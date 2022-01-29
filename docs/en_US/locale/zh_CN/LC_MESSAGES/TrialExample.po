@@ -1,0 +1,2197 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-29 17:40+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../TrialExample/Cifar10Examples.rst:2
+msgid "CIFAR-10 examples"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:5
+#: ../../TrialExample/OpEvoExamples.rst:9
+#: ../../TrialExample/Pix2pixExample.rst:5
+#: ../../TrialExample/RocksdbExamples.rst:5
+msgid "Overview"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:7
+msgid ""
+"`CIFAR-10 <https://www.cs.toronto.edu/~kriz/cifar.html>`__ classification"
+" is a common benchmark problem in machine learning. The CIFAR-10 dataset "
+"is the collection of images. It is one of the most widely used datasets "
+"for machine learning research which contains 60,000 32x32 color images in"
+" 10 different classes. Thus, we use CIFAR-10 classification as an example"
+" to introduce NNI usage."
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:10
+#: ../../TrialExample/Pix2pixExample.rst:10
+msgid "**Goals**"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:12
+msgid ""
+"As we all know, the choice of model optimizer is directly affects the "
+"performance of the final metrics. The goal of this tutorial is to **tune "
+"a better performace optimizer** to train a relatively small convolutional"
+" neural network (CNN) for recognizing images."
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:14
+msgid ""
+"In this example, we have selected the following common deep learning "
+"optimizer:"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:22
+msgid "**Experimental**"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:25
+#: ../../TrialExample/Pix2pixExample.rst:34
+msgid "Preparations"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:27
+msgid ""
+"This example requires PyTorch. PyTorch install package should be chosen "
+"based on python version and cuda version."
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:29
+msgid ""
+"Here is an example of the environment python==3.5 and cuda == 8.0, then "
+"using the following commands to install `PyTorch "
+"<https://pytorch.org/>`__\\ :"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:37
+msgid "CIFAR-10 with NNI"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:39
+#: ../../TrialExample/Pix2pixExample.rst:49
+msgid "**Search Space**"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:41
+msgid ""
+"As we stated in the target, we target to find out the best ``optimizer`` "
+"for training CIFAR-10 classification. When using different optimizers, we"
+" also need to adjust ``learning rates`` and ``network structure`` "
+"accordingly. so we chose these three parameters as hyperparameters and "
+"write the following search space."
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:51
+msgid ""
+"Implemented code directory: :githublink:`search_space.json "
+"<examples/trials/cifar10_pytorch/search_space.json>`"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:53
+#: ../../TrialExample/Pix2pixExample.rst:71
+msgid "**Trial**"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:55
+msgid ""
+"The code for CNN training of each hyperparameters set, paying particular "
+"attention to the following points are specific for NNI:"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:58
+msgid "Use ``nni.get_next_parameter()`` to get next training hyperparameter set."
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:59
+msgid ""
+"Use ``nni.report_intermediate_result(acc)`` to report the intermedian "
+"result after finish each epoch."
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:60
+msgid ""
+"Use ``nni.report_final_result(acc)`` to report the final result before "
+"the trial end."
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:62
+msgid ""
+"Implemented code directory: :githublink:`main.py "
+"<examples/trials/cifar10_pytorch/main.py>`"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:64
+msgid ""
+"You can also use your previous code directly, refer to `How to define a "
+"trial <Trials.rst>`__ for modify."
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:66
+#: ../../TrialExample/Pix2pixExample.rst:89
+msgid "**Config**"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:68
+msgid ""
+"Here is the example of running this experiment on local(with multiple "
+"GPUs):"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:70
+msgid ""
+"code directory: :githublink:`examples/trials/cifar10_pytorch/config.yml "
+"<examples/trials/cifar10_pytorch/config.yml>`"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:72
+msgid "Here is the example of running this experiment on OpenPAI:"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:74
+msgid ""
+"code directory: "
+":githublink:`examples/trials/cifar10_pytorch/config_pai.yml "
+"<examples/trials/cifar10_pytorch/config_pai.yml>`"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:76
+msgid ""
+"The complete examples we have implemented: "
+":githublink:`examples/trials/cifar10_pytorch/ "
+"<examples/trials/cifar10_pytorch>`"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:79
+#: ../../TrialExample/Pix2pixExample.rst:98
+msgid "Launch the experiment"
+msgstr ""
+
+#: ../../TrialExample/Cifar10Examples.rst:81
+#: ../../TrialExample/Pix2pixExample.rst:100
+msgid ""
+"We are ready for the experiment, let's now **run the config.yml file from"
+" your command line to start the experiment**."
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:2
+msgid "EfficientNet"
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:4
+msgid ""
+"`EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks"
+" <https://arxiv.org/abs/1905.11946>`__"
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:6
+msgid ""
+"Use Grid search to find the best combination of alpha, beta and gamma for"
+" EfficientNet-B1, as discussed in Section 3.3 in paper. Search space, "
+"tuner, configuration examples are provided here."
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:9
+msgid "Instructions"
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:11
+msgid ":githublink:`Example code <examples/trials/efficientnet>`"
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:14
+msgid "Set your working directory here in the example code directory."
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:15
+msgid ""
+"Run ``git clone https://github.com/ultmaster/EfficientNet-PyTorch`` to "
+"clone the `ultmaster modified version <https://github.com/ultmaster"
+"/EfficientNet-PyTorch>`__ of the original `EfficientNet-PyTorch "
+"<https://github.com/lukemelas/EfficientNet-PyTorch>`__. The modifications"
+" were done to adhere to the original `Tensorflow version "
+"<https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet>`__"
+" as close as possible (including EMA, label smoothing and etc.); also "
+"added are the part which gets parameters from tuner and reports "
+"intermediate/final results. Clone it into ``EfficientNet-PyTorch``\\ ; "
+"the files like ``main.py``\\ , ``train_imagenet.sh`` will appear inside, "
+"as specified in the configuration files."
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:16
+msgid ""
+"Run ``nnictl create --config config_local.yml`` (use ``config_pai.yml`` "
+"for OpenPAI) to find the best EfficientNet-B1. Adjust the training "
+"service (PAI/local/remote), batch size in the config files according to "
+"the environment."
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:18
+msgid ""
+"For training on ImageNet, read ``EfficientNet-"
+"PyTorch/train_imagenet.sh``. Download ImageNet beforehand and extract it "
+"adhering to `PyTorch format "
+"<https://pytorch.org/docs/stable/torchvision/datasets.html#imagenet>`__ "
+"and then replace ``/mnt/data/imagenet`` in with the location of the "
+"ImageNet storage. This file should also be a good example to follow for "
+"mounting ImageNet into the container on OpenPAI."
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:21
+msgid "Results"
+msgstr ""
+
+#: ../../TrialExample/EfficientNet.rst:23
+msgid ""
+"The follow image is a screenshot, demonstrating the relationship between "
+"acc@1 and alpha, beta, gamma."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:2
+msgid "GBDT in nni"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:4
+msgid ""
+"Gradient boosting is a machine learning technique for regression and "
+"classification problems, which produces a prediction model in the form of"
+" an ensemble of weak prediction models, typically decision trees. It "
+"builds the model in a stage-wise fashion as other boosting methods do, "
+"and it generalizes them by allowing optimization of an arbitrary "
+"differentiable loss function."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:6
+msgid ""
+"Gradient boosting decision tree has many popular implementations, such as"
+" `lightgbm <https://github.com/Microsoft/LightGBM>`__\\ , `xgboost "
+"<https://github.com/dmlc/xgboost>`__\\ , and `catboost "
+"<https://github.com/catboost/catboost>`__\\ , etc. GBDT is a great tool "
+"for solving the problem of traditional machine learning problem. Since "
+"GBDT is a robust algorithm, it could use in many domains. The better "
+"hyper-parameters for GBDT, the better performance you could achieve."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:8
+msgid ""
+"NNI is a great platform for tuning hyper-parameters, you could try "
+"various builtin search algorithm in nni and run multiple trials "
+"concurrently."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:11
+msgid "1. Search Space in GBDT"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:13
+msgid ""
+"There are many hyper-parameters in GBDT, but what kind of parameters will"
+" affect the performance or speed? Based on some practical experience, "
+"some suggestion here(Take lightgbm as example):"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:17
+msgid "For better accuracy"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:18
+msgid "``learning_rate``. The range of ``learning rate`` could be [0.001, 0.9]."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:23
+msgid ""
+"``num_leaves``. ``num_leaves`` is related to ``max_depth``\\ , you don't "
+"have to tune both of them."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:26
+msgid "``bagging_freq``. ``bagging_freq`` could be [1, 2, 4, 8, 10]"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:29
+msgid "``num_iterations``. May larger if underfitting."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:33
+msgid "For speed up"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:34
+msgid ""
+"``bagging_fraction``. The range of ``bagging_fraction`` could be [0.7, "
+"1.0]."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:39
+msgid ""
+"``feature_fraction``. The range of ``feature_fraction`` could be [0.6, "
+"1.0]."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:42
+msgid "``max_bin``."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:46
+msgid "To avoid overfitting"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:47
+msgid "``min_data_in_leaf``. This depends on your dataset."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:52
+msgid "``min_sum_hessian_in_leaf``. This depend on your dataset."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:55
+msgid "``lambda_l1`` and ``lambda_l2``."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:58
+msgid "``min_gain_to_split``."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:61
+msgid "``num_leaves``."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:63
+msgid ""
+"Reference link: `lightgbm <https://lightgbm.readthedocs.io/en/latest"
+"/Parameters-Tuning.html>`__ and `autoxgoboost <https://github.com/ja-"
+"thomas/autoxgboost/blob/master/poster_2018.pdf>`__"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:67
+msgid "2. Task description"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:69
+msgid ""
+"Now we come back to our example \"auto-gbdt\" which run in lightgbm and "
+"nni. The data including :githublink:`train data <examples/trials/auto-"
+"gbdt/data/regression.train>` and :githublink:`test data <examples/trials"
+"/auto-gbdt/data/regression.train>`. Given the features and label in train"
+" data, we train a GBDT regression model and use it to predict."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:73
+msgid "3. How to run in nni"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:76
+msgid "3.1 Install all the requirments"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:84
+msgid "3.2 Prepare your trial code"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:86
+msgid "You need to prepare a basic code as following:"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:127
+msgid "3.3 Prepare your search space."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:129
+msgid ""
+"If you like to tune ``num_leaves``\\ , ``learning_rate``\\ , "
+"``bagging_fraction`` and ``bagging_freq``\\ , you could write a "
+":githublink:`search_space.json <examples/trials/auto-"
+"gbdt/search_space.json>` as follow:"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:140
+msgid ""
+"More support variable type you could reference `here "
+"<../Tutorial/SearchSpaceSpec.rst>`__."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:143
+msgid "3.4 Add SDK of nni into your code."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:188
+msgid "3.5 Write a config file and run it."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:190
+msgid "In the config file, you could set some settings including:"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:193
+msgid "Experiment setting: ``trialConcurrency``\\ , ``trialGpuNumber``\\ , etc."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:194
+msgid "Platform setting: ``trainingService``\\ , etc."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:195
+msgid "Path setting: ``searchSpaceFile``\\ , ``trialCodeDirectory``\\ , etc."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:196
+msgid ""
+"Algorithm setting: select ``tuner`` algorithm, ``tuner optimize_mode``\\ "
+", etc."
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:198
+msgid "An config.yml as follow:"
+msgstr ""
+
+#: ../../TrialExample/GbdtExample.rst:215
+msgid "Run this experiment with command as follow:"
+msgstr ""
+
+#: ../../TrialExample/KDExample.rst:2
+msgid "Knowledge Distillation on NNI"
+msgstr ""
+
+#: ../../TrialExample/KDExample.rst:5
+msgid "KnowledgeDistill"
+msgstr ""
+
+#: ../../TrialExample/KDExample.rst:7
+msgid ""
+"Knowledge Distillation (KD) is proposed in `Distilling the Knowledge in a"
+" Neural Network <https://arxiv.org/abs/1503.02531>`__\\ ,  the compressed"
+" model is trained to mimic a pre-trained, larger model.  This training "
+"setting is also referred to as \"teacher-student\",  where the large "
+"model is the teacher and the small model is the student. KD is often used"
+" to fine-tune the pruned model."
+msgstr ""
+
+#: ../../TrialExample/KDExample.rst:15
+msgid "Usage"
+msgstr ""
+
+#: ../../TrialExample/KDExample.rst:17
+msgid "PyTorch code"
+msgstr ""
+
+#: ../../TrialExample/KDExample.rst:38
+msgid ""
+"The complete code for fine-tuning the pruned model can be found "
+":githublink:`here <examples/model_compress/pruning/finetune_kd_torch.py>`"
+msgstr ""
+
+#: ../../TrialExample/KDExample.rst:44
+msgid ""
+"Note that: for fine-tuning a pruned model, run "
+":githublink:`basic_pruners_torch.py "
+"<examples/model_compress/pruning/basic_pruners_torch.py>` first to get "
+"the mask file, then pass the mask path as argument to the script."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:6
+msgid "MNIST examples"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:8
+msgid ""
+"CNN MNIST classifier for deep learning is similar to ``hello world`` for "
+"programming languages. Thus, we use MNIST as example to introduce "
+"different features of NNI. The examples are listed below:"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:11
+msgid "`MNIST with NNI API (PyTorch) <#mnist-pytorch>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:12
+msgid "`MNIST with NNI API (TensorFlow v2.x) <#mnist-tfv2>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:13
+msgid "`MNIST with NNI API (TensorFlow v1.x) <#mnist-tfv1>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:14
+msgid "`MNIST with NNI annotation <#mnist-annotation>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:15
+msgid "`MNIST in keras <#mnist-keras>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:16
+msgid "`MNIST -- tuning with batch tuner <#mnist-batch>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:17
+msgid "`MNIST -- tuning with hyperband <#mnist-hyperband>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:18
+msgid "`MNIST -- tuning within a nested search space <#mnist-nested>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:19
+msgid "`distributed MNIST (tensorflow) using kubeflow <#mnist-kubeflow-tf>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:20
+msgid "`distributed MNIST (pytorch) using kubeflow <#mnist-kubeflow-pytorch>`__"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:22
+msgid ""
+":raw-html:`<a name=\"mnist-pytorch\"></a>` **MNIST with NNI API "
+"(PyTorch)**"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:25
+msgid ""
+"This is a simple network which has two convolutional layers, two pooling "
+"layers and a fully connected layer. We tune hyperparameters, such as "
+"dropout rate, convolution size, hidden size, etc. It can be tuned with "
+"most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an "
+"exmaple YAML file which enables assessor."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:30
+msgid ""
+"code directory: :githublink:`mnist-pytorch/ <examples/trials/mnist-"
+"pytorch/>`"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:32
+msgid ""
+":raw-html:`<a name=\"mnist-tfv2\"></a>` **MNIST with NNI API (TensorFlow "
+"v2.x)**"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:35
+msgid "Same network to the example above, but written in TensorFlow."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:37
+msgid "code directory: :githublink:`mnist-tfv2/ <examples/trials/mnist-tfv2/>`"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:39
+msgid ""
+":raw-html:`<a name=\"mnist-tfv1\"></a>` **MNIST with NNI API (TensorFlow "
+"v1.x)**"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:42
+msgid "Same network to the example above, but written in TensorFlow v1.x API."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:44
+msgid "code directory: :githublink:`mnist-tfv1/ <examples/trials/mnist-tfv1/>`"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:46
+msgid ""
+":raw-html:`<a name=\"mnist-annotation\"></a>` **MNIST with NNI "
+"annotation**"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:49
+msgid ""
+"This example is similar to the example above, the only difference is that"
+" this example uses NNI annotation to specify search space and report "
+"results, while the example above uses NNI apis to receive configuration "
+"and report results."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:51
+msgid ""
+"code directory: :githublink:`mnist-annotation/ <examples/trials/mnist-"
+"annotation/>`"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:53
+msgid ""
+":raw-html:`<a name=\"mnist-batch\"></a>` **MNIST -- tuning with batch "
+"tuner**"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:56
+msgid ""
+"This example is to show how to use batch tuner. Users simply list all the"
+" configurations they want to try in the search space file. NNI will try "
+"all of them."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:58
+msgid ""
+"code directory: :githublink:`mnist-batch-tune-keras/ <examples/trials"
+"/mnist-batch-tune-keras/>`"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:60
+msgid ""
+":raw-html:`<a name=\"mnist-hyperband\"></a>` **MNIST -- tuning with "
+"hyperband**"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:63
+msgid ""
+"This example is to show how to use hyperband to tune the model. There is "
+"one more key ``STEPS`` in the received configuration for trials to "
+"control how long it can run (e.g., number of iterations)."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:67
+msgid ""
+"code directory: :githublink:`mnist-hyperband/ <examples/trials/mnist-"
+"hyperband/>`"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:69
+msgid ""
+":raw-html:`<a name=\"mnist-nested\"></a>` **MNIST -- tuning within a "
+"nested search space**"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:72
+msgid ""
+"This example is to show that NNI also support nested search space. The "
+"search space file is an example of how to define nested search space."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:74
+msgid ""
+"code directory: :githublink:`mnist-nested-search-space/ <examples/trials"
+"/mnist-nested-search-space/>`"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:76
+msgid ""
+":raw-html:`<a name=\"mnist-kubeflow-tf\"></a>` **distributed MNIST "
+"(tensorflow) using kubeflow**"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:79
+msgid ""
+"This example is to show how to run distributed training on kubeflow "
+"through NNI. Users can simply provide distributed training code and a "
+"configure file which specifies the kubeflow mode. For example, what is "
+"the command to run ps and what is the command to run worker, and how many"
+" resources they consume. This example is implemented in tensorflow, thus,"
+" uses kubeflow tensorflow operator."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:81
+msgid ""
+"code directory: :githublink:`mnist-distributed/ <examples/trials/mnist-"
+"distributed/>`"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:83
+msgid ""
+":raw-html:`<a name=\"mnist-kubeflow-pytorch\"></a>` **distributed MNIST "
+"(pytorch) using kubeflow**"
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:86
+msgid ""
+"Similar to the previous example, the difference is that this example is "
+"implemented in pytorch, thus, it uses kubeflow pytorch operator."
+msgstr ""
+
+#: ../../TrialExample/MnistExamples.rst:88
+msgid ""
+"code directory: :githublink:`mnist-distributed-pytorch/ <examples/trials"
+"/mnist-distributed-pytorch/>`"
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:6
+msgid "Tuning Tensor Operators on NNI"
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:11
+msgid ""
+"Abundant applications raise the demands of training and inference deep "
+"neural networks (DNNs) efficiently on diverse hardware platforms ranging "
+"from cloud servers to embedded devices. Moreover, computational graph-"
+"level optimization of deep neural network, like tensor operator fusion, "
+"may introduce new tensor operators. Thus, manually optimized tensor "
+"operators provided by hardware-specific libraries have limitations in "
+"terms of supporting new hardware platforms or supporting new operators, "
+"so automatically optimizing tensor operators on diverse hardware "
+"platforms is essential for large-scale deployment and application of deep"
+" learning technologies in the real-world problems."
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:13
+msgid ""
+"Tensor operator optimization is substantially a combinatorial "
+"optimization problem. The objective function is the performance of a "
+"tensor operator on specific hardware platform, which should be maximized "
+"with respect to the hyper-parameters of corresponding device code, such "
+"as how to tile a matrix or whether to unroll a loop. Unlike many typical "
+"problems of this type, such as travelling salesman problem, the objective"
+" function of tensor operator optimization is a black box and expensive to"
+" sample. One has to compile a device code with a specific configuration "
+"and run it on real hardware to get the corresponding performance metric. "
+"Therefore, a desired method for optimizing tensor operators should find "
+"the best configuration with as few samples as possible."
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:15
+msgid ""
+"The expensive objective function makes solving tensor operator "
+"optimization problem with traditional combinatorial optimization methods,"
+" for example, simulated annealing and evolutionary algorithms, almost "
+"impossible. Although these algorithms inherently support combinatorial "
+"search spaces, they do not take sample-efficiency into account, thus "
+"thousands of or even more samples are usually needed, which is "
+"unacceptable when tuning tensor operators in product environments. On the"
+" other hand, sequential model based optimization (SMBO) methods are "
+"proved sample-efficient for optimizing black-box functions with "
+"continuous search spaces. However, when optimizing ones with "
+"combinatorial search spaces, SMBO methods are not as sample-efficient as "
+"their continuous counterparts, because there is lack of prior assumptions"
+" about the objective functions, such as continuity and differentiability "
+"in the case of continuous search spaces. For example, if one could assume"
+" an objective function with a continuous search space is infinitely "
+"differentiable, a Gaussian process with a radial basis function (RBF) "
+"kernel could be used to model the objective function. In this way, a "
+"sample provides not only a single value at a point but also the local "
+"properties of the objective function in its neighborhood or even global "
+"properties, which results in a high sample-efficiency. In contrast, SMBO "
+"methods for combinatorial optimization suffer poor sample-efficiency due "
+"to the lack of proper prior assumptions and surrogate models which can "
+"leverage them."
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:19
+msgid ""
+"OpEvo is recently proposed for solving this challenging problem. It "
+"efficiently explores the search spaces of tensor operators by introducing"
+" a topology-aware mutation operation based on q-random walk distribution "
+"to leverage the topological structures over the search spaces. Following "
+"this example, you can use OpEvo to tune three representative types of "
+"tensor operators selected from two popular neural networks, BERT and "
+"AlexNet. Three comparison baselines, AutoTVM, G-BFS and N-A2C, are also "
+"provided. Please refer to `OpEvo: An Evolutionary Method for Tensor "
+"Operator Optimization <https://arxiv.org/abs/2006.05664>`__ for detailed "
+"explanation about these algorithms."
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:22
+msgid "Environment Setup"
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:24
+msgid ""
+"We prepared a dockerfile for setting up experiment environments. Before "
+"starting, please make sure the Docker daemon is running and the driver of"
+" your GPU accelerator is properly installed. Enter into the example "
+"folder ``examples/trials/systems/opevo`` and run below command to build "
+"and instantiate a Docker image from the dockerfile."
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:34
+msgid "Run Experiments:"
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:36
+msgid ""
+"Three representative kinds of tensor operators, **matrix "
+"multiplication**\\ , **batched matrix multiplication** and **2D "
+"convolution**\\ , are chosen from BERT and AlexNet, and tuned with NNI. "
+"The ``Trial`` code for all tensor operators is "
+"``/root/compiler_auto_tune_stable.py``\\ , and ``Search Space`` files and"
+" ``config`` files for each tuning algorithm locate in "
+"``/root/experiments/``\\ , which are categorized by tensor operators. "
+"Here ``/root`` refers to the root of the container."
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:38
+msgid ""
+"For tuning the operators of matrix multiplication, please run below "
+"commands from ``/root``\\ :"
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:74
+msgid ""
+"For tuning the operators of batched matrix multiplication, please run "
+"below commands from ``/root``\\ :"
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:96
+msgid ""
+"For tuning the operators of 2D convolution, please run below commands "
+"from ``/root``\\ :"
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:112
+msgid ""
+"Please note that G-BFS and N-A2C are only designed for tuning tiling "
+"schemes of multiplication of matrices with only power of 2 rows and "
+"columns, so they are not compatible with other types of configuration "
+"spaces, thus not eligible to tune the operators of batched matrix "
+"multiplication and 2D convolution. Here, AutoTVM is implemented by its "
+"authors in the TVM project, so the tuning results are printed on the "
+"screen rather than reported to NNI manager. The port 8080 of the "
+"container is bind to the host on the same port, so one can access the NNI"
+" Web UI through ``host_ip_addr:8080`` and monitor tuning process as below"
+" screenshot."
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:117
+msgid "Citing OpEvo"
+msgstr ""
+
+#: ../../TrialExample/OpEvoExamples.rst:119
+msgid "If you feel OpEvo is helpful, please consider citing the paper as follows:"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:2
+msgid "Pix2pix example"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:7
+msgid ""
+"`Pix2pix <https://arxiv.org/abs/1611.07004>`__ is a conditional "
+"generative adversial network (conditional GAN) framework proposed by "
+"Isola et. al. in 2016 targeting at solving image-to-image translation "
+"problems. This framework performs well in a wide range of image "
+"generation problems. In the original paper, the authors demonstrate how "
+"to use pix2pix to solve the following image translation problems: 1) "
+"labels to street scene; 2) labels to facade; 3) BW to Color; 4) Aerial to"
+" Map; 5) Day to Night and 6) Edges to Photo. If you are interested, "
+"please read more in the `official project page "
+"<https://phillipi.github.io/pix2pix/>`__ . In this example, we use "
+"pix2pix to introduce how to use NNI for tuning conditional GANs."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:12
+msgid ""
+"Although GANs are known to be able to generate high-resolution realistic "
+"images, they are generally fragile and difficult to optimize, and mode "
+"collapse can happen during training due to improper optimization setting,"
+" loss formulation, model architecture, weight initialization, or even "
+"data augmentation patterns. The goal of this tutorial is to leverage NNI "
+"hyperparameter tuning tools to automatically find a good setting for "
+"these important factors."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:14
+msgid ""
+"In this example, we aim at selecting the following hyperparameters "
+"automatically:"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:17
+msgid "``ngf``: number of generator filters in the last conv layer"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:18
+msgid "``ndf``: number of discriminator filters in the first conv layer"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:19
+msgid "``netG``: generator architecture"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:20
+msgid "``netD``: discriminator architecture"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:21
+msgid "``norm``: normalization type"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:22
+msgid "``init_type``: weight initialization method"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:23
+msgid "``lr``: initial learning rate for adam"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:24
+msgid "``beta1``: momentum term of adam"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:25
+msgid "``lr_policy``: learning rate policy"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:26
+msgid "``gan_mode``: type of GAN objective"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:27
+msgid "``lambda_L1``: weight of L1 loss in the generator objective"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:31
+msgid "**Experiments**"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:36
+msgid ""
+"This example requires the GPU version of PyTorch. PyTorch installation "
+"should be chosen based on system, python version, and cuda version."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:38
+msgid ""
+"Please refer to the detailed instruction of installing `PyTorch "
+"<https://pytorch.org/get-started/locally/>`__"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:40
+msgid ""
+"Next, run the following shell script to clone the repository maintained "
+"by the original authors of pix2pix. This example relies on the "
+"implementations in this repository."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:47
+msgid "Pix2pix with NNI"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:51
+msgid ""
+"We summarize the range of values for each hyperparameter mentioned above "
+"into a single search space json object."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:69
+msgid ""
+"Starting from v2.0, the search space is directly included in the config. "
+"Please find the example here: :githublink:`config.yml <examples/trials"
+"/pix2pix-pytorch/config.yml>`"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:73
+msgid ""
+"To experiment on this set of hyperparameters using NNI, we have to write "
+"a trial code, which receives a set of parameter settings from NNI, trains"
+" a generator and discriminator using these parameters, and then reports "
+"the final scores back to NNI. In the experiment, NNI repeatedly calls "
+"this trial code, passing in different set of hyperparameter settings. It "
+"is important that the following three lines are incorporated in the trial"
+" code:"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:75
+msgid "Use ``nni.get_next_parameter()`` to get next hyperparameter set."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:76
+msgid ""
+"(Optional) Use ``nni.report_intermediate_result(score)`` to report the "
+"intermediate result after finishing each epoch."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:77
+msgid ""
+"Use ``nni.report_final_result(score)`` to report the final result before "
+"the trial ends."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:79
+msgid ""
+"Implemented code directory: :githublink:`pix2pix.py <examples/trials"
+"/pix2pix-pytorch/pix2pix.py>`"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:81
+msgid "Some notes on the implementation:"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:83
+msgid ""
+"The trial code for this example is adapted from the `repository "
+"maintained by the authors of Pix2pix and CycleGAN "
+"<https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix>`__ .  You can "
+"also use your previous code directly. Please refer to `How to define a "
+"trial <Trials.rst>`__ for modifying the code."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:84
+msgid ""
+"By default, the code uses the dataset \"facades\". It also supports the "
+"datasets \"night2day\", \"edges2handbags\", \"edges2shoes\", and "
+"\"maps\"."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:85
+msgid ""
+"For \"facades\", 200 epochs are enough for the model to converge to a "
+"point where the difference between models trained with different "
+"hyperparameters are salient enough for evaluation. If you are using other"
+" datasets, please consider increasing the ``n_epochs`` and "
+"``n_epochs_decay`` parameters by either passing them as arguments when "
+"calling ``pix2pix.py`` in the config file (discussed below) or changing "
+"the ``pix2pix.py`` directly. Also, for \"facades\", 200 epochs are "
+"enought for the final training, while the number may vary for other "
+"datasets."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:86
+msgid ""
+"In this example, we use L1 loss on the test set as the score to report to"
+" NNI. Although L1 is by no means a comprehensive measure of image "
+"generation performance, at most times it makes sense for evaluating "
+"pix2pix models with similar architectural setup. In this example, for the"
+" hyperparameters we experiment on, a higher L1 score generally indicates "
+"a higher generation performance."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:91
+msgid ""
+"Here is the example config of running this experiment on local (with a "
+"single GPU):"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:93
+msgid ""
+"code directory: :githublink:`examples/trials/pix2pix-pytorch/config.yml "
+"<examples/trials/pix2pix-pytorch/config.yml>`"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:95
+msgid ""
+"To have a full glance on our implementation, check: "
+":githublink:`examples/trials/pix2pix-pytorch/ <examples/trials/pix2pix-"
+"pytorch>`"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:107
+msgid "Collecting the Results"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:109
+msgid ""
+"By default, our trial code saves the final trained model for each trial "
+"in the ``checkpoints/`` directory in the trial directory of the NNI "
+"experiment. The ``latest_net_G.pth`` and ``latest_net_D.pth`` correspond "
+"to the save checkpoints for the generator and the discriminator."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:111
+msgid ""
+"To make it easier to run inference and see the generated images, we also "
+"incorporate a simple inference code here: :githublink:`test.py "
+"<examples/trials/pix2pix-pytorch/test.py>`"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:113
+msgid "To use the code, run the following command:"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:119
+msgid ""
+"``CHECKPOINT`` is the directory saving the checkpoints (e.g., the "
+"``checkpoints/`` directory in the trial directory). ``PARAMETER_CFG`` is "
+"the ``parameter.cfg`` file generated by NNI recording the hyperparameter "
+"settings. This file can be found in the trial directory created by NNI."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:122
+msgid "Results and Discussions"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:124
+msgid ""
+"Following the previous steps, we ran the example for 40 trials using the "
+"TPE tuner. We found that the best-performing parameters on the 'facades' "
+"dataset to be the following set."
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:142
+msgid ""
+"Meanwhile, we compare the results with the model training using the "
+"following default empirical hyperparameter settings:"
+msgstr ""
+
+#: ../../TrialExample/Pix2pixExample.rst:160
+msgid ""
+"We can observe that for learning rate (0.0002), the generator "
+"architecture (U-Net), and gan objective (LSGAN), the two results agree "
+"with each other. This is also consistent with the widely accepted "
+"practice on this dataset. Meanwhile, the hyperparameters \"beta1\", "
+"\"lambda_L1\", \"ngf\", and \"ndf\" are slightly changed in the NNI's "
+"found solution to fit the target dataset. We found that the parameters "
+"searched by NNI outperforms the empirical parameters on the facades "
+"dataset both in terms of L1 loss and the visual qualities of the images. "
+"While the search hyperparameter has a L1 loss of 0.3317 on the test set "
+"of facades, the empirical hyperparameters can only achieve a L1 loss of "
+"0.4148. The following image shows some sample results of facades test set"
+" input-output pairs produced by the model with hyperparameters tuned with"
+" NNI."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:2
+msgid "Tuning RocksDB on NNI"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:7
+msgid ""
+"`RocksDB <https://github.com/facebook/rocksdb>`__ is a popular high "
+"performance embedded key-value database used in production systems at "
+"various web-scale enterprises including Facebook, Yahoo!, and LinkedIn.. "
+"It is a fork of `LevelDB <https://github.com/google/leveldb>`__ by "
+"Facebook optimized to exploit many central processing unit (CPU) cores, "
+"and make efficient use of fast storage, such as solid-state drives (SSD),"
+" for input/output (I/O) bound workloads."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:9
+msgid ""
+"The performance of RocksDB is highly contingent on its tuning. However, "
+"because of the complexity of its underlying technology and a large number"
+" of configurable parameters, a good configuration is sometimes hard to "
+"obtain. NNI can help to address this issue. NNI supports many kinds of "
+"tuning algorithms to search the best configuration of RocksDB, and "
+"support many kinds of environments like local machine, remote servers and"
+" cloud."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:11
+msgid ""
+"This example illustrates how to use NNI to search the best configuration "
+"of RocksDB for a ``fillrandom`` benchmark supported by a benchmark tool "
+"``db_bench``\\ , which is an official benchmark tool provided by RocksDB "
+"itself. Therefore, before running this example, please make sure NNI is "
+"installed and `db_bench <https://github.com/facebook/rocksdb/wiki"
+"/Benchmarking-tools>`__ is in your ``PATH``. Please refer to `here "
+"<../Tutorial/QuickStart.rst>`__ for detailed information about "
+"installation and preparing of NNI environment, and `here "
+"<https://github.com/facebook/rocksdb/blob/master/INSTALL.md>`__ for "
+"compiling RocksDB as well as ``db_bench``."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:13
+msgid ""
+"We also provide a simple script :githublink:`db_bench_installation.sh "
+"<examples/trials/systems_auto_tuning/rocksdb-"
+"fillrandom/db_bench_installation.sh>` helping to compile and install "
+"``db_bench`` as well as its dependencies on Ubuntu. Installing RocksDB on"
+" other systems can follow the same procedure."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:15
+msgid ""
+":githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-"
+"fillrandom>`"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:18
+msgid "Experiment setup"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:20
+msgid ""
+"There are mainly three steps to setup an experiment of tuning systems on "
+"NNI. Define search space with a ``json`` file, write a benchmark code, "
+"and start NNI experiment by passing a config file to NNI manager."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:23
+msgid "Search Space"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:25
+msgid ""
+"For simplicity, this example tunes three parameters, "
+"``write_buffer_size``\\ , ``min_write_buffer_num`` and "
+"``level0_file_num_compaction_trigger``\\ , for writing 16M keys with 20 "
+"Bytes of key size and 100 Bytes of value size randomly, based on writing "
+"operations per second (OPS). ``write_buffer_size`` sets the size of a "
+"single memtable. Once memtable exceeds this size, it is marked immutable "
+"and a new one is created. ``min_write_buffer_num`` is the minimum number "
+"of memtables to be merged before flushing to storage. Once the number of "
+"files in level 0 reaches ``level0_file_num_compaction_trigger``\\ , level"
+" 0 to level 1 compaction is triggered."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:27
+msgid ""
+"In this example, the search space is specified by a ``search_space.json``"
+" file as shown below. Detailed explanation of search space could be found"
+" `here <../Tutorial/SearchSpaceSpec.rst>`__."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:46
+msgid ""
+":githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-"
+"fillrandom/search_space.json>`"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:49
+msgid "Benchmark code"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:51
+msgid ""
+"Benchmark code should receive a configuration from NNI manager, and "
+"report the corresponding benchmark result back. Following NNI APIs are "
+"designed for this purpose. In this example, writing operations per second"
+" (OPS) is used as a performance metric. Please refer to `here "
+"<Trials.rst>`__ for detailed information."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:54
+msgid "Use ``nni.get_next_parameter()`` to get next system configuration."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:55
+msgid "Use ``nni.report_final_result(metric)`` to report the benchmark result."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:57
+msgid ""
+":githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-"
+"fillrandom/main.py>`"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:60
+msgid "Config file"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:62
+msgid ""
+"One could start a NNI experiment with a config file. A config file for "
+"NNI is a ``yaml`` file usually including experiment settings (\\ "
+"``trialConcurrency``\\ , ``trialGpuNumber``\\ , etc.), platform settings "
+"(\\ ``trainingService``\\ ), path settings (\\ ``searchSpaceFile``\\ , "
+"``trialCodeDirectory``\\ , etc.) and tuner settings (\\ ``tuner``\\ , "
+"``tuner optimize_mode``\\ , etc.). Please refer to `here "
+"<../Tutorial/QuickStart.rst>`__ for more information."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:64
+msgid "Here is an example of tuning RocksDB with SMAC algorithm:"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:66
+msgid ""
+":githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-"
+"fillrandom/config_smac.yml>`"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:68
+msgid "Here is an example of tuning RocksDB with TPE algorithm:"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:70
+msgid ""
+":githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-"
+"fillrandom/config_tpe.yml>`"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:72
+msgid ""
+"Other tuners can be easily adopted in the same way. Please refer to `here"
+" <../Tuner/BuiltinTuner.rst>`__ for more information."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:74
+msgid ""
+"Finally, we could enter the example folder and start the experiment using"
+" following commands:"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:84
+msgid "Experiment results"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:86
+msgid "We ran these two examples on the same machine with following details:"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:89
+msgid "16 * Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:90
+msgid "465 GB of rotational hard drive with ext4 file system"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:91
+msgid "128 GB of RAM"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:92
+msgid "Kernel version: 4.15.0-58-generic"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:93
+msgid "NNI version: v1.0-37-g1bd24577"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:94
+msgid "RocksDB version: 6.4"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:95
+msgid "RocksDB DEBUG_LEVEL: 0"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:97
+msgid ""
+"The detailed experiment results are shown in the below figure. Horizontal"
+" axis is sequential order of trials. Vertical axis is the metric, write "
+"OPS in this example. Blue dots represent trials for tuning RocksDB with "
+"SMAC tuner, and orange dots stand for trials for tuning RocksDB with TPE "
+"tuner."
+msgstr ""
+
+msgid "image"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:105
+msgid ""
+"Following table lists the best trials and corresponding parameters and "
+"metric obtained by the two tuners. Unsurprisingly, both of them found the"
+" same optimal configuration for ``fillrandom`` benchmark."
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:111
+msgid "Tuner"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:112
+msgid "Best trial"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:113
+msgid "Best OPS"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:114
+msgid "write_buffer_size"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:115
+msgid "min_write_buffer_number_to_merge"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:116
+msgid "level0_file_num_compaction_trigger"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:117
+msgid "SMAC"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:118
+msgid "255"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:119
+msgid "779289"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:120
+#: ../../TrialExample/RocksdbExamples.rst:126
+msgid "2097152"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:121
+#: ../../TrialExample/RocksdbExamples.rst:122
+#: ../../TrialExample/RocksdbExamples.rst:127
+#: ../../TrialExample/RocksdbExamples.rst:128
+msgid "7.0"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:123
+msgid "TPE"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:124
+msgid "169"
+msgstr ""
+
+#: ../../TrialExample/RocksdbExamples.rst:125
+msgid "761456"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:2
+msgid "Scikit-learn in NNI"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:4
+msgid ""
+"`Scikit-learn <https://github.com/scikit-learn/scikit-learn>`__ is a "
+"popular machine learning tool for data mining and data analysis. It "
+"supports many kinds of machine learning models like LinearRegression, "
+"LogisticRegression, DecisionTree, SVM etc. How to make the use of scikit-"
+"learn more efficiency is a valuable topic."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:6
+msgid ""
+"NNI supports many kinds of tuning algorithms to search the best models "
+"and/or hyper-parameters for scikit-learn, and support many kinds of "
+"environments like local machine, remote servers and cloud."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:9
+msgid "1. How to run the example"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:11
+msgid ""
+"To start using NNI, you should install the NNI package, and use the "
+"command line tool ``nnictl`` to start an experiment. For more information"
+" about installation and preparing for the environment,  please refer "
+"`here <../Tutorial/QuickStart.rst>`__."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:13
+msgid ""
+"After you installed NNI, you could enter the corresponding folder and "
+"start the experiment using following commands:"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:20
+msgid "2. Description of the example"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:23
+msgid "2.1 classification"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:25
+msgid ""
+"This example uses the dataset of digits, which is made up of 1797 8x8 "
+"images, and each image is a hand-written digit, the goal is to classify "
+"these images into 10 classes."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:27
+msgid ""
+"In this example, we use SVC as the model, and choose some parameters of "
+"this model, including ``\"C\", \"kernel\", \"degree\", \"gamma\" and "
+"\"coef0\"``. For more information of these parameters, please `refer "
+"<https://scikit-"
+"learn.org/stable/modules/generated/sklearn.svm.SVC.html>`__."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:30
+msgid "2.2 regression"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:32
+msgid ""
+"This example uses the Boston Housing Dataset, this dataset consists of "
+"price of houses in various places in Boston and the information such as "
+"Crime (CRIM), areas of non-retail business in the town (INDUS), the age "
+"of people who own the house (AGE) etc., to predict the house price of "
+"Boston."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:34
+msgid ""
+"In this example, we tune different kinds of regression models including "
+"``\"LinearRegression\", \"SVR\", \"KNeighborsRegressor\", "
+"\"DecisionTreeRegressor\"`` and some parameters like ``\"svr_kernel\", "
+"\"knr_weights\"``. You could get more details about these models from "
+"`here <https://scikit-learn.org/stable/supervised_learning.html"
+"#supervised-learning>`__."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:37
+msgid "3. How to write scikit-learn code using NNI"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:39
+msgid ""
+"It is easy to use NNI in your scikit-learn code, there are only a few "
+"steps."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:43
+msgid "**step 1**"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:45
+msgid ""
+"Prepare a search_space.json to storage your choose spaces. For example, "
+"if you want to choose different models, you may try:"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:54
+msgid ""
+"If you want to choose different models and parameters, you could put them"
+" together in a search_space.json file."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:64
+msgid ""
+"Then you could read these values as a dict from your python code, please "
+"get into the step 2."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:67
+msgid "**step 2**"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:69
+msgid ""
+"At the beginning of your python code, you should ``import nni`` to insure"
+" the packages works normally."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:71
+msgid ""
+"First, you should use ``nni.get_next_parameter()`` function to get your "
+"parameters given by NNI. Then you could use these parameters to update "
+"your code. For example, if you define your search_space.json like "
+"following format:"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:84
+msgid "You may get a parameter dict like this:"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:96
+msgid "Then you could use these variables to write your scikit-learn code."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:99
+msgid "**step 3**"
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:101
+msgid ""
+"After you finished your training, you could get your own score of the "
+"model, like your precision, recall or MSE etc. NNI needs your score to "
+"tuner algorithms and generate next group of parameters, please report the"
+" score back to NNI and start next trial job."
+msgstr ""
+
+#: ../../TrialExample/SklearnExamples.rst:103
+msgid ""
+"You just need to use ``nni.report_final_result(score)`` to communicate "
+"with NNI after you process your scikit-learn code. Or if you have "
+"multiple scores in the steps of training, you could also report them back"
+" to NNI using ``nni.report_intemediate_result(score)``. Note, you may not"
+" report intermediate result of your job, but you must report back your "
+"final result."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:2
+msgid "Automatic Model Architecture Search for Reading Comprehension"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:4
+msgid ""
+"This example shows us how to use Genetic Algorithm to find good model "
+"architectures for Reading Comprehension."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:7
+msgid "1. Search Space"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:9
+msgid ""
+"Since attention and RNN have been proven effective in Reading "
+"Comprehension, we conclude the search space as follow:"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:12
+msgid "IDENTITY (Effectively means keep training)."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:13
+msgid ""
+"INSERT-RNN-LAYER (Inserts a LSTM. Comparing the performance of GRU and "
+"LSTM in our experiment, we decided to use LSTM here.)"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:14
+msgid "REMOVE-RNN-LAYER"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:15
+msgid "INSERT-ATTENTION-LAYER(Inserts an attention layer.)"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:16
+msgid "REMOVE-ATTENTION-LAYER"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:17
+msgid "ADD-SKIP (Identity between random layers)."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:18
+msgid "REMOVE-SKIP (Removes random skip)."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:27
+msgid "New version"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:29
+msgid ""
+"Also we have another version which time cost is less and performance is "
+"better. We will release soon."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:32
+msgid "2. How to run this example in local?"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:35
+msgid "2.1 Use downloading script to download data"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:37
+msgid ""
+"Execute the following command to download needed files using the "
+"downloading script:"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:45
+msgid "Or Download manually"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:48
+msgid ""
+"download ``dev-v1.1.json`` and ``train-v1.1.json`` `here "
+"<https://rajpurkar.github.io/SQuAD-explorer/>`__"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:56
+msgid ""
+"download ``glove.840B.300d.txt`` `here "
+"<https://nlp.stanford.edu/projects/glove/>`__"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:64
+msgid "2.2 Update configuration"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:66
+msgid ""
+"Modify ``nni/examples/trials/ga_squad/config.yml``\\ , here is the "
+"default configuration:"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:89
+msgid ""
+"In the **trial** part, if you want to use GPU to perform the architecture"
+" search, change ``trialGpuNum`` from ``0`` to ``1``. You need to increase"
+" the ``maxTrialNumber`` and ``maxExperimentDuration``\\ , according to "
+"how long you want to wait for the search result."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:92
+msgid "2.3 submit this job"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:99
+msgid "3. Technical details about the trial"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:102
+msgid "3.1 How does it works"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:104
+msgid ""
+"The evolution-algorithm based architecture for question answering has two"
+" different parts just like any other examples: the trial and the tuner."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:107
+msgid "3.2 The trial"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:109
+msgid ""
+"The trial has a lot of different files, functions and classes. Here we "
+"will only give most of those files a brief introduction:"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:112
+msgid ""
+"``attention.py`` contains an implementation for attention mechanism in "
+"Tensorflow."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:113
+msgid "``data.py`` contains functions for data preprocessing."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:114
+msgid "``evaluate.py`` contains the evaluation script."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:115
+msgid "``graph.py`` contains the definition of the computation graph."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:116
+msgid "``rnn.py`` contains an implementation for GRU in Tensorflow."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:117
+msgid "``train_model.py`` is a wrapper for the whole question answering model."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:119
+msgid "Among those files, ``trial.py`` and ``graph_to_tf.py`` are special."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:121
+msgid ""
+"``graph_to_tf.py`` has a function named as ``graph_to_network``\\ , here "
+"is its skeleton code:"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:154
+msgid ""
+"As we can see, this function is actually a compiler, that converts the "
+"internal model DAG configuration (which will be introduced in the ``Model"
+" configuration format`` section) ``graph``\\ , to a Tensorflow "
+"computation graph."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:160
+msgid ""
+"performs topological sorting on the internal graph representation, and "
+"the code inside the loop:"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:166
+msgid ""
+"performs actually conversion that maps each layer to a part in Tensorflow"
+" computation graph."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:169
+msgid "3.3 The tuner"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:171
+msgid ""
+"The tuner is much more simple than the trial. They actually share the "
+"same ``graph.py``. Besides, the tuner has a ``customer_tuner.py``\\ , the"
+" most important class in which is ``CustomerTuner``\\ :"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:206
+msgid ""
+"As we can see, the overloaded method ``generate_parameters`` implements a"
+" pretty naive mutation algorithm. The code lines:"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:214
+msgid ""
+"controls the mutation process. It will always take two random individuals"
+" in the population, only keeping and mutating the one with better result."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:217
+msgid "3.4 Model configuration format"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:219
+msgid ""
+"Here is an example of the model configuration, which is passed from the "
+"tuner to the trial in the architecture search procedure."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:266
+msgid ""
+"Every model configuration will have a \"layers\" section, which is a JSON"
+" list of layer definitions. The definition of each layer is also a JSON "
+"object, where:"
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:269
+msgid ""
+"``type`` is the type of the layer. 0, 1, 2, 3, 4 corresponds to "
+"attention, self-attention, RNN, input and output layer respectively."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:270
+msgid ""
+"``size`` is the length of the output. \"x\", \"y\" correspond to document"
+" length / question length, respectively."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:271
+msgid "``input_size`` is the number of inputs the layer has."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:272
+msgid "``input`` is the indices of layers taken as input of this layer."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:273
+msgid ""
+"``output`` is the indices of layers use this layer's output as their "
+"input."
+msgstr ""
+
+#: ../../TrialExample/SquadEvolutionExamples.rst:274
+msgid "``is_delete`` means whether the layer is still available."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:6
+msgid "Write a Trial Run on NNI"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:8
+msgid ""
+"A **Trial** in NNI is an individual attempt at applying a configuration "
+"(e.g., a set of hyper-parameters) to a model."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:10
+msgid ""
+"To define an NNI trial, you need to first define the set of parameters "
+"(i.e., search space) and then update the model. NNI provides two "
+"approaches for you to define a trial: `NNI API <#nni-api>`__ and `NNI "
+"Python annotation <#nni-annotation>`__. You could also refer to `here "
+"<#more-examples>`__ for more trial examples."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:12
+msgid ":raw-html:`<a name=\"nni-api\"></a>`"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:15
+msgid "NNI API"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:18
+msgid "Step 1 - Prepare a SearchSpace parameters file."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:20
+msgid "An example is shown below:"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:31
+msgid ""
+"Refer to `SearchSpaceSpec <../Tutorial/SearchSpaceSpec.rst>`__ to learn "
+"more about search spaces. Tuner will generate configurations from this "
+"search space, that is, choosing a value for each hyperparameter from the "
+"range."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:34
+msgid "Step 2 - Update model code"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:38
+msgid "Import NNI"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:40
+msgid "Include ``import nni`` in your trial code to use NNI APIs."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:43
+msgid "Get configuration from Tuner"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:49
+msgid "``RECEIVED_PARAMS`` is an object, for example:"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:51
+msgid ""
+"``{\"conv_size\": 2, \"hidden_size\": 124, \"learning_rate\": 0.0307, "
+"\"dropout_rate\": 0.2029}``."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:54
+msgid "Report metric data periodically (optional)"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:60
+msgid ""
+"``metrics`` can be any python object. If users use the NNI built-in "
+"tuner/assessor, ``metrics`` can only have two formats: 1) a number e.g., "
+"float, int, or 2) a dict object that has a key named ``default`` whose "
+"value is a number. These ``metrics`` are reported to `assessor "
+"<../Assessor/BuiltinAssessor.rst>`__. Often, ``metrics`` includes the "
+"periodically evaluated loss or accuracy."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:63
+msgid "Report performance of the configuration"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:69
+msgid ""
+"``metrics`` can also be any python object. If users use the NNI built-in "
+"tuner/assessor, ``metrics`` follows the same format rule as that in "
+"``report_intermediate_result``\\ , the number indicates the model's "
+"performance, for example, the model's accuracy, loss etc. These "
+"``metrics`` are reported to `tuner <../Tuner/BuiltinTuner.rst>`__."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:72
+msgid "Step 3 - Enable NNI API"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:74
+msgid ""
+"To enable NNI API mode, you need to set useAnnotation to *false* and "
+"provide the path of the SearchSpace file was defined in step 1:"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:81
+msgid ""
+"You can refer to `here <../Tutorial/ExperimentConfig.rst>`__ for more "
+"information about how to set up experiment configurations."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:83
+msgid ""
+"Please refer to `here <../sdk_reference.rst>`__ for more APIs (e.g., "
+"``nni.get_sequence_id()``\\ ) provided by NNI."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:85
+msgid ":raw-html:`<a name=\"nni-annotation\"></a>`"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:88
+msgid "NNI Python Annotation"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:90
+msgid ""
+"An alternative to writing a trial is to use NNI's syntax for python. NNI "
+"annotations are simple, similar to comments. You don't have to make "
+"structural changes to your existing code. With a few lines of NNI "
+"annotation, you will be able to:"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:93
+msgid "annotate the variables you want to tune"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:94
+msgid "specify the range  in which you want to tune the variables"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:95
+msgid ""
+"annotate which variable you want to report as an intermediate result to "
+"``assessor``"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:96
+msgid ""
+"annotate which variable you want to report as the final result (e.g. "
+"model accuracy) to ``tuner``."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:98
+msgid ""
+"Again, take MNIST as an example, it only requires 2 steps to write a "
+"trial with NNI Annotation."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:101
+msgid "Step 1 - Update codes with annotations"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:103
+msgid ""
+"The following is a TensorFlow code snippet for NNI Annotation where the "
+"highlighted four lines are annotations that:"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:106
+msgid "tune batch_size and dropout_rate"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:107
+msgid "report test_acc every 100 steps"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:108
+msgid "lastly report test_acc as the final result."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:110
+msgid ""
+"It's worth noting that, as these newly added codes are merely "
+"annotations, you can still run your code as usual in environments without"
+" NNI installed."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:138
+msgid "**NOTE**\\ :"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:141
+msgid ""
+"``@nni.variable`` will affect its following line which should be an "
+"assignment statement whose left-hand side must be the same as the keyword"
+" ``name`` in the ``@nni.variable`` statement."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:142
+msgid ""
+"``@nni.report_intermediate_result``\\ /\\ ``@nni.report_final_result`` "
+"will send the data to assessor/tuner at that line."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:144
+msgid ""
+"For more information about annotation syntax and its usage, please refer "
+"to `Annotation <../Tutorial/AnnotationSpec.rst>`__."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:147
+msgid "Step 2 - Enable NNI Annotation"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:149
+msgid ""
+"In the YAML configure file, you need to set *useAnnotation* to true to "
+"enable NNI annotation:"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:156
+msgid "Standalone mode for debugging"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:158
+msgid ""
+"NNI supports a standalone mode for trial code to run without starting an "
+"NNI experiment. This is for finding out bugs in trial code more "
+"conveniently. NNI annotation natively supports standalone mode, as the "
+"added NNI related lines are comments. For NNI trial APIs, the APIs have "
+"changed behaviors in standalone mode, some APIs return dummy values, and "
+"some APIs do not really report values. Please refer to the following "
+"table for the full list of these APIs."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:170
+msgid ""
+"You can try standalone mode with the :githublink:`mnist example "
+"<examples/trials/mnist-pytorch>`. Simply run ``python3 mnist.py`` under "
+"the code directory. The trial code should successfully run with the "
+"default hyperparameter values."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:172
+msgid ""
+"For more information on debugging, please refer to `How to Debug "
+"<../Tutorial/HowToDebug.rst>`__"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:175
+msgid "Where are my trials?"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:178
+msgid "Local Mode"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:180
+msgid ""
+"In NNI, every trial has a dedicated directory for them to output their "
+"own data. In each trial, an environment variable called "
+"``NNI_OUTPUT_DIR`` is exported. Under this directory, you can find each "
+"trial's code, data, and other logs. In addition, each trial's log "
+"(including stdout) will be re-directed to a file named ``trial.log`` "
+"under that directory."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:182
+msgid ""
+"If NNI Annotation is used, the trial's converted code is in another "
+"temporary directory. You can check that in a file named ``run.sh`` under "
+"the directory indicated by ``NNI_OUTPUT_DIR``. The second line (i.e., the"
+" ``cd`` command) of this file will change directory to the actual "
+"directory where code is located. Below is an example of ``run.sh``\\ :"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:199
+msgid "Other Modes"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:201
+msgid ""
+"When running trials on other platforms like remote machine or PAI, the "
+"environment variable ``NNI_OUTPUT_DIR`` only refers to the output "
+"directory of the trial, while the trial code and ``run.sh`` might not be "
+"there. However, the ``trial.log`` will be transmitted back to the local "
+"machine in the trial's directory, which defaults to ``~/nni-"
+"experiments/$experiment_id$/trials/$trial_id$/``"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:203
+msgid ""
+"For more information, please refer to `HowToDebug "
+"<../Tutorial/HowToDebug.rst>`__."
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:205
+msgid ":raw-html:`<a name=\"more-examples\"></a>`"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:208
+msgid "More Trial Examples"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:211
+msgid ""
+"`Write logs to trial output directory for tensorboard "
+"<../Tutorial/Tensorboard.rst>`__"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:212
+msgid "`MNIST examples <MnistExamples.rst>`__"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:213
+msgid ""
+"`Finding out best optimizer for Cifar10 classification "
+"<Cifar10Examples.rst>`__"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:214
+msgid "`How to tune Scikit-learn on NNI <SklearnExamples.rst>`__"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:215
+msgid ""
+"`Automatic Model Architecture Search for Reading Comprehension. "
+"<SquadEvolutionExamples.rst>`__"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:216
+msgid "`Tuning GBDT on NNI <GbdtExample.rst>`__"
+msgstr ""
+
+#: ../../TrialExample/Trials.rst:217
+msgid "`Tuning RocksDB on NNI <RocksdbExamples.rst>`__"
+msgstr ""
+

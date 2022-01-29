@@ -1,0 +1,2363 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-29 17:40+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../CommunitySharings/HpoComparison.rst:2
+msgid "Hyper Parameter Optimization Comparison"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:4
+#: ../../CommunitySharings/NasComparison.rst:4
+msgid "*Posted by Anonymous Author*"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:6
+msgid ""
+"Comparison of Hyperparameter Optimization (HPO) algorithms on several "
+"problems."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:8
+msgid "Hyperparameter Optimization algorithms are list below:"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:11
+msgid "`Random Search <../Tuner/BuiltinTuner.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:12
+msgid "`Grid Search <../Tuner/BuiltinTuner.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:13
+msgid "`Evolution <../Tuner/BuiltinTuner.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:14
+msgid "`Anneal <../Tuner/BuiltinTuner.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:15
+msgid "`Metis <../Tuner/BuiltinTuner.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:16
+msgid "`TPE <../Tuner/BuiltinTuner.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:17
+msgid "`SMAC <../Tuner/BuiltinTuner.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:18
+msgid "`HyperBand <../Tuner/BuiltinTuner.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:19
+msgid "`BOHB <../Tuner/BuiltinTuner.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:21
+msgid "All algorithms run in NNI local environment."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:23
+msgid "Machine Environment："
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:37
+msgid "AutoGBDT Example"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:40
+#: ../../CommunitySharings/HpoComparison.rst:209
+msgid "Problem Description"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:42
+msgid ""
+"Nonconvex problem on the hyper-parameter search of `AutoGBDT "
+"<../TrialExample/GbdtExample.rst>`__ example."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:45
+#: ../../CommunitySharings/HpoComparison.rst:241
+msgid "Search Space"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:76
+msgid ""
+"The total search space is 1,204,224, we set the number of maximum trial "
+"to 1000. The time limitation is 48 hours."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:79
+#: ../../CommunitySharings/HpoComparison.rst:295
+msgid "Results"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:85
+msgid "Algorithm"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:86
+msgid "Best loss"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:87
+msgid "Average of Best 5 Losses"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:88
+msgid "Average of Best 10 Losses"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:89
+#: ../../CommunitySharings/HpoComparison.rst:93
+#: ../../CommunitySharings/HpoComparison.rst:97
+msgid "Random Search"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:90
+msgid "0.418854"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:91
+msgid "0.420352"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:92
+msgid "0.421553"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:94
+msgid "0.417364"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:95
+msgid "0.420024"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:96
+msgid "0.420997"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:98
+msgid "0.417861"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:99
+msgid "0.419744"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:100
+msgid "0.420642"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:101
+msgid "Grid Search"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:102
+#: ../../CommunitySharings/HpoComparison.rst:103
+#: ../../CommunitySharings/HpoComparison.rst:104
+msgid "0.498166"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:105
+#: ../../CommunitySharings/HpoComparison.rst:109
+#: ../../CommunitySharings/HpoComparison.rst:113
+#: ../../CommunitySharings/HpoComparison.rst:316
+#: ../../CommunitySharings/HpoComparison.rst:361
+msgid "Evolution"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:106
+#: ../../CommunitySharings/HpoComparison.rst:107
+#: ../../CommunitySharings/HpoComparison.rst:108
+#: ../../CommunitySharings/HpoComparison.rst:114
+#: ../../CommunitySharings/HpoComparison.rst:115
+#: ../../CommunitySharings/HpoComparison.rst:116
+#: ../../CommunitySharings/HpoComparison.rst:122
+#: ../../CommunitySharings/HpoComparison.rst:123
+msgid "0.409887"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:110
+msgid "0.413620"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:111
+msgid "0.413875"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:112
+msgid "0.414067"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:117
+#: ../../CommunitySharings/HpoComparison.rst:121
+#: ../../CommunitySharings/HpoComparison.rst:125
+#: ../../CommunitySharings/HpoComparison.rst:312
+#: ../../CommunitySharings/HpoComparison.rst:357
+msgid "Anneal"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:118
+msgid "0.414877"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:119
+msgid "0.417289"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:120
+msgid "0.418281"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:124
+msgid "0.410118"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:126
+msgid "0.413683"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:127
+msgid "0.416949"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:128
+msgid "0.417537"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:129
+#: ../../CommunitySharings/HpoComparison.rst:133
+#: ../../CommunitySharings/HpoComparison.rst:137
+#: ../../CommunitySharings/HpoComparison.rst:328
+#: ../../CommunitySharings/HpoComparison.rst:373
+msgid "Metis"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:130
+msgid "0.416273"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:131
+msgid "0.420411"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:132
+msgid "0.422380"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:134
+msgid "0.420262"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:135
+msgid "0.423175"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:136
+msgid "0.424816"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:138
+msgid "0.421027"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:139
+msgid "0.424172"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:140
+msgid "0.425714"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:141
+#: ../../CommunitySharings/HpoComparison.rst:145
+#: ../../CommunitySharings/HpoComparison.rst:149
+#: ../../CommunitySharings/HpoComparison.rst:320
+#: ../../CommunitySharings/HpoComparison.rst:365
+msgid "TPE"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:142
+#: ../../CommunitySharings/HpoComparison.rst:143
+#: ../../CommunitySharings/HpoComparison.rst:144
+msgid "0.414478"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:146
+#: ../../CommunitySharings/HpoComparison.rst:150
+msgid "0.415077"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:147
+msgid "0.417986"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:148
+msgid "0.418797"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:151
+msgid "0.417009"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:152
+msgid "0.418053"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:153
+#: ../../CommunitySharings/HpoComparison.rst:157
+#: ../../CommunitySharings/HpoComparison.rst:161
+#: ../../CommunitySharings/HpoComparison.rst:324
+#: ../../CommunitySharings/HpoComparison.rst:369
+msgid "SMAC"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:154
+#: ../../CommunitySharings/HpoComparison.rst:155
+#: ../../CommunitySharings/HpoComparison.rst:156
+#: ../../CommunitySharings/HpoComparison.rst:162
+#: ../../CommunitySharings/HpoComparison.rst:163
+#: ../../CommunitySharings/HpoComparison.rst:164
+msgid "**0.408386**"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:158
+#: ../../CommunitySharings/HpoComparison.rst:159
+#: ../../CommunitySharings/HpoComparison.rst:160
+msgid "0.414012"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:165
+#: ../../CommunitySharings/HpoComparison.rst:169
+#: ../../CommunitySharings/HpoComparison.rst:173
+msgid "BOHB"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:166
+msgid "0.410464"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:167
+msgid "0.415319"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:168
+msgid "0.417755"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:170
+msgid "0.418995"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:171
+msgid "0.420268"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:172
+msgid "0.422604"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:174
+msgid "0.415149"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:175
+msgid "0.418072"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:176
+msgid "0.418932"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:177
+#: ../../CommunitySharings/HpoComparison.rst:181
+#: ../../CommunitySharings/HpoComparison.rst:185
+msgid "HyperBand"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:178
+msgid "0.414065"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:179
+msgid "0.415222"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:180
+msgid "0.417628"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:182
+msgid "0.416807"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:183
+msgid "0.417549"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:184
+msgid "0.418828"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:186
+msgid "0.415550"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:187
+msgid "0.415977"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:188
+msgid "0.417186"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:189
+#: ../../CommunitySharings/HpoComparison.rst:193
+#: ../../CommunitySharings/HpoComparison.rst:197
+msgid "GP"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:190
+msgid "0.414353"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:191
+msgid "0.418563"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:192
+msgid "0.420263"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:194
+msgid "0.414395"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:195
+msgid "0.418006"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:196
+msgid "0.420431"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:198
+msgid "0.412943"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:199
+msgid "0.416566"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:200
+msgid "0.418443"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:203
+msgid ""
+"In this example, all the algorithms are used with default parameters. For"
+" Metis, there are about 300 trials because it runs slowly due to its high"
+" time complexity O(n^3) in Gaussian Process."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:206
+msgid "RocksDB Benchmark 'fillrandom' and 'readrandom'"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:211
+msgid ""
+"`DB_Bench <https://github.com/facebook/rocksdb/wiki/Benchmarking-"
+"tools>`__ is the main tool that is used to benchmark `RocksDB "
+"<https://rocksdb.org/>`__\\ 's performance. It has so many hapermeter to "
+"tune."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:213
+msgid ""
+"The performance of ``DB_Bench`` is associated with the machine "
+"configuration and installation method. We run the ``DB_Bench``\\ in the "
+"Linux machine and install the Rock in shared library."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:216
+msgid "Machine configuration"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:228
+msgid "Storage performance"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:230
+msgid ""
+"**Latency**\\ : each IO request will take some time to complete, this is "
+"called the average latency. There are several factors that would affect "
+"this time including network connection quality and hard disk IO "
+"performance."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:232
+msgid ""
+"**IOPS**\\ : **IO operations per second**\\ , which means the amount of "
+"*read or write operations* that could be done in one seconds time."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:234
+msgid ""
+"**IO size**\\ : **the size of each IO request**. Depending on the "
+"operating system and the application/service that needs disk access it "
+"will issue a request to read or write a certain amount of data at the "
+"same time."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:236
+msgid "**Throughput (in MB/s) = Average IO size x IOPS**"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:238
+msgid ""
+"IOPS is related to online processing ability and we use the IOPS as the "
+"metric in my experiment."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:292
+msgid ""
+"The search space is enormous (about 10^40) and we set the maximum number "
+"of trial to 100 to limit the computation resource."
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:298
+msgid "fillrandom' Benchmark"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:304
+#: ../../CommunitySharings/HpoComparison.rst:349
+msgid "Model"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:305
+#: ../../CommunitySharings/HpoComparison.rst:350
+msgid "Best IOPS (Repeat 1)"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:306
+#: ../../CommunitySharings/HpoComparison.rst:351
+msgid "Best IOPS (Repeat 2)"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:307
+#: ../../CommunitySharings/HpoComparison.rst:352
+msgid "Best IOPS (Repeat 3)"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:308
+#: ../../CommunitySharings/HpoComparison.rst:353
+msgid "Random"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:309
+msgid "449901"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:310
+msgid "427620"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:311
+msgid "477174"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:313
+msgid "461896"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:314
+msgid "467150"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:315
+msgid "437528"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:317
+msgid "436755"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:318
+msgid "389956"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:319
+msgid "389790"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:321
+msgid "378346"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:322
+msgid "482316"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:323
+msgid "468989"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:325
+msgid "491067"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:326
+msgid "490472"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:327
+msgid "**491136**"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:329
+msgid "444920"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:330
+msgid "457060"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:331
+msgid "454438"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:334
+#: ../../CommunitySharings/HpoComparison.rst:379
+msgid "Figure:"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:343
+msgid "'readrandom' Benchmark"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:354
+msgid "2276157"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:355
+msgid "2285301"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:356
+msgid "2275142"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:358
+msgid "2286330"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:359
+msgid "2282229"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:360
+msgid "2284012"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:362
+msgid "2286524"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:363
+msgid "2283673"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:364
+msgid "2283558"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:366
+msgid "2287366"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:367
+msgid "2282865"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:368
+msgid "2281891"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:370
+msgid "2270874"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:371
+msgid "2284904"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:372
+msgid "2282266"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:374
+msgid "**2287696**"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:375
+msgid "2283496"
+msgstr ""
+
+#: ../../CommunitySharings/HpoComparison.rst:376
+msgid "2277701"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:2
+msgid "Comparison of Filter Pruning Algorithms"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:4
+msgid ""
+"To provide an initial insight into the performance of various filter "
+"pruning algorithms, we conduct extensive experiments with various pruning"
+" algorithms on some benchmark models and datasets. We present the "
+"experiment result in this document. In addition, we provide friendly "
+"instructions on the re-implementation of these experiments to facilitate "
+"further contributions to this effort."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:10
+msgid "Experiment Setting"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:12
+msgid "The experiments are performed with the following pruners/datasets/models:"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:16
+msgid ""
+"Models: :githublink:`VGG16, ResNet18, ResNet50 "
+"<examples/model_compress/pruning/models/cifar10>`"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:19
+msgid "Datasets: CIFAR-10"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:22
+msgid "Pruners:"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:25
+msgid "These pruners are included:"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:27
+msgid ""
+"Pruners with scheduling : ``SimulatedAnnealing Pruner``\\ , ``NetAdapt "
+"Pruner``\\ , ``AutoCompress Pruner``. Given the overal sparsity "
+"requirement, these pruners can automatically generate a sparsity "
+"distribution among different layers."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:29
+msgid ""
+"One-shot pruners: ``L1Filter Pruner``\\ , ``L2Filter Pruner``\\ , ``FPGM "
+"Pruner``. The sparsity of each layer is set the same as the overall "
+"sparsity in this experiment."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:33
+msgid "Only **filter pruning** performances are compared here."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:35
+msgid ""
+"For the pruners with scheduling, ``L1Filter Pruner`` is used as the base "
+"algorithm. That is to say, after the sparsities distribution is decided "
+"by the scheduling algorithm, ``L1Filter Pruner`` is used to performn real"
+" pruning."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:38
+msgid ""
+"All the pruners listed above are implemented in :githublink:`nni "
+"<docs/en_US/Compression/Overview.rst>`."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:41
+msgid "Experiment Result"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:43
+msgid ""
+"For each dataset/model/pruner combination, we prune the model to "
+"different levels by setting a series of target sparsities for the pruner."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:45
+msgid ""
+"Here we plot both **Number of Weights - Performances** curve and **FLOPs "
+"- Performance** curve. As a reference, we also plot the result declared "
+"in the paper `AutoCompress: An Automatic DNN Structured Pruning Framework"
+" for Ultra-High Compression Rates <http://arxiv.org/abs/1907.03141>`__ "
+"for models VGG16 and ResNet18 on CIFAR-10."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:48
+msgid "The experiment result are shown in the following figures:"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:50
+msgid "CIFAR-10, VGG16:"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:58
+msgid "CIFAR-10, ResNet18:"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:66
+msgid "CIFAR-10, ResNet50:"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:75
+msgid "Analysis"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:77
+msgid "From the experiment result, we get the following conclusions:"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:80
+msgid ""
+"Given the constraint on the number of parameters, the pruners with "
+"scheduling ( ``AutoCompress Pruner`` , ``SimualatedAnnealing Pruner`` ) "
+"performs better than the others when the constraint is strict. However, "
+"they have no such advantage in FLOPs/Performances comparison since only "
+"number of parameters constraint is considered in the optimization "
+"process;"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:81
+msgid ""
+"The basic algorithms ``L1Filter Pruner`` , ``L2Filter Pruner`` , ``FPGM "
+"Pruner`` performs very similarly in these experiments;"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:82
+msgid ""
+"``NetAdapt Pruner`` can not achieve very high compression rate. This is "
+"caused by its mechanism that it prunes only one layer each pruning "
+"iteration. This leads to un-acceptable complexity if the sparsity per "
+"iteration is much lower than the overall sparisity constraint."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:85
+msgid "Experiments Reproduction"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:88
+msgid "Implementation Details"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:92
+msgid ""
+"The experiment results are all collected with the default configuration "
+"of the pruners in nni, which means that when we call a pruner class in "
+"nni, we don't change any default class arguments."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:95
+msgid ""
+"Both FLOPs and the number of parameters are counted with "
+":githublink:`Model FLOPs/Parameters Counter "
+"<docs/en_US/Compression/CompressionUtils.md#model-flopsparameters-"
+"counter>` after :githublink:`model speed up "
+"<docs/en_US/Compression/ModelSpeedup.rst>`. This avoids potential issues "
+"of counting them of masked models."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:99
+msgid ""
+"The experiment code can be found :githublink:`here "
+"<examples/model_compress/pruning/auto_pruners_torch.py>`."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:102
+msgid "Experiment Result Rendering"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:106
+msgid ""
+"If you follow the practice in the :githublink:`example "
+"<examples/model_compress/pruning/auto_pruners_torch.py>`\\ , for every "
+"single pruning experiment, the experiment result will be saved in JSON "
+"format as follows:"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:117
+msgid ""
+"The experiment results are saved :githublink:`here "
+"<examples/model_compress/pruning/comparison_of_pruners>`. You can refer "
+"to :githublink:`analyze "
+"<examples/model_compress/pruning/comparison_of_pruners/analyze.py>` to "
+"plot new performance comparison figures."
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:121
+msgid "Contribution"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:124
+msgid "TODO Items"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:127
+msgid "Pruners constrained by FLOPS/latency"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:128
+msgid "More pruning algorithms/datasets/models"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:131
+msgid "Issues"
+msgstr ""
+
+#: ../../CommunitySharings/ModelCompressionComparison.rst:133
+msgid ""
+"For algorithm implementation & experiment issues, please `create an issue"
+" <https://github.com/microsoft/nni/issues/new/>`__."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:6
+msgid ""
+"NNI review article from Zhihu: :raw-html:`<an open source project with "
+"highly reasonable design>` - By Garvin Li"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:8
+msgid ""
+"The article is by a NNI user on Zhihu forum. In the article, Garvin had "
+"shared his experience on using NNI for Automatic Feature Engineering. We "
+"think this article is very useful for users who are interested in using "
+"NNI for feature engineering. With author's permission, we translated the "
+"original article into English."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:10
+msgid ""
+"**source**\\ : `如何看待微软最新发布的AutoML平台NNI？By Garvin Li "
+"<https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:13
+msgid "01 Overview of AutoML"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:15
+msgid ""
+"In author's opinion, AutoML is not only about hyperparameter "
+"optimization, but also a process that can target various stages of the "
+"machine learning process, including feature engineering, NAS, HPO, etc."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:20
+msgid "02 Overview of NNI"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:22
+msgid ""
+"NNI (Neural Network Intelligence) is an open source AutoML toolkit from "
+"Microsoft, to help users design and tune machine learning models, neural "
+"network architectures, or a complex system’s parameters in an efficient "
+"and automatic way."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:27
+msgid ""
+"Link: `https://github.com/Microsoft/nni "
+"<https://github.com/Microsoft/nni>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:29
+msgid ""
+"In general, most of Microsoft tools have one prominent characteristic: "
+"the design is highly reasonable (regardless of the technology innovation "
+"degree). NNI's AutoFeatureENG basically meets all user requirements of "
+"AutoFeatureENG with a very reasonable underlying framework design."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:35
+msgid "03 Details of NNI-AutoFeatureENG"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:39
+msgid ""
+"The article is following the github project: "
+"`https://github.com/SpongebBob/tabular_automl_NNI "
+"<https://github.com/SpongebBob/tabular_automl_NNI>`__."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:42
+msgid ""
+"Each new user could do AutoFeatureENG with NNI easily and efficiently. To"
+" exploring the AutoFeatureENG capability, downloads following required "
+"files, and then run NNI install through pip."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:49
+msgid ""
+"NNI treats AutoFeatureENG as a two-steps-task, feature generation "
+"exploration and feature selection. Feature generation exploration is "
+"mainly about feature derivation and high-order feature combination."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:52
+msgid "04 Feature Exploration"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:54
+msgid ""
+"For feature derivation, NNI offers many operations which could "
+"automatically generate new features, which list \\ `as following "
+"<https://github.com/SpongebBob/tabular_automl_NNI/blob/master/AutoFEOp.md>`__\\"
+"  :"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:56
+msgid ""
+"**count**\\ : Count encoding is based on replacing categories with their "
+"counts computed on the train set, also named frequency encoding."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:58
+msgid ""
+"**target**\\ : Target encoding is based on encoding categorical variable "
+"values with the mean of target variable per value."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:60
+msgid ""
+"**embedding**\\ : Regard features as sentences, generate vectors using "
+"*Word2Vec.*"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:62
+msgid ""
+"**crosscout**\\ : Count encoding on more than one-dimension, alike CTR "
+"(Click Through Rate)."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:64
+msgid ""
+"**aggregete**\\ : Decide the aggregation functions of the features, "
+"including min/max/mean/var."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:66
+msgid "**nunique**\\ : Statistics of the number of unique features."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:68
+msgid "**histsta**\\ : Statistics of feature buckets, like histogram statistics."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:70
+msgid ""
+"Search space could be defined in a **JSON file**\\ : to define how "
+"specific features intersect, which two columns intersect and how features"
+" generate from corresponding columns."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:78
+msgid ""
+"The picture shows us the procedure of defining search space. NNI provides"
+" count encoding for 1-order-op, as well as cross count encoding, aggerate"
+" statistics (min max var mean median nunique) for 2-order-op."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:80
+msgid ""
+"For example, we want to search the features which are a frequency "
+"encoding (valuecount) features on columns name {“C1”, ...,” C26”}, in the"
+" following way:"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:88
+msgid ""
+"we can define a cross frequency encoding (value count on cross dims) "
+"method on columns {\"C1\",...,\"C26\"} x {\"C1\",...,\"C26\"} in the "
+"following way:"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:96
+msgid ""
+"The purpose of Exploration is to generate new features. You can use "
+"**get_next_parameter** function to get received feature candidates of one"
+" trial."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:100
+msgid "RECEIVED_PARAMS = nni.get_next_parameter()"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:104
+msgid "05 Feature selection"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:106
+msgid ""
+"To avoid feature explosion and overfitting, feature selection is "
+"necessary. In the feature selection of NNI-AutoFeatureENG, LightGBM "
+"(Light Gradient Boosting Machine), a gradient boosting framework "
+"developed by Microsoft, is mainly promoted."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:114
+msgid ""
+"If you have used **XGBoost** or **GBDT**\\ , you would know the algorithm"
+" based on tree structure can easily calculate the importance of each "
+"feature on results. LightGBM is able to make feature selection naturally."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:116
+msgid ""
+"The issue is that selected features might be applicable to *GBDT* "
+"(Gradient Boosting Decision Tree), but not to the linear algorithm like "
+"*LR* (Logistic Regression)."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:125
+msgid "06 Summary"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:127
+msgid ""
+"NNI's AutoFeatureEng sets a well-established standard, showing us the "
+"operation procedure, available modules, which is highly convenient to "
+"use. However, a simple model is probably not enough for good results."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:130
+msgid "Suggestions to NNI"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:132
+msgid ""
+"About Exploration: If consider using DNN (like xDeepFM) to extract high-"
+"order feature would be better."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:134
+msgid ""
+"About Selection: There could be more intelligent options, such as "
+"automatic selection system based on downstream models."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:136
+msgid ""
+"Conclusion: NNI could offer users some inspirations of design and it is a"
+" good open source project. I suggest researchers leverage it to "
+"accelerate the AI research."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_AutoFeatureEng.rst:138
+msgid ""
+"Tips: Because the scripts of open source projects are compiled based on "
+"gcc7, Mac system may encounter problems of gcc (GNU Compiler Collection)."
+" The solution is as follows:"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:2
+#: ../../CommunitySharings/community_sharings.rst:9
+msgid "Use NNI on Google Colab"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:4
+msgid ""
+"NNI can easily run on Google Colab platform. However, Colab doesn't "
+"expose its public IP and ports, so by default you can not access NNI's "
+"Web UI on Colab. To solve this, you need a reverse proxy software like "
+"``ngrok`` or ``frp``. This tutorial will show you how to use ngrok to "
+"access NNI's Web UI on Colab."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:7
+msgid "How to Open NNI's Web UI on Google Colab"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:10
+msgid "Install required packages and softwares."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:21
+msgid ""
+"Register a ngrok account `here <https://ngrok.com/>`__\\ , then connect "
+"to your account using your authtoken."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:28
+msgid ""
+"Start an NNI example on a port bigger than 1024, then start ngrok with "
+"the same port. If you want to use gpu, make sure gpuNum >= 1 in "
+"config.yml. Use ``get_ipython()`` to start ngrok since it will be stuck "
+"if you use ``! ngrok http 5000 &``."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:36
+msgid "Check the public url."
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:42
+msgid ""
+"You will see an url like http://xxxx.ngrok.io after step 4, open this url"
+" and you will find NNI's Web UI. Have fun :)"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:45
+msgid "Access Web UI with frp"
+msgstr ""
+
+#: ../../CommunitySharings/NNI_colab_support.rst:47
+msgid ""
+"frp is another reverse proxy software with similar functions. However, "
+"frp doesn't provide free public urls, so you may need an server with "
+"public IP as a frp server. See `here <https://github.com/fatedier/frp>`__"
+" to know more about how to deploy frp."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:2
+#: ../../CommunitySharings/perf_compare.rst:7
+msgid "Neural Architecture Search Comparison"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:6
+msgid ""
+"Train and Compare NAS (Neural Architecture Search) models including "
+"Autokeras, DARTS, ENAS and NAO."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:8
+msgid "Their source code link is as below:"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:12
+msgid ""
+"Autokeras: `https://github.com/jhfjhfj1/autokeras "
+"<https://github.com/jhfjhfj1/autokeras>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:15
+msgid ""
+"DARTS: `https://github.com/quark0/darts "
+"<https://github.com/quark0/darts>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:18
+msgid ""
+"ENAS: `https://github.com/melodyguan/enas "
+"<https://github.com/melodyguan/enas>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:21
+msgid ""
+"NAO: `https://github.com/renqianluo/NAO "
+"<https://github.com/renqianluo/NAO>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:24
+msgid "Experiment Description"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:26
+msgid ""
+"To avoid over-fitting in **CIFAR-10**\\ , we also compare the models in "
+"the other five datasets including Fashion-MNIST, CIFAR-100, OUI-Adience-"
+"Age, ImageNet-10-1 (subset of ImageNet), ImageNet-10-2 (another subset of"
+" ImageNet). We just sample a subset with 10 different labels from "
+"ImageNet to make ImageNet-10-1 or ImageNet-10-2."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:32
+msgid "Dataset"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:33
+msgid "Training Size"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:34
+msgid "Numer of Classes"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:35
+msgid "Descriptions"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:36
+msgid "`Fashion-MNIST <https://github.com/zalandoresearch/fashion-mnist>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:37
+msgid "60,000"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:38
+#: ../../CommunitySharings/NasComparison.rst:42
+#: ../../CommunitySharings/NasComparison.rst:54
+#: ../../CommunitySharings/NasComparison.rst:58
+msgid "10"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:39
+msgid ""
+"T-shirt/top, trouser, pullover, dress, coat, sandal, shirt, sneaker, bag "
+"and ankle boot."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:40
+msgid "`CIFAR-10 <https://www.cs.toronto.edu/~kriz/cifar.html>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:41
+#: ../../CommunitySharings/NasComparison.rst:45
+msgid "50,000"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:43
+msgid "Airplanes, cars, birds, cats, deer, dogs, frogs, horses, ships and trucks."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:44
+msgid "`CIFAR-100 <https://www.cs.toronto.edu/~kriz/cifar.html>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:46
+msgid "100"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:47
+msgid "Similar to CIFAR-10 but with 100 classes and 600 images each."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:48
+msgid ""
+"`OUI-Adience-Age <https://talhassner.github.io/home/projects/Adience"
+"/Adience-data.html>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:49
+msgid "26,580"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:50
+msgid "8"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:51
+msgid "8 age groups/labels (0-2, 4-6, 8-13, 15-20, 25-32, 38-43, 48-53, 60-)."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:52
+msgid "`ImageNet-10-1 <http://www.image-net.org/>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:53
+#: ../../CommunitySharings/NasComparison.rst:57
+msgid "9,750"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:55
+msgid ""
+"Coffee mug, computer keyboard, dining table, wardrobe, lawn mower, "
+"microphone, swing, sewing machine, odometer and gas pump."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:56
+msgid "`ImageNet-10-2 <http://www.image-net.org/>`__"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:59
+msgid ""
+"Drum, banj, whistle, grand piano, violin, organ, acoustic guitar, "
+"trombone, flute and sax."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:62
+msgid ""
+"We do not change the default fine-tuning technique in their source code. "
+"In order to match each task, the codes of input image shape and output "
+"numbers are changed."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:64
+msgid ""
+"Search phase time for all NAS methods is **two days** as well as the "
+"retrain time.  Average results are reported based on **three repeat "
+"times**. Our evaluation machines have one Nvidia Tesla P100 GPU, 112GB of"
+" RAM and one 2.60GHz CPU (Intel E5-2690)."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:66
+msgid ""
+"For NAO, it requires too much computing resources, so we only use NAO-WS "
+"which provides the pipeline script."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:68
+msgid ""
+"For AutoKeras, we used  0.2.18 version because it was the latest version "
+"when we started the experiment."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:71
+msgid "NAS Performance"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:77
+#: ../../CommunitySharings/NasComparison.rst:129
+msgid "NAS"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:78
+msgid "AutoKeras (%)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:79
+#: ../../CommunitySharings/NasComparison.rst:131
+msgid "ENAS (macro) (%)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:80
+#: ../../CommunitySharings/NasComparison.rst:132
+msgid "ENAS (micro) (%)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:81
+#: ../../CommunitySharings/NasComparison.rst:133
+msgid "DARTS (%)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:82
+#: ../../CommunitySharings/NasComparison.rst:134
+msgid "NAO-WS (%)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:83
+msgid "Fashion-MNIST"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:84
+msgid "91.84"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:85
+msgid "95.44"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:86
+msgid "95.53"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:87
+msgid "**95.74**"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:88
+msgid "95.20"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:89
+msgid "CIFAR-10"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:90
+msgid "75.78"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:91
+msgid "95.68"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:92
+msgid "**96.16**"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:93
+msgid "94.23"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:94
+msgid "95.64"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:95
+msgid "CIFAR-100"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:96
+msgid "43.61"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:97
+msgid "78.13"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:98
+msgid "78.84"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:99
+msgid "**79.74**"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:100
+msgid "75.75"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:101
+msgid "OUI-Adience-Age"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:102
+msgid "63.20"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:103
+msgid "**80.34**"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:104
+msgid "78.55"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:105
+msgid "76.83"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:106
+msgid "72.96"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:107
+msgid "ImageNet-10-1"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:108
+msgid "61.80"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:109
+msgid "77.07"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:110
+msgid "79.80"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:111
+msgid "**80.48**"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:112
+msgid "77.20"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:113
+msgid "ImageNet-10-2"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:114
+msgid "37.20"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:115
+msgid "58.13"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:116
+msgid "56.47"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:117
+msgid "60.53"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:118
+msgid "**61.20**"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:121
+msgid "Unfortunately, we cannot reproduce all the results in the paper."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:123
+msgid "The best or average results reported in the paper:"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:130
+msgid "AutoKeras(%)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:135
+msgid "CIFAR- 10"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:136
+msgid "88.56(best)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:137
+msgid "96.13(best)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:138
+msgid "97.11(best)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:139
+msgid "97.17(average)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:140
+msgid "96.47(best)"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:143
+msgid ""
+"For AutoKeras, it has relatively worse performance across all datasets "
+"due to its random factor on network morphism."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:145
+msgid ""
+"For ENAS, ENAS (macro) shows good results in OUI-Adience-Age and ENAS "
+"(micro)  shows good results in CIFAR-10."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:147
+#, python-format
+msgid ""
+"For DARTS, it has a good performance on some datasets but we found its "
+"high variance in other datasets. The difference among three runs of "
+"benchmarks can be up to 5.37% in OUI-Adience-Age and 4.36% in "
+"ImageNet-10-1."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:149
+msgid ""
+"For NAO-WS, it shows good results in ImageNet-10-2 but it can perform "
+"very poorly in OUI-Adience-Age."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:152
+msgid "Reference"
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:156
+msgid ""
+"Jin, Haifeng, Qingquan Song, and Xia Hu. \"Efficient neural architecture "
+"search with network morphism.\" *arXiv preprint arXiv:1806.10282* (2018)."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:159
+msgid ""
+"Liu, Hanxiao, Karen Simonyan, and Yiming Yang. \"Darts: Differentiable "
+"architecture search.\" arXiv preprint arXiv:1806.09055 (2018)."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:162
+msgid ""
+"Pham, Hieu, et al. \"Efficient Neural Architecture Search via Parameters "
+"Sharing.\" international conference on machine learning (2018): "
+"4092-4101."
+msgstr ""
+
+#: ../../CommunitySharings/NasComparison.rst:165
+msgid ""
+"Luo, Renqian, et al. \"Neural Architecture Optimization.\" neural "
+"information processing systems (2018): 7827-7838."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:6
+msgid "Parallelizing a Sequential Algorithm TPE"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:8
+msgid ""
+"TPE approaches were actually run asynchronously in order to make use of "
+"multiple compute nodes and to avoid wasting time waiting for trial "
+"evaluations to complete. For the TPE approach, the so-called constant "
+"liar approach was used: each time a candidate point x∗ was proposed, a "
+"fake fitness evaluation of the y was assigned temporarily, until the "
+"evaluation completed and reported the actual loss f(x∗)."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:11
+msgid "Introduction and Problems"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:14
+msgid "Sequential Model-based Global Optimization"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:16
+msgid ""
+"Sequential Model-Based Global Optimization (SMBO) algorithms have been "
+"used in many applications where evaluation of the fitness function is "
+"expensive. In an application where the true fitness function f: X → R is "
+"costly to evaluate, model-based algorithms approximate f with a surrogate"
+" that is cheaper to evaluate. Typically the inner loop in an SMBO "
+"algorithm is the numerical optimization of this surrogate, or some "
+"transformation of the surrogate. The point x∗ that maximizes the "
+"surrogate (or its transformation) becomes the proposal for where the true"
+" function f should be evaluated. This active-learning-like algorithm "
+"template is summarized in the figure below. SMBO algorithms differ in "
+"what criterion they optimize to obtain x∗ given a model (or surrogate) of"
+" f, and in they model f via observation history H."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:24
+msgid ""
+"The algorithms in this work optimize the criterion of Expected "
+"Improvement (EI). Other criteria have been suggested, such as Probability"
+" of Improvement and Expected Improvement, minimizing the Conditional "
+"Entropy of the Minimizer, and the bandit-based criterion. We chose to use"
+" the EI criterion in TPE because it is intuitive, and has been shown to "
+"work well in a variety of settings. Expected improvement is the "
+"expectation under some model M of f : X → RN that f(x) will exceed "
+"(negatively) some threshold y∗:"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:32
+msgid ""
+"Since calculation of p(y|x) is expensive, TPE approach modeled p(y|x) by "
+"p(x|y) and p(y).The TPE defines p(x|y) using two such densities:"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:40
+msgid ""
+"where l(x) is the density formed by using the observations {x(i)} such "
+"that corresponding loss f(x(i)) was less than y∗ and g(x) is the density "
+"formed by using the remaining observations. TPE algorithm depends on a y∗"
+" that is larger than the best observed f(x) so that some points can be "
+"used to form l(x). The TPE algorithm chooses y∗ to be some quantile γ of "
+"the observed y values, so that p(y<\\ ``y∗``\\ ) = γ, but no specific "
+"model for p(y) is necessary. The tree-structured form of l and g makes it"
+" easy to draw many candidates according to l and evaluate them according "
+"to g(x)/l(x). On each iteration, the algorithm returns the candidate x∗ "
+"with the greatest EI."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:43
+msgid ""
+"Here is a simulation of the TPE algorithm in a two-dimensional search "
+"space. The difference of background color represents different values. It"
+" can be seen that TPE combines exploration and exploitation very well. "
+"(Black indicates the points of this round samples, and yellow indicates "
+"the points has been taken in the history.)"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:51
+msgid ""
+"**Since EI is a continuous function, the highest x of EI is determined at"
+" a certain status.** As shown in the figure below, the blue triangle is "
+"the point that is most likely to be sampled in this state."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:59
+msgid ""
+"TPE performs well when we use it in sequential, but if we provide a "
+"larger concurrency, then **there will be a large number of points "
+"produced in the same EI state**\\ , too concentrated points will reduce "
+"the exploration ability of the tuner, resulting in resources waste."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:61
+msgid ""
+"Here is the simulation figure when we set ``concurrency=60``\\ , It can "
+"be seen that this phenomenon is obvious."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:70
+msgid "Research solution"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:73
+msgid "Approximated q-EI Maximization"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:75
+msgid ""
+"The multi-points criterion that we have presented below can potentially "
+"be used to deliver an additional design of experiments in one step "
+"through the resolution of the optimization problem."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:83
+msgid ""
+"However, the computation of q-EI becomes intensive as q increases. After "
+"our research, there are four popular greedy strategies that approach the "
+"result of problem while avoiding its numerical cost."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:86
+msgid ""
+"Solution 1: Believing the OK Predictor: The KB(Kriging Believer) "
+"Heuristic Strategy"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:88
+msgid ""
+"The Kriging Believer strategy replaces the conditional knowledge about "
+"the responses at the sites chosen within the last iterations by "
+"deterministic values equal to the expectation of the Kriging predictor. "
+"Keeping the same notations as previously, the strategy can be summed up "
+"as follows:"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:96
+msgid ""
+"This sequential strategy delivers a q-points design and is "
+"computationally affordable since it relies on the analytically known EI, "
+"optimized in d dimensions. However, there is a risk of failure, since "
+"believing an OK predictor that overshoots the observed data may lead to a"
+" sequence that gets trapped in a non-optimal region for many iterations. "
+"We now propose a second strategy that reduces this risk."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:99
+msgid "Solution 2: The CL(Constant Liar) Heuristic Strategy"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:101
+msgid ""
+"Let us now consider a sequential strategy in which the metamodel is "
+"updated (still without hyperparameter re-estimation) at each iteration "
+"with a value L exogenously fixed by the user, here called a ”lie”. The "
+"strategy referred to as the Constant Liar consists in lying with the same"
+" value L at every iteration: maximize EI (i.e. find xn+1), actualize the "
+"model as if y(xn+1) = L, and so on always with the same L ∈ R:"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:109
+msgid ""
+"L should logically be determined on the basis of the values taken by y at"
+" X. Three values, min{Y}, mean{Y}, and max{Y} are considered here. **The "
+"larger L is, the more explorative the algorithm will be, and vice "
+"versa.**"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:111
+msgid ""
+"We have simulated the method above. The following figure shows the result"
+" of using mean value liars to maximize q-EI. We find that the points we "
+"have taken have begun to be scattered."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:120
+msgid "Experiment"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:123
+msgid "Branin-Hoo"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:125
+msgid ""
+"The four optimization strategies presented in the last section are now "
+"compared on the Branin-Hoo function which is a classical test-case in "
+"global optimization."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:133
+msgid ""
+"The recommended values of a, b, c, r, s and t are: a = 1, b = 5.1 ⁄ "
+"(4π2), c = 5 ⁄ π, r = 6, s = 10 and t = 1 ⁄ (8π). This function has three"
+" global minimizers(-3.14, 12.27), (3.14, 2.27), (9.42, 2.47)."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:135
+msgid ""
+"Next is the comparison of the q-EI associated with the q first points (q "
+"∈ [1,10]) given by the constant liar strategies (min and max), 2000 "
+"q-points designs uniformly drawn for every q, and 2000 q-points LHS "
+"designs taken at random for every q."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:143
+msgid ""
+"As we can seen on figure, CL[max] and CL[min] offer very good q-EI "
+"results compared to random designs, especially for small values of q."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:146
+msgid "Gaussian Mixed Model function"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:148
+msgid ""
+"We also compared the case of using parallel optimization and not using "
+"parallel optimization. A two-dimensional multimodal Gaussian Mixed "
+"distribution is used to simulate, the following is our result:"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:155
+msgid "concurrency=80"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:156
+msgid "concurrency=60"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:157
+msgid "concurrency=40"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:158
+msgid "concurrency=20"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:159
+msgid "concurrency=10"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:160
+msgid "Without parallel optimization"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:161
+msgid "avg =  0.4841 :raw-html:`<br>` var =  0.1953"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:162
+msgid "avg =  0.5155 :raw-html:`<br>` var =  0.2219"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:163
+msgid "avg =  0.5773 :raw-html:`<br>` var =  0.2570"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:164
+msgid "avg =  0.4680 :raw-html:`<br>` var =  0.1994"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:165
+msgid "avg = 0.2774 :raw-html:`<br>` var = 0.1217"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:166
+msgid "With parallel optimization"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:167
+msgid "avg =  0.2132 :raw-html:`<br>` var = 0.0700"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:168
+msgid "avg =  0.2177\\ :raw-html:`<br>`\\ var =  0.0796"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:169
+msgid "avg =  0.1835 :raw-html:`<br>` var =  0.0533"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:170
+msgid "avg =  0.1671 :raw-html:`<br>` var =  0.0413"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:171
+msgid "avg =  0.1918 :raw-html:`<br>` var =  0.0697"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:174
+msgid ""
+"Note: The total number of samples per test is 240 (ensure that the budget"
+" is equal). The trials in each form were repeated 1000 times, the value "
+"is the average and variance of the best results in 1000 trials."
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:177
+msgid "References"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:179
+msgid ""
+"[1] James Bergstra, Remi Bardenet, Yoshua Bengio, Balazs Kegl. "
+"`Algorithms for Hyper-Parameter Optimization. "
+"<https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-"
+"optimization.pdf>`__"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:181
+#, python-format
+msgid ""
+"[2] Meng-Hiot Lim, Yew-Soon Ong. `Computational Intelligence in Expensive"
+" Optimization Problems. "
+"<https://link.springer.com/content/pdf/10.1007%2F978-3-642-10701-6.pdf>`__"
+msgstr ""
+
+#: ../../CommunitySharings/ParallelizingTpeSearch.rst:183
+#, python-format
+msgid ""
+"[3] M. Jordan, J. Kleinberg, B. Scho¨lkopf. `Pattern Recognition and "
+"Machine Learning. "
+"<http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf>`__"
+msgstr ""
+
+#: ../../CommunitySharings/RecommendersSvd.rst:2
+msgid "Automatically tuning SVD (NNI in Recommenders)"
+msgstr ""
+
+#: ../../CommunitySharings/RecommendersSvd.rst:4
+msgid ""
+"In this tutorial, we first introduce a github repo `Recommenders "
+"<https://github.com/Microsoft/Recommenders>`__. It is a repository that "
+"provides examples and best practices for building recommendation systems,"
+" provided as Jupyter notebooks. It has various models that are popular "
+"and widely deployed in recommendation systems. To provide a complete end-"
+"to-end experience, they present each example in five key tasks, as shown "
+"below:"
+msgstr ""
+
+#: ../../CommunitySharings/RecommendersSvd.rst:7
+msgid ""
+"`Prepare Data "
+"<https://github.com/microsoft/recommenders/tree/master/examples/01_prepare_data>`__\\"
+" : Preparing and loading data for each recommender algorithm."
+msgstr ""
+
+#: ../../CommunitySharings/RecommendersSvd.rst:8
+msgid ""
+"Model(`collaborative filtering algorithms "
+"<https://github.com/microsoft/recommenders/tree/master/examples/02_model_collaborative_filtering>`__\\"
+" , `content-based filtering algorithms "
+"<https://github.com/microsoft/recommenders/tree/master/examples/02_model_content_based_filtering>`__\\"
+" , `hybrid algorithms "
+"<https://github.com/microsoft/recommenders/tree/master/examples/02_model_hybrid>`__\\"
+" ): Building models using various classical and deep learning recommender"
+" algorithms such as Alternating Least Squares (\\ `ALS "
+"<https://spark.apache.org/docs/latest/api/python/_modules/pyspark/ml/recommendation.html#ALS>`__\\"
+" ) or eXtreme Deep Factorization Machines (\\ `xDeepFM "
+"<https://arxiv.org/abs/1803.05170>`__\\ )."
+msgstr ""
+
+#: ../../CommunitySharings/RecommendersSvd.rst:9
+msgid ""
+"`Evaluate "
+"<https://github.com/microsoft/recommenders/tree/master/examples/03_evaluate>`__\\"
+" : Evaluating algorithms with offline metrics."
+msgstr ""
+
+#: ../../CommunitySharings/RecommendersSvd.rst:10
+msgid ""
+"`Model Select and Optimize "
+"<https://github.com/microsoft/recommenders/tree/master/examples/04_model_select_and_optimize>`__\\"
+" : Tuning and optimizing hyperparameters for recommender models."
+msgstr ""
+
+#: ../../CommunitySharings/RecommendersSvd.rst:11
+msgid ""
+"`Operationalize "
+"<https://github.com/microsoft/recommenders/tree/master/examples/05_operationalize>`__\\"
+" : Operationalizing models in a production environment on Azure."
+msgstr ""
+
+#: ../../CommunitySharings/RecommendersSvd.rst:13
+msgid ""
+"The fourth task is tuning and optimizing the model's hyperparameters, "
+"this is where NNI could help. To give a concrete example that NNI tunes "
+"the models in Recommenders, let's demonstrate with the model `SVD "
+"<https://github.com/microsoft/recommenders/blob/master/examples/02_model_collaborative_filtering/surprise_svd_deep_dive.ipynb>`__\\"
+" , and data Movielens100k. There are more than 10 hyperparameters to be "
+"tuned in this model."
+msgstr ""
+
+#: ../../CommunitySharings/RecommendersSvd.rst:15
+msgid ""
+"This `Jupyter notebook "
+"<https://github.com/microsoft/recommenders/blob/master/examples/04_model_select_and_optimize/nni_surprise_svd.ipynb>`__"
+" provided by Recommenders is a very detailed step-by-step tutorial for "
+"this example. It uses different built-in tuning algorithms in NNI, "
+"including ``Annealing``\\ , ``SMAC``\\ , ``Random Search``\\ , ``TPE``\\ "
+", ``Hyperband``\\ , ``Metis`` and ``Evolution``. Finally, the results of "
+"different tuning algorithms are compared. Please go through this notebook"
+" to learn how to use NNI to tune SVD model, then you could further use "
+"NNI to tune other models in Recommenders."
+msgstr ""
+
+#: ../../CommunitySharings/SptagAutoTune.rst:2
+msgid "Automatically tuning SPTAG with NNI"
+msgstr ""
+
+#: ../../CommunitySharings/SptagAutoTune.rst:4
+msgid ""
+"`SPTAG <https://github.com/microsoft/SPTAG>`__ (Space Partition Tree And "
+"Graph) is a library for large scale vector approximate nearest neighbor "
+"search scenario released by `Microsoft Research (MSR) "
+"<https://www.msra.cn/>`__ and `Microsoft Bing <https://www.bing.com/>`__."
+msgstr ""
+
+#: ../../CommunitySharings/SptagAutoTune.rst:6
+msgid ""
+"This library assumes that the samples are represented as vectors and that"
+" the vectors can be compared by L2 distances or cosine distances. Vectors"
+" returned for a query vector are the vectors that have smallest L2 "
+"distance or cosine distances with the query vector. SPTAG provides two "
+"methods: kd-tree and relative neighborhood graph (SPTAG-KDT) and balanced"
+" k-means tree and relative neighborhood graph (SPTAG-BKT). SPTAG-KDT is "
+"advantageous in index building cost, and SPTAG-BKT is advantageous in "
+"search accuracy in very high-dimensional data."
+msgstr ""
+
+#: ../../CommunitySharings/SptagAutoTune.rst:9
+msgid ""
+"In SPTAG, there are tens of parameters that can be tuned for specified "
+"scenarios or datasets. NNI is a great tool for automatically tuning those"
+" parameters. The authors of SPTAG tried NNI for the auto tuning and found"
+" good-performing parameters easily, thus, they shared the practice of "
+"tuning SPTAG on NNI in their document `here "
+"<https://github.com/microsoft/SPTAG/blob/master/docs/Parameters.md>`__. "
+"Please refer to it for detailed tutorial."
+msgstr ""
+
+#: ../../CommunitySharings/automodel.rst:7
+msgid "Tuning SVD automatically"
+msgstr ""
+
+#: ../../CommunitySharings/automodel.rst:7
+msgid "EfficientNet on NNI"
+msgstr ""
+
+#: ../../CommunitySharings/automodel.rst:7
+msgid "Automatic Model Architecture Search for Reading Comprehension"
+msgstr ""
+
+#: ../../CommunitySharings/automodel.rst:7
+msgid "Parallelizing Optimization for TPE"
+msgstr ""
+
+#: ../../CommunitySharings/automodel.rst:3
+msgid "Automatic Model Tuning"
+msgstr ""
+
+#: ../../CommunitySharings/automodel.rst:5
+msgid ""
+"NNI can be applied on various model tuning tasks. Some state-of-the-art "
+"model search algorithms, such as EfficientNet, can be easily built on "
+"NNI. Popular models, e.g., recommendation models, can be tuned with NNI. "
+"The following are some use cases to illustrate how to leverage NNI in "
+"your model tuning tasks and how to build your own pipeline with NNI."
+msgstr ""
+
+#: ../../CommunitySharings/autosys.rst:7
+msgid "Tuning SPTAG (Space Partition Tree And Graph) automatically"
+msgstr ""
+
+#: ../../CommunitySharings/autosys.rst:7
+msgid "Tuning the performance of RocksDB"
+msgstr ""
+
+#: ../../CommunitySharings/autosys.rst:7
+msgid "Tuning Tensor Operators automatically"
+msgstr ""
+
+#: ../../CommunitySharings/autosys.rst:3
+msgid "Automatic System Tuning"
+msgstr ""
+
+#: ../../CommunitySharings/autosys.rst:5
+msgid ""
+"The performance of systems, such as database, tensor operator "
+"implementaion, often need to be tuned to adapt to specific hardware "
+"configuration, targeted workload, etc. Manually tuning a system is "
+"complicated and often requires detailed understanding of hardware and "
+"workload. NNI can make such tasks much easier and help system owners find"
+" the best configuration to the system automatically. The detailed design "
+"philosophy of automatic system tuning can be found in this `paper "
+"<https://dl.acm.org/doi/10.1145/3352020.3352031>`__\\ . The following are"
+" some typical cases that NNI can help."
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:9
+msgid "Automatic Model Tuning (HPO/NAS)"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:9
+msgid "Automatic System Tuning (AutoSys)"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:9
+#: ../../CommunitySharings/model_compression.rst:3
+msgid "Model Compression"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:9
+#: ../../CommunitySharings/feature_engineering.rst:3
+msgid "Feature Engineering"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:9
+msgid "Performance measurement, comparison and analysis"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:3
+#: ../../CommunitySharings/community_sharings.rst:8
+msgid "Use Cases and Solutions"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:5
+msgid ""
+"Different from the tutorials and examples in the rest of the document "
+"which show the usage of a feature, this part mainly introduces end-to-end"
+" scenarios and use cases to help users further understand how NNI can "
+"help them. NNI can be widely adopted in various scenarios. We also "
+"encourage community contributors to share their AutoML practices "
+"especially the NNI usage practices from their experience."
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:20
+msgid "External Repositories and References"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:21
+msgid ""
+"With authors' permission, we listed a set of NNI usage examples and "
+"relevant articles."
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:24
+msgid "External Repositories"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:25
+msgid ""
+"`Hyperparameter Tuning for Matrix Factorization "
+"<https://github.com/microsoft/recommenders/blob/master/examples/04_model_select_and_optimize/nni_surprise_svd.ipynb>`__"
+" with NNI"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:26
+msgid ""
+"`scikit-nni <https://github.com/ksachdeva/scikit-nni>`__ Hyper-parameter "
+"search for scikit-learn pipelines using NNI"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:29
+msgid "Relevant Articles"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:30
+msgid ""
+"`Cost-effective Hyper-parameter Tuning using AdaptDL with NNI - Feb 23, "
+"2021 <https://medium.com/casl-project/cost-effective-hyper-parameter-"
+"tuning-using-adaptdl-with-nni-e55642888761>`__"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:31
+msgid ""
+"`(in Chinese) A summary of NNI new capabilities in NNI 2.0 - Jan 21, 2021"
+" <https://www.msra.cn/zh-cn/news/features/nni-2>`__"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:32
+msgid ""
+"`(in Chinese) A summary of NNI new capabilities in 2019 - Dec 26, 2019 "
+"<https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA>`__"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:33
+msgid ""
+"`Find thy hyper-parameters for scikit-learn pipelines using Microsoft NNI"
+" - Nov 6, 2019 <https://towardsdatascience.com/find-thy-hyper-parameters-"
+"for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1>`__"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:34
+#, python-format
+msgid ""
+"`(in Chinese) AutoML tools (Advisor, NNI and Google Vizier) comparison - "
+"Aug 05, 2019 "
+"<http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-"
+"new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90>`__"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:35
+msgid "`Hyper Parameter Optimization Comparison <./HpoComparison.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:36
+msgid "`Neural Architecture Search Comparison <./NasComparison.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:37
+msgid ""
+"`Parallelizing a Sequential Algorithm TPE "
+"<./ParallelizingTpeSearch.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:38
+msgid "`Automatically tuning SVD with NNI <./RecommendersSvd.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/community_sharings.rst:39
+msgid "`Automatically tuning SPTAG with NNI <./SptagAutoTune.rst>`__"
+msgstr ""
+
+#: ../../CommunitySharings/feature_engineering.rst:7
+msgid "NNI review article from Zhihu: - By Garvin Li"
+msgstr ""
+
+#: ../../CommunitySharings/feature_engineering.rst:5
+msgid ""
+"The following is an article about how NNI helps in auto feature "
+"engineering shared by a community contributor. More use cases and "
+"solutions will be added in the future."
+msgstr ""
+
+#: ../../CommunitySharings/model_compression.rst:7
+msgid "Knowledge distillation with NNI model compression"
+msgstr ""
+
+#: ../../CommunitySharings/model_compression.rst:5
+msgid ""
+"The following one shows how to apply knowledge distillation on NNI model "
+"compression. More use cases and solutions will be added in the future."
+msgstr ""
+
+#: ../../CommunitySharings/perf_compare.rst:7
+msgid "Hyper-parameter Tuning Algorithm Comparsion"
+msgstr ""
+
+#: ../../CommunitySharings/perf_compare.rst:7
+msgid "Model Compression Algorithm Comparsion"
+msgstr ""
+
+#: ../../CommunitySharings/perf_compare.rst:3
+msgid "Performance Measurement, Comparison and Analysis"
+msgstr ""
+
+#: ../../CommunitySharings/perf_compare.rst:5
+msgid ""
+"Performance comparison and analysis can help users decide a proper "
+"algorithm (e.g., tuner, NAS algorithm) for their scenario. The following "
+"are some measurement and comparison data for users' reference."
+msgstr ""
+

@@ -1,0 +1,4611 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-29 17:43+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../NAS/ApiReference.rst:2
+msgid "Retiarii API Reference"
+msgstr ""
+
+#: ../../NAS/ApiReference.rst:4 ../../NAS/HardwareAwareNAS.rst:4
+#: ../../NAS/Overview.rst:6 ../../NAS/QuickStart.rst:5
+msgid "Contents"
+msgstr ""
+
+#: ../../NAS/ApiReference.rst:7
+msgid "Inline Mutation APIs"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:1 of
+msgid ""
+"Layer choice selects one of the ``candidates``, then apply it on inputs "
+"and return results."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:3 of
+msgid "Layer choice does not allow itself to be nested."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.hash_module
+#: nni.nas.benchmarks.nasbench101.graph_util.infer_num_vertices
+#: nni.nas.benchmarks.nasbench101.graph_util.nasbench_format_to_architecture_repr
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression
+#: nni.retiarii.evaluator.pytorch.lightning.Classification
+#: nni.retiarii.evaluator.pytorch.lightning.Regression
+#: nni.retiarii.fixed.fixed_arch nni.retiarii.nn.pytorch.api.InputChoice
+#: nni.retiarii.nn.pytorch.api.LayerChoice
+#: nni.retiarii.nn.pytorch.api.ValueChoice
+#: nni.retiarii.nn.pytorch.component.Cell
+#: nni.retiarii.nn.pytorch.component.Repeat
+#: nni.retiarii.nn.pytorch.hypermodule.AutoActivation
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer
+#: nni.retiarii.strategy.bruteforce.GridSearch
+#: nni.retiarii.strategy.bruteforce.Random
+#: nni.retiarii.strategy.evolution.RegularizedEvolution
+#: nni.retiarii.strategy.rl.PolicyBasedRL of
+msgid "Parameters"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:5 of
+msgid "A module list to be selected from."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:17
+#: nni.retiarii.nn.pytorch.api.LayerChoice:7 of
+msgid "Prior distribution used in random sampling."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:9 of
+msgid "Identifier of the layer choice."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:14 of
+msgid ""
+"Deprecated. Number of ops to choose from. ``len(layer_choice)`` is "
+"recommended."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig
+#: nni.nas.benchmarks.nds.model.NdsTrialStats
+#: nni.retiarii.nn.pytorch.api.LayerChoice of
+msgid "type"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:13
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig:17
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig:29
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:13
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:17
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:23
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:29
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:13
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:13
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:67
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:13
+#: nni.retiarii.nn.pytorch.api.LayerChoice:16 of
+msgid "int"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:20 of
+msgid "Names of candidates."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:22 of
+msgid "list of str"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:26 of
+msgid ""
+"Deprecated. A list of all candidate modules in the layer choice module. "
+"``list(layer_choice)`` is recommended, which will serve the same purpose."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:29 of
+msgid "list of Module"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:32 of
+msgid "Notes"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:33 of
+msgid ""
+"``candidates`` can be a list of modules or a ordered dict of named "
+"modules, for example,"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.LayerChoice:43 of
+msgid ""
+"Elements in layer choice can be modified or deleted. Use ``del "
+"self.op_choice[\"conv5x5\"]`` or ``self.op_choice[1] = nn.Conv3d(...)``. "
+"Adding more choices is not supported yet."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice.create_fixed_module:1
+#: nni.retiarii.nn.pytorch.api.LayerChoice.create_fixed_module:1
+#: nni.retiarii.nn.pytorch.api.ValueChoice.create_fixed_module:1
+#: nni.retiarii.nn.pytorch.component.Repeat.create_fixed_module:1 of
+msgid ""
+"Try to create a fixed module from fixed dict. If the code is running in a"
+" trial, this method would succeed, and a concrete module instead of a "
+"mutable will be created. Raises no context error if the creation failed."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ChosenInputs.forward:1
+#: nni.retiarii.nn.pytorch.api.InputChoice.forward:1
+#: nni.retiarii.nn.pytorch.api.LayerChoice.forward:1
+#: nni.retiarii.nn.pytorch.api.ValueChoice.forward:1
+#: nni.retiarii.nn.pytorch.component.Cell.forward:1
+#: nni.retiarii.nn.pytorch.component.Repeat.forward:1
+#: nni.retiarii.nn.pytorch.hypermodule.AutoActivation.forward:1 of
+msgid "Defines the computation performed at every call."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ChosenInputs.forward:3
+#: nni.retiarii.nn.pytorch.api.InputChoice.forward:3
+#: nni.retiarii.nn.pytorch.api.LayerChoice.forward:3
+#: nni.retiarii.nn.pytorch.api.ValueChoice.forward:3
+#: nni.retiarii.nn.pytorch.component.Cell.forward:3
+#: nni.retiarii.nn.pytorch.component.Repeat.forward:3
+#: nni.retiarii.nn.pytorch.hypermodule.AutoActivation.forward:3 of
+msgid "Should be overridden by all subclasses."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ChosenInputs.forward:6
+#: nni.retiarii.nn.pytorch.api.InputChoice.forward:6
+#: nni.retiarii.nn.pytorch.api.LayerChoice.forward:6
+#: nni.retiarii.nn.pytorch.api.ValueChoice.forward:6
+#: nni.retiarii.nn.pytorch.component.Cell.forward:6
+#: nni.retiarii.nn.pytorch.component.Repeat.forward:6
+#: nni.retiarii.nn.pytorch.hypermodule.AutoActivation.forward:6 of
+msgid ""
+"Although the recipe for forward pass needs to be defined within this "
+"function, one should call the :class:`Module` instance afterwards instead"
+" of this since the former takes care of running the registered hooks "
+"while the latter silently ignores them."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:1 of
+msgid ""
+"Input choice selects ``n_chosen`` inputs from ``choose_from`` (contains "
+"``n_candidates`` keys). Use ``reduction`` to specify how chosen inputs "
+"are reduced into one output. A few options are:"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:4 of
+msgid "``none``: do nothing and return the list directly."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:5 of
+msgid "``sum``: summing all the chosen inputs."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:6 of
+msgid "``mean``: taking the average of all chosen inputs."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:7 of
+msgid "``concat``: concatenate all chosen inputs at dimension 1."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:9 of
+msgid "We don't support customizing reduction yet."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:11 of
+msgid "Number of inputs to choose from. It is required."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:13 of
+msgid ""
+"Recommended inputs to choose. If None, mutator is instructed to select "
+"any."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:15 of
+msgid "``mean``, ``concat``, ``sum`` or ``none``."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.InputChoice:19 of
+msgid "Identifier of the input choice."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ValueChoice:1 of
+msgid "ValueChoice is to choose one from ``candidates``."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ValueChoice:3 of
+msgid ""
+"In most use scenarios, ValueChoice should be passed to the init "
+"parameters of a serializable module. For example,"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ValueChoice:15 of
+msgid ""
+"In case, you want to search a parameter that is used repeatedly, this is "
+"also possible by sharing the same value choice instance. (Sharing the "
+"label should have the same effect.) For example,"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ValueChoice:38 of
+msgid ""
+"Note that ValueChoice should be used directly. Transformations like "
+"``nn.Linear(32, nn.ValueChoice([64, 128]) * 2)`` are not supported."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ValueChoice:41 of
+msgid ""
+"Another common use case is to initialize the values to choose from in "
+"init and call the module in forward to get the chosen value. Usually, "
+"this is used to pass a mutable value to a functional API like "
+"``torch.xxx`` or ``nn.functional.xxx```. For example,"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ValueChoice:55 of
+msgid "List of values to choose from."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ValueChoice:57 of
+msgid "Prior distribution to sample from."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ValueChoice:59 of
+msgid "Identifier of the value choice."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.api.ChosenInputs:1 of
+msgid ""
+"A module that chooses from a tensor list and outputs a reduced tensor. "
+"The already-chosen version of InputChoice."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Repeat:1 of
+msgid "Repeat a block by a variable number of times."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Repeat:3 of
+msgid ""
+"The block to be repeated. If not a list, it will be replicated into a "
+"list. If a list, it should be of length ``max_depth``, the modules will "
+"be instantiated in order and a prefix will be taken. If a function, it "
+"will be called (the argument is the index) to instantiate a module. "
+"Otherwise the module will be deep-copied."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Repeat:8 of
+msgid ""
+"If one number, the block will be repeated by a fixed number of times. If "
+"a tuple, it should be (min, max), meaning that the block will be repeated"
+" at least `min` times and at most `max` times."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:1 of
+msgid ""
+"Cell structure [zophnas]_ [zophnasnet]_ that is popularly used in NAS "
+"literature."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:3 of
+msgid ""
+"A cell consists of multiple \"nodes\". Each node is a sum of multiple "
+"operators. Each operator is chosen from ``op_candidates``, and takes one "
+"input from previous nodes and predecessors. Predecessor means the input "
+"of cell. The output of cell is the concatenation of some of the nodes in "
+"the cell (currently all the nodes)."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:7 of
+msgid ""
+"A list of modules to choose from, or a function that returns a list of "
+"modules."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:9 of
+msgid "Number of nodes in the cell."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:11 of
+msgid ""
+"Number of operators in each node. The output of each node is the sum of "
+"all operators in the node. Default: 1."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:13 of
+msgid ""
+"Number of inputs of the cell. The input to forward should be a list of "
+"tensors. Default: 1."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:15 of
+msgid ""
+"Currently only ``all`` is supported, which has slight difference with "
+"that described in reference. Default: all."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:17 of
+msgid ""
+"Identifier of the cell. Cell sharing the same label will semantically "
+"share the same choice."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:21
+#: nni.retiarii.strategy.rl.PolicyBasedRL:14
+#: nni.retiarii.strategy.tpe_strategy.TPEStrategy:6 of
+msgid "References"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:22 of
+msgid ""
+"Barret Zoph, Quoc V. Le, \"Neural Architecture Search with Reinforcement "
+"Learning\". https://arxiv.org/abs/1611.01578"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.component.Cell:23 of
+msgid ""
+"Barret Zoph, Vijay Vasudevan, Jonathon Shlens, Quoc V. Le, \"Learning "
+"Transferable Architectures for Scalable Image Recognition\". "
+"https://arxiv.org/abs/1707.07012"
+msgstr ""
+
+#: ../../NAS/ApiReference.rst:28
+msgid "Graph Mutation APIs"
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator:1 of
+msgid ""
+"Mutates graphs in model to generate new model. `Mutator` class will be "
+"used in two places:"
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator:4 of
+msgid "Inherit `Mutator` to implement graph mutation logic."
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator:5 of
+msgid "Use `Mutator` subclass to implement NAS strategy."
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator:7 of
+msgid ""
+"In scenario 1, the subclass should implement `Mutator.mutate()` interface"
+" with `Mutator.choice()`. In scenario 2, strategy should use constructor "
+"or `Mutator.bind_sampler()` to initialize subclass, and then use "
+"`Mutator.apply()` to mutate model. For certain mutator subclasses, "
+"strategy or sampler can use `Mutator.dry_run()` to predict choice "
+"candidates. # Method names are open for discussion."
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator:13 of
+msgid ""
+"If mutator has a label, in most cases, it means that this mutator is "
+"applied to nodes with this label."
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator.apply:1 of
+msgid ""
+"Apply this mutator on a model. Returns mutated model. The model will be "
+"copied before mutation and the original model will not be modified."
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator.bind_sampler:1 of
+msgid "Set the sampler which will handle `Mutator.choice` calls."
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator.choice:1 of
+msgid "Ask sampler to make a choice."
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator.dry_run:1 of
+msgid ""
+"Dry run mutator on a model to collect choice candidates. If you invoke "
+"this method multiple times on same or different models, it may or may not"
+" return identical results, depending on how the subclass implements "
+"`Mutator.mutate()`."
+msgstr ""
+
+#: nni.retiarii.mutator.Mutator.mutate:1 of
+msgid "Abstract method to be implemented by subclass. Mutate a model in place."
+msgstr ""
+
+#: nni.retiarii.graph.Model:1 of
+msgid "Represents a neural network model."
+msgstr ""
+
+#: nni.retiarii.graph.Model:3 of
+msgid ""
+"During mutation, one `Model` object is created for each trainable "
+"snapshot. For example, consider a mutator that insert a node at an edge "
+"for each iteration. In one iteration, the mutator invokes 4 primitives: "
+"add node, remove edge, add edge to head, add edge to tail. These 4 "
+"primitives operates in one `Model` object. When they are all done the "
+"model will be set to \"frozen\" (trainable) status and be submitted to "
+"execution engine. And then a new iteration starts, and a new `Model` "
+"object is created by forking last model."
+msgstr ""
+
+#: nni.retiarii.graph.Model:12 of
+msgid "Python class that base model is converted from."
+msgstr ""
+
+#: nni.retiarii.graph.Model:16 of
+msgid "Initialization parameters of python class."
+msgstr ""
+
+#: nni.retiarii.graph.Model:20 of
+msgid "See `ModelStatus`."
+msgstr ""
+
+#: nni.retiarii.graph.Model:24 of
+msgid ""
+"The outermost graph which usually takes dataset as input and feeds output"
+" to loss function."
+msgstr ""
+
+#: nni.retiarii.graph.Model:28 of
+msgid "All graphs (subgraphs) in this model."
+msgstr ""
+
+#: nni.retiarii.graph.Model:32 of
+msgid "Model evaluator"
+msgstr ""
+
+#: nni.retiarii.graph.Model:36 of
+msgid ""
+"Mutation history. `self` is directly mutated from `self.history[-1]`; "
+"`self.history[-1] is mutated from `self.history[-2]`, and so on. "
+"`self.history[0]` is the base graph."
+msgstr ""
+
+#: nni.retiarii.graph.Model:43 of
+msgid ""
+"Training result of the model, or `None` if it's not yet trained or has "
+"failed to train."
+msgstr ""
+
+#: nni.retiarii.graph.Model:47 of
+msgid ""
+"Intermediate training metrics. If the model is not trained, it's an empty"
+" list."
+msgstr ""
+
+#: nni.retiarii.graph.Model.fork:1 of
+msgid "Create a new model which has same topology, names, and IDs to current one."
+msgstr ""
+
+#: nni.retiarii.graph.Model.fork:3 of
+msgid ""
+"Can only be invoked on a frozen model. The new model will be in "
+"`Mutating` state."
+msgstr ""
+
+#: nni.retiarii.graph.Model.fork:6 of
+msgid "This API is used in mutator base class."
+msgstr ""
+
+#: nni.retiarii.graph.Model.get_node_by_name:1 of
+msgid "Traverse all the nodes to find the matched node with the given name."
+msgstr ""
+
+#: nni.retiarii.graph.Model.get_node_by_python_name:1 of
+msgid ""
+"Traverse all the nodes to find the matched node with the given "
+"python_name."
+msgstr ""
+
+#: nni.retiarii.graph.Model.get_nodes:1 of
+msgid "Traverse through all the nodes."
+msgstr ""
+
+#: nni.retiarii.graph.Model.get_nodes_by_label:1 of
+msgid ""
+"Traverse all the nodes to find the matched node(s) with the given label. "
+"There could be multiple nodes with the same label. Name space name can "
+"uniquely identify a graph or node."
+msgstr ""
+
+#: nni.retiarii.graph.Model.get_nodes_by_label:5 of
+msgid "NOTE: the implementation does not support the class abstraction"
+msgstr ""
+
+#: nni.retiarii.graph.Model.get_nodes_by_type:1 of
+msgid "Traverse all the nodes to find the matched node(s) with the given type."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:1 of
+msgid "Graph topology."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:3 of
+msgid ""
+"This class simply represents the topology, with no semantic meaning. All "
+"other information like metric, non-graph functions, mutation history, etc"
+" should go to `Model`."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:6 of
+msgid "Each graph belongs to and only belongs to one `Model`."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:10 of
+msgid "The model containing (and owning) this graph."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:14 of
+msgid ""
+"Unique ID in the model. If two models have graphs of identical ID, they "
+"are semantically the same graph. Typically this means one graph is "
+"mutated from another, or they are both mutated from one ancestor."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:20 of
+msgid "Mnemonic name of this graph. It should have an one-to-one mapping with ID."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:24 of
+msgid "Optional mnemonic names of input parameters."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:28 of
+msgid "Optional mnemonic names of output values."
+msgstr ""
+
+#: nni.retiarii.graph.Edge:20 nni.retiarii.graph.Graph:32
+#: nni.retiarii.graph.Graph:36 nni.retiarii.graph.Graph:40
+#: nni.retiarii.graph.Graph:48 nni.retiarii.graph.Node:37 of
+msgid "..."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:44 of
+msgid "All input/output/hidden nodes."
+msgstr ""
+
+#: nni.retiarii.graph.Graph:52 nni.retiarii.graph.Node:29 of
+msgid ""
+"The name of torch.nn.Module, should have one-to-one mapping with items in"
+" python model."
+msgstr ""
+
+#: nni.retiarii.graph.Graph.fork:1 of
+msgid ""
+"Fork the model and returns corresponding graph in new model. This "
+"shortcut might be helpful because many algorithms only cares about "
+"\"stem\" subgraph instead of whole model."
+msgstr ""
+
+#: nni.retiarii.graph.Graph.get_node_by_id:1
+#: nni.retiarii.graph.Graph.get_node_by_name:1 of
+msgid ""
+"Returns the node which has specified name; or returns `None` if no node "
+"has this name."
+msgstr ""
+
+#: nni.retiarii.graph.Graph.get_node_by_python_name:1 of
+msgid ""
+"Returns the node which has specified python_name; or returns `None` if no"
+" node has this python_name."
+msgstr ""
+
+#: nni.retiarii.graph.Graph.get_nodes_by_type:1 of
+msgid "Returns nodes whose operation is specified typed."
+msgstr ""
+
+#: nni.retiarii.graph.Node:1 of
+msgid "An operation or an opaque subgraph inside a graph."
+msgstr ""
+
+#: nni.retiarii.graph.Node:3 of
+msgid ""
+"Each node belongs to and only belongs to one `Graph`. Nodes should never "
+"be created with constructor. Use `Graph.add_node()` instead."
+msgstr ""
+
+#: nni.retiarii.graph.Node:6 of
+msgid ""
+"The node itself is for topology only. Information of tensor calculation "
+"should all go inside `operation` attribute."
+msgstr ""
+
+#: nni.retiarii.graph.Node:9 of
+msgid ""
+"TODO: parameter of subgraph (cell) It's easy to assign parameters on cell"
+" node, but it's hard to \"use\" them. We need to design a way to "
+"reference stored cell parameters in inner node operations. e.g. `self.fc "
+"= Linear(self.units)`  <-  how to express `self.units` in IR?"
+msgstr ""
+
+#: nni.retiarii.graph.Node:16 of
+msgid "The graph containing this node."
+msgstr ""
+
+#: nni.retiarii.graph.Node:20 of
+msgid ""
+"Unique ID in the model. If two models have nodes with same ID, they are "
+"semantically the same node."
+msgstr ""
+
+#: nni.retiarii.graph.Node:25 of
+msgid "Mnemonic name. It should have an one-to-one mapping with ID."
+msgstr ""
+
+#: nni.retiarii.graph.Node:33 of
+msgid ""
+"Optional. If two nodes have the same label, they are considered same by "
+"the mutator."
+msgstr ""
+
+#: nni.retiarii.graph.Node:41 of
+msgid ""
+"Read only shortcut to get the referenced subgraph. If this node is not a "
+"subgraph (is a primitive operation), accessing `cell` will raise an "
+"error."
+msgstr ""
+
+#: nni.retiarii.graph.Node:46 of
+msgid ""
+"Predecessor nodes of this node in the graph. This is an optional mutation"
+" helper."
+msgstr ""
+
+#: nni.retiarii.graph.Node:50 of
+msgid ""
+"Successor nodes of this node in the graph. This is an optional mutation "
+"helper."
+msgstr ""
+
+#: nni.retiarii.graph.Node:54 of
+msgid ""
+"Incoming edges of this node in the graph. This is an optional mutation "
+"helper."
+msgstr ""
+
+#: nni.retiarii.graph.Node:58 of
+msgid ""
+"Outgoing edges of this node in the graph. This is an optional mutation "
+"helper."
+msgstr ""
+
+#: nni.retiarii.graph.Node.specialize_cell:1 of
+msgid ""
+"Only available if the operation is a cell. Duplicate the cell template "
+"and let this node reference to newly created copy."
+msgstr ""
+
+#: nni.retiarii.graph.Edge:1 of
+msgid "A tensor, or \"data flow\", between two nodes."
+msgstr ""
+
+#: nni.retiarii.graph.Edge:3 of
+msgid ""
+"Example forward code snippet: ``` a, b, c = split(x) p = concat(a, c) q ="
+" sum(b, p) z = relu(q) ```"
+msgstr ""
+
+#: nni.retiarii.graph.Edge:16 of
+msgid "Edges in above snippet:"
+msgstr ""
+
+#: nni.retiarii.graph.Edge:12 of
+msgid "head: (split, 0), tail: (concat, 0)  # a in concat"
+msgstr ""
+
+#: nni.retiarii.graph.Edge:13 of
+msgid "head: (split, 2), tail: (concat, 1)  # c in concat"
+msgstr ""
+
+#: nni.retiarii.graph.Edge:14 of
+msgid "head: (split, 1), tail: (sum, -1 or 0)  # b in sum"
+msgstr ""
+
+#: nni.retiarii.graph.Edge:15 of
+msgid "head: (concat, null), tail: (sum, -1 or 1)  # p in sum"
+msgstr ""
+
+#: nni.retiarii.graph.Edge:16 of
+msgid "head: (sum, null), tail: (relu, null)  # q in relu"
+msgstr ""
+
+#: nni.retiarii.graph.Edge:24 of
+msgid "Head node."
+msgstr ""
+
+#: nni.retiarii.graph.Edge:28 of
+msgid "Tail node."
+msgstr ""
+
+#: nni.retiarii.graph.Edge:32 of
+msgid ""
+"Index of outputs in head node. If the node has only one output, this "
+"should be `null`."
+msgstr ""
+
+#: nni.retiarii.graph.Edge:37 of
+msgid ""
+"Index of inputs in tail node. If the node has only one input, this should"
+" be `null`. If the node does not care about order, this can be `-1`."
+msgstr ""
+
+#: nni.retiarii.operation.Operation:1 of
+msgid "Calculation logic of a graph node."
+msgstr ""
+
+#: nni.retiarii.operation.Operation:3 of
+msgid ""
+"The constructor is private. Use `Operation.new()` to create operation "
+"object."
+msgstr ""
+
+#: nni.retiarii.operation.Operation:5 of
+msgid ""
+"`Operation` is a naive record. Do not \"mutate\" its attributes or store "
+"information relate to specific node. All complex logic should be "
+"implemented in `Node` class."
+msgstr ""
+
+#: nni.retiarii.operation.Operation:11 of
+msgid ""
+"Operation type name (e.g. Conv2D). If it starts with underscore, the "
+"\"operation\" is a special one (e.g. subgraph, input/output)."
+msgstr ""
+
+#: nni.retiarii.operation.Operation:16 of
+msgid "Arbitrary key-value parameters (e.g. kernel_size)."
+msgstr ""
+
+#: ../../NAS/ApiReference.rst:49
+msgid "Evaluators"
+msgstr ""
+
+#: nni.retiarii.evaluator.functional.FunctionalEvaluator:1 of
+msgid ""
+"Functional evaluator that directly takes a function and thus should be "
+"general."
+msgstr ""
+
+#: nni.retiarii.evaluator.functional.FunctionalEvaluator:5 of
+msgid "The full name of the function."
+msgstr ""
+
+#: nni.retiarii.evaluator.functional.FunctionalEvaluator:9 of
+msgid "Keyword arguments for the function other than model."
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.lightning.LightningModule:1 of
+msgid "Basic wrapper of generated model."
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.lightning.LightningModule:3 of
+msgid "Lightning modules used in NNI should inherit this class."
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification:1
+#: nni.retiarii.evaluator.pytorch.lightning.Classification:1 of
+msgid "Trainer that is used for classification."
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification:3
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule:4
+#: nni.retiarii.evaluator.pytorch.lightning.Classification:3 of
+msgid ""
+"Class for criterion module (not an instance). default: "
+"``nn.CrossEntropyLoss``"
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification:5
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule:6
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression:5
+#: nni.retiarii.evaluator.pytorch.lightning.Classification:5
+#: nni.retiarii.evaluator.pytorch.lightning.Regression:5 of
+msgid "Learning rate. default: 0.001"
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification:7
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule:8
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression:7
+#: nni.retiarii.evaluator.pytorch.lightning.Classification:7
+#: nni.retiarii.evaluator.pytorch.lightning.Regression:7 of
+msgid "L2 weight decay. default: 0"
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification:9
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule:10
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression:9
+#: nni.retiarii.evaluator.pytorch.lightning.Classification:9
+#: nni.retiarii.evaluator.pytorch.lightning.Regression:9 of
+msgid "Class for optimizer (not an instance). default: ``Adam``"
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification:11
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression:11
+#: nni.retiarii.evaluator.pytorch.lightning.Classification:11
+#: nni.retiarii.evaluator.pytorch.lightning.Regression:11 of
+msgid ""
+"Used in ``trainer.fit()``. A PyTorch DataLoader with training samples. If"
+" the ``lightning_module`` has a predefined train_dataloader method this "
+"will be skipped."
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification:14
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression:14
+#: nni.retiarii.evaluator.pytorch.lightning.Classification:14
+#: nni.retiarii.evaluator.pytorch.lightning.Regression:14 of
+msgid ""
+"Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list "
+"of them, specifying validation samples. If the ``lightning_module`` has a"
+" predefined val_dataloaders method this will be skipped."
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.lightning.Classification:17 of
+msgid ""
+"If true, model will be exported to ``model.onnx`` before training starts."
+" default true"
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.lightning.Classification:19
+#: nni.retiarii.evaluator.pytorch.lightning.Regression:19 of
+msgid ""
+"Optional keyword arguments passed to trainer. See `Lightning "
+"documentation <https://pytorch-"
+"lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details."
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression:1
+#: nni.retiarii.evaluator.pytorch.lightning.Regression:1 of
+msgid "Trainer that is used for regression."
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression:3
+#: nni.retiarii.evaluator.pytorch.lightning.Regression:3 of
+msgid "Class for criterion module (not an instance). default: ``nn.MSELoss``"
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.lightning.Regression:17 of
+msgid ""
+"If true, model will be exported to ``model.onnx`` before training starts."
+" default: true"
+msgstr ""
+
+#: ../../NAS/ApiReference.rst:64
+msgid "Oneshot Trainers"
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:1 of
+msgid "DARTS trainer."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:3
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:3
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:3 of
+msgid "PyTorch model to be trained."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:5
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:5
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:5 of
+msgid "Receives logits and ground truth label, return a loss tensor."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:7
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:7
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:7 of
+msgid "Receives logits and ground truth label, return a dict of metrics."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:9
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:11
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:9 of
+msgid "The optimizer used for optimizing the model."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:11
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:13
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:11 of
+msgid "Number of epochs planned for training."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:13
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:15
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:13 of
+msgid ""
+"Dataset for training. Will be split for training weights and architecture"
+" weights."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:15
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:25 of
+msgid "Gradient clipping. Set to 0 to disable. Default: 5."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:17 of
+msgid "Learning rate to optimize the model."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:19
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:17
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:17
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:17 of
+msgid "Batch size."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:21
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:19
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:19 of
+msgid "Workers for data loading."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:23
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:21
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:21 of
+msgid "``torch.device(\"cpu\")`` or ``torch.device(\"cuda\")``."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:25
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:23
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:23 of
+msgid "Step count per logging."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:27
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:25 of
+msgid "Learning rate of architecture parameters."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.darts.DartsTrainer:29 of
+msgid ""
+"``True`` if using second order optimization, else first order "
+"optimization."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:1 of
+msgid "ENAS trainer."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:9 of
+msgid ""
+"Receives logits and ground truth label, return a tensor, which will be "
+"feeded to RL controller as reward."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:27 of
+msgid "Weight of sample entropy loss."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:29 of
+msgid "Weight of skip penalty loss."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:31 of
+msgid ""
+"Decay factor of baseline. New baseline will be equal to ``baseline_decay "
+"* baseline_old + reward * (1 - baseline_decay)``."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:33 of
+msgid "Learning rate for RL controller."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:35 of
+msgid ""
+"Number of steps that will be aggregated into one mini-batch for RL "
+"controller."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:37 of
+msgid "Number of mini-batches for each epoch of RL controller learning."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.enas.EnasTrainer:39 of
+msgid "Optional kwargs that will be passed to :class:`ReinforceController`."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:1 of
+msgid "Proxyless trainer."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:15 of
+msgid "Number of epochs to warmup model parameters."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:27 of
+msgid ""
+"Regularization type to add hardware related loss, allowed types include -"
+" ``\"mul#log\"``: ``regularized_loss = (torch.log(expected_latency) / "
+"math.log(self.ref_latency)) ** beta`` - ``\"add#linear\"``: "
+"``regularized_loss = reg_lambda * (expected_latency - self.ref_latency) /"
+" self.ref_latency`` - None: do not apply loss regularization."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:32 of
+msgid ""
+"Regularization params, allowed params include - ``\"alpha\"`` and "
+"``\"beta\"`` is required when ``grad_reg_loss_type == \"mul#log\"`` - "
+"``\"lambda\"`` is required when ``grad_reg_loss_type == \"add#linear\"``"
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:36 of
+msgid ""
+"Applied hardware for to constraint the model's latency. Latency is "
+"predicted by Microsoft nn-Meter (https://github.com/microsoft/nn-Meter)."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:39 of
+msgid "The dummy input shape when applied to the target hardware."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.proxyless.ProxylessTrainer:41 of
+msgid "Reference latency value in the applied hardware (ms)."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:1 of
+msgid ""
+"Single-path trainer. Samples a path every time and backpropagates on that"
+" path."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:3 of
+msgid "Model with mutables."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:5 of
+msgid "Called with logits and targets. Returns a loss tensor."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:7 of
+msgid "Returns a dict that maps metrics keys to metrics data."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:9 of
+msgid "Optimizer that optimizes the model."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:11 of
+msgid "Number of epochs of training."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:13 of
+msgid "Dataset of training."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:15 of
+msgid "Dataset of validation."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:19 of
+msgid ""
+"Number of threads for data preprocessing. Not used for this trainer. "
+"Maybe removed in future."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:21 of
+msgid ""
+"Device object. Either ``torch.device(\"cuda\")`` or "
+"``torch.device(\"cpu\")``. When ``None``, trainer will automatic detects "
+"GPU and selects GPU first."
+msgstr ""
+
+#: nni.retiarii.oneshot.pytorch.random.SinglePathTrainer:24 of
+msgid "Number of mini-batches to log metrics."
+msgstr ""
+
+#: ../../NAS/ApiReference.rst:79 ../../NAS/multi_trial_nas.rst:6
+msgid "Exploration Strategies"
+msgstr ""
+
+#: nni.retiarii.strategy.bruteforce.Random:1 of
+msgid "Random search on the search space."
+msgstr ""
+
+#: nni.retiarii.strategy.bruteforce.Random:3 of
+msgid ""
+"Do not dry run to get the full search space. Used when the search space "
+"has variational size or candidates. Default: false."
+msgstr ""
+
+#: nni.retiarii.strategy.bruteforce.Random:5 of
+msgid ""
+"Do not try the same configuration twice. When variational is true, "
+"deduplication is not supported. Default: true."
+msgstr ""
+
+#: nni.retiarii.strategy.bruteforce.Random:7
+#: nni.retiarii.strategy.evolution.RegularizedEvolution:18 of
+msgid ""
+"Feed the model and return a bool. This will filter the models in search "
+"space and select which to submit."
+msgstr ""
+
+#: nni.retiarii.strategy.bruteforce.GridSearch:1 of
+msgid ""
+"Traverse the search space and try all the possible combinations one by "
+"one."
+msgstr ""
+
+#: nni.retiarii.strategy.bruteforce.GridSearch:3 of
+msgid ""
+"Shuffle the order in a candidate list, so that they are tried in a random"
+" order. Default: true."
+msgstr ""
+
+#: nni.retiarii.strategy.evolution.RegularizedEvolution:1 of
+msgid ""
+"Algorithm for regularized evolution (i.e. aging evolution). Follows "
+"\"Algorithm 1\" in Real et al. \"Regularized Evolution for Image "
+"Classifier Architecture Search\"."
+msgstr ""
+
+#: nni.retiarii.strategy.evolution.RegularizedEvolution:4 of
+msgid "Can be one of \"maximize\" and \"minimize\". Default: maximize."
+msgstr ""
+
+#: nni.retiarii.strategy.evolution.RegularizedEvolution:6 of
+msgid "The number of individuals to keep in the population. Default: 100."
+msgstr ""
+
+#: nni.retiarii.strategy.evolution.RegularizedEvolution:8 of
+msgid ""
+"The number of cycles (trials) the algorithm should run for. Default: "
+"20000."
+msgstr ""
+
+#: nni.retiarii.strategy.evolution.RegularizedEvolution:10 of
+msgid ""
+"The number of individuals that should participate in each tournament. "
+"Default: 25."
+msgstr ""
+
+#: nni.retiarii.strategy.evolution.RegularizedEvolution:12 of
+msgid "Probability that mutation happens in each dim. Default: 0.05"
+msgstr ""
+
+#: nni.retiarii.strategy.evolution.RegularizedEvolution:14 of
+msgid ""
+"Can be one of \"ignore\" and \"worst\". If \"ignore\", simply give up the"
+" model and find a new one. If \"worst\", mark the model as -inf (if "
+"maximize, inf if minimize), so that the algorithm \"learns\" to avoid "
+"such model. Default: ignore."
+msgstr ""
+
+#: nni.retiarii.strategy.tpe_strategy.TPEStrategy:1 of
+msgid ""
+"The Tree-structured Parzen Estimator (TPE) [bergstrahpo]_ is a sequential"
+" model-based optimization (SMBO) approach. SMBO methods sequentially "
+"construct models to approximate the performance of hyperparameters based "
+"on historical measurements, and then subsequently choose new "
+"hyperparameters to test based on this model."
+msgstr ""
+
+#: nni.retiarii.strategy.tpe_strategy.TPEStrategy:7 of
+msgid ""
+"Bergstra et al., \"Algorithms for Hyper-Parameter Optimization\". "
+"https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-"
+"optimization.pdf"
+msgstr ""
+
+#: nni.retiarii.strategy.rl.PolicyBasedRL:1 of
+msgid ""
+"Algorithm for policy-based reinforcement learning. This is a wrapper of "
+"algorithms provided in tianshou (PPO by default), and can be easily "
+"customized with other algorithms that inherit ``BasePolicy`` (e.g., "
+"REINFORCE [1]_)."
+msgstr ""
+
+#: nni.retiarii.strategy.rl.PolicyBasedRL:5 of
+msgid "How many times collector runs to collect trials for RL. Default 100."
+msgstr ""
+
+#: nni.retiarii.strategy.rl.PolicyBasedRL:7 of
+msgid ""
+"How many trials (trajectories) each time collector collects. After each "
+"collect, trainer will sample batch from replay buffer and do the update. "
+"Default: 20."
+msgstr ""
+
+#: nni.retiarii.strategy.rl.PolicyBasedRL:10 of
+msgid ""
+"Takes ``ModelEvaluationEnv`` as input and return a policy. See "
+"``_default_policy_fn`` for an example."
+msgstr ""
+
+#: nni.retiarii.strategy.rl.PolicyBasedRL:15 of
+msgid ""
+"Barret Zoph and Quoc V. Le, \"Neural Architecture Search with "
+"Reinforcement Learning\". https://arxiv.org/abs/1611.01578"
+msgstr ""
+
+#: ../../NAS/ApiReference.rst:97
+msgid "Retiarii Experiments"
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models:1 of
+msgid "Export several top performing models."
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models:3 of
+msgid ""
+"For one-shot algorithms, only top-1 is supported. For others, "
+"``optimize_mode`` and ``formatter`` are available for customization."
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models:6 of
+msgid "top_k"
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models:7 of
+msgid "How many models are intended to be exported."
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models:9 of
+msgid "optimize_mode"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig:23
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:40
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:7
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:33
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:41
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:49 of
+msgid "str"
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models:9 of
+msgid ""
+"``maximize`` or ``minimize``. Not supported by one-shot algorithms. "
+"``optimize_mode`` is likely to be removed and defined in strategy in "
+"future."
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models:13 of
+msgid "formatter"
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models:12 of
+msgid ""
+"Support ``code`` and ``dict``. Not supported by one-shot algorithms. If "
+"``code``, the python code of model will be returned. If ``dict``, the "
+"mutation history will be returned."
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.retrain_model:1 of
+msgid ""
+"this function retrains the exported model, and test it to output test "
+"accuracy"
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.run:1 of
+msgid ""
+"Run the experiment. This function will block until experiment finish or "
+"error."
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.start:1 of
+msgid ""
+"Start the experiment in background. This method will raise exception on "
+"failure. If it returns, the experiment should have been successfully "
+"started. :param port: The port of web UI. :param debug: Whether to start "
+"in debug mode."
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExperiment.stop:1 of
+msgid "Stop background experiment."
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExeConfig.validate:1 of
+msgid ""
+"Validate legality of the config object. Raise exception if any error "
+"occurred."
+msgstr ""
+
+#: nni.retiarii.experiment.pytorch.RetiariiExeConfig.validate:3 of
+msgid ""
+"This function does **not** return truth value. Do not write ``if "
+"config.validate()``."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.hash_module
+#: nni.nas.benchmarks.nasbench101.graph_util.infer_num_vertices
+#: nni.nas.benchmarks.nasbench101.graph_util.nasbench_format_to_architecture_repr
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats
+#: nni.retiarii.experiment.pytorch.RetiariiExeConfig.validate
+#: nni.retiarii.fixed.fixed_arch of
+msgid "Returns"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.hash_module
+#: nni.nas.benchmarks.nasbench101.graph_util.infer_num_vertices
+#: nni.nas.benchmarks.nasbench101.graph_util.nasbench_format_to_architecture_repr
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats
+#: nni.retiarii.experiment.pytorch.RetiariiExeConfig.validate
+#: nni.retiarii.fixed.fixed_arch of
+msgid "Return type"
+msgstr ""
+
+#: ../../NAS/ApiReference.rst:106
+msgid "CGO Execution"
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule:1
+#: of
+msgid ""
+"Lightning Module of SupervisedLearning for Cross-Graph Optimization. "
+"Users who needs cross-graph optimization should use this module."
+msgstr ""
+
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification:17
+#: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression:17 of
+msgid ""
+"Optional keyword arguments passed to trainer. See `Lightning "
+"documentation <https://pytorch-"
+"lightning.readthedocs.io/en/stable/trainer.html>`__ for details."
+msgstr ""
+
+#: ../../NAS/ApiReference.rst:115
+msgid "Utilities"
+msgstr ""
+
+#: nni.retiarii.serializer.basic_unit:1 of
+msgid ""
+"To wrap a module as a basic unit, is to make it a primitive and stop the "
+"engine from digging deeper into it."
+msgstr ""
+
+#: nni.retiarii.serializer.basic_unit:3 of
+msgid ""
+"``basic_unit_tag`` is true by default. If set to false, it will not be "
+"explicitly mark as a basic unit, and graph parser will continue to parse."
+" Currently, this is to handle a special case in ``nn.Sequential``."
+msgstr ""
+
+#: nni.retiarii.serializer.basic_unit:6 of
+msgid ""
+"Although ``basic_unit`` calls ``trace`` in its implementation, it is not "
+"for serialization. Rather, it is meant to capture the initialization "
+"arguments for mutation. Also, graph execution engine will stop digging "
+"into the inner modules when it reaches a module that is decorated with "
+"``basic_unit``."
+msgstr ""
+
+#: nni.retiarii.serializer.model_wrapper:1 of
+msgid "Wrap the base model (search space). For example,"
+msgstr ""
+
+#: nni.retiarii.serializer.model_wrapper:9 of
+msgid "The wrapper serves two purposes:"
+msgstr ""
+
+#: nni.retiarii.serializer.model_wrapper:11 of
+msgid ""
+"Capture the init parameters of python class so that it can be re-"
+"instantiated in another process."
+msgstr ""
+
+#: nni.retiarii.serializer.model_wrapper:12 of
+msgid ""
+"Reset uid in namespace so that the auto label counting in each model "
+"stably starts from zero."
+msgstr ""
+
+#: nni.retiarii.serializer.model_wrapper:14 of
+msgid ""
+"Currently, NNI might not complain in simple cases where "
+"``@model_wrapper`` is actually not needed. But in future, we might "
+"enforce ``@model_wrapper`` to be required for base model."
+msgstr ""
+
+#: nni.retiarii.fixed.fixed_arch:1 of
+msgid ""
+"Load architecture from ``fixed_arch`` and apply to model. This should be "
+"used as a context manager. For example,"
+msgstr ""
+
+#: nni.retiarii.fixed.fixed_arch:8 of
+msgid ""
+"Path to the JSON that stores the architecture, or dict that stores the "
+"exported architecture."
+msgstr ""
+
+#: nni.retiarii.fixed.fixed_arch:10 of
+msgid "Print log messages if set to True"
+msgstr ""
+
+#: nni.retiarii.fixed.fixed_arch:13 of
+msgid "Context manager that provides a fixed architecture when creates the model."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:4 ../../NAS/Benchmarks.rst:52
+msgid "Example Usages"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:2
+msgid "NAS Benchmarks"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:10 ../../NAS/DARTS.rst:5 ../../NAS/ENAS.rst:5
+#: ../../NAS/Proxylessnas.rst:5 ../../NAS/SPOS.rst:5
+msgid "Introduction"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:12
+msgid ""
+"To improve the reproducibility of NAS algorithms as well as reducing "
+"computing resource requirements, researchers proposed a series of NAS "
+"benchmarks such as `NAS-Bench-101 <https://arxiv.org/abs/1902.09635>`__\\"
+" , `NAS-Bench-201 <https://arxiv.org/abs/2001.00326>`__\\ , `NDS "
+"<https://arxiv.org/abs/1905.13214>`__\\ , etc. NNI provides a query "
+"interface for users to acquire these benchmarks. Within just a few lines "
+"of code, researcher are able to evaluate their NAS algorithms easily and "
+"fairly by utilizing these benchmarks."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:15
+msgid "Prerequisites"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:18
+msgid ""
+"Please prepare a folder to household all the benchmark databases. By "
+"default, it can be found at ``${HOME}/.cache/nni/nasbenchmark``. Or you "
+"can place it anywhere you like, and specify it in ``NASBENCHMARK_DIR`` "
+"via ``export NASBENCHMARK_DIR=/path/to/your/nasbenchmark`` before "
+"importing NNI."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:19
+msgid ""
+"Please install ``peewee`` via ``pip3 install peewee``\\ , which NNI uses "
+"to connect to database."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:22 ../../NAS/FBNet.rst:72
+msgid "Data Preparation"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:25
+msgid "Option 1 (Recommended)"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:27
+msgid ""
+"You can download the preprocessed benchmark files via ``python -m "
+"nni.nas.benchmarks.download <benchmark_name>``, where "
+"``<benchmark_name>`` can be ``nasbench101``, ``nasbench201``, and etc. "
+"Add ``--help`` to the command for supported command line arguments."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:30
+msgid "Option 2"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:32
+msgid ""
+"If you have files that are processed before v2.5, it is recommended that "
+"you delete them and try option 1."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:35
+msgid "Clone NNI to your machine and enter ``examples/nas/benchmarks`` directory."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:42
+msgid ""
+"Replace ``${NNI_VERSION}`` with a released version name or branch name, "
+"e.g., ``v2.4``."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:45
+msgid ""
+"Install dependencies via ``pip3 install -r xxx.requirements.txt``. "
+"``xxx`` can be ``nasbench101``\\ , ``nasbench201`` or ``nds``."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:47
+msgid ""
+"Generate the database via ``./xxx.sh``. The directory that stores the "
+"benchmark file can be configured with ``NASBENCHMARK_DIR`` environment "
+"variable, which defaults to ``~/.nni/nasbenchmark``. Note that the NAS-"
+"Bench-201 dataset will be downloaded from a google drive."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:49
+msgid ""
+"Please make sure there is at least 10GB free disk space and note that the"
+" conversion process can take up to hours to complete."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:54
+msgid ""
+"Please refer to `examples usages of Benchmarks API "
+"<./BenchmarksExample.rst>`__."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:57 ../../NAS/BenchmarksExample.ipynb:38
+msgid "NAS-Bench-101"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:59
+msgid "`Paper link <https://arxiv.org/abs/1902.09635>`__"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:60
+msgid "`Open-source <https://github.com/google-research/nasbench>`__"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:62
+msgid ""
+"NAS-Bench-101 contains 423,624 unique neural networks, combined with 4 "
+"variations in number of epochs (4, 12, 36, 108), each of which is trained"
+" 3 times. It is a cell-wise search space, which constructs and stacks a "
+"cell by enumerating DAGs with at most 7 operators, and no more than 9 "
+"connections. All operators can be chosen from ``CONV3X3_BN_RELU``\\ , "
+"``CONV1X1_BN_RELU`` and ``MAXPOOL3X3``\\ , except the first operator "
+"(always ``INPUT``\\ ) and last operator (always ``OUTPUT``\\ )."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:64
+msgid ""
+"Notably, NAS-Bench-101 eliminates invalid cells (e.g., there is no path "
+"from input to output, or there is redundant computation). Furthermore, "
+"isomorphic cells are de-duplicated, i.e., all the remaining cells are "
+"computationally unique."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:67 ../../NAS/Benchmarks.rst:103
+#: ../../NAS/Benchmarks.rst:171
+msgid "API Documentation"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats:1 of
+msgid "Query trial stats of NAS-Bench-101 given conditions."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats:3 of
+msgid ""
+"If a dict, it is in the format that is described in "
+":class:`nni.nas.benchmark.nasbench101.Nb101TrialConfig`. Only trial stats"
+" matched will be returned. If none, all architectures in the database "
+"will be matched."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats:7
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats:7
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:18 of
+msgid "If int, matching results will be returned. Otherwise a wildcard."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats:9 of
+msgid ""
+"Whether to match essentially-same architecture, i.e., architecture with "
+"the same graph-invariant hash value."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats:12
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats:12
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:20 of
+msgid ""
+"If 'none' or None, all trial stats will be returned directly. If 'mean', "
+"fields in trial stats will be averaged given the same trial config."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats:15
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats:15
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:23 of
+msgid "If true, intermediate results will be returned."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.query.query_nb101_trial_stats:18 of
+msgid ""
+"A generator of :class:`nni.nas.benchmark.nasbench101.Nb101TrialStats` "
+"objects, where each of them has been converted into a dict."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig:1 of
+msgid "Trial config for NAS-Bench-101."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig:5 of
+msgid ""
+"A dict with keys ``op1``, ``op2``, ... and ``input1``, ``input2``, ... "
+"Vertices are enumerate from 0. Since node 0 is input node, it is skipped "
+"in this dict. Each ``op`` is one of "
+":const:`nni.nas.benchmark.nasbench101.CONV3X3_BN_RELU`, "
+":const:`nni.nas.benchmark.nasbench101.CONV1X1_BN_RELU`, and "
+":const:`nni.nas.benchmark.nasbench101.MAXPOOL3X3`. Each ``input`` is a "
+"list of previous nodes. For example ``input5`` can be ``[0, 1, 3]``."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig:11
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:11
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:16
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:27 of
+msgid "dict"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig:15 of
+msgid ""
+"Number of vertices (nodes) in one cell. Should be less than or equal to 7"
+" in default setup."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig:21 of
+msgid "Graph-invariant MD5 string for this architecture."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialConfig:27 of
+msgid ""
+"Number of epochs planned for this trial. Should be one of 4, 12, 36, 108 "
+"in default setup."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:1 of
+msgid ""
+"Computation statistics for NAS-Bench-101. Each corresponds to one trial. "
+"Each config has multiple trials with different random seeds, but "
+"unfortunately seed for each trial is unavailable. NAS-Bench-101 trains "
+"and evaluates on CIFAR-10 by default. The original training set is "
+"divided into 40k training images and 10k validation images, and the "
+"original validation set is used for test only."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:8
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:5 of
+msgid "Setup for this trial data."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:10 of
+msgid "Nb101TrialConfig"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:14
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:17
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:17 of
+msgid "Final accuracy on training data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:19
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:25
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:31
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:37
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:16
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:22
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:28
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:34
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:40
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:19
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:25
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:31
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:38
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:19
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:25
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:31
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:38
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:69
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:75
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:81
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:87
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:93
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:99
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:105
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:25
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:31
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:55
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:61
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:19
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:31
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:37
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:49
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:55
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:61
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:67 of
+msgid "float"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:20
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:23 of
+msgid "Final accuracy on validation data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:26
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:29
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:29 of
+msgid "Final accuracy on test data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:32
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:67
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:53 of
+msgid "Number of trainable parameters in million."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101TrialStats:38
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:85 of
+msgid "Duration of training in seconds."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:1 of
+msgid "Intermediate statistics for NAS-Bench-101."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:5 of
+msgid "The exact trial where the intermediate result is produced."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:7 of
+msgid "Nb101TrialStats"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:11 of
+msgid "Elapsed epochs when evaluation is done."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:17 of
+msgid "Intermediate accuracy on training data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:23 of
+msgid "Intermediate accuracy on validation data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:29 of
+msgid "Intermediate accuracy on test data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.model.Nb101IntermediateStats:35 of
+msgid "Time elapsed in seconds."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.nasbench_format_to_architecture_repr:1
+#: of
+msgid ""
+"Computes a graph-invariance MD5 hash of the matrix and label pair. "
+"Imported from NAS-Bench-101 repo."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.nasbench_format_to_architecture_repr:4
+#: of
+msgid ""
+"A 2D array of shape NxN, where N is the number of vertices. "
+"``matrix[u][v]`` is 1 if there is a direct edge from `u` to `v`, "
+"otherwise it will be 0."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.nasbench_format_to_architecture_repr:8
+#: of
+msgid ""
+"A list of str that starts with input and ends with output. The "
+"intermediate nodes are chosen from candidate operators."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.nasbench_format_to_architecture_repr:12
+#: of
+msgid "Converted number of vertices and architecture."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.infer_num_vertices:1 of
+msgid "Infer number of vertices from an architecture dict."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.infer_num_vertices:3 of
+msgid "Architecture in NNI format."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.infer_num_vertices:6 of
+msgid "Number of vertices."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.hash_module:1 of
+msgid ""
+"Computes a graph-invariance MD5 hash of the matrix and label pair. This "
+"snippet is modified from code in NAS-Bench-101 repo."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.hash_module:4 of
+msgid "Square upper-triangular adjacency matrix."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.hash_module:6 of
+msgid "Labels of length equal to both dimensions of matrix."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench101.graph_util.hash_module:9 of
+msgid "MD5 hash of the matrix and labeling."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:94 ../../NAS/BenchmarksExample.ipynb:99
+msgid "NAS-Bench-201"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:96
+msgid "`Paper link <https://arxiv.org/abs/2001.00326>`__"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:97
+msgid "`Open-source API <https://github.com/D-X-Y/NAS-Bench-201>`__"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:98
+msgid "`Implementations <https://github.com/D-X-Y/AutoDL-Projects>`__"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:100
+msgid ""
+"NAS-Bench-201 is a cell-wise search space that views nodes as tensors and"
+" edges as operators. The search space contains all possible densely-"
+"connected DAGs with 4 nodes, resulting in 15,625 candidates in total. "
+"Each operator (i.e., edge) is selected from a pre-defined operator set "
+"(\\ ``NONE``\\ , ``SKIP_CONNECT``\\ , ``CONV_1X1``\\ , ``CONV_3X3`` and "
+"``AVG_POOL_3X3``\\ ). Training appraoches vary in the dataset used "
+"(CIFAR-10, CIFAR-100, ImageNet) and number of epochs scheduled (12 and "
+"200). Each combination of architecture and training approach is repeated "
+"1 - 3 times with different random seeds."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats:1 of
+msgid "Query trial stats of NAS-Bench-201 given conditions."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats:3 of
+msgid ""
+"If a dict, it is in the format that is described in "
+":class:`nni.nas.benchmark.nasbench201.Nb201TrialConfig`. Only trial stats"
+" matched will be returned. If none, all architectures in the database "
+"will be matched."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats:9 of
+msgid ""
+"If specified, can be one of the dataset available in "
+":class:`nni.nas.benchmark.nasbench201.Nb201TrialConfig`. Otherwise a "
+"wildcard."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.query.query_nb201_trial_stats:18 of
+msgid ""
+"A generator of :class:`nni.nas.benchmark.nasbench201.Nb201TrialStats` "
+"objects, where each of them has been converted into a dict."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:1 of
+msgid "Trial config for NAS-Bench-201."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:5 of
+msgid ""
+"A dict with keys ``0_1``, ``0_2``, ``0_3``, ``1_2``, ``1_3``, ``2_3``, "
+"each of which is an operator chosen from "
+":const:`nni.nas.benchmark.nasbench201.NONE`, "
+":const:`nni.nas.benchmark.nasbench201.SKIP_CONNECT`, "
+":const:`nni.nas.benchmark.nasbench201.CONV_1X1`, "
+":const:`nni.nas.benchmark.nasbench201.CONV_3X3` and "
+":const:`nni.nas.benchmark.nasbench201.AVG_POOL_3X3`."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:15 of
+msgid "Number of epochs planned for this trial. Should be one of 12 and 200."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:21 of
+msgid "Number of channels for initial convolution. 16 by default."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:27 of
+msgid "Number of cells per stage. 5 by default."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialConfig:33 of
+msgid ""
+"Dataset used for training and evaluation. NAS-Bench-201 provides the "
+"following 4 options: ``cifar10-valid`` (training data is splited into 25k"
+" for training and 25k for validation, validation data is used for test), "
+"``cifar10`` (training data is used in training, validation data is "
+"splited into 5k for validation and 5k for testing), ``cifar100`` (same "
+"protocol as ``cifar10``), and ``imagenet16-120`` (a subset of 120 classes"
+" in ImageNet, downscaled to 16x16, using training data for training, 6k "
+"images from validation set for validation and the other 6k for testing)."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:1 of
+msgid "Computation statistics for NAS-Bench-201. Each corresponds to one trial."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:7 of
+msgid "Nb201TrialConfig"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:11
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:11 of
+msgid "Random seed selected, for reproduction."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:35
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:35 of
+msgid ""
+"Test accuracy on original validation set (10k for CIFAR and 12k for "
+"Imagenet16-120), ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:42 of
+msgid ""
+"Final cross entropy loss on training data. Note that loss could be NaN, "
+"in which case this attributed will be None."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:44
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:50
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:56
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:62
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:45
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:51
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:57
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:63
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:19
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:25
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:43 of
+msgid "float or None"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:49 of
+msgid "Final cross entropy loss on validation data."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:55 of
+msgid "Final cross entropy loss on test data."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:61 of
+msgid "Final cross entropy loss on original validation set."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:73 of
+msgid "Latency in seconds."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:79
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:59 of
+msgid "FLOPs in million."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:91 of
+msgid "Time elapsed to evaluate on validation set."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:97 of
+msgid "Time elapsed to evaluate on test set."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201TrialStats:103 of
+msgid "Time elapsed to evaluate on original test set."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:1 of
+msgid "Intermediate statistics for NAS-Bench-201."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:5
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:5 of
+msgid "Corresponding trial."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:7 of
+msgid "Nb201TrialStats"
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:11
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:11 of
+msgid "Elapsed epochs."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:17
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:23 of
+msgid "Current accuracy on training data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:23 of
+msgid "Current accuracy on validation data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:29
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:29 of
+msgid "Current accuracy on test data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:42 of
+msgid "Current cross entropy loss on training data."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:48 of
+msgid "Current cross entropy loss on validation data."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:54 of
+msgid "Current cross entropy loss on test data."
+msgstr ""
+
+#: nni.nas.benchmarks.nasbench201.model.Nb201IntermediateStats:60 of
+msgid "Current cross entropy loss on original validation set."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:124 ../../NAS/BenchmarksExample.ipynb:167
+msgid "NDS"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:126
+msgid "`Paper link <https://arxiv.org/abs/1905.13214>`__"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:127
+msgid "`Open-source <https://github.com/facebookresearch/nds>`__"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:129
+msgid ""
+"*On Network Design Spaces for Visual Recognition* released trial "
+"statistics of over 100,000 configurations (models + hyper-parameters) "
+"sampled from multiple model families, including vanilla (feedforward "
+"network loosely inspired by VGG), ResNet and ResNeXt (residual basic "
+"block and residual bottleneck block) and NAS cells (following popular "
+"design from NASNet, Ameoba, PNAS, ENAS and DARTS). Most configurations "
+"are trained only once with a fixed seed, except a few that are trained "
+"twice or three times."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:131
+msgid ""
+"Instead of storing results obtained with different configurations in "
+"separate files, we dump them into one single database to enable "
+"comparison in multiple dimensions. Specifically, we use ``model_family`` "
+"to distinguish model types, ``model_spec`` for all hyper-parameters "
+"needed to build this model, ``cell_spec`` for detailed information on "
+"operators and connections if it is a NAS cell, ``generator`` to denote "
+"the sampling policy through which this configuration is generated. Refer "
+"to API documentation for details."
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:134
+msgid "Available Operators"
+msgstr ""
+
+#: ../../NAS/Benchmarks.rst:136
+msgid "Here is a list of available operators used in NDS."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:1 of
+msgid "Query trial stats of NDS given conditions."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:3 of
+msgid ""
+"If str, can be one of the model families available in "
+":class:`nni.nas.benchmark.nds.NdsTrialConfig`. Otherwise a wildcard."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:6 of
+msgid ""
+"If str, can be one of the proposers available in "
+":class:`nni.nas.benchmark.nds.NdsTrialConfig`. Otherwise a wildcard."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:8 of
+msgid ""
+"If str, can be one of the generators available in "
+":class:`nni.nas.benchmark.nds.NdsTrialConfig`. Otherwise a wildcard."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:10 of
+msgid ""
+"If specified, can be one of the model spec available in "
+":class:`nni.nas.benchmark.nds.NdsTrialConfig`. Otherwise a wildcard."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:13 of
+msgid ""
+"If specified, can be one of the cell spec available in "
+":class:`nni.nas.benchmark.nds.NdsTrialConfig`. Otherwise a wildcard."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:16 of
+msgid ""
+"If str, can be one of the datasets available in "
+":class:`nni.nas.benchmark.nds.NdsTrialConfig`. Otherwise a wildcard."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.query.query_nds_trial_stats:26 of
+msgid ""
+"A generator of :class:`nni.nas.benchmark.nds.NdsTrialStats` objects, "
+"where each of them has been converted into a dict."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:1 of
+msgid "Trial config for NDS."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:5 of
+msgid ""
+"Could be ``nas_cell``, ``residual_bottleneck``, ``residual_basic`` or "
+"``vanilla``."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:11 of
+msgid ""
+"If ``model_family`` is ``nas_cell``, it contains ``num_nodes_normal``, "
+"``num_nodes_reduce``, ``depth``, ``width``, ``aux`` and ``drop_prob``. If"
+" ``model_family`` is ``residual_bottleneck``, it contains ``bot_muls``, "
+"``ds`` (depths), ``num_gs`` (number of groups) and ``ss`` (strides). If "
+"``model_family`` is ``residual_basic`` or ``vanilla``, it contains "
+"``ds``, ``ss`` and ``ws``."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:20 of
+msgid ""
+"If ``model_family`` is not ``nas_cell`` it will be an empty dict. "
+"Otherwise, it specifies ``<normal/reduce>_<i>_<op/input>_<x/y>``, where i"
+" ranges from 0 to ``num_nodes_<normal/reduce> - 1``. If it is an ``op``, "
+"the value is chosen from the constants specified previously like "
+":const:`nni.nas.benchmark.nds.CONV_1X1`. If it is i's ``input``, the "
+"value range from 0 to ``i + 1``, as ``nas_cell`` uses previous two nodes "
+"as inputs, and node 0 is actually the second node. Refer to NASNet paper "
+"for details. Finally, another two key-value pairs ``normal_concat`` and "
+"``reduce_concat`` specify which nodes are eventually concatenated into "
+"output."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:31 of
+msgid "Dataset used. Could be ``cifar10`` or ``imagenet``."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:37 of
+msgid ""
+"Can be one of ``random`` which generates configurations at random, while "
+"keeping learning rate and weight decay fixed, ``fix_w_d`` which further "
+"keeps ``width`` and ``depth`` fixed, only applicable for ``nas_cell``. "
+"``tune_lr_wd`` which further tunes learning rate and weight decay."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:45 of
+msgid ""
+"Paper who has proposed the distribution for random sampling. Available "
+"proposers include ``nasnet``, ``darts``, ``enas``, ``pnas``, ``amoeba``, "
+"``vanilla``, ``resnext-a``, ``resnext-b``, ``resnet``, ``resnet-b`` "
+"(ResNet with bottleneck). See NDS paper for details."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:53 of
+msgid "Initial learning rate."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:59 of
+msgid "L2 weight decay applied on weights."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialConfig:65 of
+msgid ""
+"Number of epochs scheduled, during which learning rate will decay to 0 "
+"following cosine annealing."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:1 of
+msgid "Computation statistics for NDS. Each corresponds to one trial."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:5 of
+msgid "Corresponding config for trial."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:7 of
+msgid "NdsTrialConfig"
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:23 of
+msgid "Final cross entropy loss on training data. Could be NaN (None)."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:35 of
+msgid "Best accuracy on training data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:41 of
+msgid "Best cross entropy loss on training data. Could be NaN (None)."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:47 of
+msgid "Best accuracy on test data, ranging from 0 to 100."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsTrialStats:65 of
+msgid "Seconds elapsed for each iteration."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:1 of
+msgid "Intermediate statistics for NDS."
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:7 of
+msgid "NdsTrialStats"
+msgstr ""
+
+#: nni.nas.benchmarks.nds.model.NdsIntermediateStats:17 of
+msgid "Current cross entropy loss on training data. Can be NaN (None)."
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:9
+msgid "Example Usages of NAS Benchmarks"
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:49 ../../NAS/BenchmarksExample.ipynb:110
+msgid "Use the following architecture as an example:"
+msgstr ""
+
+msgid "nas-101"
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:87
+msgid ""
+"An architecture of NAS-Bench-101 could be trained more than once. Each "
+"element of the returned generator is a dict which contains one of the "
+"training results of this trial config (architecture + hyper-parameters) "
+"including train/valid/test accuracy, training time, number of epochs, "
+"etc. The results of NAS-Bench-201 and NDS follow similar formats."
+msgstr ""
+
+msgid "nas-201"
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:143
+msgid "Intermediate results are also available."
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:178
+msgid "Use the following architecture as an example: |nds|"
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:182
+msgid "nds"
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:180
+msgid ""
+"Here, ``bot_muls``, ``ds``, ``num_gs``, ``ss`` and ``ws`` stand for "
+"“bottleneck multipliers”, “depths”, “number of groups”, “strides” and "
+"“widths” respectively."
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:325
+msgid "NLP"
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:336
+msgid ""
+"Use the following two architectures as examples. The arch in the paper is"
+" called “receipe” with nested variable, and now it is nunested in the "
+"benchmarks for NNI. An arch has multiple Node, Node_input_n and Node_op, "
+"you can refer to doc for more details."
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:338
+msgid "arch1 : |8d875af55216456594f23d31b9a743cb|"
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:342
+msgid "8d875af55216456594f23d31b9a743cb"
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:340
+msgid "arch2 : |e22f90e71bb64000b21cb46ce8fc59fe|"
+msgstr ""
+
+#: ../../NAS/BenchmarksExample.ipynb:346
+msgid "e22f90e71bb64000b21cb46ce8fc59fe"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:2 ../../NAS/one_shot_nas.rst:7
+msgid "DARTS"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:7
+msgid ""
+"The paper `DARTS: Differentiable Architecture Search "
+"<https://arxiv.org/abs/1806.09055>`__ addresses the scalability challenge"
+" of architecture search by formulating the task in a differentiable "
+"manner. Their method is based on the continuous relaxation of the "
+"architecture representation, allowing efficient search of the "
+"architecture using gradient descent."
+msgstr ""
+
+#: ../../NAS/DARTS.rst:9
+msgid ""
+"Authors' code optimizes the network weights and architecture weights "
+"alternatively in mini-batches. They further explore the possibility that "
+"uses second order optimization (unroll) instead of first order, to "
+"improve the performance."
+msgstr ""
+
+#: ../../NAS/DARTS.rst:11
+msgid ""
+"Implementation on NNI is based on the `official implementation "
+"<https://github.com/quark0/darts>`__ and a `popular 3rd-party repo "
+"<https://github.com/khanrc/pt.darts>`__. DARTS on NNI is designed to be "
+"general for arbitrary search space. A CNN search space tailored for "
+"CIFAR10, same as the original paper, is implemented as a use case of "
+"DARTS."
+msgstr ""
+
+#: ../../NAS/DARTS.rst:14
+msgid "Reproduction Results"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:16
+msgid ""
+"The above-mentioned example is meant to reproduce the results in the "
+"paper, we do experiments with first and second order optimization. Due to"
+" the time limit, we retrain *only the best architecture* derived from the"
+" search phase and we repeat the experiment *only once*. Our results is "
+"currently on par with the results reported in paper. We will add more "
+"results later when ready."
+msgstr ""
+
+#: ../../NAS/DARTS.rst:23
+msgid "In paper"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:24
+msgid "Reproduction"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:25
+msgid "First order (CIFAR10)"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:26
+msgid "3.00 +/- 0.14"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:27
+msgid "2.78"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:28
+msgid "Second order (CIFAR10)"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:29
+msgid "2.76 +/- 0.09"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:30
+msgid "2.80"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:34 ../../NAS/ENAS.rst:12 ../../NAS/SPOS.rst:12
+msgid "Examples"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:37
+msgid "CNN Search Space"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:39
+msgid ":githublink:`Example code <examples/nas/oneshot/darts>`"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:54 ../../NAS/ENAS.rst:37 ../../NAS/SPOS.rst:80
+msgid "Reference"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:57 ../../NAS/ENAS.rst:40 ../../NAS/SPOS.rst:83
+msgid "PyTorch"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:63
+msgid "Limitations"
+msgstr ""
+
+#: ../../NAS/DARTS.rst:66
+msgid ""
+"DARTS doesn't support DataParallel and needs to be customized in order to"
+" support DistributedDataParallel."
+msgstr ""
+
+#: ../../NAS/ENAS.rst:2 ../../NAS/one_shot_nas.rst:7
+msgid "ENAS"
+msgstr ""
+
+#: ../../NAS/ENAS.rst:7
+msgid ""
+"The paper `Efficient Neural Architecture Search via Parameter Sharing "
+"<https://arxiv.org/abs/1802.03268>`__ uses parameter sharing between "
+"child models to accelerate the NAS process. In ENAS, a controller learns "
+"to discover neural network architectures by searching for an optimal "
+"subgraph within a large computational graph. The controller is trained "
+"with policy gradient to select a subgraph that maximizes the expected "
+"reward on the validation set. Meanwhile the model corresponding to the "
+"selected subgraph is trained to minimize a canonical cross entropy loss."
+msgstr ""
+
+#: ../../NAS/ENAS.rst:9
+msgid ""
+"Implementation on NNI is based on the `official implementation in "
+"Tensorflow <https://github.com/melodyguan/enas>`__\\ , including a "
+"general-purpose Reinforcement-learning controller and a trainer that "
+"trains target network and this controller alternatively. Following paper,"
+" we have also implemented macro and micro search space on CIFAR10 to "
+"demonstrate how to use these trainers. Since code to train from scratch "
+"on NNI is not ready yet, reproduction results are currently unavailable."
+msgstr ""
+
+#: ../../NAS/ENAS.rst:15
+msgid "CIFAR10 Macro/Micro Search Space"
+msgstr ""
+
+#: ../../NAS/ENAS.rst:17
+msgid ":githublink:`Example code <examples/nas/oneshot/enas>`"
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:2 ../../NAS/multi_trial_nas.rst:6
+msgid "Execution Engines"
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:4
+msgid ""
+"Execution engine is for running Retiarii Experiment. NNI supports three "
+"execution engines, users can choose a speicific engine according to the "
+"type of their model mutation definition and their requirements for cross-"
+"model optimizations."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:6
+msgid ""
+"**Pure-python execution engine** is the default engine, it supports the "
+"model space expressed by `inline mutation API "
+"<./MutationPrimitives.rst>`__."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:8
+msgid ""
+"**Graph-based execution engine** supports the use of `inline mutation "
+"APIs <./MutationPrimitives.rst>`__ and model spaces represented by "
+"`mutators <./Mutators.rst>`__. It requires the user's model to be parsed "
+"by `TorchScript <https://pytorch.org/docs/stable/jit.html>`__."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:10
+msgid ""
+"**CGO execution engine** has the same requirements and capabilities as "
+"the **Graph-based execution engine**. But further enables cross-model "
+"optimizations, which makes model space exploration faster."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:13
+msgid "Pure-python Execution Engine"
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:15
+msgid ""
+"Pure-python Execution Engine is the default engine, we recommend users to"
+" keep using this execution engine, if they are new to NNI NAS. Pure-"
+"python execution engine plays magic within the scope of inline mutation "
+"APIs, while does not touch the rest of user model. Thus, it has minimal "
+"requirement on user model."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:17
+msgid "One steps are needed to use this engine now."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:19
+msgid ""
+"Add ``@nni.retiarii.model_wrapper`` decorator outside the whole PyTorch "
+"model."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:21
+msgid ""
+"You should always use ``super().__init__()`` instead of "
+"``super(MyNetwork, self).__init__()`` in the PyTorch model, because the "
+"latter one has issues with model wrapper."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:24
+msgid "Graph-based Execution Engine"
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:26
+msgid ""
+"For graph-based execution engine, it converts user-defined model to a "
+"graph representation (called graph IR) using `TorchScript "
+"<https://pytorch.org/docs/stable/jit.html>`__, each instantiated module "
+"in the model is converted to a subgraph. Then mutations are applied to "
+"the graph to generate new graphs. Each new graph is then converted back "
+"to PyTorch code and executed on the user specified training service."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:28
+msgid ""
+"Users may find ``@basic_unit`` helpful in some cases. ``@basic_unit`` "
+"here means the module will not be converted to a subgraph, instead, it is"
+" converted to a single graph node as a basic unit."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:30
+msgid "``@basic_unit`` is usually used in the following cases:"
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:32
+msgid ""
+"When users want to tune initialization parameters of a module using "
+"``ValueChoice``, then decorate the module with ``@basic_unit``. For "
+"example, ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))``, "
+"here ``MyConv`` should be decorated."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:34
+msgid ""
+"When a module cannot be successfully parsed to a subgraph, decorate the "
+"module with ``@basic_unit``. The parse failure could be due to complex "
+"control flow. Currently Retiarii does not support adhoc loop, if there is"
+" adhoc loop in a module's forward, this class should be decorated as "
+"serializable module. For example, the following ``MyModule`` should be "
+"decorated."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:46
+msgid ""
+"Some inline mutation APIs require their handled module to be decorated "
+"with ``@basic_unit``. For example, user-defined module that is provided "
+"to ``LayerChoice`` as a candidate op should be decorated."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:48
+msgid "Three steps are need to use graph-based execution engine."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:50
+msgid "Remove ``@nni.retiarii.model_wrapper`` if there is any in your model."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:51
+msgid ""
+"Add ``config.execution_engine = 'base'`` to ``RetiariiExeConfig``. The "
+"default value of ``execution_engine`` is 'py', which means pure-python "
+"execution engine."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:52
+msgid "Add ``@basic_unit`` when necessary following the above guidelines."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:54
+msgid ""
+"For exporting top models, graph-based execution engine supports exporting"
+" source code for top models by running "
+"``exp.export_top_models(formatter='code')``."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:57
+msgid "CGO Execution Engine (experimental)"
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:59
+msgid ""
+"CGO（Cross-Graph Optimization) execution engine does cross-model "
+"optimizations based on the graph-based execution engine. In CGO execution"
+" engine, multiple models could be merged and trained together in one "
+"trial. Currently, it only supports ``DedupInputOptimizer`` that can merge"
+" graphs sharing the same dataset to only loading and pre-processing each "
+"batch of data once, which can avoid bottleneck on data loading."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:62
+msgid "To use CGO engine, PyTorch-lightning above version 1.4.2 is required."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:64
+msgid "To enable CGO execution engine, you need to follow these steps:"
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:66
+msgid ""
+"Create RetiariiExeConfig with remote training service. CGO execution "
+"engine currently only supports remote training service."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:67
+msgid "Add configurations for remote training service"
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:68
+msgid "Add configurations for CGO engine"
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:91
+msgid ""
+"CGO Execution Engine only supports pytorch-lightning trainer that "
+"inherits "
+":class:`nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule`."
+" For a trial running multiple models, the trainers inheriting "
+":class:`nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule`"
+" can handle the multiple outputs from the merged model for training, test"
+" and validation. We have already implemented two trainers: "
+":class:`nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification` and "
+":class:`nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression`."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:103
+msgid ""
+"Advanced users can also implement their own trainers by inheriting "
+"``MultiModelSupervisedLearningModule``."
+msgstr ""
+
+#: ../../NAS/ExecutionEngines.rst:105
+msgid ""
+"Sometimes, a mutated model cannot be executed (e.g., due to shape "
+"mismatch). When a trial running multiple models contains a bad model, CGO"
+" execution engine will re-run each model independently in seperate trials"
+" without cross-model optimizations."
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:2
+msgid "Exploration Strategies for Multi-trial NAS"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:5
+msgid "Usage of Exploration Strategy"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:7
+msgid ""
+"To use an exploration strategy, users simply instantiate an exploration "
+"strategy and pass the instantiated object to ``RetiariiExperiment``. "
+"Below is a simple example."
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:16
+msgid "Supported Exploration Strategies"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:18
+msgid "NNI provides the following exploration strategies for multi-trial NAS."
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:24
+msgid "Name"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:25 ../../NAS/Overview.rst:37
+#: ../../NAS/Overview.rst:63
+msgid "Brief Introduction of Algorithm"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:26
+msgid "`Random Strategy <./ApiReference.rst#nni.retiarii.strategy.Random>`__"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:27 ../../NAS/Overview.rst:39
+msgid ""
+"Randomly sampling new model(s) from user defined model space. "
+"(``nni.retiarii.strategy.Random``)"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:28
+msgid "`Grid Search <./ApiReference.rst#nni.retiarii.strategy.GridSearch>`__"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:29 ../../NAS/Overview.rst:41
+msgid ""
+"Sampling new model(s) from user defined model space using grid search "
+"algorithm. (``nni.retiarii.strategy.GridSearch``)"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:30
+msgid ""
+"`Regularized Evolution "
+"<./ApiReference.rst#nni.retiarii.strategy.RegularizedEvolution>`__"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:31 ../../NAS/Overview.rst:43
+msgid ""
+"Generating new model(s) from generated models using `regularized "
+"evolution algorithm <https://arxiv.org/abs/1802.01548>`__ . "
+"(``nni.retiarii.strategy.RegularizedEvolution``)"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:32
+msgid "`TPE Strategy <./ApiReference.rst#nni.retiarii.strategy.TPEStrategy>`__"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:33 ../../NAS/Overview.rst:45
+msgid ""
+"Sampling new model(s) from user defined model space using `TPE algorithm "
+"<https://papers.nips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__"
+" . (``nni.retiarii.strategy.TPEStrategy``)"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:34
+msgid "`RL Strategy <./ApiReference.rst#nni.retiarii.strategy.PolicyBasedRL>`__"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:35 ../../NAS/Overview.rst:47
+msgid ""
+"It uses `PPO algorithm <https://arxiv.org/abs/1707.06347>`__ to sample "
+"new model(s) from user defined model space. "
+"(``nni.retiarii.strategy.PolicyBasedRL``)"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:38
+msgid "Customize Exploration Strategy"
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:40
+msgid ""
+"If users want to innovate a new exploration strategy, they can easily "
+"customize a new one following the interface provided by NNI. "
+"Specifically, users should inherit the base strategy class "
+"``BaseStrategy``, then implement the member function ``run``. This member"
+" function takes ``base_model`` and ``applied_mutators`` as its input "
+"arguments. It can simply apply the user specified mutators in "
+"``applied_mutators`` onto ``base_model`` to generate a new model. When a "
+"mutator is applied, it should be bound with a sampler (e.g., "
+"``RandomSampler``). Every sampler implements the ``choice`` function "
+"which chooses value(s) from candidate values. The ``choice`` functions "
+"invoked in mutators are executed with the sampler."
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:42
+msgid ""
+"Below is a very simple random strategy, which makes the choices "
+"completely random."
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:72
+msgid ""
+"You can find that this strategy does not know the search space "
+"beforehand, it passively makes decisions every time ``choice`` is invoked"
+" from mutators. If a strategy wants to know the whole search space before"
+" making any decision (e.g., TPE, SMAC), it can use ``dry_run`` function "
+"provided by ``Mutator`` to obtain the space. An example strategy can be "
+"found :githublink:`here <nni/retiarii/strategy/tpe_strategy.py>`."
+msgstr ""
+
+#: ../../NAS/ExplorationStrategies.rst:74
+msgid ""
+"After generating a new model, the strategy can use our provided APIs "
+"(e.g., ``submit_models``, ``is_stopped_exec``) to submit the model and "
+"get its reported results. More APIs can be found in `API References "
+"<./ApiReference.rst>`__."
+msgstr ""
+
+#: ../../NAS/FBNet.rst:2 ../../NAS/one_shot_nas.rst:7
+msgid "FBNet"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:4
+msgid ""
+"This one-shot NAS is still implemented under NNI NAS 1.0, and will `be "
+"migrated to Retiarii framework in v2.4 "
+"<https://github.com/microsoft/nni/issues/3814>`__."
+msgstr ""
+
+#: ../../NAS/FBNet.rst:6
+msgid ""
+"For the mobile application of facial landmark, based on the basic "
+"architecture of PFLD model, we have applied the FBNet (Block-wise DNAS) "
+"to design an concise model with the trade-off between latency and "
+"accuracy. References are listed as below:"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:9
+msgid ""
+"`FBNet: Hardware-Aware Efficient ConvNet Design via Differentiable Neural"
+" Architecture Search <https://arxiv.org/abs/1812.03443>`__"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:10
+msgid ""
+"`PFLD: A Practical Facial Landmark Detector "
+"<https://arxiv.org/abs/1902.10859>`__"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:12
+msgid ""
+"FBNet is a block-wise differentiable NAS method (Block-wise DNAS), where "
+"the best candidate building blocks can be chosen by using Gumbel Softmax "
+"random sampling and differentiable training. At each layer (or stage) to "
+"be searched, the diverse candidate blocks are side by side planned (just "
+"like the effectiveness of structural re-parameterization), leading to "
+"sufficient pre-training of the supernet. The pre-trained supernet is "
+"further sampled for finetuning of the subnet, to achieve better "
+"performance."
+msgstr ""
+
+#: ../../NAS/FBNet.rst:19
+msgid ""
+"PFLD is a lightweight facial landmark model for realtime application. The"
+" architecture of PLFD is firstly simplified for acceleration, by using "
+"the stem block of PeleeNet, average pooling with depthwise convolution "
+"and eSE module."
+msgstr ""
+
+#: ../../NAS/FBNet.rst:21
+msgid ""
+"To achieve better trade-off between latency and accuracy, the FBNet is "
+"further applied on the simplified PFLD for searching the best block at "
+"each specific layer. The search space is based on the FBNet space, and "
+"optimized for mobile deployment by using the average pooling with "
+"depthwise convolution and eSE module etc."
+msgstr ""
+
+#: ../../NAS/FBNet.rst:25
+msgid "Experiments"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:27
+msgid ""
+"To verify the effectiveness of FBNet applied on PFLD, we choose the open "
+"source dataset with 106 landmark points as the benchmark:"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:29
+msgid ""
+"`Grand Challenge of 106-Point Facial Landmark Localization "
+"<https://arxiv.org/abs/1905.03469>`__"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:31
+msgid ""
+"The baseline model is denoted as MobileNet-V3 PFLD (`Reference baseline "
+"<https://github.com/Hsintao/pfld_106_face_landmarks>`__), and the "
+"searched model is denoted as Subnet. The experimental results are listed "
+"as below, where the latency is tested on Qualcomm 625 CPU (ARMv8):"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:38
+msgid "Model"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:39
+msgid "Size"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:40
+msgid "Latency"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:41
+msgid "Validation NME"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:42
+msgid "MobileNet-V3 PFLD"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:43
+msgid "1.01MB"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:44
+msgid "10ms"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:45
+msgid "6.22%"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:46
+msgid "Subnet"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:47
+msgid "693KB"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:48
+msgid "1.60ms"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:49
+msgid "5.58%"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:53
+msgid "Example"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:55
+msgid ""
+"`Example code "
+"<https://github.com/microsoft/nni/tree/master/examples/nas/oneshot/pfld>`__"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:57
+msgid "Please run the following scripts at the example directory."
+msgstr ""
+
+#: ../../NAS/FBNet.rst:59
+msgid "The Python dependencies used here are listed as below:"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:74
+msgid ""
+"Firstly, you should download the dataset `106points dataset "
+"<https://drive.google.com/file/d/1I7QdnLxAlyG2Tq3L66QYzGhiBEoVfzKo/view?usp=sharing>`__"
+" to the path ``./data/106points`` . The dataset includes the train-set "
+"and test-set:"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:85
+msgid "Quik Start"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:88
+msgid "1. Search"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:90
+msgid ""
+"Based on the architecture of simplified PFLD, the setting of multi-stage "
+"search space and hyper-parameters for searching should be firstly "
+"configured to construct the supernet, as an example:"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:115
+msgid ""
+"After creation of the supernet with the specification of search space and"
+" hyper-parameters, we can run below command to start searching and "
+"training of the supernet:"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:121
+msgid ""
+"The validation accuracy will be shown during training, and the model with"
+" best accuracy will be saved as "
+"``./ckpt_save/supernet/checkpoint_best.pth``."
+msgstr ""
+
+#: ../../NAS/FBNet.rst:125
+msgid "2. Finetune"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:127
+msgid ""
+"After pre-training of the supernet, we can run below command to sample "
+"the subnet and conduct the finetuning:"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:134
+msgid ""
+"The validation accuracy will be shown during training, and the model with"
+" best accuracy will be saved as "
+"``./ckpt_save/subnet/checkpoint_best.pth``."
+msgstr ""
+
+#: ../../NAS/FBNet.rst:138
+msgid "3. Export"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:140
+msgid ""
+"After the finetuning of subnet, we can run below command to export the "
+"ONNX model:"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:147
+msgid ""
+"ONNX model is saved as ``./output/subnet.onnx``, which can be further "
+"converted to the mobile inference engine by using `MNN "
+"<https://github.com/alibaba/MNN>`__ ."
+msgstr ""
+
+#: ../../NAS/FBNet.rst:149
+msgid "The checkpoints of pre-trained supernet and subnet are offered as below:"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:151
+msgid ""
+"`Supernet "
+"<https://drive.google.com/file/d/1TCuWKq8u4_BQ84BWbHSCZ45N3JGB9kFJ/view?usp=sharing>`__"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:152
+msgid ""
+"`Subnet "
+"<https://drive.google.com/file/d/160rkuwB7y7qlBZNM3W_T53cb6MQIYHIE/view?usp=sharing>`__"
+msgstr ""
+
+#: ../../NAS/FBNet.rst:153
+msgid ""
+"`ONNX model "
+"<https://drive.google.com/file/d/1s-v-aOiMv0cqBspPVF3vSGujTbn_T_Uo/view?usp=sharing>`__"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:2
+msgid "Hardware-aware NAS"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:7
+msgid "End-to-end Multi-trial SPOS Demo"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:9
+msgid ""
+"To empower affordable DNN on the edge and mobile devices, hardware-aware "
+"NAS searches both high accuracy and low latency models. In particular, "
+"the search algorithm only considers the models within the target latency "
+"constraints during the search process."
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:11
+msgid "To run this demo, first install nn-Meter by running:"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:17
+msgid "Then run multi-trail SPOS demo:"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:25 ../../NAS/HardwareAwareNAS.rst:69
+msgid "How the demo works"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:27
+msgid ""
+"To support hardware-aware NAS, you first need a ``Strategy`` that "
+"supports filtering the models by latency. We provide such a filter named "
+"``LatencyFilter`` in NNI and initialize a ``Random`` strategy with the "
+"filter:"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:33
+msgid ""
+"``LatencyFilter`` will predict the models\\' latency by using nn-Meter "
+"and filter out the models whose latency are larger than the threshold "
+"(i.e., ``100`` in this example). You can also build your own strategies "
+"and filters to support more flexible NAS such as sorting the models "
+"according to latency."
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:36
+msgid "Then, pass this strategy to ``RetiariiExperiment``:"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:48
+msgid "In ``exp_config``, ``dummy_input`` is required for tracing shape info."
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:52
+msgid "End-to-end ProxylessNAS with Latency Constraints"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:54
+msgid ""
+"`ProxylessNAS <https://arxiv.org/pdf/1812.00332.pdf>`__ is a hardware-"
+"aware one-shot NAS algorithm. ProxylessNAS applies the expected latency "
+"of the model to build a differentiable metric and design efficient neural"
+" network architectures for hardware. The latency loss is added as a "
+"regularization term for architecture parameter optimization. In this "
+"example, nn-Meter provides a latency estimator to predict expected "
+"latency for the mixed operation on other types of mobile and edge "
+"hardware."
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:56
+msgid "To run the one-shot ProxylessNAS demo, first install nn-Meter by running:"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:62
+msgid "Then run one-shot ProxylessNAS demo:"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:64
+msgid ""
+"```bash python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py "
+"--applied_hardware <hardware> --reference_latency <reference latency "
+"(ms)> ```"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:71
+msgid ""
+"In the implementation of ProxylessNAS ``trainer``, we provide a "
+"``HardwareLatencyEstimator`` which currently builds a lookup table, that "
+"stores the measured latency of each candidate building block in the "
+"search space. The latency sum of all building blocks in a candidate model"
+" will be treated as the model inference latency. The latency prediction "
+"is obtained by ``nn-Meter``. ``HardwareLatencyEstimator`` predicts "
+"expected latency for the mixed operation based on the path weight of "
+"`ProxylessLayerChoice`. With leveraging ``nn-Meter`` in NNI, users can "
+"apply ProxylessNAS to search efficient DNN models on more types of edge "
+"devices."
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:73
+msgid ""
+"Despite of ``applied_hardware`` and ``reference_latency``, There are some"
+" other parameters related to hardware-aware ProxylessNAS training in this"
+" :githublink:`example <examples/nas/oneshot/proxylessnas/main.py>`:"
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:75
+msgid ""
+"``grad_reg_loss_type``: Regularization type to add hardware related loss."
+" Allowed types include ``\"mul#log\"`` and ``\"add#linear\"``. Type of "
+"``mul#log`` is calculate by ``(torch.log(expected_latency) / "
+"math.log(reference_latency)) ** beta``. Type of ``\"add#linear\"`` is "
+"calculate by ``reg_lambda * (expected_latency - reference_latency) / "
+"reference_latency``."
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:76
+msgid ""
+"``grad_reg_loss_lambda``: Regularization params, is set to ``0.1`` by "
+"default."
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:77
+msgid ""
+"``grad_reg_loss_alpha``: Regularization params, is set to ``0.2`` by "
+"default."
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:78
+msgid ""
+"``grad_reg_loss_beta``: Regularization params, is set to ``0.3`` by "
+"default."
+msgstr ""
+
+#: ../../NAS/HardwareAwareNAS.rst:79
+msgid ""
+"``dummy_input``: The dummy input shape when applied to the target "
+"hardware. This parameter is set as (1, 3, 224, 224) by default."
+msgstr ""
+
+#: ../../NAS/Hypermodules.rst:2
+msgid "Hypermodules"
+msgstr ""
+
+#: ../../NAS/Hypermodules.rst:4
+msgid ""
+"Hypermodule is a (PyTorch) module which contains many "
+"architecture/hyperparameter candidates for this module. By using "
+"hypermodule in user defined model, NNI will help users automatically find"
+" the best architecture/hyperparameter of the hypermodules for this model."
+" This follows the design philosophy of Retiarii that users write DNN "
+"model as a space."
+msgstr ""
+
+#: ../../NAS/Hypermodules.rst:6
+msgid ""
+"There has been proposed some hypermodules in NAS community, such as "
+"AutoActivation, AutoDropout. Some of them are implemented in the Retiarii"
+" framework."
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.hypermodule.AutoActivation:1 of
+msgid ""
+"This module is an implementation of the paper \"Searching for Activation "
+"Functions\" (https://arxiv.org/abs/1710.05941). NOTE: current `beta` is "
+"not per-channel parameter"
+msgstr ""
+
+#: nni.retiarii.nn.pytorch.hypermodule.AutoActivation:5 of
+msgid "the number of core units"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:2 ../../NAS/multi_trial_nas.rst:6
+msgid "Model Evaluators"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:4
+msgid ""
+"A model evaluator is for training and validating each generated model. "
+"They are necessary to evaluate the performance of new explored models."
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:7
+msgid "Customize Evaluator with Any Function"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:9
+msgid ""
+"The simplest way to customize a new evaluator is with functional APIs, "
+"which is very easy when training code is already available. Users only "
+"need to write a fit function that wraps everything, which usually "
+"includes training, validating and testing of a single model. This "
+"function takes one positional arguments (``model_cls``) and possible "
+"keyword arguments. The keyword arguments (other than ``model_cls``) are "
+"fed to FunctionEvaluator as its initialization parameters (note that they"
+" will be `serialized <./Serialization.rst>`__). In this way, users get "
+"everything under their control, but expose less information to the "
+"framework and as a result, further optimizations like `CGO "
+"<./ExecutionEngines.rst#cgo-execution-engine-experimental>`__ might be "
+"not feasible. An example is as belows:"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:29
+msgid ""
+"When using customized evaluators, if you want to visualize models, you "
+"need to export your model and save it into ``$NNI_OUTPUT_DIR/model.onnx``"
+" in your evaluator. An example here:"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:41
+msgid ""
+"If the conversion is successful, the model will be able to be visualized "
+"with powerful tools `Netron <https://netron.app/>`__."
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:44
+msgid "Evaluators with PyTorch-Lightning"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:47
+msgid "Use Built-in Evaluators"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:49
+msgid ""
+"NNI provides some commonly used model evaluators for users' convenience. "
+"These evaluators are built upon the awesome library PyTorch-Lightning."
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:51
+msgid ""
+"We recommend to read the `serialization tutorial <./Serialization.rst>`__"
+" before using these evaluators. A few notes to summarize the tutorial:"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:53
+msgid ""
+"``pl.DataLoader`` should be used in place of "
+"``torch.utils.data.DataLoader``."
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:54
+msgid ""
+"The datasets used in data-loader should be decorated with ``nni.trace`` "
+"recursively."
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:56
+msgid "For example,"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:79
+msgid "Customize Evaluator with PyTorch-Lightning"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:81
+msgid ""
+"Another approach is to write training code in PyTorch-Lightning style, "
+"that is, to write a LightningModule that defines all elements needed for "
+"training (e.g., loss function, optimizer) and to define a trainer that "
+"takes (optional) dataloaders to execute the training. Before that, please"
+" read the `document of PyTorch-lightning <https://pytorch-"
+"lightning.readthedocs.io/>`__ to learn the basic concepts and components "
+"provided by PyTorch-lightning."
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:83
+msgid ""
+"In practice, writing a new training module in Retiarii should inherit "
+"``nni.retiarii.evaluator.pytorch.lightning.LightningModule``, which has a"
+" ``set_model`` that will be called after ``__init__`` to save the "
+"candidate model (generated by strategy) as ``self.model``. The rest of "
+"the process (like ``training_step``) should be the same as writing any "
+"other lightning module. Evaluators should also communicate with "
+"strategies via two API calls (``nni.report_intermediate_result`` for "
+"periodical metrics and ``nni.report_final_result`` for final metrics), "
+"added in ``on_validation_epoch_end`` and ``teardown`` respectively."
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:85
+msgid "An example is as follows:"
+msgstr ""
+
+#: ../../NAS/ModelEvaluators.rst:136
+msgid ""
+"Then, users need to wrap everything (including LightningModule, trainer "
+"and dataloaders) into a ``Lightning`` object, and pass this object into a"
+" Retiarii experiment."
+msgstr ""
+
+#: ../../NAS/MutationPrimitives.rst:2 ../../NAS/construct_space.rst:7
+msgid "Mutation Primitives"
+msgstr ""
+
+#: ../../NAS/MutationPrimitives.rst:4
+msgid ""
+"To make users easily express a model space within their "
+"PyTorch/TensorFlow model, NNI provides some inline mutation APIs as shown"
+" below."
+msgstr ""
+
+#: ../../NAS/MutationPrimitives.rst:6
+msgid ""
+"`nn.LayerChoice "
+"<./ApiReference.rst#nni.retiarii.nn.pytorch.LayerChoice>`__. It allows "
+"users to put several candidate operations (e.g., PyTorch modules), one of"
+" them is chosen in each explored model."
+msgstr ""
+
+#: ../../NAS/MutationPrimitives.rst:20
+msgid ""
+"`nn.InputChoice "
+"<./ApiReference.rst#nni.retiarii.nn.pytorch.InputChoice>`__. It is mainly"
+" for choosing (or trying) different connections. It takes several tensors"
+" and chooses ``n_chosen`` tensors from them."
+msgstr ""
+
+#: ../../NAS/MutationPrimitives.rst:30
+msgid ""
+"`nn.ValueChoice "
+"<./ApiReference.rst#nni.retiarii.nn.pytorch.ValueChoice>`__. It is for "
+"choosing one value from some candidate values. It can only be used as "
+"input argument of basic units, that is, modules in "
+"``nni.retiarii.nn.pytorch`` and user-defined modules decorated with "
+"``@basic_unit``."
+msgstr ""
+
+#: ../../NAS/MutationPrimitives.rst:39
+msgid ""
+"`nn.Repeat <./ApiReference.rst#nni.retiarii.nn.pytorch.Repeat>`__. Repeat"
+" a block by a variable number of times."
+msgstr ""
+
+#: ../../NAS/MutationPrimitives.rst:41
+msgid ""
+"`nn.Cell <./ApiReference.rst#nni.retiarii.nn.pytorch.Cell>`__. `This cell"
+" structure is popularly used in NAS literature "
+"<https://arxiv.org/abs/1611.01578>`__. Specifically, the cell consists of"
+" multiple \"nodes\". Each node is a sum of multiple operators. Each "
+"operator is chosen from user specified candidates, and takes one input "
+"from previous nodes and predecessors. Predecessor means the input of "
+"cell. The output of cell is the concatenation of some of the nodes in the"
+" cell (currently all the nodes)."
+msgstr ""
+
+#: ../../NAS/MutationPrimitives.rst:44
+msgid ""
+"All the APIs have an optional argument called ``label``, mutations with "
+"the same label will share the same choice. A typical example is,"
+msgstr ""
+
+#: ../../NAS/Mutators.rst:2
+msgid "Express Mutations with Mutators"
+msgstr ""
+
+#: ../../NAS/Mutators.rst:4
+msgid ""
+"Besides the inline mutation APIs demonstrated `here "
+"<./MutationPrimitives.rst>`__, NNI provides a more general approach to "
+"express a model space, i.e., *Mutator*, to cover more complex model "
+"spaces. Those inline mutation APIs are also implemented with mutator in "
+"the underlying system, which can be seen as a special case of model "
+"mutation."
+msgstr ""
+
+#: ../../NAS/Mutators.rst:6
+msgid "Mutator and inline mutation APIs cannot be used together."
+msgstr ""
+
+#: ../../NAS/Mutators.rst:8
+msgid ""
+"A mutator is a piece of logic to express how to mutate a given model. "
+"Users are free to write their own mutators. Then a model space is "
+"expressed with a base model and a list of mutators. A model in the model "
+"space is sampled by applying the mutators on the base model one after "
+"another. An example is shown below."
+msgstr ""
+
+#: ../../NAS/Mutators.rst:16
+msgid ""
+"``BlockMutator`` is defined by users to express how to mutate the base "
+"model."
+msgstr ""
+
+#: ../../NAS/Mutators.rst:19
+msgid "Write a mutator"
+msgstr ""
+
+#: ../../NAS/Mutators.rst:21
+msgid ""
+"User-defined mutator should inherit ``Mutator`` class, and implement "
+"mutation logic in the member function ``mutate``."
+msgstr ""
+
+#: ../../NAS/Mutators.rst:38
+msgid ""
+"The input of ``mutate`` is graph IR (Intermediate Representation) of the "
+"base model (please refer to `here <./ApiReference.rst>`__ for the format "
+"and APIs of the IR), users can mutate the graph using the graph's member "
+"functions (e.g., ``get_nodes_by_label``, ``update_operation``). The "
+"mutation operations can be combined with the API ``self.choice``, in "
+"order to express a set of possible mutations. In the above example, the "
+"node's operation can be changed to any operation from "
+"``candidate_op_list``."
+msgstr ""
+
+#: ../../NAS/Mutators.rst:40
+msgid ""
+"Use placehoder to make mutation easier: ``nn.Placeholder``. If you want "
+"to mutate a subgraph or node of your model, you can define a placeholder "
+"in this model to represent the subgraph or node. Then, use mutator to "
+"mutate this placeholder to make it real modules."
+msgstr ""
+
+#: ../../NAS/Mutators.rst:52
+msgid ""
+"``label`` is used by mutator to identify this placeholder. The other "
+"parameters are the information that is required by mutator. They can be "
+"accessed from ``node.operation.parameters`` as a dict, it could include "
+"any information that users want to put to pass it to user defined "
+"mutator. The complete example code can be found in :githublink:`Mnasnet "
+"base model <examples/nas/multi-trial/mnasnet/base_mnasnet.py>`."
+msgstr ""
+
+#: ../../NAS/Mutators.rst:54
+msgid ""
+"Starting an experiment is almost the same as using inline mutation APIs. "
+"The only difference is that the applied mutators should be passed to "
+"``RetiariiExperiment``. Below is a simple example."
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:2 ../../NAS/Overview.rst:53
+#: ../../NAS/one_shot_nas.rst:2
+msgid "One-shot NAS"
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:4
+msgid ""
+"Before reading this tutorial, we highly recommend you to first go through"
+" the tutorial of how to `define a model space <./QuickStart.rst#define-"
+"your-model-space>`__."
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:7
+msgid "Model Search with One-shot Trainer"
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:9
+msgid ""
+"With a defined model space, users can explore the space in two ways. One "
+"is using strategy and single-arch evaluator as demonstrated `here "
+"<./QuickStart.rst#explore-the-defined-model-space>`__. The other is using"
+" one-shot trainer, which consumes much less computational resource "
+"compared to the first one. In this tutorial we focus on this one-shot "
+"approach. The principle of one-shot approach is combining all the models "
+"in a model space into one big model (usually called super-model or super-"
+"graph). It takes charge of both search, training and testing, by training"
+" and evaluating this big model."
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:11
+msgid "We list the supported one-shot trainers here:"
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:13
+msgid "DARTS trainer"
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:14
+msgid "ENAS trainer"
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:15
+msgid "ProxylessNAS trainer"
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:16
+msgid "Single-path (random) trainer"
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:18
+msgid ""
+"See `API reference <./ApiReference.rst>`__ for detailed usages. Here, we "
+"show an example to use DARTS trainer manually."
+msgstr ""
+
+#: ../../NAS/OneshotTrainer.rst:37
+msgid ""
+"After the searching is done, we can use the exported architecture to "
+"instantiate the full network for retraining. Here is an example:"
+msgstr ""
+
+#: ../../NAS/Overview.rst:2
+msgid "Retiarii for Neural Architecture Search"
+msgstr ""
+
+#: ../../NAS/Overview.rst:4
+msgid ""
+"NNI's latest NAS supports are all based on Retiarii Framework, users who "
+"are still on `early version using NNI NAS v1.0 "
+"<https://nni.readthedocs.io/en/v2.2/nas.html>`__ shall migrate your work "
+"to Retiarii as soon as possible."
+msgstr ""
+
+#: ../../NAS/Overview.rst:9
+msgid "Motivation"
+msgstr ""
+
+#: ../../NAS/Overview.rst:11
+msgid ""
+"Automatic neural architecture search is playing an increasingly important"
+" role in finding better models. Recent research has proven the "
+"feasibility of automatic NAS and has led to models that beat many "
+"manually designed and tuned models. Representative works include `NASNet "
+"<https://arxiv.org/abs/1707.07012>`__\\ , `ENAS "
+"<https://arxiv.org/abs/1802.03268>`__\\ , `DARTS "
+"<https://arxiv.org/abs/1806.09055>`__\\ , `Network Morphism "
+"<https://arxiv.org/abs/1806.10282>`__\\ , and `Evolution "
+"<https://arxiv.org/abs/1703.01041>`__. In addition, new innovations "
+"continue to emerge."
+msgstr ""
+
+#: ../../NAS/Overview.rst:13
+msgid ""
+"However, it is pretty hard to use existing NAS work to help develop "
+"common DNN models. Therefore, we designed `Retiarii "
+"<https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__, a novel"
+" NAS/HPO framework, and implemented it in NNI. It helps users easily "
+"construct a model space (or search space, tuning space), and utilize "
+"existing NAS algorithms. The framework also facilitates NAS innovation "
+"and is used to design new NAS algorithms."
+msgstr ""
+
+#: ../../NAS/Overview.rst:16
+msgid "Overview"
+msgstr ""
+
+#: ../../NAS/Overview.rst:18
+msgid "There are three key characteristics of the Retiarii framework:"
+msgstr ""
+
+#: ../../NAS/Overview.rst:20
+msgid ""
+"Simple APIs are provided for defining model search space within "
+"PyTorch/TensorFlow model."
+msgstr ""
+
+#: ../../NAS/Overview.rst:21
+msgid ""
+"SOTA NAS algorithms are built-in to be used for exploring model search "
+"space."
+msgstr ""
+
+#: ../../NAS/Overview.rst:22
+msgid ""
+"System-level optimizations are implemented for speeding up the "
+"exploration."
+msgstr ""
+
+#: ../../NAS/Overview.rst:24
+msgid ""
+"There are two types of model space exploration approach: **Multi-trial "
+"NAS** and **One-shot NAS**. Mutli-trial NAS trains each sampled model in "
+"the model space independently, while One-shot NAS samples the model from "
+"a super model. After constructing the model space, users can use either "
+"exploration appraoch to explore the model space."
+msgstr ""
+
+#: ../../NAS/Overview.rst:28 ../../NAS/multi_trial_nas.rst:2
+msgid "Multi-trial NAS"
+msgstr ""
+
+#: ../../NAS/Overview.rst:30
+msgid ""
+"Multi-trial NAS means each sampled model from model space is trained "
+"independently. A typical multi-trial NAS is `NASNet "
+"<https://arxiv.org/abs/1707.07012>`__. The algorithm to sample models "
+"from model space is called exploration strategy. NNI has supported the "
+"following exploration strategies for multi-trial NAS."
+msgstr ""
+
+#: ../../NAS/Overview.rst:36
+msgid "Exploration Strategy Name"
+msgstr ""
+
+#: ../../NAS/Overview.rst:38
+msgid "Random Strategy"
+msgstr ""
+
+#: ../../NAS/Overview.rst:40
+msgid "Grid Search"
+msgstr ""
+
+#: ../../NAS/Overview.rst:42
+msgid "Regularized Evolution"
+msgstr ""
+
+#: ../../NAS/Overview.rst:44
+msgid "TPE Strategy"
+msgstr ""
+
+#: ../../NAS/Overview.rst:46
+msgid "RL Strategy"
+msgstr ""
+
+#: ../../NAS/Overview.rst:50
+msgid ""
+"Please refer to `here <./multi_trial_nas.rst>`__ for detailed usage of "
+"multi-trial NAS."
+msgstr ""
+
+#: ../../NAS/Overview.rst:55
+msgid ""
+"One-shot NAS means building model space into a super-model, training the "
+"super-model with weight sharing, and then sampling models from the super-"
+"model to find the best one. `DARTS <https://arxiv.org/abs/1806.09055>`__ "
+"is a typical one-shot NAS. Below is the supported one-shot NAS "
+"algorithms. More one-shot NAS will be supported soon."
+msgstr ""
+
+#: ../../NAS/Overview.rst:62
+msgid "One-shot Algorithm Name"
+msgstr ""
+
+#: ../../NAS/Overview.rst:64
+msgid "`ENAS <ENAS.rst>`__"
+msgstr ""
+
+#: ../../NAS/Overview.rst:65
+msgid ""
+"`Efficient Neural Architecture Search via Parameter Sharing "
+"<https://arxiv.org/abs/1802.03268>`__. In ENAS, a controller learns to "
+"discover neural network architectures by searching for an optimal "
+"subgraph within a large computational graph. It uses parameter sharing "
+"between child models to achieve fast speed and excellent performance."
+msgstr ""
+
+#: ../../NAS/Overview.rst:66
+msgid "`DARTS <DARTS.rst>`__"
+msgstr ""
+
+#: ../../NAS/Overview.rst:67
+msgid ""
+"`DARTS: Differentiable Architecture Search "
+"<https://arxiv.org/abs/1806.09055>`__ introduces a novel algorithm for "
+"differentiable network architecture search on bilevel optimization."
+msgstr ""
+
+#: ../../NAS/Overview.rst:68
+msgid "`SPOS <SPOS.rst>`__"
+msgstr ""
+
+#: ../../NAS/Overview.rst:69
+msgid ""
+"`Single Path One-Shot Neural Architecture Search with Uniform Sampling "
+"<https://arxiv.org/abs/1904.00420>`__ constructs a simplified supernet "
+"trained with a uniform path sampling method and applies an evolutionary "
+"algorithm to efficiently search for the best-performing architectures."
+msgstr ""
+
+#: ../../NAS/Overview.rst:70
+msgid "`ProxylessNAS <Proxylessnas.rst>`__"
+msgstr ""
+
+#: ../../NAS/Overview.rst:71
+msgid ""
+"`ProxylessNAS: Direct Neural Architecture Search on Target Task and "
+"Hardware <https://arxiv.org/abs/1812.00332>`__. It removes proxy, "
+"directly learns the architectures for large-scale target tasks and target"
+" hardware platforms."
+msgstr ""
+
+#: ../../NAS/Overview.rst:73
+msgid ""
+"Please refer to `here <one_shot_nas.rst>`__ for detailed usage of one-"
+"shot NAS algorithms."
+msgstr ""
+
+#: ../../NAS/Overview.rst:76
+msgid "Reference and Feedback"
+msgstr ""
+
+#: ../../NAS/Overview.rst:78
+msgid "`Quick Start <./QuickStart.rst>`__ ;"
+msgstr ""
+
+#: ../../NAS/Overview.rst:79
+msgid "`Construct Your Model Space <./construct_space.rst>`__ ;"
+msgstr ""
+
+#: ../../NAS/Overview.rst:80
+msgid ""
+"`Retiarii: A Deep Learning Exploratory-Training Framework "
+"<https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ ;"
+msgstr ""
+
+#: ../../NAS/Overview.rst:81
+msgid ""
+"To `report a bug <https://github.com/microsoft/nni/issues/new?template"
+"=bug-report.rst>`__ for this feature in GitHub ;"
+msgstr ""
+
+#: ../../NAS/Overview.rst:82
+msgid ""
+"To `file a feature or improvement request "
+"<https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__"
+" for this feature in GitHub ."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:2
+msgid "ProxylessNAS on NNI"
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:7
+msgid ""
+"The paper `ProxylessNAS: Direct Neural Architecture Search on Target Task"
+" and Hardware <https://arxiv.org/pdf/1812.00332.pdf>`__ removes proxy, it"
+" directly learns the architectures for large-scale target tasks and "
+"target hardware platforms. They address high memory consumption issue of "
+"differentiable NAS and reduce the computational cost to the same level of"
+" regular training while still allowing a large candidate set. Please "
+"refer to the paper for the details."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:10
+msgid "Usage"
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:12
+msgid ""
+"To use ProxylessNAS training/searching approach, users need to specify "
+"search space in their model using `NNI NAS interface "
+"<./MutationPrimitives.rst>`__\\ , e.g., ``LayerChoice``\\ , "
+"``InputChoice``. After defining and instantiating the model, the "
+"following work can be leaved to ProxylessNasTrainer by instantiating the "
+"trainer and passing the model to it."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:30
+msgid ""
+"The complete example code can be found :githublink:`here "
+"<examples/nas/oneshot/proxylessnas>`."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:32
+msgid "**Input arguments of ProxylessNasTrainer**"
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:35
+msgid ""
+"**model** (*PyTorch model, required*\\ ) - The model that users want to "
+"tune/search. It has mutables to specify search space."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:36
+msgid ""
+"**metrics** (*PyTorch module, required*\\ ) - The main term of the loss "
+"function for model train. Receives logits and ground truth label, return "
+"a loss tensor."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:37
+msgid ""
+"**optimizer** (*PyTorch Optimizer, required*\\) - The optimizer used for "
+"optimizing the model."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:38
+msgid ""
+"**num_epochs** (*int, optional, default = 120*\\ ) - The number of epochs"
+" to train/search."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:39
+msgid ""
+"**dataset** (*PyTorch dataset, required*\\ ) - Dataset for training. Will"
+" be split for training weights and architecture weights."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:40
+msgid ""
+"**warmup_epochs** (*int, optional, default = 0*\\ ) - The number of "
+"epochs to do during warmup."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:41
+msgid "**batch_size** (*int, optional, default = 64*\\ ) - Batch size."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:42
+msgid "**workers** (*int, optional, default = 4*\\ ) - Workers for data loading."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:43
+msgid ""
+"**device** (*device, optional, default = 'cpu'*\\ ) - The devices that "
+"users provide to do the train/search. The trainer applies data parallel "
+"on the model for users."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:44
+msgid ""
+"**log_frequency** (*int, optional, default = None*\\ ) - Step count per "
+"logging."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:45
+msgid ""
+"**arc_learning_rate** (*float, optional, default = 1e-3*\\ ) - The "
+"learning rate of the architecture parameters optimizer."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:46
+msgid ""
+"**grad_reg_loss_type** (*'mul#log', 'add#linear', or None, optional, "
+"default = 'add#linear'*\\ ) - Regularization type to add hardware related"
+" loss. The trainer will not apply loss regularization when "
+"grad_reg_loss_type is set as None."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:47
+msgid ""
+"**grad_reg_loss_params** (*dict, optional, default = None*\\ ) - "
+"Regularization params. 'alpha' and 'beta' is required when "
+"``grad_reg_loss_type`` is 'mul#log', 'lambda' is required when "
+"``grad_reg_loss_type`` is 'add#linear'."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:48
+msgid ""
+"**applied_hardware** (*string, optional, default = None*\\ ) - Applied "
+"hardware for to constraint the model's latency. Latency is predicted by "
+"Microsoft nn-Meter (https://github.com/microsoft/nn-Meter)."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:49
+msgid ""
+"**dummy_input** (*tuple, optional, default = (1, 3, 224, 224)*\\ ) - The "
+"dummy input shape when applied to the target hardware."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:50
+msgid ""
+"**ref_latency** (*float, optional, default = 65.0*\\ ) - Reference "
+"latency value in the applied hardware (ms)."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:54
+msgid "Implementation"
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:56
+msgid ""
+"The implementation on NNI is based on the `offical implementation "
+"<https://github.com/mit-han-lab/ProxylessNAS>`__. The official "
+"implementation supports two training approaches: gradient descent and RL "
+"based. In our current implementation on NNI, gradient descent training "
+"approach is supported. The complete support of ProxylessNAS is ongoing."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:58
+msgid ""
+"The official implementation supports different targeted hardware, "
+"including 'mobile', 'cpu', 'gpu8', 'flops'.  In NNI repo, the hardware "
+"latency prediction is supported by `Microsoft nn-Meter "
+"<https://github.com/microsoft/nn-Meter>`__. nn-Meter is an accurate "
+"inference latency predictor for DNN models on diverse edge devices. nn-"
+"Meter support four hardwares up to now, including "
+"*'cortexA76cpu_tflite21'*, *'adreno640gpu_tflite21'*, "
+"*'adreno630gpu_tflite21'*, and *'myriadvpu_openvino2019r2'*. Users can "
+"find more information about nn-Meter on its website. More hardware will "
+"be supported in the future. Users could find more details about applying "
+"``nn-Meter`` `here <./HardwareAwareNAS.rst>`__ ."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:60
+msgid ""
+"Below we will describe implementation details. Like other one-shot NAS "
+"algorithms on NNI, ProxylessNAS is composed of two parts: *search space* "
+"and *training approach*. For users to flexibly define their own search "
+"space and use built-in ProxylessNAS training approach, we put the "
+"specified search space in :githublink:`example code "
+"<examples/nas/oneshot/proxylessnas>` using :githublink:`NNI NAS interface"
+" <nni/retiarii/oneshot/pytorch/proxyless>`."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:67
+msgid ""
+"ProxylessNAS training approach is composed of ProxylessLayerChoice and "
+"ProxylessNasTrainer. ProxylessLayerChoice instantiates MixedOp for each "
+"mutable (i.e., LayerChoice), and manage architecture weights in MixedOp. "
+"**For DataParallel**\\ , architecture weights should be included in user "
+"model. Specifically, in ProxylessNAS implementation, we add MixedOp to "
+"the corresponding mutable (i.e., LayerChoice) as a member variable. The "
+"ProxylessLayerChoice class also exposes two member functions, i.e., "
+"``resample``\\ , ``finalize_grad``\\ , for the trainer to control the "
+"training of architecture weights."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:69
+msgid ""
+"ProxylessNasMutator also implements the forward logic of the mutables "
+"(i.e., LayerChoice)."
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:72
+msgid "Reproduce Results"
+msgstr ""
+
+#: ../../NAS/Proxylessnas.rst:74
+msgid ""
+"To reproduce the result, we first run the search, we found that though it"
+" runs many epochs the chosen architecture converges at the first several "
+"epochs. This is probably induced by hyper-parameters or the "
+"implementation, we are working on it."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:2
+msgid "Quick Start of Retiarii on NNI"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:7
+msgid ""
+"In this quick start, we use multi-trial NAS as an example to show how to "
+"construct and explore a model space. There are mainly three crucial "
+"components for a neural architecture search task, namely,"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:9
+msgid "Model search space that defines a set of models to explore."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:10
+msgid "A proper strategy as the method to explore this model space."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:11
+msgid ""
+"A model evaluator that reports the performance of every model in the "
+"space."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:13
+msgid ""
+"The tutorial for One-shot NAS can be found `here "
+"<./OneshotTrainer.rst>`__."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:15
+msgid ""
+"Currently, PyTorch is the only supported framework by Retiarii, and we "
+"have only tested **PyTorch 1.7 to 1.10**. This documentation assumes "
+"PyTorch context but it should also apply to other frameworks, which is in"
+" our future plan."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:18
+msgid "Define your Model Space"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:20
+msgid ""
+"Model space is defined by users to express a set of models that users "
+"want to explore, which contains potentially good-performing models. In "
+"this framework, a model space is defined with two parts: a base model and"
+" possible mutations on the base model."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:23
+msgid "Define Base Model"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:25
+msgid ""
+"Defining a base model is almost the same as defining a PyTorch (or "
+"TensorFlow) model. Usually, you only need to replace the code ``import "
+"torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn`` to use our"
+" wrapped PyTorch modules."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:27
+msgid "Below is a very simple example of defining a base model."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:55
+msgid ""
+"Always keep in mind that you should use ``import nni.retiarii.nn.pytorch "
+"as nn`` and :meth:`nni.retiarii.model_wrapper`. Many mistakes are a "
+"result of forgetting one of those. Also, please use ``torch.nn`` for "
+"submodules of ``nn.init``, e.g., ``torch.nn.init`` instead of "
+"``nn.init``."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:58
+msgid "Define Model Mutations"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:60
+msgid ""
+"A base model is only one concrete model not a model space. We provide "
+"`APIs and primitives <./MutationPrimitives.rst>`__ for users to express "
+"how the base model can be mutated. That is, to build a model space which "
+"includes many models."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:62
+msgid "Based on the above base model, we can define a model space as below."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:98
+msgid ""
+"This example uses two mutation APIs, ``nn.LayerChoice`` and "
+"``nn.ValueChoice``. ``nn.LayerChoice`` takes a list of candidate modules "
+"(two in this example), one will be chosen for each sampled model. It can "
+"be used like normal PyTorch module. ``nn.ValueChoice`` takes a list of "
+"candidate values, one will be chosen to take effect for each sampled "
+"model."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:100
+msgid ""
+"More detailed API description and usage can be found `here "
+"<./construct_space.rst>`__ ."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:102
+msgid ""
+"We are actively enriching the mutation APIs, to facilitate easy "
+"construction of model space. If the currently supported mutation APIs "
+"cannot express your model space, please refer to `this doc "
+"<./Mutators.rst>`__ for customizing mutators."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:105
+msgid "Explore the Defined Model Space"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:107
+msgid ""
+"There are basically two exploration approaches: (1) search by evaluating "
+"each sampled model independently, which is the search approach in multi-"
+"trial NAS and (2) one-shot weight-sharing based search, which is used in "
+"one-shot NAS. We demonstrate the first approach in this tutorial. Users "
+"can refer to `here <./OneshotTrainer.rst>`__ for the second approach."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:109
+msgid ""
+"First, users need to pick a proper exploration strategy to explore the "
+"defined model space. Second, users need to pick or customize a model "
+"evaluator to evaluate the performance of each explored model."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:112
+msgid "Pick an exploration strategy"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:114
+msgid ""
+"Retiarii supports many `exploration strategies "
+"<./ExplorationStrategies.rst>`__."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:116
+msgid "Simply choosing (i.e., instantiate) an exploration strategy as below."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:125
+msgid "Pick or customize a model evaluator"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:127
+msgid ""
+"In the exploration process, the exploration strategy repeatedly generates"
+" new models. A model evaluator is for training and validating each "
+"generated model to obtain the model's performance. The performance is "
+"sent to the exploration strategy for the strategy to generate better "
+"models."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:129
+msgid ""
+"Retiarii has provided `built-in model evaluators "
+"<./ModelEvaluators.rst>`__, but to start with, it is recommended to use "
+"``FunctionalEvaluator``, that is, to wrap your own training and "
+"evaluation code with one single function. This function should receive "
+"one single model class and uses ``nni.report_final_result`` to report the"
+" final score of this model."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:131
+msgid ""
+"An example here creates a simple evaluator that runs on MNIST dataset, "
+"trains for 2 epochs, and reports its validation accuracy."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:160
+msgid ""
+"The ``train_epoch`` and ``test_epoch`` here can be any customized "
+"function, where users can write their own training recipe. See "
+":githublink:`examples/nas/multi-trial/mnist/search.py` for the full "
+"example."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:162
+msgid ""
+"It is recommended that the ``evaluate_model`` here accepts no additional "
+"arguments other than ``model_cls``. However, in the `advanced tutorial "
+"<./ModelEvaluators.rst>`__, we will show how to use additional arguments "
+"in case you actually need those. In future, we will support mutation on "
+"the arguments of evaluators, which is commonly called \"Hyper-parmeter "
+"tuning\"."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:165
+msgid "Launch an Experiment"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:167
+msgid ""
+"After all the above are prepared, it is time to start an experiment to do"
+" the model search. An example is shown below."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:179
+msgid ""
+"The complete code of this example can be found :githublink:`here "
+"<examples/nas/multi-trial/mnist/search.py>`. Users can also run Retiarii "
+"Experiment with `different training services "
+"<../training_services.rst>`__ besides ``local`` training service."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:182
+msgid "Visualize the Experiment"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:184
+msgid ""
+"Users can visualize their experiment in the same way as visualizing a "
+"normal hyper-parameter tuning experiment. For example, open "
+"``localhost::8081`` in your browser, 8081 is the port that you set in "
+"``exp.run``. Please refer to `here <../Tutorial/WebUI.rst>`__ for "
+"details."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:186
+msgid ""
+"We support visualizing models with 3rd-party visualization engines (like "
+"`Netron <https://netron.app/>`__). This can be used by clicking "
+"``Visualization`` in detail panel for each trial. Note that current "
+"visualization is based on `onnx <https://onnx.ai/>`__ , thus "
+"visualization is not feasible if the model cannot be exported into onnx. "
+"Built-in evaluators (e.g., Classification) will automatically export the "
+"model into a file. For your own evaluator, you need to save your file "
+"into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:189
+msgid "Export Top Models"
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:191
+msgid ""
+"Users can export top models after the exploration is done using "
+"``export_top_models``."
+msgstr ""
+
+#: ../../NAS/QuickStart.rst:198
+msgid ""
+"The output is `json` object which records the mutation actions of the top"
+" model. If users want to output source code of the top model, they can "
+"use graph-based execution engine for the experiment, by simply adding the"
+" following two lines."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:2
+msgid "Single Path One-Shot (SPOS)"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:7
+msgid ""
+"Proposed in `Single Path One-Shot Neural Architecture Search with Uniform"
+" Sampling <https://arxiv.org/abs/1904.00420>`__ is a one-shot NAS method "
+"that addresses the difficulties in training One-Shot NAS models by "
+"constructing a simplified supernet trained with an uniform path sampling "
+"method, so that all underlying architectures (and their weights) get "
+"trained fully and equally. An evolutionary algorithm is then applied to "
+"efficiently search for the best-performing architectures without any fine"
+" tuning."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:9
+msgid ""
+"Implementation on NNI is based on `official repo <https://github.com"
+"/megvii-model/SinglePathOneShot>`__. We implement a trainer that trains "
+"the supernet and a evolution tuner that leverages the power of NNI "
+"framework that speeds up the evolutionary search phase."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:14
+msgid ""
+"Here is a use case, which is the search space in paper. However, we "
+"applied latency limit instead of flops limit to perform the architecture "
+"search phase."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:16
+msgid ":githublink:`Example code <examples/nas/oneshot/spos>`"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:19
+msgid "Requirements"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:21
+msgid ""
+"Prepare ImageNet in the standard format (follow the script `here "
+"<https://gist.github.com/BIGBALLON/8a71d225eff18d88e469e6ea9b39cef4>`__\\"
+" ). Linking it to ``data/imagenet`` will be more convenient."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:23
+msgid ""
+"Download the checkpoint file from `here "
+"<https://1drv.ms/u/s!Am_mmG2-KsrnajesvSdfsq_cN48?e=aHVppN>`__ (maintained"
+" by `Megvii <https://github.com/megvii-model>`__\\ ) if you don't want to"
+" retrain the supernet. Put ``checkpoint-150000.pth.tar`` under ``data`` "
+"directory."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:27
+msgid "After preparation, it's expected to have the following code structure:"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:47
+msgid "Step 1. Train Supernet"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:53
+msgid ""
+"Will export the checkpoint to ``checkpoints`` directory, for the next "
+"step."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:55
+msgid ""
+"NOTE: The data loading used in the official repo is `slightly different "
+"from usual <https://github.com/megvii-"
+"model/SinglePathOneShot/issues/5>`__\\ , as they use BGR tensor and keep "
+"the values between 0 and 255 intentionally to align with their own DL "
+"framework. The option ``--spos-preprocessing`` will simulate the behavior"
+" used originally and enable you to use the checkpoints pretrained."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:58
+msgid "Step 2. Evolution Search"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:60
+msgid ""
+"Single Path One-Shot leverages evolution algorithm to search for the best"
+" architecture. In the paper, the search module, which is responsible for "
+"testing the sampled architecture, recalculates all the batch norm for a "
+"subset of training images, and evaluates the architecture on the full "
+"validation set."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:62
+msgid ""
+"In this example, we have an incomplete implementation of the evolution "
+"search. The example only support training from scratch. Inheriting "
+"weights from pretrained supernet is not supported yet. To search with the"
+" regularized evolution strategy, run"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:68
+msgid ""
+"The final architecture exported from every epoch of evolution can be "
+"found in ``trials`` under the working directory of your tuner, which, by "
+"default, is ``$HOME/nni-experiments/your_experiment_id/trials``."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:71
+msgid "Step 3. Train for Evaluation"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:77
+msgid ""
+"By default, it will use ``architecture_final.json``. This architecture is"
+" provided by the official repo (converted into NNI format). You can use "
+"any architecture (e.g., the architecture found in step 2) with ``--fixed-"
+"arc`` option."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:89
+msgid "Known Limitations"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:92
+msgid "Block search only. Channel search is not supported yet."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:93
+msgid ""
+"In the search phase, training from the scratch is required. Inheriting "
+"weights from supernet is not supported yet."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:96
+msgid "Current Reproduction Results"
+msgstr ""
+
+#: ../../NAS/SPOS.rst:98
+msgid ""
+"Reproduction is still undergoing. Due to the gap between official release"
+" and original paper, we compare our current results with official repo "
+"(our run) and paper."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:101
+msgid ""
+"Evolution phase is almost aligned with official repo. Our evolution "
+"algorithm shows a converging trend and reaches ~65% accuracy at the end "
+"of search. Nevertheless, this result is not on par with paper. For "
+"details, please refer to `this issue <https://github.com/megvii-"
+"model/SinglePathOneShot/issues/6>`__."
+msgstr ""
+
+#: ../../NAS/SPOS.rst:102
+#, python-format
+msgid ""
+"Retrain phase is not aligned. Our retraining code, which uses the "
+"architecture released by the authors, reaches 72.14% accuracy, still "
+"having a gap towards 73.61% by official release and 74.3% reported in "
+"original paper."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:2 ../../NAS/multi_trial_nas.rst:6
+msgid "Serialization"
+msgstr ""
+
+#: ../../NAS/Serialization.rst:4
+msgid ""
+"In multi-trial NAS, a sampled model should be able to be executed on a "
+"remote machine or a training platform (e.g., AzureML, OpenPAI). "
+"\"Serialization\" enables re-instantiation of model evaluator in another "
+"process or machine, such that, both the model and its model evaluator "
+"should be correctly serialized. To make NNI correctly serialize model "
+"evaluator, users should apply ``nni.trace`` on some of their functions "
+"and objects. API references can be found in :func:`nni.trace`."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:6
+msgid ""
+"Serialization is implemented as a combination of `json-tricks <https"
+"://json-tricks.readthedocs.io/en/latest/>`_ and `cloudpickle "
+"<https://github.com/cloudpipe/cloudpickle>`_. Essentially, it is json-"
+"tricks, that is a enhanced version of Python JSON, enabling handling of "
+"serialization of numpy arrays, date/times, decimal, fraction and etc. The"
+" difference lies in the handling of class instances. Json-tricks deals "
+"with class instances with ``__dict__`` and ``__class__``, which in most "
+"of our cases are not reliable (e.g., datasets, dataloaders). Rather, our "
+"serialization deals with class instances with two methods:"
+msgstr ""
+
+#: ../../NAS/Serialization.rst:8
+msgid ""
+"If the class / factory that creates the object is decorated with "
+"``nni.trace``, we can serialize the class / factory function, along with "
+"the parameters, such that the instance can be re-instantiated."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:9
+msgid "Otherwise, cloudpickle is used to serialize the object into a binary."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:11
+msgid ""
+"The recommendation is, unless you are absolutely certain that there is no"
+" problem and extra burden to serialize the object into binary, always add"
+" ``nni.trace``. In most cases, it will be more clean and neat, and "
+"enables possibilities such as mutation of parameters (will be supported "
+"in future)."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:15
+msgid "**What will happen if I forget to \"trace\" my objects?**"
+msgstr ""
+
+#: ../../NAS/Serialization.rst:17
+msgid ""
+"It is likely that the program can still run. NNI will try to serialize "
+"the untraced object into a binary. It might fail in complex cases. For "
+"example, when the object is too large. Even if it succeeds, the result "
+"might be a substantially large object. For example, if you forgot to add "
+"``nni.trace`` on ``MNIST``, the MNIST dataset object wil be serialized "
+"into binary, which will be dozens of megabytes because the object has the"
+" whole 60k images stored inside. You might see warnings and even errors "
+"when running experiments. To avoid such issues, the easiest way is to "
+"always remember to add ``nni.trace`` to non-primitive objects."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:19
+msgid ""
+"In Retiarii, serializer will throw exception when one of an single object"
+" in the recursive serialization is larger than 64 KB when binary "
+"serialized. This indicates that such object needs to be wrapped by "
+"``nni.trace``. In rare cases, if you insist on pickling large data, the "
+"limit can be overridden by setting an environment variable "
+"``PICKLE_SIZE_LIMIT``, whose unit is byte. Please note that even if the "
+"experiment might be able to run, this can still cause performance issues "
+"and even the crash of NNI experiment."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:21
+msgid "To trace a function or class, users can use decorator like,"
+msgstr ""
+
+#: ../../NAS/Serialization.rst:29
+msgid ""
+"Inline trace that traces instantly on the object instantiation or "
+"function invoke is also acceptable: ``nni.trace(MyClass)(parameters)``."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:31
+msgid ""
+"Assuming a class ``cls`` is already traced, when it is serialized, its "
+"class type along with initialization parameters will be dumped. As the "
+"parameters are possibly class instances (if not primitive types like "
+"``int`` and ``str``), their serialization will be a similar problem. We "
+"recommend decorate them with ``nni.trace`` as well. In other words, "
+"``nni.trace`` should be applied recursively if necessary."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:33
+msgid ""
+"Below is an example, ``transforms.Compose``, ``transforms.Normalize``, "
+"and ``MNIST`` are serialized manually using ``nni.trace``. ``nni.trace`` "
+"takes a class / function as its argument, and returns a wrapped class and"
+" function that has the same behavior with the original class / function. "
+"The usage of the wrapped class / function is also identical to the "
+"original one, except that the arguments are recorded. No need to apply "
+"``nni.trace`` to ``pl.Classification`` and ``pl.DataLoader`` because they"
+" are already traced."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:58
+msgid ""
+"**What's the relationship between model_wrapper, basic_unit and "
+"nni.trace?**"
+msgstr ""
+
+#: ../../NAS/Serialization.rst:60
+msgid ""
+"They are fundamentally different. ``model_wrapper`` is used to wrap a "
+"base model (search space), ``basic_unit`` to annotate a module as "
+"primitive. ``nni.trace`` is to enable serialization of general objects. "
+"Though they share similar underlying implementations, but do keep in mind"
+" that you will experience errors if you mix them up."
+msgstr ""
+
+#: ../../NAS/Serialization.rst:62
+msgid ""
+"Please refer to API reference of :meth:`nni.retiarii.model_wrapper`, "
+":meth:`nni.retiarii.basic_unit`, and :meth:`nni.trace`."
+msgstr ""
+
+#: ../../NAS/WriteOneshot.rst:2
+msgid "Customize a New One-shot Trainer"
+msgstr ""
+
+#: ../../NAS/WriteOneshot.rst:4
+msgid ""
+"One-shot trainers should inherit "
+"``nni.retiarii.oneshot.BaseOneShotTrainer``, and need to implement "
+"``fit()`` (used to conduct the fitting and searching process) and "
+"``export()`` method (used to return the searched best architecture)."
+msgstr ""
+
+#: ../../NAS/WriteOneshot.rst:6
+msgid ""
+"Writing a one-shot trainer is very different to single-arch evaluator. "
+"First of all, there are no more restrictions on init method arguments, "
+"any Python arguments are acceptable. Secondly, the model fed into one-"
+"shot trainers might be a model with Retiarii-specific modules, such as "
+"LayerChoice and InputChoice. Such model cannot directly forward-propagate"
+" and trainers need to decide how to handle those modules."
+msgstr ""
+
+#: ../../NAS/WriteOneshot.rst:8
+msgid ""
+"A typical example is DartsTrainer, where learnable-parameters are used to"
+" combine multiple choices in LayerChoice. Retiarii provides ease-to-use "
+"utility functions for module-replace purposes, namely "
+"``replace_layer_choice``, ``replace_input_choice``. A simplified example "
+"is as follows:"
+msgstr ""
+
+#: ../../NAS/WriteOneshot.rst:56
+msgid ""
+"The full code of DartsTrainer is available to Retiarii source code. "
+"Please have a check at :githublink:`DartsTrainer "
+"<nni/retiarii/oneshot/pytorch/darts.py>`."
+msgstr ""
+
+#: ../../NAS/construct_space.rst:7
+msgid "Customize Mutators"
+msgstr ""
+
+#: ../../NAS/construct_space.rst:7
+msgid "Hypermodule Lib"
+msgstr ""
+
+#: ../../NAS/construct_space.rst:3
+msgid "Construct Model Space"
+msgstr ""
+
+#: ../../NAS/construct_space.rst:5
+msgid ""
+"NNI provides powerful APIs for users to easily express model space (or "
+"search space). First, users can use mutation primitives (e.g., "
+"ValueChoice, LayerChoice) to inline a space in their model. Second, NNI "
+"provides simple interface for users to customize new mutators for "
+"expressing more complicated model spaces. In most cases, the mutation "
+"primitives are enough to express users' model spaces."
+msgstr ""
+
+#: ../../NAS/multi_trial_nas.rst:4
+msgid ""
+"In multi-trial NAS, users need model evaluator to evaluate the "
+"performance of each sampled model, and need an exploration strategy to "
+"sample models from a defined model space. Here, users could use NNI "
+"provided model evaluators or write their own model evalutor. They can "
+"simply choose a exploration strategy. Advanced users can also customize "
+"new exploration strategy. For a simple example about how to run a multi-"
+"trial NAS experiment, please refer to `Quick Start <./QuickStart.rst>`__."
+msgstr ""
+
+#: ../../NAS/one_shot_nas.rst:7
+msgid "Run One-shot NAS"
+msgstr ""
+
+#: ../../NAS/one_shot_nas.rst:7
+msgid "SPOS"
+msgstr ""
+
+#: ../../NAS/one_shot_nas.rst:7
+msgid "ProxylessNAS"
+msgstr ""
+
+#: ../../NAS/one_shot_nas.rst:7
+msgid "Customize One-shot NAS"
+msgstr ""
+
+#: ../../NAS/one_shot_nas.rst:4
+msgid ""
+"One-shot NAS algorithms leverage weight sharing among models in neural "
+"architecture search space to train a supernet, and use this supernet to "
+"guide the selection of better models. This type of algorihtms greatly "
+"reduces computational resource compared to independently training each "
+"model from scratch (which we call \"Multi-trial NAS\"). NNI has supported"
+" many popular One-shot NAS algorithms as following."
+msgstr ""
+

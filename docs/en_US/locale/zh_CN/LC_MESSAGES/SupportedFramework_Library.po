@@ -1,0 +1,164 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-29 17:40+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../SupportedFramework_Library.rst:6
+msgid "Framework and Library Supports"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:8
+msgid ""
+"With the built-in Python API, NNI naturally supports the hyper parameter "
+"tuning and neural network search for all the AI frameworks and libraries "
+"who support Python models(\\ ``version >= 3.6``\\ ). NNI had also "
+"provided a set of examples and tutorials for some of the popular "
+"scenarios to make jump start easier."
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:11
+msgid "Supported AI Frameworks"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:14
+msgid "`PyTorch <https://github.com/pytorch/pytorch>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:16
+msgid ":githublink:`MNIST-pytorch <examples/trials/mnist-distributed-pytorch>`"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:17
+msgid "`CIFAR-10 <./TrialExample/Cifar10Examples.rst>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:18
+msgid ""
+":githublink:`TGS salt identification chanllenge <examples/trials/kaggle-"
+"tgs-salt/README.md>`"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:19
+#: ../../SupportedFramework_Library.rst:29
+msgid ""
+":githublink:`Network_morphism "
+"<examples/trials/network_morphism/README.md>`"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:21
+msgid "`TensorFlow <https://github.com/tensorflow/tensorflow>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:23
+msgid ":githublink:`MNIST-tensorflow <examples/trials/mnist-distributed>`"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:24
+msgid ":githublink:`Squad <examples/trials/ga_squad/README.md>`"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:26
+msgid "`Keras <https://github.com/keras-team/keras>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:28
+msgid ":githublink:`MNIST-keras <examples/trials/mnist-keras>`"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:32
+msgid "`MXNet <https://github.com/apache/incubator-mxnet>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:33
+msgid "`Caffe2 <https://github.com/BVLC/caffe>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:34
+msgid "`CNTK (Python language) <https://github.com/microsoft/CNTK>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:35
+msgid "`Spark MLlib <http://spark.apache.org/mllib/>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:36
+msgid "`Chainer <https://chainer.org/>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:37
+msgid "`Theano <https://pypi.org/project/Theano/>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:39
+msgid ""
+"You are encouraged to `contribute more examples "
+"<Tutorial/Contributing.rst>`__ for other NNI users."
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:42
+msgid "Supported Library"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:44
+msgid ""
+"NNI also supports all libraries written in python.Here are some common "
+"libraries, including some algorithms based on GBDT: XGBoost, CatBoost and"
+" lightGBM."
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:47
+msgid "`Scikit-learn <https://scikit-learn.org/stable/>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:49
+msgid "`Scikit-learn <TrialExample/SklearnExamples.rst>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:51
+msgid "`XGBoost <https://xgboost.readthedocs.io/en/latest/>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:52
+msgid "`CatBoost <https://catboost.ai/>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:53
+msgid "`LightGBM <https://lightgbm.readthedocs.io/en/latest/>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:55
+msgid "`Auto-gbdt <TrialExample/GbdtExample.rst>`__"
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:57
+msgid ""
+"Here is just a small list of libraries that supported by NNI. If you are "
+"interested in NNI, you can refer to the `tutorial "
+"<TrialExample/Trials.rst>`__ to complete your own hacks."
+msgstr ""
+
+#: ../../SupportedFramework_Library.rst:59
+msgid ""
+"In addition to the above examples, we also welcome more and more users to"
+" apply NNI to your own work, if you have any doubts, please refer `Write "
+"a Trial Run on NNI <TrialExample/Trials.rst>`__. In particular, if you "
+"want to be a contributor of NNI, whether it is the sharing of examples , "
+"writing of Tuner or otherwise, we are all looking forward to your "
+"participation.More information please refer to `here "
+"<Tutorial/Contributing.rst>`__."
+msgstr ""
+

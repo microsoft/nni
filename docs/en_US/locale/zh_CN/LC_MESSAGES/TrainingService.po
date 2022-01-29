@@ -1,0 +1,2628 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-29 17:40+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../TrainingService/AMLMode.rst:2
+msgid "**Run an Experiment on Azure Machine Learning**"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:4 ../../TrainingService/Overview.rst:46
+msgid ""
+"NNI supports running an experiment on `AML <https://azure.microsoft.com"
+"/en-us/services/machine-learning/>`__ , called aml mode."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:7 ../../TrainingService/DLCMode.rst:9
+#: ../../TrainingService/HybridMode.rst:7 ../../TrainingService/PaiMode.rst:13
+msgid "Setup environment"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:9 ../../TrainingService/DLCMode.rst:11
+msgid ""
+"Step 1. Install NNI, follow the install guide `here "
+"<../Tutorial/QuickStart.rst>`__."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:11
+msgid ""
+"Step 2. Create an Azure account/subscription using this `link "
+"<https://azure.microsoft.com/en-us/free/services/machine-learning/>`__. "
+"If you already have an Azure account/subscription, skip this step."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:13
+msgid ""
+"Step 3. Install the Azure CLI on your machine, follow the install guide "
+"`here <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view"
+"=azure-cli-latest>`__."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:15
+msgid ""
+"Step 4. Authenticate to your Azure subscription from the CLI. To "
+"authenticate interactively, open a command line or terminal and use the "
+"following command:"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:21
+msgid ""
+"Step 5. Log into your Azure account with a web browser and create a "
+"Machine Learning resource. You will need to choose a resource group and "
+"specific a workspace name. Then download ``config.json`` which will be "
+"used later."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:28
+msgid "Step 6. Create an AML cluster as the computeTarget."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:35
+msgid "Step 7. Open a command line and install AML package environment."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:43
+#: ../../TrainingService/AdaptDLMode.rst:38
+#: ../../TrainingService/DLCMode.rst:28 ../../TrainingService/HybridMode.rst:12
+#: ../../TrainingService/KubeflowMode.rst:97
+#: ../../TrainingService/PaiMode.rst:65
+#: ../../TrainingService/RemoteMachineMode.rst:74
+msgid "Run an experiment"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:45 ../../TrainingService/DLCMode.rst:30
+#: ../../TrainingService/PaiMode.rst:67
+msgid ""
+"Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML "
+"file's content is like:"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:65
+msgid ""
+"Note: You should set ``platform: aml`` in NNI config YAML file if you "
+"want to start experiment in aml mode."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:67
+msgid ""
+"Compared with `LocalMode <LocalMode.rst>`__ training service "
+"configuration in aml mode have these additional keys:"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:70 ../../TrainingService/PaiMode.rst:126
+msgid "dockerImage"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:72
+msgid ""
+"required key. The docker image name used in job. NNI support image "
+"``msranni/nni`` for running aml jobs."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:74
+msgid ""
+"This image is build based on cuda environment, may not be suitable for "
+"CPU clusters in AML."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:76
+msgid "amlConfig:"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:79
+msgid "subscriptionId"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:81
+msgid "required key, the subscriptionId of your account"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:83
+msgid "resourceGroup"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:85
+msgid "required key, the resourceGroup of your account"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:87
+msgid "workspaceName"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:89
+msgid "required key, the workspaceName of your account"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:91
+msgid "computeTarget"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:93
+msgid ""
+"required key, the compute cluster name you want to use in your AML "
+"workspace. `refer <https://docs.microsoft.com/en-us/azure/machine-"
+"learning/concept-compute-target>`__ See Step 6."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:95
+msgid "maxTrialNumberPerGpu"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:97
+msgid ""
+"optional key, default 1. Used to specify the max concurrency trial number"
+" on a GPU device."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:99
+msgid "useActiveGpu"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:101
+msgid ""
+"optional key, default false. Used to specify whether to use a GPU if "
+"there is another process. By default, NNI will use the GPU only if there "
+"is no other active process in the GPU."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:103
+msgid ""
+"The required information of amlConfig could be found in the downloaded "
+"``config.json`` in Step 5."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:105 ../../TrainingService/DLCMode.rst:67
+msgid "Run the following commands to start the example experiment:"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:116
+msgid ""
+"Replace ``${NNI_VERSION}`` with a released version name or branch name, "
+"e.g., ``v2.4``."
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:119
+msgid "Monitor your code in the cloud by using the studio"
+msgstr ""
+
+#: ../../TrainingService/AMLMode.rst:121
+msgid ""
+"To monitor your job's code, you need to visit your studio which you "
+"create at step 5. Once the job completes, go to the Outputs + logs tab. "
+"There you can see a 70_driver_log.txt file, This file contains the "
+"standard output from a run and can be useful when you're debugging remote"
+" runs in the cloud. Learn more about aml from `here "
+"<https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-"
+"experiment-hello-world>`__."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:2
+msgid "Run an Experiment on AdaptDL"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:4
+msgid ""
+"Now NNI supports running experiment on `AdaptDL "
+"<https://github.com/petuum/adaptdl>`__. Before starting to use NNI "
+"AdaptDL mode, you should have a Kubernetes cluster, either on-premises or"
+" `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/en-"
+"us/services/kubernetes-service/>`__\\ , a Ubuntu machine on which "
+"`kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-"
+"cluster-access-kubeconfig/>`__ is setup to connect to your Kubernetes "
+"cluster. In AdaptDL mode, your trial program will run as AdaptDL job in "
+"Kubernetes cluster."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:6
+msgid ""
+"AdaptDL aims to make distributed deep learning easy and efficient in "
+"dynamic-resource environments such as shared clusters and the cloud."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:9
+msgid "Prerequisite for Kubernetes Service"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:12
+msgid ""
+"A **Kubernetes** cluster using Kubernetes 1.14 or later with storage. "
+"Follow this guideline to set up Kubernetes `on Azure "
+"<https://azure.microsoft.com/en-us/services/kubernetes-service/>`__\\ , "
+"or `on-premise <https://kubernetes.io/docs/setup/>`__ with `cephfs "
+"<https://kubernetes.io/docs/concepts/storage/storage-classes/#ceph-"
+"rbd>`__\\ , or `microk8s with storage add-on enabled "
+"<https://microk8s.io/docs/addons>`__."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:13
+msgid ""
+"Helm install **AdaptDL Scheduler** to your Kubernetes cluster. Follow "
+"this `guideline <https://adaptdl.readthedocs.io/en/latest/installation"
+"/install-adaptdl.html>`__ to setup AdaptDL scheduler."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:14
+msgid ""
+"Prepare a **kubeconfig** file, which will be used by NNI to interact with"
+" your Kubernetes API server. By default, NNI manager will use "
+"``$(HOME)/.kube/config`` as kubeconfig file's path. You can also specify "
+"other kubeconfig files by setting the ** KUBECONFIG** environment "
+"variable. Refer this `guideline "
+"<https://kubernetes.io/docs/concepts/configuration/organize-cluster-"
+"access-kubeconfig>`__ to learn more about kubeconfig."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:15
+#: ../../TrainingService/FrameworkControllerMode.rst:12
+#: ../../TrainingService/KubeflowMode.rst:13
+msgid ""
+"If your NNI trial job needs GPU resource, you should follow this "
+"`guideline <https://github.com/NVIDIA/k8s-device-plugin>`__ to configure "
+"**Nvidia device plugin for Kubernetes**."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:16
+msgid ""
+"(Optional) Prepare a **NFS server** and export a general purpose mount as"
+" external storage."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:17
+#: ../../TrainingService/FrameworkControllerMode.rst:20
+#: ../../TrainingService/KubeflowMode.rst:21
+msgid ""
+"Install **NNI**\\ , follow the install guide `here "
+"<../Tutorial/QuickStart.rst>`__."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:20
+msgid "Verify Prerequisites"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:40
+msgid ""
+"We have a CIFAR10 example that fully leverages the AdaptDL scheduler "
+"under ``examples/trials/cifar10_pytorch`` folder. (\\ ``main_adl.py`` and"
+" ``config_adl.yaml``\\ )"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:42
+msgid ""
+"Here is a template configuration specification to use AdaptDL as a "
+"training service."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:78
+msgid ""
+"Those configs not mentioned below, are following the `default specs "
+"defined </Tutorial/ExperimentConfig.rst#configuration-spec>`__  in the "
+"NNI doc."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:82
+msgid ""
+"**trainingServicePlatform**\\ : Choose ``adl`` to use the Kubernetes "
+"cluster with AdaptDL scheduler."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:83
+msgid ""
+"**nniManagerIp**\\ : *Required* to get the correct info and metrics back "
+"from the cluster, for ``adl`` training service. IP address of the machine"
+" with NNI manager (NNICTL) that launches NNI experiment."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:85
+msgid ""
+"**logCollection**\\ : *Recommended* to set as ``http``. It will collect "
+"the trial logs on cluster back to your machine via http."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:86
+msgid ""
+"**tuner**\\ : It supports the Tuun tuner and all NNI built-in tuners "
+"(only except for the checkpoint feature of the NNI PBT tuners)."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:87
+msgid "**trial**\\ : It defines the specs of an ``adl`` trial."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:89
+msgid ""
+"**namespace**\\: (*Optional*\\ ) Kubernetes namespace to launch the "
+"trials. Default to ``default`` namespace."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:90
+msgid ""
+"**adaptive**\\ : (*Optional*\\ ) Boolean for AdaptDL trainer. While "
+"``true``\\ , it the job is preemptible and adaptive."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:91
+msgid "**image**\\ : Docker image for the trial"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:92
+msgid ""
+"**imagePullSecret**\\ : (*Optional*\\ ) If you are using a private "
+"registry, you need to provide the secret to successfully pull the image."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:94
+msgid ""
+"**codeDir**\\ : the working directory of the container. ``.`` means the "
+"default working directory defined by the image."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:95
+msgid "**command**\\ : the bash command to start the trial"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:96
+msgid ""
+"**gpuNum**\\ : the number of GPUs requested for this trial. It must be "
+"non-negative integer."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:97
+msgid ""
+"**cpuNum**\\ : (*Optional*\\ ) the number of CPUs requested for this "
+"trial.  It must be non-negative integer."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:98
+msgid ""
+"**memorySize**\\ : (*Optional*\\ ) the size of memory requested for this "
+"trial. It must follow the Kubernetes `default format "
+"<https://kubernetes.io/docs/concepts/configuration/manage-resources-"
+"containers/#meaning-of-memory>`__."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:100
+msgid ""
+"**nfs**\\ : (*Optional*\\ ) mounting external storage. For more "
+"information about using NFS please check the below paragraph."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:101
+msgid "**checkpoint** (*Optional*\\ ) storage settings for model checkpoints."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:103
+msgid ""
+"**storageClass**\\ : check `Kubernetes storage documentation "
+"<https://kubernetes.io/docs/concepts/storage/storage-classes/>`__ for how"
+" to use the appropriate ``storageClass``."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:104
+msgid ""
+"**storageSize**\\ : this value should be large enough to fit your model's"
+" checkpoints, or it could cause \"disk quota exceeded\" error."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:107
+msgid "NFS Storage"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:109
+msgid ""
+"As you may have noticed in the above configuration spec, an *optional* "
+"section is available to configure NFS external storage. It is optional "
+"when no external storage is required, when for example an docker image is"
+" sufficient with codes and data inside."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:112
+msgid ""
+"Note that ``adl`` training service does NOT help mount an NFS to the "
+"local dev machine, so that one can manually mount it to local, manage the"
+" filesystem, copy the data or code etc. The ``adl`` training service can "
+"then mount it to the kubernetes for every trials, with the proper "
+"configurations:"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:116
+msgid "**server**\\ : NFS server address, e.g. IP address or domain"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:117
+msgid ""
+"**path**\\ : NFS server export path, i.e. the absolute path in NFS that "
+"can be mounted to trials"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:118
+msgid ""
+"**containerMountPath**\\ : In container absolute path to mount the NFS "
+"**path** above, so that every trial will have the access to the NFS. In "
+"the trial containers, you can access the NFS with this path."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:122
+msgid "Use cases:"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:125
+msgid ""
+"If your training trials depend on a dataset of large size, you may want "
+"to download it first onto the NFS first, and mount it so that it can be "
+"shared across multiple trials."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:127
+msgid ""
+"The storage for containers are ephemeral and the trial containers will be"
+" deleted after a trial's lifecycle is over. So if you want to export your"
+" trained models, you may mount the NFS to the trial to persist and export"
+" your trained models."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:131
+msgid ""
+"In short, it is not limited how a trial wants to read from or write on "
+"the NFS storage, so you may use it flexibly as per your needs."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:134
+msgid "Monitor via Log Stream"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:136
+msgid "Follow the log streaming of a certain trial:"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:146
+msgid ""
+"Note that *after* a trial has done and its pod has been deleted, no logs "
+"can be retrieved then via this command. However you may still be able to "
+"access the past trial logs according to the following approach."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:152
+msgid "Monitor via TensorBoard"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:154
+msgid ""
+"In the context of NNI, an experiment has multiple trials. For easy "
+"comparison across trials for a model tuning process, we support "
+"TensorBoard integration. Here one experiment has an independent "
+"TensorBoard logging directory thus dashboard."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:159
+msgid ""
+"You can only use the TensorBoard while the monitored experiment is "
+"running. In other words, it is not supported to monitor stopped "
+"experiments."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:162
+msgid "In the trial container you may have access to two environment variables:"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:165
+msgid ""
+"``ADAPTDL_TENSORBOARD_LOGDIR``\\ : the TensorBoard logging directory for "
+"the current experiment,"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:166
+msgid "``NNI_TRIAL_JOB_ID``\\ : the ``trial`` job id for the current trial."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:168
+msgid ""
+"It is recommended for to have them joined as the directory for trial, for"
+" example in Python:"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:179
+msgid ""
+"If an experiment is stopped, the data logged here (defined by *the above "
+"envs* for monitoring with the following commands) will be lost. To "
+"persist the logged data, you can use the external storage (e.g. to mount "
+"an NFS) to export it and view the TensorBoard locally."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:184
+msgid ""
+"With the above setting, you can monitor the experiment easily via "
+"TensorBoard by"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:191
+msgid "If having multiple experiment running at the same time, you may use"
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:197
+msgid "It will provide you the web url to access the tensorboard."
+msgstr ""
+
+#: ../../TrainingService/AdaptDLMode.rst:199
+msgid ""
+"Note that you have the flexibility to set up the local ``--port`` for the"
+" TensorBoard."
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:2
+msgid "**Run an Experiment on Aliyun PAI-DSW + PAI-DLC**"
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:4
+msgid ""
+"NNI supports running an experiment on `PAI-DSW "
+"<https://help.aliyun.com/document_detail/194831.html>`__ , submit trials "
+"to `PAI-DLC <https://help.aliyun.com/document_detail/165137.html>`__ "
+"called dlc mode."
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:6
+msgid ""
+"PAI-DSW server performs the role to submit a job while PAI-DLC is where "
+"the training job runs."
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:13
+msgid ""
+"Step 2. Create PAI-DSW server following this `link "
+"<https://help.aliyun.com/document_detail/163684.html?section-2cw-lsi-es9"
+"#title-ji9-re9-88x>`__. Note as the training service will be run on PAI-"
+"DLC, it won't cost many resources to run and you may just need a PAI-DSW "
+"server with CPU."
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:15
+msgid ""
+"Step 3. Open PAI-DLC `here <https://pai-"
+"dlc.console.aliyun.com/#/guide>`__, select the same region as your PAI-"
+"DSW server. Move to ``dataset configuration`` and mount the same NAS disk"
+" as the PAI-DSW server does. (Note currently only PAI-DLC public-cluster "
+"is supported.)"
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:17
+msgid ""
+"Step 4. Open your PAI-DSW server command line, download and install PAI-"
+"DLC python SDK to submit DLC tasks, refer to `this link "
+"<https://help.aliyun.com/document_detail/203290.html>`__. Skip this step "
+"if SDK is already installed."
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:61
+msgid ""
+"Note: You should set ``platform: dlc`` in NNI config YAML file if you "
+"want to start experiment in dlc mode."
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:63
+msgid ""
+"Compared with `LocalMode <LocalMode.rst>`__ training service "
+"configuration in dlc mode have these additional keys like "
+"``type/image/jobType/podCount/ecsSpec/region/nasDataSourceId/accessKeyId/accessKeySecret``,"
+" for detailed explanation ref to this `link "
+"<https://help.aliyun.com/document_detail/203111.html#h2-url-3>`__."
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:65
+msgid ""
+"Also, as dlc mode requires DSW/DLC to mount the same NAS disk to share "
+"information, there are two extra keys related to this: "
+"``localStorageMountPoint`` and ``containerStorageMountPoint``."
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:78
+msgid ""
+"Replace ``${NNI_VERSION}`` with a released version name or branch name, "
+"e.g., ``v2.3``."
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:81
+msgid "Monitor your job"
+msgstr ""
+
+#: ../../TrainingService/DLCMode.rst:83
+msgid ""
+"To monitor your job on DLC, you need to visit `DLC  <https://pai-"
+"dlc.console.aliyun.com/#/jobs>`__ to check job status."
+msgstr ""
+
+#: ../../TrainingService/DLTSMode.rst:2
+msgid "**Run an Experiment on DLTS**"
+msgstr ""
+
+#: ../../TrainingService/DLTSMode.rst:4
+msgid ""
+"NNI supports running an experiment on `DLTS "
+"<https://github.com/microsoft/DLWorkspace.git>`__\\ , called dlts mode. "
+"Before starting to use NNI dlts mode, you should have an account to "
+"access DLTS dashboard."
+msgstr ""
+
+#: ../../TrainingService/DLTSMode.rst:7
+msgid "Setup Environment"
+msgstr ""
+
+#: ../../TrainingService/DLTSMode.rst:9
+msgid ""
+"Step 1. Choose a cluster from DLTS dashboard, ask administrator for the "
+"cluster dashboard URL."
+msgstr ""
+
+msgid "Choose Cluster"
+msgstr ""
+
+#: ../../TrainingService/DLTSMode.rst:17
+msgid "Step 2. Prepare a NNI config YAML like the following:"
+msgstr ""
+
+#: ../../TrainingService/DLTSMode.rst:43
+msgid "Remember to fill the cluster dashboard URL to the last line."
+msgstr ""
+
+#: ../../TrainingService/DLTSMode.rst:45
+msgid ""
+"Step 3. Open your working directory of the cluster, paste the NNI config "
+"as well as related code to a directory."
+msgstr ""
+
+msgid "Copy Config"
+msgstr ""
+
+#: ../../TrainingService/DLTSMode.rst:53
+msgid "Step 4. Submit a NNI manager job to the specified cluster."
+msgstr ""
+
+msgid "Submit Job"
+msgstr ""
+
+#: ../../TrainingService/DLTSMode.rst:61
+msgid ""
+"Step 5. Go to Endpoints tab of the newly created job, click the Port "
+"40000 link to check trial's information."
+msgstr ""
+
+msgid "View NNI WebUI"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:2
+msgid "Run an Experiment on FrameworkController"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:4
+#: ../../TrainingService/Overview.rst:42
+msgid ""
+"NNI supports running experiment using `FrameworkController "
+"<https://github.com/Microsoft/frameworkcontroller>`__\\ , called "
+"frameworkcontroller mode. FrameworkController is built to orchestrate all"
+" kinds of applications on Kubernetes, you don't need to install Kubeflow "
+"for specific deep learning framework like tf-operator or pytorch-"
+"operator. Now you can use FrameworkController as the training service to "
+"run NNI experiment."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:7
+#: ../../TrainingService/KubeflowMode.rst:7
+msgid "Prerequisite for on-premises Kubernetes Service"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:10
+#: ../../TrainingService/KubeflowMode.rst:10
+msgid ""
+"A **Kubernetes** cluster using Kubernetes 1.8 or later. Follow this "
+"`guideline <https://kubernetes.io/docs/setup/>`__ to set up Kubernetes"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:11
+msgid ""
+"Prepare a **kubeconfig** file, which will be used by NNI to interact with"
+" your Kubernetes API server. By default, NNI manager will use "
+"$(HOME)/.kube/config as kubeconfig file's path. You can also specify "
+"other kubeconfig files by setting the**KUBECONFIG** environment variable."
+" Refer this `guideline <https://kubernetes.io/docs/concepts/configuration"
+"/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:13
+msgid ""
+"Prepare a **NFS server** and export a general purpose mount (we recommend"
+" to map your NFS server path in ``root_squash option``\\ , otherwise "
+"permission issue may raise when NNI copies files to NFS. Refer this `page"
+" <https://linux.die.net/man/5/exports>`__ to learn what root_squash "
+"option is), or **Azure File Storage**."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:14
+#: ../../TrainingService/KubeflowMode.rst:15
+msgid ""
+"Install **NFS client** on the machine where you install NNI and run "
+"nnictl to create experiment. Run this command to install NFSv4 client:"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:23
+#: ../../TrainingService/KubeflowMode.rst:24
+msgid "Prerequisite for Azure Kubernetes Service"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:26
+#: ../../TrainingService/KubeflowMode.rst:27
+msgid ""
+"NNI support Kubeflow based on Azure Kubernetes Service, follow the "
+"`guideline <https://azure.microsoft.com/en-us/services/kubernetes-"
+"service/>`__ to set up Azure Kubernetes Service."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:27
+#: ../../TrainingService/KubeflowMode.rst:28
+msgid ""
+"Install `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-"
+"azure-cli?view=azure-cli-latest>`__ and **kubectl**.  Use ``az login`` to"
+" set azure account, and connect kubectl client to AKS, refer this "
+"`guideline <https://docs.microsoft.com/en-us/azure/aks/kubernetes-"
+"walkthrough#connect-to-the-cluster>`__."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:28
+#: ../../TrainingService/KubeflowMode.rst:30
+msgid ""
+"Follow the `guideline <https://docs.microsoft.com/en-"
+"us/azure/storage/common/storage-quickstart-create-account?tabs=portal>`__"
+" to create azure file storage account. If you use Azure Kubernetes "
+"Service, NNI need Azure Storage Service to store code files and the "
+"output files."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:29
+msgid ""
+"To access Azure storage service, NNI need the access key of the storage "
+"account, and NNI uses `Azure Key Vault <https://azure.microsoft.com/en-"
+"us/services/key-vault/>`__ Service to protect your private key. Set up "
+"Azure Key Vault Service, add a secret to Key Vault to store the access "
+"key of Azure storage account. Follow this `guideline "
+"<https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli>`__ to"
+" store the access key."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:33
+msgid "Prerequisite for PVC storage mode"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:34
+msgid ""
+"In order to use persistent volume claims instead of NFS or Azure storage,"
+" related storage must be created manually, in the namespace your trials "
+"will run later. This restriction is due to the fact, that persistent "
+"volume claims are hard to recycle and thus can quickly mess with a "
+"cluster's storage management. Persistent volume claims can be created by "
+"e.g. using kubectl. Please refer to the official Kubernetes documentation"
+" for `further information <https://kubernetes.io/docs/concepts/storage"
+"/persistent-volumes/#persistentvolumeclaims>`__."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:42
+msgid "Setup FrameworkController"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:44
+msgid ""
+"Follow the `guideline "
+"<https://github.com/Microsoft/frameworkcontroller/tree/master/example/run>`__"
+" to set up FrameworkController in the Kubernetes cluster, NNI supports "
+"FrameworkController by the stateful set mode. If your cluster enforces "
+"authorization, you need to create a service account with granted "
+"permission for FrameworkController, and then pass the name of the "
+"FrameworkController service account to the NNI Experiment Config. `refer "
+"<https://github.com/Microsoft/frameworkcontroller/tree/master/example/run"
+"#run-by-kubernetes-statefulset>`__. If the k8s cluster enforces "
+"Authorization, you also need to create a ServiceAccount with granted "
+"permission for FrameworkController, `refer "
+"<https://github.com/microsoft/frameworkcontroller/tree/master/example/run#prerequisite>`__."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:48
+#: ../../TrainingService/KubeflowMode.rst:34
+msgid "Design"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:50
+msgid ""
+"Please refer the design of `Kubeflow training service "
+"<KubeflowMode.rst>`__\\ , FrameworkController training service pipeline "
+"is similar."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:53
+msgid "Example"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:55
+msgid "The FrameworkController config file format is:"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:98
+msgid ""
+"If you use Azure Kubernetes Service, you should  set "
+"``frameworkcontrollerConfig`` in your config YAML file as follows:"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:112
+msgid ""
+"If you set `ServiceAccount "
+"<https://github.com/microsoft/frameworkcontroller/tree/master/example/run#prerequisite>`__"
+" in your k8s, please set ``serviceAccountName`` in your config file: For "
+"example:"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:120
+msgid ""
+"Note: You should explicitly set ``trainingServicePlatform: "
+"frameworkcontroller`` in NNI config YAML file if you want to start "
+"experiment in frameworkcontrollerConfig mode."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:122
+msgid ""
+"The trial's config format for NNI frameworkcontroller mode is a simple "
+"version of FrameworkController's official config, you could refer the "
+"`Tensorflow example of FrameworkController "
+"<https://github.com/microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/ps/cpu/tensorflowdistributedtrainingwithcpu.yaml>`__"
+" for deep understanding."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:124
+msgid ""
+"Trial configuration in frameworkcontroller mode have the following "
+"configuration keys:"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:127
+msgid ""
+"taskRoles: you could set multiple task roles in config file, and each "
+"task role is a basic unit to process in Kubernetes cluster."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:129
+msgid ""
+"name: the name of task role specified, like \"worker\", \"ps\", "
+"\"master\"."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:130
+msgid "taskNum: the replica number of the task role."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:131
+msgid "command: the users' command to be used in the container."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:132
+msgid "gpuNum: the number of gpu device used in container."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:133
+msgid "cpuNum: the number of cpu device used in container."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:134
+msgid "memoryMB: the memory limitaion to be specified in container."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:135
+msgid "image: the docker image used to create pod and run the program."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:136
+msgid ""
+"frameworkAttemptCompletionPolicy: the policy to run framework, please "
+"refer the `user-manual "
+"<https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-"
+"manual.md#frameworkattemptcompletionpolicy>`__ to get the specific "
+"information. Users could use the policy to control the pod, for example, "
+"if ps does not stop, only worker stops, The completion policy could helps"
+" stop ps."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:138
+msgid ""
+"NNI also offers the possibility to include a customized "
+"frameworkcontroller template similar to the aforementioned tensorflow "
+"example. A valid configuration the may look like:"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:167
+msgid ""
+"Note that in this example a persistent volume claim has been used, that "
+"must be created manually in the specified namespace beforehand. Stick to "
+"the mnist-pytorch example (:githublink: `<examples/trials/mnist-"
+"pytorch>`__) for a more detailed config (:githublink: `<examples/trials"
+"/mnist-pytorch/config_frameworkcontroller_custom.yml>`__) and "
+"frameworkcontroller template (:githublink: "
+"`<examples/trials/fc_template.yml>`__)."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:170
+msgid "How to run example"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:172
+msgid ""
+"After you prepare a config file, you could run your experiment by nnictl."
+" The way to start an experiment on FrameworkController is similar to "
+"Kubeflow, please refer the `document <KubeflowMode.rst>`__ for more "
+"information."
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:175
+#: ../../TrainingService/KubeflowMode.rst:251
+#: ../../TrainingService/PaiMode.rst:211
+msgid "version check"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:177
+#: ../../TrainingService/KubeflowMode.rst:253
+msgid ""
+"NNI support version check feature in since version 0.6, `refer "
+"<PaiMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:181
+msgid "FrameworkController reuse mode"
+msgstr ""
+
+#: ../../TrainingService/FrameworkControllerMode.rst:182
+msgid ""
+"NNI support setting reuse mode for trial jobs. In reuse mode, NNI will "
+"submit a long-running trial runner process to occupy the container, and "
+"start trial jobs as the subprocess of the trial runner process, it means "
+"k8s do not need to schedule new container again, it just reuse old "
+"container. Currently, frameworkcontroller reuse mode only support V2 "
+"config. Here is the example:"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:2
+msgid "How to Implement Training Service in NNI"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:5
+msgid "Overview"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:7
+msgid ""
+"TrainingService is a module related to platform management and job "
+"schedule in NNI. TrainingService is designed to be easily implemented, we"
+" define an abstract class TrainingService as the parent class of all "
+"kinds of TrainingService, users just need to inherit the parent class and"
+" complete their own child class if they want to implement customized "
+"TrainingService."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:10
+msgid "System architecture"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:18
+msgid ""
+"The brief system architecture of NNI is shown in the picture. NNIManager "
+"is the core management module of system, in charge of calling "
+"TrainingService to manage trial jobs and the communication between "
+"different modules. Dispatcher is a message processing center responsible "
+"for message dispatch. TrainingService is a module to manage trial jobs, "
+"it communicates with nniManager module, and has different instance "
+"according to different training platform. For the time being, NNI "
+"supports `local platfrom <LocalMode.rst>`__\\ , `remote platfrom "
+"<RemoteMachineMode.rst>`__\\ , `PAI platfrom <PaiMode.rst>`__\\ , "
+"`kubeflow platform <KubeflowMode.rst>`__ and `FrameworkController "
+"platfrom <FrameworkControllerMode.rst>`__."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:20
+msgid ""
+"In this document, we introduce the brief design of TrainingService. If "
+"users want to add a new TrainingService instance, they just need to "
+"complete a child class to implement TrainingService, don't need to "
+"understand the code detail of NNIManager, Dispatcher or other modules."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:23
+msgid "Folder structure of code"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:25
+msgid "NNI's folder structure is shown below:"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:57
+msgid ""
+"``nni/src/`` folder stores the most source code of NNI. The code in this "
+"folder is related to NNIManager, TrainingService, SDK, WebUI and other "
+"modules. Users could find the abstract class of TrainingService in "
+"``nni/src/nni_manager/common/trainingService.ts`` file, and they should "
+"put their own implemented TrainingService in "
+"``nni/src/nni_manager/training_service`` folder. If users have "
+"implemented their own TrainingService code, they should also supplement "
+"the unit test of the code, and place them in "
+"``nni/src/nni_manager/training_service/test`` folder."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:60
+msgid "Function annotation of TrainingService"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:79
+msgid ""
+"The parent class of TrainingService has a few abstract functions, users "
+"need to inherit the parent class and implement all of these abstract "
+"functions."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:81
+msgid "**setClusterMetadata(key: string, value: string)**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:83
+msgid ""
+"ClusterMetadata is the data related to platform details, for examples, "
+"the ClusterMetadata defined in remote machine server is:"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:110
+msgid ""
+"The metadata includes the host address, the username or other "
+"configuration related to the platform. Users need to define their own "
+"metadata format, and set the metadata instance in this function. This "
+"function is called before the experiment is started to set the "
+"configuration of remote machines."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:112
+msgid "**getClusterMetadata(key: string)**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:114
+msgid ""
+"This function will return the metadata value according to the values, it "
+"could be left empty if users don't need to use it."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:116
+msgid "**submitTrialJob(form: JobApplicationForm)**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:118
+msgid ""
+"SubmitTrialJob is a function to submit new trial jobs, users should "
+"generate a job instance in TrialJobDetail type. TrialJobDetail is defined"
+" as follow:"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:136
+msgid ""
+"According to different kinds of implementation, users could put the job "
+"detail into a job queue, and keep  fetching the job from the queue and "
+"start preparing and running them. Or they could finish preparing and "
+"running process in this function, and return job detail after the submit "
+"work."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:138
+msgid "**cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean)**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:140
+msgid ""
+"If this function is called, the trial started by the platform should be "
+"canceled. Different kind of platform has diffenent methods to calcel a "
+"running job, this function should be implemented according to specific "
+"platform."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:142
+msgid "**updateTrialJob(trialJobId: string, form: JobApplicationForm)**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:144
+msgid ""
+"This function is called to update the trial job's status, trial job's "
+"status should be detected according to different platform, and be updated"
+" to ``RUNNING``\\ , ``SUCCEED``\\ , ``FAILED`` etc."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:146
+msgid "**getTrialJob(trialJobId: string)**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:148
+msgid "This function returns a trialJob detail instance according to trialJobId."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:150
+msgid "**listTrialJobs()**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:152
+msgid ""
+"Users should put all of trial job detail information into a list, and "
+"return the list."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:154
+msgid "**addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:156
+msgid ""
+"NNI will hold an EventEmitter to get job metrics, if there is new job "
+"metrics detected, the EventEmitter will be triggered. Users should start "
+"the EventEmitter in this function."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:158
+msgid ""
+"**removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => "
+"void)**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:160
+msgid "Close the EventEmitter."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:162
+msgid "**run()**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:164
+msgid ""
+"The run() function is a main loop function in TrainingService, users "
+"could set a while loop to execute their logic code, and finish executing "
+"them when the experiment is stopped."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:166
+msgid "**cleanUp()**"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:168
+msgid ""
+"This function is called to clean up the environment when a experiment is "
+"stopped. Users should do the platform-related cleaning operation in this "
+"function."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:171
+msgid "TrialKeeper tool"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:173
+msgid ""
+"NNI offers a TrialKeeper tool to help maintaining trial jobs. Users can "
+"find the source code in ``nni/tools/nni_trial_tool``. If users want to "
+"run trial jobs in cloud platform, this tool will be a fine choice to help"
+" keeping trial running in the platform."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:175
+msgid "The running architecture of TrialKeeper is show as follow:"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:183
+msgid ""
+"When users submit a trial job to cloud platform, they should wrap their "
+"trial command into TrialKeeper, and start a TrialKeeper process in cloud "
+"platform. Notice that TrialKeeper use restful server to communicate with "
+"TrainingService, users should start a restful server in local machine to "
+"receive metrics sent from TrialKeeper. The source code about restful "
+"server could be found in "
+"``nni/src/nni_manager/training_service/common/clusterJobRestServer.ts``."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:186
+msgid "Reference"
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:188
+msgid ""
+"For more information about how to debug, please `refer "
+"<../Tutorial/HowToDebug.rst>`__."
+msgstr ""
+
+#: ../../TrainingService/HowToImplementTrainingService.rst:190
+msgid ""
+"The guideline of how to contribute, please `refer "
+"<../Tutorial/Contributing.rst>`__."
+msgstr ""
+
+#: ../../TrainingService/HybridMode.rst:2
+msgid "**Run an Experiment on Hybrid Mode**"
+msgstr ""
+
+#: ../../TrainingService/HybridMode.rst:4
+msgid ""
+"Run NNI on hybrid mode means that NNI will run trials jobs in multiple "
+"kinds of training platforms. For example, NNI could submit trial jobs to "
+"remote machine and AML simultaneously."
+msgstr ""
+
+#: ../../TrainingService/HybridMode.rst:9
+msgid ""
+"NNI has supported `local <./LocalMode.rst>`__\\ , `remote "
+"<./RemoteMachineMode.rst>`__\\ , `PAI <./PaiMode.rst>`__\\ , `AML "
+"<./AMLMode.rst>`__,  `Kubeflow <./KubeflowMode.rst>`__\\ , "
+"`FrameworkController <./FrameworkControllerMode.rst>`__\\ ,for hybrid "
+"training service. Before starting an experiment using these mode, users "
+"should setup the corresponding environment for the platforms. More "
+"details about the environment setup could be found in the corresponding "
+"docs."
+msgstr ""
+
+#: ../../TrainingService/HybridMode.rst:14
+msgid ""
+"Use ``examples/trials/mnist-tfv1`` as an example. The NNI config YAML "
+"file's content is like:"
+msgstr ""
+
+#: ../../TrainingService/HybridMode.rst:38
+msgid ""
+"To use hybrid training services, users should set training service "
+"configurations as a list in `trainingService` field. Currently, hybrid "
+"support setting `local`, `remote`, `pai`, `aml`, `kubeflow` and "
+"`frameworkcontroller` training services."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:2
+msgid "Run an Experiment on Kubeflow"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:4
+msgid ""
+"Now NNI supports running experiment on `Kubeflow "
+"<https://github.com/kubeflow/kubeflow>`__\\ , called kubeflow mode. "
+"Before starting to use NNI kubeflow mode, you should have a Kubernetes "
+"cluster, either on-premises or `Azure Kubernetes Service(AKS) "
+"<https://azure.microsoft.com/en-us/services/kubernetes-service/>`__\\ , a"
+" Ubuntu machine on which `kubeconfig "
+"<https://kubernetes.io/docs/concepts/configuration/organize-cluster-"
+"access-kubeconfig/>`__ is setup to connect to your Kubernetes cluster. If"
+" you are not familiar with Kubernetes, `here "
+"<https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ is a good "
+"start. In kubeflow mode, your trial program will run as Kubeflow job in "
+"Kubernetes cluster."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:11
+msgid ""
+"Download, set up, and deploy **Kubeflow** to your Kubernetes cluster. "
+"Follow this `guideline <https://www.kubeflow.org/docs/started/getting-"
+"started/>`__ to setup Kubeflow."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:12
+msgid ""
+"Prepare a **kubeconfig** file, which will be used by NNI to interact with"
+" your Kubernetes API server. By default, NNI manager will use "
+"``$(HOME)/.kube/config`` as kubeconfig file's path. You can also specify "
+"other kubeconfig files by setting the **KUBECONFIG** environment "
+"variable. Refer this `guideline "
+"<https://kubernetes.io/docs/concepts/configuration/organize-cluster-"
+"access-kubeconfig>`__ to learn more about kubeconfig."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:14
+msgid ""
+"Prepare a **NFS server** and export a general purpose mount (we recommend"
+" to map your NFS server path in ``root_squash option``\\ , otherwise "
+"permission issue may raise when NNI copy files to NFS. Refer this `page "
+"<https://linux.die.net/man/5/exports>`__ to learn what root_squash option"
+" is), or **Azure File Storage**."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:29
+msgid ""
+"Deploy Kubeflow on Azure Kubernetes Service, follow the `guideline "
+"<https://www.kubeflow.org/docs/started/getting-started/>`__."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:31
+msgid ""
+"To access Azure storage service, NNI need the access key of the storage "
+"account, and NNI use `Azure Key Vault <https://azure.microsoft.com/en-"
+"us/services/key-vault/>`__ Service to protect your private key. Set up "
+"Azure Key Vault Service, add a secret to Key Vault to store the access "
+"key of Azure storage account. Follow this `guideline "
+"<https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli>`__ to"
+" store the access key."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:41
+msgid ""
+"Kubeflow training service instantiates a Kubernetes rest client to "
+"interact with your K8s cluster's API server."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:43
+msgid ""
+"For each trial, we will upload all the files in your local codeDir path "
+"(configured in nni_config.yml) together with NNI generated files like "
+"parameter.cfg into a storage volumn. Right now we support two kinds of "
+"storage volumes: `nfs "
+"<https://en.wikipedia.org/wiki/Network_File_System>`__ and `azure file "
+"storage <https://azure.microsoft.com/en-us/services/storage/files/>`__\\ "
+", you should configure the storage volumn in NNI config YAML file. After "
+"files are prepared, Kubeflow training service will call K8S rest API to "
+"create Kubeflow jobs (\\ `tf-operator <https://github.com/kubeflow/tf-"
+"operator>`__ job or `pytorch-operator <https://github.com/kubeflow"
+"/pytorch-operator>`__ job) in K8S, and mount your storage volume into the"
+" job's pod. Output files of Kubeflow job, like stdout, stderr, trial.log "
+"or model files, will also be copied back to the storage volumn. NNI will "
+"show the storage volumn's URL for each trial in WebUI, to allow user "
+"browse the log files and job's output files."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:46
+msgid "Supported operator"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:48
+msgid ""
+"NNI only support tf-operator and pytorch-operator of Kubeflow, other "
+"operators is not tested. Users could set operator type in config file. "
+"The setting of tf-operator:"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:57
+msgid "The setting of pytorch-operator:"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:64
+msgid ""
+"If users want to use tf-operator, he could set ``ps`` and ``worker`` in "
+"trial config. If users want to use pytorch-operator, he could set "
+"``master`` and ``worker`` in trial config."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:67
+msgid "Supported storage type"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:69
+msgid ""
+"NNI support NFS and Azure Storage to store the code and output files, "
+"users could set storage type in config file and set the corresponding "
+"config."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:71
+msgid "The setting for NFS storage are as follows:"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:83
+msgid ""
+"If you use Azure storage, you should  set ``kubeflowConfig`` in your "
+"config YAML file as follows:"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:99
+msgid ""
+"Use ``examples/trials/mnist-tfv1`` as an example. This is a tensorflow "
+"job, and use tf-operator of Kubeflow. The NNI config YAML file's content "
+"is like:"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:149
+msgid ""
+"Note: You should explicitly set ``trainingServicePlatform: kubeflow`` in "
+"NNI config YAML file if you want to start experiment in kubeflow mode."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:151
+msgid ""
+"If you want to run PyTorch jobs, you could set your config files as "
+"follow:"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:196
+msgid ""
+"Trial configuration in kubeflow mode have the following configuration "
+"keys:"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:199
+msgid "codeDir"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:201
+msgid "code directory, where you put training code and config files"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:203
+msgid ""
+"worker (required). This config section is used to configure tensorflow "
+"worker role"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:205
+msgid "replicas"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:207
+msgid ""
+"Required key. Should be positive number depends on how many replication "
+"your want to run for tensorflow worker role."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:209
+msgid "command"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:211
+msgid "Required key. Command to launch your trial job, like ``python mnist.py``"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:213
+msgid "memoryMB"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:215
+msgid ""
+"Required key. Should be positive number based on your trial program's "
+"memory requirement"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:217
+msgid "cpuNum"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:218
+msgid "gpuNum"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:219
+msgid "image"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:221
+msgid ""
+"Required key. In kubeflow mode, your trial program will be scheduled by "
+"Kubernetes to run in `Pod "
+"<https://kubernetes.io/docs/concepts/workloads/pods/pod/>`__. This key is"
+" used to specify the Docker image used to create the pod where your trail"
+" program will run."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:222
+msgid ""
+"We already build a docker image :githublink:`msranni/nni "
+"<deployment/docker/Dockerfile>`. You can either use this image directly "
+"in your config file, or build your own image based on it."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:224
+msgid "privateRegistryAuthPath"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:226
+msgid ""
+"Optional field, specify ``config.json`` file path that holds an "
+"authorization token of docker registry, used to pull image from private "
+"registry. `Refer <https://kubernetes.io/docs/tasks/configure-pod-"
+"container/pull-image-private-registry/>`__."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:228
+msgid "apiVersion"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:230
+msgid "Required key. The API version of your Kubeflow."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:234
+msgid ""
+"ps (optional). This config section is used to configure Tensorflow "
+"parameter server role."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:235
+msgid ""
+"master(optional). This config section is used to configure PyTorch "
+"parameter server role."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:237
+msgid ""
+"Once complete to fill NNI experiment config file and save (for example, "
+"save as exp_kubeflow.yml), then run the following command"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:243
+msgid ""
+"to start the experiment in kubeflow mode. NNI will create Kubeflow tfjob "
+"or pytorchjob for each trial, and the job name format is something like "
+"``nni_exp_{experiment_id}_trial_{trial_id}``. You can see the Kubeflow "
+"tfjob created by NNI in your Kubernetes dashboard."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:246
+msgid ""
+"Notice: In kubeflow mode, NNIManager will start a rest server and listen "
+"on a port which is your NNI WebUI's port plus 1. For example, if your "
+"WebUI port is ``8080``\\ , the rest server will listen on ``8081``\\ , to"
+" receive metrics from trial job running in Kubernetes. So you should "
+"``enable 8081`` TCP port in your firewall rule to allow incoming traffic."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:248
+msgid ""
+"Once a trial job is completed, you can go to NNI WebUI's overview page "
+"(like http://localhost:8080/oview) to check trial's information."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:255
+msgid ""
+"Any problems when using NNI in Kubeflow mode, please create issues on "
+"`NNI Github repo <https://github.com/Microsoft/nni>`__."
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:259
+msgid "Kubeflow reuse mode"
+msgstr ""
+
+#: ../../TrainingService/KubeflowMode.rst:260
+msgid ""
+"NNI support setting reuse mode for trial jobs. In reuse mode, NNI will "
+"submit a long-running trial runner process to occupy the container, and "
+"start trial jobs as the subprocess of the trial runner process, it means "
+"k8s do not need to schedule new container again, it just reuse old "
+"container. Currently, kubeflow reuse mode only support V2 config. Here is"
+" the example:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:2
+msgid "**Tutorial: Create and Run an Experiment on local with NNI API**"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:4
+msgid ""
+"In this tutorial, we will use the example in [nni/examples/trials/mnist-"
+"pytorch] to explain how to create and run an experiment on local with NNI"
+" API."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:8
+msgid "Before starts"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:11
+msgid ""
+"You have an implementation for MNIST classifer using convolutional "
+"layers, the Python code is similar to ``mnist.py``."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:15
+msgid "Step 1 - Update model codes"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:18
+msgid "To enable NNI API, make the following changes:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:20
+msgid ""
+"1.1 Declare NNI API: include ``import nni`` in your trial code to use NNI"
+" APIs."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:22
+msgid "1.2 Get predefined parameters"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:24
+msgid "Use the following code snippet:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:30
+msgid ""
+"to get hyper-parameters' values assigned by tuner. ``tuner_params`` is an"
+" object, for example:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:38
+msgid ""
+"1.3 Report NNI results: Use the API: "
+"``nni.report_intermediate_result(accuracy)`` to send ``accuracy`` to "
+"assessor. Use the API: ``nni.report_final_result(accuracy)`` to send "
+"`accuracy` to tuner."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:40
+msgid "**NOTE**\\ :"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:50
+msgid "Step 2 - Define SearchSpace"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:53
+msgid ""
+"The hyper-parameters used in ``Step 1.2 - Get predefined parameters`` is "
+"defined in a ``search_space.json`` file like below:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:64
+msgid ""
+"Refer to `define search space <../Tutorial/SearchSpaceSpec.rst>`__ to "
+"learn more about search space."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:68
+msgid "Step 3 - Define Experiment"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:72
+msgid "To run an experiment in NNI, you only needed:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:75
+msgid "Provide a runnable trial"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:76
+msgid "Provide or choose a tuner"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:77
+msgid "Provide a YAML experiment configure file"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:78
+msgid "(optional) Provide or choose an assessor"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:80
+msgid "**Prepare trial**\\ :"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:84
+msgid ""
+"You can download nni source code and a set of examples can be found in "
+"``nni/examples``, run ``ls nni/examples/trials`` to see all the trial "
+"examples."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:87
+msgid ""
+"Let's use a simple trial example, e.g. mnist, provided by NNI. After you "
+"cloned NNI source, NNI examples have been put in ~/nni/examples, run ``ls"
+" ~/nni/examples/trials`` to see all the trial examples. You can simply "
+"execute the following command to run the NNI mnist example:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:94
+msgid ""
+"This command will be filled in the YAML configure file below. Please "
+"refer to `here <../TrialExample/Trials.rst>`__ for how to write your own "
+"trial."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:96
+msgid ""
+"**Prepare tuner**\\ : NNI supports several popular automl algorithms, "
+"including Random Search, Tree of Parzen Estimators (TPE), Evolution "
+"algorithm etc. Users can write their own tuner (refer to `here "
+"<../Tuner/CustomizeTuner.rst>`__\\ ), but for simplicity, here we choose "
+"a tuner provided by NNI as below:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:106
+msgid ""
+"*name* is used to specify a tuner in NNI, *classArgs* are the arguments "
+"pass to the tuner (the spec of builtin tuners can be found `here "
+"<../Tuner/BuiltinTuner.rst>`__\\ ), *optimization_mode* is to indicate "
+"whether you want to maximize or minimize your trial's result."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:108
+msgid ""
+"**Prepare configure file**\\ : Since you have already known which trial "
+"code you are going to run and which tuner you are going to use, it is "
+"time to prepare the YAML configure file. NNI provides a demo configure "
+"file for each trial example, ``cat ~/nni/examples/trials/mnist-"
+"pytorch/config.yml`` to see it. Its content is basically shown below:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:132
+msgid ""
+"With all these steps done, we can run the experiment with the following "
+"command:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:139
+msgid ""
+"You can refer to `here <../Tutorial/Nnictl.rst>`__ for more usage guide "
+"of *nnictl* command line tool."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:142
+msgid "View experiment results"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:144
+msgid ""
+"The experiment has been running now. Other than *nnictl*\\ , NNI also "
+"provides WebUI for you to view experiment progress, to control your "
+"experiment, and some other appealing features."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:147
+msgid "Using multiple local GPUs to speed up search"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:149
+msgid ""
+"The following steps assume that you have 4 NVIDIA GPUs installed at local"
+" and PyTorch with CUDA support. The demo enables 4 concurrent trail jobs "
+"and each trail job uses 1 GPU."
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:151
+msgid ""
+"**Prepare configure file**\\ : NNI provides a demo configuration file for"
+" the setting above, ``cat ~/nni/examples/trials/mnist-"
+"pytorch/config_detailed.yml`` to see it. The trailConcurrency and "
+"trialGpuNumber are different from the basic configure file:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:167
+msgid "We can run the experiment with the following command:"
+msgstr ""
+
+#: ../../TrainingService/LocalMode.rst:174
+msgid ""
+"You can use *nnictl* command line tool or WebUI to trace the training "
+"progress. *nvidia_smi* command line tool can also help you to monitor the"
+" GPU usage during training."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:2
+msgid "Training Service"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:5
+msgid "What is Training Service?"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:7
+msgid ""
+"NNI training service is designed to allow users to focus on AutoML "
+"itself, agnostic to the underlying computing infrastructure where the "
+"trials are actually run. When migrating from one cluster to another "
+"(e.g., local machine to Kubeflow), users only need to tweak several "
+"configurations, and the experiment can be easily scaled."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:9
+msgid ""
+"Users can use training service provided by NNI, to run trial jobs on "
+"`local machine <./LocalMode.rst>`__\\ , `remote machines "
+"<./RemoteMachineMode.rst>`__\\ , and on clusters like `PAI "
+"<./PaiMode.rst>`__\\ , `Kubeflow <./KubeflowMode.rst>`__\\ , `AdaptDL "
+"<./AdaptDLMode.rst>`__\\ , `FrameworkController "
+"<./FrameworkControllerMode.rst>`__\\ , `DLTS <./DLTSMode.rst>`__, `AML "
+"<./AMLMode.rst>`__ and `DLC <./DLCMode.rst>`__. These are called *built-"
+"in training services*."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:11
+msgid ""
+"If the computing resource customers try to use is not listed above, NNI "
+"provides interface that allows users to build their own training service "
+"easily. Please refer to `how to implement training service "
+"<./HowToImplementTrainingService.rst>`__ for details."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:14
+msgid "How to use Training Service?"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:16
+msgid ""
+"Training service needs to be chosen and configured properly in experiment"
+" configuration YAML file. Users could refer to the document of each "
+"training service for how to write the configuration. Also, `reference "
+"<../Tutorial/ExperimentConfig.rst>`__ provides more details on the "
+"specification of the experiment configuration file."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:18
+msgid ""
+"Next, users should prepare code directory, which is specified as "
+"``codeDir`` in config file. Please note that in non-local mode, the code "
+"directory will be uploaded to remote or cluster before the experiment. "
+"Therefore, we limit the number of files to 2000 and total size to 300MB. "
+"If the code directory contains too many files, users can choose which "
+"files and subfolders should be excluded by adding a ``.nniignore`` file "
+"that works like a ``.gitignore`` file. For more details on how to write "
+"this file, see :githublink:`this example <examples/trials/mnist-"
+"tfv1/.nniignore>` and the `git documentation <https://git-"
+"scm.com/docs/gitignore#_pattern_format>`__."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:20
+msgid ""
+"In case users intend to use large files in their experiment (like large-"
+"scaled datasets) and they are not using local mode, they can either: 1) "
+"download the data before each trial launches by putting it into trial "
+"command; or 2) use a shared storage that is accessible to worker nodes. "
+"Usually, training platforms are equipped with shared storage, and NNI "
+"allows users to easily use them. Refer to docs of each built-in training "
+"service for details."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:23
+msgid "Built-in Training Services"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:29
+msgid "TrainingService"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:30
+msgid "Brief Introduction"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:31
+msgid "`Local <./LocalMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:32
+msgid ""
+"NNI supports running an experiment on local machine, called local mode. "
+"Local mode means that NNI will run the trial jobs and nniManager process "
+"in same machine, and support gpu schedule function for trial jobs."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:33
+msgid "`Remote <./RemoteMachineMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:34
+msgid ""
+"NNI supports running an experiment on multiple machines through SSH "
+"channel, called remote mode. NNI assumes that you have access to those "
+"machines, and already setup the environment for running deep learning "
+"training code. NNI will submit the trial jobs in remote machine, and "
+"schedule suitable machine with enough gpu resource if specified."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:35
+msgid "`PAI <./PaiMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:36
+msgid ""
+"NNI supports running an experiment on `OpenPAI "
+"<https://github.com/Microsoft/pai>`__ (aka PAI), called PAI mode. Before "
+"starting to use NNI PAI mode, you should have an account to access an "
+"`OpenPAI <https://github.com/Microsoft/pai>`__ cluster. See `here "
+"<https://github.com/Microsoft/pai#how-to-deploy>`__ if you don't have any"
+" OpenPAI account and want to deploy an OpenPAI cluster. In PAI mode, your"
+" trial program will run in PAI's container created by Docker."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:37
+msgid "`Kubeflow <./KubeflowMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:38
+msgid ""
+"NNI supports running experiment on `Kubeflow "
+"<https://github.com/kubeflow/kubeflow>`__\\ , called kubeflow mode. "
+"Before starting to use NNI kubeflow mode, you should have a Kubernetes "
+"cluster, either on-premises or `Azure Kubernetes Service(AKS) "
+"<https://azure.microsoft.com/en-us/services/kubernetes-service/>`__\\ , a"
+" Ubuntu machine on which `kubeconfig "
+"<https://kubernetes.io/docs/concepts/configuration/organize-cluster-"
+"access-kubeconfig/>`__ is setup to connect to your Kubernetes cluster. If"
+" you are not familiar with Kubernetes, `here "
+"<https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ is a good "
+"start. In kubeflow mode, your trial program will run as Kubeflow job in "
+"Kubernetes cluster."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:39
+msgid "`AdaptDL <./AdaptDLMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:40
+msgid ""
+"NNI supports running experiment on `AdaptDL "
+"<https://github.com/petuum/adaptdl>`__\\ , called AdaptDL mode. Before "
+"starting to use AdaptDL mode, you should have a Kubernetes cluster."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:41
+msgid "`FrameworkController <./FrameworkControllerMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:43
+msgid "`DLTS <./DLTSMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:44
+msgid ""
+"NNI supports running experiment using `DLTS "
+"<https://github.com/microsoft/DLWorkspace.git>`__\\ , which is an open "
+"source toolkit, developed by Microsoft, that allows AI scientists to spin"
+" up an AI cluster in turn-key fashion."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:45
+msgid "`AML <./AMLMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:47
+msgid "`DLC <./DLCMode.rst>`__"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:48
+msgid ""
+"NNI supports running an experiment on `PAI-DLC "
+"<https://help.aliyun.com/document_detail/165137.html>`__ , called dlc "
+"mode."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:52
+msgid "What does Training Service do?"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:62
+msgid ""
+"According to the architecture shown in `Overview <../Overview.rst>`__\\ ,"
+" training service (platform) is actually responsible for two events: 1) "
+"initiating a new trial; 2) collecting metrics and communicating with NNI "
+"core (NNI manager); 3) monitoring trial job status. To demonstrated in "
+"detail how training service works, we show the workflow of training "
+"service from the very beginning to the moment when first trial succeeds."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:64
+msgid ""
+"Step 1. **Validate config and prepare the training platform.** Training "
+"service will first check whether the training platform user specifies is "
+"valid (e.g., is there anything wrong with authentication). After that, "
+"training service will start to prepare for the experiment by making the "
+"code directory (\\ ``codeDir``\\ ) accessible to training platform."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:66
+msgid ""
+"Different training services have different ways to handle ``codeDir``. "
+"For example, local training service directly runs trials in ``codeDir``. "
+"Remote training service packs ``codeDir`` into a zip and uploads it to "
+"each machine. K8S-based training services copy ``codeDir`` onto a shared "
+"storage, which is either provided by training platform itself, or "
+"configured by users in config file."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:68
+msgid ""
+"Step 2. **Submit the first trial.** To initiate a trial, usually (in non-"
+"reuse mode), NNI copies another few files (including parameters, launch "
+"script and etc.) onto training platform. After that, NNI launches the "
+"trial through subprocess, SSH, RESTful API, and etc."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:70
+msgid ""
+"The working directory of trial command has exactly the same content as "
+"``codeDir``, but can have different paths (even on different machines) "
+"Local mode is the only training service that shares one ``codeDir`` "
+"across all trials. Other training services copies a ``codeDir`` from the "
+"shared copy prepared in step 1 and each trial has an independent working "
+"directory. We strongly advise users not to rely on the shared behavior in"
+" local mode, as it will make your experiments difficult to scale to other"
+" training services."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:72
+msgid ""
+"Step 3. **Collect metrics.**  NNI then monitors the status of trial, "
+"updates the status (e.g., from ``WAITING`` to ``RUNNING``\\ , ``RUNNING``"
+" to ``SUCCEEDED``\\ ) recorded, and also collects the metrics. Currently,"
+" most training services are implemented in an \"active\" way, i.e., "
+"training service will call the RESTful API on NNI manager to update the "
+"metrics. Note that this usually requires the machine that runs NNI "
+"manager to be at least accessible to the worker node."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:76
+msgid "Training Service Under Reuse Mode"
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:78
+msgid ""
+"When reuse mode is enabled, a cluster, such as a remote machine or a "
+"computer instance on AML, will launch a long-running environment, so that"
+" NNI will submit trials to these environments iteratively, which saves "
+"the time to create new jobs. For instance, using OpenPAI training "
+"platform under reuse mode can avoid the overhead of pulling docker "
+"images, creating containers, and downloading data repeatedly."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:80
+msgid ""
+"In the reuse mode, user needs to make sure each trial can run "
+"independently in the same job (e.g., avoid loading checkpoints from "
+"previous trials)."
+msgstr ""
+
+#: ../../TrainingService/Overview.rst:82
+msgid ""
+"Currently, only `Local <./LocalMode.rst>`__, `Remote "
+"<./RemoteMachineMode.rst>`__, `OpenPAI <./PaiMode.rst>`__, `AML "
+"<./AMLMode.rst>`__ and `DLC <./DLCMode.rst>`__ training services support "
+"resue mode. For Remote and OpenPAI training platforms, you can enable "
+"reuse mode according to `here <../reference/experiment_config.rst>`__ "
+"manually. AML is implemented under reuse mode, so the default mode is "
+"reuse mode, no need to manually enable."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:6
+msgid "**Run an Experiment on OpenPAI**"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:8
+msgid ""
+"NNI supports running an experiment on `OpenPAI "
+"<https://github.com/Microsoft/pai>`__\\ , called pai mode. Before "
+"starting to use NNI pai mode, you should have an account to access an "
+"`OpenPAI <https://github.com/Microsoft/pai>`__ cluster. See `here "
+"<https://github.com/Microsoft/pai#how-to-deploy>`__ if you don't have any"
+" OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your"
+" trial program will run in pai's container created by Docker."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:15
+msgid ""
+"**Step 1. Install NNI, follow the install guide** `here "
+"<../Tutorial/QuickStart.rst>`__."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:17
+msgid "**Step 2. Get token.**"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:19
+msgid ""
+"Open web portal of OpenPAI, and click ``My profile`` button in the top-"
+"right side."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:24
+msgid "Click ``copy`` button in the page to copy a jwt token."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:29
+msgid "**Step 3. Mount NFS storage to local machine.**"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:31
+msgid "Click ``Submit job`` button in web portal."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:36
+msgid "Find the data management region in job submission page."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:41
+msgid ""
+"The ``Preview container paths`` is the NFS host and path that OpenPAI "
+"provided, you need to mount the corresponding host and path to your local"
+" machine first, then NNI could use the OpenPAI's NFS storage.\\ :raw-"
+"html:`<br>` For example, use the following command:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:48
+msgid ""
+"Then the ``/data`` folder in container will be mounted to ``/local/mnt`` "
+"folder in your local machine.\\ :raw-html:`<br>` You could use the "
+"following configuration in your NNI's config file:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:55
+msgid "**Step 4. Get OpenPAI's storage config name and localStorageMountPoint**"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:57
+msgid ""
+"The ``Team share storage`` field is storage configuration used to specify"
+" storage value in OpenPAI. You can get ``storageConfigName`` and "
+"``containerStorageMountPoint`` field in ``Team share storage``\\ , for "
+"example:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:92
+msgid ""
+"Note: You should set ``platform: pai`` in NNI config YAML file if you "
+"want to start experiment in pai mode. The host field in configuration "
+"file is PAI's job submission page uri, like ``10.10.5.1``\\ , the default"
+" protocol in NNI is HTTPS, if your PAI's cluster disabled https, please "
+"use the uri in ``http://10.10.5.1`` format."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:95
+msgid "OpenPai configurations"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:97
+msgid ""
+"Compared with `LocalMode <LocalMode.rst>`__ and `RemoteMachineMode "
+"<RemoteMachineMode.rst>`__\\ , ``trainingService`` configuration in pai "
+"mode has the following additional keys:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:101
+msgid "username"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:103
+msgid "Required key. User name of OpenPAI platform."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:106
+msgid "token"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:108
+msgid "Required key. Authentication key of OpenPAI platform."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:111
+msgid "host"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:113
+msgid ""
+"Required key. The host of OpenPAI platform. It's OpenPAI's job submission"
+" page uri, like ``10.10.5.1``\\ , the default protocol in NNI is HTTPS, "
+"if your OpenPAI cluster disabled https, please use the uri in "
+"``http://10.10.5.1`` format."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:116
+msgid "trialCpuNumber"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:118
+msgid ""
+"Optional key. Should be positive number based on your trial program's CPU"
+"  requirement. If it is not set in trial configuration, it should be set "
+"in the config specified in ``openpaiConfig`` or ``openpaiConfigFile`` "
+"field."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:121
+msgid "trialMemorySize"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:123
+msgid ""
+"Optional key. Should be in format like ``2gb`` based on your trial "
+"program's memory requirement. If it is not set in trial configuration, it"
+" should be set in the config specified in ``openpaiConfig`` or "
+"``openpaiConfigFile`` field."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:128
+msgid ""
+"Optional key. In OpenPai mode, your trial program will be scheduled by "
+"OpenPAI to run in `Docker container <https://www.docker.com/>`__. This "
+"key is used to specify the Docker image used to create the container in "
+"which your trial will run."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:130
+msgid ""
+"We already build a docker image :githublink:`nnimsra/nni "
+"<deployment/docker/Dockerfile>`. You can either use this image directly "
+"in your config file, or build your own image based on it. If it is not "
+"set in trial configuration, it should be set in the config specified in "
+"``openpaiConfig`` or ``openpaiConfigFile`` field."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:135
+msgid "virtualCluster"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:137
+msgid ""
+"Optional key. Set the virtualCluster of OpenPAI. If omitted, the job will"
+" run on default virtual cluster."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:140
+msgid "localStorageMountPoint"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:142
+msgid "Required key. Set the mount path in the machine you run nnictl."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:145
+msgid "containerStorageMountPoint"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:147
+msgid "Required key. Set the mount path in your container used in OpenPAI."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:150
+msgid "storageConfigName:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:152
+msgid ""
+"Optional key. Set the storage name used in OpenPAI. If it is not set in "
+"trial configuration, it should be set in the config specified in "
+"``openpaiConfig`` or ``openpaiConfigFile`` field."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:155
+msgid "openpaiConfigFile"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:157
+msgid ""
+"Optional key. Set the file path of OpenPAI job configuration, the file is"
+" in yaml format."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:159
+msgid ""
+"If users set ``openpaiConfigFile`` in NNI's configuration file, no need "
+"to specify the fields ``storageConfigName``, ``virtualCluster``, "
+"``dockerImage``, ``trialCpuNumber``, ``trialGpuNumber``, "
+"``trialMemorySize`` in configuration. These fields will use the values "
+"from the config file specified by  ``openpaiConfigFile``."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:162
+msgid "openpaiConfig"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:164
+msgid ""
+"Optional key. Similar to ``openpaiConfigFile``, but instead of "
+"referencing an external file, using this field you embed the content into"
+" NNI's config YAML."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:166
+msgid "Note:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:170
+msgid ""
+"The job name in OpenPAI's configuration file will be replaced by a new "
+"job name, the new job name is created by NNI, the name format is "
+"``nni_exp_{this.experimentId}_trial_{trialJobId}`` ."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:173
+msgid ""
+"If users set multiple taskRoles in OpenPAI's configuration file, NNI will"
+" wrap all of these taksRoles and start multiple tasks in one trial job, "
+"users should ensure that only one taskRole report metric to NNI, "
+"otherwise there might be some conflict error."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:175
+msgid ""
+"Once complete to fill NNI experiment config file and save (for example, "
+"save as exp_pai.yml), then run the following command"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:181
+msgid ""
+"to start the experiment in pai mode. NNI will create OpenPAI job for each"
+" trial, and the job name format is something like "
+"``nni_exp_{experiment_id}_trial_{trial_id}``. You can see jobs created by"
+" NNI in the OpenPAI cluster's web portal, like:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:189
+msgid ""
+"Notice: In pai mode, NNIManager will start a rest server and listen on a "
+"port which is your NNI WebUI's port plus 1. For example, if your WebUI "
+"port is ``8080``\\ , the rest server will listen on ``8081``\\ , to "
+"receive metrics from trial job running in Kubernetes. So you should "
+"``enable 8081`` TCP port in your firewall rule to allow incoming traffic."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:191
+msgid ""
+"Once a trial job is completed, you can goto NNI WebUI's overview page "
+"(like http://localhost:8080/oview) to check trial's information."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:193
+msgid ""
+"Expand a trial information in trial list view, click the logPath link "
+"like:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:198
+msgid ""
+"And you will be redirected to HDFS web portal to browse the output files "
+"of that trial in HDFS:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:203
+msgid ""
+"You can see there're three fils in output folder: stderr, stdout, and "
+"trial.log"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:206
+msgid "data management"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:208
+msgid ""
+"Before using NNI to start your experiment, users should set the "
+"corresponding mount data path in your nniManager machine. OpenPAI has "
+"their own storage(NFS, AzureBlob ...), and the storage will used in "
+"OpenPAI will be mounted to the container when it start a job. Users "
+"should set the OpenPAI storage type by ``paiStorageConfigName`` field to "
+"choose a storage in OpenPAI. Then users should mount the storage to their"
+" nniManager machine, and set the ``nniManagerNFSMountPath`` field in "
+"configuration file, NNI will generate bash files and copy data in "
+"``codeDir`` to the ``nniManagerNFSMountPath`` folder, then NNI will start"
+" a trial job. The data in ``nniManagerNFSMountPath`` will be sync to "
+"OpenPAI storage, and will be mounted to OpenPAI's container. The data "
+"path in container is set in ``containerNFSMountPath``\\ , NNI will enter "
+"this folder first, and then run scripts to start a trial job."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:213
+msgid ""
+"NNI support version check feature in since version 0.6. It is a policy to"
+" insure the version of NNIManager is consistent with trialKeeper, and "
+"avoid errors caused by version incompatibility. Check policy:"
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:217
+msgid ""
+"NNIManager before v0.6 could run any version of trialKeeper, trialKeeper "
+"support backward compatibility."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:218
+msgid ""
+"Since version 0.6, NNIManager version should keep same with triakKeeper "
+"version. For example, if NNIManager version is 0.6, trialKeeper version "
+"should be 0.6 too."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:219
+msgid ""
+"Note that the version check feature only check first two digits of "
+"version.For example, NNIManager v0.6.1 could use trialKeeper v0.6 or "
+"trialKeeper v0.6.2, but could not use trialKeeper v0.5.1 or trialKeeper "
+"v0.7."
+msgstr ""
+
+#: ../../TrainingService/PaiMode.rst:221
+msgid ""
+"If you could not run your experiment and want to know if it is caused by "
+"version check, you could check your webUI, and there will be an error "
+"message about version check."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:2
+msgid "Run an Experiment on Remote Machines"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:4
+msgid ""
+"NNI can run one experiment on multiple remote machines through SSH, "
+"called ``remote`` mode. It's like a lightweight training platform. In "
+"this mode, NNI can be started from your computer, and dispatch trials to "
+"remote machines in parallel."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:6
+msgid ""
+"The OS of remote machines supports ``Linux``\\ , ``Windows 10``\\ , and "
+"``Windows Server 2019``."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:9
+msgid "Requirements"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:13
+msgid ""
+"Make sure the default environment of remote machines meets requirements "
+"of your trial code. If the default environment does not meet the "
+"requirements, the setup script can be added into ``command`` field of NNI"
+" config."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:16
+msgid ""
+"Make sure remote machines can be accessed through SSH from the machine "
+"which runs ``nnictl`` command. It supports both password and key "
+"authentication of SSH. For advanced usages, please refer to `machineList "
+"part of configuration <../Tutorial/ExperimentConfig.rst>`__."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:19
+msgid "Make sure the NNI version on each machine is consistent."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:22
+msgid ""
+"Make sure the command of Trial is compatible with remote OSes, if you "
+"want to use remote Linux and Windows together. For example, the default "
+"python 3.x executable called ``python3`` on Linux, and ``python`` on "
+"Windows."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:25
+msgid "Linux"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:28
+msgid ""
+"Follow `installation <../Tutorial/InstallationLinux.rst>`__ to install "
+"NNI on the remote machine."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:31
+msgid "Windows"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:35
+msgid ""
+"Follow `installation <../Tutorial/InstallationWin.rst>`__ to install NNI "
+"on the remote machine."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:38
+msgid "Install and start ``OpenSSH Server``."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:42
+msgid "Open ``Settings`` app on Windows."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:45
+msgid "Click ``Apps``\\ , then click ``Optional features``."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:48
+msgid ""
+"Click ``Add a feature``\\ , search and select ``OpenSSH Server``\\ , and "
+"then click ``Install``."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:51
+msgid ""
+"Once it's installed, run below command to start and set to automatic "
+"start."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:59
+msgid ""
+"Make sure remote account is administrator, so that it can stop running "
+"trials."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:62
+msgid ""
+"Make sure there is no welcome message more than default, since it causes "
+"ssh2 failed in NodeJs. For example, if you're using Data Science VM on "
+"Azure, it needs to remove extra echo commands in "
+"``C:\\dsvm\\tools\\setup\\welcome.bat``."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:64
+msgid "The output like below is ok, when opening a new command window."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:76
+msgid ""
+"e.g. there are three machines, which can be logged in with username and "
+"password."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:82
+msgid "IP"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:83
+msgid "Username"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:84
+msgid "Password"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:85
+msgid "10.1.1.1"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:86
+#: ../../TrainingService/RemoteMachineMode.rst:89
+#: ../../TrainingService/RemoteMachineMode.rst:92
+msgid "bob"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:87
+#: ../../TrainingService/RemoteMachineMode.rst:90
+#: ../../TrainingService/RemoteMachineMode.rst:93
+msgid "bob123"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:88
+msgid "10.1.1.2"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:91
+msgid "10.1.1.3"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:96
+msgid ""
+"Install and run NNI on one of those three machines or another machine, "
+"which has network access to them."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:98
+msgid ""
+"Use ``examples/trials/mnist-pytorch`` as the example. Below is content of"
+" ``examples/trials/mnist-pytorch/config_remote.yml``\\ :"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:124
+msgid ""
+"Files in ``trialCodeDirectory`` will be uploaded to remote machines "
+"automatically. You can run below command on Windows, Linux, or macOS to "
+"spawn trials on remote Linux machines:"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:131
+msgid "Configure python environment"
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:133
+msgid ""
+"By default, commands and scripts will be executed in the default "
+"environment in remote machine. If there are multiple python virtual "
+"environments in your remote machine, and you want to run experiments in a"
+" specific environment, then use **pythonPath** to specify a python "
+"environment on your remote machine."
+msgstr ""
+
+#: ../../TrainingService/RemoteMachineMode.rst:135
+msgid "For example, with anaconda you can specify:"
+msgstr ""
+

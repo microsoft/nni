@@ -1,0 +1,67 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-29 17:40+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../training_services.rst:4
+msgid "Overview"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "Local"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "Remote"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "OpenPAI"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "Kubeflow"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "AdaptDL"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "FrameworkController"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "DLTS"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "AML"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "PAI-DLC"
+msgstr ""
+
+#: ../../training_services.rst:4
+msgid "Hybrid"
+msgstr ""
+
+#: ../../training_services.rst:2
+msgid "Introduction to NNI Training Services"
+msgstr ""
+

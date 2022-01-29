@@ -1,0 +1,1280 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-29 17:40+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../reference.rst:4
+msgid "nnictl Commands"
+msgstr ""
+
+#: ../../reference.rst:4
+msgid "Experiment Configuration"
+msgstr ""
+
+#: ../../reference.rst:4
+msgid "Experiment Configuration (legacy)"
+msgstr ""
+
+#: ../../reference.rst:4
+msgid "Search Space"
+msgstr ""
+
+#: ../../reference.rst:4
+msgid "NNI Annotation"
+msgstr ""
+
+#: ../../reference.rst:4
+msgid "SDK API References"
+msgstr ""
+
+#: ../../reference.rst:4
+msgid "Supported Framework Library"
+msgstr ""
+
+#: ../../reference.rst:4
+msgid "Launch from Python"
+msgstr ""
+
+#: ../../reference.rst:4
+msgid "Shared Storage"
+msgstr ""
+
+#: ../../reference.rst:4
+msgid "Tensorboard"
+msgstr ""
+
+#: ../../reference.rst:2
+msgid "References"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:3
+msgid "Experiment Config Reference"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:5
+msgid ""
+"A config file is needed when creating an experiment. This document "
+"describes the rules to write a config file and provides some examples."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:9
+msgid ""
+"This document lists field names with ``camelCase``. If users use these "
+"fields in the pythonic way with NNI Python APIs (e.g., "
+"``nni.experiment``), the field names should be converted to "
+"``snake_case``."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:11
+msgid ""
+"In this document, the type of fields are formatted as `Python type hint "
+"<https://docs.python.org/3.10/library/typing.html>`_. Therefore JSON "
+"objects are called `dict` and arrays are called `list`."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:15
+msgid ""
+"Some fields take a path to a file or directory. Unless otherwise noted, "
+"both absolute path and relative path are supported, and ``~`` will be "
+"expanded to the home directory."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:17
+msgid ""
+"When written in the YAML file, relative paths are relative to the "
+"directory containing that file."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:18
+msgid ""
+"When assigned in Python code, relative paths are relative to the current "
+"working directory."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:19
+msgid ""
+"All relative paths are converted to absolute when loading YAML file into "
+"Python class, and when saving Python class to YAML file."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:21
+msgid ""
+"Setting a field to ``None`` or ``null`` is equivalent to not setting the "
+"field."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:26
+msgid "Contents"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:29
+msgid "Examples"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:32
+msgid "Local Mode"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:53
+msgid "Local Mode (Inline Search Space)"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:76
+msgid "Remote Mode"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:103
+msgid "Reference"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:106
+msgid "ExperimentConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:112
+#: ../../reference/experiment_config.rst:253
+#: ../../reference/experiment_config.rst:301
+#: ../../reference/experiment_config.rst:342
+#: ../../reference/experiment_config.rst:365
+#: ../../reference/experiment_config.rst:442
+#: ../../reference/experiment_config.rst:514
+#: ../../reference/experiment_config.rst:551
+#: ../../reference/experiment_config.rst:620
+#: ../../reference/experiment_config.rst:659
+msgid "Field Name"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:113
+#: ../../reference/experiment_config.rst:254
+#: ../../reference/experiment_config.rst:302
+#: ../../reference/experiment_config.rst:343
+#: ../../reference/experiment_config.rst:366
+#: ../../reference/experiment_config.rst:443
+#: ../../reference/experiment_config.rst:515
+#: ../../reference/experiment_config.rst:552
+#: ../../reference/experiment_config.rst:621
+#: ../../reference/experiment_config.rst:660
+msgid "Type"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:114
+#: ../../reference/experiment_config.rst:255
+#: ../../reference/experiment_config.rst:303
+#: ../../reference/experiment_config.rst:344
+#: ../../reference/experiment_config.rst:367
+#: ../../reference/experiment_config.rst:444
+#: ../../reference/experiment_config.rst:516
+#: ../../reference/experiment_config.rst:553
+#: ../../reference/experiment_config.rst:622
+#: ../../reference/experiment_config.rst:661
+msgid "Description"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:116
+msgid "experimentName"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:117
+#: ../../reference/experiment_config.rst:121
+#: ../../reference/experiment_config.rst:140
+#: ../../reference/experiment_config.rst:161
+#: ../../reference/experiment_config.rst:173
+#: ../../reference/experiment_config.rst:180
+#: ../../reference/experiment_config.rst:195
+#: ../../reference/experiment_config.rst:204
+#: ../../reference/experiment_config.rst:382
+#: ../../reference/experiment_config.rst:386
+#: ../../reference/experiment_config.rst:391
+#: ../../reference/experiment_config.rst:419
+#: ../../reference/experiment_config.rst:480
+#: ../../reference/experiment_config.rst:501
+#: ../../reference/experiment_config.rst:523
+#: ../../reference/experiment_config.rst:560
+#: ../../reference/experiment_config.rst:568
+msgid "``str``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:118
+msgid "Mnemonic name of the experiment, which will be shown in WebUI and nnictl."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:120
+msgid "searchSpaceFile"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:122
+msgid ""
+"Path_ to the JSON file containing the search space. Search space format "
+"is determined by tuner. The common format for built-in tuners is "
+"documented  `here <../Tutorial/SearchSpaceSpec.rst>`__. Mutually "
+"exclusive to ``searchSpace``."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:126
+msgid "searchSpace"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:127
+#: ../../reference/experiment_config.rst:497
+msgid "``JSON``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:128
+msgid ""
+"Search space object. The format is determined by tuner. Common format for"
+" built-in tuners is documented `here "
+"<../Tutorial/SearchSpaceSpec.rst>`__. Note that ``None`` means \"no such "
+"field\" so empty search space should be written as ``{}``. Mutually "
+"exclusive to ``searchSpaceFile``."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:133
+msgid "trialCommand"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:134
+#: ../../reference/experiment_config.rst:370
+#: ../../reference/experiment_config.rst:378
+#: ../../reference/experiment_config.rst:451
+#: ../../reference/experiment_config.rst:457
+#: ../../reference/experiment_config.rst:461
+#: ../../reference/experiment_config.rst:470
+#: ../../reference/experiment_config.rst:476
+#: ../../reference/experiment_config.rst:484
+#: ../../reference/experiment_config.rst:488
+#: ../../reference/experiment_config.rst:527
+#: ../../reference/experiment_config.rst:531
+#: ../../reference/experiment_config.rst:535
+#: ../../reference/experiment_config.rst:539
+#: ../../reference/experiment_config.rst:564
+#: ../../reference/experiment_config.rst:572
+#: ../../reference/experiment_config.rst:576
+#: ../../reference/experiment_config.rst:580
+#: ../../reference/experiment_config.rst:584
+#: ../../reference/experiment_config.rst:588
+#: ../../reference/experiment_config.rst:592
+#: ../../reference/experiment_config.rst:596
+#: ../../reference/experiment_config.rst:600
+#: ../../reference/experiment_config.rst:629
+#: ../../reference/experiment_config.rst:634
+#: ../../reference/experiment_config.rst:639
+#: ../../reference/experiment_config.rst:645
+#: ../../reference/experiment_config.rst:649
+#: ../../reference/experiment_config.rst:668
+#: ../../reference/experiment_config.rst:673
+#: ../../reference/experiment_config.rst:679
+#: ../../reference/experiment_config.rst:685
+#: ../../reference/experiment_config.rst:689
+#: ../../reference/experiment_config.rst:693
+msgid "``str``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:135
+msgid ""
+"Command to launch trial. The command will be executed in bash on Linux "
+"and macOS, and in PowerShell on Windows. Note that using ``python3`` on "
+"Linux and macOS, and using ``python`` on Windows."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:139
+msgid "trialCodeDirectory"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:141
+msgid ""
+"Default: ``\".\"``. `Path`_ to the directory containing trial source "
+"files. All files in this directory will be sent to the training machine, "
+"unless in the ``.nniignore`` file. (See :ref:`nniignore <nniignore>` for "
+"details.)"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:145
+msgid "trialConcurrency"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:146
+#: ../../reference/experiment_config.rst:466
+msgid "``int``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:147
+msgid ""
+"Specify how many trials should be run concurrently. The real concurrency "
+"also depends on hardware resources and may be less than this value."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:150
+msgid "trialGpuNumber"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:151
+msgid "``int`` or ``None``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:152
+msgid ""
+"Default: None. This field might have slightly different meanings for "
+"various training services, especially when set to ``0`` or ``None``. See "
+"`training service's document <../training_services.rst>`__ for details."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:156
+msgid ""
+"In local mode, setting the field to ``0`` will prevent trials from "
+"accessing GPU (by empty ``CUDA_VISIBLE_DEVICES``). And when set to "
+"``None``, trials will be created and scheduled as if they did not use "
+"GPU, but they can still use all GPU resources if they want."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:160
+msgid "maxExperimentDuration"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:162
+msgid ""
+"Limit the duration of this experiment if specified. The duration is "
+"unlimited if not set. Format: ``number + s|m|h|d``. Examples: "
+"``\"10m\"``, ``\"0.5h\"``. When time runs out, the experiment will stop "
+"creating trials but continue to serve WebUI."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:167
+msgid "maxTrialNumber"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:168
+#: ../../reference/experiment_config.rst:324
+#: ../../reference/experiment_config.rst:374
+#: ../../reference/experiment_config.rst:409
+msgid "``int``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:169
+msgid ""
+"Limit the number of trials to create if specified. The trial number is "
+"unlimited if not set. When the budget runs out, the experiment will stop "
+"creating trials but continue to serve WebUI."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:172
+msgid "maxTrialDuration"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:174
+msgid ""
+"Limit the duration of trial job if specified. The duration is unlimited "
+"if not set. Format: ``number + s|m|h|d``. Examples: ``\"10m\"``, "
+"``\"0.5h\"``. When time runs out, the current trial job will stop."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:179
+msgid "nniManagerIp"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:181
+msgid ""
+"Default: default connection chosen by system. IP of the current machine, "
+"used by training machines to access NNI manager. Not used in local mode. "
+"Except for the local mode, it is highly recommended to set this field "
+"manually."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:184
+msgid "useAnnotation"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:185
+#: ../../reference/experiment_config.rst:190
+#: ../../reference/experiment_config.rst:310
+#: ../../reference/experiment_config.rst:355
+#: ../../reference/experiment_config.rst:395
+#: ../../reference/experiment_config.rst:493
+msgid "``bool``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:186
+msgid ""
+"Default: ``False``. Enable `annotation "
+"<../Tutorial/AnnotationSpec.rst>`__. When using annotation, "
+"``searchSpace`` and ``searchSpaceFile`` should not be specified manually."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:189
+msgid "debug"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:191
+msgid ""
+"Default: ``False``. Enable debug mode. When enabled, logging will be more"
+" verbose and some internal validation will be loosened."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:194
+msgid "logLevel"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:196
+msgid ""
+"Default: ``info`` or ``debug``, depending on ``debug`` option. Set log "
+"level of the whole system. values: ``\"trace\"``, ``\"debug\"``, "
+"``\"info\"``, ``\"warning\"``, ``\"error\"``, ``\"fatal\"`` When debug "
+"mode is enabled, Loglevel is set to \"debug\", otherwise, Loglevel is set"
+" to \"info\". Most modules of NNI will be affected by this value, "
+"including NNI manager, tuner, training service, etc. The exception is "
+"trial, whose logging level is directly managed by trial code. For Python "
+"modules, \"trace\" acts as logging level 0 and \"fatal\" acts as "
+"``logging.CRITICAL``."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:203
+msgid "experimentWorkingDirectory"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:205
+msgid ""
+"Default: ``~/nni-experiments``. Specify the :ref:`directory <path>` to "
+"place log, checkpoint, metadata, and other run-time stuff. NNI will "
+"create a subdirectory named by experiment ID, so it is safe to use the "
+"same directory for multiple experiments."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:209
+msgid "tunerGpuIndices"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:210
+#: ../../reference/experiment_config.rst:328
+#: ../../reference/experiment_config.rst:413
+msgid "``list[int]`` or ``str`` or ``int``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:211
+msgid ""
+"Limit the GPUs visible to tuner, assessor, and advisor. This will be the "
+"``CUDA_VISIBLE_DEVICES`` environment variable of tuner process. Because "
+"tuner, assessor, and advisor run in the same process, this option will "
+"affect them all."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:215
+msgid "tuner"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:216
+#: ../../reference/experiment_config.rst:221
+#: ../../reference/experiment_config.rst:226
+msgid "``AlgorithmConfig``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:217
+msgid ""
+"Specify the tuner. The built-in tuners can be found `here "
+"<../builtin_tuner.rst>`__ and you can follow `this tutorial "
+"<../Tuner/CustomizeTuner.rst>`__ to customize a new tuner."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:220
+msgid "assessor"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:222
+msgid ""
+"Specify the assessor. The built-in assessors can be found `here "
+"<../builtin_assessor.rst>`__ and you can follow `this tutorial "
+"<../Assessor/CustomizeAssessor.rst>`__ to customize a new assessor."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:225
+msgid "advisor"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:227
+msgid ""
+"Specify the advisor. NNI provides two built-in advisors: `BOHB "
+"<../Tuner/BohbAdvisor.rst>`__ and `Hyperband "
+"<../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial "
+"<../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:230
+msgid "trainingService"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:231
+msgid "``TrainingServiceConfig``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:232
+msgid "Specify the `training service <../TrainingService/Overview.rst>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:234
+msgid "sharedStorage"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:235
+msgid "``SharedStorageConfig``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:236
+msgid ""
+"Configure the shared storage, detailed usage can be found `here "
+"<../Tutorial/HowToUseSharedStorage.rst>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:239
+msgid "AlgorithmConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:241
+msgid "``AlgorithmConfig`` describes a tuner / assessor / advisor algorithm."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:243
+msgid "For customized algorithms, there are two ways to describe them:"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:245
+msgid ""
+"`Register the algorithm <../Tutorial/InstallCustomizedAlgos.rst>`__ to "
+"use it like built-in. (preferred)"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:247
+msgid "Specify code directory and class name directly."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:257
+msgid "name"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:258
+#: ../../reference/experiment_config.rst:263
+#: ../../reference/experiment_config.rst:269
+msgid "``str`` or ``None``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:259
+msgid ""
+"Default: None. Name of the built-in or registered algorithm. ``str`` for "
+"the built-in and registered algorithm, ``None`` for other customized "
+"algorithms."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:262
+msgid "className"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:264
+msgid ""
+"Default: None. Qualified class name of not registered customized "
+"algorithm. ``None`` for the built-in and registered algorithm, ``str`` "
+"for other customized algorithms. example: ``\"my_tuner.MyTuner\"``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:268
+msgid "codeDirectory"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:270
+msgid ""
+"Default: None. Path_ to the directory containing the customized algorithm"
+" class. ``None`` for the built-in and registered algorithm, ``str`` for "
+"other customized algorithms."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:273
+msgid "classArgs"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:274
+msgid "``dict[str, Any]``, optional"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:275
+msgid ""
+"Keyword arguments passed to algorithm class' constructor. See algorithm's"
+" document for supported value."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:279
+msgid "TrainingServiceConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:281
+msgid "One of the following:"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:283
+msgid "`LocalConfig`_"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:284
+msgid "`RemoteConfig`_"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:285
+msgid "`OpenpaiConfig`_"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:286
+msgid "`AmlConfig`_"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:287
+msgid "`DlcConfig`_"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:288
+msgid "`HybridConfig`_"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:290
+msgid ""
+"For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, "
+"`FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, "
+"and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platforms, "
+"it is suggested to use `v1 config schema "
+"<../Tutorial/ExperimentConfig.rst>`_ for now."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:293
+msgid "LocalConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:295
+msgid "Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:305
+#: ../../reference/experiment_config.rst:346
+#: ../../reference/experiment_config.rst:446
+#: ../../reference/experiment_config.rst:518
+#: ../../reference/experiment_config.rst:555
+msgid "platform"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:306
+msgid "``\"local\"``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:309
+#: ../../reference/experiment_config.rst:394
+msgid "useActiveGpu"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:311
+#: ../../reference/experiment_config.rst:396
+msgid ""
+"Default: ``False``. Specify whether NNI should submit trials to GPUs "
+"occupied by other tasks. Must be set when ``trialGpuNumber`` greater than"
+" zero. Following processes can make GPU \"active\":"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:315
+#: ../../reference/experiment_config.rst:400
+msgid "non-NNI CUDA programs"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:316
+#: ../../reference/experiment_config.rst:401
+msgid "graphical desktop"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:317
+#: ../../reference/experiment_config.rst:402
+msgid ""
+"trials submitted by other NNI instances, if you have more than one NNI "
+"experiments running at same time"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:318
+#: ../../reference/experiment_config.rst:403
+msgid "other users' CUDA programs, if you are using a shared server"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:320
+msgid ""
+"If you are using a graphical OS like Windows 10 or Ubuntu desktop, set "
+"this field to ``True``, otherwise, the GUI will prevent NNI from "
+"launching any trial. When you create multiple NNI experiments and "
+"``useActiveGpu`` is set to ``True``, they will submit multiple trials to "
+"the same GPU(s) simultaneously."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:323
+#: ../../reference/experiment_config.rst:408
+msgid "maxTrialNumberPerGpu"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:325
+#: ../../reference/experiment_config.rst:410
+msgid "Default: ``1``. Specify how many trials can share one GPU."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:327
+#: ../../reference/experiment_config.rst:412
+msgid "gpuIndices"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:329
+#: ../../reference/experiment_config.rst:414
+msgid ""
+"Limit the GPUs visible to trial processes. If ``trialGpuNumber`` is less "
+"than the length of this value, only a subset will be visible to each "
+"trial. This will be used as ``CUDA_VISIBLE_DEVICES`` environment "
+"variable."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:334
+msgid "RemoteConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:336
+msgid ""
+"Detailed usage can be found `here "
+"<../TrainingService/RemoteMachineMode.rst>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:347
+msgid "``\"remote\"``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:350
+msgid "machineList"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:351
+msgid "``List[RemoteMachineConfig]``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:352
+msgid "List of training machines."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:354
+#: ../../reference/experiment_config.rst:492
+msgid "reuseMode"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:356
+#: ../../reference/experiment_config.rst:494
+msgid ""
+"Default: ``True``. Enable `reuse mode <../TrainingService/Overview.rst"
+"#training-service-under-reuse-mode>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:359
+msgid "RemoteMachineConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:369
+#: ../../reference/experiment_config.rst:450
+msgid "host"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:371
+msgid "IP or hostname (domain name) of the machine."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:373
+msgid "port"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:375
+msgid "Default: ``22``. SSH service port."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:377
+msgid "user"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:379
+msgid "Login user name."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:381
+msgid "password"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:383
+msgid "If not specified, ``sshKeyFile`` will be used instead."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:385
+msgid "sshKeyFile"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:387
+msgid ""
+"`Path`_ to ``sshKeyFile`` (identity file). Only used when ``password`` is"
+" not specified."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:390
+msgid "sshPassphrase"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:392
+msgid "Passphrase of SSH identity file."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:405
+msgid ""
+"If your remote machine is a graphical OS like Ubuntu desktop, set this "
+"field to ``True``, otherwise, the GUI will prevent NNI from launching any"
+" trial. When you create multiple NNI experiments and ``useActiveGpu`` is "
+"set to ``True``, they will submit multiple trials to the same GPU(s) "
+"simultaneously."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:418
+msgid "pythonPath"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:420
+msgid ""
+"Specify a Python environment. This path will be inserted at the front of "
+"PATH. Here are some examples:"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:423
+msgid "(linux) pythonPath: ``/opt/python3.7/bin``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:424
+msgid "(windows) pythonPath: ``C:/Python37``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:426
+msgid ""
+"If you are working on Anaconda, there is some difference. On Windows, you"
+" also have to add ``../script`` and ``../Library/bin`` separated by "
+"``;``. Examples are as below:"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:428
+msgid "(linux anaconda) pythonPath: ``/home/yourname/anaconda3/envs/myenv/bin/``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:429
+msgid ""
+"(windows anaconda) pythonPath: ``C:/Users/yourname/.conda/envs/myenv``; "
+"``C:/Users/yourname/.conda/envs/myenv/Scripts``; "
+"``C:/Users/yourname/.conda/envs/myenv/Library/bin``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:431
+msgid "This is useful if preparing steps vary for different machines."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:434
+msgid "OpenpaiConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:436
+msgid "Detailed usage can be found `here <../TrainingService/PaiMode.rst>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:447
+msgid "``\"openpai\"``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:452
+msgid ""
+"Hostname of OpenPAI service. This may include ``https://`` or ``http://``"
+" prefix. HTTPS will be used by default."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:456
+msgid "username"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:458
+msgid "OpenPAI user name."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:460
+msgid "token"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:462
+msgid "OpenPAI user token. This can be found in your OpenPAI user settings page."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:465
+msgid "trialCpuNumber"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:467
+msgid "Specify the CPU number of each trial to be used in OpenPAI container."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:469
+msgid "trialMemorySize"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:471
+msgid ""
+"Specify the memory size of each trial to be used in OpenPAI container. "
+"format: ``number + tb|gb|mb|kb``. examples: ``\"8gb\"``, ``\"8192mb\"``."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:475
+msgid "storageConfigName"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:477
+msgid "Specify the storage name used in OpenPAI."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:479
+#: ../../reference/experiment_config.rst:522
+msgid "dockerImage"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:481
+#: ../../reference/experiment_config.rst:524
+msgid ""
+"Default: ``\"msranni/nni:latest\"``. Name and tag of docker image to run "
+"the trials."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:483
+#: ../../reference/experiment_config.rst:595
+msgid "localStorageMountPoint"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:485
+msgid ""
+":ref:`Mount point <path>` of storage service (typically NFS) on the local"
+" machine."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:487
+#: ../../reference/experiment_config.rst:599
+msgid "containerStorageMountPoint"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:489
+msgid ""
+"Mount point of storage service (typically NFS) in docker container. This "
+"must be an absolute path."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:496
+msgid "openpaiConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:498
+msgid "Embedded OpenPAI config file."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:500
+msgid "openpaiConfigFile"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:502
+msgid ""
+"`Path`_ to OpenPAI config file. An example can be found `here "
+"<https://github.com/microsoft/pai/blob/master/docs/manual/cluster-"
+"user/examples/hello-world-job.yaml>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:506
+msgid "AmlConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:508
+msgid "Detailed usage can be found `here <../TrainingService/AMLMode.rst>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:519
+msgid "``\"aml\"``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:526
+msgid "subscriptionId"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:528
+msgid "Azure subscription ID."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:530
+msgid "resourceGroup"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:532
+msgid "Azure resource group name."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:534
+msgid "workspaceName"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:536
+msgid "Azure workspace name."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:538
+msgid "computeTarget"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:540
+msgid "AML compute cluster name."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:543
+msgid "DlcConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:545
+msgid "Detailed usage can be found `here <../TrainingService/DlcMode.rst>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:556
+msgid "``\"dlc\"``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:559
+msgid "type"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:561
+msgid "Default: ``\"Worker\"``. Job spec type."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:563
+msgid "image"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:565
+msgid "Name and tag of docker image to run the trials."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:567
+msgid "jobType"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:569
+msgid ""
+"Default: ``\"TFJob\"``. PAI-DLC training job type, ``\"TFJob\"`` or "
+"``\"PyTorchJob\"``."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:571
+msgid "podCount"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:573
+msgid "Pod count to run a single training job."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:575
+msgid "ecsSpec"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:577
+msgid "Training server config spec string."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:579
+msgid "region"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:581
+msgid "The region where PAI-DLC public-cluster locates."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:583
+msgid "nasDataSourceId"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:585
+msgid "The NAS datasource id configurated in PAI-DLC side."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:587
+msgid "accessKeyId"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:589
+msgid "The accessKeyId of your cloud account."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:591
+msgid "accessKeySecret"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:593
+msgid "The accessKeySecret of your cloud account."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:597
+msgid ""
+"The mount point of the NAS on PAI-DSW server, default is "
+"/home/admin/workspace/."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:601
+msgid "The mount point of the NAS on PAI-DLC side, default is /root/data/."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:604
+msgid "HybridConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:606
+msgid ""
+"Currently only support `LocalConfig`_, `RemoteConfig`_, `OpenpaiConfig`_ "
+"and `AmlConfig`_ . Detailed usage can be found `here "
+"<../TrainingService/HybridMode.rst>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:609
+msgid "SharedStorageConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:611
+msgid ""
+"Detailed usage can be found `here "
+"<../Tutorial/HowToUseSharedStorage.rst>`__."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:614
+msgid "nfsConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:624
+#: ../../reference/experiment_config.rst:663
+msgid "storageType"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:625
+msgid "``\"NFS\"``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:628
+#: ../../reference/experiment_config.rst:667
+msgid "localMountPoint"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:630
+#: ../../reference/experiment_config.rst:669
+msgid ""
+"The path that the storage has been or will be mounted in the local "
+"machine. If the path does not exist, it will be created automatically. "
+"Recommended to use an absolute path, i.e. ``/tmp/nni-shared-storage``."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:633
+#: ../../reference/experiment_config.rst:672
+msgid "remoteMountPoint"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:635
+msgid ""
+"The path that the storage will be mounted in the remote machine. If the "
+"path does not exist, it will be created automatically. Recommended to use"
+" a relative path. i.e. ``./nni-shared-storage``."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:638
+#: ../../reference/experiment_config.rst:678
+msgid "localMounted"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:640
+msgid ""
+"Specify the object and status to mount the shared storage. values: "
+"``\"usermount\"``, ``\"nnimount\"``, ``\"nomount\"`` ``usermount`` means "
+"the user has already mounted this storage on localMountPoint. "
+"``nnimount`` means NNI will try to mount this storage on localMountPoint."
+" ``nomount`` means storage will not mount in the local machine, will "
+"support partial storages in the future."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:644
+msgid "nfsServer"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:646
+msgid "NFS server host."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:648
+msgid "exportedDirectory"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:650
+msgid ""
+"Exported directory of NFS server, detailed `here "
+"<https://www.ibm.com/docs/en/aix/7.2?topic=system-nfs-exporting-"
+"mounting>`_."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:653
+msgid "azureBlobConfig"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:664
+msgid "``\"AzureBlob\"``"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:674
+msgid ""
+"The path that the storage will be mounted in the remote machine. If the "
+"path does not exist, it will be created automatically. Recommended to use"
+" a relative path. i.e. ``./nni-shared-storage``. Note that the directory "
+"must be empty when using AzureBlob."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:680
+msgid ""
+"Specify the object and status to mount the shared storage. values: "
+"``\"usermount\"``, ``\"nnimount\"``, ``\"nomount\"``. ``usermount`` means"
+" the user has already mounted this storage on localMountPoint. "
+"``nnimount`` means NNI will try to mount this storage on localMountPoint."
+" ``nomount`` means storage will not mount in the local machine, will "
+"support partial storages in the future."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:684
+msgid "storageAccountName"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:686
+msgid "Azure storage account name."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:688
+msgid "storageAccountKey"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:690
+msgid "Azure storage account key."
+msgstr ""
+
+#: ../../reference/experiment_config.rst:692
+msgid "containerName"
+msgstr ""
+
+#: ../../reference/experiment_config.rst:694
+msgid "AzureBlob container name."
+msgstr ""
+

@@ -72,6 +72,13 @@ master_doc = 'index'
 # Usually you set "language" from the command line for these cases.
 language = None
 
+# Localization
+locale_dirs = ['locale/']
+
+# If true, a document’s text domain is its docname if it is a top-level
+# project file and its very base directory otherwise.
+gettext_compact = True
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.

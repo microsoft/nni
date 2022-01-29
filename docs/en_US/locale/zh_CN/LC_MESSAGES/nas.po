@@ -1,0 +1,112 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-29 17:40+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../nas.rst:24
+msgid "Overview"
+msgstr ""
+
+#: ../../nas.rst:24
+msgid "Quick Start"
+msgstr ""
+
+#: ../../nas.rst:24
+msgid "Construct Model Space"
+msgstr ""
+
+#: ../../nas.rst:24
+msgid "Multi-trial NAS"
+msgstr ""
+
+#: ../../nas.rst:24
+msgid "One-shot NAS"
+msgstr ""
+
+#: ../../nas.rst:24
+msgid "Hardware-aware NAS"
+msgstr ""
+
+#: ../../nas.rst:24
+msgid "NAS Benchmarks"
+msgstr ""
+
+#: ../../nas.rst:24
+msgid "NAS API References"
+msgstr ""
+
+#: ../../nas.rst:3
+msgid "Retiarii for Neural Architecture Search (NAS)"
+msgstr ""
+
+#: ../../nas.rst:5
+msgid ""
+"Automatic neural architecture search is taking an increasingly important "
+"role on finding better models. Recent research works have proved the "
+"feasibility of automatic NAS, and also found some models that could beat "
+"manually tuned models. Some of representative works are NASNet, ENAS, "
+"DARTS, Network Morphism, and Evolution. Moreover, new innovations keep "
+"emerging."
+msgstr ""
+
+#: ../../nas.rst:9
+msgid ""
+"However, it takes great efforts to implement NAS algorithms, and it is "
+"hard to reuse code base of existing algorithms in a new one. To "
+"facilitate NAS innovations (e.g., design and implement new NAS models, "
+"compare different NAS models side-by-side), an easy-to-use and flexible "
+"programming interface is crucial."
+msgstr ""
+
+#: ../../nas.rst:13
+msgid ""
+"Thus, we design `Retiarii "
+"<https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__. It is a"
+" deep learning framework that supports the exploratory training on a "
+"neural network model space, rather than on a single neural network model."
+" Exploratory training with Retiarii allows user to express various search"
+" spaces for *Neural Architecture Search* and *Hyper-Parameter Tuning* "
+"with high flexibility."
+msgstr ""
+
+#: ../../nas.rst:16
+msgid "Some frequently used terminologies in this document:"
+msgstr ""
+
+#: ../../nas.rst:18
+msgid ""
+"*Model search space*: it means a set of models from which the best model "
+"is explored/searched. Sometimes we use *search space* or *model space* in"
+" short."
+msgstr ""
+
+#: ../../nas.rst:19
+msgid ""
+"*Exploration strategy*: the algorithm that is used to explore a model "
+"search space."
+msgstr ""
+
+#: ../../nas.rst:20
+msgid ""
+"*Model evaluator*: it is used to train a model and evaluate the model's "
+"performance."
+msgstr ""
+
+#: ../../nas.rst:22
+msgid "Follow the instructions below to start your journey with Retiarii."
+msgstr ""
+

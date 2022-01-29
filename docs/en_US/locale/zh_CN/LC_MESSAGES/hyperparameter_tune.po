@@ -1,0 +1,83 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-29 17:40+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../hyperparameter_tune.rst:17
+msgid "Write Trial"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:17
+msgid "Tuners"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:17
+msgid "Assessors"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:17
+msgid "Training Platform"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:17
+msgid "Examples"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:17
+msgid "WebUI"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:17
+msgid "How to Debug"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:17
+msgid "Advanced"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:17
+msgid "HPO Benchmarks"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:3
+msgid "Auto (Hyper-parameter) Tuning"
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:5
+msgid ""
+"Auto tuning is one of the key features provided by NNI; a main "
+"application scenario being hyper-parameter tuning. Tuning specifically "
+"applies to trial code. We provide a lot of popular auto tuning algorithms"
+" (called Tuner), and some early stop algorithms (called Assessor). NNI "
+"supports running trials on various training platforms, for example, on a "
+"local machine, on several servers in a distributed manner, or on "
+"platforms such as OpenPAI, Kubernetes, etc."
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:11
+msgid ""
+"Other key features of NNI, such as model compression, feature "
+"engineering, can also be further enhanced by auto tuning, which we'll "
+"described when introducing those features."
+msgstr ""
+
+#: ../../hyperparameter_tune.rst:14
+msgid ""
+"NNI has high extensibility, advanced users can customize their own Tuner,"
+" Assessor, and Training Service according to their needs."
+msgstr ""
+
