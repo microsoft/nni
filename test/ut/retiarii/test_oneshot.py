@@ -80,17 +80,22 @@ def prepare_model_data():
     base_model = Net()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = MNIST('data/mnist', train = True, download=True, transform=transform)
-    train_loader = DataLoader(train_dataset, 32, shuffle= True)
+    train_loader = DataLoader(train_dataset, 64, shuffle= True)
     valid_dataset = MNIST('data/mnist', train = False, download=True, transform=transform)
     valid_loader = DataLoader(valid_dataset, 64, shuffle= True)
 
-    return base_model, train_loader, valid_loader
+    trainer_kwargs = {
+        'max_epochs' : 1,
+        'limit_train_batches' : .1
+    }
+
+    return base_model, train_loader, valid_loader, trainer_kwargs
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_darts():
-    base_model, train_loader, valid_loader = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader,**{'max_epochs':1})
+    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
+    cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader, **trainer_kwargs)
     cls.module.set_model(base_model)
     darts_model = DartsModule(cls.module)
     para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
@@ -99,8 +104,8 @@ def test_darts():
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_proxyless():
-    base_model, train_loader, valid_loader = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
+    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
+    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
     cls.module.set_model(base_model)
     proxyless_model = ProxylessModule(cls.module)
     para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
@@ -109,8 +114,8 @@ def test_proxyless():
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_enas():
-    base_model, train_loader, valid_loader = prepare_model_data()
-    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
+    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
+    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
     cls.module.set_model(base_model)
     enas_model = EnasModule(cls.module)
     concat_loader = ConcatenateTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
@@ -119,8 +124,8 @@ def test_enas():
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_random():
-    base_model, train_loader, valid_loader = prepare_model_data()
-    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader , **{'max_epochs':1})
+    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
+    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader , **trainer_kwargs)
     cls.module.set_model(base_model)
     random_model = RandomSampleModule(cls.module)
     cls.trainer.fit(random_model, cls.train_dataloader, cls.val_dataloaders)
@@ -128,8 +133,8 @@ def test_random():
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_snas():
-    base_model, train_loader, valid_loader = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
+    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
+    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
     cls.module.set_model(base_model)
     proxyless_model = SNASModule(cls.module)
     para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
