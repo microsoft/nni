@@ -44,6 +44,8 @@
 
        git clone -b v2.6 https://github.com/Microsoft/nni.git
        cd nni
+       python -m pip install -U -r dependencies/setup.txt
+       python -m pip install -r dependencies/develop.txt
        python setup.py develop
 
 验证安装

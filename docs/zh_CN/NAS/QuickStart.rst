@@ -196,3 +196,10 @@ Retiarii 提供了诸多的 `内置模型评估器 <./ModelEvaluators.rst>`__，
 
   for model_code in exp.export_top_models(formatter='dict'):
     print(model_code)
+
+导出的 `json` 记录的是最佳模型的突变记录。如果用户想要最佳模型的代码，可以简单的使用基于图的执行引擎，增加如下两行代码即可：
+
+.. code-block:: python
+
+  exp_config.execution_engine = 'base'
+  export_formatter = 'code'

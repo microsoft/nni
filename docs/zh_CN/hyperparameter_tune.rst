@@ -4,9 +4,17 @@
 自动超参数调优
 ##############
 
-自动调优是 NNI 的主要功能之一。它的工作模式是反复运行 trial 代码，每次向其提供不同的超参组合，从而对 trial 的运行结果进行调优。NNI 提供了很多流行的自动调优算法（称为 Tuner）和一些提前终止算法（称为 Assessor）。NNI 支持在多种训练平台上运行 trial，包括本机、远程服务器、Azure Machine Learning、基于 Kubernetes 的集群（如 OpenPAI、Kubeflow）等等。
+自动调优是 NNI 的主要功能之一。它的工作模式是
+反复运行 trial 代码，每次向其提供不同的超参组合，从而对 trial 的运行结果进行调优。
+NNI 提供了很多流行的自动调优算法（称为 Tuner）和一些提前终止算法（称为 Assessor）。
+NNI 支持在多种训练平台上运行 trial，包括本机、
+远程服务器、Azure Machine Learning、基于 Kubernetes 的集群（如 OpenPAI、Kubeflow）等等。
 
-NNI 具有高扩展性，用户可以根据需求实现自己的 Tuner 算法和训练平台。
+其他的功能，例如模型压缩、特征工程，也可以
+使用自动调优。这些我们在介绍相应功能的时候会具体介绍。
+
+NNI 具有高扩展性，
+用户可以根据需求实现自己的 Tuner 算法和训练平台。
 
 ..  toctree::
     :maxdepth: 2
