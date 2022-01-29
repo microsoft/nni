@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
+import pytest
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
@@ -74,6 +75,7 @@ class Net(pl.LightningModule):
         return output
 
 
+@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def prepare_model_data():
     base_model = Net()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
@@ -85,6 +87,7 @@ def prepare_model_data():
     return base_model, train_loader, valid_loader
 
 
+@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_darts():
     base_model, train_loader, valid_loader = prepare_model_data()
     cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader,**{'max_epochs':1})
@@ -94,6 +97,7 @@ def test_darts():
     cls.trainer.fit(darts_model, para_loader)
 
 
+@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_proxyless():
     base_model, train_loader, valid_loader = prepare_model_data()
     cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
@@ -103,6 +107,7 @@ def test_proxyless():
     cls.trainer.fit(proxyless_model, para_loader)
 
 
+@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_enas():
     base_model, train_loader, valid_loader = prepare_model_data()
     cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
@@ -112,6 +117,7 @@ def test_enas():
     cls.trainer.fit(enas_model, concat_loader)
 
 
+@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_random():
     base_model, train_loader, valid_loader = prepare_model_data()
     cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader , **{'max_epochs':1})
@@ -120,6 +126,7 @@ def test_random():
     cls.trainer.fit(random_model, cls.train_dataloader, cls.val_dataloaders)
 
 
+@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_snas():
     base_model, train_loader, valid_loader = prepare_model_data()
     cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
