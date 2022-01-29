@@ -28,7 +28,8 @@
 
      git clone -b v2.6 https://github.com/Microsoft/nni.git
      cd nni
-     python3 -m pip install --upgrade pip setuptools
+     python3 -m pip install -U -r dependencies/setup.txt
+     python3 -m pip install -r dependencies/develop.txt
      python3 setup.py develop
 
 从 NNI 源代码构建 Wheel 包
@@ -42,7 +43,8 @@
     git clone -b v2.6 https://github.com/Microsoft/nni.git
     cd nni
     export NNI_RELEASE=2.6
-    python3 -m pip install --upgrade pip setuptools wheel
+    python3 -m pip install -U -r dependencies/setup.txt
+    python3 -m pip install -r dependencies/develop.txt
     python3 setup.py clean --all
     python3 setup.py build_ts
     python3 setup.py bdist_wheel -p manylinux1_x86_64

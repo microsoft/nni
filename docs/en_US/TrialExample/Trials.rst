@@ -34,13 +34,11 @@ Step 2 - Update model code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* 
-  Import NNI
+* Import NNI
 
     Include ``import nni`` in your trial code to use NNI APIs.
 
-* 
-  Get configuration from Tuner
+* Get configuration from Tuner
 
 .. code-block:: python
 
@@ -75,7 +73,6 @@ To enable NNI API mode, you need to set useAnnotation to *false* and provide the
 
 .. code-block:: yaml
 
-   useAnnotation: false
    searchSpacePath: /path/to/your/search_space.json
 
 You can refer to `here <../Tutorial/ExperimentConfig.rst>`__ for more information about how to set up experiment configurations.

@@ -228,7 +228,6 @@ Wait for the message ``INFO: Successfully started experiment!`` in the command l
 
 If you prepared ``trial``\ , ``search space``\ , and ``config`` according to the above steps and successfully created an NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameter sets for each trial according to the defined search space. You can see its progress through the WebUI clearly.
 
-
 Step 5: View the Experiment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -246,7 +245,6 @@ View Overview Page
 
 Information about this experiment will be shown in the WebUI, including the experiment profile and search space message. NNI also supports downloading this information and the parameters through the **Experiment summary** button.
 
-
 .. image:: ../../img/webui-img/full-oview.png
    :target: ../../img/webui-img/full-oview.png
    :alt: overview
@@ -256,7 +254,6 @@ View Trials Detail Page
 ***********************
 
 You could see the best trial metrics and hyper-parameter graph in this page. And the table content includes more columns when you click the button ``Add/Remove columns``.
-
 
 .. image:: ../../img/webui-img/full-detail.png
    :target: ../../img/webui-img/full-detail.png
@@ -286,4 +283,3 @@ Related Topic
 * `How to use Annotation? <AnnotationSpec.rst>`__
 * `How to use the command line tool nnictl? <Nnictl.rst>`__
 * `How to launch Tensorboard on WebUI? <Tensorboard.rst>`__
-

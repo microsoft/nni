@@ -9,9 +9,8 @@
     Notebook Example <compression_pipeline_example>
 
 
-模型压缩通常包括三个阶段：1）预训练模型，2）压缩模型，3）微调模型。 NNI 主要关注于第二阶段，并为模型压缩提供易于使用的 API。
-遵循本指南，您将快速了解如何使用 NNI 来压缩模型。
-更深入地了解 NNI 中的模型压缩模块，请查看 `Tutorial <./Tutorial.rst>`__。
+模型压缩通常包括三个阶段：1）预训练模型，2）压缩模型，3）微调模型。 NNI 主要关注于第二阶段，并为模型压缩提供易于使用的 API。遵循本指南，您将快速了解如何使用 NNI 来压缩模型。更深入地了解 NNI 中的模型压缩模块，请查看 `Tutorial <./Tutorial.rst>`__。
+
 提供了一个在 Jupyter notebook 中进行完整的模型压缩流程的 `示例 <./compression_pipeline_example.rst>`__，参考 :githublink:`代码 <examples/notebooks/compression_pipeline_example.ipynb>`。
 
 模型剪枝
@@ -31,14 +30,12 @@ Step1. 编写配置
        'op_types': ['default'],
    }]
 
-配置说明在 `这里 <./Tutorial.rst#specify-the-configuration>`__。注意，不同的 Pruner 可能有自定义的配置字段。
-详情参考每个 Pruner 的 `具体用法 <./Pruner.rst>`__，来调整相应的配置。
+配置说明在 `这里 <./Tutorial.rst#specify-the-configuration>`__。注意，不同的 Pruner 可能有自定义的配置字段。详情参考每个 Pruner 的 `具体用法 <./Pruner.rst>`__，来调整相应的配置。
 
 Step2. 选择 Pruner 来压缩模型
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-首先，使用模型来初始化 Pruner，并将配置作为参数传入，然后调用 ``compress()`` 来压缩模型。
-请注意，有些算法可能会检查训练过程中的梯度，因此我们可能会定义一组 trainer, optimizer, criterion 并传递给 Pruner。
+首先，使用模型来初始化 Pruner，并将配置作为参数传入，然后调用 ``compress()`` 来压缩模型。请注意，有些算法可能会检查训练过程中的梯度，因此我们可能会定义一组 trainer, optimizer, criterion 并传递给 Pruner。
 
 .. code-block:: python
 
@@ -47,9 +44,7 @@ Step2. 选择 Pruner 来压缩模型
    pruner = LevelPruner(model, config_list)
    model = pruner.compress()
 
-然后，使用正常的训练方法来训练模型 （如，SGD），剪枝在训练过程中是透明的。
-有些 Pruner（如 L1FilterPruner、FPGMPruner）在开始时修剪一次，下面的训练可以看作是微调。
-有些 Pruner（例如AGPPruner）会迭代的对模型剪枝，在训练过程中逐步修改掩码。
+然后，使用正常的训练方法来训练模型 （如，SGD），剪枝在训练过程中是透明的。有些 Pruner（如 L1FilterPruner、FPGMPruner）在开始时修剪一次，下面的训练可以看作是微调。有些 Pruner（例如AGPPruner）会迭代的对模型剪枝，在训练过程中逐步修改掩码。
 
 如果使用 Pruner 进行迭代剪枝，或者剪枝过程中需要训练或者推理，则需要将 finetune 逻辑传到 Pruner 中。
 
@@ -61,7 +56,6 @@ Step2. 选择 Pruner 来压缩模型
 
    pruner = AGPPruner(model, config_list, optimizer, trainer, criterion, num_iterations=10, epochs_per_iteration=1, pruning_algorithm='level')
    model = pruner.compress()
-
 
 Step3. 导出压缩结果
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
