@@ -16,6 +16,7 @@ import os
 import subprocess
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('../extension'))
 
 
 # -- Project information ---------------------------------------------------
@@ -50,6 +51,7 @@ extensions = [
     'nbsphinx',
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
+    'inplace_translation',
 ]
 
 # Add mock modules
@@ -72,17 +74,14 @@ master_doc = 'index'
 # Usually you set "language" from the command line for these cases.
 language = None
 
-# Localization
-locale_dirs = ['locale/']
-
-# If true, a document’s text domain is its docname if it is a top-level
-# project file and its very base directory otherwise.
-gettext_compact = True
-
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'Release_v1.0.md', '**.ipynb_checkpoints']
+exclude_patterns = [
+    '_build', 'Thumbs.db', '.DS_Store', 'Release_v1.0.md', '**.ipynb_checkpoints',
+    # Exclude translations. They will be added back via replacement later if language is set.
+    '**_zh_CN.rst',
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
