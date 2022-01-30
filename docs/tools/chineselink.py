@@ -9,7 +9,6 @@ Under docs, run
 """
 
 import hashlib
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -62,7 +61,7 @@ for path in iterate_dir(Path('en_US')):
         continue
     if path.suffix in suffix_list:
         if 'zh_CN' not in path.name:
-            target_path = path.parent / (path.stem + 'zh_CN' + path.suffix)
+            target_path = path.parent / (path.stem + '_zh_CN' + path.suffix)
             if target_path.exists():
                 # whitelist files. should be translated
                 need_to_translate(path, target_path)
