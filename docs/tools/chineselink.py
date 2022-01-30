@@ -55,8 +55,8 @@ def need_to_translate(source, target):
     target.open('w').writelines(contents)
 
 
-for path in iterate_dir(Path('en_US')):
-    relative_path = path.relative_to('en_US')
+for path in iterate_dir(Path('source')):
+    relative_path = path.relative_to('source')
     if relative_path.as_posix().startswith('_build'):
         continue
     if path.suffix in suffix_list:
