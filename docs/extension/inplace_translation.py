@@ -1,12 +1,18 @@
 """
 Sphinx inplace translation.
-"""
+Please put `xxx_zh_CN.rst` alongside `xxx.rst`. When language is set to `zh_CN`,
+`xxx_zh_CN.rst` will be used in place of `xxx.rst`.
+If translation does not exist, it will automatically fallback to the original files, without warning.
 
-__version_info__ = (1, 0, 0)
-__version__ = '1.0.0'
+I write this based on the example of:
+https://github.com/readthedocs/sphinxcontrib-multisrc/blob/master/sphinxcontrib/multisrc.py
+"""
 
 import os
 import types
+
+__version_info__ = (1, 0, 0)
+__version__ = '1.0.0'
 
 
 def builder_inited(app):
@@ -33,7 +39,6 @@ def patch_doc2path(env, language):
 
 def setup(app):
     app.connect('builder-inited', builder_inited)
-    # app.connect('source-read', render_jinja)
     return {
         'version': __version__,
     }
