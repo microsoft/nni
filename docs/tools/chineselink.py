@@ -31,6 +31,11 @@ suffix_list = [
 pipeline_mode = len(sys.argv) > 1 and sys.argv[1] == 'check'
 failed_files = []
 
+# in case I need to change `_zh` to something else
+# files = list(filter(lambda d: d.name.endswith('zh_CN.rst'), iterate_dir('source')))
+# for file in files:
+#     os.rename(file, file.parent / (file.name[:-7] + file.name[-4:]))
+
 
 def need_to_translate(source, target):
     if not target.exists():
@@ -60,14 +65,14 @@ for path in iterate_dir(Path('source')):
     if relative_path.as_posix().startswith('_build'):
         continue
     if path.suffix in suffix_list:
-        if 'zh_CN' not in path.name:
-            target_path = path.parent / (path.stem + '_zh_CN' + path.suffix)
+        if '_zh.' not in path.name:
+            target_path = path.parent / (path.stem + '_zh' + path.suffix)
             if target_path.exists():
                 # whitelist files. should be translated
                 need_to_translate(path, target_path)
                 print(f'Skipped linking for {path} as it is in whitelist.')
         else:
-            source_path = path.parent / (path.stem[:-6] + path.suffix)
+            source_path = path.parent / (path.stem[:-3] + path.suffix)
             if not source_path.exists():
                 # delete redundant files
                 failed_files.append('(redundant) ' + source_path.as_posix())
