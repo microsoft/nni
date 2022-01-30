@@ -49,22 +49,22 @@ for i, path in enumerate(whitelist):
     english_content = (Path('en_US') / path).read_text().strip().splitlines()
     chinese_content = (Path('zh_CN') / path).read_text().strip().splitlines()[2:]
 
-    # print(path)
-    # for en, ch in zip(english_content, chinese_content):
-    #     en = en.strip()
-    #     ch = ch.strip()
-    #     if not en:
-    #         continue
-    #     if en == ch:
-    #         continue
-    #     if all(s == '#' for s in en):
-    #         continue
-    #     if ':maxdepth:' in en:
-    #         continue
-    #     if en.endswith('>'):
-    #         print(en[:en.find('<')].strip(), ch[:ch.find('<')].strip())
-    #     else:
-    #         print(en, ch)
-    print(path, len(english_content), len(chinese_content))
-    # if i == 5:
-    #     break
+    print(path)
+    for en, ch in zip(english_content, chinese_content):
+        en = en.strip()
+        ch = ch.strip()
+        if not en:
+            continue
+        if en == ch:
+            continue
+        if any(all(s == c for s in en) for c in '#=^"\''):
+            continue
+        if ':maxdepth:' in en:
+            continue
+        if en.endswith('>'):
+            print(en[:en.find('<')].strip(), ch[:ch.find('<')].strip())
+        else:
+            print(en, ch)
+    # print(path, len(english_content), len(chinese_content))
+    if i == 5:
+        break
