@@ -1,7 +1,7 @@
 .. 1ec93e31648291b0c881655304116b50
 
 剪枝（V2版本）
-==========
+===============
 
 剪枝（V2版本）是对旧版本的重构，提供了更强大的功能。
 与旧版本相比，迭代剪枝过程与剪枝器（pruner）分离，剪枝器只负责剪枝且生成掩码一次。
@@ -23,6 +23,6 @@
 ..  toctree::
     :maxdepth: 1
 
-    剪枝算法 <../en_US/Compression/v2_pruning_algo>
-    剪枝调度器接口 <../en_US/Compression/v2_scheduler>
-    剪枝配置 <../en_US/Compression/v2_pruning_config_list>
+    剪枝算法 <v2_pruning_algo>
+    剪枝调度器接口 <v2_scheduler>
+    剪枝配置 <v2_pruning_config_list>
