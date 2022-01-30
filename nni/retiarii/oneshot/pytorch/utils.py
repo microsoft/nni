@@ -206,13 +206,13 @@ class ParallelTrainValDataLoader(DataLoader):
     --------
     Fit your dataloaders into a parallel one.
     >>> para_loader = ParallelTrainValDataLoader(train_dataloader, val_datalodaer)
-    Then you can use the 'para_loader' as a normal training loader.
+    Then you can use the ``para_loader`` as a normal training loader.
     """
     def __init__(self, train_dataloader, val_dataloader):
         self.train_loader = train_dataloader
         self.val_loader = val_dataloader
         self.equal_len = len(train_dataloader) == len(val_dataloader)
-        self.train_longger = len(train_dataloader) > len(val_dataloader)
+        self.train_longer = len(train_dataloader) > len(val_dataloader)
         super().__init__(None)
 
     def __iter__(self):
@@ -225,7 +225,7 @@ class ParallelTrainValDataLoader(DataLoader):
             train_batch = next(self.train_iter)
         except StopIteration:
             # training data is used up
-            if self.equal_len or self.train_longger:
+            if self.equal_len or self.train_longer:
                 # if training is the longger one or equal, stop iteration
                 raise StopIteration()
             # if training is the shorter one, upsample it
@@ -236,7 +236,7 @@ class ParallelTrainValDataLoader(DataLoader):
             val_batch = next(self.val_iter)
         except StopIteration:
             # validation data is used up
-            if not self.train_longger:
+            if not self.train_longer:
                 # if validation is the longger one (the equal condition is
                 # covered above), stop iteration
                 raise StopIteration()
@@ -253,11 +253,10 @@ class ParallelTrainValDataLoader(DataLoader):
 class ConcatenateTrainValDataLoader(DataLoader):
     """
     A dataloader that yields validation data after training data in an epoch. You will
-    got a batch in a form of (batch, b) in the training step, where the bool variable 'b'
-    is set to true if the 'batch' comes from the training dataset, and False for validation
-    dataset.
+    got a batch in a form of (batch, source) in the training step, where ``source`` can
+    be 'train' or 'val', indicating where the batch comes from.
 
-    Some NAS algorithms, i.e. ENAS, may require this type of dataset.
+    Some NAS algorithms, i.e. ENAS, may require this type of dataloader.
 
     Parameters
     ----------
@@ -265,6 +264,11 @@ class ConcatenateTrainValDataLoader(DataLoader):
         training dataloader
     val_data : DataLoader
         validation dataloader
+
+    Warnings
+    ----------
+    If you set 'limit_train_batches' of the trainer, the validation batches may be skipped.
+    Consider downsample train dataset and validation dataset instead.
 
     Example
     --------
@@ -279,7 +283,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
 
     def __iter__(self):
         self.cur_iter = iter(self.train_loader)
-        self.is_train = True
+        self.source = 'train'
         return self
 
     def __next__(self):
@@ -287,13 +291,13 @@ class ConcatenateTrainValDataLoader(DataLoader):
             batch = next(self.cur_iter)
         except StopIteration:
             # training data is used up, change to validation data
-            if self.is_train:
+            if self.source == 'train':
                 self.cur_iter = iter(self.val_loader)
-                self.is_train = False
+                self.source = 'val'
                 return next(self)
             raise StopIteration()
         else:
-            return batch, self.is_train
+            return batch, self.source
 
     def __len__(self):
         return len(self.train_loader) + len(self.val_loader)
