@@ -6,14 +6,14 @@ import pytorch_lightning as pl
 import pytest
 from torchvision import transforms
 from torchvision.datasets import MNIST
+from torch.utils.data.sampler import RandomSampler
 
 from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
 from nni.retiarii.nn.pytorch import LayerChoice, Repeat
 from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
-                                          DartsModule, EnasModule,
+                                          DartsModule, EnasModule, SNASModule,
                                           ParallelTrainValDataLoader,
                                           ProxylessModule, RandomSampleModule)
-from nni.retiarii.oneshot.pytorch.differentiable import SNASModule
 
 
 class DepthwiseSeparableConv(nn.Module):
@@ -80,13 +80,14 @@ def prepare_model_data():
     base_model = Net()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = MNIST('data/mnist', train = True, download=True, transform=transform)
-    train_loader = DataLoader(train_dataset, 64, shuffle= True)
+    train_random_sampler = RandomSampler(train_dataset, True, int(len(train_dataset) / 10))
+    train_loader = DataLoader(train_dataset, 64, sampler = train_random_sampler)
     valid_dataset = MNIST('data/mnist', train = False, download=True, transform=transform)
-    valid_loader = DataLoader(valid_dataset, 64, shuffle= True)
+    valid_random_sampler = RandomSampler(valid_dataset, True, int(len(valid_dataset) / 10))
+    valid_loader = DataLoader(valid_dataset, 64, sampler = valid_random_sampler)
 
     trainer_kwargs = {
-        'max_epochs' : 1,
-        'limit_train_batches' : .1
+        'max_epochs' : 1
     }
 
     return base_model, train_loader, valid_loader, trainer_kwargs
@@ -136,7 +137,7 @@ def test_snas():
     base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
     cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
     cls.module.set_model(base_model)
-    proxyless_model = SNASModule(cls.module)
+    proxyless_model = SNASModule(cls.module, 1, use_temp_anneal=True)
     para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
     cls.trainer.fit(proxyless_model, para_loader)
 
@@ -147,16 +148,11 @@ if __name__ == '__main__':
         help='exp to run, default = all' )
     args = parser.parse_args()
 
-    exp_dict = {
-        'darts' : test_darts,
-        'proxyless' : test_proxyless,
-        'enas' : test_enas,
-        'random' : test_random,
-        'snas' : test_snas
-    }
-
     if args.exp == 'all':
-        for func in exp_dict.values():
-            func()
+        test_darts()
+        test_proxyless()
+        test_enas()
+        test_random()
+        test_snas()
     else:
-        exp_dict[args.exp]()
+        globals()[f'test_{args.exp}']()

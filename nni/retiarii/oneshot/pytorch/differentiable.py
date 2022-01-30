@@ -288,27 +288,52 @@ class ProxylessModule(DartsModule):
 
 
 class SNASLayerChoice(DartsLayerChoice):
-    def __init__(self, layer_choice, temp = 1):
+    def __init__(self, layer_choice):
         super().__init__(layer_choice)
-        self._temp = temp
 
     def forward(self, *args, **kwargs):
-        self.one_hot = F.gumbel_softmax(self.alpha.log(), self._temp)
+        self.one_hot = F.gumbel_softmax(self.alpha.log(), self.temp)
         op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
         alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
         return torch.sum(op_results * F.softmax(self.one_hot, -1).view(*alpha_shape), 0)
 
 
 class SNASInputChoice(DartsInputChoice):
-    def __init__(self, input_choice, temp = 1):
+    def __init__(self, input_choice):
         super().__init__(input_choice)
-        self._temp = temp
 
     def forward(self, inputs):
-        self.one_hot = F.gumbel_softmax(self.alpha.log(), self._temp)
+        self.one_hot = F.gumbel_softmax(self.alpha.log(), self.temp)
         inputs = torch.stack(inputs)
         alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
         return torch.sum(inputs * F.softmax(self.one_hot, -1).view(*alpha_shape), 0)
+
+
+class Temp_Scheduler(object):
+    # Copyright (c) 2020 SNAS-Series
+    # MIT License
+    # https://github.com/SNAS-Series/SNAS-Series
+
+    def __init__(self, total_epochs, curr_temp, base_temp, temp_min=0.33, last_epoch=-1):
+        self.curr_temp = curr_temp
+        self.base_temp = base_temp
+        self.temp_min = temp_min
+        self.last_epoch = last_epoch
+        self.total_epochs = total_epochs
+        self.step(last_epoch + 1)
+
+    def step(self, epoch=None):
+        return self.decay_whole_process()
+
+    def decay_whole_process(self, epoch=None):
+        if epoch is None:
+            epoch = self.last_epoch + 1
+        self.last_epoch = epoch
+        self.total_epochs = 150
+        self.curr_temp = (1 - self.last_epoch / self.total_epochs) * (self.base_temp - self.temp_min) + self.temp_min
+        if self.curr_temp < self.temp_min:
+            self.curr_temp = self.temp_min
+        return self.curr_temp
 
 
 class SNASModule(DartsModule):
@@ -324,7 +349,11 @@ class SNASModule(DartsModule):
         The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
         is wrapped by base_model, and base_model will be wrapped by this model.
     gumble_temperature : float
-        The temperature used in gumble-softmax. See [snas] for details.
+        The initial temperature used in gumble-softmax. See [snas] for details.
+    use_temp_anneal : bool
+        True if use a scheduler to anneal gumble temperature.
+    temp_min : float
+        The minimal temperature for scheduler.
     custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
         The custom xxxChoice replace method. Keys should be xxxChoice type and values should
         return an nn.module. This custom replace dict will override the default replace
@@ -335,13 +364,24 @@ class SNASModule(DartsModule):
     ..[snas] S. Xie, H. Zheng, C. Liu, and L. Lin, “SNAS: stochastic neural architecture search,” presented at the
         International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=rylqooRqK7
     """
-    def __init__(self, base_model, gumble_temperature = 1., custom_replace_dict=None):
+    def __init__(self, base_model, max_epochs, gumble_temperature = 1., use_temp_anneal = False, temp_min = .33, custom_replace_dict=None):
+        # SNAS replace layers require gumble_temperature to work, so self.temp is set before initialize base class
         self.temp = gumble_temperature
         super().__init__(base_model, custom_replace_dict)
+        self.use_temp_anneal = use_temp_anneal
+        if use_temp_anneal:
+            self.temp_lr_scheduler = Temp_Scheduler(max_epochs, self.temp, self.temp, temp_min)
+
+    def on_epoch_start(self):
+        if self.use_temp_anneal:
+            self.temp = self.temp_lr_scheduler.step()
+            for _, nas_module in self.nas_modules:
+                nas_module.temp = self.temp
+        return self.model.on_epoch_start()
 
     @property
     def default_replace_dict(self):
         return {
-            LayerChoice : lambda m : SNASLayerChoice(m, self.temp),
-            InputChoice : lambda m : SNASInputChoice(m, self.temp)
+            LayerChoice : SNASLayerChoice,
+            InputChoice : SNASInputChoice
         }

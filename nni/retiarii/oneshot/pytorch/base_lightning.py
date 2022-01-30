@@ -1,13 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from warnings import warn
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
 
 from torch.optim.lr_scheduler import _LRScheduler
-from torch.optim import Optimizer
 
 
 def _replace_module_with_type(root_module, replace_dict, modules):
@@ -119,8 +117,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
         self.arc_optim_count = len(arc_optimizers)
 
         # The third return value ``frequency`` and ``monitor`` are ignored since lightning
-        # requires len(optimizers) == len(frequency), and gradient backword
-        # is handled manually.
+        # requires len(optimizers) == len(frequency), and gradient backword is handled manually.
+        # For data structure of variables below, please see pytorch lightning docs of
+        # configure_optimizers.
         w_optimizers, lr_schedulers, self.frequencies, monitor = \
             self.trainer._configure_optimizers(self.model.configure_optimizers())
         lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
@@ -136,6 +135,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return arc_optimizers + w_optimizers, lr_schedulers
 
     def on_train_start(self):
+        self.model.trainer = self.trainer
+        self.model.log = self.log
         return self.model.on_train_start()
 
     def on_train_end(self):
@@ -171,8 +172,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_after_backward(self):
         return self.model.on_after_backward()
 
-    # def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val = None, gradient_clip_algorithm = None):
-    #     return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
+    def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val = None, gradient_clip_algorithm = None):
+        return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
 
     def configure_architecture_optimizers(self):
         """
@@ -214,12 +215,15 @@ class BaseOneShotLightningModule(pl.LightningModule):
             elif isinstance(lr_scheduler, dict):
                 interval = lr_scheduler['interval']
                 frequency = lr_scheduler['frequency']
-                if  interval == 'step' and \
-                    batch_index % frequency == 0 \
-                    or \
-                    interval == 'epoch' and \
-                    self.trainer.is_last_batch and \
-                    (self.trainer.current_epoch + 1) % frequency == 0:
+                if  (
+                        interval == 'step' and
+                        batch_index % frequency == 0
+                    ) or \
+                    (
+                        interval == 'epoch' and
+                        self.trainer.is_last_batch and
+                        (self.trainer.current_epoch + 1) % frequency == 0
+                    ):
                         lr_scheduler.step()
 
         lr_schedulers = self.lr_schedulers()

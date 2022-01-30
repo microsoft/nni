@@ -135,7 +135,6 @@ class EnasModule(BaseOneShotLightningModule):
                 arc_opt.step()
                 arc_opt.zero_grad()
 
-
     def _resample(self):
         result = self.controller.resample()
         for name, module in self.nas_modules:
