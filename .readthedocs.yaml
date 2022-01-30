@@ -22,11 +22,11 @@ sphinx:
 # Optionally declare the Python requirements required to build your docs
 python:
   install:
-  - requirements: docs/develop.txt
-  - requirements: docs/required.txt
+  - requirements: dependencies/develop.txt
+  - requirements: dependencies/required.txt
   # The issue with smac and swig prevents us from installing required_extra.
   # As a result, the docstring from several tuners including SMAC, PPO cannot be rendered.
-  # - requirements: docs/required_extra.txt
-  - requirements: docs/recommended.txt
+  # - requirements: dependencies/required_extra.txt
+  - requirements: dependencies/recommended.txt
   # We cannot have `python setup.py install` here,
   # because it's not supported by NNI.
