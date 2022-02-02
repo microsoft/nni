@@ -145,7 +145,7 @@ def test_snas():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='all', metavar='E',
-        help='exp to run, default = all' )
+        help='experiment to run, default = all' )
     args = parser.parse_args()
 
     if args.exp == 'all':
