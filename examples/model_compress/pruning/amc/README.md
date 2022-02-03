@@ -27,7 +27,7 @@ Run `amc_train.py` again with `--ckpt` and `--mask` to speedup and finetune the 
 python3 amc_train.py --model_type mobilenetv2 --ckpt logs/mobilenetv2_cifar10_r0.5_search-run2/best_model.pth --mask logs/mobilenetv2_cifar10_r0.5_search-run2/best_mask.pth --n_epoch 100
 ```
 
-# RM+AMCPruner Example
+# RM+AMCPruner Example([RMNet: Equivalently Removing Residual Connection from Networks](https://arxiv.org/abs/2111.00687))
 This example shows us how to use RM Operation and AMCPruner example.
 
 
@@ -51,7 +51,7 @@ Once finished, saved checkpoint file can be found at:
 logs/rmnetv2_cifar10_train-run2/ckpt.best.pth
 ```
 
-## Pruning the MobileNetV1 with AMCPruner[RMNet: Equivalently Removing Residual Connection from Networks](https://arxiv.org/abs/2111.00687)
+## Pruning the MobileNetV1 with AMCPruner
 Run following command to prune the trained model:
 ```bash
 python3 amc_search.py --model_type rmnetv1 --ckpt_path logs/rmnetv2_cifar10_train-run2/ckpt.best.pth
