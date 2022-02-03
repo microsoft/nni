@@ -16,7 +16,7 @@ sys.path.append('../../models')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='AMC search script')
-    parser.add_argument('--model_type', default='mobilenet', type=str, choices=['mobilenet', 'mobilenetv2', 'resnet18', 'resnet34', 'resnet50'],
+    parser.add_argument('--model_type', default='mobilenet', type=str, choices=['mobilenet', 'mobilenetv2', 'resnet18', 'resnet34', 'resnet50','rmnetv2', 'rmnetv1'],
         help='model to prune')
     parser.add_argument('--dataset', default='cifar10', type=str, choices=['cifar10', 'imagenet'], help='dataset to use (cifar/imagenet)')
     parser.add_argument('--batch_size', default=50, type=int, help='number of data batch size')
@@ -52,6 +52,11 @@ def get_model_and_checkpoint(model, dataset, checkpoint_path, n_gpu=1):
         net = resnet.__dict__[model](pretrained=True)
         in_features = net.fc.in_features
         net.fc = nn.Linear(in_features, n_class)
+    elif args.model_type.startswith('rmnet'):
+        from rm_r import ckpt_to_mobilenet
+        assert args.ckpt_path is not None
+        net = ckpt_to_mobilenet(args.model_type, args.ckpt_path, n_class)
+        args.ckpt_path = None
     else:
         raise NotImplementedError
     if checkpoint_path:
