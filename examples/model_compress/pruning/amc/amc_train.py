@@ -71,7 +71,7 @@ def get_model(args):
         in_features = net.fc.in_features
         net.fc = nn.Linear(in_features, n_class)
     elif args.model_type.startswith('rmnet'):
-        from rm_r import ckpt_to_mobilenet
+        from rmnet import ckpt_to_mobilenet
         assert args.ckpt_path is not None
         net = ckpt_to_mobilenet(args.model_type, args.ckpt_path, n_class)
         args.ckpt_path = None
