@@ -51,7 +51,7 @@ Once finished, saved checkpoint file can be found at:
 logs/rmnetv2_cifar10_train-run2/ckpt.best.pth
 ```
 
-## Pruning the MobileNetV1 with AMCPruner
+## Pruning the MobileNetV1 with AMCPruner[RMNet: Equivalently Removing Residual Connection from Networks](https://arxiv.org/abs/2111.00687)
 Run following command to prune the trained model:
 ```bash
 python3 amc_search.py --model_type rmnetv1 --ckpt_path logs/rmnetv2_cifar10_train-run2/ckpt.best.pth
