@@ -30,7 +30,7 @@ from mobilenet_v2 import MobileNetV2
 def parse_args():
     parser = argparse.ArgumentParser(description='AMC train / fine-tune script')
     parser.add_argument('--model_type', default='mobilenet', type=str,
-        choices=['mobilenet', 'mobilenetv2', 'resnet18', 'resnet34', 'resnet50'],
+        choices=['mobilenet', 'mobilenetv2', 'resnet18', 'resnet34', 'resnet50','rmnetv2', 'rmnetv1'],
         help='name of the model to train')
     parser.add_argument('--dataset', default='cifar10', type=str, help='name of the dataset to train')
     parser.add_argument('--lr', default=0.05, type=float, help='learning rate')
@@ -70,6 +70,11 @@ def get_model(args):
         net = resnet.__dict__[args.model_type](pretrained=True)
         in_features = net.fc.in_features
         net.fc = nn.Linear(in_features, n_class)
+    elif args.model_type.startswith('rmnet'):
+        from rm_r import ckpt_to_mobilenet
+        assert args.ckpt_path is not None
+        net = ckpt_to_mobilenet(args.model_type, args.ckpt_path, n_class)
+        args.ckpt_path = None
     else:
         raise NotImplementedError
 
@@ -77,11 +82,11 @@ def get_model(args):
         # the checkpoint can be state_dict exported by amc_search.py or saved by amc_train.py
         print('=> Loading checkpoint {} ..'.format(args.ckpt_path))
         net.load_state_dict(torch.load(args.ckpt_path, torch.device('cpu')))
-        if args.mask_path is not None:
-            SZ = 224 if args.dataset == 'imagenet' else 32
-            data = torch.randn(2, 3, SZ, SZ)
-            ms = ModelSpeedup(net, data, args.mask_path, torch.device('cpu'))
-            ms.speedup_model()
+    if args.mask_path is not None:
+        SZ = 224 if args.dataset == 'imagenet' else 32
+        data = torch.randn(2, 3, SZ, SZ)
+        ms = ModelSpeedup(net, data, args.mask_path, torch.device('cpu'))
+        ms.speedup_model()
 
     net.to(args.device)
     if torch.cuda.is_available() and args.n_gpu > 1:
