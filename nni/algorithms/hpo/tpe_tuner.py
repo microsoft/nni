@@ -127,6 +127,8 @@ class TpeTuner(Tuner):
         return deformat_parameters(params, self.space)
 
     def receive_trial_result(self, parameter_id, _parameters, loss, **kwargs):
+        if isinstance(loss, dict):
+            loss = loss['default']
         if self.optimize_mode is OptimizeMode.Maximize:
             loss = -loss
         if self.liar:
