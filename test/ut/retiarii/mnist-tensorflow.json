@@ -39,6 +39,6 @@
     },
 
     "_evaluator": {
-        "__type__": "_debug_no_trainer"
+        "type": "DebugEvaluator"
     }
 }

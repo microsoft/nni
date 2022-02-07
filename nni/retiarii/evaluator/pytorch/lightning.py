@@ -4,7 +4,7 @@
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, NoReturn, Union, Optional, List, Type
+from typing import Dict, Union, Optional, List, Type
 
 import pytorch_lightning as pl
 import torch.nn as nn
@@ -33,11 +33,11 @@ class LightningModule(pl.LightningModule):
     Lightning modules used in NNI should inherit this class.
     """
 
-    def set_model(self, model: Union[Type[nn.Module], nn.Module]) -> NoReturn:
-        if isinstance(model, type):
-            self.model = model()
-        else:
+    def set_model(self, model: Union[Type[nn.Module], nn.Module]) -> None:
+        if isinstance(model, nn.Module):
             self.model = model
+        else:
+            self.model = model()
 
 
 Trainer = nni.trace(pl.Trainer)
@@ -93,6 +93,7 @@ class Lightning(Evaluator):
 
     def _dump(self):
         return {
+            'type': self.__class__,
             'module': self.module,
             'trainer': self.trainer,
             'train_dataloader': self.train_dataloader,

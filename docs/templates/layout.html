@@ -1,0 +1,20 @@
+{% extends "!layout.html" %}
+
+{#- TO INJECT INFORMATION FROM READTHEDOCS HERE #}
+{% block scripts %}
+  {{ super() }}
+  {% if versions %}
+  <script type="text/javascript">
+    READTHEDOCS_VERSIONS = {{ versions | tojson }}
+  </script>
+  {% endif %}
+{% endblock %}
+
+{#- REPLACE ATTRIBUTES INSTANTLY TO DISABLE SOME HOOKS #}
+{% block footer_scripts %}
+<script type="text/javascript">
+  // try to disable original hook for md-source.
+  $('*[data-md-source="github"]').attr("data-md-source", "nni");
+</script>
+{{ super() }}
+{% endblock %}

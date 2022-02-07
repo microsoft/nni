@@ -125,7 +125,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
     }
     
-    private async prepareFrameworkControllerConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string):
+    private async prepareFrameworkControllerConfig(envId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string):
             Promise<any> {
         const podResources: any = [];
         for (const taskRole of this.config.taskRoles) {
@@ -136,7 +136,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         }
         // Generate frameworkcontroller job resource config object
         const frameworkcontrollerJobConfig: any =
-            await this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
+            await this.generateFrameworkControllerJobConfig(envId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
 
         return Promise.resolve(frameworkcontrollerJobConfig);
     }
@@ -160,7 +160,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
      * @param frameworkcontrollerJobName job name
      * @param podResources  pod template
      */
-    private async generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string,
+    private async generateFrameworkControllerJobConfig(envId: string, trialWorkingFolder: string,
         frameworkcontrollerJobName: string, podResources: any): Promise<any> {
 
         const taskRoles: any = [];
@@ -198,7 +198,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                 labels: {
                     app: this.NNI_KUBERNETES_TRIAL_LABEL,
                     expId: this.experimentId,
-                    trialId: trialJobId
+                    envId: envId
                 }
             },
             spec: {

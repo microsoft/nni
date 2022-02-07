@@ -83,12 +83,14 @@ export class Logger {
 
         const message = args.map(arg => (typeof arg === 'string' ? arg : util.inspect(arg))).join(' ');
         
-        const record = `[${datetime}] ${levelName} (${this.name}) ${message}\n`;
+        const record = `[${datetime}] ${levelName} (${this.name}) ${message}`;
 
         if (logFile === undefined) {
-            console.log(record);
+            if (!isUnitTest()) {  // be quite for unit test
+                console.log(record);
+            }
         } else {
-            logFile.write(record);
+            logFile.write(record + '\n');
         }
     }
 }
@@ -129,4 +131,11 @@ export function stopLogging(): void {
         (global as any).logFile.end();
         (global as any).logFile = undefined;
     }
+}
+
+/* utilities */
+
+function isUnitTest(): boolean {
+    const event = process.env['npm_lifecycle_event'] ?? '';
+    return event.startsWith('test') || event === 'mocha' || event === 'nyc';
 }

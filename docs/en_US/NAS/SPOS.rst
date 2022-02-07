@@ -72,7 +72,7 @@ Step 3. Train for Evaluation
 
 .. code-block:: bash
 
-   python scratch.py
+   python evaluation.py
 
 By default, it will use ``architecture_final.json``. This architecture is provided by the official repo (converted into NNI format). You can use any architecture (e.g., the architecture found in step 2) with ``--fixed-arc`` option.
 

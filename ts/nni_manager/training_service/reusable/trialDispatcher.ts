@@ -119,7 +119,7 @@ class TrialDispatcher implements TrainingService {
         await validateCodeDir(config.trialCodeDirectory);
 
         const serviceConfigs = Array.isArray(config.trainingService) ? config.trainingService : [ config.trainingService ];
-        const servicePromises = serviceConfigs.map(serviceConfig => createEnvironmentService(serviceConfig.platform, config));
+        const servicePromises = serviceConfigs.map(serviceConfig => createEnvironmentService(serviceConfig));
         this.environmentServiceList = await Promise.all(servicePromises);
 
         this.environmentMaintenceLoopInterval = Math.max(
