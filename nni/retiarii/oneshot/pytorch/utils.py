@@ -181,12 +181,6 @@ def replace_input_choice(root_module, init_fn, modules=None):
     """
     return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
 
-
-def replace_module_with_type(root_module, init_fn, type_name, modules):
-
-    return _replace_module_with_type(root_module, init_fn, type_name, modules)
-
-
 class ParallelTrainValDataLoader(DataLoader):
     """
     A dataloader yields both train data and validation data in a batch, with an order of
