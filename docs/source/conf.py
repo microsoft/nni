@@ -49,7 +49,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
-    'nbsphinx',
+    # 'nbsphinx',  # nbsphinx has conflicts with sphinx-gallery.
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
     'inplace_translation',
@@ -65,6 +65,13 @@ sphinx_gallery_conf = {
 
     # Control ignored python files.
     'ignore_pattern': r'__init__\.py|/scripts/',
+
+    # This is `/plot` by default. Only files starting with `/plot` will be executed.
+    # All files should be executed in our case.
+    'filename_pattern': r'.*',
+
+    # Disabling download button of all scripts
+    'download_all_examples': False,
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -177,12 +184,21 @@ html_title = 'Neural Network Intelligence'
 html_css_files = [
     'css/material_custom.css',
     'css/material_dropdown.css',
+    'css/sphinx_gallery.css',
     'css/index_page.css',
 ]
 html_js_files = [
     'js/version.js',
     'js/github.js',
+    'js/sphinx_gallery.js',
 ]
+
+# HTML context that can be used in jinja templates
+git_commit_id = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()
+
+html_context = {
+    'git_commit_id': git_commit_id
+}
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
@@ -260,8 +276,6 @@ epub_exclude_files = ['search.html']
 
 # external links (for github code)
 # Reference the code via :githublink:`path/to/your/example/code.py`
-git_commit_id = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()
-
 extlinks = {
     'githublink': ('https://github.com/microsoft/nni/blob/' + git_commit_id + '/%s', 'Github link: ')
 }

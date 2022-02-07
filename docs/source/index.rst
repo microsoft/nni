@@ -8,17 +8,36 @@ Neural Network Intelligence
 
 ..  toctree::
     :maxdepth: 2
-    :titlesonly:
+    :caption: Get Started
+    :hidden:
+
+    Installation <installation>
+    QuickStart <Tutorial/QuickStart>
+    Tutorials <tutorials/index>
+
+..  toctree::
+    :maxdepth: 2
+    :caption: Advanced Materials
     :hidden:
 
     Overview
-    Installation <installation>
-    QuickStart <Tutorial/QuickStart>
     Auto (Hyper-parameter) Tuning <hyperparameter_tune>
     Neural Architecture Search <nas>
     Model Compression <model_compression>
     Feature Engineering <feature_engineering>
+
+..  toctree::
+    :maxdepth: 2
+    :caption: References
+    :hidden:
+
     References <reference>
+
+..  toctree::
+    :maxdepth: 2
+    :caption: Misc
+    :hidden:
+
     Use Cases and Solutions <CommunitySharings/community_sharings>
     Research and Publications <ResearchPublications>
     FAQ <Tutorial/FAQ>

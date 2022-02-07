@@ -1,0 +1,56 @@
+/* Customization to sphinx-gallery generated notebooks */
+
+p.sphx-glr-script-out {
+    margin: 0;
+    padding: 0;
+    font-size: .7rem;
+}
+
+.sphx-glr-script-out .highlight {
+    margin: 0 !important;
+}
+
+.sphx-glr-script-out .highlight pre {
+    background-color: #f2f3fa !important;
+    padding: .6rem !important;
+    margin-bottom: 1.5rem;
+}
+
+div.sphx-glr-footer {
+    display: none;
+}
+
+.notebook-action-link {
+    padding-right: 1rem;
+}
+
+.sphx-glr-download-link-note {
+    margin-bottom: 1.5rem;
+}
+
+.notebook-action-div {
+    display: inline;
+    border-bottom: 1px solid #f3f4f7;
+    padding-right: 2rem;
+    padding-bottom: 0.625rem;
+}
+
+.notebook-action-link:hover .notebook-action-div {
+    /* match theme */
+    border-bottom-color: #f50057;
+}
+
+.notebook-action-link img {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.notebook-action-link div {
+    display: inline;
+}
+
+.notebook-action-link:not(:hover) div {
+    color: rgba(0, 0, 0, .68);
+}

@@ -8,6 +8,10 @@
     READTHEDOCS_VERSIONS = {{ versions | tojson }}
   </script>
   {% endif %}
+  <script type="text/javascript">
+    GIT_COMMIT_ID = "{{ git_commit_id }}";
+    PAGENAME = "{{ pagename }}";
+  </script>
 {% endblock %}
 
 {#- REPLACE ATTRIBUTES INSTANTLY TO DISABLE SOME HOOKS #}
