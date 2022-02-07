@@ -17,7 +17,7 @@ class EnasModule(BaseOneShotLightningModule):
     The ENAS Model. In each epoch, model parameters are first trained with weight sharing, followed by
     the enas RL agent. The agent will produce a sample of model architecture, and the reward function
     is used to train the agent.
-    The ENAS Model should be trained with ConcatenateTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
+    The ENAS Model should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTraiValDataloader`.
 
     Parameters
     ----------
@@ -149,7 +149,7 @@ class RandomSampleModule(BaseOneShotLightningModule):
     """
     Random Sampling NAS Algorithm. In each epoch, model parameters are first trained after a uniformly random
     sampling of each choice. The training result is also a random sample of search space.
-    The RandomSample Model should be trained with ConcatenateTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
+    The RandomSample Model should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTraiValDataloader`
 
     Parameters
     ----------

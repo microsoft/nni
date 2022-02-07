@@ -17,7 +17,7 @@ class DartsModule(BaseOneShotLightningModule):
     step, in wchich the alphas are frozen and the model parameters are optimized. In this step, the
     output of each choice are sumed up with respect to their alpha value. The result of DARTS
     is argmax in alpha.
-    The DARTS Model should be trained with ParallelTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
+    The DARTS Model should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTraiValDataloader`.
 
     Parameters
     ----------
@@ -254,7 +254,7 @@ class ProxylessModule(DartsModule):
     """
     The Proxyless Module. This is a darts-based method. What it differs from darts is that it resample
     the architecture according to alphas to select only one path a time to reduce memory consumption.
-    The ProxylessModule should be trained with :class:`nn.retiarii.oneshot.pytorch.utils.ParallelTraiValDataloader`.
+    The ProxylessModule should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.ParallelTraiValDataloader`.
 
     Reference
     ----------
@@ -286,25 +286,16 @@ class ProxylessModule(DartsModule):
 
 
 class SNASLayerChoice(DartsLayerChoice):
-    def __init__(self, layer_choice):
-        super().__init__(layer_choice)
-        # SNAS do gumble_softmax to alpha, which requires positive values for alpha.
-        self.alpha = nn.Parameter(torch.rand(len(self.op_choices)))
-
     def forward(self, *args, **kwargs):
-        self.one_hot = F.gumbel_softmax(self.alpha.log(), self.temp)
+        self.one_hot = F.gumbel_softmax(self.alpha, self.temp)
         op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
         alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
         yhat = torch.sum(op_results * self.one_hot.view(*alpha_shape), 0)
         return yhat
 
 class SNASInputChoice(DartsInputChoice):
-    def __init__(self, layer_choice):
-        super().__init__(layer_choice)
-        self.alpha = nn.Parameter(torch.rand(len(self.op_choices)))
-
     def forward(self, inputs):
-        self.one_hot = F.gumbel_softmax(self.alpha.log(), self.temp)
+        self.one_hot = F.gumbel_softmax(self.alpha, self.temp)
         inputs = torch.stack(inputs)
         alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
         yhat = torch.sum(inputs * self.one_hot.view(*alpha_shape), 0)
@@ -313,8 +304,8 @@ class SNASInputChoice(DartsInputChoice):
 class SNASModule(DartsModule):
     """
     The SNAS Module. This is a darts-based method. It uses gumble-softmax to simulate a one-hot distribution to
-    select only one path a time. The SNAS Module should be trained with ParallelTrainValDataLoader in
-    nn.retiarii.oneshot.utils.
+    select only one path a time. The SNAS Module should be trained with
+    :class:`nni.retiarii.oneshot.utils.ParallelTrainValDataLoader`.
 
     Parameters
     ----------
@@ -328,9 +319,6 @@ class SNASModule(DartsModule):
         SNAS will run at a fixed temperature. See [snas] for details.
     min_temp : float
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
-    anneal_epochs : int
-        The annealing epochs count. The linear annealing will be applied to the temperature from epoch 0
-        to anneal_epochs. No need to set this if you set ``use_temp_anneal`` False.
     custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
         The custom xxxChoice replace method. Keys should be xxxChoice type and values should
         return an nn.module. This custom replace dict will override the default replace
@@ -342,17 +330,16 @@ class SNASModule(DartsModule):
         International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=rylqooRqK7
     """
     def __init__(self, base_model, gumble_temperature = 1., use_temp_anneal = False,
-                anneal_epochs = 10, min_temp = .33, custom_replace_dict=None):
+                 min_temp = .33, custom_replace_dict=None):
         super().__init__(base_model, custom_replace_dict)
         self.temp = gumble_temperature
         self.init_temp = gumble_temperature
         self.use_temp_anneal = use_temp_anneal
-        self.anneal_epochs = anneal_epochs
         self.min_temp = min_temp
 
     def on_epoch_start(self):
         if self.use_temp_anneal:
-            self.temp = (1 - self.trainer.current_epoch / self.anneal_epochs) * (self.init_temp - self.min_temp) + self.min_temp
+            self.temp = (1 - self.trainer.current_epoch / self.trainer.max_epochs) * (self.init_temp - self.min_temp) + self.min_temp
             self.temp = max(self.temp, self.min_temp)
 
             for _, nas_module in self.nas_modules:
