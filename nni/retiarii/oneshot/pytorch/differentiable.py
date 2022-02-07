@@ -341,7 +341,8 @@ class SNASModule(DartsModule):
     .. [snas] S. Xie, H. Zheng, C. Liu, and L. Lin, “SNAS: stochastic neural architecture search,” presented at the
         International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=rylqooRqK7
     """
-    def __init__(self, base_model, gumble_temperature = 1., use_temp_anneal = False, anneal_epochs = 10, min_temp = .33, custom_replace_dict=None):
+    def __init__(self, base_model, gumble_temperature = 1., use_temp_anneal = False,
+                anneal_epochs = 10, min_temp = .33, custom_replace_dict=None):
         super().__init__(base_model, custom_replace_dict)
         self.temp = gumble_temperature
         self.init_temp = gumble_temperature
