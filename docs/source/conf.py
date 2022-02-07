@@ -42,6 +42,7 @@ release = 'v2.6'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx_gallery.gen_gallery',
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinxarg.ext',
@@ -56,6 +57,15 @@ extensions = [
 
 # Add mock modules
 autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter']
+
+# Sphinx gallery examples
+sphinx_gallery_conf = {
+    'examples_dirs': '../../examples/tutorials',   # path to your example scripts
+    'gallery_dirs': 'tutorials',                   # path to where to save gallery generated output
+
+    # Control ignored python files.
+    'ignore_pattern': r'__init__\.py|/scripts/',
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['../templates']
