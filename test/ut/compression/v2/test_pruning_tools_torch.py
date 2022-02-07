@@ -22,7 +22,9 @@ from nni.algorithms.compression.v2.pytorch.pruning.tools import (
 )
 from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     NormalSparsityAllocator,
-    GlobalSparsityAllocator
+    GlobalSparsityAllocator,
+    Conv2dDependencyAwareAllocator,
+    AttentionSparsityAllocator
 )
 from nni.algorithms.compression.v2.pytorch.pruning.tools.base import HookCollectorInfo
 from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name
@@ -48,6 +50,43 @@ class TorchModel(torch.nn.Module):
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
+
+
+class ConvDependenceModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(1, 5, 5, 1)
+        self.bn1 = torch.nn.BatchNorm2d(5)
+        self.conv2 = torch.nn.Conv2d(5, 10, 5, 1)
+        self.conv3 = torch.nn.Conv2d(5, 10, 5, 1)
+        self.bn2 = torch.nn.BatchNorm2d(10)
+        self.fc1 = torch.nn.Linear(4 * 4 * 10, 100)
+        self.fc2 = torch.nn.Linear(100, 10)
+
+    def forward(self, x):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.max_pool2d(x, 2, 2)
+        x = F.relu(self.bn2(self.conv2(x) + self.conv3(x)))
+        x = F.max_pool2d(x, 2, 2)
+        x = x.view(-1, 4 * 4 * 10)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return F.log_softmax(x, dim=1)
+
+
+class AttentionModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc1 = torch.nn.Linear(100, 50)
+        self.fc2 = torch.nn.Linear(100, 50)
+        self.fc3 = torch.nn.Linear(100, 50)
+        self.fc4 = torch.nn.Linear(50, 10)
+
+    def forward(self, x):
+        y = torch.matmul(self.fc1(x), self.fc2(x).transpose(-1, -2))
+        y = torch.matmul(y, self.fc3(x))
+        y = self.fc4(y)
+        return F.log_softmax(y, dim=1)
 
 
 def trainer(model, optimizer, criterion):
@@ -193,6 +232,10 @@ class PruningToolsTestCase(unittest.TestCase):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
         pruner = Pruner(model, config_list)
+        metrics = {
+            'conv1': torch.rand(5, 1, 5, 5),
+            'conv2': torch.rand(10, 5, 5, 5)
+        }
         sparsity_allocator = GlobalSparsityAllocator(pruner)
         masks = sparsity_allocator.generate_sparsity(metrics)
         total_elements, total_masked_elements = 0, 0
@@ -200,6 +243,36 @@ class PruningToolsTestCase(unittest.TestCase):
             total_elements += t['weight'].numel()
             total_masked_elements += t['weight'].sum().item()
         assert total_masked_elements / total_elements == 0.2
+
+        # Test Conv2dDependencyAwareAllocator
+        model = ConvDependenceModel()
+        config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
+        pruner = Pruner(model, config_list)
+        metrics = {
+            'conv1': torch.rand(5),
+            'conv2': torch.rand(10),
+            'conv3': torch.rand(10)
+        }
+        sparsity_allocator = Conv2dDependencyAwareAllocator(pruner, dim=0, dummy_input=torch.rand(10, 1, 28, 28))
+        masks = sparsity_allocator.generate_sparsity(metrics)
+        assert all(v['weight'].sum() / v['weight'].numel() == 0.2 for k, v in masks.items())
+        assert torch.equal(masks['conv2']['weight'], masks['conv3']['weight'])
+
+        # Test AttentionSparsityAllocator
+        model = AttentionModel()
+        config_list = [{'op_types': ['Linear'], 'total_sparsity': 0.8}]
+        pruner = Pruner(model, config_list)
+        metrics = {
+            'fc1': torch.rand(50),
+            'fc2': torch.rand(50),
+            'fc3': torch.rand(50),
+            'fc4': torch.rand(10),
+        }
+        sparsity_allocator = AttentionSparsityAllocator(pruner, dim=0, dummy_input=torch.rand(10, 16, 100))
+        masks = sparsity_allocator.generate_sparsity(metrics)
+        assert all(v['weight'].sum() / v['weight'].numel() == 0.2 for k, v in masks.items())
+        assert torch.equal(masks['fc1']['weight'], masks['fc2']['weight']) and torch.equal(masks['fc3']['weight'], masks['fc2']['weight'])
+        assert torch.equal(masks['fc1']['weight'].sum(dim=1)==0, masks['fc4']['weight'].sum(dim=0)==0)
 
 
 if __name__ == '__main__':

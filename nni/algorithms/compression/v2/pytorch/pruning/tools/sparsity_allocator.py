@@ -240,14 +240,13 @@ class AttentionSparsityAllocator(SparsityAllocator):
 
             # Special rule based output layer mask generation.
             output_layer_name = self.attention_name_groups[idx][-1]
-            if output_layer_name in metrics and len(self.dim) == 1 and self.dim[0] == 1:
+            if output_layer_name in metrics and self.dim and len(self.dim) == 1 and self.dim[0] == 0:
                 # Don't use colculated metric, use group metric.
                 metrics[output_layer_name] = None
                 metric = group_metric
                 wrapper = self.pruner.get_modules_wrapper()[output_layer_name]
                 prune_num = int(wrapper.config['total_sparsity'] * metric.numel())
                 head_width = int(wrapper.module.weight.size(1) / metric.size(0))
-                prune_num = int(wrapper.config['total_sparsity'] * metric.numel())
                 if prune_num == 0:
                     threshold = metric.min() - 1
                 else:
