@@ -23,8 +23,8 @@ Start and Manage a New Experiment
 
 .. GENERATED FROM PYTHON SOURCE LINES 7-9
 
-1. Configure Search Space
--------------------------
+Configure Search Space
+----------------------
 
 .. GENERATED FROM PYTHON SOURCE LINES 9-18
 
@@ -48,8 +48,8 @@ Start and Manage a New Experiment
 
 .. GENERATED FROM PYTHON SOURCE LINES 19-21
 
-2. Configure Experiment
------------------------
+Configure Experiment
+--------------------
 
 .. GENERATED FROM PYTHON SOURCE LINES 21-34
 
@@ -77,8 +77,8 @@ Start and Manage a New Experiment
 
 .. GENERATED FROM PYTHON SOURCE LINES 35-37
 
-3. Start Experiment
--------------------
+Start Experiment
+----------------
 
 .. GENERATED FROM PYTHON SOURCE LINES 37-39
 
@@ -96,18 +96,18 @@ Start and Manage a New Experiment
 
  .. code-block:: none
 
-    [2022-02-07 15:40:24] Creating experiment, Experiment ID: 2a7ibxcq
-    [2022-02-07 15:40:24] Starting web server...
-    [2022-02-07 15:40:25] Setting up...
-    [2022-02-07 15:40:26] Web UI URLs: http://127.0.0.1:8080 http://10.190.173.211:8080 http://172.17.0.1:8080 http://192.168.49.1:8080
+    [2022-02-07 18:37:37] Creating experiment, Experiment ID: zfv2b83l
+    [2022-02-07 18:37:37] Starting web server...
+    [2022-02-07 18:37:38] Setting up...
+    [2022-02-07 18:37:38] Web UI URLs: http://127.0.0.1:8080 http://10.190.173.211:8080 http://172.17.0.1:8080 http://192.168.49.1:8080
 
 
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 40-44
 
-4. Experiment View & Control
-----------------------------
+Experiment View & Control
+-------------------------
 
 View the status of experiment.
 
@@ -176,7 +176,7 @@ Export the experiment data.
  .. code-block:: none
 
 
-    [TrialResult(parameter={'C': 0.8, 'kernel': 'linear', 'degree': 4, 'gamma': 0.03, 'coef0': 0.03}, value=0.9866666666666667, trialJobId='FQ1k8'), TrialResult(parameter={'C': 0.6000000000000001, 'kernel': 'linear', 'degree': 3, 'gamma': 0.03, 'coef0': 0.04}, value=0.9866666666666667, trialJobId='KYnxr')]
+    [TrialResult(parameter={'C': 0.2, 'kernel': 'linear', 'degree': 3, 'gamma': 0.09, 'coef0': 0.05}, value=0.9866666666666667, trialJobId='qEP1F'), TrialResult(parameter={'C': 0.7000000000000001, 'kernel': 'linear', 'degree': 4, 'gamma': 0.07, 'coef0': 0.06}, value=0.9866666666666667, trialJobId='h5Rnc')]
 
 
 
@@ -201,14 +201,14 @@ Get metric of jobs
  .. code-block:: none
 
 
-    {'FQ1k8': [TrialMetricData(timestamp=1644216037536, trialJobId='FQ1k8', parameterId='0', type='FINAL', sequence=0, data=0.9866666666666667)], 'KYnxr': [TrialMetricData(timestamp=1644216037545, trialJobId='KYnxr', parameterId='1', type='FINAL', sequence=0, data=0.9866666666666667)]}
+    {'qEP1F': [TrialMetricData(timestamp=1644226669729, trialJobId='qEP1F', parameterId='0', type='FINAL', sequence=0, data=0.9866666666666667)], 'h5Rnc': [TrialMetricData(timestamp=1644226669775, trialJobId='h5Rnc', parameterId='1', type='FINAL', sequence=0, data=0.9866666666666667)]}
 
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 65-67
 
-5. Stop Experiment
-------------------
+Stop Experiment
+---------------
 
 .. GENERATED FROM PYTHON SOURCE LINES 67-68
 
@@ -225,8 +225,8 @@ Get metric of jobs
 
  .. code-block:: none
 
-    [2022-02-07 15:40:46] Stopping experiment, please wait...
-    [2022-02-07 15:40:49] Experiment stopped
+    [2022-02-07 18:37:58] Stopping experiment, please wait...
+    [2022-02-07 18:38:01] Experiment stopped
 
 
 
@@ -234,7 +234,7 @@ Get metric of jobs
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  24.656 seconds)
+   **Total running time of the script:** ( 0 minutes  24.664 seconds)
 
 
 .. _sphx_glr_download_tutorials_nni_experiment.py:

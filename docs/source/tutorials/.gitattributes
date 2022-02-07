@@ -1,0 +1,5 @@
+# Treating almost all the files as binary.
+# They are not designed for editing.
+
+*.rst   binary
+*.py    binary
