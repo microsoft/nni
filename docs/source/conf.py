@@ -72,6 +72,10 @@ sphinx_gallery_conf = {
 
     # Disabling download button of all scripts
     'download_all_examples': False,
+
+    # Change default thumbnail
+    # Working directory is strange, needs full path.
+    'default_thumb_file': os.path.join(os.path.dirname(__file__), '../img/nni_icon_blue.png'),
 }
 
 # Add any paths that contain templates here, relative to this directory.

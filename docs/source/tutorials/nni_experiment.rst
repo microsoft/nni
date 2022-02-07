@@ -96,10 +96,10 @@ Start Experiment
 
  .. code-block:: none
 
-    [2022-02-07 18:37:37] Creating experiment, Experiment ID: zfv2b83l
-    [2022-02-07 18:37:37] Starting web server...
-    [2022-02-07 18:37:38] Setting up...
-    [2022-02-07 18:37:38] Web UI URLs: http://127.0.0.1:8080 http://10.190.173.211:8080 http://172.17.0.1:8080 http://192.168.49.1:8080
+    [2022-02-07 18:56:04] Creating experiment, Experiment ID: fl9vu67z
+    [2022-02-07 18:56:04] Starting web server...
+    [2022-02-07 18:56:05] Setting up...
+    [2022-02-07 18:56:05] Web UI URLs: http://127.0.0.1:8080 http://10.190.173.211:8080 http://172.17.0.1:8080 http://192.168.49.1:8080
 
 
 
@@ -176,7 +176,7 @@ Export the experiment data.
  .. code-block:: none
 
 
-    [TrialResult(parameter={'C': 0.2, 'kernel': 'linear', 'degree': 3, 'gamma': 0.09, 'coef0': 0.05}, value=0.9866666666666667, trialJobId='qEP1F'), TrialResult(parameter={'C': 0.7000000000000001, 'kernel': 'linear', 'degree': 4, 'gamma': 0.07, 'coef0': 0.06}, value=0.9866666666666667, trialJobId='h5Rnc')]
+    [TrialResult(parameter={'C': 0.9, 'kernel': 'rbf', 'degree': 4, 'gamma': 0.07, 'coef0': 0.03}, value=0.9733333333333334, trialJobId='dNOZt'), TrialResult(parameter={'C': 0.8, 'kernel': 'sigmoid', 'degree': 2, 'gamma': 0.01, 'coef0': 0.01}, value=0.9733333333333334, trialJobId='okYSD')]
 
 
 
@@ -201,7 +201,7 @@ Get metric of jobs
  .. code-block:: none
 
 
-    {'qEP1F': [TrialMetricData(timestamp=1644226669729, trialJobId='qEP1F', parameterId='0', type='FINAL', sequence=0, data=0.9866666666666667)], 'h5Rnc': [TrialMetricData(timestamp=1644226669775, trialJobId='h5Rnc', parameterId='1', type='FINAL', sequence=0, data=0.9866666666666667)]}
+    {'okYSD': [TrialMetricData(timestamp=1644227777089, trialJobId='okYSD', parameterId='1', type='FINAL', sequence=0, data=0.9733333333333334)], 'dNOZt': [TrialMetricData(timestamp=1644227777357, trialJobId='dNOZt', parameterId='0', type='FINAL', sequence=0, data=0.9733333333333334)]}
 
 
 
@@ -225,8 +225,8 @@ Stop Experiment
 
  .. code-block:: none
 
-    [2022-02-07 18:37:58] Stopping experiment, please wait...
-    [2022-02-07 18:38:01] Experiment stopped
+    [2022-02-07 18:56:25] Stopping experiment, please wait...
+    [2022-02-07 18:56:28] Experiment stopped
 
 
 
@@ -234,7 +234,7 @@ Stop Experiment
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  24.664 seconds)
+   **Total running time of the script:** ( 0 minutes  24.662 seconds)
 
 
 .. _sphx_glr_download_tutorials_nni_experiment.py:

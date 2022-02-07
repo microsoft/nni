@@ -11,4 +11,4 @@
 .pickle binary
 
 # Linguist override (for github)
-docs/tutorials/*    linguist-generated
+docs/source/tutorials/*     linguist-generated
