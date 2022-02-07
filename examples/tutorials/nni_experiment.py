@@ -4,8 +4,8 @@ Start and Manage a New Experiment
 """
 
 # %%
-# 1. Configure Search Space
-# -------------------------
+# Configure Search Space
+# ----------------------
 
 search_space = {
     "C": {"_type": "quniform", "_value": [0.1, 1, 0.1]},
@@ -16,8 +16,8 @@ search_space = {
 }
 
 # %%
-# 2. Configure Experiment
-# -----------------------
+# Configure Experiment
+# --------------------
 
 from nni.experiment import Experiment
 experiment = Experiment('local')
@@ -32,13 +32,13 @@ experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
 experiment.config.training_service.use_active_gpu = True
 
 # %%
-# 3. Start Experiment
-# -------------------
+# Start Experiment
+# ----------------
 experiment.start(8080)
 
 # %%
-# 4. Experiment View & Control
-# ----------------------------
+# Experiment View & Control
+# -------------------------
 #
 # View the status of experiment.
 experiment.get_status()
@@ -62,6 +62,6 @@ experiment.export_data()
 experiment.get_job_metrics()
 
 # %%
-# 5. Stop Experiment
-# ------------------
+# Stop Experiment
+# ---------------
 experiment.stop()
