@@ -9,3 +9,6 @@
 # These files appear mostly in docs/ folder
 .ipynb  binary
 .pickle binary
+
+# Linguist override (for github)
+docs/tutorials/*    linguist-generated
