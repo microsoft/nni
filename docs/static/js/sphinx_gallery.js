@@ -1,23 +1,3 @@
-`<div class="pytorch-call-to-action-links">
-<div id="tutorial-type">{{ pagename }}</div>
-
-<div id="google-colab-link">
-    <img class="call-to-action-img" src="_static/images/gallery-colab.svg"/>
-    <div>Run in Google Colab</div>
-    <div class="call-to-action-mobile-view">Colab</div>
-</div>
-<div id="download-notebook-link">
-    <img class="call-to-action-notebook-img" src="_static/img/gallery-download.svg"/>
-    <div>Download Notebook</div>
-    <div class="call-to-action-mobile-view">Notebook</div>
-</div>
-<div id="github-view-link">
-    <img class="call-to-action-img" src="_static/images/gallery-github.svg"/>
-    <div>View on GitHub</div>
-    <div class="call-to-action-mobile-view">GitHub</div>
-</div>
-</div>`;
-
 $(document).ready(function() {
     const downloadNote = $(".sphx-glr-download-link-note.admonition.note");
     if (downloadNote.length > 0) {
@@ -29,22 +9,24 @@ $(document).ready(function() {
             "/docs/source/" + PAGENAME + ".ipynb";
 
         downloadNote.removeClass("admonition");
+        // the image links are stored in layout.html
+        // to leverage jinja engine
         downloadNote.html(`
             <a class="notebook-action-link" href="${colabLink}">
                 <div class="notebook-action-div">
-                    <img src="/_static/img/gallery-colab.svg"/>
+                    <img src="${GALLERY_LINKS.colab}"/>
                     <div>Run in Google Colab</div>
                 </div>
             </a>
             <a class="notebook-action-link" href="${notebookLink}">
                 <div class="notebook-action-div">
-                    <img src="/_static/img/gallery-download.svg"/>
+                    <img src="${GALLERY_LINKS.notebook}"/>
                     <div>Download Notebook</div>
                 </div>
             </a>
             <a class="notebook-action-link" href="${githubLink}">
                 <div class="notebook-action-div">
-                    <img src="/_static/img/gallery-github.svg"/>
+                    <img src="${GALLERY_LINKS.github}"/>
                     <div>View on GitHub</div>
                 </div>
             </a>
