@@ -13,13 +13,17 @@ CARD_TEMPLATE = """
 
     <div class="card-link-body">
 
+    <div class="card-link-text">
+
     <div class="card-link-title-container">
         <h4>{header}</h4>
     </div>
 
     <p class="card-link-summary">{description}</p>
 
-    <div class="card-link-icon circle">
+    </div>
+
+    <div class="card-link-icon circle {image_background}">
 
 .. image:: {image}
 
@@ -39,6 +43,7 @@ class CustomCardItemDirective(Directive):
     option_spec = {
         'header': directives.unchanged,
         'image': directives.unchanged,
+        'background': directives.unchanged,
         'link': directives.unchanged,
         'description': directives.unchanged,
         'tags': directives.unchanged
@@ -61,27 +66,19 @@ class CustomCardItemDirective(Directive):
             if 'image' in self.options:
                 image = directives.uri(self.options['image'])
             else:
-                image = os.path.join(os.path.relpath(env.srcdir, env.confdir), '../img/thumbnails/nni_icon_blue.png')
+                image = os.path.join(os.path.relpath(env.app.srcdir, env.app.confdir), '../img/thumbnails/nni_icon_white.png')
 
-            if 'description' in self.options:
-                description = self.options['description']
-            else:
-                description = ''
+            image_background = self.options.get('background', 'indigo')
+            description = self.options.get('description', '')
+            tags = self.options.get('tags', '')
 
-            if 'tags' in self.options:
-                tags = self.options['tags']
-            else:
-                tags = ''
-
-        except FileNotFoundError as e:
-            print(e)
-            return []
         except ValueError as e:
             print(e)
             raise
 
         card_rst = CARD_TEMPLATE.format(header=header,
                                         image=image,
+                                        image_background=image_background,
                                         link=link,
                                         description=description,
                                         tags=tags)

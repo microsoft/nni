@@ -5,9 +5,10 @@ Tutorials
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
 
-   tutorials/nas_quick_start_mnist
    tutorials/nni_experiment
+   tutorials/nas_quick_start_mnist
 
 .. ----------------------
 
@@ -15,5 +16,11 @@ Tutorials
    :header: Start and Manage a New Experiment
    :description: Familiarize yourself with Pythonic API to manage a hyper-parameter tuning experiment
    :link: tutorials/nni_experiment.html
-..    :image: ../img/emoicons/Crying.png
+   :image: ../img/thumbnails/overview-31.png
 
+.. cardlinkitem::
+   :header: Get started with NAS on MNIST
+   :description: bla bla bla bla
+   :link: tutorials/nas_quick_start_mnist.html
+   :image: ../img/thumbnails/overview-30.png
+   :background: cyan

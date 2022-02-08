@@ -55,6 +55,107 @@ div.sphx-glr-footer {
     color: rgba(0, 0, 0, .68);
 }
 
+.card-link.admonition {
+    border-left: 0;
+    padding: 18px;
+}
+
+.card-link .card-link-body {
+    min-height: 90px;
+    position: relative;
+}
+
+.card-link-text {
+    padding-left: 110px;
+}
+
+.card-link a:not(:hover) .card-link-text {
+    color: rgba(0, 0, 0, .68);
+}
+
+.card-link-text .card-link-title-container {
+    padding-top: 0.2rem;
+}
+
+.card-link-text .card-link-title-container h4 {
+    margin-top: 0;
+}
+
 .card-link-icon {
-    
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.card-link-icon img {
+    max-width: 80%;
+    max-height: 80%;
+    /* horizontal and vertical center */
+    /* https://stackoverflow.com/questions/7273338/how-to-vertically-align-an-image-inside-a-div */
+    text-align: center;
+    vertical-align: middle;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+}
+
+/* link icon background color */
+.card-link-icon.circle {
+    background-color: #283593;
+    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+    padding: 0;
+}
+
+/* pallette */
+.card-link-icon.red {
+    background-color: #C62828;
+}
+
+.card-link-icon.pink {
+    background-color: #AD1457;
+}
+
+.card-link-icon.purple {
+    background-color: #8E24AA;
+}
+
+.card-link-icon.deep-purple {
+    background-color: #512DA8;
+}
+
+.card-link-icon.blue {
+    background-color: #1565C0;
+}
+
+.card-link-icon.light-blue {
+    background-color: #0277BD;
+}
+
+.card-link-icon.cyan {
+    background-color: #006064;
+}
+
+.card-link-icon.teal {
+    background-color: #00796B;
+}
+
+.card-link-icon.green {
+    background-color: #2E7D32;
+}
+
+.card-link-icon.deep-orange {
+    background-color: #BF360C;
+}
+
+.card-link-icon.brown {
+    background-color: #6D4C41;
+}
+
+.card-link-icon.indigo {
+    background-color: #3949AB;
 }
