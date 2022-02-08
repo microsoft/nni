@@ -23,7 +23,7 @@ import traceback
 from zipfile import ZipFile
 
 
-node_version = 'v16.3.0'
+node_version = 'v16.13.2'
 yarn_version = 'v1.22.10'
 
 def _get_jupyter_lab_version():
@@ -177,7 +177,10 @@ def compile_ts(release):
 
     _print('Building web UI')
     _yarn('ts/webui')
-    _yarn('ts/webui', 'build')
+    if release:
+        _yarn('ts/webui', 'release')
+    else:
+        _yarn('ts/webui', 'build')
 
     _print('Building JupyterLab extension')
     if release:
