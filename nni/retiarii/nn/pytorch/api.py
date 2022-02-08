@@ -492,6 +492,10 @@ class ValueChoiceX(Translatable):
             return ValueChoiceX(min, 'min({})', lst)
         return min(lst)
 
+    def __hash__(self):
+        # this is required because we have implemented ``__eq__``
+        return id(self)
+
     # NOTE:
     # Write operations are not supported. Reasons follow:
     # - Semantics are not clear. It can be applied to "all" the inner candidates, or only the chosen one.
@@ -510,7 +514,7 @@ class ValueChoiceX(Translatable):
         return ValueChoiceX(round, 'round({})', [self])
 
     def __trunc__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(math.trunc, 'math.trunc({})', [self])
+        raise RuntimeError("Try to use `ValueChoice.to_int()` instead of `math.trunc()` on value choices.")
 
     def __floor__(self) -> 'ValueChoiceX':
         return ValueChoiceX(math.floor, 'math.floor({})', [self])
