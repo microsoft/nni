@@ -13,7 +13,7 @@ from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule
 from .enas import ReinforceController, ReinforceField
 from .utils import get_naive_match_and_replace
-from .superlayer import PathSamplingLinearValueChoice
+from .superlayer import PathSamplingSuperLinear
 
 
 class EnasModule(BaseOneShotLightningModule):
@@ -91,7 +91,7 @@ class EnasModule(BaseOneShotLightningModule):
                         to_samples.append(v)
                 # 如果有 value choice：
                 if len(to_samples) > 0:
-                    to_replace = PathSamplingLinearValueChoice(module)
+                    to_replace = PathSamplingSuperLinear(module)
                     return to_samples, to_replace
             return None
         
@@ -199,7 +199,7 @@ class RandomSampleModule(BaseOneShotLightningModule):
                         to_samples.append(v)
                 # 如果有 value choice：
                 if len(to_samples) > 0:
-                    to_replace = PathSamplingLinearValueChoice(module)
+                    to_replace = PathSamplingSuperLinear(module)
                     return to_samples, to_replace
             return None
         
