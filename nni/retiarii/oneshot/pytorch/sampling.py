@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice,ValueChoice
+from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice, ValueChoice
 from nni.retiarii.nn.pytorch.nn import Linear, Conv2d
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule

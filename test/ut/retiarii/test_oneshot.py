@@ -1,15 +1,15 @@
 import argparse
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 import pytest
+import nni.retiarii.nn.pytorch.nn as nn
 from torchvision import transforms
 from torchvision.datasets import MNIST
 from torch.utils.data.sampler import RandomSampler
 
 from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
-from nni.retiarii.nn.pytorch import LayerChoice, Repeat
+from nni.retiarii.nn.pytorch import LayerChoice, Repeat, ValueChoice
 from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
                                           DartsModule, EnasModule, SNASModule,
                                           ParallelTrainValDataLoader,
@@ -25,7 +25,6 @@ class DepthwiseSeparableConv(nn.Module):
     def forward(self, x):
         return self.pointwise(self.depthwise(x))
 
-
 class Net(pl.LightningModule):
     def __init__(self):
         super().__init__()
@@ -40,39 +39,37 @@ class Net(pl.LightningModule):
             nn.Dropout(.75)
         ])
         self.dropout2 = nn.Dropout(0.5)
-        self.fc = LayerChoice([
-            nn.Sequential(
-                nn.Linear(9216, 64),
-                nn.ReLU(),
-                self.dropout2,
-                nn.Linear(64, 10),
-            ),
-            nn.Sequential(
-                nn.Linear(9216, 128),
-                nn.ReLU(),
-                self.dropout2,
-                nn.Linear(128, 10),
-            ),
-            nn.Sequential(
-                nn.Linear(9216, 256),
-                nn.ReLU(),
-                self.dropout2,
-                nn.Linear(256, 10),
-            )
-        ])
-        self.rpfc = Repeat(
-            nn.Linear(10, 10),
-            [1, 2]
-        )
-
+        self.fc1 = nn.Linear(9216, ValueChoice(candidates=[64,128,256], label = 'shanghai'))
+        self.fc2 = nn.Linear(ValueChoice(candidates=[64,128,256], label = 'shanghai'), 10)
+        self.rpfc = nn.Linear(10, 10)
+        
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.max_pool2d(self.conv2(x), 2)
         x = torch.flatten(self.dropout1(x), 1)
-        x = self.fc(x)
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.dropout2(x)
+        x = self.fc2(x)
         x = self.rpfc(x)
         output = F.log_softmax(x, dim=1)
         return output
+    
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        output = self(x)
+        loss = nn.CrossEntropyLoss()
+        return loss(output, y)
+    
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        pred = self(x).argmax(1, True)
+        acc = pred.eq(y.view_as(pred)).sum().item()/ len(y)
+        return acc
+    
+    def configure_optimizers(self):
+        optim = torch.optim.Adagrad(self.parameters(), 1, 0)
+        return optim
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')

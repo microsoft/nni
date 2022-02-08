@@ -355,6 +355,9 @@ class ValueChoice(Translatable, Mutable):
         for candidate in self.candidates:
             access.access(candidate)
         return access
+    
+    def __len__(self):
+        return len(self.candidates)
 
 
 @basic_unit
