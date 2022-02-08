@@ -42,6 +42,7 @@ def _replace_module_with_type(root_module, prior_replace, default_replace, modul
             # 先使用用户的 match and replace，如果返回了一个 Module，就认为覆盖 default 实现
             # 如果返回 None，就认为使用 default 实现
             # 应该不会有用户返回 None 但想表达不替换的意思的情况把？
+            replace_result = None
             if prior_replace is not None:
                 for f in prior_replace:
                     replace_result = f(child)

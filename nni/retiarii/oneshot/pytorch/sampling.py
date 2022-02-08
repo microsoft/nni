@@ -53,8 +53,8 @@ class EnasModule(BaseOneShotLightningModule):
     """
     def __init__(self, base_model, ctrl_kwargs = None,
                  entropy_weight = 1e-4, skip_weight = .8, baseline_decay = .999,
-                 ctrl_steps_aggregate = 20, grad_clip = 0, custom_replace_dict = None):
-        super().__init__(base_model, custom_replace_dict)
+                 ctrl_steps_aggregate = 20, grad_clip = 0, custom_match_and_replace=[lambda m: None]):
+        super().__init__(base_model, custom_match_and_replace)
 
         self.nas_fields = [ReinforceField(name, len(module),
                                           isinstance(module, PathSamplingLayerChoice) or module.n_chosen == 1)
