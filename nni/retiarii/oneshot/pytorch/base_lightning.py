@@ -250,7 +250,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
                 optimizer.step()
             elif method == 'zero_grad':
                 optimizer.zero_grad()
-        
+
         optimizers = self.user_optimizers
         if optimizers is None:
             return
@@ -266,7 +266,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             for optimizer in optimizers:
                 apply_method(optimizer, method)
-    
+
     @property
     def architecture_optimizers(self):
         """
@@ -277,7 +277,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         ----------
         opts : List[Optimizer], Optimizer, None
             Architecture optimizers you defined in ``configure_architecture_optimizers``. This
-            will be None if there is no architecture optimizers. 
+            will be None if there is no architecture optimizers.
         """
         opts = self.optimizers()
         if isinstance(opts,list):
@@ -290,7 +290,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         if self.arc_optim_count == 1:
             return opts
         return None
-    
+
     @property
     def user_optimizers(self):
         """
@@ -299,7 +299,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Returns
         ----------
         opts : List[Optimizer], Optimizer, None
-            Optimizers defined by user's model. This will be None if there is no user optimizers. 
+            Optimizers defined by user's model. This will be None if there is no user optimizers.
         """
         opts = self.optimizers()
         if isinstance(opts,list):
