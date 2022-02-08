@@ -297,3 +297,29 @@ class ConcatenateTrainValDataLoader(DataLoader):
 
     def __len__(self):
         return len(self.train_loader) + len(self.val_loader)
+
+
+def get_naive_match_and_replace(match_type, to_sample_func, to_replace_func=None):
+    '''
+    A util function helps generate the naive match_and_replace function.
+
+    Parameters
+    ----------
+    match_type : type
+        If the input module is of this type, the coming functions will be called.
+    to_sample_func : Callable[[nn.Module], nn.Module]
+        Takes an nn.Module and generate another module to be sampled.
+    to_replace_func : Callable[[nn.Module], nn.Module]
+        Takes an nn.Module and generate another module to be replaced. The return module will
+        forward instead of the input module in the model. Leave this None if to_sample and 
+        to_replace are the same.
+    '''
+    def naive_match_and_replace(module):
+        if isinstance(module, match_type):
+            to_sample = to_sample_func(module)
+            to_replace = to_replace_func(module) \
+                if to_replace_func is not None else to_sample
+            return to_sample, to_replace
+        return None
+    
+    return naive_match_and_replace

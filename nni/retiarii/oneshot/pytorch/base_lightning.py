@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch.optim.lr_scheduler import _LRScheduler
 
 
-def _replace_module_with_type(root_module, replace_dict, modules):
+def _replace_module_with_type(root_module, prior_replace, default_replace, modules):
     """
     Replace xxxChoice in user's model with NAS modules.valuechoice
 
@@ -18,9 +18,14 @@ def _replace_module_with_type(root_module, replace_dict, modules):
         User-defined module with xxxChoice in it. In fact, since this method is
         called in the ``__init__`` of ``BaseOneShotLightningModule``, this will be a
         pl.LightningModule.
-    replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
-        Functions to replace xxxChoice modules. Keys should be xxxChoice type and values should be a
-        function that return an nn.module.
+    prior_match_and_replace : List[Callable[[nn.Module], (nn.Module, nn.Module)]]
+        Takes an nn.Module as input and returns another nn.Module if replacement is needed or
+        to override default replace method, otherwise returns None to leave it as default. Prior
+        means if this method returns a not None result for a module, the following
+        ''match_and_replace'' will be ignored.
+    match_and_replace : List[Callable[[nn.Module], (nn.Module, nn.Module)]]
+        Takes an nn.Module as input and returns another nn.Module if replacement is needed.
+        Returns None otherwise.
     modules : List[nn.Module]
         The replace result. This is also the return value of this function.
 
@@ -34,10 +39,37 @@ def _replace_module_with_type(root_module, replace_dict, modules):
 
     def apply(m):
         for name, child in m.named_children():
-            child_type = type(child)
-            if child_type in replace_dict.keys():
-                setattr(m, name, replace_dict[child_type](child))
-                modules.append((child.key, getattr(m, name)))
+            # 先使用用户的 match and replace，如果返回了一个 Module，就认为覆盖 default 实现
+            # 如果返回 None，就认为使用 default 实现
+            # 应该不会有用户返回 None 但想表达不替换的意思的情况把？
+            if prior_replace is not None:
+                for f in prior_replace:
+                    replace_result = f(child)
+                    if replace_result is not None:
+                        break
+            
+            if replace_result is None:
+                for f in default_replace:
+                    replace_result = f(child)
+                    if replace_result is not None:
+                        break
+            
+            # 如果用户的和 default 的至少有一个没返回 None，就是要替换
+            if replace_result is not None:
+                # 为了适配 valuechoice，分成 tosample 和 to replace 两个
+                # tosample 的是原来那个 valuechoice
+                # toreplace 的是一个具体的 module，比如 Linear, conv 可能都要分别实现
+                to_samples, to_replace = replace_result
+                setattr(m, name, to_replace)
+                if isinstance(to_samples, list):
+                    for to_sample in to_samples:
+                        item = (to_sample.label, to_sample)
+                        if item not in modules:
+                            modules.append(item)
+                else:
+                    item = (to_samples.label, to_samples)
+                    if item not in modules:
+                        modules.append(item)
             else:
                 apply(child)
 
@@ -61,13 +93,14 @@ class BaseOneShotLightningModule(pl.LightningModule):
     base_model : pl.LightningModule
         The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model,
         and base_model will be wrapped by this model.
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an
-        ``nn.module``. This custom replace dict will override the default replace dict of each NAS method.
+    custom_match_and_replace : List[Callable[[nn.Module], (nn.Module, nn.Moduel)]]
+        The custom xxxChoice match and replace method. Each method should take an nn.Module and yields
+        two modules (to_sample, to_replace). The ''to_sample'' will be placed in ''self.nas_module'' to be
+        sampled, and the ''to_replace'' will replace the input module and forward instead of it.
     """
     automatic_optimization = False
 
-    def __init__(self, base_model, custom_replace_dict=None):
+    def __init__(self, base_model, custom_match_and_replace=[lambda m: None]):
         super().__init__()
         assert isinstance(base_model, pl.LightningModule)
         self.model = base_model
@@ -75,12 +108,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # replace xxxChoice with respect to NAS alg
         # replaced modules are stored in self.nas_modules
         self.nas_modules = []
-        choice_replace_dict = self.default_replace_dict
-        if custom_replace_dict is not None:
-            for k, v in custom_replace_dict.items():
-                assert isinstance(v, nn.Module)
-                choice_replace_dict[k] = v
-        _replace_module_with_type(self.model, choice_replace_dict, self.nas_modules)
+        _replace_module_with_type(
+            self.model, custom_match_and_replace, self.match_and_replace(), self.nas_modules)
 
     def forward(self, x):
         return self.model(x)
@@ -179,21 +208,21 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         return None
 
-    @property
-    def default_replace_dict(self):
+    @staticmethod
+    def match_and_replace():
         """
-        Default xxxChoice replace dict. This is called in ``__init__`` to get the default replace
+        Default xxxChoice replace method. This is called in __init__ to get the default replace
         functions for your NAS algorithm. Note that your default replace functions will be
         override by user-defined custom_replace_dict.
 
         Returns
         ----------
-        replace_dict : Dict[Type, Callable[nn.Module, nn.Module]]
-            This is of the same type of ``custom_replace_dict`` in ``__init__``, but this will
-            be overriden if users define their own replace functions.
+        match_and_replace_funcs : List[Callable[[nn.Module], (nn.Module, nn.Module)]]
+            The replace function list. Each function takes an nn.Module and yields two modules like
+            ''to_sample, to_replace''. The ''to_sample'' will be placed in ''self.nas_module'' to be
+            sampled, and the ''to_replace'' will replace the input module and forward instead of it.
         """
-        replace_dict = {}
-        return replace_dict
+        return []
 
     def call_lr_schedulers(self, batch_index):
         """
