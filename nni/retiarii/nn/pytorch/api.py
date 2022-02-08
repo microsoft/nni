@@ -157,6 +157,14 @@ class LayerChoice(Mutable):
         return f'LayerChoice({self.candidates}, label={repr(self.label)})'
 
 
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
+
+ReductionType = Literal['mean', 'concat', 'sum', 'none']
+
+
 class InputChoice(Mutable):
     """
     Input choice selects ``n_chosen`` inputs from ``choose_from`` (contains ``n_candidates`` keys).
@@ -184,7 +192,8 @@ class InputChoice(Mutable):
     """
 
     @classmethod
-    def create_fixed_module(cls, n_candidates: int, n_chosen: Optional[int] = 1, reduction: str = 'sum', *,
+    def create_fixed_module(cls, n_candidates: int, n_chosen: Optional[int] = 1,
+                            reduction: ReductionType = 'sum', *,
                             prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         return ChosenInputs(get_fixed_value(label), reduction=reduction)
 
@@ -233,9 +242,19 @@ class ChosenInputs(nn.Module):
     """
     A module that chooses from a tensor list and outputs a reduced tensor.
     The already-chosen version of InputChoice.
+
+    When forward, ``chosen`` will be used to select inputs from ``candidate_inputs``,
+    and ``reduction`` will be used to choose from those inputs to form a tensor.
+
+    Attributes
+    ----------
+    chosen : list of int
+        Indices of chosen inputs.
+    reduction : ``mean`` | ``concat`` | ``sum`` | ``none``
+        How to reduce the inputs when multiple are selected.
     """
 
-    def __init__(self, chosen: Union[List[int], int], reduction: str):
+    def __init__(self, chosen: Union[List[int], int], reduction: ReductionType):
         super().__init__()
         self.chosen = chosen if isinstance(chosen, list) else [chosen]
         self.reduction = reduction
@@ -260,7 +279,7 @@ class ChosenInputs(nn.Module):
 
 
 # the code in ValueChoice can be generated with this codegen
-# this is not done online because because I want to have type-hint supports
+# this is not done online because I want to have type-hint supports
 # $ python -c "from nni.retiarii.nn.pytorch.api import _valuechoice_codegen; _valuechoice_codegen(_internal=True)"
 def _valuechoice_codegen(*, _internal: bool = False):
     if not _internal:
