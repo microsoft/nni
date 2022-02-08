@@ -52,7 +52,10 @@ extensions = [
     # 'nbsphinx',  # nbsphinx has conflicts with sphinx-gallery.
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
+
+    # Custom extensions in extension/ folder.
     'inplace_translation',
+    'cardlinkitem',
 ]
 
 # Add mock modules
@@ -75,7 +78,7 @@ sphinx_gallery_conf = {
 
     # Change default thumbnail
     # Working directory is strange, needs full path.
-    'default_thumb_file': os.path.join(os.path.dirname(__file__), '../img/nni_icon_blue.png'),
+    'default_thumb_file': os.path.join(os.path.dirname(__file__), '../img/thumbnails/nni_icon_blue.png'),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -99,9 +102,15 @@ language = None
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
-    '_build', 'Thumbs.db', '.DS_Store', 'Release_v1.0.md', '**.ipynb_checkpoints',
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    'Release_v1.0.md',
+    '**.ipynb_checkpoints',
     # Exclude translations. They will be added back via replacement later if language is set.
     '**_zh.rst',
+    # Exclude generated tutorials index
+    'tutorials/index.rst',
 ]
 
 # The name of the Pygments (syntax highlighting) style to use.

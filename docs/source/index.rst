@@ -13,7 +13,7 @@ Neural Network Intelligence
 
     Installation <installation>
     QuickStart <Tutorial/QuickStart>
-    Tutorials <tutorials/index>
+    Tutorials <tutorials>
 
 ..  toctree::
     :maxdepth: 2
