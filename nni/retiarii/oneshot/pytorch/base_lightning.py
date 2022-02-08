@@ -10,7 +10,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 
 def _replace_module_with_type(root_module, replace_dict, modules):
     """
-    Replace xxxChoice in user's model with NAS modules.
+    Replace xxxChoice in user's model with NAS modules.valuechoice
 
     Parameters
     ----------
