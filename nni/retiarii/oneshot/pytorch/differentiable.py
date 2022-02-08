@@ -12,22 +12,12 @@ from .darts import DartsInputChoice, DartsLayerChoice
 
 class DartsModule(BaseOneShotLightningModule):
     """
-    The DARTS model. In each iteration, there are 2 training phases. The phase 1 is architecture
+    The DARTS module. In each iteration, there are 2 training phases. The phase 1 is architecture
     step, in which the model parameters are frozen and the alphas are optimized. The phase 2 is model
     step, in wchich the alphas are frozen and the model parameters are optimized. In this step, the
     output of each choice are sumed up with respect to their alpha value. The result of DARTS
-    is argmax in alpha.
+    is argmax in alpha. See [darts] for details.
     The DARTS Model should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTraiValDataloader`.
-
-    Parameters
-    ----------
-    base_model : pl.LightningModule
-        The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
-        is wrapped by base_model, and base_model will be wrapped by this model.
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
-        return an nn.module. This custom replace dict will override the default replace
-        dict of each NAS method.
 
     Reference
     ----------
@@ -36,23 +26,15 @@ class DartsModule(BaseOneShotLightningModule):
     """
 
     def training_step(self, batch, batch_idx):
-        # grad manually, only 1 architecture optimizer for darts
-        opts = self.optimizers()
-        if isinstance(opts,list):
-            # list of optimizers
-            # pylint: disable=unsubscriptable-object
-            arc_optim = opts[0]
-            w_optim = opts[1:]
-        else :
-            # no model optimizer
-            arc_optim = opts
+        # grad manually
+        arc_optim = self.architecture_optimizers
 
-        # ParallelTrainValDataLoader will yield both train and val data in a batch
+        # The ParallelTrainValDataLoader yields both train and val data in a batch
         trn_batch, val_batch = batch
 
         # phase 1: architecture step
-        # The _resample hook is kept for some following darts-based NAS
-        # methods such as proxyless. See code of those methods for details.
+        # The _resample hook is kept for some darts-based NAS methods like proxyless.
+        # See code of those methods for details.
         self._resample()
         arc_optim.zero_grad()
         arc_step_loss = self.model.training_step(val_batch, 2 * batch_idx)
@@ -64,12 +46,12 @@ class DartsModule(BaseOneShotLightningModule):
 
         # phase 2: model step
         self._resample()
-        self.call_user_optimizers(w_optim, 'zero_grad')
+        self.call_user_optimizers('zero_grad')
         loss_and_metrics = self.model.training_step(trn_batch, 2 * batch_idx + 1)
         w_step_loss = loss_and_metrics['loss'] \
             if isinstance(loss_and_metrics, dict) else loss_and_metrics
         self.manual_backward(w_step_loss)
-        self.call_user_optimizers(w_optim, 'step')
+        self.call_user_optimizers('step')
 
         self.call_lr_schedulers(batch_idx)
 
@@ -261,7 +243,6 @@ class ProxylessModule(DartsModule):
     .. [proxyless] H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target
         Task and Hardware,” presented at the International Conference on Learning Representations,
         Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
-
     """
 
     @property
@@ -303,7 +284,7 @@ class SNASInputChoice(DartsInputChoice):
 
 class SNASModule(DartsModule):
     """
-    The SNAS Module. This is a darts-based method. It uses gumble-softmax to simulate a one-hot distribution to
+    The SNAS Module. This is a darts-based method. It uses gumble-softmax to simulate an one-hot distribution to
     select only one path a time. The SNAS Module should be trained with
     :class:`nni.retiarii.oneshot.utils.ParallelTrainValDataLoader`.
 

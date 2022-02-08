@@ -181,9 +181,10 @@ def replace_input_choice(root_module, init_fn, modules=None):
     """
     return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
 
+
 class ParallelTrainValDataLoader(DataLoader):
     """
-    A dataloader yields both train data and validation data in a batch, with an order of
+    Dataloader that yields both train data and validation data in a batch, with an order of
     (train_batch, val_batch). The shorter one will be upsampled (repeated) to the length
     of the longer one, and the tail of the last repeat will be dropped.
 
@@ -246,9 +247,9 @@ class ParallelTrainValDataLoader(DataLoader):
 
 class ConcatenateTrainValDataLoader(DataLoader):
     """
-    A dataloader that yields validation data after training data in an epoch. You will
-    got a batch in a form of (batch, source) in the training step, where ``source`` can
-    be 'train' or 'val', indicating where the batch comes from.
+    Dataloader that yields validation data after training data in an epoch. You will get a batch with
+    the form of (batch, source) in the training step, where ``source`` is a ``str`` whose value is
+    either 'train' or 'val', indicating which dataloader the batch comes from.
 
     Some NAS algorithms, i.e. ENAS, may require this type of dataloader.
 
@@ -261,14 +262,15 @@ class ConcatenateTrainValDataLoader(DataLoader):
 
     Warnings
     ----------
-    If you set 'limit_train_batches' of the trainer, the validation batches may be skipped.
-    Consider downsample train dataset and validation dataset instead.
+    If you set ``limit_train_batches`` of the trainer, the validation batches may be skipped.
+    Consider downsampling the train dataset and the validation dataset instead if you want to
+    shorten the length of data.
 
     Example
     --------
     Fit your dataloaders into a concatenated one.
-    >>> concat_loader = ParallelTrainValDataLoader(train_dataloader, val_datalodaer)
-    Then you can use the 'concat_loader' as a normal training loader.
+    >>> concat_loader = ConcatenateTrainValDataLoader(train_dataloader, val_datalodaer)
+    Then you can use the ``concat_loader`` as a normal training loader.
     """
     def __init__(self, train_dataloader, val_dataloader):
         self.train_loader = train_dataloader

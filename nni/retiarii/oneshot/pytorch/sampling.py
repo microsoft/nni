@@ -14,16 +14,16 @@ from .enas import ReinforceController, ReinforceField
 
 class EnasModule(BaseOneShotLightningModule):
     """
-    The ENAS Model. In each epoch, model parameters are first trained with weight sharing, followed by
-    the enas RL agent. The agent will produce a sample of model architecture, and the reward function
+    The ENAS module. In each epoch, model parameters are first trained with weight sharing, followed by
+    the ENAS RL agent. The agent will produce a sample of model architecture, and the reward function
     is used to train the agent.
-    The ENAS Model should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTraiValDataloader`.
+    The ENASModule should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.
 
     Parameters
     ----------
     base_model : pl.LightningModule
-        The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
-        is wrapped by ``base_model``, and ``base_model`` will be wrapped by this model.
+        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model,
+        and base_model will be wrapped by this model.
     ctrl_kwargs : dict
         Optional kwargs that will be passed to :class:`ReinforceController`.
     entropy_weight : float
@@ -75,35 +75,24 @@ class EnasModule(BaseOneShotLightningModule):
         }
 
     def training_step(self, batch, batch_idx):
-        # grad manually
-        opts = self.optimizers()
-        if isinstance(opts,list):
-            # list of optimizers
-            # pylint: disable=unsubscriptable-object
-            arc_opt = opts[0]
-            w_opt = opts[1:]
-        else :
-            # no model optimizer
-            arc_opt = opts
-
-        # the batch is composed with x, y, b, where b denote if the data provided
-        # is from the training set
+        # The ConcatenateTrainValDataloader yields both data and which dataloader it comes from.
         batch, source = batch
 
         if source == 'train':
             # step 1: train model params
             self._resample()
-            self.call_user_optimizers(w_opt, 'zero_grad')
+            self.call_user_optimizers('zero_grad')
             loss_and_metrics = self.model.training_step(batch, batch_idx)
             w_step_loss = loss_and_metrics['loss'] \
                 if isinstance(loss_and_metrics, dict) else loss_and_metrics
             self.manual_backward(w_step_loss)
-            self.call_user_optimizers(w_opt, 'step')
+            self.call_user_optimizers('step')
             return loss_and_metrics
 
         if source == 'val':
             # step 2: train ENAS agent
             x, y = batch
+            arc_opt = self.architecture_optimizers
             arc_opt.zero_grad()
             self._resample()
             with torch.no_grad():
@@ -147,23 +136,21 @@ class EnasModule(BaseOneShotLightningModule):
 
 class RandomSampleModule(BaseOneShotLightningModule):
     """
-    Random Sampling NAS Algorithm. In each epoch, model parameters are first trained after a uniformly random
-    sampling of each choice. The training result is also a random sample of search space.
-    The RandomSample Model should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTraiValDataloader`
+    Random Sampling NAS Algorithm. In each epoch, model parameters are trained after a uniformly random
+    sampling of each choice. The training result is also a random sample of the search space.
+    The RandomSample Module should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.
 
     Parameters
     ----------
     base_model : pl.LightningModule
-        The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
-        is wrapped by ``base_model``, and ``base_model`` will be wrapped by this model.
+        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model,
+        and base_model will be wrapped by this model.
     custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
         The custom xxxChoice replace method. Keys should be xxxChoice type and values should
         return an nn.module. This custom replace dict will override the default replace
         dict of each NAS method.
     """
     automatic_optimization = True
-    def __init__(self, base_model, custom_replace_dict = None):
-        super().__init__(base_model, custom_replace_dict)
 
     def training_step(self, batch, batch_idx):
         self._resample()

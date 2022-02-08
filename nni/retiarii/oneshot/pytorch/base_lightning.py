@@ -16,17 +16,17 @@ def _replace_module_with_type(root_module, replace_dict, modules):
     ----------
     root_module : nn.Module
         User-defined module with xxxChoice in it. In fact, since this method is
-        called in the ``__init__`` of BaseOneShotLightningModule, this will be a
+        called in the ``__init__`` of ``BaseOneShotLightningModule``, this will be a
         pl.LightningModule.
     replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
         Functions to replace xxxChoice modules. Keys should be xxxChoice type and values should be a
         function that return an nn.module.
-    modules : list[ nn.Module ]
+    modules : List[nn.Module]
         The replace result. This is also the return value of this function.
 
     Returns
     ----------
-    modules : list[ nn.Module ]
+    modules : List[nn.Module]
         The replace result.
     """
     if modules is None:
@@ -47,24 +47,23 @@ def _replace_module_with_type(root_module, replace_dict, modules):
 
 class BaseOneShotLightningModule(pl.LightningModule):
     """
-    The base class for all one-shot NAS models. Essential functions such as
-    preprocessing user's model, redirect lightning hooks for user's model, configure
-    optimizers and export NAS result are implemented in this class.
+    The base class for all one-shot NAS models. Essential function such as preprocessing user's model,
+    redirecting lightning hooks for user's model, configuring optimizers and exporting NAS result are
+    implemented in this class.
 
     Attributes
     ----------
-    nas_modules : list[nn.Module]
+    nas_modules : List[nn.Module]
         modules a paticular NAS method replaces with
 
     Parameters
     ----------
     base_model : pl.LightningModule
-        The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
-        is wrapped by base_model, and base_model will be wrapped by this model.
+        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model,
+        and base_model will be wrapped by this model.
     custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
-        return an nn.module. This custom replace dict will override the default replace
-        dict of each NAS method.
+        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an
+        ``nn.module``. This custom replace dict will override the default replace dict of each NAS method.
     """
     automatic_optimization = False
 
@@ -87,15 +86,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        # You can use self.optimizers() in training_step to get a list of all optimizers.
-        # Model optimizers comes after architecture optimizers, and the number of architecture
-        # optimizers is self.arc_optim_count.
-        #
-        # Example :
-        # optims = self.optimizers()
-        # arc_optims = optims[:self.arc_optim_count] # architecture optimizers
-        # w_optimizers = optims[self.arc_optim_count:] # model optimizers
-
+        # You can use self.architecture_optimizers or self.user_optimizers to get optimizers in
+        # your own training step.
         return self.model.training_step(batch, batch_idx)
 
     def configure_optimizers(self):
@@ -103,8 +95,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Combine architecture optimizers and user's model optimizers.
         Overwrite configure_architecture_optimizers if architecture optimizers
         are needed in your NAS algorithm.
-        By default ``self.model`` is currently a _SupervisedLearningModule in
-        nni.retiarii.evaluator.pytorch.lightning, and it only returns 1 optimizer.
+        By now ``self.model`` is currently a :class:`nni.retiarii.evaluator.pytorch.lightning.
+        _SupervisedLearningModule`, and it only returns 1 optimizer.
         But for extendibility, codes for other return value types are also implemented.
         """
         # pylint: disable=assignment-from-none
@@ -116,10 +108,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
             arc_optimizers = [arc_optimizers]
         self.arc_optim_count = len(arc_optimizers)
 
-        # The third return value ``frequency`` and ``monitor`` are ignored since lightning
-        # requires len(optimizers) == len(frequency), and gradient backword is handled manually.
-        # For data structure of variables below, please see pytorch lightning docs of
-        # configure_optimizers.
+        # The third return value ``frequency`` and ``monitor`` are ignored because lightning requires
+        # ``len(optimizers) == len(frequency)``, and gradient backword is handled manually.
+        # For data structure of variables below, please see pytorch lightning docs of ``configure_optimizers``.
         w_optimizers, lr_schedulers, self.frequencies, monitor = \
             self.trainer._configure_optimizers(self.model.configure_optimizers())
         lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
@@ -177,8 +168,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def configure_architecture_optimizers(self):
         """
-        Hook kept for subclasses. Each specific NAS method returns the optimizer of
-        architecture parameters.
+        Hook kept for subclasses. Each specific NAS method returns the optimizer of architecture
+        parameters. Note that lr schedulers are not supported now for architecture_optimizers.
 
         Returns
         ----------
@@ -191,21 +182,30 @@ class BaseOneShotLightningModule(pl.LightningModule):
     @property
     def default_replace_dict(self):
         """
-        Default xxxChoice replace dict. This is called in __init__ to get the default replace
+        Default xxxChoice replace dict. This is called in ``__init__`` to get the default replace
         functions for your NAS algorithm. Note that your default replace functions will be
         override by user-defined custom_replace_dict.
 
         Returns
         ----------
-        replace_dict : dict{ type : func }
-            Keys should be xxxChoice type, and values should be a function that returns a nn.Module
-            instance. This is of the same type of 'custom_replace_dict' in __init__, but this will
-            be override if users defined their own replace functions.
+        replace_dict : Dict[Type, Callable[nn.Module, nn.Module]]
+            This is of the same type of ``custom_replace_dict`` in ``__init__``, but this will
+            be overriden if users define their own replace functions.
         """
         replace_dict = {}
         return replace_dict
 
     def call_lr_schedulers(self, batch_index):
+        """
+        Function that imitates lightning trainer's behaviour of calling user's lr schedulers. Since
+        auto_optimization is turned off by this class, you can use this function to make schedulers
+        behave as they were automatically handled by the lightning trainer.
+
+        Parameters
+        ----------
+        batch_idx : int
+            batch index
+        """
         def apply(lr_scheduler):
             # single scheduler is called every epoch
             if  isinstance(lr_scheduler, _LRScheduler) and \
@@ -234,12 +234,26 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             apply(lr_schedulers)
 
-    def call_user_optimizers(self, optimizers, method):
+    def call_user_optimizers(self, method):
+        """
+        Function that imitates lightning trainer's behaviour of calling user's optimizers. Since
+        auto_optimization is turned off by this class, you can use this function to make user
+        optimizers behave as they were automatically handled by the lightning trainer.
+
+        Parameters
+        ----------
+        method : str
+            Method to call. Only ``step`` and ``zero_grad`` are supported now.
+        """
         def apply_method(optimizer, method):
             if method == 'step':
                 optimizer.step()
             elif method == 'zero_grad':
                 optimizer.zero_grad()
+        
+        optimizers = self.user_optimizers
+        if optimizers is None:
+            return
 
         if len(self.frequencies) > 0:
             self.cur_optimizer_step += 1
@@ -252,6 +266,49 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             for optimizer in optimizers:
                 apply_method(optimizer, method)
+    
+    @property
+    def architecture_optimizers(self):
+        """
+        Get architecture optimizers from all optimizers. Use this to get your architecture optimizers
+        in training stage.
+
+        Returns
+        ----------
+        opts : List[Optimizer], Optimizer, None
+            Architecture optimizers you defined in ``configure_architecture_optimizers``. This
+            will be None if there is no architecture optimizers. 
+        """
+        opts = self.optimizers()
+        if isinstance(opts,list):
+            # pylint: disable=unsubscriptable-object
+            arc_opts = opts[:self.arc_optim_count]
+            if len(arc_opts) == 1:
+                arc_opts = arc_opts[0]
+            return arc_opts
+        # If there is only 1 optimizer and it is the architecture optimizer
+        if self.arc_optim_count == 1:
+            return opts
+        return None
+    
+    @property
+    def user_optimizers(self):
+        """
+        Get user optimizers from all optimizers. Use this to get user optimizers in training stage.
+
+        Returns
+        ----------
+        opts : List[Optimizer], Optimizer, None
+            Optimizers defined by user's model. This will be None if there is no user optimizers. 
+        """
+        opts = self.optimizers()
+        if isinstance(opts,list):
+            # pylint: disable=unsubscriptable-object
+            return opts[self.arc_optim_count:]
+        # If there is only 1 optimizer and no architecture optimizer
+        if self.arc_optim_count == 0:
+            return opts
+        return None
 
     def export(self):
         """
@@ -260,8 +317,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         Returns
         --------
-        result : dict { str : int }
-            Keys are names of nas_modules, and values are the choice of each nas_module.
+        result : Dict[str, int]
+            Keys are names of nas_modules, and values are the choice index of it.
         """
         result = {}
         for name, module in self.nas_modules:
