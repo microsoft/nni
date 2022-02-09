@@ -31,7 +31,7 @@ class ToSample:
         return len(self.candidates)
 
 
-class ENASLinearValueChoice(ToSample):
+class ENASValueChoice(ToSample):
     """
     """
     def __init__(self, value_choice):
@@ -40,7 +40,7 @@ class ENASLinearValueChoice(ToSample):
     # ENAS 与 random 共用
     # Conv2D valueChoice
 
-class RandomLinearValueChoice(ToSample):
+class RandomValueChoice(ToSample):
     def __init__(self, value_choice):
         super().__init__(value_choice.label, value_choice.candidates)
 
@@ -48,6 +48,7 @@ class RandomLinearValueChoice(ToSample):
 def sampled_candidate(attr):
     if isinstance(attr, ToSample):
         attr = attr.sampled_candidate
+    return attr
 
 def max_candidate(attr):
     if isinstance(attr, ToSample):
@@ -83,8 +84,8 @@ class PathSamplingSuperLinear(nn.Linear):
 class PathSamplingSuperConv2d(nn.Conv2d):
     # 暂时只支持正方形的 kernel
     # 暂不支持 group
-    def __init__(self, module) -> None:
-        super().__init__()
+    # 也不支持嵌套
+    def __init__(self, module):
         args = module.trace_kwargs
         # out_channel 组卷积核，每组 in_channel 个，每个 kernel_size * kernel_size 这么大。
         self._in_channels = args['in_channels']
@@ -97,7 +98,7 @@ class PathSamplingSuperConv2d(nn.Conv2d):
         self._padding = args.get('padding', 0)
         self._dilation = args.get('dilation', 1)
         self._groups = args.get('groups', 1)
-        self._bias = args.get('bias', True)
+        self._bias = args.get('bias', False)
         _padding_mode = args.get('padding_mode', 'zeros')
         _device = args.get('device', None)
         _dtype = args.get('dtype', None)
@@ -105,7 +106,7 @@ class PathSamplingSuperConv2d(nn.Conv2d):
     
     def forward(self, input):
         in_chn = sampled_candidate(self._in_channels)
-        out_chn = sampled_candidate(self.out_channels)
+        out_chn = sampled_candidate(self._out_channels)
         kernel_size = sampled_candidate(self._kernel_size)
 
         # conv 和 linear 不一样，前面的 stride 和 padding 是可能会影响到后面层的 size 的。
@@ -121,7 +122,7 @@ class PathSamplingSuperConv2d(nn.Conv2d):
         # weight.shape = [out_chn, in_chn, kernel_size]
         # 如何取部分 kernel? 是从中央取，还是取左上？
         weight = self.weight[:out_chn, :in_chn, :kernel_size, :kernel_size]
-        
-        return self._conv_forward(input, weight, self.bias)
+        bias = self.bias[:out_chn]
+        return self._conv_forward(input, weight, bias)
 
     

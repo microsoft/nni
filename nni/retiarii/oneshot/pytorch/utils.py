@@ -314,7 +314,7 @@ def get_naive_match_and_replace(match_type, to_sample_func, to_replace_func=None
         forward instead of the input module in the model. Leave this None if to_sample and 
         to_replace are the same.
     '''
-    def naive_match_and_replace(module):
+    def naive_match_and_replace(module, nas_modules):
         if isinstance(module, match_type):
             to_sample = to_sample_func(module)
             to_replace = to_replace_func(module) \
@@ -323,3 +323,21 @@ def get_naive_match_and_replace(match_type, to_sample_func, to_replace_func=None
         return None
     
     return naive_match_and_replace
+
+def get_valuechoice_match_and_replace(match_type, to_sample_func, to_replace_func):
+    def valuechoice_match_and_replace(module, nas_modules):
+        if isinstance(module, match_type):
+            to_samples = []
+            for k, v in module.trace_kwargs.items():
+                if isinstance(v, nn.ValueChoice):
+                    # if a to_sample with the same label has already been created in another module,
+                    # then replace mine with it. 
+                    v = nas_modules.get(v.label, to_sample_func(v))
+                    module.trace_kwargs[k] = v
+                    to_samples.append(v)
+            
+            if len(to_samples) > 0:
+                to_replace = to_replace_func(module)
+                return to_samples, to_replace
+    
+    return valuechoice_match_and_replace

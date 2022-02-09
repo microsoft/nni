@@ -7,13 +7,14 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice, ValueChoice
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from nni.retiarii.nn.pytorch.nn import Linear, Conv2d
+
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule
 from .enas import ReinforceController, ReinforceField
-from .utils import get_naive_match_and_replace
-from .superlayer import PathSamplingSuperLinear, ENASLinearValueChoice, RandomLinearValueChoice
+from .utils import get_naive_match_and_replace, get_valuechoice_match_and_replace
+from .superlayer import PathSamplingSuperConv2d, PathSamplingSuperLinear, ENASValueChoice, RandomValueChoice
 
 
 class EnasModule(BaseOneShotLightningModule):
@@ -53,7 +54,7 @@ class EnasModule(BaseOneShotLightningModule):
     """
     def __init__(self, base_model, ctrl_kwargs = None,
                  entropy_weight = 1e-4, skip_weight = .8, baseline_decay = .999,
-                 ctrl_steps_aggregate = 20, grad_clip = 0, custom_match_and_replace=[lambda m: None]):
+                 ctrl_steps_aggregate = 20, grad_clip = 0, custom_match_and_replace=None):
         super().__init__(base_model, custom_match_and_replace)
 
         self.nas_fields = [ReinforceField(name, len(module),
@@ -82,23 +83,10 @@ class EnasModule(BaseOneShotLightningModule):
         input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
         layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
 
-        def linear_value_replace(module):
-            # 对于 valuechoice，需要给每种不同的 layer 单独实现其 value choice
-            if isinstance(module, Linear):
-                to_samples = []
-                for k, v in module.trace_kwargs.items():
-                    if isinstance(v, ValueChoice):
-                        # 替换成对应的 to_sample  
-                        v = ENASLinearValueChoice(v)
-                        module.trace_kwargs[k] = v
-                        to_samples.append(v)
-                # 如果有 value choice：
-                if len(to_samples) > 0:
-                    to_replace = PathSamplingSuperLinear(module)
-                    return to_samples, to_replace
-            return None
+        linear_replace = get_valuechoice_match_and_replace(Linear, ENASValueChoice, PathSamplingSuperLinear)
+        conv2d_replace = get_valuechoice_match_and_replace(Conv2d, ENASValueChoice, PathSamplingSuperConv2d)
         
-        return [input_replace, layer_replace, linear_value_replace]
+        return [input_replace, layer_replace, linear_replace, conv2d_replace]
 
     def training_step(self, batch, batch_idx):
         # The ConcatenateTrainValDataloader yields both data and which dataloader it comes from.
@@ -193,22 +181,10 @@ class RandomSampleModule(BaseOneShotLightningModule):
         input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
         layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
 
-        def linear_value_replace(module):
-            # 对于 valuechoice，需要给每种不同的 layer 单独实现其 value choice
-            if isinstance(module, Linear):
-                to_samples = []
-                for k, v in module.trace_kwargs.items():
-                    if isinstance(v, ValueChoice):
-                        v = RandomLinearValueChoice(v)
-                        module.trace_kwargs[k] = v
-                        to_samples.append(v)
-                # 如果有 value choice：
-                if len(to_samples) > 0:
-                    to_replace = PathSamplingSuperLinear(module)
-                    return to_samples, to_replace
-            return None
+        linear_replace = get_valuechoice_match_and_replace(Linear,  RandomValueChoice, PathSamplingSuperLinear)
+        conv2d_replace = get_valuechoice_match_and_replace(Conv2d, RandomValueChoice, PathSamplingSuperConv2d)
         
-        return [input_replace, layer_replace, linear_value_replace]
+        return [input_replace, layer_replace, linear_replace, conv2d_replace]
 
     def _resample(self):
         # The simplest sampling-based NAS method.

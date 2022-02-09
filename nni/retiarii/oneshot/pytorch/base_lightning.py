@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch.optim.lr_scheduler import _LRScheduler
 
 
-def _replace_module_with_type(root_module, prior_replace, default_replace, modules):
+def _replace_module_with_type(root_module, prior_replace, default_replace):
     """
     Replace xxxChoice in user's model with NAS modules.valuechoice
 
@@ -18,24 +18,21 @@ def _replace_module_with_type(root_module, prior_replace, default_replace, modul
         User-defined module with xxxChoice in it. In fact, since this method is
         called in the ``__init__`` of ``BaseOneShotLightningModule``, this will be a
         pl.LightningModule.
-    prior_match_and_replace : List[Callable[[nn.Module], (nn.Module, nn.Module)]]
+    prior_match_and_replace : List[Callable[[nn.Module, Dict[str, Any]], (nn.Module, nn.Module)]]
         Takes an nn.Module as input and returns another nn.Module if replacement is needed or
         to override default replace method, otherwise returns None to leave it as default. Prior
         means if this method returns a not None result for a module, the following
         ''match_and_replace'' will be ignored.
-    match_and_replace : List[Callable[[nn.Module], (nn.Module, nn.Module)]]
+    match_and_replace : List[Callable[[nn.Module, Dict[str, Any]], (nn.Module, nn.Module)]]
         Takes an nn.Module as input and returns another nn.Module if replacement is needed.
         Returns None otherwise.
-    modules : List[nn.Module]
-        The replace result. This is also the return value of this function.
 
     Returns
     ----------
-    modules : List[nn.Module]
+    modules : Dict[str, nn.Module]
         The replace result.
     """
-    if modules is None:
-        modules = []
+    modules = {}
 
     def apply(m):
         for name, child in m.named_children():
@@ -45,13 +42,13 @@ def _replace_module_with_type(root_module, prior_replace, default_replace, modul
             replace_result = None
             if prior_replace is not None:
                 for f in prior_replace:
-                    replace_result = f(child)
+                    replace_result = f(child, modules)
                     if replace_result is not None:
                         break
             
             if replace_result is None:
                 for f in default_replace:
-                    replace_result = f(child)
+                    replace_result = f(child, modules)
                     if replace_result is not None:
                         break
             
@@ -64,18 +61,17 @@ def _replace_module_with_type(root_module, prior_replace, default_replace, modul
                 setattr(m, name, to_replace)
                 if isinstance(to_samples, list):
                     for to_sample in to_samples:
-                        item = (to_sample.label, to_sample)
-                        if item not in modules:
-                            modules.append(item)
+                        # 按理说这里不判断也行，反正返回的是同一个
+                        if to_sample.label not in modules.keys():
+                            modules[to_sample.label] = to_sample
                 else:
-                    item = (to_samples.label, to_samples)
-                    if item not in modules:
-                        modules.append(item)
+                    if to_samples.label not in modules.keys():
+                        modules[to_samples.label] = to_samples
             else:
                 apply(child)
 
     apply(root_module)
-    return modules
+    return modules.items()
 
 
 class BaseOneShotLightningModule(pl.LightningModule):
@@ -101,16 +97,15 @@ class BaseOneShotLightningModule(pl.LightningModule):
     """
     automatic_optimization = False
 
-    def __init__(self, base_model, custom_match_and_replace=[lambda m: None]):
+    def __init__(self, base_model, custom_match_and_replace=None):
         super().__init__()
         assert isinstance(base_model, pl.LightningModule)
         self.model = base_model
 
         # replace xxxChoice with respect to NAS alg
         # replaced modules are stored in self.nas_modules
-        self.nas_modules = []
-        _replace_module_with_type(
-            self.model, custom_match_and_replace, self.match_and_replace(), self.nas_modules)
+        self.nas_modules = _replace_module_with_type(self.model, custom_match_and_replace, self.match_and_replace())
+        breakpoint()
 
     def forward(self, x):
         return self.model(x)
