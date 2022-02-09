@@ -57,28 +57,43 @@ div.sphx-glr-footer {
 
 .card-link.admonition {
     border-left: 0;
-    padding: 18px;
+    padding: 0.9rem;
 }
 
 .card-link .card-link-body {
-    min-height: 90px;
+    min-height: 4rem;
     position: relative;
 }
 
 .card-link-text {
-    padding-left: 110px;
+    padding-left: 4.9rem;
 }
 
 .card-link a:not(:hover) .card-link-text {
     color: rgba(0, 0, 0, .68);
 }
 
-.card-link-text .card-link-title-container {
-    padding-top: 0.2rem;
+.card-link-text .card-link-title-container h4 {
+    margin: 0;
 }
 
-.card-link-text .card-link-title-container h4 {
-    margin-top: 0;
+.card-link-text .card-link-summary {
+    margin-top: 0.3rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.card-link-tag {
+    margin-right: 0.4rem;
+    background: #eeeff2;
+    border: 1px solid #e0dcda;
+    color: rgba(0, 0, 0, 0.7);
+    border-radius: 18px;
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.7rem;
 }
 
 .card-link-icon {
@@ -106,8 +121,8 @@ div.sphx-glr-footer {
 .card-link-icon.circle {
     background-color: #283593;
     border-radius: 50%;
-    width: 90px;
-    height: 90px;
+    width: 4rem;
+    height: 4rem;
     padding: 0;
 }
 

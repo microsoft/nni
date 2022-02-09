@@ -1,7 +1,7 @@
 NAS Benchmarks
 ==============
 
-..
+.. code-block::
 
    ..  toctree::
       :hidden:

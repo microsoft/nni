@@ -4,6 +4,12 @@ from docutils.parsers.rst import Directive, directives
 from docutils.statemachine import StringList
 from docutils import nodes
 
+TAG_TEMPLATE = """<span class="card-link-tag">{tag}</span>"""
+
+TAGS_TEMPLATE = """
+    <p class="card-link-summary">{tags}</p>
+"""
+
 CARD_TEMPLATE = """
 .. raw:: html
 
@@ -20,6 +26,8 @@ CARD_TEMPLATE = """
     </div>
 
     <p class="card-link-summary">{description}</p>
+
+    {tags}
 
     </div>
 
@@ -70,18 +78,25 @@ class CustomCardItemDirective(Directive):
 
             image_background = self.options.get('background', 'indigo')
             description = self.options.get('description', '')
-            tags = self.options.get('tags', '')
+
+            tags = self.options.get('tags', '').strip().split('/')
+            tags = [t.strip() for t in tags if t.strip()]
 
         except ValueError as e:
             print(e)
             raise
+
+        if tags:
+            tags_rst = TAGS_TEMPLATE.format(tags=''.join([TAG_TEMPLATE.format(tag=tag) for tag in tags]))
+        else:
+            tags_rst = ''
 
         card_rst = CARD_TEMPLATE.format(header=header,
                                         image=image,
                                         image_background=image_background,
                                         link=link,
                                         description=description,
-                                        tags=tags)
+                                        tags=tags_rst)
         card_list = StringList(card_rst.split('\n'))
         card = nodes.paragraph()
         self.state.nested_parse(card_list, self.content_offset, card)

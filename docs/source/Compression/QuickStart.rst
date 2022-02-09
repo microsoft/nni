@@ -1,10 +1,12 @@
 Quick Start
 ===========
 
-..  toctree::
-    :hidden:
+.. code-block::
 
-    Notebook Example <compression_pipeline_example>
+   ..  toctree::
+      :hidden:
+
+      Notebook Example <compression_pipeline_example>
 
 
 Model compression usually consists of three stages: 1) pre-training a model, 2) compress the model, 3) fine-tuning the model. NNI mainly focuses on the second stage and provides very simple APIs for compressing a model. Follow this guide for a quick look at how easy it is to use NNI to compress a model. 

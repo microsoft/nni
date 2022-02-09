@@ -1,7 +1,7 @@
 How to Launch an Experiment from Python
 =======================================
 
-..
+.. code-block::
 
     ..  toctree::
         :hidden:

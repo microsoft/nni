@@ -1,12 +1,14 @@
-.. 7939c13c80b09ed8e2efd25623a77e8a
+.. 98b0285bbfe1a01c90b9ba6a9b0d6caa
 
 快速入门
 ===========
 
-..  toctree::
-    :hidden:
+.. code-block::
 
-    Notebook Example <compression_pipeline_example>
+   ..  toctree::
+      :hidden:
+
+      Notebook Example <compression_pipeline_example>
 
 
 模型压缩通常包括三个阶段：1）预训练模型，2）压缩模型，3）微调模型。 NNI 主要关注于第二阶段，并为模型压缩提供易于使用的 API。遵循本指南，您将快速了解如何使用 NNI 来压缩模型。更深入地了解 NNI 中的模型压缩模块，请查看 `Tutorial <./Tutorial.rst>`__。
