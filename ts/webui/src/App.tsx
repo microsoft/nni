@@ -3,14 +3,14 @@ import { Stack } from '@fluentui/react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import { isManagerExperimentPage } from './static/function';
-import NavCon from './components/NavCon';
+import Nav from './components/nav/Nav';
 import MessageInfo from './components/modals/MessageInfo';
-import { SlideNavBtns } from './components/slideNav/SlideNavBtns';
+import { SlideNavBtns } from './components/nav/slideNav/SlideNavBtns';
 const echarts = require('echarts/lib/echarts');
 echarts.registerTheme('nni_theme', {
     color: '#3c8dbc'
 });
-import './App.scss';
+import './static/style/App.scss';
 import './static/style/common.scss';
 import './static/style/trialsDetail.scss';
 
@@ -139,6 +139,8 @@ class App extends React.Component<{}, AppState> {
         this.setState(state => ({
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
         }));
+        console.info('-----------');
+        console.info(this.state.trialsUpdateBroadcast);
     };
 
     shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {
@@ -180,7 +182,7 @@ class App extends React.Component<{}, AppState> {
                     <Stack className='nni' style={{ minHeight: window.innerHeight }}>
                         <div className='header'>
                             <div className='headerCon'>
-                                <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
+                                <Nav changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
                             </div>
                         </div>
                         <Stack className='contentBox'>

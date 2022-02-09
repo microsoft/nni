@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import { getPrefix } from './static/function';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-const Overview = lazy(() => import('./components/Overview'));
-const TrialsDetail = lazy(() => import('./components/TrialsDetail'));
-const Experiment = lazy(() => import('./components/managementExp/ExperimentManager'));
-import './index.css';
+const Overview = lazy(() => import('./components/experiment/Overview'));
+const TrialsDetail = lazy(() => import('./components/experiment/trialdetail/table/TrialsDetail'));
+const Experiment = lazy(() => import('./components/experimentManagement/ExperimentManager'));
+import './static/style/index.css';
 import './static/style/loading.scss';
 import * as serviceWorker from './serviceWorker';
 
