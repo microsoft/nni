@@ -93,8 +93,10 @@
     "start": "node --max-old-space-size=3072 scripts/start.js",
     "build": "node --max-old-space-size=3072 scripts/developmentBuild.js",
     "release": "node --max-old-space-size=3072 scripts/productionBuild.js",
+    "sanity-check": "yarn sanity-check:tsc && yarn sanity-check:eslint",
+    "sanity-check:tsc": "tsc",
+    "sanity-check:eslint": "eslint ./ --ext .tsx,.ts",
     "test": "node --max-old-space-size=3072 scripts/test.js",
-    "eslint": "npx eslint ./ --ext .tsx,.ts",
     "stylelint": "npx stylelint **/*{.css,.scss}",
     "mock": "node scripts/server.js",
     "dev": "concurrently \"yarn mock\" \"yarn start\""
