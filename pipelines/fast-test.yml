@@ -20,6 +20,11 @@ stages:
 
     - script: |
         cd docs
+        # rstcheck -r source
+      displayName: rstcheck (disabled for now)
+
+    - script: |
+        cd docs
         make -e SPHINXOPTS="-W --keep-going -T" html
       displayName: Sphinx sanity check  # TODO: rstcheck
 

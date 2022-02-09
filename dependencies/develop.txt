@@ -8,6 +8,7 @@ pylint
 pytest
 pytest-azurepipelines
 pytest-cov
+rstcheck
 sphinx
 sphinx-argparse
 sphinx-gallery
