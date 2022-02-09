@@ -1,4 +1,4 @@
-.. a67033195635ebcd510103eab8703b6a
+.. 7939c13c80b09ed8e2efd25623a77e8a
 
 快速入门
 ===========
@@ -11,7 +11,7 @@
 
 模型压缩通常包括三个阶段：1）预训练模型，2）压缩模型，3）微调模型。 NNI 主要关注于第二阶段，并为模型压缩提供易于使用的 API。遵循本指南，您将快速了解如何使用 NNI 来压缩模型。更深入地了解 NNI 中的模型压缩模块，请查看 `Tutorial <./Tutorial.rst>`__。
 
-提供了一个在 Jupyter notebook 中进行完整的模型压缩流程的 `示例 <./compression_pipeline_example.rst>`__，参考 :githublink:`代码 <examples/notebooks/compression_pipeline_example.ipynb>`。
+.. 提供了一个在 Jupyter notebook 中进行完整的模型压缩流程的 `示例 <./compression_pipeline_example.rst>`__，参考 :githublink:`代码 <examples/notebooks/compression_pipeline_example.ipynb>`。
 
 模型剪枝
 -------------

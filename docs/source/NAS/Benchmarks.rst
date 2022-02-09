@@ -1,10 +1,12 @@
 NAS Benchmarks
 ==============
 
-..  toctree::
-    :hidden:
+..
 
-    Example Usages <BenchmarksExample>
+   ..  toctree::
+      :hidden:
+
+      Example Usages <BenchmarksExample>
 
 Introduction
 ------------

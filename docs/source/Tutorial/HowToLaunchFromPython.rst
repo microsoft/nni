@@ -1,11 +1,13 @@
 How to Launch an Experiment from Python
 =======================================
 
-..  toctree::
-    :hidden:
+..
 
-    Start Usage <python_api_start>
-    Connect Usage <python_api_connect>
+    ..  toctree::
+        :hidden:
+
+        Start Usage <python_api_start>
+        Connect Usage <python_api_connect>
 
 Overview
 --------
