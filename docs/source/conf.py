@@ -56,6 +56,7 @@ extensions = [
     # Custom extensions in extension/ folder.
     'inplace_translation',
     'cardlinkitem',
+    'patch_docutils',
 ]
 
 # Add mock modules

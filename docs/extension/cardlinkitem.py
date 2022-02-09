@@ -1,3 +1,7 @@
+"""
+Directive "cardlinkitem" used in tutorials navigation page.
+"""
+
 import os
 
 from docutils.parsers.rst import Directive, directives

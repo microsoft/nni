@@ -11,9 +11,6 @@ https://github.com/readthedocs/sphinxcontrib-multisrc/blob/master/sphinxcontrib/
 import os
 import types
 
-__version_info__ = (1, 0, 0)
-__version__ = '1.0.0'
-
 
 def builder_inited(app):
     """Event listener to set up multiple environments."""
@@ -39,6 +36,3 @@ def patch_doc2path(env, language):
 
 def setup(app):
     app.connect('builder-inited', builder_inited)
-    return {
-        'version': __version__,
-    }
