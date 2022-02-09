@@ -13,6 +13,7 @@ Neural Network Intelligence
     概述<Overview>
     安装 <installation>
     入门<Tutorial/QuickStart>
+    教程<tutorials>
     自动（超参数）调优 <hyperparameter_tune>
     神经网络架构搜索<nas>
     模型压缩<model_compression>
