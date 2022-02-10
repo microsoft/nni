@@ -92,6 +92,8 @@ class ParameterChoiceLeafMutator(Mutator):
 
 
 class ParameterChoiceMutator(Mutator):
+    # To deal with ValueChoice used as a parameter of a basic unit
+    # should be used together with ParameterChoiceLeafMutator
     # parameter choice mutator is an empty-shell-mutator
     # calculate all the parameter values based on previous mutations of value choice mutator
 
