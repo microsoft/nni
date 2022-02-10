@@ -183,7 +183,7 @@ Retiarii 提供了诸多的 `内置模型评估器 <./ModelEvaluators.rst>`__，
 可视化 Experiment
 ------------------------
 
-用户可以像可视化普通的超参数调优 Experiment 一样可视化他们的 Experiment。 例如，在浏览器里打开 ``localhost::8081``，8081 是在 ``exp.run`` 里设置的端口。 参考 `这里 <../Tutorial/WebUI.rst>`__ 了解更多细节。
+用户可以像可视化普通的超参数调优 Experiment 一样可视化他们的 Experiment。 例如，在浏览器里打开 ``localhost:8081``，8081 是在 ``exp.run`` 里设置的端口。 参考 `这里 <../Tutorial/WebUI.rst>`__ 了解更多细节。
 
 我们支持使用第三方工具（例如 `Netron <https://netron.app/>`__）可视化搜索过程中采样到的模型。您可以点击每个 trial 面板下的 ``Visualization``。注意，目前的可视化是基于导出成 `onnx <https://onnx.ai/>`__ 格式的模型实现的，所以如果模型无法导出成 onnx，那么可视化就无法进行。
 
