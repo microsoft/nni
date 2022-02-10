@@ -9,7 +9,7 @@ from torchvision.datasets import MNIST
 from torch.utils.data.sampler import RandomSampler
 
 from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
-from nni.retiarii.nn.pytorch import LayerChoice, Repeat
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Repeat
 from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
                                           DartsModule, EnasModule, SNASModule,
                                           ParallelTrainValDataLoader,
@@ -34,41 +34,34 @@ class Net(pl.LightningModule):
             nn.Conv2d(32, 64, 3, 1),
             DepthwiseSeparableConv(32, 64)
         ])
-        self.dropout1 = LayerChoice([
-            nn.Dropout(.25),
-            nn.Dropout(.5),
-            nn.Dropout(.75)
-        ])
+        self.dropout1 = nn.Dropout(.25)
         self.dropout2 = nn.Dropout(0.5)
+        self.dropout_choice = InputChoice(2, 1)
         self.fc = LayerChoice([
             nn.Sequential(
                 nn.Linear(9216, 64),
                 nn.ReLU(),
-                self.dropout2,
                 nn.Linear(64, 10),
             ),
             nn.Sequential(
                 nn.Linear(9216, 128),
                 nn.ReLU(),
-                self.dropout2,
                 nn.Linear(128, 10),
             ),
             nn.Sequential(
                 nn.Linear(9216, 256),
                 nn.ReLU(),
-                self.dropout2,
                 nn.Linear(256, 10),
             )
         ])
-        self.rpfc = Repeat(
-            nn.Linear(10, 10),
-            [1, 2]
-        )
+        self.rpfc = nn.Linear(10, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.max_pool2d(self.conv2(x), 2)
-        x = torch.flatten(self.dropout1(x), 1)
+        x1 = torch.flatten(self.dropout1(x), 1)
+        x2 = torch.flatten(self.dropout2(x), 1)
+        x = self.dropout_choice([x1, x2])
         x = self.fc(x)
         x = self.rpfc(x)
         output = F.log_softmax(x, dim=1)
@@ -145,7 +138,7 @@ def test_snas():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='all', metavar='E',
-        help='experiment to run, default = all' )
+        help='exp to run, default = all' )
     args = parser.parse_args()
 
     if args.exp == 'all':
