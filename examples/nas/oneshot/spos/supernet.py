@@ -8,13 +8,12 @@ import random
 import numpy as np
 import torch
 import torch.nn as nn
-from nni.nas.pytorch.callbacks import LRSchedulerCallback
-from nni.nas.pytorch.callbacks import ModelCheckpoint
-from nni.algorithms.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTrainer
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+from nni.retiarii.oneshot.pytorch import SinglePathTrainer
 
-from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
-from utils import CrossEntropyLabelSmooth, accuracy
+from utils import CrossEntropyLabelSmooth, accuracy, ToBGRTensor
 
 logger = logging.getLogger("nni.spos.supernet")
 
@@ -45,16 +44,17 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = True
 
     model = ShuffleNetV2OneShot()
-    flops_func = model.get_candidate_flops
     if args.load_checkpoint:
         if not args.spos_preprocessing:
             logger.warning("You might want to use SPOS preprocessing if you are loading their checkpoints.")
-        model.load_state_dict(load_and_parse_state_dict())
+        # load state_dict and 
+        model_dict = model.state_dict()
+        model_dict.update(load_and_parse_state_dict())
+        model.load_state_dict(model_dict)
+        logger.info(f'Model loaded from ./data/checkpoint-150000.pth.tar')
     model.cuda()
     if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu
         model = nn.DataParallel(model, device_ids=list(range(0, torch.cuda.device_count() - 1)))
-    mutator = SPOSSupernetTrainingMutator(model, flops_func=flops_func,
-                                          flops_lb=290E6, flops_ub=360E6)
     criterion = CrossEntropyLabelSmooth(1000, args.label_smoothing)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate,
                                 momentum=args.momentum, weight_decay=args.weight_decay)
@@ -62,14 +62,22 @@ if __name__ == "__main__":
                                                   lambda step: (1.0 - step / args.epochs)
                                                   if step <= args.epochs else 0,
                                                   last_epoch=-1)
-    train_loader = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers,
-                                          spos_preprocessing=args.spos_preprocessing)
-    valid_loader = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers,
-                                          spos_preprocessing=args.spos_preprocessing)
-    trainer = SPOSSupernetTrainer(model, criterion, accuracy, optimizer,
-                                  args.epochs, train_loader, valid_loader,
-                                  mutator=mutator, batch_size=args.batch_size,
-                                  log_frequency=args.log_frequency, workers=args.workers,
-                                  callbacks=[LRSchedulerCallback(scheduler),
-                                             ModelCheckpoint("./checkpoints")])
-    trainer.train()
+    if args.spos_preprocessing:
+        trans = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
+            transforms.RandomHorizontalFlip(0.5),
+            ToBGRTensor(),
+        ])
+    else:
+        trans = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.ToTensor()
+        ])
+    train_dataset = datasets.ImageNet(args.imagenet_dir, split='train', transform=trans)
+    val_dataset = datasets.ImageNet(args.imagenet_dir, split='val', transform=trans)
+    trainer = SinglePathTrainer(model, criterion, accuracy, optimizer,
+                                args.epochs, train_dataset, val_dataset,
+                                batch_size=args.batch_size,
+                                log_frequency=args.log_frequency, workers=args.workers)
+    trainer.fit()

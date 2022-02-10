@@ -121,7 +121,7 @@ class SinglePathTrainer(BaseOneShotTrainer):
 
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
-                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None):
+                 batch_size=64, workers=4, device=None, log_frequency=None):
         self.model = model
         self.loss = loss
         self.metrics = metrics

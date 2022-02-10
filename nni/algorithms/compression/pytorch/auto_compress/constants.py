@@ -3,7 +3,7 @@
 
 from ..pruning import LevelPruner, SlimPruner, L1FilterPruner, L2FilterPruner, FPGMPruner, TaylorFOWeightFilterPruner, \
     ActivationAPoZRankFilterPruner, ActivationMeanRankFilterPruner
-from ..quantization.quantizers import NaiveQuantizer, QAT_Quantizer, DoReFaQuantizer, BNNQuantizer
+from ..quantization import NaiveQuantizer, QAT_Quantizer, DoReFaQuantizer, BNNQuantizer
 
 
 PRUNER_DICT = {

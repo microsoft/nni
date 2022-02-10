@@ -1,16 +1,23 @@
 import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
-import { Stack, PrimaryButton, Pivot, PivotItem } from '@fluentui/react';
+import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui/react';
 import { Trial } from '../../static/model/trial';
-import { MANAGER_IP } from '../../static/const';
+import { MANAGER_IP, RETIARIIPARAMETERS } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import { reformatRetiariiParameter } from '../../static/function';
 import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import MessageInfo from '../modals/MessageInfo';
+import PanelMonacoEditor from '../public-child/PanelMonacoEditor';
 import '../../static/style/overview/overview.scss';
 import '../../static/style/copyParameter.scss';
 import '../../static/style/openRow.scss';
+
+/**
+ *  netron URL must be synchronized with ts/nni_manager/rest_server/index.ts`.
+ *  Remember to update it if the value is changed or this file is moved.
+ **/
 
 interface OpenRowProps {
     trialId: string;
@@ -20,6 +27,7 @@ interface OpenRowState {
     typeInfo: string;
     info: string;
     isHidenInfo: boolean;
+    showRetiaParamPanel: boolean;
 }
 
 class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
@@ -28,12 +36,21 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         this.state = {
             typeInfo: '',
             info: '',
-            isHidenInfo: true
+            isHidenInfo: true,
+            showRetiaParamPanel: false
         };
     }
 
     hideMessageInfo = (): void => {
         this.setState(() => ({ isHidenInfo: true }));
+    };
+
+    hideRetiaParam = (): void => {
+        this.setState(() => ({ showRetiaParamPanel: false }));
+    };
+
+    isshowRetiaParamPanel = (): void => {
+        this.setState(() => ({ showRetiaParamPanel: true }));
     };
 
     /**
@@ -48,7 +65,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
 
     copyParams = (trial: Trial): void => {
         // get copy parameters
-        const params = JSON.stringify(trial.description.parameters, null, 4);
+        const params = JSON.stringify(reformatRetiariiParameter(trial.description.parameters as any), null, 4);
         if (copy.default(params)) {
             this.getCopyStatus('Success copy parameters to clipboard in form of python dict !', 'success');
         } else {
@@ -66,10 +83,12 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     };
 
     render(): React.ReactNode {
-        const { isHidenInfo, typeInfo, info } = this.state;
+        const { isHidenInfo, typeInfo, info, showRetiaParamPanel } = this.state;
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
         const logPathRow = trial.info.logPath || "This trial's log path is not available.";
+        const originParameters = trial.description.parameters;
+        const hasVisualHyperParams = RETIARIIPARAMETERS in originParameters;
         return (
             <Stack className='openRow'>
                 <Stack className='openRowContent'>
@@ -82,7 +101,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                             hideRoot={true}
                                             shouldExpandNode={(): boolean => true} // default expandNode
                                             getItemString={(): null => null} // remove the {} items
-                                            data={trial.description.parameters}
+                                            data={reformatRetiariiParameter(originParameters as any)}
                                         />
                                     </Stack>
                                     <Stack horizontal className='copy'>
@@ -91,8 +110,21 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                             text='Copy as json'
                                             styles={{ root: { width: 128, marginRight: 10 } }}
                                         />
+                                        {hasVisualHyperParams && (
+                                            <DefaultButton
+                                                onClick={this.isshowRetiaParamPanel}
+                                                text='Original parameters'
+                                            />
+                                        )}
                                         {/* copy success | failed message info */}
                                         {!isHidenInfo && <MessageInfo typeInfo={typeInfo} info={info} />}
+                                        {showRetiaParamPanel && (
+                                            <PanelMonacoEditor
+                                                hideConfigPanel={this.hideRetiaParam}
+                                                panelName='Retiarii parameters'
+                                                panelContent={JSON.stringify(originParameters, null, 2)}
+                                            />
+                                        )}
                                     </Stack>
                                 </Stack>
                             ) : (

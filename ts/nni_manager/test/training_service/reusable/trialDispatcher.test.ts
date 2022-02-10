@@ -169,7 +169,7 @@ async function waitEnvironment(waitCount: number,
     return waitRequestEnvironment;
 }
 
-const config = {
+const config: any = {
     searchSpace: { },
     trialCommand: 'echo hi',
     trialCodeDirectory: path.dirname(__filename),

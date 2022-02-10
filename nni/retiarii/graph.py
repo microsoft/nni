@@ -11,7 +11,7 @@ from enum import Enum
 from typing import (Any, Dict, Iterable, List, Optional, Tuple, Type, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
-from .utils import get_importable_name, import_, uid
+from .utils import uid
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData']
 
@@ -41,20 +41,25 @@ class Evaluator(abc.ABC):
         items = ', '.join(['%s=%r' % (k, v) for k, v in self.__dict__.items()])
         return f'{self.__class__.__name__}({items})'
 
-    @abc.abstractstaticmethod
-    def _load(ir: Any) -> 'Evaluator':
-        pass
-
     @staticmethod
-    def _load_with_type(type_name: str, ir: Any) -> 'Optional[Evaluator]':
-        if type_name == '_debug_no_trainer':
-            return DebugEvaluator()
-        config_cls = import_(type_name)
-        assert issubclass(config_cls, Evaluator)
-        return config_cls._load(ir)
+    def _load(ir: Any) -> 'Evaluator':
+        evaluator_type = ir.get('type')
+        if isinstance(evaluator_type, str):
+            # for debug purposes only
+            for subclass in Evaluator.__subclasses__():
+                if subclass.__name__ == evaluator_type:
+                    evaluator_type = subclass
+                    break
+        assert issubclass(evaluator_type, Evaluator)
+        return evaluator_type._load(ir)
 
     @abc.abstractmethod
     def _dump(self) -> Any:
+        """
+        Subclass implements ``_dump`` for their own serialization.
+        They should return a dict, with a key ``type`` which equals ``self.__class__``,
+        and optionally other keys.
+        """
         pass
 
     @abc.abstractmethod
@@ -114,7 +119,7 @@ class Model:
         self.graphs: Dict[str, Graph] = {}
         self.evaluator: Optional[Evaluator] = None
 
-        self.history: List[Model] = []
+        self.history: List['Model'] = []
 
         self.metric: Optional[MetricData] = None
         self.intermediate_metrics: List[MetricData] = []
@@ -154,16 +159,13 @@ class Model:
             if graph_name != '_evaluator':
                 Graph._load(model, graph_name, graph_data)._register()
         if '_evaluator' in ir:
-            model.evaluator = Evaluator._load_with_type(ir['_evaluator']['__type__'], ir['_evaluator'])
+            model.evaluator = Evaluator._load(ir['_evaluator'])
         return model
 
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
         if self.evaluator is not None:
-            ret['_evaluator'] = {
-                '__type__': get_importable_name(self.evaluator.__class__),
-                **self.evaluator._dump()
-            }
+            ret['_evaluator'] = self.evaluator._dump()
         return ret
 
     def get_nodes(self) -> Iterable['Node']:
@@ -180,7 +182,7 @@ class Model:
         There could be multiple nodes with the same label. Name space name can uniquely
         identify a graph or node.
 
-        NOTE: the implementation does not support the class abstration
+        NOTE: the implementation does not support the class abstraction
         """
         matched_nodes = []
         for graph in self.graphs.values():
@@ -211,6 +213,27 @@ class Model:
             return matched_nodes[0]
         else:
             return None
+
+    def get_node_by_python_name(self, python_name: str) -> 'Node':
+        """
+        Traverse all the nodes to find the matched node with the given python_name.
+        """
+        matched_nodes = []
+        for graph in self.graphs.values():
+            nodes = graph.get_nodes_by_python_name(python_name)
+            matched_nodes.extend(nodes)
+        # assert len(matched_nodes) <= 1
+        if matched_nodes:
+            return matched_nodes[0]
+        else:
+            return None
+
+    def get_cell_nodes(self) -> List['Node']:
+        matched_nodes = []
+        for graph in self.graphs.values():
+            nodes = [node for node in graph.nodes if isinstance(node.operation, Cell)]
+            matched_nodes.extend(nodes)
+        return matched_nodes
 
 
 class ModelStatus(Enum):
@@ -267,6 +290,8 @@ class Graph:
         All input/output/hidden nodes.
     edges
         ...
+    python_name
+        The name of torch.nn.Module, should have one-to-one mapping with items in python model.
     """
 
     def __init__(self, model: Model, graph_id: int, name: str = None, _internal: bool = False):
@@ -275,6 +300,9 @@ class Graph:
         self.model: Model = model
         self.id: int = graph_id
         self.name: str = name or f'_generated_{graph_id}'
+
+        # `python_name` is `None` by default. It should be set after initialization if it is needed.
+        self.python_name: Optional[str] = None
 
         self.input_node: Node = Node(self, _InputPseudoUid, '_inputs', _IOPseudoOperation('_inputs'), _internal=True)
         self.output_node: Node = Node(self, _OutputPseudoUid, '_outputs', _IOPseudoOperation('_outputs'), _internal=True)
@@ -348,6 +376,13 @@ class Graph:
         found = [node for node in self.nodes if node.name == name]
         return found[0] if found else None
 
+    def get_node_by_python_name(self, python_name: str) -> Optional['Node']:
+        """
+        Returns the node which has specified python_name; or returns `None` if no node has this python_name.
+        """
+        found = [node for node in self.nodes if node.python_name == python_name]
+        return found[0] if found else None
+
     def get_nodes_by_type(self, operation_type: str) -> List['Node']:
         """
         Returns nodes whose operation is specified typed.
@@ -366,6 +401,9 @@ class Graph:
 
     def get_nodes_by_name(self, name: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.name == name]
+
+    def get_nodes_by_python_name(self, python_name: str) -> Optional['Node']:
+        return [node for node in self.nodes if node.python_name == python_name]
 
     def topo_sort(self) -> List['Node']:
         node_to_fanin = {}
@@ -416,9 +454,11 @@ class Graph:
         new_graph.output_node.operation.io_names = self.output_node.operation.io_names
         new_graph.input_node.update_label(self.input_node.label)
         new_graph.output_node.update_label(self.output_node.label)
+        new_graph.python_name = self.python_name
 
         for node in self.hidden_nodes:
             new_node = Node(new_graph, node.id, node.name, node.operation, _internal=True)
+            new_node.python_name = node.python_name
             new_node.update_label(node.label)
             new_node._register()
 
@@ -439,11 +479,13 @@ class Graph:
         new_graph.output_node.operation.io_names = self.output_node.operation.io_names
         new_graph.input_node.update_label(self.input_node.label)
         new_graph.output_node.update_label(self.output_node.label)
+        new_graph.python_name = self.python_name
 
         id_to_new_node = {}  # old node ID -> new node object
 
         for old_node in self.hidden_nodes:
             new_node = Node(new_graph, uid(), None, old_node.operation, _internal=True)._register()
+            new_node.python_name = old_node.python_name
             new_node.update_label(old_node.label)
             id_to_new_node[old_node.id] = new_node
 
@@ -507,6 +549,8 @@ class Node:
         If two models have nodes with same ID, they are semantically the same node.
     name
         Mnemonic name. It should have an one-to-one mapping with ID.
+    python_name
+        The name of torch.nn.Module, should have one-to-one mapping with items in python model.
     label
         Optional. If two nodes have the same label, they are considered same by the mutator.
     operation
@@ -528,13 +572,15 @@ class Node:
         self.graph: Graph = graph
         self.id: int = node_id
         self.name: str = name or f'_generated_{node_id}'
+        # `python_name` is `None` by default. It should be set after initialization if it is needed.
+        self.python_name: Optional[str] = None
         # TODO: the operation is likely to be considered editable by end-user and it will be hard to debug
         # maybe we should copy it here or make Operation class immutable, in next release
         self.operation: Operation = operation
         self.label: Optional[str] = None
 
     def __repr__(self):
-        return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation})'
+        return f'Node(id={self.id}, name={self.name}, python_name={self.python_name}, label={self.label}, operation={self.operation})'
 
     @property
     def predecessors(self) -> List['Node']:
@@ -603,20 +649,24 @@ class Node:
     @staticmethod
     def _load(graph: Graph, name: str, ir: Any) -> 'Node':
         if ir['operation']['type'] == '_cell':
-            op = Cell(ir['operation']['cell_name'], ir['operation'].get('parameters', {}))
+            op = Cell(ir['operation']['cell_name'], ir['operation'].get('parameters', {}), attributes=ir['operation'].get('attributes', {}))
         else:
-            op = Operation.new(ir['operation']['type'], ir['operation'].get('parameters', {}))
+            op = Operation.new(ir['operation']['type'],
+                               ir['operation'].get('parameters', {}),
+                               attributes=ir['operation'].get('attributes', {}))
         node = Node(graph, uid(), name, op)
         if 'label' in ir:
             node.update_label(ir['label'])
         return node
 
     def _dump(self) -> Any:
-        ret = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters}}
+        ret = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters, 'attributes': self.operation.attributes}}
         if isinstance(self.operation, Cell):
             ret['operation']['cell_name'] = self.operation.cell_name
         if self.label is not None:
             ret['label'] = self.label
+        if self.python_name is not None:
+            ret['python_name'] = self.python_name
         return ret
 
 
@@ -739,7 +789,7 @@ class DebugEvaluator(Evaluator):
         return DebugEvaluator()
 
     def _dump(self) -> Any:
-        return {'__type__': '_debug_no_trainer'}
+        return {'type': DebugEvaluator}
 
     def _execute(self, model_cls: type) -> Any:
         pass

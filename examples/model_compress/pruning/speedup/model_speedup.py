@@ -1,13 +1,11 @@
 import os
+import sys
 import argparse
 import time
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torchvision import datasets, transforms
 
-import sys
-sys.path.append('../models')
+from pathlib import Path
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from cifar10.vgg import VGG
 from mnist.lenet import LeNet
 

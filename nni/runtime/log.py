@@ -44,17 +44,21 @@ def init_logger() -> None:
 
     logging.getLogger('filelock').setLevel(logging.WARNING)
 
-_exp_log_initialized = False
+_cli_log_initialized = False
 
-def init_logger_experiment() -> None:
+def init_logger_for_command_line() -> None:
     """
-    Initialize logger for `nni.experiment.Experiment`.
+    Initialize logger for command line usage.
+    This means that NNI is used as "main function" rather than underlying library or background service,
+    so it should print log to stdout.
+
+    It is used by nnictl and `nni.experiment.Experiment`.
 
     This function will get invoked after `init_logger()`.
     """
-    global _exp_log_initialized
-    if not _exp_log_initialized:
-        _exp_log_initialized = True
+    global _cli_log_initialized
+    if not _cli_log_initialized:
+        _cli_log_initialized = True
         colorful_formatter = Formatter(log_format, time_format)
         colorful_formatter.format = _colorful_format
         handlers['_default_'].setFormatter(colorful_formatter)
@@ -66,7 +70,9 @@ def start_experiment_log(experiment_id: str, log_directory: Path, debug: bool) -
 
 def stop_experiment_log(experiment_id: str) -> None:
     if experiment_id in handlers:
-        logging.getLogger().removeHandler(handlers.pop(experiment_id))
+        handler = handlers.pop(experiment_id, None)
+        if handler is not None:
+            logging.getLogger().removeHandler(handler)
 
 
 def _init_logger_dispatcher() -> None:
@@ -118,13 +124,17 @@ def _colorful_format(record):
         return '[{}] ({}) {}'.format(time, record.name, record.msg % record.args)
     if record.levelno >= logging.ERROR:
         color = colorama.Fore.RED
+        level = 'ERROR: '
     elif record.levelno >= logging.WARNING:
         color = colorama.Fore.YELLOW
+        level = 'WARNING: '
     elif record.levelno >= logging.INFO:
         color = colorama.Fore.GREEN
+        level = ''
     else:
         color = colorama.Fore.BLUE
-    msg = color + (record.msg % record.args) + colorama.Style.RESET_ALL
+        level = ''
+    msg = color + level + (record.msg % record.args) + colorama.Style.RESET_ALL
     if record.levelno < logging.INFO:
         return '[{}] {}:{} {}'.format(time, record.threadName, record.name, msg)
     else:

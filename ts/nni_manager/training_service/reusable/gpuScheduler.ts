@@ -115,8 +115,8 @@ export class GpuScheduler {
             const gpus = constraint.gpus as Array<[string, number]>;
             const selectedHost = gpus[0][0];
 
-            const hostsOfConstraint: Array<[string, number]> = gpus.filter((gpuTuple: [string, number]) => gpuTuple[0] === selectedHost);
-            if (hostsOfConstraint.length > 1) {
+            const differentHosts: Array<[string, number]> = gpus.filter((gpuTuple: [string, number]) => gpuTuple[0] != selectedHost);
+            if (differentHosts.length >= 1) {
                 //TODO: remove this constraint when supporting multi-host placement
                 throw new Error("Device constraint does not support using multiple hosts")
             }

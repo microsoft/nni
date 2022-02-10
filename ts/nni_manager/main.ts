@@ -19,8 +19,7 @@ import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
 import { NNIExperimentsManager } from './core/nniExperimentsManager';
 import { NNITensorboardManager } from './core/nniTensorboardManager';
-import { NNIRestServer } from './rest_server/nniRestServer';
-
+import { RestServer } from './rest_server';
 
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number, platform: string,
@@ -72,12 +71,12 @@ if (!strPort || strPort.length === 0) {
 }
 
 const foregroundArg: string = parseArg(['--foreground', '-f']);
-if (!('true' || 'false').includes(foregroundArg.toLowerCase())) {
+if (foregroundArg && !['true', 'false'].includes(foregroundArg.toLowerCase())) {
     console.log(`FATAL: foreground property should only be true or false`);
     usage();
     process.exit(1);
 }
-const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : false;
+const foreground: boolean = (foregroundArg && foregroundArg.toLowerCase() === 'true') ? true : false;
 
 const port: number = parseInt(strPort, 10);
 
@@ -107,12 +106,12 @@ if (logDir.length > 0) {
 const logLevel: string = parseArg(['--log_level', '-ll']);
 
 const readonlyArg: string = parseArg(['--readonly', '-r']);
-if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
+if (readonlyArg && !['true', 'false'].includes(readonlyArg.toLowerCase())) {
     console.log(`FATAL: readonly property should only be true or false`);
     usage();
     process.exit(1);
 }
-const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
+const readonly = (readonlyArg && readonlyArg.toLowerCase() == 'true') ? true : false;
 
 const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
 
@@ -124,9 +123,8 @@ mkDirP(getLogDir())
     .then(async () => {
         try {
             await initContainer(foreground, mode);
-            const restServer: NNIRestServer = component.get(NNIRestServer);
+            const restServer: RestServer = component.get(RestServer);
             await restServer.start();
-            getLogger('main').info(`Rest server listening on: ${restServer.endPoint}`);
         } catch (err) {
             getLogger('main').error(`${err.stack}`);
             throw err;

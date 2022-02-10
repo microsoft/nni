@@ -36,7 +36,7 @@ describe('Unit test for dataStore', () => {
     });
 
     it('test experiment profiles CRUD', async () => {
-        const profile: ExperimentProfile = {
+        const profile: ExperimentProfile = <ExperimentProfile>{
             params: {
                 experimentName: 'exp1',
                 trialConcurrency: 2,

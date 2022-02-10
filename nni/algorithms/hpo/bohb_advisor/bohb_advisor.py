@@ -4,15 +4,15 @@
 '''
 bohb_advisor.py
 '''
-
 import sys
 import math
 import logging
-import json_tricks
 from schema import Schema, Optional
 import ConfigSpace as CS
 import ConfigSpace.hyperparameters as CSH
+from ConfigSpace.read_and_write import pcs_new
 
+import nni
 from nni import ClassArgsValidator
 from nni.runtime.protocol import CommandType, send
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
@@ -244,6 +244,7 @@ class BOHBClassArgsValidator(ClassArgsValidator):
             Optional('random_fraction'): self.range('random_fraction', float, 0, 9999),
             Optional('bandwidth_factor'): self.range('bandwidth_factor', float, 0, 9999),
             Optional('min_bandwidth'): self.range('min_bandwidth', float, 0, 9999),
+            Optional('config_space'): self.path('config_space')
         }).validate(kwargs)
 
 class BOHB(MsgDispatcherBase):
@@ -297,7 +298,8 @@ class BOHB(MsgDispatcherBase):
                  num_samples=64,
                  random_fraction=1/3,
                  bandwidth_factor=3,
-                 min_bandwidth=1e-3):
+                 min_bandwidth=1e-3,
+                 config_space=None):
         super(BOHB, self).__init__()
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.min_budget = min_budget
@@ -309,6 +311,7 @@ class BOHB(MsgDispatcherBase):
         self.random_fraction = random_fraction
         self.bandwidth_factor = bandwidth_factor
         self.min_bandwidth = min_bandwidth
+        self.config_space = config_space
 
         # all the configs waiting for run
         self.generated_hyper_configs = []
@@ -425,7 +428,7 @@ class BOHB(MsgDispatcherBase):
                 'parameter_source': 'algorithm',
                 'parameters': ''
             }
-            send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
+            send(CommandType.NoMoreTrialJobs, nni.dump(ret))
             return None
         assert self.generated_hyper_configs
         params = self.generated_hyper_configs.pop(0)
@@ -456,7 +459,7 @@ class BOHB(MsgDispatcherBase):
         """
         ret = self._get_one_trial_job()
         if ret is not None:
-            send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+            send(CommandType.NewTrialJob, nni.dump(ret))
             self.credit -= 1
 
     def handle_update_search_space(self, data):
@@ -468,48 +471,56 @@ class BOHB(MsgDispatcherBase):
             search space of this experiment
         """
         search_space = data
-        cs = CS.ConfigurationSpace()
-        for var in search_space:
-            _type = str(search_space[var]["_type"])
-            if _type == 'choice':
-                cs.add_hyperparameter(CSH.CategoricalHyperparameter(
-                    var, choices=search_space[var]["_value"]))
-            elif _type == 'randint':
-                cs.add_hyperparameter(CSH.UniformIntegerHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1] - 1))
-            elif _type == 'uniform':
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
-            elif _type == 'quniform':
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
-                    q=search_space[var]["_value"][2]))
-            elif _type == 'loguniform':
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
-                    log=True))
-            elif _type == 'qloguniform':
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
-                    q=search_space[var]["_value"][2], log=True))
-            elif _type == 'normal':
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2]))
-            elif _type == 'qnormal':
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
-                    q=search_space[var]["_value"][3]))
-            elif _type == 'lognormal':
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
-                    log=True))
-            elif _type == 'qlognormal':
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
-                    q=search_space[var]["_value"][3], log=True))
-            else:
-                raise ValueError(
-                    'unrecognized type in search_space, type is {}'.format(_type))
+        cs = None
+        logger.debug(f'Received data: {data}')
+        if self.config_space:
+            logger.info(f'Got a ConfigSpace file path, parsing the search space directly from {self.config_space}. '
+                        'The NNI search space is ignored.')
+            with open(self.config_space, 'r') as fh:
+                cs = pcs_new.read(fh)
+        else:
+            cs = CS.ConfigurationSpace()
+            for var in search_space:
+                _type = str(search_space[var]["_type"])
+                if _type == 'choice':
+                    cs.add_hyperparameter(CSH.CategoricalHyperparameter(
+                        var, choices=search_space[var]["_value"]))
+                elif _type == 'randint':
+                    cs.add_hyperparameter(CSH.UniformIntegerHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1] - 1))
+                elif _type == 'uniform':
+                    cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
+                elif _type == 'quniform':
+                    cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
+                        q=search_space[var]["_value"][2]))
+                elif _type == 'loguniform':
+                    cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
+                        log=True))
+                elif _type == 'qloguniform':
+                    cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
+                        q=search_space[var]["_value"][2], log=True))
+                elif _type == 'normal':
+                    cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                        var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2]))
+                elif _type == 'qnormal':
+                    cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                        var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
+                        q=search_space[var]["_value"][3]))
+                elif _type == 'lognormal':
+                    cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                        var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
+                        log=True))
+                elif _type == 'qlognormal':
+                    cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                        var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
+                        q=search_space[var]["_value"][3], log=True))
+                else:
+                    raise ValueError(
+                        'unrecognized type in search_space, type is {}'.format(_type))
 
         self.search_space = cs
 
@@ -525,7 +536,7 @@ class BOHB(MsgDispatcherBase):
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
         logger.debug('Tuner handle trial end, result is %s', data)
-        hyper_params = json_tricks.loads(data['hyper_params'])
+        hyper_params = nni.load(data['hyper_params'])
         self._handle_trial_end(hyper_params['parameter_id'])
         if data['trial_job_id'] in self.job_id_para_id_map:
             del self.job_id_para_id_map[data['trial_job_id']]
@@ -540,7 +551,7 @@ class BOHB(MsgDispatcherBase):
             ret['parameter_index'] = one_unsatisfied['parameter_index']
             # update parameter_id in self.job_id_para_id_map
             self.job_id_para_id_map[ret['trial_job_id']] = ret['parameter_id']
-            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
+            send(CommandType.SendTrialJobParameter, nni.dump(ret))
         for _ in range(self.credit):
             self._request_one_trial_job()
 
@@ -573,7 +584,7 @@ class BOHB(MsgDispatcherBase):
         """
         logger.debug('handle report metric data = %s', data)
         if 'value' in data:
-            data['value'] = json_tricks.loads(data['value'])
+            data['value'] = nni.load(data['value'])
         if data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
@@ -588,7 +599,7 @@ class BOHB(MsgDispatcherBase):
                 ret['parameter_index'] = data['parameter_index']
                 # update parameter_id in self.job_id_para_id_map
                 self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
-                send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
+                send(CommandType.SendTrialJobParameter, nni.dump(ret))
         else:
             assert 'value' in data
             value = extract_scalar_reward(data['value'])
@@ -644,7 +655,7 @@ class BOHB(MsgDispatcherBase):
             data doesn't have required key 'parameter' and 'value'
         """
         for entry in data:
-            entry['value'] = json_tricks.loads(entry['value'])
+            entry['value'] = nni.load(entry['value'])
         _completed_num = 0
         for trial_info in data:
             logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))

@@ -13,4 +13,4 @@ One-shot NAS algorithms leverage weight sharing among models in neural architect
     SPOS <SPOS>
     ProxylessNAS <Proxylessnas>
     FBNet <FBNet>
-    Customize one-shot NAS <WriteOneshot>
+    Customize One-shot NAS <WriteOneshot>

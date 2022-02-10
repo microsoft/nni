@@ -1,10 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import queue
-import logging
 import copy
 import types
+import logging
+from pathlib import Path
+import queue
+
 import torch
 import torch.nn as nn
 
@@ -16,6 +18,7 @@ from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
 from ..utils import rand_like_with_shape, translate_jit_code
 
+
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
@@ -23,28 +26,27 @@ _logger.setLevel(logging.INFO)
 class ModelSpeedup:
     """
     This class is to speedup the model with provided weight mask.
+
+    Parameters
+    ----------
+    model : pytorch model
+        The model user wants to speed up
+    dummy_input : pytorch tensor, tuple of tensor, list of tensor
+        Note: The first dimension of the dummy_input should be the batchsize.
+        The dummy input for ```jit.trace```, users should put it on the right
+        device.
+    masks_file : str/dict
+        The path of user provided mask file, or the mask object
+    map_location : str
+        the device on which masks are placed, same to map_location in ```torch.load```
+    batch_dim : int
+        the index of batch dimension in the dummy_input
+    confidence: the confidence coefficient of the sparsity inference. This value is
+        actually used as the batchsize of the dummy_input.
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
                  batch_dim=0, confidence=8):
-        """
-        Parameters
-        ----------
-        model : pytorch model
-            The model user wants to speed up
-        dummy_input : pytorch tensor, tuple of tensor, list of tensor
-            Note: The first dimension of the dummy_input should be the batchsize.
-            The dummy input for ```jit.trace```, users should put it on the right
-            device.
-        masks_file : str
-            The path of user provided mask file
-        map_location : str
-            the device on which masks are placed, same to map_location in ```torch.load```
-        batch_dim : int
-            the index of batch dimension in the dummy_input
-        confidence: the confidence coefficient of the sparsity inference. This value is
-            actually used as the batchsize of the dummy_input.
-        """
         assert confidence > 1
         # The auto inference will change the values of the parameters in the model
         # so we need make a copy before the mask inference
@@ -66,9 +68,13 @@ class ModelSpeedup:
         # load the mask tensor to the same device with the dummy_input
         # self.masks save the mask tensors pruned by the user and the infered
         # masks of the others modules
-        self.masks = torch.load(
-            masks_file, map_location if map_location is not None else str(self.device))
-
+        if isinstance(masks_file, (str, Path)) and Path(masks_file).exists():
+            self.masks = torch.load(
+                masks_file, map_location if map_location is not None else str(self.device))
+        elif isinstance(masks_file, dict):
+            self.masks = masks_file
+        else:
+            raise Exception('Please provide the mask or the path of the mask file')
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}

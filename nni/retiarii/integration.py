@@ -2,15 +2,17 @@
 # Licensed under the MIT license.
 
 import logging
+import os
 from typing import Any, Callable
 
+import nni
+from nni.common.serializer import PayloadTooLarge
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
 
 from .graph import MetricData
 from .integration_api import register_advisor
-from .serializer import json_dumps, json_loads
 
 _logger = logging.getLogger(__name__)
 
@@ -79,8 +81,12 @@ class RetiariiAdvisor(MsgDispatcherBase):
             raise ValueError('placement_constraint.type must be either `None`,. `GPUNumber` or `Device`')
         if placement_constraint['type'] == 'None' and len(placement_constraint['gpus']) > 0:
             raise ValueError('placement_constraint.gpus must be an empty list when type == None')
-        if placement_constraint['type'] == 'Device' and len(placement_constraint['gpus']) != 1:
-            raise ValueError('placement_constraint.gpus must be a list of number (currently only support one host)')
+        if placement_constraint['type'] == 'GPUNumber':
+            if len(placement_constraint['gpus']) != 1:
+                raise ValueError('placement_constraint.gpus currently only support one host when type == GPUNumber')
+            for e in placement_constraint['gpus']:
+                if not isinstance(e, int):
+                    raise ValueError('placement_constraint.gpus must be a list of number when type == GPUNumber')
         if placement_constraint['type'] == 'Device':
             for e in placement_constraint['gpus']:
                 if not isinstance(e, tuple):
@@ -117,7 +123,21 @@ class RetiariiAdvisor(MsgDispatcherBase):
             'placement_constraint': placement_constraint
         }
         _logger.debug('New trial sent: %s', new_trial)
-        send(CommandType.NewTrialJob, json_dumps(new_trial))
+
+        try:
+            send_payload = nni.dump(new_trial, pickle_size_limit=int(os.getenv('PICKLE_SIZE_LIMIT', 64 * 1024)))
+        except PayloadTooLarge:
+            raise ValueError(
+                'Serialization failed when trying to dump the model because payload too large (larger than 64 KB). '
+                'This is usually caused by pickling large objects (like datasets) by mistake. '
+                'See the full error traceback for details and https://nni.readthedocs.io/en/stable/NAS/Serialization.html '
+                'for how to resolve such issue. '
+            )
+
+        # trial parameters can be super large, disable pickle size limit here
+        # nevertheless, there could still be blocked by pipe / nni-manager
+        send(CommandType.NewTrialJob, send_payload)
+
         if self.send_trial_callback is not None:
             self.send_trial_callback(parameters)  # pylint: disable=not-callable
         return self.parameters_count
@@ -136,7 +156,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     def handle_trial_end(self, data):
         _logger.debug('Trial end: %s', data)
-        self.trial_end_callback(json_loads(data['hyper_params'])['parameter_id'],  # pylint: disable=not-callable
+        self.trial_end_callback(nni.load(data['hyper_params'])['parameter_id'],  # pylint: disable=not-callable
                                 data['event'] == 'SUCCEEDED')
 
     def handle_report_metric_data(self, data):
@@ -152,7 +172,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     @staticmethod
     def _process_value(value) -> Any:  # hopefully a float
-        value = json_loads(value)
+        value = nni.load(value)
         if isinstance(value, dict):
             if 'default' in value:
                 return value['default']

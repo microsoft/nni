@@ -7,19 +7,18 @@ from typing import Dict, List, Optional, Union
 
 import torch.nn as nn
 import torch.optim as optim
-import pytorch_lightning as pl
+import torchmetrics
 from torch.utils.data import DataLoader
 
 import nni
 
 from ..lightning import LightningModule, _AccuracyWithLogits, Lightning
 from .trainer import Trainer
-from ....serializer import serialize_cls
 
 
-@serialize_cls
+@nni.trace
 class _MultiModelSupervisedLearningModule(LightningModule):
-    def __init__(self, criterion: nn.Module, metrics: Dict[str, pl.metrics.Metric],
+    def __init__(self, criterion: nn.Module, metrics: Dict[str, torchmetrics.Metric],
                  n_models: int = 0,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
@@ -119,14 +118,14 @@ class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
         Class for optimizer (not an instance). default: ``Adam``
     """
 
-    def __init__(self, criterion: nn.Module, metrics: Dict[str, pl.metrics.Metric],
+    def __init__(self, criterion: nn.Module, metrics: Dict[str, torchmetrics.Metric],
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: optim.Optimizer = optim.Adam):
         super().__init__(criterion, metrics, learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 
-@serialize_cls
+@nni.trace
 class _ClassificationModule(MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
@@ -174,13 +173,13 @@ class Classification(Lightning):
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
 
-@serialize_cls
+@nni.trace
 class _RegressionModule(MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: optim.Optimizer = optim.Adam):
-        super().__init__(criterion, {'mse': pl.metrics.MeanSquaredError},
+        super().__init__(criterion, {'mse': torchmetrics.MeanSquaredError},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 

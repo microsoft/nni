@@ -124,7 +124,7 @@ View job default metric
 -----------------------
 
 
-* Click the tab ``Default Metric`` to see the point graph of all trials. Hover to see its specific default metric and search space message.
+* Click the tab ``Default metric`` to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
 
 .. image:: ../../img/webui-img/default-metric.png
@@ -133,7 +133,7 @@ View job default metric
 
 
 
-* Click the switch named ``optimization curve`` to see the experiment's optimization curve.
+* Turn on the switch named ``Optimization curve`` to see the experiment's optimization curve.
 
 
 .. image:: ../../img/webui-img/best-curve.png
@@ -144,10 +144,11 @@ View job default metric
 View hyper parameter
 --------------------
 
-Click the tab ``Hyper Parameter`` to see the parallel graph.
+Click the tab ``Hyper-parameter`` to see the parallel graph.
 
 
-* You can ``add/remove`` axes and drag to swap axes on the chart.
+* You can click the ``add/remove`` button to add or remove axes.
+* Drag the axes to swap axes on the chart.
 * You can select the percentage to see top trials.
 
 

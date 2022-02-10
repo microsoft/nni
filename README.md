@@ -2,8 +2,6 @@
 <img src="docs/img/nni_logo.png" width="300"/>
 </p>
 
------------
-
 [![MIT licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/full%20test%20-%20linux?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=62&branchName=master)
 [![Issues](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen)
@@ -27,10 +25,14 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 
 ## **What's NEW!** &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 
-* **New release**: [v2.4 is available](https://github.com/microsoft/nni/releases) - _released on June-15-2021_
+* **New release**: [v2.6 is available](https://github.com/microsoft/nni/releases/tag/v2.6) - _released on Jan-19-2022_
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
+* **New emoticons release**: [nnSpider](./docs/en_US/Tutorial/NNSpider.md)
+<p align="center">
+  <a href="#nni-spider"><img width="100%" src="docs/img/emoicons/home.svg" /></a>
+</p>
 
 ## **NNI capabilities in a glance**
 
@@ -222,7 +224,8 @@ Within the following table, we summarized the current NNI capabilities, we are g
 
 ### **Install**
 
-NNI supports and is tested on Ubuntu >= 16.04, macOS >= 10.14.1, and Windows 10 >= 1809. Simply run the following `pip install` in an environment that has `python 64-bit >= 3.6`.
+NNI supports and is tested on Ubuntu >= 18.04, Windows 10 >= 21H2, and macOS >= 11.
+Simply run the following `pip install` in an environment that has `python 64-bit >= 3.7`.
 
 Linux or macOS
 
@@ -251,7 +254,7 @@ Note:
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v2.4 https://github.com/Microsoft/nni.git
+  git clone -b v2.6 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -311,7 +314,7 @@ To learn more about making a contribution to NNI, please refer to our [How-to co
 
 We appreciate all contributions and thank all the contributors!
 
-<a href="https://github.com/microsoft/nni/graphs/contributors"><img src="docs/img/contributors.png" /></a>
+<a href="https://github.com/microsoft/nni/graphs/contributors"><img src="https://contrib.rocks/image?repo=microsoft/nni" /></a>
 
 
 ## **Feedback**

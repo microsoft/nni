@@ -5,6 +5,154 @@
 Change Log
 ==========
 
+Release 2.6 - 1/19/2022
+-----------------------
+
+**NOTE**: NNI v2.6 is the last version that supports Python 3.6. From next release NNI will require Python 3.7+.
+
+Hyper-Parameter Optimization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Experiment
+""""""""""
+
+* The legacy experiment config format is now deprecated. `(doc of new config) <https://nni.readthedocs.io/en/v2.6/reference/experiment_config.html>`__
+
+  * If you are still using legacy format, nnictl will show equivalent new config on start. Please save it to replace the old one.
+
+* nnictl now uses ``nni.experiment.Experiment`` `APIs <https://nni.readthedocs.io/en/stable/Tutorial/HowToLaunchFromPython.html>`__ as backend. The output message of create, resume, and view commands have changed.
+* Added Kubeflow and Frameworkcontroller support to hybrid mode.  `(doc) <https://nni.readthedocs.io/en/v2.6/TrainingService/HybridMode.html>`__
+* The hidden tuner manifest file has been updated. This should be transparent to users, but if you encounter issues like failed to find tuner, please try to remove ``~/.config/nni``.
+
+Algorithms
+""""""""""
+
+* Random tuner now supports classArgs ``seed``. `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/RandomTuner.html>`__
+* TPE tuner is refactored: `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/TpeTuner.html>`__
+
+  * Support classArgs ``seed``.
+  * Support classArgs ``tpe_args`` for expert users to customize algorithm behavior.
+  * Parallel optimization has been turned on by default. To turn it off set ``tpe_args.constant_liar_type`` to ``null`` (or ``None`` in Python).
+  * ``parallel_optimize`` and ``constant_liar_type`` has been removed. If you are using them please update your config to use ``tpe_args.constant_liar_type`` instead.
+
+* Grid search tuner now supports all search space types, including uniform, normal, and nested choice. `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/GridsearchTuner.html>`__
+
+Neural Architecture Search
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Enhancement to serialization utilities `(doc) <https://nni.readthedocs.io/en/v2.6/NAS/Serialization.html>`__ and changes to recommended practice of customizing evaluators. `(doc) <https://nni.readthedocs.io/en/v2.6/NAS/QuickStart.html#pick-or-customize-a-model-evaluator>`__
+* Support latency constraint on edge device for ProxylessNAS based on nn-Meter. `(doc) <https://nni.readthedocs.io/en/v2.6/NAS/Proxylessnas.html>`__
+* Trial parameters are showed more friendly in Retiarii experiments.
+* Refactor NAS examples of ProxylessNAS and SPOS.
+
+Model Compression
+^^^^^^^^^^^^^^^^^
+
+* New Pruner Supported in Pruning V2
+
+  * Auto-Compress Pruner `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html#auto-compress-pruner>`__
+  * AMC Pruner `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html#amc-pruner>`__
+  * Movement Pruning Pruner `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html#movement-pruner>`__
+
+* Support ``nni.trace`` wrapped ``Optimizer`` in Pruning V2. In the case of not affecting the user experience as much as possible, trace the input parameters of the optimizer. `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html>`__
+* Optimize Taylor Pruner, APoZ Activation Pruner, Mean Activation Pruner in V2 memory usage.
+* Add more examples for Pruning V2.
+* Add document for pruning config list.  `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_config_list.html>`__
+* Parameter ``masks_file`` of ``ModelSpeedup`` now accepts `pathlib.Path` object. (Thanks to @dosemeion) `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/ModelSpeedup.html#user-configuration-for-modelspeedup>`__
+* Bug Fix
+
+  * Fix Slim Pruner in V2 not sparsify the BN weight.
+  * Fix Simulator Annealing Task Generator generates config ignoring 0 sparsity.
+
+Documentation
+^^^^^^^^^^^^^
+
+* Supported GitHub feature "Cite this repository".
+* Updated index page of readthedocs.
+* Updated Chinese documentation.
+
+  * From now on NNI only maintains translation for most import docs and ensures they are up to date.
+
+* Reorganized HPO tuners' doc.
+
+Bugfixes
+^^^^^^^^
+
+* Fixed a bug where numpy array is used as a truth value. (Thanks to @khituras)
+* Fixed a bug in updating search space.
+* Fixed a bug that HPO search space file does not support scientific notation and tab indent.
+
+  * For now NNI does not support mixing scientific notation and YAML features. We are waiting for PyYAML to update.
+
+* Fixed a bug that causes DARTS 2nd order to crash.
+* Fixed a bug that causes deep copy of mutation primitives (e.g., LayerChoice) to crash.
+* Removed blank at bottom in Web UI overview page.
+
+Release 2.5 - 11/2/2021
+-----------------------
+
+Model Compression
+^^^^^^^^^^^^^^^^^
+
+* New major version of pruning framework `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/v2_pruning.html>`__
+
+  * Iterative pruning is more automated, users can use less code to implement iterative pruning.
+  * Support exporting intermediate models in the iterative pruning process.
+  * The implementation of the pruning algorithm is closer to the paper.
+  * Users can easily customize their own iterative pruning by using ``PruningScheduler``.
+  * Optimize the basic pruners underlying generate mask logic, easier to extend new functions.
+  * Optimized the memory usage of the pruners.
+
+* MobileNetV2 end-to-end example `(notebook) <https://github.com/microsoft/nni/blob/v2.5/examples/model_compress/pruning/mobilenetv2_end2end/Compressing%20MobileNetV2%20with%20NNI%20Pruners.ipynb>`__
+* Improved QAT quantizer `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/Quantizer.html#qat-quantizer>`__
+
+  * support dtype and scheme customization
+  * support dp multi-gpu training
+  * support load_calibration_config
+
+* Model speed-up now supports directly loading the mask `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/ModelSpeedup.html#nni.compression.pytorch.ModelSpeedup>`__
+* Support speed-up depth-wise convolution
+* Support bn-folding for LSQ quantizer
+* Support QAT and LSQ resume from PTQ
+* Added doc for observer quantizer `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/Quantizer.html#observer-quantizer>`__
+
+Neural Architecture Search
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* NAS benchmark `(doc) <https://nni.readthedocs.io/en/v2.5/NAS/Benchmarks.html>`__
+
+  * Support benchmark table lookup in experiments
+  * New data preparation approach
+
+* Improved `quick start doc <https://nni.readthedocs.io/en/v2.5/NAS/QuickStart.html>`__
+* Experimental CGO execution engine `(doc) <https://nni.readthedocs.io/en/v2.5/NAS/ExecutionEngines.html#cgo-execution-engine-experimental>`__
+
+Hyper-Parameter Optimization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* New training platform: Alibaba DSW+DLC `(doc) <https://nni.readthedocs.io/en/v2.5/TrainingService/DLCMode.html>`__
+* Support passing ConfigSpace definition directly to BOHB `(doc) <https://nni.readthedocs.io/en/v2.5/Tuner/BohbAdvisor.html#usage>`__ (thanks to khituras)
+* Reformatted `experiment config doc <https://nni.readthedocs.io/en/v2.5/reference/experiment_config.html>`__
+* Added example config files for Windows (thanks to @politecat314)
+* FrameworkController now supports reuse mode
+
+Fixed Bugs
+^^^^^^^^^^
+
+* Experiment cannot start due to platform timestamp format (issue #4077 #4083)
+* Cannot use ``1e-5`` in search space (issue #4080)
+* Dependency version conflict caused by ConfigSpace (issue #3909) (thanks to @jexxers)
+* Hardware-aware SPOS example does not work (issue #4198)
+* Web UI show wrong remaining time when duration exceeds limit (issue #4015)
+* cudnn.deterministic is always set in AMC pruner (#4117) thanks to @mstczuo
+
+And...
+^^^^^^
+
+* New `emoticons <https://github.com/microsoft/nni/blob/v2.5/docs/en_US/Tutorial/NNSpider.md>`__!
+
+.. image:: https://raw.githubusercontent.com/microsoft/nni/v2.5/docs/img/emoicons/Holiday.png
+
 Release 2.4 - 8/11/2021
 -----------------------
 

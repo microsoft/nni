@@ -2,6 +2,7 @@ import React, { useState, useCallback, useContext } from 'react';
 import axios from 'axios';
 import { Dropdown } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
+import { toSeconds } from '../../../static/experimentConfig';
 import { AppContext } from '../../../App';
 import { EditExpeParamContext } from './context';
 import { durationUnit } from '../overviewConst';
@@ -63,20 +64,32 @@ export const EditExperimentParam = (): any => {
         }
     }
 
+    function promptErrorMessage(mess: string, type: string, value: string): void {
+        showMessageInfo(mess, type);
+        setEditValInput(value);
+    }
+
     async function confirmEdit(): Promise<void> {
         const isMaxDuration = title === 'Max duration';
         const newProfile = Object.assign({}, EXPERIMENT.profile);
         let beforeParam = '';
         if (isMaxDuration) {
             if (!editInputVal.match(/^\d+(?=\.{0,1}\d+$|$)/)) {
-                showMessageInfo('Please enter a number!', 'error');
-                setEditValInput(defaultVal);
+                promptErrorMessage('Please enter a number!', 'error', defaultVal);
+                return;
+            }
+            if (toSeconds(`${editInputVal}${unit}`) < EXPERIMENT.profile.execDuration) {
+                // maxDuration should > current run time(execDuration)
+                promptErrorMessage(
+                    'Please input a valid value. (Current duration is more than the number you input.)',
+                    'error',
+                    defaultVal
+                );
                 return;
             }
         } else {
             if (!editInputVal.match(/^[1-9]\d*$/)) {
-                showMessageInfo('Please enter a positive integer!', 'error');
-                setEditValInput(defaultVal);
+                promptErrorMessage('Please enter a positive integer!', 'error', defaultVal);
                 return;
             }
         }
@@ -117,7 +130,7 @@ export const EditExperimentParam = (): any => {
                 showMessageInfo(`Successfully updated experiment's ${field}`, 'success');
                 updateOverviewPage();
             }
-        } catch (error) {
+        } catch (error: any) {
             if (error.response && error.response.data.error) {
                 showMessageInfo(`Failed to update trial ${field}\n${error.response.data.error}`, 'error');
             } else if (error.response) {

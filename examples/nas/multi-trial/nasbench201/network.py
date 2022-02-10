@@ -3,7 +3,7 @@ import nni
 import nni.retiarii.evaluator.pytorch.lightning as pl
 import torch.nn as nn
 import torchmetrics
-from nni.retiarii import model_wrapper, serialize, serialize_cls
+from nni.retiarii import model_wrapper, serialize
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.nn.pytorch import NasBench201Cell
 from nni.retiarii.strategy import Random
@@ -71,7 +71,7 @@ class AccuracyWithLogits(torchmetrics.Accuracy):
         return super().update(nn.functional.softmax(pred), target)
 
 
-@serialize_cls
+@nni.trace
 class NasBench201TrainingModule(pl.LightningModule):
     def __init__(self, max_epochs=200, learning_rate=0.1, weight_decay=5e-4):
         super().__init__()
@@ -118,7 +118,8 @@ class NasBench201TrainingModule(pl.LightningModule):
 @click.option('--epochs', default=12, help='Training length.')
 @click.option('--batch_size', default=256, help='Batch size.')
 @click.option('--port', default=8081, help='On which port the experiment is run.')
-def _multi_trial_test(epochs, batch_size, port):
+@click.option('--benchmark', is_flag=True, default=False)
+def _multi_trial_test(epochs, batch_size, port, benchmark):
     # initalize dataset. Note that 50k+10k is used. It's a little different from paper
     transf = [
         transforms.RandomCrop(32, padding=4),
@@ -154,6 +155,10 @@ def _multi_trial_test(epochs, batch_size, port):
     exp_config.max_trial_number = 20
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = False
+
+    if benchmark:
+        exp_config.benchmark = 'nasbench201-cifar100'
+        exp_config.execution_engine = 'benchmark'
 
     exp.run(exp_config, port)
 
