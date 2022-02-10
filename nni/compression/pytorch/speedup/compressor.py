@@ -383,6 +383,40 @@ class ModelSpeedup:
                 if out_degree[predecessor] == 0:
                     visit_queue.put(self.torch_graph.name_to_node[predecessor])
 
+    def replace_forward_function(self):
+        """
+        There are several functions that needed to be replaced by rewrite the
+        forward function of the target model.
+        """
+        _logger.info('Replace the forward function of the model')
+        for unique_name in self.auto_inferences:
+            self.replace_function(unique_name)
+        code = self.torch_graph.trace.code
+        constants = self.torch_graph.trace.code_with_constants[1].const_mapping
+        for constant_name in constants:
+            _name = 'CONSTANTS.' + constant_name
+            code = code.replace(_name, str(constants[constant_name]))
+
+        def forward_decorator(ori_func):
+            # import here, avoid to add non-necessary dependency package for other path
+            import inspect
+            kw_args_spec = inspect.getfullargspec(ori_func).kwonlyargs
+
+            def new_forward(*args, **kwargs):
+                filtered_kw = {key: kwargs[key]
+                                for key in kw_args_spec}
+
+                return ori_func(*args, **filtered_kw)
+            return new_forward
+        _new_forward_implementation = translate_jit_code(code)
+        setattr(self.bound_model, '_nni_forward_imple',
+                _new_forward_implementation)
+        new_forward = forward_decorator(
+            self.bound_model._nni_forward_imple)
+        setattr(self.bound_model, 'forward', types.MethodType(
+            new_forward, self.bound_model))
+
+
     def replace_compressed_modules(self):
         """
         Replace all the modules that have changed (weights/inputs/output) shape.
@@ -395,7 +429,7 @@ class ModelSpeedup:
         with torch.no_grad():
             for unique_name in self.auto_inferences:
                 self.replace_submodule(unique_name)
-            # the replaced model training state is set to True by default
+            # the new replaced model training state is set to True by default
             self.bound_model.train(False)
             need_replace_forward = False
             # We separate the module replacement with the function replacement,
@@ -410,33 +444,7 @@ class ModelSpeedup:
                 _logger.warning(
                     'Meet errors when try to run the forward inference after module replacement: %s', str(err))
             if need_replace_forward:
-                _logger.info('Replace the function of the model')
-                for unique_name in self.auto_inferences:
-                    self.replace_function(unique_name)
-                code = self.torch_graph.trace.code
-                constants = self.torch_graph.trace.code_with_constants[1].const_mapping
-                for constant_name in constants:
-                    _name = 'CONSTANTS.' + constant_name
-                    code = code.replace(_name, str(constants[constant_name]))
-
-                def forward_decorator(ori_func):
-                    # import here, avoid to add non-necessary dependency package for other path
-                    import inspect
-                    kw_args_spec = inspect.getfullargspec(ori_func).kwonlyargs
-
-                    def new_forward(*args, **kwargs):
-                        filtered_kw = {key: kwargs[key]
-                                       for key in kw_args_spec}
-
-                        return ori_func(*args, **filtered_kw)
-                    return new_forward
-                _new_forward_implementation = translate_jit_code(code)
-                setattr(self.bound_model, '_nni_forward_imple',
-                        _new_forward_implementation)
-                new_forward = forward_decorator(
-                    self.bound_model._nni_forward_imple)
-                setattr(self.bound_model, 'forward', types.MethodType(
-                    new_forward, self.bound_model))
+                self.replace_forward_function()
 
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """
@@ -514,6 +522,11 @@ class ModelSpeedup:
             return None
 
     def replace_function(self, unique_name):
+        """
+        Directly modify the function node in the jit graph.
+        So that we can generate the new forward function according
+        to the new modified function.
+        """
         assert unique_name in self.auto_inferences
         g_node = self.torch_graph.name_to_node[unique_name]
         _logger.debug("replace %s, in %s type, with op_type %s",
