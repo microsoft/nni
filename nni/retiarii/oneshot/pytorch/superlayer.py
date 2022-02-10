@@ -112,7 +112,7 @@ class PathSamplingSuperConv2d(nn.Conv2d):
         # conv 和 linear 不一样，前面的 stride 和 padding 是可能会影响到后面层的 size 的。
         # 这就要求对 value choice 的 sample时，要把 sampled index 和 candiate 分开了。。。。
         # 然后用户要自行保证前后的 size 对准
-        self.stride = sampled_candidate(self._stride)
+        self.stride = sampled_candidate(self._stride) # tuple 的情况支持一下
         self.padding = sampled_candidate(self._padding)
         self.dilation = sampled_candidate(self._dilation)
         # 支持 group 的话，我应该是对第二维进行拆分。
@@ -120,7 +120,7 @@ class PathSamplingSuperConv2d(nn.Conv2d):
 
         # 暂且只支持正方形的 kernel
         # weight.shape = [out_chn, in_chn, kernel_size]
-        # 如何取部分 kernel? 是从中央取，还是取左上？
+        # 如何取部分 kernel? 是从中央取
         weight = self.weight[:out_chn, :in_chn, :kernel_size, :kernel_size]
         bias = self.bias[:out_chn]
         return self._conv_forward(input, weight, bias)
