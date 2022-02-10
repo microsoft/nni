@@ -9,7 +9,7 @@ from torchvision.datasets import MNIST
 from torch.utils.data.sampler import RandomSampler
 
 from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Repeat
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
                                           DartsModule, EnasModule, SNASModule,
                                           ParallelTrainValDataLoader,
