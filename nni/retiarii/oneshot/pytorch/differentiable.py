@@ -5,17 +5,69 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from collections import OrderedDict
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from .base_lightning import BaseOneShotLightningModule
-from .darts import DartsInputChoice, DartsLayerChoice
+
+
+class DartsLayerChoice(nn.Module):
+    def __init__(self, layer_choice):
+        super(DartsLayerChoice, self).__init__()
+        self.name = layer_choice.label
+        self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
+        self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
+
+    def forward(self, *args, **kwargs):
+        op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
+        alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
+        return torch.sum(op_results * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
+
+    def parameters(self):
+        for _, p in self.named_parameters():
+            yield p
+
+    def named_parameters(self):
+        for name, p in super(DartsLayerChoice, self).named_parameters():
+            if name == 'alpha':
+                continue
+            yield name, p
+
+    def export(self):
+        return list(self.op_choices.keys())[torch.argmax(self.alpha).item()]
+
+
+class DartsInputChoice(nn.Module):
+    def __init__(self, input_choice):
+        super(DartsInputChoice, self).__init__()
+        self.name = input_choice.label
+        self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
+        self.n_chosen = input_choice.n_chosen or 1
+
+    def forward(self, inputs):
+        inputs = torch.stack(inputs)
+        alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
+        return torch.sum(inputs * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
+
+    def parameters(self):
+        for _, p in self.named_parameters():
+            yield p
+
+    def named_parameters(self):
+        for name, p in super(DartsInputChoice, self).named_parameters():
+            if name == 'alpha':
+                continue
+            yield name, p
+
+    def export(self):
+        return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
 
 
 class DartsModule(BaseOneShotLightningModule):
     """
     The DARTS module. Each iteration consists of 2 training phases. The phase 1 is architecture step, in which model parameters are
-    frozen and the architecture parameters are trained. The phase 2 is model step, in wchich architecture parameters are frozen and
+    frozen and the architecture parameters are trained. The phase 2 is model step, in which architecture parameters are frozen and
     model parameters are trained. See [darts] for details.
-    The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTraiValDataloader`.
+    The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTrainValDataloader`.
 
     Reference
     ----------
@@ -175,7 +227,7 @@ class ProxylessLayerChoice(nn.Module):
 class ProxylessInputChoice(nn.Module):
     def __init__(self, input_choice):
         super().__init__()
-        self.ops = nn.ModuleList(input_choice)
+        self.num_input_candidates = input_choice.n_candidates
         self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1E-3)
         self._binary_gates = nn.Parameter(torch.randn(input_choice.n_candidates) * 1E-3)
         self.sampled = None
@@ -229,7 +281,7 @@ class ProxylessInputChoice(nn.Module):
 class ProxylessModule(DartsModule):
     """
     The Proxyless Module. This is a darts-based method that resamples the architecture to reduce memory consumption.
-    The Proxyless Module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.ParallelTraiValDataloader`.
+    The Proxyless Module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.ParallelTrainValDataloader`.
 
     Reference
     ----------
@@ -266,6 +318,7 @@ class SNASLayerChoice(DartsLayerChoice):
         yhat = torch.sum(op_results * self.one_hot.view(*alpha_shape), 0)
         return yhat
 
+
 class SNASInputChoice(DartsInputChoice):
     def forward(self, inputs):
         self.one_hot = F.gumbel_softmax(self.alpha, self.temp)
@@ -273,6 +326,7 @@ class SNASInputChoice(DartsInputChoice):
         alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
         yhat = torch.sum(inputs * self.one_hot.view(*alpha_shape), 0)
         return yhat
+
 
 class SNASModule(DartsModule):
     """

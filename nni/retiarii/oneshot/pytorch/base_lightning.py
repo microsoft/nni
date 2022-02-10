@@ -52,7 +52,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     Attributes
     ----------
     nas_modules : List[nn.Module]
-        The replace result of a specific NAS method. xxxChoice will be replaced with some other modules with respect to the 
+        The replace result of a specific NAS method. xxxChoice will be replaced with some other modules with respect to the
         NAS method.
 
     Parameters
@@ -303,7 +303,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def export(self):
         """
-        Export the NAS result, idealy the best choice of each nas_modules. 
+        Export the NAS result, idealy the best choice of each nas_modules.
         You may implement an export method for your customized nas_module used to replace xxxChoice.
 
         Returns
