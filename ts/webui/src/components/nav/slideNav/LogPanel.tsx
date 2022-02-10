@@ -90,6 +90,7 @@ class LogPanel extends React.Component<LogPanelProps, LogPanelState> {
                     isFooterAtBottom={true}
                     isLightDismiss={true}
                     onLightDismissClick={closePanel}
+                    className='logPanel'
                 >
                     <Pivot selectedKey={activeTab} style={{ minHeight: 190 }}>
                         <PivotItem headerText='Dispatcher log' key='dispatcher'>
