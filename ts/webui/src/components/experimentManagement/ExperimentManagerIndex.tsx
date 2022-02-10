@@ -3,7 +3,7 @@ import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn, IStackToke
 import { ExperimentsManager } from '../../static/model/experimentsManager';
 import { expformatTimestamp, copyAndSort } from '../../static/function';
 import { AllExperimentList, SortInfo } from '../../static/interface';
-import MessageInfo from '../modals/MessageInfo';
+import MessageInfo from '../common/MessageInfo';
 import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
 import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
@@ -14,7 +14,7 @@ import { Title } from '../experiment/overview/Title';
 import '../../App.scss';
 import '../../static/style/common.scss';
 import '../../static/style/nav/nav.scss';
-import '../../static/style/experiment/experiment.scss';
+import '../../static/style/experimentManagement/experiment.scss';
 import '../../static/style/overview/probar.scss';
 import '../../static/style/tableStatus.css';
 

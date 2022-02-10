@@ -5,7 +5,7 @@ import { getPrefix } from './static/function';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 const Overview = lazy(() => import('./components/experiment/Overview'));
 const TrialsDetail = lazy(() => import('./components/experiment/trialdetail/table/TrialsDetail'));
-const Experiment = lazy(() => import('./components/experimentManagement/ExperimentManager'));
+const ExperimentManagerIndex = lazy(() => import('./components/experimentManagement/ExperimentManagerIndex'));
 import './static/style/index.css';
 import './static/style/loading.scss';
 import * as serviceWorker from './serviceWorker';
@@ -21,7 +21,7 @@ ReactDOM.render(
                 </div>
             }
         >
-            <Route path='/experiment' component={Experiment} exact />
+            <Route path='/experiment' component={ExperimentManagerIndex} exact />
             <Switch>
                 <App>
                     <Route path='/' component={Overview} exact />

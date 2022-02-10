@@ -4,7 +4,7 @@ import { EXPERIMENT } from '../../../static/datamodel';
 import MonacoEditor from 'react-monaco-editor';
 import { MONACO } from '../../../static/const';
 import { convertDuration, caclMonacoEditorHeight } from '../../../static/function';
-import { prettyStringify } from '../../../static/json_util';
+import { prettyStringify } from '../../../static/jsonutil';
 import lodash from 'lodash';
 import '../../static/style/logDrawer.scss';
 

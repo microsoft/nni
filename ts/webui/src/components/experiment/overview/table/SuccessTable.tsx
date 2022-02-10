@@ -13,9 +13,9 @@ import {
     ScrollablePane,
     ScrollbarVisibility
 } from '@fluentui/react';
-import DefaultMetric from '../../../public-child/DefaultMetric';
-import OpenRow from '../../../public-child/OpenRow';
-import CopyButton from '../../../public-child/CopyButton';
+import DefaultMetric from './DefaultMetric';
+import OpenRow from '../../../common/OpenRow';
+import CopyButton from '../../../common/CopyButton';
 import { convertDuration, copyAndSort } from '../../../../static/function';
 import { TRIALS } from '../../../../static/datamodel';
 import { SortInfo } from '../../../../static/interface';

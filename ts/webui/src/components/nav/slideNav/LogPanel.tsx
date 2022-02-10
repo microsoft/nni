@@ -4,7 +4,7 @@ import { Stack, StackItem, Panel, PrimaryButton, DefaultButton, Pivot, PivotItem
 import { infoIcon } from '../../fluent/Icon';
 import { DOWNLOAD_IP } from '../../../static/const';
 import { downFile } from '../../../static/function';
-import MonacoHTML from '../../public-child/MonacoEditor';
+import MonacoHTML from '../../common/MonacoEditor';
 import '../../static/style/logDrawer.scss';
 
 interface LogDrawerProps {

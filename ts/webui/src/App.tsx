@@ -4,7 +4,7 @@ import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import { isManagerExperimentPage } from './static/function';
 import Nav from './components/nav/Nav';
-import MessageInfo from './components/modals/MessageInfo';
+import MessageInfo from './components/common/MessageInfo';
 import { SlideNavBtns } from './components/nav/slideNav/SlideNavBtns';
 const echarts = require('echarts/lib/echarts');
 echarts.registerTheme('nni_theme', {
