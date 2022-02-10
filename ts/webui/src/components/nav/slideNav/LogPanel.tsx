@@ -5,31 +5,31 @@ import { infoIcon } from '../../fluent/Icon';
 import { DOWNLOAD_IP } from '../../../static/const';
 import { downFile } from '../../../static/function';
 import MonacoHTML from '../../common/MonacoEditor';
-import '../../static/style/logDrawer.scss';
+import '../../../static/style/logPanel.scss';
 
-interface LogDrawerProps {
-    closeDrawer: () => void;
+interface LogPanelProps {
+    closePanel: () => void;
     activeTab?: string;
 }
 
-interface LogDrawerState {
+interface LogPanelState {
     nniManagerLogStr: string | null;
     dispatcherLogStr: string | null;
     isLoading: boolean;
-    logDrawerHeight: number;
+    logPanelHeight: number;
 }
 
-class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
+class LogPanel extends React.Component<LogPanelProps, LogPanelState> {
     private timerId: number | undefined;
 
-    constructor(props: LogDrawerProps) {
+    constructor(props: LogPanelProps) {
         super(props);
 
         this.state = {
             nniManagerLogStr: null,
             dispatcherLogStr: null,
             isLoading: true,
-            logDrawerHeight: window.innerHeight
+            logPanelHeight: window.innerHeight
         };
     }
 
@@ -63,25 +63,25 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         </div>
     );
 
-    setLogDrawerHeight = (): void => {
-        this.setState(() => ({ logDrawerHeight: window.innerHeight }));
+    setLogPanelHeight = (): void => {
+        this.setState(() => ({ logPanelHeight: window.innerHeight }));
     };
 
     async componentDidMount(): Promise<void> {
         this.refresh();
-        window.addEventListener('resize', this.setLogDrawerHeight);
+        window.addEventListener('resize', this.setLogPanelHeight);
     }
 
     componentWillUnmount(): void {
         window.clearTimeout(this.timerId);
-        window.removeEventListener('resize', this.setLogDrawerHeight);
+        window.removeEventListener('resize', this.setLogPanelHeight);
     }
 
     render(): React.ReactNode {
-        const { closeDrawer, activeTab } = this.props;
-        const { nniManagerLogStr, dispatcherLogStr, isLoading, logDrawerHeight } = this.state;
+        const { closePanel, activeTab } = this.props;
+        const { nniManagerLogStr, dispatcherLogStr, isLoading, logPanelHeight } = this.state;
         // tab[height: 56] + tab[margin-bottom: 20] + button[32] + button[margin-top: 45, -bottom: 7] + fluent-panel own paddingBottom[20] + title-border[2]
-        const monacoHeight = logDrawerHeight - 182;
+        const monacoHeight = logPanelHeight - 182;
         return (
             <Stack>
                 <Panel
@@ -89,7 +89,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                     hasCloseButton={false}
                     isFooterAtBottom={true}
                     isLightDismiss={true}
-                    onLightDismissClick={closeDrawer}
+                    onLightDismissClick={closePanel}
                 >
                     <Pivot selectedKey={activeTab} style={{ minHeight: 190 }}>
                         <PivotItem headerText='Dispatcher log' key='dispatcher'>
@@ -104,7 +104,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                                         <PrimaryButton text='Download' onClick={this.downloadDispatcher} />
                                     </StackItem>
                                     <StackItem grow={12} className='close'>
-                                        <DefaultButton text='Close' onClick={closeDrawer} />
+                                        <DefaultButton text='Close' onClick={closePanel} />
                                     </StackItem>
                                 </Stack>
                             </div>
@@ -121,7 +121,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                                         <PrimaryButton text='Download' onClick={this.downloadNNImanager} />
                                     </StackItem>
                                     <StackItem grow={12} className='close'>
-                                        <DefaultButton text='Close' onClick={closeDrawer} />
+                                        <DefaultButton text='Close' onClick={closePanel} />
                                     </StackItem>
                                 </Stack>
                             </div>
@@ -158,4 +158,4 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
     };
 }
 
-export default LogDrawer;
+export default LogPanel;

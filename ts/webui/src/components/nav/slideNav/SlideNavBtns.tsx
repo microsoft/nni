@@ -2,10 +2,14 @@ import React, { useState, useCallback } from 'react';
 import { Stack, DefaultButton, Icon } from '@fluentui/react';
 import MediaQuery from 'react-responsive';
 import TrialConfigPanel from './TrialConfigPanel';
-import LogPanel from '../../modals/LogPanel';
+import LogPanel from './LogPanel';
 import IconButtonTemplate from './IconButtonTemplet';
-import '../../static/style/overview/panel.scss';
+import '../../../static/style/nav/slideNavBtns.scss';
 
+/***
+ * this file is the container of [config, search space, dispatcher/nnimanager log]
+ * these three button is in the right of page
+ */
 export const SlideNavBtns = (): any => {
     const [isShowConfigPanel, setShowConfigPanle] = useState(false);
     const [isShowLogPanel, setShowLogPanel] = useState(false);
@@ -57,7 +61,7 @@ export const SlideNavBtns = (): any => {
             </Stack>
             {isShowConfigPanel && <TrialConfigPanel panelName={panelName} hideConfigPanel={hideConfigPanel} />}
             {/* the panel for dispatcher & nnimanager log message */}
-            {isShowLogPanel && <LogPanel closeDrawer={hideLogPanel} />}
+            {isShowLogPanel && <LogPanel closePanel={hideLogPanel} />}
         </React.Fragment>
     );
 };

@@ -1,22 +1,22 @@
 import * as React from 'react';
 import { Stack, Icon, Dropdown, DefaultButton } from '@fluentui/react';
-import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { Trial } from '../../static/model/trial';
-import { AppContext } from '../../App';
-import { Title } from './overview/Title';
-import SuccessTable from './overview/table/SuccessTable';
-import DefaultPoint from './trialdetail/graph/DefaultMetricPoint';
-import { BasicInfo } from './overview/params/BasicInfo';
-import { ExpDuration } from './overview/count/ExpDuration';
-import { ExpDurationContext } from './overview/count/ExpDurationContext';
-import { TrialCount } from './overview/count/TrialCount';
-import { Command1 } from './overview/command/Command1';
-import { Command2 } from './overview/command/Command2';
-import { TitleContext } from './overview/TitleContext';
-import { itemStyleSucceed, entriesOption } from './overview/overviewConst';
-import '../static/style/overview/overview.scss';
-import '../static/style/overview/topTrial.scss';
-import '../static/style/logPath.scss';
+import { EXPERIMENT, TRIALS } from '../../../static/datamodel';
+import { Trial } from '../../../static/model/trial';
+import { AppContext } from '../../../App';
+import { Title } from './Title';
+import SuccessTable from './table/SuccessTable';
+import DefaultPoint from '../trialdetail/graph/DefaultMetricPoint';
+import { BasicInfo } from './params/BasicInfo';
+import { ExpDuration } from './count/ExpDuration';
+import { ExpDurationContext } from './count/ExpDurationContext';
+import { TrialCount } from './count/TrialCount';
+import { Command1 } from './command/Command1';
+import { Command2 } from './command/Command2';
+import { TitleContext } from './TitleContext';
+import { itemStyleSucceed, entriesOption } from './overviewConst';
+import '../../../static/style/experiment/overview/overview.scss';
+import '../../../static/style/experiment/overview/topTrial.scss';
+import '../../../static/style/logPath.scss';
 
 /**
  * single experiment

@@ -7,7 +7,15 @@ import Duration from '../graph/Duration';
 import Para from '../graph/Para';
 import Intermediate from '../graph/Intermediate';
 import TableList from './TableList';
-import '../../static/style/search.scss';
+import '../../../../static/style/button.scss';
+import '../../../../static/style/logPath.scss';
+import '../../../../static/style/openRow.scss';
+import '../../../../static/style/pagination.scss';
+import '../../../../static/style/experiment/overview/overviewTitle.scss';
+import '../../../../static/style/experiment/trialdetail/search.scss';
+import '../../../../static/style/experiment/trialdetail/tensorboard.scss';
+import '../../../../static/style/table.scss';
+import '../../../../static/style/common/trialStatus.css';
 
 /**
  * single experiment

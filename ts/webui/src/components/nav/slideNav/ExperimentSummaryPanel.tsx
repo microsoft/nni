@@ -5,7 +5,7 @@ import { DRAWEROPTION } from '../../../static/const';
 import { EXPERIMENT, TRIALS } from '../../../static/datamodel';
 import { caclMonacoEditorHeight } from '../../../static/function';
 import MonacoEditor from 'react-monaco-editor';
-import '../../static/style/logDrawer.scss';
+import '../../../static/style/logPanel.scss';
 
 interface ExpDrawerProps {
     closeExpDrawer: () => void;

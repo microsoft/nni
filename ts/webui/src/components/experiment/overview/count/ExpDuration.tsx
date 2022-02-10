@@ -7,7 +7,7 @@ import { EditExperimentParam } from './EditExperimentParam';
 import { ExpDurationContext } from './ExpDurationContext';
 import { EditExpeParamContext } from './context';
 import { leftProgress, rightEidtParam, progressHeight } from './commonStyle';
-import '../../../static/style/overview/count.scss';
+import '../../../../static/style/experiment/overview/count.scss';
 
 export const ExpDuration = (): any => (
     <ExpDurationContext.Consumer>

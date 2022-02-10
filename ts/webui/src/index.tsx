@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import { getPrefix } from './static/function';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-const Overview = lazy(() => import('./components/experiment/Overview'));
+const Overview = lazy(() => import('./components/experiment/overview/Overview'));
 const TrialsDetail = lazy(() => import('./components/experiment/trialdetail/table/TrialsDetail'));
 const ExperimentManagerIndex = lazy(() => import('./components/experimentManagement/ExperimentManagerIndex'));
 import './static/style/index.css';

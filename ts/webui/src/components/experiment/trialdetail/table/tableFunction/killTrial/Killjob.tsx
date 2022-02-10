@@ -88,12 +88,12 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
                 if (error.response) {
                     alert(error.response.data.error);
                     // setErrorMessage({
-                        //     error: true,
-                        //     message: err.response.data.error || 'Failed to start tensorBoard!'
-                        // });
-                    } else {
-                        alert('500 error, fail to cancel the job');
-                    }
+                    //     error: true,
+                    //     message: err.response.data.error || 'Failed to start tensorBoard!'
+                    // });
+                } else {
+                    alert('500 error, fail to cancel the job');
+                }
                 // setTensorboardPanelVisible(true);
             });
     };

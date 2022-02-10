@@ -12,7 +12,13 @@ import {
 } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../../../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../../../static/const';
-import { convertDuration, formatTimestamp, copyAndSort, parametersType, parseMetrics } from '../../../../static/function';
+import {
+    convertDuration,
+    formatTimestamp,
+    copyAndSort,
+    parametersType,
+    parseMetrics
+} from '../../../../static/function';
 import { TableObj, SortInfo, SearchItems } from '../../../../static/interface';
 import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction';
 import { blocked, copy, LineChart, tableListIcon } from '../../../fluent/Icon';
@@ -26,15 +32,6 @@ import ExpandableDetails from '../../../common/ExpandableDetails';
 import PaginationTable from '../../../common/PaginationTable';
 import CopyButton from '../../../common/CopyButton';
 import { Trial } from '../../../../static/model/trial';
-import '../../static/style/button.scss';
-import '../../static/style/logPath.scss';
-import '../../static/style/openRow.scss';
-import '../../static/style/pagination.scss';
-import '../../static/style/search.scss';
-import '../../static/style/table.scss';
-import '../../static/style/tableStatus.css';
-import '../../static/style/tensorboard.scss';
-import '../../static/style/overview/overviewTitle.scss';
 
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');

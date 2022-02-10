@@ -10,7 +10,7 @@ import PaiTrialLog from './PaiTrialLog';
 import TrialLog from './TrialLog';
 import MessageInfo from './MessageInfo';
 import PanelMonacoEditor from './PanelMonacoEditor';
-import '../../static/style/overview/overview.scss';
+import '../../static/style/experiment/overview/overview.scss';
 import '../../static/style/copyParameter.scss';
 import '../../static/style/openRow.scss';
 

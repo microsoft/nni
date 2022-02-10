@@ -2,15 +2,15 @@ import * as React from 'react';
 import { Stack, Panel, PrimaryButton } from '@fluentui/react';
 import MonacoEditor from 'react-monaco-editor';
 import { caclMonacoEditorHeight } from '../../static/function';
-import '../../static/style/logDrawer.scss';
+import '../../static/style/logPanel.scss';
 
-interface LogDrawerProps {
+interface LogPanelProps {
     hideConfigPanel: () => void;
     panelName: string;
     panelContent: string;
 }
 
-interface LogDrawerState {
+interface LogPanelState {
     panelInnerHeight: number;
 }
 
@@ -21,8 +21,8 @@ interface LogDrawerState {
  * panel
  */
 
-class PanelMonacoEditor extends React.Component<LogDrawerProps, LogDrawerState> {
-    constructor(props: LogDrawerProps) {
+class PanelMonacoEditor extends React.Component<LogPanelProps, LogPanelState> {
+    constructor(props: LogPanelProps) {
         super(props);
 
         this.state = {
@@ -31,16 +31,16 @@ class PanelMonacoEditor extends React.Component<LogDrawerProps, LogDrawerState> 
     }
 
     // use arrow function for change window size met error: this.setState is not a function
-    setLogDrawerHeight = (): void => {
+    setLogPanelHeight = (): void => {
         this.setState(() => ({ panelInnerHeight: window.innerHeight, innerWidth: window.innerWidth }));
     };
 
     async componentDidMount(): Promise<void> {
-        window.addEventListener('resize', this.setLogDrawerHeight);
+        window.addEventListener('resize', this.setLogPanelHeight);
     }
 
     componentWillUnmount(): void {
-        window.removeEventListener('resize', this.setLogDrawerHeight);
+        window.removeEventListener('resize', this.setLogPanelHeight);
     }
 
     render(): React.ReactNode {

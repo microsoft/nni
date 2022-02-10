@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import { Stack, Callout, Link, IconButton } from '@fluentui/react';
-import LogDrawer from '../../../modals/LogPanel';
+import { useId } from '@uifabric/react-hooks';
 import { EXPERIMENT } from '../../../../static/datamodel';
 import { formatTimestamp } from '../../../../static/function';
-import { useId } from '@uifabric/react-hooks';
-import { BestMetricContext } from '../../Overview';
+import LogPanel from '../../../nav/slideNav/LogPanel';
+import { BestMetricContext } from '../Overview';
 import { styles } from './basicInfoStyles';
-import '../../../static/style/overview/probar.scss';
-import '../../../static/style/overview/basic.scss';
+import '../../../../static/style/common/experimentStatusColor.scss';
+import '../../../../static/style/experiment/overview/basic.scss';
 
 export const BasicInfo = (): any => {
     const labelId: string = useId('callout-label');
@@ -92,7 +92,7 @@ export const BasicInfo = (): any => {
                 </div>
             </Stack>
             {/* learn about click -> default active key is dispatcher. */}
-            {isShowLogDrawer ? <LogDrawer closeDrawer={closeLogDrawer} activeTab='dispatcher' /> : null}
+            {isShowLogDrawer ? <LogPanel closePanel={closeLogDrawer} activeTab='dispatcher' /> : null}
         </div>
     );
 };

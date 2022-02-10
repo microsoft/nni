@@ -20,9 +20,9 @@ import { convertDuration, copyAndSort } from '../../../../static/function';
 import { TRIALS } from '../../../../static/datamodel';
 import { SortInfo } from '../../../../static/interface';
 import { DETAILTABS } from '../../../nav/slideNav/NNItabs';
-import '../../../static/style/succTable.scss';
-import '../../../static/style/tableStatus.css';
-import '../../../static/style/openRow.scss';
+import '../../../../static/style/experiment/overview/succTable.scss';
+import '../../../../static/style/common/trialStatus.css';
+import '../../../../static/style/openRow.scss';
 
 interface SuccessTableProps {
     trialIds: string[];

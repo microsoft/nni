@@ -5,11 +5,11 @@ import { Dialog, DialogType, DialogFooter } from '@fluentui/react/lib/Dialog';
 import { MANAGER_IP } from '../../../../../static/const';
 import { EXPERIMENT, TRIALS } from '../../../../../static/datamodel';
 import { warining, errorBadge, completed } from '../../../../fluent/Icon';
-import '../../static/style/customized.scss';
+import '../../../../../static/style/experiment/trialdetail/customized.scss';
 
 /**
- * customized trial file is for 
- * [rerun failed trial, 
+ * customized trial file is for
+ * [rerun failed trial,
  * change trial parameters and add this customized trial into the experiment]
  */
 

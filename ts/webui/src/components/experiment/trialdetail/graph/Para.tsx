@@ -3,13 +3,13 @@ import { Dropdown, IDropdownOption, Stack, DefaultButton } from '@fluentui/react
 import ParCoords from 'parcoord-es';
 import 'parcoord-es/dist/parcoords.css';
 import * as React from 'react';
-import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { SearchSpace } from '../../static/model/searchspace';
-import { filterByStatus } from '../../static/function';
-import { TableObj, SingleAxis, MultipleAxes } from '../../static/interface';
-import '../../static/style/button.scss';
-import '../../static/style/para.scss';
-import ChangeColumnComponent from '../modals/ChangeColumnComponent';
+import { EXPERIMENT, TRIALS } from '../../../../static/datamodel';
+import { SearchSpace } from '../../../../static/model/searchspace';
+import { filterByStatus } from '../../../../static/function';
+import { TableObj, SingleAxis, MultipleAxes } from '../../../../static/interface';
+import '../../../../static/style/button.scss';
+import '../../../../static/style/experiment/trialdetail/para.scss';
+import ChangeColumnComponent from '../ChangeColumnComponent';
 
 interface ParaState {
     dimName: string[];

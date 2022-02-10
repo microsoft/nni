@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Stack, PrimaryButton, Toggle, IStackTokens } from '@fluentui/react';
-import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '../../static/interface';
-import { reformatRetiariiParameter } from '../../static/function';
+import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '../../../../static/interface';
+import { reformatRetiariiParameter } from '../../../../static/function';
 import ReactEcharts from 'echarts-for-react';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';

@@ -8,8 +8,8 @@ import ExperimentSummaryPanel from './slideNav/ExperimentSummaryPanel';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './slideNav/NNItabs';
 import { EXPERIMENT } from '../../static/datamodel';
 import { gap15, stackStyle } from '../fluent/ChildrenGap';
-import '../static/style/nav/nav.scss';
-import '../static/style/icon.scss';
+import '../../static/style/nav/nav.scss';
+import '../../static/style/icon.scss';
 
 interface NavState {
     version: string;

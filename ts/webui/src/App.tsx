@@ -4,15 +4,16 @@ import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import { isManagerExperimentPage } from './static/function';
 import Nav from './components/nav/Nav';
-import MessageInfo from './components/common/MessageInfo';
 import { SlideNavBtns } from './components/nav/slideNav/SlideNavBtns';
+import MessageInfo from './components/common/MessageInfo';
+import './static/style/App.scss';
+import './static/style/common/common.scss';
+import './static/style/experiment/trialdetail/trialsDetail.scss';
+
 const echarts = require('echarts/lib/echarts');
 echarts.registerTheme('nni_theme', {
     color: '#3c8dbc'
 });
-import './static/style/App.scss';
-import './static/style/common.scss';
-import './static/style/trialsDetail.scss';
 
 interface AppState {
     interval: number;

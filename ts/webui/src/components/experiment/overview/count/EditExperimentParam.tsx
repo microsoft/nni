@@ -9,7 +9,7 @@ import { durationUnit } from '../overviewConst';
 import { MANAGER_IP, MAX_TRIAL_NUMBERS } from '../../../../static/const';
 import { Edit, CheckMark, Cancel } from '../../../fluent/Icon';
 import MessageInfo from '../../../common/MessageInfo';
-import '../../../static/style/overview/count.scss';
+import '../../../../static/style/experiment/overview/count.scss';
 
 const DurationInputRef = React.createRef<HTMLInputElement>();
 

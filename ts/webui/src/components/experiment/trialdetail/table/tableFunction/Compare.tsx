@@ -6,11 +6,11 @@ import { TooltipForIntermediate, TableObj, SingleAxis } from '../../../../../sta
 import { contentStyles, iconButtonStyles } from '../../../../fluent/ModalTheme';
 import { convertDuration, parseMetrics } from '../../../../../static/function';
 import { EXPERIMENT, TRIALS } from '../../../../../static/datamodel';
-import '../../static/style/compare.scss';
+import '../../../../../static/style/experiment/trialdetail/compare.scss';
 
 /***
  * Compare file is designed for [each trial intermediate result, trials compare model]
- * if trial has dict intermediate result, 
+ * if trial has dict intermediate result,
  * graph only supports to show all keys that type is number
  */
 
