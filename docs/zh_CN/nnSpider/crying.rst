@@ -1,1 +1,0 @@
-../../en_US/nnSpider/crying.rst

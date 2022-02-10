@@ -42,3 +42,8 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
 .md-footer-copyright__highlight {
     display: inline;
 }
+
+/* toc style */
+.md-nav span.caption {
+    margin-top: 1.25em;
+}
