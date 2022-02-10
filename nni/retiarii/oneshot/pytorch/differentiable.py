@@ -12,12 +12,10 @@ from .darts import DartsInputChoice, DartsLayerChoice
 
 class DartsModule(BaseOneShotLightningModule):
     """
-    The DARTS module. In each iteration, there are 2 training phases. The phase 1 is architecture
-    step, in which the model parameters are frozen and the alphas are optimized. The phase 2 is model
-    step, in wchich the alphas are frozen and the model parameters are optimized. In this step, the
-    output of each choice are sumed up with respect to their alpha value. The result of DARTS
-    is argmax in alpha. See [darts] for details.
-    The DARTS Model should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTraiValDataloader`.
+    The DARTS module. Each iteration consists of 2 training phases. The phase 1 is architecture step, in which model parameters are
+    frozen and the architecture parameters are trained. The phase 2 is model step, in wchich architecture parameters are frozen and
+    model parameters are trained. See [darts] for details.
+    The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTraiValDataloader`.
 
     Reference
     ----------
@@ -58,11 +56,7 @@ class DartsModule(BaseOneShotLightningModule):
         return loss_and_metrics
 
     def _resample(self):
-        """
-        Hook kept for darts-based methods. Some following works resample the architecture to
-        reduce the memory consumption during training to fit the method to bigger models. Details
-        are provided in code of those algorithms.
-        """
+        # Note: This hook is kept for following darts-based NAS algs.
         pass
 
     def finalize_grad(self):
@@ -77,7 +71,7 @@ class DartsModule(BaseOneShotLightningModule):
         }
 
     def configure_architecture_optimizers(self):
-        # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
+        # The alpha in DartsXXXChoices is the architecture parameter of DARTS. All alphas share one optimizer.
         ctrl_params = {}
         for _, m in self.nas_modules:
             if m.name in ctrl_params:
@@ -234,15 +228,13 @@ class ProxylessInputChoice(nn.Module):
 
 class ProxylessModule(DartsModule):
     """
-    The Proxyless Module. This is a darts-based method. What it differs from darts is that it resample
-    the architecture according to alphas to select only one path a time to reduce memory consumption.
-    The ProxylessModule should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.ParallelTraiValDataloader`.
+    The Proxyless Module. This is a darts-based method that resamples the architecture to reduce memory consumption.
+    The Proxyless Module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.ParallelTraiValDataloader`.
 
     Reference
     ----------
-    .. [proxyless] H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target
-        Task and Hardware,” presented at the International Conference on Learning Representations,
-        Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
+    .. [proxyless] H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware,” presented
+        at the International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
     """
 
     @property
@@ -284,26 +276,23 @@ class SNASInputChoice(DartsInputChoice):
 
 class SNASModule(DartsModule):
     """
-    The SNAS Module. This is a darts-based method. It uses gumble-softmax to simulate an one-hot distribution to
-    select only one path a time. The SNAS Module should be trained with
-    :class:`nni.retiarii.oneshot.utils.ParallelTrainValDataLoader`.
+    The SNAS Module. This is a darts-based method that uses gumble-softmax to simulate one-hot distribution.
+    The SNAS Module should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTrainValDataLoader`.
 
     Parameters
     ----------
     base_model : pl.LightningModule
-        The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
-        is wrapped by base_model, and base_model will be wrapped by this model.
+        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
+        be wrapped by this model.
     gumble_temperature : float
         The initial temperature used in gumble-softmax.
     use_temp_anneal : bool
-        If this is set to True, a linear annealing will be applied to gumble_temperature. Otherwise
-        SNAS will run at a fixed temperature. See [snas] for details.
+        True: a linear annealing will be applied to gumble_temperature. False: run at a fixed temperature. See [snas] for details.
     min_temp : float
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
-        return an nn.module. This custom replace dict will override the default replace
-        dict of each NAS method.
+        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
+        replace dict will override the default replace dict of each NAS method.
 
     Reference
     ----------

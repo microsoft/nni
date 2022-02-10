@@ -14,16 +14,15 @@ from .enas import ReinforceController, ReinforceField
 
 class EnasModule(BaseOneShotLightningModule):
     """
-    The ENAS module. In each epoch, model parameters are first trained with weight sharing, followed by
-    the ENAS RL agent. The agent will produce a sample of model architecture, and the reward function
-    is used to train the agent.
+    The ENAS module. There are 2 steps in an epoch. 1: training model parameters. 2: training ENAS RL agent. The agent will produce
+    a sample of model architecture to get the best reward.
     The ENASModule should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.
 
     Parameters
     ----------
     base_model : pl.LightningModule
-        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model,
-        and base_model will be wrapped by this model.
+        he evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
+        be wrapped by this model.
     ctrl_kwargs : dict
         Optional kwargs that will be passed to :class:`ReinforceController`.
     entropy_weight : float
@@ -35,11 +34,10 @@ class EnasModule(BaseOneShotLightningModule):
     ctrl_steps_aggregate : int
         Number of steps that will be aggregated into one mini-batch for RL controller.
     grad_clip : float
-        Gradient clipping vlaue
+        Gradient clipping vlaue.
     custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
-        return an nn.module. This custom replace dict will override the default replace
-        dict of each NAS method.
+        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
+        replace dict will override the default replace dict of each NAS method.
 
     Reference
     ----------
@@ -97,7 +95,7 @@ class EnasModule(BaseOneShotLightningModule):
             self._resample()
             with torch.no_grad():
                 logits = self.model(x)
-            # get the default metric of self.model
+            # use the default metric of self.model as reward function
             if len(self.model.metrics) == 1:
                 _, metric = next(iter(self.model.metrics.items()))
             else:
@@ -136,19 +134,17 @@ class EnasModule(BaseOneShotLightningModule):
 
 class RandomSampleModule(BaseOneShotLightningModule):
     """
-    Random Sampling NAS Algorithm. In each epoch, model parameters are trained after a uniformly random
-    sampling of each choice. The training result is also a random sample of the search space.
-    The RandomSample Module should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.
+    Random Sampling NAS Algorithm. In each epoch, model parameters are trained after a uniformly random sampling of each choice.
+    The training result is also a random sample of the search space.
 
     Parameters
     ----------
     base_model : pl.LightningModule
-        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model,
-        and base_model will be wrapped by this model.
+        he evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
+        be wrapped by this model.
     custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
-        return an nn.module. This custom replace dict will override the default replace
-        dict of each NAS method.
+        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
+        replace dict will override the default replace dict of each NAS method.
     """
     automatic_optimization = True
 
@@ -164,8 +160,7 @@ class RandomSampleModule(BaseOneShotLightningModule):
         }
 
     def _resample(self):
-        # The simplest sampling-based NAS method.
-        # Each NAS module is uniformly sampled.
+        # The simplest sampling-based NAS method that each NAS module is uniformly sampled.
         result = {}
         for name, module in self.nas_modules:
             if name not in result:

@@ -184,9 +184,8 @@ def replace_input_choice(root_module, init_fn, modules=None):
 
 class ParallelTrainValDataLoader(DataLoader):
     """
-    Dataloader that yields both train data and validation data in a batch, with an order of
-    (train_batch, val_batch). The shorter one will be upsampled (repeated) to the length
-    of the longer one, and the tail of the last repeat will be dropped.
+    Dataloader that yields both train data and validation data in a batch, with an order of (train_batch, val_batch). The shorter
+    one will be upsampled (repeated) to the length of the longer one, and the tail of the last repeat will be dropped.
 
     Some NAS algorithms, i.e. DARTS and Proxyless, require this type of dataloader.
 
@@ -247,9 +246,8 @@ class ParallelTrainValDataLoader(DataLoader):
 
 class ConcatenateTrainValDataLoader(DataLoader):
     """
-    Dataloader that yields validation data after training data in an epoch. You will get a batch with
-    the form of (batch, source) in the training step, where ``source`` is a ``str`` whose value is
-    either 'train' or 'val', indicating which dataloader the batch comes from.
+    Dataloader that yields validation data after training data in an epoch. You will get a batch with the form of (batch, source) in the
+    training step, where ``source`` is a string which is either 'train' or 'val', indicating which dataloader the batch comes from.
 
     Some NAS algorithms, i.e. ENAS, may require this type of dataloader.
 
@@ -263,8 +261,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
     Warnings
     ----------
     If you set ``limit_train_batches`` of the trainer, the validation batches may be skipped.
-    Consider downsampling the train dataset and the validation dataset instead if you want to
-    shorten the length of data.
+    Consider downsampling the train dataset and the validation dataset instead if you want to shorten the length of data.
 
     Example
     --------
