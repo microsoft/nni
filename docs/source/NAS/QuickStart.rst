@@ -181,9 +181,21 @@ The complete code of this example can be found :githublink:`here <examples/nas/m
 Visualize the Experiment
 ------------------------
 
-Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment. For example, open ``localhost::8081`` in your browser, 8081 is the port that you set in ``exp.run``. Please refer to `here <../Tutorial/WebUI.rst>`__ for details.
+Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment. For example, open ``localhost:8081`` in your browser, 8081 is the port that you set in ``exp.run``. Please refer to `here <../Tutorial/WebUI.rst>`__ for details.
 
-We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__). This can be used by clicking ``Visualization`` in detail panel for each trial. Note that current visualization is based on `onnx <https://onnx.ai/>`__ , thus visualization is not feasible if the model cannot be exported into onnx. Built-in evaluators (e.g., Classification) will automatically export the model into a file. For your own evaluator, you need to save your file into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work.
+We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__). This can be used by clicking ``Visualization`` in detail panel for each trial. Note that current visualization is based on `onnx <https://onnx.ai/>`__ , thus visualization is not feasible if the model cannot be exported into onnx.
+
+Built-in evaluators (e.g., Classification) will automatically export the model into a file. For your own evaluator, you need to save your file into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work. For instance,
+
+.. code-block:: python
+
+  def evaluate_model(model_cls):
+    model = model_cls()
+    # dump the model into an onnx
+    if 'NNI_OUTPUT_DIR' in os.environ:
+      torch.onnx.export(model, (dummy_input, ),
+                        Path(os.environ['NNI_OUTPUT_DIR']) / 'model.onnx')
+    # the rest are training and evaluation
 
 Export Top Models
 -----------------

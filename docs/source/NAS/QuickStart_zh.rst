@@ -1,4 +1,4 @@
-.. 2cbe7334076be1841320c31208c338ff
+.. d6ad1b913b292469c647ca68ac158840
 
 快速入门 Retiarii
 ==============================
@@ -183,9 +183,21 @@ Retiarii 提供了诸多的 `内置模型评估器 <./ModelEvaluators.rst>`__，
 可视化 Experiment
 ------------------------
 
-用户可以像可视化普通的超参数调优 Experiment 一样可视化他们的 Experiment。 例如，在浏览器里打开 ``localhost::8081``，8081 是在 ``exp.run`` 里设置的端口。 参考 `这里 <../Tutorial/WebUI.rst>`__ 了解更多细节。
+用户可以像可视化普通的超参数调优 Experiment 一样可视化他们的 Experiment。 例如，在浏览器里打开 ``localhost:8081``，8081 是在 ``exp.run`` 里设置的端口。 参考 `这里 <../Tutorial/WebUI.rst>`__ 了解更多细节。
 
-我们支持使用第三方工具（例如 `Netron <https://netron.app/>`__）可视化搜索过程中采样到的模型。您可以点击每个 trial 面板下的 ``Visualization``。注意，目前的可视化是基于导出成 `onnx <https://onnx.ai/>`__ 格式的模型实现的，所以如果模型无法导出成 onnx，那么可视化就无法进行。内置的模型评估器（比如 Classification）已经自动将模型导出成了一个文件。如果您自定义了模型，您需要将模型导出到 ``$NNI_OUTPUT_DIR/model.onnx``。
+我们支持使用第三方工具（例如 `Netron <https://netron.app/>`__）可视化搜索过程中采样到的模型。您可以点击每个 trial 面板下的 ``Visualization``。注意，目前的可视化是基于导出成 `onnx <https://onnx.ai/>`__ 格式的模型实现的，所以如果模型无法导出成 onnx，那么可视化就无法进行。
+
+内置的模型评估器（比如 Classification）已经自动将模型导出成了一个文件。如果您自定义了模型，您需要将模型导出到 ``$NNI_OUTPUT_DIR/model.onnx``。例如，
+
+.. code-block:: python
+
+  def evaluate_model(model_cls):
+    model = model_cls()
+    # 把模型导出成 onnx
+    if 'NNI_OUTPUT_DIR' in os.environ:
+      torch.onnx.export(model, (dummy_input, ),
+                        Path(os.environ['NNI_OUTPUT_DIR']) / 'model.onnx')
+    # 剩下的就是训练和测试流程
 
 导出最佳模型
 -----------------
