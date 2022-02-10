@@ -1,5 +1,4 @@
 -f https://download.pytorch.org/whl/torch_stable.html
-tensorflow == 1.15.4
 torch == 1.7.1+cpu
 torchvision == 0.8.2+cpu
 
@@ -8,10 +7,13 @@ torchvision == 0.8.2+cpu
 pytorch-lightning
 torchmetrics
 
-keras == 2.1.6
 onnx
 peewee
 graphviz
 gym
 tianshou >= 0.4.1
-matplotlib < 3.4
+matplotlib
+
+# TODO: time to drop tensorflow 1.x
+keras
+tensorflow < 2.0

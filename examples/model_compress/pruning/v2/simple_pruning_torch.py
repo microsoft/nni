@@ -7,7 +7,8 @@ from torchvision import datasets, transforms
 from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
 from nni.compression.pytorch.speedup import ModelSpeedup
 
-sys.path.append('../../models')
+from pathlib import Path
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from cifar10.vgg import VGG
 
 

@@ -11,7 +11,7 @@ from enum import Enum
 from typing import (Any, Dict, Iterable, List, Optional, Tuple, Type, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
-from .utils import get_importable_name, import_, uid
+from .utils import uid
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData']
 
@@ -41,20 +41,25 @@ class Evaluator(abc.ABC):
         items = ', '.join(['%s=%r' % (k, v) for k, v in self.__dict__.items()])
         return f'{self.__class__.__name__}({items})'
 
-    @abc.abstractstaticmethod
-    def _load(ir: Any) -> 'Evaluator':
-        pass
-
     @staticmethod
-    def _load_with_type(type_name: str, ir: Any) -> 'Optional[Evaluator]':
-        if type_name == '_debug_no_trainer':
-            return DebugEvaluator()
-        config_cls = import_(type_name)
-        assert issubclass(config_cls, Evaluator)
-        return config_cls._load(ir)
+    def _load(ir: Any) -> 'Evaluator':
+        evaluator_type = ir.get('type')
+        if isinstance(evaluator_type, str):
+            # for debug purposes only
+            for subclass in Evaluator.__subclasses__():
+                if subclass.__name__ == evaluator_type:
+                    evaluator_type = subclass
+                    break
+        assert issubclass(evaluator_type, Evaluator)
+        return evaluator_type._load(ir)
 
     @abc.abstractmethod
     def _dump(self) -> Any:
+        """
+        Subclass implements ``_dump`` for their own serialization.
+        They should return a dict, with a key ``type`` which equals ``self.__class__``,
+        and optionally other keys.
+        """
         pass
 
     @abc.abstractmethod
@@ -154,16 +159,13 @@ class Model:
             if graph_name != '_evaluator':
                 Graph._load(model, graph_name, graph_data)._register()
         if '_evaluator' in ir:
-            model.evaluator = Evaluator._load_with_type(ir['_evaluator']['__type__'], ir['_evaluator'])
+            model.evaluator = Evaluator._load(ir['_evaluator'])
         return model
 
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
         if self.evaluator is not None:
-            ret['_evaluator'] = {
-                '__type__': get_importable_name(self.evaluator.__class__),
-                **self.evaluator._dump()
-            }
+            ret['_evaluator'] = self.evaluator._dump()
         return ret
 
     def get_nodes(self) -> Iterable['Node']:
@@ -787,7 +789,7 @@ class DebugEvaluator(Evaluator):
         return DebugEvaluator()
 
     def _dump(self) -> Any:
-        return {'__type__': '_debug_no_trainer'}
+        return {'type': DebugEvaluator}
 
     def _execute(self, model_cls: type) -> Any:
         pass
