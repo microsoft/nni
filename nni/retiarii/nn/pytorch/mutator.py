@@ -177,6 +177,7 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
         mutator = ValueChoiceMutator(node_list, node_list[0].operation.parameters['candidates'])
         applied_mutators.append(mutator)
 
+    # `pc_nodes` are arguments of basic units. They can be compositions.
     pc_nodes: List[Tuple[Node, str, ValueChoiceX]] = []
     for node in model.get_nodes():
         for name, choice in node.operation.parameters.items():
@@ -184,6 +185,7 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
                 # e.g., (conv_node, "out_channels", ValueChoice([1, 3]))
                 pc_nodes.append((node, name, choice))
 
+    # Break `pc_nodes` down to leaf value choices. They should be what we want to sample.
     leaf_value_choices: Dict[str, List[Any]] = {}
     for _, __, choice in pc_nodes:
         for inner_choice in choice.inner_choices():
