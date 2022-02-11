@@ -345,8 +345,10 @@ def get_valuechoice_match_and_replace(match_type, to_sample_func, to_replace_fun
                     # if a to_sample with the same label has already been created by another module, use it.
                     # otherwise we create it here
                     if v.label not in nas_modules:
-                        # we set nas_modules[v.label] here incase there are multiple valuechoice with the same label in one module
+                        # we set nas_modules[v.label] here incase there are multiple valuechoices with the same label in one module
                         nas_modules[v.label] = to_sample_func(v)
+                    # we set candidates with `name_k` incase there are multiple valuechoices with the same parameter name in
+                    # different modules
                     nas_modules[v.label].add_candidates(f'{name}_{k}', v.candidates)
                     module.trace_kwargs[k] = nas_modules[v.label]
                     to_samples.append(nas_modules[v.label])

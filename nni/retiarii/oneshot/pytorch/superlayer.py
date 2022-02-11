@@ -2,10 +2,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from re import S
-from turtle import forward
-from click import option
-from numpy import isin
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -39,22 +35,22 @@ class ToSample:
         self.n_candidates = n_candidates
         self.candidates = {}
         self.sampled = sampled
-    
+
 
     def sampled_candidate(self, attr_name):
         return self.candidates[attr_name][self.sampled]
-    
+
 
     def add_candidates(self, attr, candidates = []):
         assert len(candidates) == self.n_candidates, 'For ValueChoice with the same label, the number of candidates should also be ' \
             f'the same. ValueChoice `{self.label}` expects candidatas with a length of {self.n_candidates}, but got ' \
             f'{len(candidates)} for `{attr}`.'
         self.candidates[attr] = candidates
-        
-    
+
+
     def __len__(self):
         return self.n_candidates
-    
+
 
 
 class ENASValueChoice(ToSample):
@@ -68,100 +64,101 @@ class RandomValueChoice(ToSample):
         super().__init__(value_choice.label, len(value_choice.candidates))
 
 
-def sampled_candidate(attr, name):
-    if isinstance(attr, ToSample):
-        attr = attr.sampled_candidate(name)
-    return attr
+class ValueChoiceSuperLayer:
+    def __init__(self, module_name, module):
+        self.name = module_name
+        self.args = module.trace_kwargs
+
+    def max_candidate(self, attr_name, default = None):
+        attr = self.args.get(attr_name, default)
+        if isinstance(attr, ToSample):
+            return max(attr.candidates[f'{self.name}_{attr_name}'])
+        return attr
+
+    def min_candidate(self, attr_name, default = None):
+        attr = self.args.get(attr_name, default)
+        if isinstance(attr, ToSample):
+            return min(attr.candidates[f'{self.name}_{attr_name}'])
+        return attr
+
+    def sampled_candidate(self, attr_name, default = None):
+        attr = self.args.get(attr_name, default)
+        if isinstance(attr, ToSample):
+            return attr.sampled_candidate(f'{self.name}_{attr_name}')
+        return attr
 
 
-def max_candidate(attr, name):
-    if isinstance(attr, ToSample):
-        attr = max(attr.candidates[name])
-    return attr
 
-def min_candidate(attr, name):
-    if isinstance(attr, ToSample):
-        attr = min(attr.candidates[name])
-    return attr
 
 # SuperLinear(nn.Linear) 放一个单独文件
-class PathSamplingSuperLinear(nn.Linear):
+class PathSamplingSuperLinear(ValueChoiceSuperLayer, nn.Linear):
     def __init__(self, module, name) -> None:
-        args = module.trace_kwargs
-        self.name_in_parent = name
+        ValueChoiceSuperLayer.__init__(self, name, module)
 
-        self._in_features = args['in_features']
-        max_in_features = max_candidate(self._in_features, f'{self.name_in_parent}_in_features')
-        
-        self._out_features = args['out_features']
-        max_out_features = max_candidate(self._out_features, f'{self.name_in_parent}_out_features')
+        # compulsory params
+        max_in_features = self.max_candidate('in_features')
+        max_out_features = self.max_candidate('out_features')
 
-        bias = args.get('bias', True)
-        device = args.get('device', None)
-        dtype = args.get('dtype', None)
-        
-        super().__init__(max_in_features, max_out_features, bias, device, dtype)
+        # optional and no valuechoice params
+        bias = self.args.get('bias', True)
+        device = self.args.get('device', None)
+        dtype = self.args.get('dtype', None)
+
+        nn.Linear.__init__(self, max_in_features, max_out_features, bias, device, dtype)
 
     def forward(self, x):
-        # 如果是 valuechoice 就去读 sample 的值，否则就是固定值
-        in_dim = sampled_candidate(self._in_features, f'{self.name_in_parent}_in_features')
-        out_dim = sampled_candidate(self._out_features, f'{self.name_in_parent}_out_features')
-        
+        in_dim = self.sampled_candidate('in_features')
+        out_dim = self.sampled_candidate('out_features')
+
         weights = self.weight[:out_dim, :in_dim]
         bias = self.bias[:out_dim]
-        
+
         return F.linear(x, weights, bias)
 
-class PathSamplingSuperConv2d(nn.Conv2d):
-    # 暂时只支持正方形的 kernel
-    # 暂不支持 group
-    # 也不支持嵌套
+
+class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
     def __init__(self, module, name):
-        args = module.trace_kwargs
-        self.name_in_parent = name
-        
+        ValueChoiceSuperLayer.__init__(self, name, module)
+
         # compulsorty params
-        self._in_channels = args['in_channels']
-        max_in_channel = max_candidate(self._in_channels, f'{self.name_in_parent}_in_channels')
-        self._out_channels = args['out_channels']
-        max_out_channel = max_candidate(self._out_channels, f'{self.name_in_parent}_out_channels')
+        max_in_channel = self.max_candidate('in_channels')
+        max_out_channel = self.max_candidate('out_channels')
         # kernel_size may be an int or tuple, we turn it into a tuple for simplicity
-        self._kernel_size = args['kernel_size']
-        self.max_kernel_size = self.max_kernel_size_candidate(self._kernel_size, f'{self.name_in_parent}_kernel_size')
+        self.max_kernel_size = self.max_kernel_size_candidate()
         if not isinstance(self.max_kernel_size, tuple):
             self.max_kernel_size = (self.max_kernel_size, self.max_kernel_size)
-        
-        # optional params
-        self._stride = args.get('stride', 1)
-        self._padding = args.get('padding', 0)
-        self._dilation = args.get('dilation', 1)
-        self._groups = args.get('groups', 1)
-        min_groups = min_candidate(self._groups, f'{self.name_in_parent}_groups')
 
-        self._bias = args.get('bias', False)
-        _padding_mode = args.get('padding_mode', 'zeros')
-        _device = args.get('device', None)
-        _dtype = args.get('dtype', None)
-        super().__init__(max_in_channel, max_out_channel, self.max_kernel_size, groups = min_groups,
-            padding_mode = _padding_mode, device = _device, dtype = _dtype)
-    
+        # optional params
+        # stride, padding and dilation are not necessary for init funtion, since `Conv2d`` directly accessed them in `forward`,
+        # which means we can set them just before calling Conv2d.forward
+        min_groups = self.min_candidate('groups', 1)
+
+        # no valuechoice params
+        bias = self.args.get('bias', False)
+        padding_mode = self.args.get('padding_mode', 'zeros')
+        device = self.args.get('device', None)
+        dtype = self.args.get('dtype', None)
+
+        nn.Conv2d.__init__(self, max_in_channel, max_out_channel, self.max_kernel_size,
+            groups = min_groups, bias = bias, padding_mode = padding_mode, device = device, dtype = dtype)
+
     def forward(self, input):
-        in_chn = sampled_candidate(self._in_channels, f'{self.name_in_parent}_in_channels')
-        out_chn = sampled_candidate(self._out_channels, f'{self.name_in_parent}_out_channels')
-        kernel_size = sampled_candidate(self._kernel_size, f'{self.name_in_parent}_kernel_size')
+        in_chn = self.sampled_candidate('in_channels')
+        out_chn = self.sampled_candidate('out_channels')
+        kernel_size = self.sampled_candidate('kernel_size')
         sampled_kernel_a, sampled_kernel_b = kernel_size \
             if isinstance(kernel_size, tuple) else kernel_size, kernel_size
 
-        # Users are supposed to make sure that candidates with the same index fit each other.
-        # No need to figure if the following three attributes are tuples or not, since Conv2d already handeled it.
-        self.stride = sampled_candidate(self._stride, f'{self.name_in_parent}_stride')
-        self.padding = sampled_candidate(self._padding, f'{self.name_in_parent}_padding')
-        self.dilation = sampled_candidate(self._dilation, f'{self.name_in_parent}_dilation')
+        # Users are supposed to make sure that candidates with the same index match each other.
+        # No need to figure if the following three attributes are tuples or not, since Conv2d will handeled them.
+        self.stride = self.sampled_candidate('stride', 1)
+        self.padding = self.sampled_candidate('padding', 0)
+        self.dilation = self.sampled_candidate('dilation', 1)
 
-        # F.conv2d will handle `groups`, but we still need to slice weight 
-        self.groups = sampled_candidate(self._groups, f'{self.name_in_parent}_groups')
+        # F.conv2d will handle `groups`, but we still need to slice weight tensor
+        self.groups = self.sampled_candidate('groups', 1)
 
-        # take the small kernel from the centre and round to floor(left top)
+        # take the small kernel from the center and round it to floor(left top)
         # Example:
         #   max_kernel = 5*5, sampled_kernel = 3*3, then we take [1: 4]
         #   max_kernel = 5*5, sampled_kernel = 2*2, then we take [1: 3]
@@ -175,90 +172,80 @@ class PathSamplingSuperConv2d(nn.Conv2d):
         weight = self.weight[:out_chn, :in_chn // self.groups,
             kernel_a_left : kernel_a_left + sampled_kernel_a,
             kernel_b_top : kernel_b_top + sampled_kernel_b]
-        bias = self.bias[:out_chn]
+        bias = self.bias[:out_chn] if self.bias is not None else None
 
         return self._conv_forward(input, weight, bias)
-    
-    @staticmethod
-    def max_kernel_size_candidate(kernel_size, name):
-        if isinstance(kernel_size, ToSample):
-            if isinstance(kernel_size.candidates[name][0], tuple):
-                maxa, maxb = 0, 0
-                for a, b in kernel_size.candidates[name]:
-                    a = max(a, maxa)
-                    b = max(b, maxb)
-                kernel_size = (maxa, maxb)
-            else:
-                kernel_size = max_candidate(kernel_size, name)
-        return kernel_size
 
-class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d):
+    def max_kernel_size_candidate(self):
+        kernel_size = self.args['kernel_size']
+
+        if not isinstance(kernel_size, ToSample):
+            return kernel_size
+
+        candidates = kernel_size.candidates[f'{self.name}_kernel_size']
+        if not isinstance(candidates[0], tuple):
+            return max(candidates)
+
+        maxa, maxb = 0, 0
+        for a, b in candidates:
+            a = max(a, maxa)
+            b = max(b, maxb)
+        return maxa, maxb
+
+
+class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
     def __init__(self, module, name):
-        args = module.trace_kwargs
-        self.name_in_parent = name
-        # compulsory param
-        self._num_features = args['num_features']
-        max_num_features = max_candidate(self._num_features, f'{self.name_in_parent}_num_features')
-        
-        # the initial eps and momentum doesn't affect the behaviour of construction function
-        # so min_candidate also works below 
-        self._eps = args.get('eps', 1e-5)
-        eps = max_candidate(self._eps, f'{self.name_in_parent}_eps')
-        self._momentum = args.get('momentum', .1)
-        momentum = max_candidate(self._momentum, f'{self.name_in_parent}_momentum')
+        ValueChoiceSuperLayer.__init__(self, name, module)
+
+        # compulsory params
+        max_num_features = self.max_candidate('num_features')
+
+        # optional params
+        # the initial values of eps and momentum doesn't matter since they are directly accessed in forward
+        # we just take max candidate for simplicity here
+        eps = self.max_candidate('eps', 1e-4)
+        momentum = self.max_candidate('momentum', .1)
 
         # no ValueChoice params
-        affine = args.get('affine', True)
-        track_running_stats = args.get('track_running_stats', True)
-        device = args.get('device', None)
-        dtype = args.get('dtype', None)
+        affine = self.args.get('affine', True)
+        track_running_stats = self.args.get('track_running_stats', True)
+        device = self.args.get('device', None)
+        dtype = self.args.get('dtype', None)
 
-        super().__init__(max_num_features, eps, momentum, affine, track_running_stats, device, dtype)
-    
+        nn.BatchNorm2d.__init__(self, max_num_features, eps, momentum, affine, track_running_stats, device, dtype)
+
     def forward(self, input):
         # get sampled parameters
-        num_features = sampled_candidate(self._num_features, f'{self.name_in_parent}_num_features')
+        num_features = self.sampled_candidate('num_features')
         weight = self.weight[:num_features]
         bias = self.bias[:num_features]
         running_mean = self.running_mean[:num_features]
         running_var = self.running_var[:num_features]
 
-        self.eps = sampled_candidate(self._eps, f'{self.name_in_parent}_eps')
-        self.momentum = sampled_candidate(self._momentum, f'{self.name_in_parent}_momentum')
+        self.eps = self.sampled_candidate('eps', 1e-4)
+        self.momentum = self.sampled_candidate('momentum', .1)
 
+        # code below are simply coppied from pytorch v1.10.1 source code since directly setting weight or bias is not allowed.
+        # please turn to pytorch source code if you have any problem with code below
         self._check_input_dim(input)
-
-        # exponential_average_factor is set to self.momentum
-        # (when it is available) only so that it gets updated
-        # in ONNX graph when this node is exported to ONNX.
         if self.momentum is None:
             exponential_average_factor = 0.0
         else:
             exponential_average_factor = self.momentum
-
         if self.training and self.track_running_stats:
-            # TODO: if statement only here to tell the jit to skip emitting this when it is None
-            if self.num_batches_tracked is not None:  # type: ignore[has-type]
-                self.num_batches_tracked = self.num_batches_tracked + 1  # type: ignore[has-type]
-                if self.momentum is None:  # use cumulative moving average
+            if self.num_batches_tracked is not None:
+                self.num_batches_tracked = self.num_batches_tracked + 1
+                if self.momentum is None:
                     exponential_average_factor = 1.0 / float(self.num_batches_tracked)
-                else:  # use exponential moving average
+                else:
                     exponential_average_factor = self.momentum
-
-        r"""
-        Decide whether the mini-batch stats should be used for normalization rather than the buffers.
-        Mini-batch stats are used in training mode, and in eval mode when buffers are None.
-        """
         if self.training:
             bn_training = True
         else:
             bn_training = (self.running_mean is None) and (self.running_var is None)
+        # code above are simply coppied from pytorch v1.10.1 source code since directly setting weight or bias is not allowed.
+        # please turn to pytorch source code if you have any problem with code above
 
-        r"""
-        Buffers are only updated if they are to be tracked and we are in training mode. Thus they only need to be
-        passed when the update should occur (i.e. in training mode when they are tracked), or when buffer stats are
-        used for normalization (i.e. in eval mode when buffers are not None).
-        """
         return F.batch_norm(
             input,
             # If buffers are not to be tracked, ensure that they won't be updated
