@@ -200,55 +200,71 @@ def original_state_dict_hooks(model: Any):
     # the following are written for pytorch only
 
     # first get the full mapping
+    full_mapping = {}
 
-    def get_full_mapping(src_prefix, tar_prefix, module):
+    def full_mapping_in_module(src_prefix, tar_prefix, module):
         if hasattr(module, STATE_DICT_PY_MAPPING):
             # only values are complete
-            mappings = getattr(module, STATE_DICT_PY_MAPPING)
-            mappings = {src_prefix + k: v for k, v in mappings.items()}
+            local_map = getattr(module, STATE_DICT_PY_MAPPING)
         elif hasattr(module, STATE_DICT_PY_MAPPING_PARTIAL):
             # keys and values are both incomplete
-            mappings = getattr(module, STATE_DICT_PY_MAPPING)
-            mappings = {src_prefix + k: tar_prefix + v for k, v in mappings.items()}
+            local_map = getattr(module, STATE_DICT_PY_MAPPING)
+            local_map = {k: tar_prefix + v for k, v in local_map.items()}
+        else:
+            # no mapping
+            local_map = {}
 
-        # some variables might not exist in the mappings
-        # but they still need to be mapped because prefix are not same
-        if src_prefix != tar_prefix:
+        if '' in local_map:
+            # special case, overwrite prefix
+            tar_prefix = local_map['']
+
+        for key, value in local_map.items():
+            if key not in module._modules:  # not a sub-module, probably a parameter
+                full_mapping[src_prefix + key] = value
+
+        if src_prefix != tar_prefix:  # To deal with leaf nodes.
             for name in itertools.chain(module._parameters.keys(), module._buffers.keys()):
-                mappings[src_prefix + name] = tar_prefix + name
+                if (src_prefix + name) not in full_mapping:
+                    full_mapping[src_prefix + name] = tar_prefix + name
 
-        for name, child in m.named_children():
-            get_full_mapping(child)
+        for name, child in module.named_children():
+            full_mapping_in_module(
+                src_prefix + name + '.',
+                local_map.get(name, tar_prefix + name) + '.',  # if mapping doesn't exist, respect the prefix
+                child
+            )
 
-    get_full_mapping(root_module)
-    return modules
+    full_mapping_in_module('', '', model)
+    print(full_mapping)
 
-    def create_hook(module: nn.Module, type: str):
-        # type = load | save
+    def load_state_dict_hook(state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs):
+        reverse_mapping = defaultdict(list)
+        for src, tar in full_mapping.items():
+            reverse_mapping[tar].append(src)
 
-
-
-        def get_concerned_state_dict(state_dict: Dict[str, Any], prefix: str) -> Dict[str, Any]:
-            return {k: v for k, v in state_dict.items() if k.startswith(prefix) or not prefix}
-
-        def get_mapping(prefix):
-            if hasattr(module, STATE_DICT_PY_MAPPING):
-                mappings = getattr(module, STATE_DICT_PY_MAPPING)
-            elif hasattr(module, STATE_DICT_PY_MAPPING_PARTIAL):
-                mappings = getattr(module, STATE_DICT_PY_MAPPING)
-                mappings = {prefix + k: v for k, v in mappings.items()}
+        transf_state_dict = {}
+        for src, tar_keys in reverse_mapping.items():
+            if src in state_dict:
+                value = state_dict.pop(src)
+                for tar in tar_keys:
+                    transf_state_dict[tar] = value
             else:
-                # not found, mapping should be empty
-                mappings = {}
-            return mappings = {}
+                missing_keys.append(src)
+        state_dict.update(transf_state_dict)
 
-        def load_state_dict_hook(state_dict, prefix, local_metadata, strict,
-                                 missing_keys, unexpected_keys, error_msgs):
-            state_dict = get_concerned_state_dict(state_dict)
-            print(prefix, state_dict.keys(), )
+    def state_dict_hook(module, destination, prefix, local_metadata):
+        result = {}
+        for src, tar in full_mapping.items():
+            if src in destination:
+                result[tar] = destination.pop(src)
+            else:
+                raise KeyError(f'"{src}" not in state dict, but found in mapping.')
+        destination.update(result)
 
     try:
-
+        hooks = []
+        hooks.append(model._register_load_state_dict_pre_hook(load_state_dict_hook))
+        hooks.append(model._register_state_dict_hook(state_dict_hook))
         yield
     finally:
         for hook in hooks:
