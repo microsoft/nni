@@ -65,12 +65,12 @@ class ValueChoiceSuperLayer:
 
     Parameters
     ----------
-    module_name : str
-        the unique identifier of `module`
     module : nn.Module:
         module to be replaced
+    module_name : str
+        the unique identifier of `module`
     """
-    def __init__(self, module_name, module):
+    def __init__(self, module, module_name):
         self.name = module_name
         self.args = module.trace_kwargs
 
@@ -113,13 +113,13 @@ class PathSamplingSuperLinear(ValueChoiceSuperLayer, nn.Linear):
 
     Parameters
     ----------
-    module : nn.Module
-        the module to be replaced
+    module : nn.Module:
+        module to be replaced
     name : str
         the unique identifier of `module`
     """
     def __init__(self, module, name) -> None:
-        ValueChoiceSuperLayer.__init__(self, name, module)
+        ValueChoiceSuperLayer.__init__(self, module, name)
 
         # compulsory params
         max_in_features = self.max_candidate('in_features')
@@ -158,7 +158,8 @@ class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
     Warnings
     ----------
     Users are supposed to make sure that in different valuechoices with the same label, candidates with the same index should match
-    each other.
+    each other. For example, the constraint among `kernel_size`, `padding`, `stride` and `dilation` in a convolutional layer should
+    be met. Users ought to design candidates carefully to produce a tensor with correct shape for downstream calculation.
 
     Parameters
     ----------
@@ -168,7 +169,7 @@ class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
         the unique identifier of `module`
     """
     def __init__(self, module, name):
-        ValueChoiceSuperLayer.__init__(self, name, module)
+        ValueChoiceSuperLayer.__init__(self, module, name)
 
         # compulsorty params
         max_in_channel = self.max_candidate('in_channels')
@@ -259,7 +260,7 @@ class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
         the unique identifier of `module`
     """
     def __init__(self, module, name):
-        ValueChoiceSuperLayer.__init__(self, name, module)
+        ValueChoiceSuperLayer.__init__(self, module, name)
 
         # compulsory params
         max_num_features = self.max_candidate('num_features')
@@ -323,3 +324,101 @@ class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
             exponential_average_factor,
             self.eps,
         )
+
+
+class PathSamplingMultiHeadAttention(ValueChoiceSuperLayer, nn.MultiheadAttention):
+    """
+    The MultiHeadAttention layer to replace original mhattn with valuechoice in its parameter list. It construct the biggest Q, K,
+    V and some other tensors first, and slice it before every forward according to the sampled value. Supported parameters are listed
+    below:
+        embed_dim : int
+        num_heads : float
+        kdim :int
+        vdim : int
+        dropout : float
+    
+    Warnings
+    ----------
+    Users are supposed to make sure that in different valuechoices with the same label, candidates with the same index should match
+    each other. For example, the divisibility constraint between `embed_dim` and `num_heads` in a multi-head attention module should
+    be met. Users ought to design candidates carefully to prevent the module from breakdown.
+    
+    Parameters
+    ----------
+    module : nn.Module
+        the module to be replaced
+    name : str
+        the unique identifier of `module`
+    """
+    def __init__(self, module, name):
+        ValueChoiceSuperLayer.__init__(self, name, module)
+
+        # compulsory params
+        self.max_embed_dim = self.max_candidate('embed_dim')
+        num_heads = self.max_candidate('num_heads')
+        
+        # optional params
+        kdim = self.max_candidate('kdim', self.max_embed_dim)
+        vdim = self.max_candidate('vdim', self.max_embed_dim)
+        dropout = self.max_candidate('dropout', 0.)
+
+        # no valuechoice params
+        bias = self.args.get('bias', True)
+        add_bias_kv = self.args.get('add_bias_kv', False)
+        add_zero_attn = self.args.get('add_zero_attn', False)
+        batch_first = self.args.get('batch_first', False)
+        device = self.args.get('device', None)
+        dtype = self.args.get('dtype', None)
+
+        nn.MultiheadAttention.__init__(self.max_embed_dim, num_heads, dropout, bias, add_bias_kv, add_zero_attn,
+            kdim, vdim, batch_first ,device, dtype)
+    
+    def forward(self, query, key, value, key_padding_mask = None, need_weights = True, attn_mask = None):
+        if self.batch_first:
+            query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
+
+        embed_dim = self.sampled_candidate('embed_dim')
+        kdim = self.sampled_candidate('kdim', embed_dim)
+        vdim = self.sampled_candidate('vdim', embed_dim)
+        num_heads = self.sampled_candidate('num_heads')
+
+        in_proj_bias = self.in_proj_bias[:embed_dim] + \
+                       self.in_proj_bias[self.max_embed_dim : self.max_embed_dim + embed_dim] + \
+                       self.in_proj_bias[2 * self.max_embed_dim : 2 * self.max_embed_dim + embed_dim] \
+                       if self.in_proj_bias is not None else None
+        in_proj_weight = self.in_proj_weight[:embed_dim, :embed_dim] + \
+                         self.in_proj_weight[self.max_embed_dim : self.max_embed_dim + embed_dim, :embed_dim] + \
+                         self.in_proj_weight[2 * self.max_embed_dim : 2 * self.max_embed_dim + embed_dim, :embed_dim] \
+                         if self.in_proj_weight is not None else None
+        bias_k = self.bias_k[:,:,:embed_dim] if self.bias_k is not None else None
+        bias_v = self.bias_v[:, :, :embed_dim] if self.bias_v is not None else None
+        out_proj_weight = self.out_proj.weight[:embed_dim, embed_dim]
+        out_proj_bias = self.out_proj.bias[:embed_dim]
+
+        if not self._qkv_same_embed_dim:
+            q_proj = self.q_proj_weight[:embed_dim, :embed_dim]
+            k_proj = self.k_proj_weight[:embed_dim, :kdim]
+            v_proj = self.v_proj_weight[:embed_dim, :vdim]
+
+            attn_output, attn_output_weights = F.multi_head_attention_forward(
+                query, key, value, embed_dim, num_heads,
+                in_proj_weight, in_proj_bias,
+                bias_k, bias_v, self.add_zero_attn,
+                self.dropout, out_proj_weight, out_proj_bias,
+                training=self.training,
+                key_padding_mask=key_padding_mask, need_weights=need_weights,
+                attn_mask=attn_mask, use_separate_proj_weight=True,
+                q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
+        else:
+            attn_output, attn_output_weights = F.multi_head_attention_forward(
+                query, key, value, embed_dim, num_heads,
+                in_proj_weight, in_proj_bias,
+                bias_k, bias_v, self.add_zero_attn,
+                self.dropout, out_proj_weight, out_proj_bias,
+                training=self.training,
+                key_padding_mask=key_padding_mask, need_weights=need_weights,
+                attn_mask=attn_mask)
+        if self.batch_first:
+            return attn_output.transpose(1, 0), attn_output_weights
+        else:
+            return attn_output, attn_output_weights
