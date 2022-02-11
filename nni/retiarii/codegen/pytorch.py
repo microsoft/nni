@@ -98,7 +98,18 @@ def _format_variable_name(name: str, graph_name: str) -> str:
     name = name.replace('/', '__')
 
     # https://stackoverflow.com/questions/3303312/how-do-i-convert-a-string-to-a-valid-variable-name-in-python
-    return re.sub('\W|^(?=\d)','_', name)
+    name = re.sub('\W|^(?=\d)','_', name)
+
+    if name.startswith('__') and (len(name) > 2 and name[2] != '_'):
+        # name can't start with double underscore
+        # it's reserved in Python: https://stackoverflow.com/a/1301409/6837658
+        # but it's actually very common in our generated code
+        name = name[1:]
+    elif name.startswith('_'):
+        # to avoid conflicts between '_' and '__'
+        name = 'i' + name
+
+    return name
 
 
 def generate_cuda_mapping(placement: Dict[Node, Device]) -> Dict[Device, int]:

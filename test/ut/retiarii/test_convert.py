@@ -55,13 +55,10 @@ class TestConvert(unittest.TestCase, ConvertMixin):
     def checkExportImport(self, model, input):
         model_ir = self._convert_model(model, input)
         model_code = model_to_pytorch_script(model_ir)
-        print(model_code)
 
         exec_vars = {}
         exec(model_code + '\n\nconverted_model = _model()', exec_vars)
         converted_model = exec_vars['converted_model']
-        print('Converted', converted_model)
-        print(converted_model._model__main)
         with original_state_dict_hooks(converted_model):
             converted_model.load_state_dict(dict(model.state_dict()))
         with torch.no_grad():

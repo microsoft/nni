@@ -223,11 +223,15 @@ def original_state_dict_hooks(model: Any):
                 full_mapping[src_prefix + key] = value
 
         if src_prefix != tar_prefix:  # To deal with leaf nodes.
-            for name in itertools.chain(module._parameters.keys(), module._buffers.keys()):
+            for name, value in itertools.chain(module._parameters.items(), module._buffers.items()):  # direct children
+                if value is None or name in module._non_persistent_buffers_set:
+                    # it won't appear in state dict
+                    continue
                 if (src_prefix + name) not in full_mapping:
                     full_mapping[src_prefix + name] = tar_prefix + name
 
         for name, child in module.named_children():
+            # sub-modules
             full_mapping_in_module(
                 src_prefix + name + '.',
                 local_map.get(name, tar_prefix + name) + '.',  # if mapping doesn't exist, respect the prefix
@@ -235,7 +239,6 @@ def original_state_dict_hooks(model: Any):
             )
 
     full_mapping_in_module('', '', model)
-    print(full_mapping)
 
     def load_state_dict_hook(state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs):
         reverse_mapping = defaultdict(list)
