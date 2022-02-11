@@ -36,37 +36,27 @@ def _replace_module_with_type(root_module, prior_replace, default_replace):
 
     def apply(m):
         for name, child in m.named_children():
-            # 先使用用户的 match and replace，如果返回了一个 Module，就认为覆盖 default 实现
-            # 如果返回 None，就认为使用 default 实现
-            # 应该不会有用户返回 None 但想表达不替换的意思的情况把？
             replace_result = None
             if prior_replace is not None:
                 for f in prior_replace:
-                    replace_result = f(child, modules)
+                    replace_result = f(child, name, modules)
                     if replace_result is not None:
                         break
-            
+
             if replace_result is None:
                 for f in default_replace:
-                    replace_result = f(child, modules)
+                    replace_result = f(child, name, modules)
                     if replace_result is not None:
                         break
-            
-            # 如果用户的和 default 的至少有一个没返回 None，就是要替换
+
             if replace_result is not None:
-                # 为了适配 valuechoice，分成 tosample 和 to replace 两个
-                # tosample 的是原来那个 valuechoice
-                # toreplace 的是一个具体的 module，比如 Linear, conv 可能都要分别实现
                 to_samples, to_replace = replace_result
                 setattr(m, name, to_replace)
-                if isinstance(to_samples, list):
-                    for to_sample in to_samples:
-                        # 按理说这里不判断也行，反正返回的是同一个
-                        if to_sample.label not in modules.keys():
-                            modules[to_sample.label] = to_sample
-                else:
-                    if to_samples.label not in modules.keys():
-                        modules[to_samples.label] = to_samples
+                if not isinstance(to_samples, list):
+                    to_samples = [to_samples] # just to unify iteration code
+                for to_sample in to_samples:
+                    if to_sample.label not in modules.keys():
+                        modules[to_sample.label] = to_sample
             else:
                 apply(child)
 
@@ -105,7 +95,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # replace xxxChoice with respect to NAS alg
         # replaced modules are stored in self.nas_modules
         self.nas_modules = _replace_module_with_type(self.model, custom_match_and_replace, self.match_and_replace())
-        breakpoint()
 
     def forward(self, x):
         return self.model(x)

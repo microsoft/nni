@@ -301,7 +301,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
 
 def get_naive_match_and_replace(match_type, to_sample_func, to_replace_func=None):
     '''
-    A util function helps generate the naive match_and_replace function.
+    A util function that helps generate the naive match_and_replace function. 
 
     Parameters
     ----------
@@ -310,11 +310,10 @@ def get_naive_match_and_replace(match_type, to_sample_func, to_replace_func=None
     to_sample_func : Callable[[nn.Module], nn.Module]
         Takes an nn.Module and generate another module to be sampled.
     to_replace_func : Callable[[nn.Module], nn.Module]
-        Takes an nn.Module and generate another module to be replaced. The return module will
-        forward instead of the input module in the model. Leave this None if to_sample and 
-        to_replace are the same.
+        Takes an nn.Module and generate another module to be replaced. The return module will `forward` instead of the input module
+        in the model. Leave this None if to_sample and to_replace are the same.
     '''
-    def naive_match_and_replace(module, nas_modules):
+    def naive_match_and_replace(module, name, nas_modules):
         if isinstance(module, match_type):
             to_sample = to_sample_func(module)
             to_replace = to_replace_func(module) \
@@ -325,19 +324,35 @@ def get_naive_match_and_replace(match_type, to_sample_func, to_replace_func=None
     return naive_match_and_replace
 
 def get_valuechoice_match_and_replace(match_type, to_sample_func, to_replace_func):
-    def valuechoice_match_and_replace(module, nas_modules):
+    '''
+    A util function helps generate the naive valuechoice_match_and_replace function.
+
+    Parameters
+    ----------
+    match_type : type
+        If the input module is of this type, the coming functions will be called.
+    to_sample_func : Callable[[nn.Module], nn.Module]
+        Takes an nn.Module and generate another module to be sampled.
+    to_replace_func : Callable[[nn.Module], nn.Module]
+        Takes an nn.Module and generate another module to be replaced. The return module will `forward` instead of the input module
+        in the model.
+    '''
+    def valuechoice_match_and_replace(module, name, nas_modules):
         if isinstance(module, match_type):
             to_samples = []
             for k, v in module.trace_kwargs.items():
                 if isinstance(v, nn.ValueChoice):
-                    # if a to_sample with the same label has already been created in another module,
-                    # then replace mine with it. 
-                    v = nas_modules.get(v.label, to_sample_func(v))
-                    module.trace_kwargs[k] = v
-                    to_samples.append(v)
+                    # if a to_sample with the same label has already been created by another module, use it.
+                    # otherwise we create it here
+                    if v.label not in nas_modules:
+                        # we set nas_modules[v.label] here incase there are multiple valuechoice with the same label in one module
+                        nas_modules[v.label] = to_sample_func(v)
+                    nas_modules[v.label].add_candidates(f'{name}_{k}', v.candidates)
+                    module.trace_kwargs[k] = nas_modules[v.label]
+                    to_samples.append(nas_modules[v.label])
             
             if len(to_samples) > 0:
-                to_replace = to_replace_func(module)
+                to_replace = to_replace_func(module, name)
                 return to_samples, to_replace
     
     return valuechoice_match_and_replace

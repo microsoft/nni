@@ -8,13 +8,15 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
-from nni.retiarii.nn.pytorch.nn import Linear, Conv2d
+from nni.retiarii.nn.pytorch.nn import BatchNorm2d, Linear, Conv2d
 
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule
 from .enas import ReinforceController, ReinforceField
 from .utils import get_naive_match_and_replace, get_valuechoice_match_and_replace
-from .superlayer import PathSamplingSuperConv2d, PathSamplingSuperLinear, ENASValueChoice, RandomValueChoice
+from .superlayer import (PathSamplingSuperBatchNorm2d, PathSamplingSuperConv2d, 
+                        PathSamplingSuperLinear, ENASValueChoice, 
+                        RandomValueChoice)
 
 
 class EnasModule(BaseOneShotLightningModule):
@@ -183,8 +185,9 @@ class RandomSampleModule(BaseOneShotLightningModule):
 
         linear_replace = get_valuechoice_match_and_replace(Linear,  RandomValueChoice, PathSamplingSuperLinear)
         conv2d_replace = get_valuechoice_match_and_replace(Conv2d, RandomValueChoice, PathSamplingSuperConv2d)
+        batchnorm2d_replace = get_valuechoice_match_and_replace(BatchNorm2d, RandomValueChoice, PathSamplingSuperBatchNorm2d)
         
-        return [input_replace, layer_replace, linear_replace, conv2d_replace]
+        return [input_replace, layer_replace, linear_replace, conv2d_replace, batchnorm2d_replace]
 
     def _resample(self):
         # The simplest sampling-based NAS method.
