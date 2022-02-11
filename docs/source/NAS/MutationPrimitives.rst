@@ -1,6 +1,8 @@
 Mutation Primitives
 ===================
 
+.. TODO: this file will be merged with API reference in future.
+
 To make users easily express a model space within their PyTorch/TensorFlow model, NNI provides some inline mutation APIs as shown below.
 
 We show the most common use case here. For advanced usages, please see `reference <./ApiReference.rst>`__.
@@ -48,7 +50,7 @@ API reference: :class:`nni.retiarii.nn.pytorch.ValueChoice`
 
 It is for choosing one value from some candidate values. The most common use cases are:
 
-* Used as input arguments of `basic units <LINK_TBD>` (i.e., modules in ``nni.retiarii.nn.pytorch`` and user-defined modules decorated with ``@basic_unit``).
+* Used as input arguments of :class:`nni.retiarii.basic_unit` (i.e., modules in ``nni.retiarii.nn.pytorch`` and user-defined modules decorated with ``@basic_unit``).
 * Used as input arguments of evaluator (*new in v2.7*).
 
 Examples are as follows:
@@ -108,9 +110,6 @@ Repeat a block by a variable number of times.
   # Block() will be repeated 1, 2, or 3 times
   self.blocks = nn.Repeat(Block(), (1, 3))
 
-  # FIXME
-  # The following use cases have known issues and will be fixed in current release
-
   # Can be used together with layer choice
   # With deep copy, the 3 layers will have the same label, thus share the choice
   self.blocks = nn.Repeat(nn.LayerChoice([...]), (1, 3))
@@ -124,4 +123,60 @@ Repeat a block by a variable number of times.
 
 API reference: :class:`nni.retiarii.nn.pytorch.Cell`
 
-This cell structure is popularly used in `NAS literature <https://arxiv.org/abs/1611.01578>`__. Specifically, the cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from user specified candidates, and takes one input from previous nodes and predecessors. Predecessor means the input of cell. The output of cell is the concatenation of some of the nodes in the cell (currently all the nodes).
+This cell structure is popularly used in `NAS literature <https://arxiv.org/abs/1611.01578>`__. High-level speaking, literatures often use the following glossaries.
+
+.. list-table::
+   :widths: 25 75
+
+   * - Cell
+     - A cell consists of several nodes.
+   * - Node
+     - A node is the **sum** of several operators.
+   * - Operator
+     - Each operator is independently chosen from a list of user-specified candidate operators.
+   * - Operator's input
+     - Each operator has one input, chosen from previous nodes as well as predecessors.
+   * - Predecessors
+     - Input of cell. A cell can have multiple predecessors. Predecessors are sent to *preprocessor* for preprocessing.
+   * - Cell's output
+     - Output of cell. Usually concatenation of several nodes (possibly all nodes) in the cell. Cell's output, along with predecessors, are sent to *postprocessor* for postprocessing.
+   * - Preprocessor
+     - Extra preprocessing to predecessors. Usually used in shape alignment (e.g., predecessors have different shapes). By default, do nothing.
+   * - Postprocessor
+     - Extra postprocessing for cell's output. Usually used to chain cells with multiple Predecessors
+       (e.g., the next cell wants to have the outputs of both this cell and previous cell as its input). By default, directly use this cell's output.
+
+Example usages:
+
+.. code-block:: python
+
+  # import nni.retiarii.nn.pytorch as nn
+  # used in `__init__` method
+
+  # Choose between conv2d and maxpool2d.
+  # The cell have 4 nodes, 1 op per node, and 2 predecessors.
+  cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2)
+  # forward
+  cell([input1, input2])
+
+  # Use `merge_op` to specify how to construct the output.
+  # The output will then have dynamic shape, depending on which input has been used in the cell.
+  cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, merge_op='loose_end')
+
+  # The op candidates can be callable that accepts node index in cell, op index in node, and input index.
+  cell = nn.Cell([
+    lambda node_index, op_index, input_index: nn.Conv2d(32, 32, 3, stride=2 if input_index < 1 else 1),
+    ...
+  ], 4, 1, 2)
+
+  # predecessor example
+  class Preprocessor:
+    def __init__(self):
+      self.conv1 = nn.Conv2d(16, 32, 1)
+      self.conv2 = nn.Conv2d(64, 32, 1)
+
+    def forward(self, x):
+      return [self.conv1(x[0]), self.conv2(x[1])]
+
+  cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, preprocessor=Preprocessor())
+  cell([torch.randn(1, 16, 48, 48), torch.randn(1, 64, 48, 48)])  # the two inputs will be sent to conv1 and conv2 respectively
