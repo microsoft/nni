@@ -1,1 +1,0 @@
-../../en_US/CommunitySharings/community_sharings.rst

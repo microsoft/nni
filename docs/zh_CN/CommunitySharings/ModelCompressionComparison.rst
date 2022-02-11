@@ -1,1 +1,0 @@
-../../en_US/CommunitySharings/ModelCompressionComparison.rst
