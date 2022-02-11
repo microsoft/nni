@@ -2,8 +2,10 @@
 # Licensed under the MIT license.
 
 import inspect
+import itertools
 import warnings
 from collections import defaultdict
+from contextlib import contextmanager
 from typing import Any, List, Dict
 from pathlib import Path
 
@@ -154,3 +156,100 @@ class ModelNamespace:
 
 def get_current_context(key: str) -> Any:
     return ContextStack.top(key)
+
+
+# map variables to prefix in the state dict
+# e.g., {'upsample': 'mynet.module.deconv2.upsample_layer'}
+STATE_DICT_PY_MAPPING = '_mapping_'
+
+# map variables to `prefix`.`value` in the state dict
+# e.g., {'upsample': 'choice3.upsample_layer'},
+# which actually means {'upsample': 'mynet.module.choice3.upsample_layer'},
+# and 'upsample' is also in `mynet.module`.
+STATE_DICT_PY_MAPPING_PARTIAL = '_mapping_partial_'
+
+
+@contextmanager
+def original_state_dict_hooks(model: Any):
+    """
+    Use this patch if you want to save/load state dict in the original state dict hierarchy.
+
+    For example, when you already have a state dict for the base model / search space (which often
+    happens when you have trained a supernet with one-shot strategies), the state dict isn't organized
+    in the same way as when a sub-model is sampled from the search space. This patch will help
+    the modules in the sub-model find the corresponding module in the base model.
+
+    The code looks like,
+
+    .. code-block:: python
+
+        with original_state_dict_hooks(model):
+            model.load_state_dict(state_dict_from_supernet, strict=False)  # supernet has extra keys
+
+    Or vice-versa,
+
+    .. code-block:: python
+
+        with original_state_dict_hooks(model):
+            supernet_style_state_dict = model.state_dict()
+    """
+
+    import torch.nn as nn
+    assert isinstance(model, nn.Module), 'PyTorch is the only supported framework for now.'
+
+    # the following are written for pytorch only
+
+    # first get the full mapping
+
+    def get_full_mapping(src_prefix, tar_prefix, module):
+        if hasattr(module, STATE_DICT_PY_MAPPING):
+            # only values are complete
+            mappings = getattr(module, STATE_DICT_PY_MAPPING)
+            mappings = {src_prefix + k: v for k, v in mappings.items()}
+        elif hasattr(module, STATE_DICT_PY_MAPPING_PARTIAL):
+            # keys and values are both incomplete
+            mappings = getattr(module, STATE_DICT_PY_MAPPING)
+            mappings = {src_prefix + k: tar_prefix + v for k, v in mappings.items()}
+
+        # some variables might not exist in the mappings
+        # but they still need to be mapped because prefix are not same
+        if src_prefix != tar_prefix:
+            for name in itertools.chain(module._parameters.keys(), module._buffers.keys()):
+                mappings[src_prefix + name] = tar_prefix + name
+
+        for name, child in m.named_children():
+            get_full_mapping(child)
+
+    get_full_mapping(root_module)
+    return modules
+
+    def create_hook(module: nn.Module, type: str):
+        # type = load | save
+
+
+
+        def get_concerned_state_dict(state_dict: Dict[str, Any], prefix: str) -> Dict[str, Any]:
+            return {k: v for k, v in state_dict.items() if k.startswith(prefix) or not prefix}
+
+        def get_mapping(prefix):
+            if hasattr(module, STATE_DICT_PY_MAPPING):
+                mappings = getattr(module, STATE_DICT_PY_MAPPING)
+            elif hasattr(module, STATE_DICT_PY_MAPPING_PARTIAL):
+                mappings = getattr(module, STATE_DICT_PY_MAPPING)
+                mappings = {prefix + k: v for k, v in mappings.items()}
+            else:
+                # not found, mapping should be empty
+                mappings = {}
+            return mappings = {}
+
+        def load_state_dict_hook(state_dict, prefix, local_metadata, strict,
+                                 missing_keys, unexpected_keys, error_msgs):
+            state_dict = get_concerned_state_dict(state_dict)
+            print(prefix, state_dict.keys(), )
+
+    try:
+
+        yield
+    finally:
+        for hook in hooks:
+            hook.remove()

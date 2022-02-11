@@ -5,6 +5,7 @@ import logging
 from typing import Dict, List, Tuple, Any
 
 from nni.retiarii.operation_def.torch_op_def import ToDevice
+from nni.retiarii.utils import STATE_DICT_PY_MAPPING
 from nni.common.device import Device, GPUDevice
 
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
@@ -126,6 +127,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     # only need to generate code for module here
     import_pkgs = set()
     node_codes = []
+    node_python_mappings = {}
     cuda_remapped_id = None
     if placement:
         cuda_remapped_id = generate_cuda_mapping(placement)
@@ -139,7 +141,9 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
             pkg_name = node.operation.get_import_pkg()
             if pkg_name is not None:
                 import_pkgs.add(pkg_name)
-            node_code = node.operation.to_init_code(_remove_prefix(node.name, graph_name))
+
+            py_variable_name = _remove_prefix(node.name, graph_name)
+            node_code = node.operation.to_init_code(py_variable_name)
             if node_code is not None:
                 if placement and node in placement and len(node_code) > 0:
                     if isinstance(placement[node], GPUDevice):
@@ -149,6 +153,11 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
                     node_codes.append(f"{node_code}.to('{device_repr}')")
                 else:
                     node_codes.append(node_code)
+
+                # Map to module hierarchies in original search space python code
+                node_python_mappings[py_variable_name] = node.python_name
+
+    node_codes.append(f'self.{STATE_DICT_PY_MAPPING} = {node_python_mappings}')
 
     if graph.input_node.operation.io_names is None:
         input_code = '*_inputs'
