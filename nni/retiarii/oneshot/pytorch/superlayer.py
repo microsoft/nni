@@ -1,4 +1,3 @@
-
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
@@ -52,19 +51,25 @@ class ToSample:
         return self.n_candidates
 
 
-
-class ENASValueChoice(ToSample):
-    def __init__(self, value_choice):
-        super().__init__(value_choice.label, len(value_choice.candidates))
-        self.n_chosen = 1
-
-
-class RandomValueChoice(ToSample):
-    def __init__(self, value_choice):
-        super().__init__(value_choice.label, len(value_choice.candidates))
-
-
 class ValueChoiceSuperLayer:
+    """
+    Layer that has at least one valuechoice in it param list. Basic functions such as getting max/min/sampled candidates are
+    implemented in this class.
+
+    Attributes
+    ----------
+    name : str
+        the unique identifier of the module it replaced
+    args : Dict[str, Any]
+        the parameter list of the original module
+
+    Parameters
+    ----------
+    module_name : str
+        the unique identifier of `module`
+    module : nn.Module:
+        module to be replaced
+    """
     def __init__(self, module_name, module):
         self.name = module_name
         self.args = module.trace_kwargs
@@ -88,10 +93,31 @@ class ValueChoiceSuperLayer:
         return attr
 
 
+class ENASValueChoice(ToSample):
+    def __init__(self, value_choice):
+        super().__init__(value_choice.label, len(value_choice.candidates))
+        self.n_chosen = 1
 
 
-# SuperLinear(nn.Linear) 放一个单独文件
+class RandomValueChoice(ToSample):
+    def __init__(self, value_choice):
+        super().__init__(value_choice.label, len(value_choice.candidates))
+
+
 class PathSamplingSuperLinear(ValueChoiceSuperLayer, nn.Linear):
+    """
+    The Linear layer to replace original linear with valuechoices in its parameter list. It construct the biggest weight matrix first,
+    and slice it before every forward according to the sampled value. Supported parameters are listed below:
+        in_features : int
+        out_features : int
+
+    Parameters
+    ----------
+    module : nn.Module
+        the module to be replaced
+    name : str
+        the unique identifier of `module`
+    """
     def __init__(self, module, name) -> None:
         ValueChoiceSuperLayer.__init__(self, name, module)
 
@@ -117,6 +143,30 @@ class PathSamplingSuperLinear(ValueChoiceSuperLayer, nn.Linear):
 
 
 class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
+    """
+    The Conv2d layer to replace original conv2d with valuechoices in its parameter list. It construct the biggest weight matrix first,
+    and slice it before every forward according to the sampled value.
+    Supported valuechoice parameters are listed below:
+        in_channels : int
+        out_channels : int
+        kernel_size : int, tuple(int)
+        stride : int, tuple(int)
+        padding : int, tuple(int)
+        dilation : int, tuple(int)
+        group : int
+    
+    Warnings
+    ----------
+    Users are supposed to make sure that in different valuechoices with the same label, candidates with the same index should match
+    each other.
+
+    Parameters
+    ----------
+    module : nn.Module
+        the module to be replaced
+    name : str
+        the unique identifier of `module`
+    """
     def __init__(self, module, name):
         ValueChoiceSuperLayer.__init__(self, name, module)
 
@@ -194,6 +244,20 @@ class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
 
 
 class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
+    """
+    The BatchNorm2d layer to replace original bn2d with valuechoice in its parameter list. It construct the biggest mean and variation
+    tensor first, and slice it before every forward according to the sampled value. Supported parameters are listed below:
+        num_features : int
+        eps : float
+        momentum : float
+    
+    Parameters
+    ----------
+    module : nn.Module
+        the module to be replaced
+    name : str
+        the unique identifier of `module`
+    """
     def __init__(self, module, name):
         ValueChoiceSuperLayer.__init__(self, name, module)
 
@@ -259,7 +323,3 @@ class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
             exponential_average_factor,
             self.eps,
         )
-
-
-
-    
