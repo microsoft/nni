@@ -14,6 +14,6 @@ WebUI is built by using [React](https://reactjs.org/docs/getting-started.html) a
 
 ## PR
 
-* WebUI uses [eslint](https://eslint.org/docs/user-guide/getting-started) and [prettier](https://prettier.io/docs/en/index.html) to format code. Before you send PR, you could use the command `yarn eslint` to check style. And `yarn eslint --fix` could fix almost warnings and errors. Also use `yarn stylelint` to confirm `.scss & .css` style.
+* WebUI uses [eslint](https://eslint.org/docs/user-guide/getting-started) and [prettier](https://prettier.io/docs/en/index.html) to format code. Before you send PR, you could use the command `yarn sanity-check` to format code style.
 
 * You could send the PR if `yarn release` gets successful build after formatting code.
