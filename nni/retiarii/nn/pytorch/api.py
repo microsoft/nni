@@ -10,6 +10,7 @@ import torch.nn as nn
 
 from nni.common.serializer import Translatable
 from nni.retiarii.serializer import basic_unit
+from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
 from .utils import Mutable, generate_new_label, get_fixed_value
 
 
@@ -64,9 +65,18 @@ class LayerChoice(Mutable):
                             label: Optional[str] = None, **kwargs):
         chosen = get_fixed_value(label)
         if isinstance(candidates, list):
-            return candidates[int(chosen)]
+            result = candidates[int(chosen)]
         else:
-            return candidates[chosen]
+            result = candidates[chosen]
+
+        # map the named hierarchies to support weight inheritance for python engine
+        if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
+            # already has a mapping, will merge with it
+            prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
+            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'{chosen}.{v}' for k, v in prev_mapping.items()})
+        else:
+            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'': str(chosen)})
+        return result
 
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
                  prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):

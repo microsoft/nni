@@ -208,7 +208,7 @@ def original_state_dict_hooks(model: Any):
             local_map = getattr(module, STATE_DICT_PY_MAPPING)
         elif hasattr(module, STATE_DICT_PY_MAPPING_PARTIAL):
             # keys and values are both incomplete
-            local_map = getattr(module, STATE_DICT_PY_MAPPING)
+            local_map = getattr(module, STATE_DICT_PY_MAPPING_PARTIAL)
             local_map = {k: tar_prefix + v for k, v in local_map.items()}
         else:
             # no mapping
@@ -216,10 +216,10 @@ def original_state_dict_hooks(model: Any):
 
         if '' in local_map:
             # special case, overwrite prefix
-            tar_prefix = local_map['']
+            tar_prefix = local_map[''] + '.'
 
         for key, value in local_map.items():
-            if key not in module._modules:  # not a sub-module, probably a parameter
+            if key != '' and key not in module._modules:  # not a sub-module, probably a parameter
                 full_mapping[src_prefix + key] = value
 
         if src_prefix != tar_prefix:  # To deal with leaf nodes.
