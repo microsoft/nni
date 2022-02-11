@@ -34,7 +34,7 @@ def create_experiment(args):
     logging.getLogger('nni').setLevel(logging.INFO)
 
     if not config_file.is_file():
-        _logger.error('"{config_file}" is not a valid file.')
+        _logger.error(f'"{config_file}" is not a valid file.')
         exit(1)
 
     with config_file.open() as config:
@@ -90,6 +90,9 @@ def create_experiment(args):
     exp.url_prefix = url_prefix
     run_mode = RunMode.Foreground if foreground else RunMode.Detach
     exp.start(port, debug, run_mode)
+
+    _logger.info(f'To stop experiment run "nnictl stop {exp.id}" or "nnictl stop --all"')
+    _logger.info('Reference: https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html')
 
 def resume_experiment(args):
     exp_id = args.id

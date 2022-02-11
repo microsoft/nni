@@ -11,7 +11,6 @@ import colorama
 import psutil
 
 import nni.runtime.log
-from nni.common import dump
 
 from .config import ExperimentConfig
 from .data import TrialJob, TrialMetricData, TrialResult
@@ -29,6 +28,10 @@ class RunMode(Enum):
       - Background: stop NNI manager when Python script exits; do not print NNI manager log. (default)
       - Foreground: stop NNI manager when Python script exits; print NNI manager log to stdout.
       - Detach: do not stop NNI manager when Python script exits.
+
+    NOTE:
+    This API is non-stable and is likely to get refactored in next release.
+    NNI manager should treat log level more seriously so we can default to "foreground" without being too verbose.
     """
     Background = 'background'
     Foreground = 'foreground'
@@ -459,7 +462,6 @@ class Experiment:
         value: dict
             New search_space.
         """
-        value = dump(value)
         self._update_experiment_profile('searchSpace', value)
 
     def update_max_trial_number(self, value: int):

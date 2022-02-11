@@ -1,0 +1,176 @@
+/* Customization to sphinx-gallery generated notebooks */
+
+p.sphx-glr-script-out {
+    margin: 0;
+    padding: 0;
+    font-size: .7rem;
+}
+
+.sphx-glr-script-out .highlight {
+    margin: 0 !important;
+}
+
+.sphx-glr-script-out .highlight pre {
+    background-color: #f2f3fa !important;
+    padding: .6rem !important;
+    margin-bottom: 1.5rem;
+}
+
+div.sphx-glr-footer {
+    display: none;
+}
+
+.notebook-action-link {
+    padding-right: 1rem;
+}
+
+.sphx-glr-download-link-note {
+    margin-bottom: 1.5rem;
+}
+
+.notebook-action-div {
+    display: inline;
+    border-bottom: 1px solid #f3f4f7;
+    padding-right: 2rem;
+    padding-bottom: 0.625rem;
+}
+
+.notebook-action-link:hover .notebook-action-div {
+    /* match theme */
+    border-bottom-color: #f50057;
+}
+
+.notebook-action-link img {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.notebook-action-link div {
+    display: inline;
+}
+
+.notebook-action-link:not(:hover) div {
+    color: rgba(0, 0, 0, .68);
+}
+
+.card-link.admonition {
+    border-left: 0;
+    padding: 0.9rem;
+}
+
+.card-link .card-link-body {
+    min-height: 4rem;
+    position: relative;
+}
+
+.card-link-text {
+    padding-left: 4.9rem;
+}
+
+.card-link a:not(:hover) .card-link-text {
+    color: rgba(0, 0, 0, .68);
+}
+
+.card-link-text .card-link-title-container h4 {
+    margin: 0;
+}
+
+.card-link-text .card-link-summary {
+    margin-top: 0.3rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.card-link-tag {
+    margin-right: 0.4rem;
+    background: #eeeff2;
+    border: 1px solid #e0dcda;
+    color: rgba(0, 0, 0, 0.7);
+    border-radius: 18px;
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.7rem;
+}
+
+.card-link-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.card-link-icon img {
+    max-width: 80%;
+    max-height: 80%;
+    /* horizontal and vertical center */
+    /* https://stackoverflow.com/questions/7273338/how-to-vertically-align-an-image-inside-a-div */
+    text-align: center;
+    vertical-align: middle;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+}
+
+/* link icon background color */
+.card-link-icon.circle {
+    background-color: #283593;
+    border-radius: 50%;
+    width: 4rem;
+    height: 4rem;
+    padding: 0;
+}
+
+/* pallette */
+.card-link-icon.red {
+    background-color: #C62828;
+}
+
+.card-link-icon.pink {
+    background-color: #AD1457;
+}
+
+.card-link-icon.purple {
+    background-color: #8E24AA;
+}
+
+.card-link-icon.deep-purple {
+    background-color: #512DA8;
+}
+
+.card-link-icon.blue {
+    background-color: #1565C0;
+}
+
+.card-link-icon.light-blue {
+    background-color: #0277BD;
+}
+
+.card-link-icon.cyan {
+    background-color: #006064;
+}
+
+.card-link-icon.teal {
+    background-color: #00796B;
+}
+
+.card-link-icon.green {
+    background-color: #2E7D32;
+}
+
+.card-link-icon.deep-orange {
+    background-color: #BF360C;
+}
+
+.card-link-icon.brown {
+    background-color: #6D4C41;
+}
+
+.card-link-icon.indigo {
+    background-color: #3949AB;
+}

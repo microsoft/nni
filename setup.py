@@ -117,7 +117,7 @@ def _setup():
 
         data_files = _get_data_files(),
 
-        python_requires = '>=3.6',
+        python_requires = '>=3.7',
         install_requires = _read_requirements_txt('dependencies/required.txt'),
         extras_require = {
             'SMAC': _read_requirements_txt('dependencies/required_extra.txt', 'SMAC'),

@@ -99,7 +99,7 @@ if __name__ == '__main__':
         trainer(model, optimizer, criterion, i)
         evaluator(model)
 
-    config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+    config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
 
     # evaluator in 'SimulatedAnnealingPruner' could not be None.
     pruner = SimulatedAnnealingPruner(model, config_list, pruning_algorithm=args.pruning_algo,
