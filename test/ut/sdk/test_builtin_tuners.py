@@ -58,6 +58,8 @@ class BuiltinTunersTestCase(TestCase):
         return receive
 
     def send_trial_result(self, tuner, parameter_id, parameters, metrics):
+        if parameter_id % 2 == 1:
+            metrics = {'default': metrics, 'extra': 'hello'}
         tuner.receive_trial_result(parameter_id, parameters, metrics)
         tuner.trial_end(parameter_id, True)
 
