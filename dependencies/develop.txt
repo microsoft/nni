@@ -8,8 +8,8 @@ pylint
 pytest
 pytest-azurepipelines
 pytest-cov
+rstcheck
 sphinx
 sphinx-argparse
-sphinx-rtd-theme
-sphinxcontrib-websupport
+sphinx-gallery
 git+https://github.com/bashtage/sphinx-material.git

@@ -8,8 +8,11 @@ import torch.nn.functional as F
 from nni.retiarii import InvalidMutation, Sampler, basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
+from nni.retiarii.evaluator import FunctionalEvaluator
 from nni.retiarii.execution.utils import _unpack_if_only_one
-from nni.retiarii.nn.pytorch.mutator import process_inline_mutation, extract_mutation_from_pt_module
+from nni.retiarii.graph import Model
+from nni.retiarii.nn.pytorch.api import ValueChoice
+from nni.retiarii.nn.pytorch.mutator import process_evaluator_mutations, process_inline_mutation, extract_mutation_from_pt_module
 from nni.retiarii.serializer import model_wrapper
 from nni.retiarii.utils import ContextStack
 
@@ -736,3 +739,42 @@ class Python(GraphIR):
             except InvalidMutation:
                 continue
             self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(2, 10)).size() == torch.Size([2, 16]))
+
+
+class Shared(unittest.TestCase):
+    # This kind of tests are general across execution engines
+
+    def test_valuechoice_in_evaluator(self):
+        def foo():
+            pass
+
+        evaluator = FunctionalEvaluator(foo, t=1, x=2)
+        assert process_evaluator_mutations(evaluator, []) == []
+
+        evaluator = FunctionalEvaluator(foo, t=1, x=ValueChoice([1, 2]), y=ValueChoice([3, 4]))
+        mutators = process_evaluator_mutations(evaluator, [])
+        assert len(mutators) == 2
+        init_model = Model(_internal=True)
+        init_model.evaluator = evaluator
+        sampler = EnumerateSampler()
+        model = mutators[0].bind_sampler(sampler).apply(init_model)
+        assert model.evaluator.trace_kwargs['x'] == 1
+        model = mutators[0].bind_sampler(sampler).apply(init_model)
+        assert model.evaluator.trace_kwargs['x'] == 2
+
+        # share label
+        evaluator = FunctionalEvaluator(foo, t=ValueChoice([1, 2], label='x'), x=ValueChoice([1, 2], label='x'))
+        mutators = process_evaluator_mutations(evaluator, [])
+        assert len(mutators) == 1
+
+        # getitem
+        choice = ValueChoice([{"a": 1, "b": 2}, {"a": 3, "b": 4}])
+        evaluator = FunctionalEvaluator(foo, t=1, x=choice['a'], y=choice['b'])
+        mutators = process_evaluator_mutations(evaluator, [])
+        assert len(mutators) == 1
+        init_model = Model(_internal=True)
+        init_model.evaluator = evaluator
+        sampler = RandomSampler()
+        for _ in range(10):
+            model = mutators[0].bind_sampler(sampler).apply(init_model)
+            assert (model.evaluator.trace_kwargs['x'], model.evaluator.trace_kwargs['y']) in [(1, 2), (3, 4)]

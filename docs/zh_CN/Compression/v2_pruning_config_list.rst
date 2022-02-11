@@ -1,1 +1,0 @@
-../../en_US/Compression/v2_pruning_config_list.rst
