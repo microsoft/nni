@@ -67,9 +67,6 @@ class ValueChoiceSuperLayer:
     module_name : str
         the unique identifier of `module`
     """
-    def __init__(self, module, module_name):
-        self.name = module_name
-        self.args = module.trace_kwargs
 
     def max_candidate(self, attr_name, default = None):
         attr = self.args.get(attr_name, default)
@@ -101,7 +98,7 @@ class RandomValueChoice(ToSample):
         super().__init__(value_choice.label, len(value_choice.candidates))
 
 
-class PathSamplingSuperLinear(ValueChoiceSuperLayer, nn.Linear):
+class PathSamplingSuperLinear(nn.Linear, ValueChoiceSuperLayer):
     """
     The Linear layer to replace original linear with valuechoices in its parameter list. It construct the biggest weight matrix first,
     and slice it before every forward according to the sampled value. Supported parameters are listed below:
@@ -116,7 +113,8 @@ class PathSamplingSuperLinear(ValueChoiceSuperLayer, nn.Linear):
         the unique identifier of `module`
     """
     def __init__(self, module, name) -> None:
-        ValueChoiceSuperLayer.__init__(self, module, name)
+        self.name = name
+        self.args = module.trace_kwargs
 
         # compulsory params
         max_in_features = self.max_candidate('in_features')
@@ -127,7 +125,7 @@ class PathSamplingSuperLinear(ValueChoiceSuperLayer, nn.Linear):
         device = self.args.get('device', None)
         dtype = self.args.get('dtype', None)
 
-        nn.Linear.__init__(self, max_in_features, max_out_features, bias, device, dtype)
+        super().__init__(self, max_in_features, max_out_features, bias, device, dtype)
 
     def forward(self, x):
         in_dim = self.sampled_candidate('in_features')
@@ -139,7 +137,7 @@ class PathSamplingSuperLinear(ValueChoiceSuperLayer, nn.Linear):
         return F.linear(x, weights, bias)
 
 
-class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
+class PathSamplingSuperConv2d(nn.Conv2d, ValueChoiceSuperLayer):
     """
     The Conv2d layer to replace original conv2d with valuechoices in its parameter list. It construct the biggest weight matrix first,
     and slice it before every forward according to the sampled value.
@@ -166,7 +164,8 @@ class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
         the unique identifier of `module`
     """
     def __init__(self, module, name):
-        ValueChoiceSuperLayer.__init__(self, module, name)
+        self.name = name
+        self.args = module.trace_kwargs
 
         # compulsorty params
         max_in_channel = self.max_candidate('in_channels')
@@ -187,7 +186,7 @@ class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
         device = self.args.get('device', None)
         dtype = self.args.get('dtype', None)
 
-        nn.Conv2d.__init__(self, max_in_channel, max_out_channel, self.max_kernel_size,
+        super().__init__(self, max_in_channel, max_out_channel, self.max_kernel_size,
             groups = min_groups, bias = bias, padding_mode = padding_mode, device = device, dtype = dtype)
 
     def forward(self, input):
@@ -241,7 +240,7 @@ class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
         return maxa, maxb
 
 
-class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
+class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
     """
     The BatchNorm2d layer to replace original bn2d with valuechoice in its parameter list. It construct the biggest mean and variation
     tensor first, and slice it before every forward according to the sampled value. Supported parameters are listed below:
@@ -257,7 +256,8 @@ class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
         the unique identifier of `module`
     """
     def __init__(self, module, name):
-        ValueChoiceSuperLayer.__init__(self, module, name)
+        self.name = name
+        self.args = module.trace_kwargs
 
         # compulsory params
         max_num_features = self.max_candidate('num_features')
@@ -274,7 +274,7 @@ class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
         device = self.args.get('device', None)
         dtype = self.args.get('dtype', None)
 
-        nn.BatchNorm2d.__init__(self, max_num_features, eps, momentum, affine, track_running_stats, device, dtype)
+        super().__init__(self, max_num_features, eps, momentum, affine, track_running_stats, device, dtype)
 
     def forward(self, input):
         # get sampled parameters
@@ -323,7 +323,7 @@ class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
         )
 
 
-class PathSamplingMultiHeadAttention(ValueChoiceSuperLayer, nn.MultiheadAttention):
+class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLayer):
     """
     The MultiHeadAttention layer to replace original mhattn with valuechoice in its parameter list. It construct the biggest Q, K,
     V and some other tensors first, and slice it before every forward according to the sampled value. Supported parameters are listed
@@ -348,7 +348,8 @@ class PathSamplingMultiHeadAttention(ValueChoiceSuperLayer, nn.MultiheadAttentio
         the unique identifier of `module`
     """
     def __init__(self, module, name):
-        ValueChoiceSuperLayer.__init__(self, module, name)
+        self.name = name
+        self.args = module.trace_kwargs
 
         # compulsory params
         self.max_embed_dim = self.max_candidate('embed_dim')
@@ -367,8 +368,7 @@ class PathSamplingMultiHeadAttention(ValueChoiceSuperLayer, nn.MultiheadAttentio
         device = self.args.get('device', None)
         dtype = self.args.get('dtype', None)
 
-        # 为什么这里 nn.MultiheadAttention 就不行啊？？？？？
-        super(ValueChoiceSuperLayer, self).__init__(self.max_embed_dim, num_heads, dropout, bias, add_bias_kv,
+        super().__init__(self.max_embed_dim, num_heads, dropout, bias, add_bias_kv,
             add_zero_attn, kdim, vdim, batch_first ,device, dtype)
     
     def forward(self, query, key, value, key_padding_mask = None, need_weights = True, attn_mask = None):
