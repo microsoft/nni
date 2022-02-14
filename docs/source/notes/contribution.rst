@@ -96,114 +96,81 @@ NNI development environment supports Ubuntu 1604 (or above), and Windows 10 with
 
 7. Commit and push your changes, and submit your pull request!
 
-Contributing to Source Code and Bug Fixes
------------------------------------------
+Coding Tips
+-----------
 
-Provide PRs with appropriate tags for bug fixes or enhancements to the source code. Do follow the correct naming conventions and code styles when you work on and do try to implement all code reviews along the way.
+We expect all contributors to respect the following coding styles and naming conventions upon their contribution.
 
-If you are looking for How to develop and debug the NNI source code, you can refer to `How to set up NNI developer environment doc <./SetupNniDeveloperEnvironment.rst>`__ file in the ``docs`` folder.
+Python
+^^^^^^
 
-Similarly for `Quick Start <QuickStart.rst>`__. For everything else, refer to `NNI Home page <http://nni.readthedocs.io>`__.
+* We follow `PEP8 <https://www.python.org/dev/peps/pep-0008/>`__ for Python code and naming conventions, do try to adhere to the same when making a pull request. Our pull request has a mandatory code scan with ``pylint`` and ``flake8``.
 
-Solve Existing Issues
----------------------
+   .. note:: To scan your own code locally, run
 
-Head over to `issues <https://github.com/Microsoft/nni/issues>`__ to find issues where help is needed from contributors. You can find issues tagged with 'good-first-issue' or 'help-wanted' to contribute in.
+      .. code-block:: bash
 
-A person looking to contribute can take up an issue by claiming it as a comment/assign their Github ID to it. In case there is no PR or update in progress for a week on the said issue, then the issue reopens for anyone to take up again. We need to consider high priority issues/regressions where response time must be a day or so.
+         python -m pylint --rcfile pylintrc nni
 
-Code Styles & Naming Conventions
---------------------------------
+   .. tip:: One can also take the help of auto-format tools such as `autopep8 <https://code.visualstudio.com/docs/python/editing#_formatting>`_, which will automatically resolve most of the styling issues.
 
-* We follow `PEP8 <https://www.python.org/dev/peps/pep-0008/>`__ for Python code and naming conventions, do try to adhere to the same when making a pull request or making a change. One can also take the help of linters such as ``flake8`` or ``pylint``
-* We also follow `NumPy Docstring Style <https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy>`__ for Python Docstring Conventions. During the `documentation building <Contributing.rst#documentation>`__\ , we use `sphinx.ext.napoleon <https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html>`__ to generate Python API documentation from Docstring.
-* For docstrings, please refer to `numpydoc docstring guide <https://numpydoc.readthedocs.io/en/latest/format.html>`__ and `pandas docstring guide <https://python-sprints.github.io/pandas/guide/pandas_docstring.html>`__
+* We recommend documenting all the methods and classes in your code. Follow `NumPy Docstring Style <https://numpydoc.readthedocs.io/en/latest/format.html>`__ for Python Docstring Conventions.
 
-  * For function docstring, **description**, **Parameters**, and **Returns** **Yields** are mandatory.
-  * For class docstring, **description**, **Attributes** are mandatory.
-  * For docstring to describe ``dict``, which is commonly used in our hyper-param format description, please refer to `Internal Guideline on Writing Standards <https://ribokit.github.io/docs/text/>`__
+  * For function docstring, **description**, **Parameters**, and **Returns** are mandatory.
+  * For class docstring, **description**, **Attributes** are mandatory. The parameters of ``__init__`` should be documented in the docstring of docs.
+  * For docstring to describe ``dict``, which is commonly used in our hyper-parameter format description, please refer to `Internal Guideline on Writing Standards <https://ribokit.github.io/docs/text/>`_.
+
+   .. note:: `Here <https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy>`_ is a cheatsheet provided by Sphinx.
+
+TypeScript
+^^^^^^^^^^
+
+TypeScript code checks can be done with,
+
+.. code-block:: bash
+
+   # for nni manager
+   cd ts/nni_manager
+   yarn eslint
+
+   # for webui
+   cd ts/webui
+   yarn sanity-check
 
 Documentation
 -------------
 
-Our documentation is built with :githublink:`sphinx <docs>`.
+Build and check documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Before submitting the documentation change, please **build homepage locally**: ``cd docs/en_US && make html``, then you can see all the built documentation webpage under the folder ``docs/en_US/_build/html``. It's also highly recommended taking care of **every WARNING** during the build, which is very likely the signal of a **deadlink** and other annoying issues.
-
-* 
-  For links, please consider using **relative paths** first. However, if the documentation is written in reStructuredText format, and:
-
-
-  * It's an image link which needs to be formatted with embedded html grammar, please use global URL like ``https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png``, which can be automatically generated by dragging picture onto `Github Issue <https://github.com/Microsoft/nni/issues/new>`__ Box.
-  * It cannot be re-formatted by sphinx, such as source code, please use its global URL. For source code that links to our github repo, please use URLs rooted at ``https://github.com/Microsoft/nni/tree/master/`` (:githublink:`mnist.py <examples/trials/mnist-pytorch/mnist.py>` for example).
-
-
-https://docutils.sourceforge.io/docs/user/rst/quickstart.html
-https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
-
-
-Setup NNI development environment
-=================================
-
-NNI development environment supports Ubuntu 1604 (or above), and Windows 10 with Python3 64bit.
-
-1. Clone source code
-^^^^^^^^^^^^^^^^^^^^
+Our documentation is located under ``docs/`` folder. The following command can be used to build the documentation.
 
 .. code-block:: bash
 
-   git clone https://github.com/Microsoft/nni.git
+   cd docs
+   make html
 
-Note, if you want to contribute code back, it needs to fork your own NNI repo, and clone from there.
+It's also highly recommended taking care of **every WARNING** during the build, which is very likely the signal of a **deadlink** and other annoying issues. Our code check will also make sure that the documentation build completes with no warning.
 
-2. Install from source code
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The built documentation can be found in ``docs/build/html`` folder.
 
-.. code-block:: bash
+.. attention:: Always use your web browser to check the documentation before committing your change.
 
-   python3 -m pip install -U -r dependencies/setup.txt
-   python3 -m pip install -r dependencies/develop.txt
-   python3 setup.py develop
+.. tip:: `Live Server <https://github.com/ritwickdey/vscode-live-server>`_ is a great extension if you are looking for a static-files server to serve contents in ``docs/build/html``.
 
-This installs NNI in `development mode <https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html>`__,
-so you don't need to reinstall it after edit.
 
-3. Check if the environment is ready
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Writing new documents
+^^^^^^^^^^^^^^^^^^^^^
 
-Now, you can try to start an experiment to check if your environment is ready.
-For example, run the command
+Read the following two guides on how to write ReStructuredText:
 
-.. code-block:: bash
+* https://docutils.sourceforge.io/docs/user/rst/quickstart.html
+* https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 
-   nnictl create --config examples/trials/mnist-pytorch/config.yml
 
-And open WebUI to check if everything is OK
+Writing new tutorials
+^^^^^^^^^^^^^^^^^^^^^
 
-4. Reload changes
-^^^^^^^^^^^^^^^^^
 
-Python
-******
-
-Nothing to do, the code is already linked to package folders.
-
-TypeScript (Linux and macOS)
-****************************
-
-* If ``ts/nni_manager`` is changed, run ``yarn watch`` under this folder. It will watch and build code continually. The ``nnictl`` need to be restarted to reload NNI manager.
-* If ``ts/webui`` is changed, run ``yarn dev``\ , which will run a mock API server and a webpack dev server simultaneously. Use ``EXPERIMENT`` environment variable (e.g., ``mnist-tfv1-running``\ ) to specify the mock data being used. Built-in mock experiments are listed in ``src/webui/mock``. An example of the full command is ``EXPERIMENT=mnist-tfv1-running yarn dev``.
-
-TypeScript (Windows)
-********************
-
-Currently you must rebuild TypeScript modules with `python3 setup.py build_ts` after edit.
-
-5. Submit Pull Request
-^^^^^^^^^^^^^^^^^^^^^^
-
-All changes are merged to master branch from your forked repo. The description of Pull Request must be meaningful, and useful.
-
-We will review the changes as soon as possible. Once it passes review, we will merge it to master branch.
-
-For more contribution guidelines and coding styles, you can refer to the `contributing document <Contributing.rst>`__.
+Chinese translation
+^^^^^^^^^^^^^^^^^^^
