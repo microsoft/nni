@@ -140,8 +140,6 @@ class App extends React.Component<{}, AppState> {
         this.setState(state => ({
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
         }));
-        console.info('-----------');
-        console.info(this.state.trialsUpdateBroadcast);
     };
 
     shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {

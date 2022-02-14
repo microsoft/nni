@@ -176,23 +176,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
         checked?: boolean
     ): void => {
         const { displayedItems, selectedRowIds } = this.state;
-        const latestDisplayedItems = JSON.parse(JSON.stringify(displayedItems));
-        let latestSelectedRowIds = selectedRowIds;
-
-        if (checked === false) {
-            // 取消选择，移除selected trial数组
-            latestSelectedRowIds = latestSelectedRowIds.filter(item => item !== id);
-        } else {
-            // 选择trial，加入selected trial数组
-            latestSelectedRowIds.push(id);
+        const items = JSON.parse(JSON.stringify(displayedItems));
+        const temp = selectedRowIds;
+        if (checked === true) {
+            temp.push(id);
         }
-
-        latestDisplayedItems.forEach(item => {
+        items.forEach(item => {
             if (item.id === id) {
                 item._checked = !!checked;
             }
         });
-        this.setState(() => ({ displayedItems: latestDisplayedItems, selectedRowIds: latestSelectedRowIds }));
+        this.setState(() => ({ displayedItems: items, selectedRowIds: temp }));
     };
 
     private changeSelectTrialIds = (): void => {
@@ -456,8 +450,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         {blocked}
                     </PrimaryButton>
                 ) : (
-                    // <KillJob trial={record} updatePage={this.props.updateDetailPage} />
-                    <KillJob trial={record} updatePage={this._updateTableSource} />
+                    <KillJob trial={record} />
                 )}
                 <PrimaryButton
                     className='detail-button-operation'
