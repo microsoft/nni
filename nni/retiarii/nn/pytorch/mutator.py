@@ -372,7 +372,7 @@ class EvaluatorValueChoiceMutator(Mutator):
             if isinstance(param, ValueChoiceX):
                 leaf_node_values = [value_choice_decisions[choice.label] for choice in param.inner_choices()]
                 result[key] = param.evaluate(leaf_node_values)
-        
+
         model.evaluator.trace_kwargs.update(result)
 
 
@@ -389,11 +389,15 @@ def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mu
                 # merge duplicate labels
                 for mutator in existing_mutators:
                     if mutator.name == choice.label:
-                        raise ValueError(f'Found duplicated labels “{choice.label}”. When two value choices have the same name, '
-                                        'they would share choices. However, sharing choices between model and evaluator is not yet supported.')
+                        raise ValueError(
+                            f'Found duplicated labels “{choice.label}”. When two value choices have the same name, '
+                            'they would share choices. However, sharing choices between model and evaluator is not yet supported.'
+                        )
                 if choice.label in mutator_candidates and mutator_candidates[choice.label] != choice.candidates:
-                    raise ValueError(f'Duplicate labels for evaluator ValueChoice {choice.label}. They should share choices.'
-                                    f'But their candidate list is not equal: {mutator_candidates[choice.label][1]} vs. {choice.candidates}')
+                    raise ValueError(
+                        f'Duplicate labels for evaluator ValueChoice {choice.label}. They should share choices.'
+                        f'But their candidate list is not equal: {mutator_candidates[choice.label][1]} vs. {choice.candidates}'
+                    )
                 mutator_keys[choice.label].append(key)
                 mutator_candidates[choice.label] = choice.candidates
     mutators = []
