@@ -67,7 +67,7 @@ class DartsModule(BaseOneShotLightningModule):
     The DARTS module. Each iteration consists of 2 training phases. The phase 1 is architecture step, in which model parameters are
     frozen and the architecture parameters are trained. The phase 2 is model step, in which architecture parameters are frozen and
     model parameters are trained. See [darts] for details.
-    The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTrainValDataloader`.
+    The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.
 
     Reference
     ----------
@@ -79,7 +79,7 @@ class DartsModule(BaseOneShotLightningModule):
         # grad manually
         arc_optim = self.architecture_optimizers
 
-        # The ParallelTrainValDataLoader yields both train and val data in a batch
+        # The InterleavedTrainValDataLoader yields both train and val data in a batch
         trn_batch, val_batch = batch
 
         # phase 1: architecture step
@@ -281,7 +281,7 @@ class ProxylessInputChoice(nn.Module):
 class ProxylessModule(DartsModule):
     """
     The Proxyless Module. This is a darts-based method that resamples the architecture to reduce memory consumption.
-    The Proxyless Module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.ParallelTrainValDataloader`.
+    The Proxyless Module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.
 
     Reference
     ----------
@@ -331,7 +331,7 @@ class SNASInputChoice(DartsInputChoice):
 class SNASModule(DartsModule):
     """
     The SNAS Module. This is a darts-based method that uses gumble-softmax to simulate one-hot distribution.
-    The SNAS Module should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTrainValDataLoader`.
+    The SNAS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.
 
     Parameters
     ----------

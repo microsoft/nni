@@ -12,7 +12,7 @@ from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
                                           DartsModule, EnasModule, SNASModule,
-                                          ParallelTrainValDataLoader,
+                                          InterleavedTrainValDataLoader,
                                           ProxylessModule, RandomSampleModule)
 
 
@@ -92,7 +92,7 @@ def test_darts():
     cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader, **trainer_kwargs)
     cls.module.set_model(base_model)
     darts_model = DartsModule(cls.module)
-    para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
+    para_loader = InterleavedTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
     cls.trainer.fit(darts_model, para_loader)
 
 
@@ -102,7 +102,7 @@ def test_proxyless():
     cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
     cls.module.set_model(base_model)
     proxyless_model = ProxylessModule(cls.module)
-    para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
+    para_loader = InterleavedTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
     cls.trainer.fit(proxyless_model, para_loader)
 
 
@@ -131,7 +131,7 @@ def test_snas():
     cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
     cls.module.set_model(base_model)
     proxyless_model = SNASModule(cls.module, 1, use_temp_anneal=True)
-    para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
+    para_loader = InterleavedTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
     cls.trainer.fit(proxyless_model, para_loader)
 
 
