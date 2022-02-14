@@ -33,7 +33,7 @@ def nni_info(*args):
     else:
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
-def parse_args():
+def get_parser():
     logging.getLogger().setLevel(logging.ERROR)
 
     '''Definite the arguments users need to follow and input'''
@@ -282,6 +282,10 @@ def parse_args():
     jupyter_uninstall_parser = jupyter_subparsers.add_parser('uninstall', help='uninstall JupyterLab extension')
     jupyter_uninstall_parser.set_defaults(func=_jupyter_uninstall)
 
+    return parser
+
+def parse_args():
+    parser = get_parser()
     args = parser.parse_args()
     args.func(args)
 
