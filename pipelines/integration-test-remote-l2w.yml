@@ -27,7 +27,6 @@ jobs:
       echo "Working directory: ${PWD}"
       echo "NNI version: ${NNI_RELEASE}"
       echo "Build ID: $(Build.BuildId)"
-      python3 -m pip install --upgrade pip setuptools
       python3 setup.py clean --all
     displayName: Prepare on Linux manager
 
@@ -44,7 +43,6 @@ jobs:
       sshEndpoint: $(worker)
       runOptions: commands
       commands: |
-        conda activate l2w & python -m pip install --upgrade pip setuptools
         conda activate l2w & python /tmp/nnitest/$(Build.BuildId)/test/vso_tools/install_nni.py $(NNI_RELEASE)
       failOnStdErr: false
     displayName: Install NNI on Windows worker
