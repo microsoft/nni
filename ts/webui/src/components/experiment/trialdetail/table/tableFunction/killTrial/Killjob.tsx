@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Stack, FocusTrapCallout, DefaultButton, FocusZone, PrimaryButton } from '@fluentui/react';
-import axios from 'axios';
-import { MANAGER_IP } from '../../../../../../static/const';
+import { killJob } from '../../../../../../static/function';
 import { blocked } from '../../../../../fluent/Icon';
 import { styles } from '../../../../overview/params/basicInfoStyles';
 
@@ -11,7 +10,6 @@ interface KillJobState {
 
 interface KillJobProps {
     trial: any;
-    updatePage: () => void;
 }
 
 class KillJob extends React.Component<KillJobProps, KillJobState> {
@@ -66,38 +64,6 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
         );
     }
 
-    // kill trial
-    private killJob = (key: number, id: string): void => {
-        const { updatePage } = this.props;
-        axios(`${MANAGER_IP}/trial-jobs/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json;charset=utf-8'
-            }
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    // TODO: use Message.txt to tooltip
-                    updatePage();
-                    // alert('Cancel the job successfully');
-                } else {
-                    alert('fail to cancel the job');
-                }
-            })
-            .catch(error => {
-                if (error.response) {
-                    alert(error.response.data.error);
-                    // setErrorMessage({
-                    //     error: true,
-                    //     message: err.response.data.error || 'Failed to start tensorBoard!'
-                    // });
-                } else {
-                    alert('500 error, fail to cancel the job');
-                }
-                // setTensorboardPanelVisible(true);
-            });
-    };
-
     private onDismiss = (): void => {
         this.setState(() => ({ isCalloutVisible: false }));
     };
@@ -105,7 +71,7 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
     private onKill = (): void => {
         this.setState({ isCalloutVisible: false }, () => {
             const { trial } = this.props;
-            this.killJob(trial.key, trial.id);
+            killJob(trial.key, trial.id, trial.status);
         });
     };
 
