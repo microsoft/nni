@@ -285,7 +285,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                 const searchInput = newValue.trim();
                 let result = originExperimentList.filter(
                     item =>
-                        (item.experimentName !== null && item.experimentName.toLowerCase().includes(searchInput.toLowerCase())) ||
+                        item.experimentName.toLowerCase().includes(searchInput.toLowerCase()) ||
                         item.id.toLowerCase().includes(searchInput.toLowerCase())
                 );
                 result = this.commonSelectString(result, '');
@@ -407,8 +407,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             // hert re-search data for fix this status: filter first -> searchBox search result null -> close filter
             result = originExperimentList.filter(
                 item =>
-                item.id.toLowerCase().includes(searchInputVal.toLowerCase()) ||
-                ((item.experimentName !== null) && item.experimentName.toLowerCase().includes(searchInputVal.toLowerCase()))
+                item.experimentName.toLowerCase().includes(searchInputVal.toLowerCase()) ||
+                item.id.toLowerCase().includes(searchInputVal.toLowerCase())
             );
         }
         
