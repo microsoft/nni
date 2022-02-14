@@ -8,6 +8,16 @@
     READTHEDOCS_VERSIONS = {{ versions | tojson }}
   </script>
   {% endif %}
+  <script type="text/javascript">
+    // for gallery links
+    GIT_COMMIT_ID = "{{ git_commit_id }}";
+    PAGENAME = "{{ pagename }}";
+    GALLERY_LINKS = {
+      colab: "{{ pathto('_static/img/gallery-colab.svg', 1) }}",
+      notebook: "{{ pathto('_static/img/gallery-download.svg', 1) }}",
+      github: "{{ pathto('_static/img/gallery-github.svg', 1) }}"
+    }
+  </script>
 {% endblock %}
 
 {#- REPLACE ATTRIBUTES INSTANTLY TO DISABLE SOME HOOKS #}

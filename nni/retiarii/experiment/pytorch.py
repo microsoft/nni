@@ -34,7 +34,7 @@ from ..execution.utils import get_mutation_dict
 from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
-from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation
+from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation, process_evaluator_mutations
 from ..oneshot.interface import BaseOneShotTrainer
 from ..serializer import is_model_wrapped
 from ..strategy import BaseStrategy
@@ -200,6 +200,7 @@ class RetiariiExperiment(Experiment):
             full_ir=self.config.execution_engine not in ['py', 'benchmark'],
             dummy_input=self.config.dummy_input
         )
+        self.applied_mutators += process_evaluator_mutations(self.trainer, self.applied_mutators)
 
         _logger.info('Start strategy...')
         search_space = dry_run_for_formatted_search_space(base_model_ir, self.applied_mutators)

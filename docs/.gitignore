@@ -1,1 +1,4 @@
-**/_build
+build/
+
+# legacy build
+_build/
