@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 
 class ToSample:
     """
@@ -122,7 +122,7 @@ class PathSamplingSuperLinear(ValueChoiceSuperLayer, nn.Linear):
         max_in_features = self.max_candidate('in_features')
         max_out_features = self.max_candidate('out_features')
 
-        # optional and no valuechoice params
+        # optional and non-valuechoice params
         bias = self.args.get('bias', True)
         device = self.args.get('device', None)
         dtype = self.args.get('dtype', None)
@@ -181,7 +181,7 @@ class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
         # which means we can set them just before calling Conv2d.forward
         min_groups = self.min_candidate('groups', 1)
 
-        # no valuechoice params
+        # non-valuechoice params
         bias = self.args.get('bias', False)
         padding_mode = self.args.get('padding_mode', 'zeros')
         device = self.args.get('device', None)
@@ -198,7 +198,7 @@ class PathSamplingSuperConv2d(ValueChoiceSuperLayer, nn.Conv2d):
             if isinstance(kernel_size, tuple) else kernel_size, kernel_size
 
         # Users are supposed to make sure that candidates with the same index match each other.
-        # No need to figure if the following three attributes are tuples or not, since Conv2d will handeled them.
+        # No need to figure if the following three attributes are tuples or not, since Conv2d will handel them.
         self.stride = self.sampled_candidate('stride', 1)
         self.padding = self.sampled_candidate('padding', 0)
         self.dilation = self.sampled_candidate('dilation', 1)
@@ -268,7 +268,7 @@ class PathSamplingSuperBatchNorm2d(ValueChoiceSuperLayer, nn.BatchNorm2d):
         eps = self.max_candidate('eps', 1e-4)
         momentum = self.max_candidate('momentum', .1)
 
-        # no ValueChoice params
+        # non-valuechoice params
         affine = self.args.get('affine', True)
         track_running_stats = self.args.get('track_running_stats', True)
         device = self.args.get('device', None)
@@ -348,7 +348,7 @@ class PathSamplingMultiHeadAttention(ValueChoiceSuperLayer, nn.MultiheadAttentio
         the unique identifier of `module`
     """
     def __init__(self, module, name):
-        ValueChoiceSuperLayer.__init__(self, name, module)
+        ValueChoiceSuperLayer.__init__(self, module, name)
 
         # compulsory params
         self.max_embed_dim = self.max_candidate('embed_dim')
@@ -359,7 +359,7 @@ class PathSamplingMultiHeadAttention(ValueChoiceSuperLayer, nn.MultiheadAttentio
         vdim = self.max_candidate('vdim', self.max_embed_dim)
         dropout = self.max_candidate('dropout', 0.)
 
-        # no valuechoice params
+        # non-valuechoice params
         bias = self.args.get('bias', True)
         add_bias_kv = self.args.get('add_bias_kv', False)
         add_zero_attn = self.args.get('add_zero_attn', False)
@@ -367,8 +367,9 @@ class PathSamplingMultiHeadAttention(ValueChoiceSuperLayer, nn.MultiheadAttentio
         device = self.args.get('device', None)
         dtype = self.args.get('dtype', None)
 
-        nn.MultiheadAttention.__init__(self.max_embed_dim, num_heads, dropout, bias, add_bias_kv, add_zero_attn,
-            kdim, vdim, batch_first ,device, dtype)
+        # 为什么这里 nn.MultiheadAttention 就不行啊？？？？？
+        super(ValueChoiceSuperLayer, self).__init__(self.max_embed_dim, num_heads, dropout, bias, add_bias_kv,
+            add_zero_attn, kdim, vdim, batch_first ,device, dtype)
     
     def forward(self, query, key, value, key_padding_mask = None, need_weights = True, attn_mask = None):
         if self.batch_first:
@@ -379,17 +380,19 @@ class PathSamplingMultiHeadAttention(ValueChoiceSuperLayer, nn.MultiheadAttentio
         vdim = self.sampled_candidate('vdim', embed_dim)
         num_heads = self.sampled_candidate('num_heads')
 
-        in_proj_bias = self.in_proj_bias[:embed_dim] + \
-                       self.in_proj_bias[self.max_embed_dim : self.max_embed_dim + embed_dim] + \
-                       self.in_proj_bias[2 * self.max_embed_dim : 2 * self.max_embed_dim + embed_dim] \
+        in_proj_bias = torch.concat(
+            [self.in_proj_bias[:embed_dim], 
+             self.in_proj_bias[self.max_embed_dim : self.max_embed_dim + embed_dim],
+             self.in_proj_bias[2 * self.max_embed_dim : 2 * self.max_embed_dim + embed_dim]], dim = 0) \
                        if self.in_proj_bias is not None else None
-        in_proj_weight = self.in_proj_weight[:embed_dim, :embed_dim] + \
-                         self.in_proj_weight[self.max_embed_dim : self.max_embed_dim + embed_dim, :embed_dim] + \
-                         self.in_proj_weight[2 * self.max_embed_dim : 2 * self.max_embed_dim + embed_dim, :embed_dim] \
+        in_proj_weight = torch.concat(
+            [self.in_proj_weight[:embed_dim, :embed_dim],
+             self.in_proj_weight[self.max_embed_dim : self.max_embed_dim + embed_dim, :embed_dim],
+             self.in_proj_weight[2 * self.max_embed_dim : 2 * self.max_embed_dim + embed_dim, :embed_dim]], dim = 0) \
                          if self.in_proj_weight is not None else None
-        bias_k = self.bias_k[:,:,:embed_dim] if self.bias_k is not None else None
+        bias_k = self.bias_k[:, :, :embed_dim] if self.bias_k is not None else None
         bias_v = self.bias_v[:, :, :embed_dim] if self.bias_v is not None else None
-        out_proj_weight = self.out_proj.weight[:embed_dim, embed_dim]
+        out_proj_weight = self.out_proj.weight[:embed_dim, :embed_dim]
         out_proj_bias = self.out_proj.bias[:embed_dim]
 
         if not self._qkv_same_embed_dim:
