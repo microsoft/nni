@@ -68,6 +68,44 @@ Examples are as follows:
 
     self.evaluator = FunctionalEvaluator(train_and_evaluate, learning_rate=nn.ValueChoice([1e-3, 1e-2, 1e-1]))
 
+Value choices supports arithmetic operators, which is particularly useful when searching for a network width multiplier:
+
+..  code-block:: python
+
+    # init
+    scale = nn.ValueChoice([1.0, 1.5, 2.0])
+    self.conv1 = nn.Conv2d(3, round(scale * 16))
+    self.conv2 = nn.Conv2d(round(scale * 16), round(scale * 64))
+    self.conv3 = nn.Conv2d(round(scale * 64), round(scale * 256))
+
+    # forward
+    return self.conv3(self.conv2(self.conv1(x)))
+
+Or when kernel size and padding are coupled so as to keep the output size constant:
+
+..  code-block:: python
+
+    # init
+    ks = nn.ValueChoice([3, 5, 7])
+    self.conv = nn.Conv2d(3, 16, kernel_size=ks, padding=(ks - 1) // 2)
+
+    # forward
+    return self.conv(x)
+
+Or when several layers are concatenated for a final layer.
+
+..  code-block:: python
+
+    # init
+    self.linear1 = nn.Linear(3, nn.ValueChoice([1, 2, 3], label='a'))
+    self.linear2 = nn.Linear(3, nn.ValueChoice([4, 5, 6], label='b'))
+    self.final = nn.Linear(nn.ValueChoice([1, 2, 3], label='a') + nn.ValueChoice([4, 5, 6], label='b'), 2)
+
+    # forward
+    return self.final(torch.cat([self.linear1(x), self.linear2(x)], 1))
+
+Some advanced operators are also provided, such as ``nn.ValueChoice.max`` and ``nn.ValueChoice.cond``. See reference of :class:`nni.retiarii.nn.pytorch.ValueChoice` for more details.
+
 .. tip::
 
   All the APIs have an optional argument called ``label``, mutations with the same label will share the same choice. A typical example is,
