@@ -6,6 +6,12 @@ The existence of residual connection requires that the number of channels of the
 We propose to equivalently remove the residual connection in a vanilla ResNet and MobileNetV2 architecture by a reserving and merging(RM) operation on ResBlocks.
 This plug-in method can improve previous pruning methods by a large margin.
 
+RM -R & Pruning
+^^^^^^^
+
+How to Use
+^^^^^^^
+
 The following one shows how to apply RM -R on NNI model compression. More use cases and solutions will be added in the future.
 
   Step 1: train a model for pruning:
