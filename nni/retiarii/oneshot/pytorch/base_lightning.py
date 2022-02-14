@@ -165,7 +165,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def configure_architecture_optimizers(self):
         """
-        Hook kept for subclasses. A specific NAS method inheriting this base cluss should return its architecture optimizers here
+        Hook kept for subclasses. A specific NAS method inheriting this base class should return its architecture optimizers here
         if architecture parameters are needed. Note that lr schedulers are not supported now for architecture_optimizers.
 
         Returns

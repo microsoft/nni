@@ -199,7 +199,7 @@ class ParallelTrainValDataLoader(DataLoader):
     Example
     --------
     Fit your dataloaders into a parallel one.
-    >>> para_loader = ParallelTrainValDataLoader(train_dataloader, val_datalodaer)
+    >>> para_loader = ParallelTrainValDataLoader(train_dataloader, val_dataloader)
     Then you can use the ``para_loader`` as a normal training loader.
     """
     def __init__(self, train_dataloader, val_dataloader):
