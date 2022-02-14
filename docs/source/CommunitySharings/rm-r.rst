@@ -8,7 +8,24 @@ This plug-in method can improve previous pruning methods by a large margin.
 
 RM -R & Pruning
 ^^^^^^^
+The residual connection reserves the input feature map and merges them into the residual function's output. 
+Our goal is to equivalently implement the function of reserving and merging in a plain model. 
+The whole process of RM operation is shown in the following figures. 
+Figure a) shows a ResBlock during the training phase. Figure b) is the converted RMBlock for inference, which has no residual connections. Both blocks have equal output given the same input.
 
+.. image:: ../../img/rm_r.png
+   :target: ../../img/rm_r.png
+   :alt: 
+
+We first remove residual connection from MobileNetV2 with RM Operaion and then apply pruning on it.
+As shown in the following figure, there doesn't exists residual connections within residual blocks. 
+Channels within different ResBlocks will no longer have correlations, which is friendly for pruning.
+
+.. image:: ../../img/rm_r_pruning.png
+   :target: ../../img/rm_r_pruning.png
+   :alt: 
+   
+   
 How to Use
 ^^^^^^^
 
