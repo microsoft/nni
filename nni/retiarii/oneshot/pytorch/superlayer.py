@@ -35,17 +35,14 @@ class ToSample:
         self.candidates = {}
         self.sampled = sampled
 
-
     def sampled_candidate(self, attr_name):
         return self.candidates[attr_name][self.sampled]
-
 
     def add_candidates(self, attr, candidates = []):
         assert len(candidates) == self.n_candidates, 'For ValueChoice with the same label, the number of candidates should also be ' \
             f'the same. ValueChoice `{self.label}` expects candidatas with a length of {self.n_candidates}, but got ' \
             f'{len(candidates)} for `{attr}`.'
         self.candidates[attr] = candidates
-
 
     def __len__(self):
         return self.n_candidates
