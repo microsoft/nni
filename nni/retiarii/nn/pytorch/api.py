@@ -374,6 +374,11 @@ class ChosenInputs(nn.Module):
     """
     A module that chooses from a tensor list and outputs a reduced tensor.
     The already-chosen version of InputChoice.
+
+    Attributes
+    ----------
+    chosen : list of int
+        Indices of chosen candidates.
     """
 
     def __init__(self, chosen: Union[List[int], int], reduction: str):

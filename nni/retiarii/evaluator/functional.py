@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from ..graph import Evaluator
+import nni
+from nni.retiarii.graph import Evaluator
 
 
+@nni.trace
 class FunctionalEvaluator(Evaluator):
     """
     Functional evaluator that directly takes a function and thus should be general.

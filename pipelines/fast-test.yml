@@ -20,13 +20,23 @@ stages:
 
     - script: |
         cd docs
-        python tools/chineselink.py check
-      displayName: Translation up-to-date
+        # rstcheck -r source
+      displayName: rstcheck (disabled for now)  # TODO: rstcheck
 
     - script: |
-        cd docs/en_US
-        sphinx-build -M html . _build -W --keep-going -T
-      displayName: Sphinx  # TODO: rstcheck
+        cd docs
+        make -e SPHINXOPTS="-W --keep-going -T" html
+      displayName: Sphinx sanity check
+
+    - script: |
+        cd docs
+        make -e SPHINXOPTS="-W --keep-going -T -D language='zh'" html
+      displayName: Sphinx sanity check (Chinese)
+
+    - script: |
+        cd docs
+        python tools/chineselink.py check
+      displayName: Translation up-to-date
 
   - job: python
     pool:
@@ -71,12 +81,8 @@ stages:
     - script: |
         set -e
         yarn --cwd ts/webui
-        yarn --cwd ts/webui eslint
-      displayName: ESLint (WebUI)
-
-    - script: |
-        yarn --cwd ts/webui tsc
-      displayName: Type Check (WebUI)
+        yarn --cwd ts/webui sanity-check
+      displayName: Sanity check (WebUI)
 
 
   # To reduce debug cost, steps are sorted differently on each platform,
