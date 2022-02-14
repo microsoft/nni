@@ -336,46 +336,72 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
 
 # mutations for evaluator
 
-class EvaluatorValueChoiceMutator(Mutator):
-    def __init__(self, keys: List[str], label: Optional[str]):
-        self.keys = keys
+class EvaluatorValueChoiceLeafMutator(Mutator):
+    # see "ParameterChoiceLeafMutator"
+    # works in the same way
+
+    def __init__(self, candidates: List[Any], label: str):
         super().__init__(label=label)
+        self.candidates = candidates
+
+    def mutate(self, model: Model) -> Model:
+        # leave a record here
+        # real mutations will be done in ParameterChoiceMutator
+        self.choice(self.candidates)
+
+
+class EvaluatorValueChoiceMutator(Mutator):
+    # works in the same way as `ParameterChoiceMutator`
+    # we only need one such mutator for one model/evaluator
 
     def mutate(self, model: Model):
         # make a copy to mutate the evaluator
         model.evaluator = model.evaluator.trace_copy()
-        chosen = None
-        for i, key in enumerate(self.keys):
-            value_choice: ValueChoice = model.evaluator.trace_kwargs[key]
-            if i == 0:
-                # i == 0 is needed here because there can be candidates of "None"
-                chosen = self.choice(value_choice.candidates)
-            # get the real chosen value after "access"
-            model.evaluator.trace_kwargs[key] = value_choice.access(chosen)
-        return model
+
+        value_choice_decisions = {}
+        for mutation in model.history:
+            if isinstance(mutation.mutator, EvaluatorValueChoiceLeafMutator):
+                value_choice_decisions[mutation.mutator.label] = mutation.samples[0]
+
+        result = {}
+
+        # for each argument that is a composition of value choice
+        # we find all the leaf-value-choice in the mutation
+        # and compute the final result
+        for key, param in model.evaluator.trace_kwargs.items():
+            if isinstance(param, ValueChoiceX):
+                leaf_node_values = [value_choice_decisions[choice.label] for choice in param.inner_choices()]
+                result[key] = param.evaluate(leaf_node_values)
+        
+        model.evaluator.trace_kwargs.update(result)
 
 
 def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mutator]) -> List[Mutator]:
     # take all the value choice in the kwargs of evaluaator into a list
+    # `existing_mutators` can mutators generated from `model`
     if not is_traceable(evaluator):
         return []
     mutator_candidates = {}
     mutator_keys = defaultdict(list)
     for key, param in evaluator.trace_kwargs.items():
-        if isinstance(param, ValueChoice):
-            # merge duplicate labels
-            for mutator in existing_mutators:
-                if mutator.name == param.label:
-                    raise ValueError(f'Found duplicated labels for mutators {param.label}. When two mutators have the same name, '
-                                     'they would share choices. However, sharing choices between model and evaluator is not yet supported.')
-            if param.label in mutator_candidates and mutator_candidates[param.label] != param.candidates:
-                raise ValueError(f'Duplicate labels for evaluator ValueChoice {param.label}. They should share choices.'
-                                 f'But their candidate list is not equal: {mutator_candidates[param.label][1]} vs. {param.candidates}')
-            mutator_keys[param.label].append(key)
-            mutator_candidates[param.label] = param.candidates
+        if isinstance(param, ValueChoiceX):
+            for choice in param.inner_choices():
+                # merge duplicate labels
+                for mutator in existing_mutators:
+                    if mutator.name == choice.label:
+                        raise ValueError(f'Found duplicated labels “{choice.label}”. When two value choices have the same name, '
+                                        'they would share choices. However, sharing choices between model and evaluator is not yet supported.')
+                if choice.label in mutator_candidates and mutator_candidates[choice.label] != choice.candidates:
+                    raise ValueError(f'Duplicate labels for evaluator ValueChoice {choice.label}. They should share choices.'
+                                    f'But their candidate list is not equal: {mutator_candidates[choice.label][1]} vs. {choice.candidates}')
+                mutator_keys[choice.label].append(key)
+                mutator_candidates[choice.label] = choice.candidates
     mutators = []
-    for key in mutator_keys:
-        mutators.append(EvaluatorValueChoiceMutator(mutator_keys[key], key))
+    for label in mutator_keys:
+        mutators.append(EvaluatorValueChoiceLeafMutator(mutator_candidates[label], label))
+    if mutators:
+        # one last mutator to actually apply the mutations
+        mutators.append(EvaluatorValueChoiceMutator())
     return mutators
 
 

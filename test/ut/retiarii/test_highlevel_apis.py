@@ -53,6 +53,16 @@ class MutableConv(nn.Module):
             return self.conv2(x)
 
 
+def _apply_all_mutators(model, mutators, samplers):
+    if not isinstance(samplers, list):
+        samplers = [samplers for _ in range(len(mutators))]
+    assert len(samplers) == len(mutators)
+    model_new = model
+    for mutator, sampler in zip(mutators, samplers):
+        model_new = mutator.bind_sampler(sampler).apply(model_new)
+    return model_new
+
+
 class GraphIR(unittest.TestCase):
     # graph engine will have an extra mutator for parameter choices
     value_choice_incr = 1
@@ -71,15 +81,6 @@ class GraphIR(unittest.TestCase):
         model = self._convert_to_ir(pytorch_model)
         mutators = process_inline_mutation(model)
         return model, mutators
-
-    def _apply_all_mutators(self, model, mutators, samplers):
-        if not isinstance(samplers, list):
-            samplers = [samplers for _ in range(len(mutators))]
-        assert len(samplers) == len(mutators)
-        model_new = model
-        for mutator, sampler in zip(mutators, samplers):
-            model_new = mutator.bind_sampler(sampler).apply(model_new)
-        return model_new
 
     def test_layer_choice(self):
         @model_wrapper
@@ -254,10 +255,10 @@ class GraphIR(unittest.TestCase):
                 return self.conv(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 1)
-        mutator = mutators[0].bind_sampler(EnumerateSampler())
-        model1 = mutator.apply(model)
-        model2 = mutator.apply(model)
+        self.assertEqual(len(mutators), self.value_choice_incr + 1)
+        samplers = [EnumerateSampler() for _ in range(len(mutators))]
+        model1 = _apply_all_mutators(model, mutators, samplers)
+        model2 = _apply_all_mutators(model, mutators, samplers)
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 5, 5)).size(),
                          torch.Size([1, 5, 3, 3]))
         self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 5, 5)).size(),
@@ -276,8 +277,8 @@ class GraphIR(unittest.TestCase):
         model, mutators = self._get_model_with_mutators(Net())
         self.assertEqual(len(mutators), 2 + self.value_choice_incr)
         samplers = [EnumerateSampler() for _ in range(len(mutators))]
-        model1 = self._apply_all_mutators(model, mutators, samplers)
-        model2 = self._apply_all_mutators(model, mutators, samplers)
+        model1 = _apply_all_mutators(model, mutators, samplers)
+        model2 = _apply_all_mutators(model, mutators, samplers)
         input = torch.randn(1, 3, 5, 5)
         self.assertEqual(self._get_converted_pytorch_model(model1)(input).size(),
                          torch.Size([1, 6, 3, 3]))
@@ -298,8 +299,8 @@ class GraphIR(unittest.TestCase):
         model, mutators = self._get_model_with_mutators(Net())
         self.assertEqual(len(mutators), 1 + self.value_choice_incr)
         sampler = EnumerateSampler()
-        model1 = self._apply_all_mutators(model, mutators, sampler)
-        model2 = self._apply_all_mutators(model, mutators, sampler)
+        model1 = _apply_all_mutators(model, mutators, sampler)
+        model2 = _apply_all_mutators(model, mutators, sampler)
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 5, 5)).size(),
                          torch.Size([1, 6, 5, 5]))
         self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 5, 5)).size(),
@@ -342,7 +343,7 @@ class GraphIR(unittest.TestCase):
         sz_counter = Counter()
         sampler = RandomSampler()
         for i in range(100):
-            model_new = self._apply_all_mutators(model, mutators, sampler)
+            model_new = _apply_all_mutators(model, mutators, sampler)
             sz_counter[self._get_converted_pytorch_model(model_new)(torch.randn(1, 3)).size(1)] += 1
         self.assertEqual(len(sz_counter), 4)
 
@@ -403,9 +404,9 @@ class GraphIR(unittest.TestCase):
         self.assertEqual(len(mutators), 1 + self.value_choice_incr)
         sampler = EnumerateSampler()
         input = torch.randn(1, 3, 5, 5)
-        self.assertEqual(self._get_converted_pytorch_model(self._apply_all_mutators(model, mutators, sampler))(input).size(),
+        self.assertEqual(self._get_converted_pytorch_model(_apply_all_mutators(model, mutators, sampler))(input).size(),
                          torch.Size([1, 6, 3, 3]))
-        self.assertEqual(self._get_converted_pytorch_model(self._apply_all_mutators(model, mutators, sampler))(input).size(),
+        self.assertEqual(self._get_converted_pytorch_model(_apply_all_mutators(model, mutators, sampler))(input).size(),
                          torch.Size([1, 8, 1, 1]))
 
         @model_wrapper
@@ -426,7 +427,7 @@ class GraphIR(unittest.TestCase):
         model, mutators = self._get_model_with_mutators(Net2())
         self.assertEqual(len(mutators), 1 + self.value_choice_incr)
         input = torch.randn(1, 3, 5, 5)
-        self._get_converted_pytorch_model(self._apply_all_mutators(model, mutators, EnumerateSampler()))(input)
+        self._get_converted_pytorch_model(_apply_all_mutators(model, mutators, EnumerateSampler()))(input)
 
     def test_valuechoice_getitem_functional(self):
         @model_wrapper
@@ -487,7 +488,7 @@ class GraphIR(unittest.TestCase):
         samplers = [EnumerateSampler()] + [RandomSampler() for _ in range(self.value_choice_incr + 1)]
 
         for i in range(10):
-            model_new = self._apply_all_mutators(model, mutators, samplers)
+            model_new = _apply_all_mutators(model, mutators, samplers)
             result = self._get_converted_pytorch_model(model_new)(torch.randn(1, i % 3 + 1, 3, 3))
             self.assertIn(result.size(), [torch.Size([1, round((i % 3 + 1) * 3 * k), 3, 3]) for k in [2.5, 3.0, 3.5]])
 
@@ -894,28 +895,28 @@ class Shared(unittest.TestCase):
 
         evaluator = FunctionalEvaluator(foo, t=1, x=ValueChoice([1, 2]), y=ValueChoice([3, 4]))
         mutators = process_evaluator_mutations(evaluator, [])
-        assert len(mutators) == 2
+        assert len(mutators) == 3
         init_model = Model(_internal=True)
         init_model.evaluator = evaluator
-        sampler = EnumerateSampler()
-        model = mutators[0].bind_sampler(sampler).apply(init_model)
+        samplers = [EnumerateSampler() for _ in range(3)]
+        model = _apply_all_mutators(init_model, mutators, samplers)
         assert model.evaluator.trace_kwargs['x'] == 1
-        model = mutators[0].bind_sampler(sampler).apply(init_model)
+        model = _apply_all_mutators(init_model, mutators, samplers)
         assert model.evaluator.trace_kwargs['x'] == 2
 
         # share label
         evaluator = FunctionalEvaluator(foo, t=ValueChoice([1, 2], label='x'), x=ValueChoice([1, 2], label='x'))
         mutators = process_evaluator_mutations(evaluator, [])
-        assert len(mutators) == 1
+        assert len(mutators) == 2
 
         # getitem
         choice = ValueChoice([{"a": 1, "b": 2}, {"a": 3, "b": 4}])
         evaluator = FunctionalEvaluator(foo, t=1, x=choice['a'], y=choice['b'])
         mutators = process_evaluator_mutations(evaluator, [])
-        assert len(mutators) == 1
+        assert len(mutators) == 2
         init_model = Model(_internal=True)
         init_model.evaluator = evaluator
         sampler = RandomSampler()
         for _ in range(10):
-            model = mutators[0].bind_sampler(sampler).apply(init_model)
+            model = _apply_all_mutators(init_model, mutators, sampler)
             assert (model.evaluator.trace_kwargs['x'], model.evaluator.trace_kwargs['y']) in [(1, 2), (3, 4)]
