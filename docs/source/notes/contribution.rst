@@ -137,6 +137,9 @@ TypeScript code checks can be done with,
    cd ts/webui
    yarn sanity-check
 
+Tests
+^^^^^
+
 Documentation
 -------------
 
