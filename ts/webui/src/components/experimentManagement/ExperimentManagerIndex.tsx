@@ -400,18 +400,13 @@ class Experiment extends React.Component<{}, ExpListState> {
     private setSearchSource(): void {
         const { sortInfo, originExperimentList } = this.state;
         let { searchInputVal } = this.state;
-        let result = JSON.parse(JSON.stringify(originExperimentList));
         searchInputVal = searchInputVal.trim();
-        // user input some value to filter trial first...
-        if(searchInputVal !== '') {
-            // hert re-search data for fix this status: filter first -> searchBox search result null -> close filter
-            result = originExperimentList.filter(
-                item =>
+        // hert re-search data for fix this status: filter first -> searchBox search result null -> close filter
+        const result = originExperimentList.filter(
+            item =>
                 item.experimentName.toLowerCase().includes(searchInputVal.toLowerCase()) ||
                 item.id.toLowerCase().includes(searchInputVal.toLowerCase())
-            );
-        }
-        
+        );
         this.setState(() => ({
             source: getSortedSource(result, sortInfo),
             selectedStatus: [],
