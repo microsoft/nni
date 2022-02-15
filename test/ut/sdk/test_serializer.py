@@ -209,7 +209,6 @@ def test_pickle():
     assert obj._b == 1
 
 
-@pytest.mark.skipif(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
 def test_multiprocessing_dataloader():
     # check whether multi-processing works
     # it's possible to have pickle errors
@@ -296,3 +295,4 @@ if __name__ == '__main__':
     # test_basic_unit()
     # test_generator()
     test_pickle()
+    test_multiprocessing_dataloader()

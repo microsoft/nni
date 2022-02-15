@@ -367,10 +367,15 @@ def _trace_cls(base, kw_only, call_super=True):
 
         def __reduce__(self):
             # The issue that decorator and pickler doesn't play well together is well known.
-            # The "correct" solution should be creating another class, like `functools.partial`.
-            # But adding a `type(self)` actually works, for reasons I don't fully understand.
-            # https://stackoverflow.com/questions/52185507/pickle-and-decorated-classes-picklingerror-not-the-same-object
-            return _pickling_object, (type(self), self.trace_args, self.trace_kwargs)
+            # The workaround solution is to use a fool class (_pickling_object) which pretends to be the pickled object.
+            # We then put the original type, as well as args and kwargs in its `__new__` argument.
+            # I suspect that their could still be problems when things get complex,
+            # e.g., the wrapped class has a custom pickling or `__new__`.
+            # But it can't be worse because the previous pickle doesn't work at all.
+            #
+            # Linked issue: https://github.com/microsoft/nni/issues/4434
+            # SO: https://stackoverflow.com/questions/52185507/pickle-and-decorated-classes-picklingerror-not-the-same-object
+            return _pickling_object, (cloudpickle.dumps(type(self).__wrapped__), self.trace_args, self.trace_kwargs)
 
     _copy_class_wrapper_attributes(base, wrapper)
 
@@ -433,9 +438,11 @@ def _copy_class_wrapper_attributes(base, wrapper):
 
 
 class _pickling_object:
+    # Need `cloudpickle.load` on the callable because the callable is pickled with cloudpickle.
+    # Used in `_trace_cls`.
 
-    def __new__(cls, func, args, kwargs):
-        return func(*args, **kwargs)
+    def __new__(cls, type_, args, kwargs):
+        return cloudpickle.loads(type_)(*args, **kwargs)
 
 
 def _argument_processor(arg):
