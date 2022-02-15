@@ -148,7 +148,14 @@ When a new feature is added or a bug is fixed, tests are highly recommended to m
 Unit test (Python)
 ^^^^^^^^^^^^^^^^^^
 
+Python UT are located in ``test/ut/`` folder. We use `pytest <https://docs.pytest.org/>`_ to launch the tests, and the working directory is ``test/ut/``.
 
+.. tip:: pytest can be used on a single file or a single test function.
+
+   .. code-block:: bash
+
+      pytest sdk/test_tuner.py
+      pytest sdk/test_tuner.py::test_tpe
 
 Unit test (TypeScript)
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -160,7 +167,9 @@ Integration test
 
 The integration tests can be found in ``pipelines/`` folder. 
 
+The integration tests are run on Azure DevOps platform on a daily basis, in order to make sure that our examples and training service integrations work properly. However, for critical changes that have impacts on the core functionalities of NNI, we recommend to `trigger the pipeline on the pull request branch <https://stackoverflow.com/questions/60157818/azure-pipeline-run-build-on-pull-request-branch>`_.
 
+The integration tests won't be automatically triggered on pull requests. You might need to contact the core developers to help you trigger the tests.
 
 Documentation
 -------------
@@ -187,7 +196,17 @@ The built documentation can be found in ``docs/build/html`` folder.
 Writing new documents
 ^^^^^^^^^^^^^^^^^^^^^
 
-`ReStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_ is our documentation language. Sphinx has `an excellent cheatsheet of rst <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ which contains almost everything you might need to know to write a elegant document.
+`ReStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_ is our documentation language.
+
+.. tip:: Sphinx has `an excellent cheatsheet of rst <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ which contains almost everything you might need to know to write a elegant document.
+
+**Dealing with sections.** ``=``, for sections. ``-``, for subsections. ``^``, for subsubsections. ``"``, for paragraphs.
+
+**Dealing with images.** Images should be put into ``docs/img`` folder. Then, reference the image in the document with relative links. For example, ``.. image:: ../../img/example.png``.
+
+**Dealing with codes.** We recommend using ``.. code-block:: python`` to start a code block. The ``python`` here annotates the syntax highlighting.
+
+**Dealing with links.** Use `` `Link text <https://domain.invalid/>`_ `` for inline web links. Note that use one underline might cause `"duplicated target name" error <https://stackoverflow.com/questions/27420317/restructured-text-rst-http-links-underscore-vs-use>`_ when multiple targets share the same name. In that case, use double-underline to avoid the error: `` `Link text <https://domain.invalid/>`__ ``.
 
 Other than built-in directives provided by Sphinx, we also provide some custom directives:
 
