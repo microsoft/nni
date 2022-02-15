@@ -304,12 +304,12 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def export(self):
         """
         Export the NAS result, idealy the best choice of each nas_modules.
-        You may implement an export method for your customized nas_module used to replace xxxChoice.
+        You may implement an ``export`` method for your customized nas_module.
 
         Returns
         --------
         result : Dict[str, int]
-            Keys are names of nas_modules, and values are the choice index of it.
+            Keys are names of nas_modules, and values are the choice indices of them.
         """
         result = {}
         for name, module in self.nas_modules:

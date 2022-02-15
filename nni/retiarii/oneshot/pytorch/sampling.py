@@ -122,6 +122,9 @@ class EnasModule(BaseOneShotLightningModule):
                 arc_opt.zero_grad()
 
     def _resample(self):
+        """
+        Resample the architecture as ENAS result. This doesn't require an ``export`` method in nas_modules to work.
+        """
         result = self.controller.resample()
         for name, module in self.nas_modules:
             module.sampled = result[name]
@@ -160,7 +163,10 @@ class RandomSampleModule(BaseOneShotLightningModule):
         }
 
     def _resample(self):
-        # The simplest sampling-based NAS method that each NAS module is uniformly sampled.
+        """
+        Resample the architecture as RandomSample result. This is simply a uniformly sampling that doesn't require an ``export``
+        method in nas_modules to work.
+        """
         result = {}
         for name, module in self.nas_modules:
             if name not in result:

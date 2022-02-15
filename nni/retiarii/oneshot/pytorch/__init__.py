@@ -7,4 +7,4 @@ from .proxyless import ProxylessTrainer
 from .random import SinglePathTrainer, RandomTrainer
 from .differentiable import DartsModule, ProxylessModule, SNASModule
 from .sampling import EnasModule, RandomSampleModule
-from .utils import ParallelTrainValDataLoader, ConcatenateTrainValDataLoader
+from .utils import InterleavedTrainValDataLoader, ConcatenateTrainValDataLoader
