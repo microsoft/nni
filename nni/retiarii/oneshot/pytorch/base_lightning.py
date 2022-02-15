@@ -179,12 +179,12 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def default_replace_dict(self):
         """
         Default xxxChoice replace dict. This is called in ``__init__`` to get the default replace functions for your NAS algorithm.
-        Note that your default replace functions may be overriden by user-defined custom_replace_dict.
+        Note that your default replace functions may be overridden by user-defined custom_replace_dict.
 
         Returns
         ----------
         replace_dict : Dict[Type, Callable[nn.Module, nn.Module]]
-            Same as ``custom_replace_dict`` in ``__init__``, but this will be overriden if users define their own replace functions.
+            Same as ``custom_replace_dict`` in ``__init__``, but this will be overridden if users define their own replace functions.
         """
         replace_dict = {}
         return replace_dict
@@ -303,7 +303,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def export(self):
         """
-        Export the NAS result, idealy the best choice of each nas_modules.
+        Export the NAS result, ideally the best choice of each nas_modules.
         You may implement an ``export`` method for your customized nas_module.
 
         Returns
