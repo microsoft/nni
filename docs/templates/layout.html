@@ -1,0 +1,30 @@
+{% extends "!layout.html" %}
+
+{#- TO INJECT INFORMATION FROM READTHEDOCS HERE #}
+{% block scripts %}
+  {{ super() }}
+  {% if versions %}
+  <script type="text/javascript">
+    READTHEDOCS_VERSIONS = {{ versions | tojson }}
+  </script>
+  {% endif %}
+  <script type="text/javascript">
+    // for gallery links
+    GIT_COMMIT_ID = "{{ git_commit_id }}";
+    PAGENAME = "{{ pagename }}";
+    GALLERY_LINKS = {
+      colab: "{{ pathto('_static/img/gallery-colab.svg', 1) }}",
+      notebook: "{{ pathto('_static/img/gallery-download.svg', 1) }}",
+      github: "{{ pathto('_static/img/gallery-github.svg', 1) }}"
+    }
+  </script>
+{% endblock %}
+
+{#- REPLACE ATTRIBUTES INSTANTLY TO DISABLE SOME HOOKS #}
+{% block footer_scripts %}
+<script type="text/javascript">
+  // try to disable original hook for md-source.
+  $('*[data-md-source="github"]').attr("data-md-source", "nni");
+</script>
+{{ super() }}
+{% endblock %}

@@ -6,6 +6,7 @@ import unittest
 import torch
 import torch.nn.functional as F
 
+import nni
 from nni.algorithms.compression.v2.pytorch.pruning import (
     LevelPruner,
     L1NormPruner,
@@ -18,7 +19,7 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     ADMMPruner,
     MovementPruner
 )
-from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact, trace_parameters
+from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact
 
 
 class TorchModel(torch.nn.Module):
@@ -55,7 +56,7 @@ def trainer(model, optimizer, criterion):
 
 
 def get_optimizer(model):
-    return trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    return nni.trace(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 
 criterion = torch.nn.CrossEntropyLoss()
@@ -70,6 +71,16 @@ class PrunerTestCase(unittest.TestCase):
         pruner._unwrap_model()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
+
+    def test_level_pruner_bank(self):
+        model = TorchModel()
+        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.7}]
+        pruner = LevelPruner(model=model, config_list=config_list, mode='balance', balance_gran=[5])
+        pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        # round down cause to lower sparsity
+        assert sparsity_list[0]['total_sparsity'] == 0.6
 
     def test_l1_norm_pruner(self):
         model = TorchModel()
