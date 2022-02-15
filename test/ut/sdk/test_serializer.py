@@ -208,7 +208,13 @@ def test_pickle():
     assert obj._a == 1
     assert obj._b == 1
 
+    obj = SimpleClass(1)
+    obj.xxx = 3
+    obj = pickle.loads(pickle.dumps(obj))
+    assert obj.xxx == 3
 
+
+@pytest.mark.skipif(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
 def test_multiprocessing_dataloader():
     # check whether multi-processing works
     # it's possible to have pickle errors
@@ -221,6 +227,22 @@ def test_multiprocessing_dataloader():
     x, y = next(iter(dataloader))
     assert x.size() == torch.Size([10, 1, 28, 28])
     assert y.size() == torch.Size([10])
+
+
+def _test_multiprocessing_dataset_worker(dataset):
+    print(dataset)
+
+
+@pytest.mark.skipif(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
+def test_multiprocessing_dataset():
+    from torch.utils.data import Dataset
+
+    dataset = nni.trace(Dataset)()
+
+    import multiprocessing
+    process = multiprocessing.Process(target=_test_multiprocessing_dataset_worker, args=(dataset, ))
+    process.start()
+    process.join()
 
 
 def test_type():
@@ -295,4 +317,4 @@ if __name__ == '__main__':
     # test_basic_unit()
     # test_generator()
     test_pickle()
-    test_multiprocessing_dataloader()
+    test_multiprocessing_dataset()

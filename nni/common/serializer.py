@@ -375,7 +375,7 @@ def _trace_cls(base, kw_only, call_super=True):
             #
             # Linked issue: https://github.com/microsoft/nni/issues/4434
             # SO: https://stackoverflow.com/questions/52185507/pickle-and-decorated-classes-picklingerror-not-the-same-object
-            return _pickling_object, (cloudpickle.dumps(type(self).__wrapped__), self.trace_args, self.trace_kwargs)
+            return _pickling_object, (cloudpickle.dumps(type(self)), cloudpickle.dumps(self.__dict__))
 
     _copy_class_wrapper_attributes(base, wrapper)
 
@@ -441,8 +441,13 @@ class _pickling_object:
     # Need `cloudpickle.load` on the callable because the callable is pickled with cloudpickle.
     # Used in `_trace_cls`.
 
-    def __new__(cls, type_, args, kwargs):
-        return cloudpickle.loads(type_)(*args, **kwargs)
+    def __new__(cls, type_, data):
+        type_ = cloudpickle.loads(type_)
+        data = cloudpickle.loads(data)
+        obj = type_.__new__(type_)
+        # https://docs.python.org/3/library/pickle.html#pickling-class-instances
+        obj.__dict__.update(data)
+        return obj
 
 
 def _argument_processor(arg):
