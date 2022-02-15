@@ -40,7 +40,7 @@ Neural Network Intelligence
     Use Cases and Solutions <CommunitySharings/community_sharings>
     Research and Publications <ResearchPublications>
     FAQ <Tutorial/FAQ>
-    Contribution Guide <contribution>
+    Contribution Guide <notes/contributing>
     Change Log <Release>
 
 

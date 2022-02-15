@@ -106,13 +106,13 @@ Python
 
 * We follow `PEP8 <https://www.python.org/dev/peps/pep-0008/>`__ for Python code and naming conventions, do try to adhere to the same when making a pull request. Our pull request has a mandatory code scan with ``pylint`` and ``flake8``.
 
-   .. note:: To scan your own code locally, run
+  .. note:: To scan your own code locally, run
 
-      .. code-block:: bash
+     .. code-block:: bash
 
          python -m pylint --rcfile pylintrc nni
 
-   .. tip:: One can also take the help of auto-format tools such as `autopep8 <https://code.visualstudio.com/docs/python/editing#_formatting>`_, which will automatically resolve most of the styling issues.
+  .. tip:: One can also take the help of auto-format tools such as `autopep8 <https://code.visualstudio.com/docs/python/editing#_formatting>`_, which will automatically resolve most of the styling issues.
 
 * We recommend documenting all the methods and classes in your code. Follow `NumPy Docstring Style <https://numpydoc.readthedocs.io/en/latest/format.html>`__ for Python Docstring Conventions.
 
@@ -120,7 +120,7 @@ Python
   * For class docstring, **description**, **Attributes** are mandatory. The parameters of ``__init__`` should be documented in the docstring of docs.
   * For docstring to describe ``dict``, which is commonly used in our hyper-parameter format description, please refer to `Internal Guideline on Writing Standards <https://ribokit.github.io/docs/text/>`_.
 
-   .. note:: `Here <https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy>`_ is a cheatsheet provided by Sphinx.
+  .. tip:: `A cheatsheet provided by Sphinx <https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy>`__ shows a number of examples of docstring in numpy style.
 
 TypeScript
 ^^^^^^^^^^
@@ -138,7 +138,29 @@ TypeScript code checks can be done with,
    yarn sanity-check
 
 Tests
-^^^^^
+-----
+
+When a new feature is added or a bug is fixed, tests are highly recommended to make sure that the fix is effective or the feature won't break in future. There are two types of tests in NNI:
+
+* Unit test (**UT**): each test targets at a specific class / function / module.
+* Integration test (**IT**): each test is an end-to-end example / demo.
+
+Unit test (Python)
+^^^^^^^^^^^^^^^^^^
+
+
+
+Unit test (TypeScript)
+^^^^^^^^^^^^^^^^^^^^^^
+
+TypeScript UT are paired with TypeScript code. Use ``yarn test`` to run them.
+
+Integration test
+^^^^^^^^^^^^^^^^
+
+The integration tests can be found in ``pipelines/`` folder. 
+
+
 
 Documentation
 -------------
@@ -165,11 +187,12 @@ The built documentation can be found in ``docs/build/html`` folder.
 Writing new documents
 ^^^^^^^^^^^^^^^^^^^^^
 
-Read the following two guides on how to write ReStructuredText:
+`ReStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_ is our documentation language. Sphinx has `an excellent cheatsheet of rst <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ which contains almost everything you might need to know to write a elegant document.
 
-* https://docutils.sourceforge.io/docs/user/rst/quickstart.html
-* https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
+Other than built-in directives provided by Sphinx, we also provide some custom directives:
 
+* ``.. cardlinkitem::``: A tutorial card, useful in :doc:`../tutorial`.
+* ``:githublink:`path/to/file.ext` `` or ``:githublink:`text <path/to/file.ext>` ``: reference a file on the GitHub. Linked to the same commit id as where the documentation is built.
 
 Writing new tutorials
 ^^^^^^^^^^^^^^^^^^^^^
