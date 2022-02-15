@@ -25,12 +25,5 @@ NNI 中也内置了一些主流的模型压缩算法。
 ..  toctree::
     :maxdepth: 2
 
-    概述 <Compression/Overview>
-    快速入门 <Compression/QuickStart>
-    教程 <Compression/Tutorial>
-    剪枝 <Compression/pruning>
-    剪枝（V2版本） <Compression/v2_pruning>
-    量化 <Compression/quantization>
-    工具 <Compression/CompressionUtils>
-    高级用法 <Compression/advanced>
-    API 参考 <Compression/CompressionReference>
+    概述 <compression/overview>
+    模型剪枝 <compression/pruning>

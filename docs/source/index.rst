@@ -23,7 +23,7 @@ Neural Network Intelligence
     Overview
     Auto (Hyper-parameter) Tuning <hyperparameter_tune>
     Neural Architecture Search <nas>
-    Model Compression <model_compression>
+    Model Compression <compression>
     Feature Engineering <feature_engineering>
 
 ..  toctree::

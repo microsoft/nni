@@ -50,6 +50,27 @@ Tutorials
    :hidden:
 
    /tutorials/nni_experiment
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Pruning Quickstart">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_quick_start_mnist_thumb.png
+     :alt: Pruning Quickstart
+
+     :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/pruning_quick_start_mnist
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

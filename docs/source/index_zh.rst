@@ -16,7 +16,7 @@ Neural Network Intelligence
     教程<tutorials>
     自动（超参数）调优 <hyperparameter_tune>
     神经网络架构搜索<nas>
-    模型压缩<model_compression>
+    模型压缩<compression>
     特征工程<feature_engineering>
     参考<reference>
     示例与解决方案<CommunitySharings/community_sharings>

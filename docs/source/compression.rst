@@ -23,12 +23,5 @@ For details, please refer to the following tutorials:
 ..  toctree::
     :maxdepth: 2
 
-    Overview <Compression/Overview>
-    Quick Start <Compression/QuickStart>
-    Tutorial <Compression/Tutorial>
-    Pruning <Compression/pruning>
-    Pruning V2 <Compression/v2_pruning>
-    Quantization <Compression/quantization>
-    Utilities <Compression/CompressionUtils>
-    Advanced Usage <Compression/advanced>
-    API Reference <Compression/CompressionReference>
+    Overview <compression/overview>
+    Pruning <compression/pruning>
