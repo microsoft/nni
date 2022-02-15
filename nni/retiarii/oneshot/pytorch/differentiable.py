@@ -80,7 +80,11 @@ class DartsModule(BaseOneShotLightningModule):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
         ctrl_params = {}
         for _, m in self.nas_modules:
-            if m.name in ctrl_params:
+            # TODO: unify layerchoice/inputchoice and valuechoice alpha         
+            if isinstance(m.alpha, dict):
+                for name, alpha in m.alpha:
+                    ctrl_params[name] = alpha
+            elif m.name in ctrl_params:
                 assert m.alpha.size() == ctrl_params[m.name].size(), 'Size of parameters with the same label should be same.'
                 m.alpha = ctrl_params[m.name]
             else:
