@@ -27,6 +27,11 @@ class SimpleClass:
         self._b = b
 
 
+@nni.trace
+class EmptyClass:
+    pass
+
+
 class UnserializableSimpleClass:
     def __init__(self):
         self._a = 1
@@ -193,6 +198,17 @@ def test_dataset():
     assert y.size() == torch.Size([10])
 
 
+def test_pickle():
+    import pickle
+
+    pickle.dumps(EmptyClass())
+    obj = SimpleClass(1)
+    obj = pickle.loads(pickle.dumps(obj))
+
+    assert obj._a == 1
+    assert obj._b == 1
+
+
 @pytest.mark.skipif(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
 def test_multiprocessing_dataloader():
     # check whether multi-processing works
@@ -279,4 +295,4 @@ if __name__ == '__main__':
     # test_unserializable()
     # test_basic_unit()
     # test_generator()
-    test_arguments_kind()
+    test_pickle()

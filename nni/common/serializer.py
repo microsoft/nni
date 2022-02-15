@@ -365,6 +365,13 @@ def _trace_cls(base, kw_only, call_super=True):
             # calling serializable object init to initialize the full object
             super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=call_super)
 
+        def __reduce__(self):
+            # The issue that decorator and pickler doesn't play well together is well known.
+            # The "correct" solution should be creating another class, like `functools.partial`.
+            # But adding a `type(self)` actually works, for reasons I don't fully understand.
+            # https://stackoverflow.com/questions/52185507/pickle-and-decorated-classes-picklingerror-not-the-same-object
+            return _pickling_object, (type(self), self.trace_args, self.trace_kwargs)
+
     _copy_class_wrapper_attributes(base, wrapper)
 
     return wrapper
@@ -423,6 +430,12 @@ def _copy_class_wrapper_attributes(base, wrapper):
                 pass
 
     wrapper.__wrapped__ = base
+
+
+class _pickling_object:
+
+    def __new__(cls, func, args, kwargs):
+        return func(*args, **kwargs)
 
 
 def _argument_processor(arg):
