@@ -200,7 +200,7 @@ Writing new documents
 
 .. tip:: Sphinx has `an excellent cheatsheet of rst <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ which contains almost everything you might need to know to write a elegant document.
 
-**Dealing with sections.** ``=``, for sections. ``-``, for subsections. ``^``, for subsubsections. ``"``, for paragraphs.
+**Dealing with sections.** ``=`` for sections. ``-`` for subsections. ``^`` for subsubsections. ``"`` for paragraphs.
 
 **Dealing with images.** Images should be put into ``docs/img`` folder. Then, reference the image in the document with relative links. For example, ``.. image:: ../../img/example.png``.
 
