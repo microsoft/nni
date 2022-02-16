@@ -192,11 +192,10 @@ The built documentation can be found in ``docs/build/html`` folder.
 
 .. tip:: `Live Server <https://github.com/ritwickdey/vscode-live-server>`_ is a great extension if you are looking for a static-files server to serve contents in ``docs/build/html``.
 
-
 Writing new documents
 ^^^^^^^^^^^^^^^^^^^^^
 
-`ReStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_ is our documentation language.
+`ReStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_ is our documentation language. Please find the reference of RST `here <https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html>`__.
 
 .. tip:: Sphinx has `an excellent cheatsheet of rst <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ which contains almost everything you might need to know to write a elegant document.
 
@@ -216,6 +215,37 @@ Other than built-in directives provided by Sphinx, we also provide some custom d
 Writing new tutorials
 ^^^^^^^^^^^^^^^^^^^^^
 
+Our tutorials are powered by `sphinx-gallery <https://sphinx-gallery.github.io/>`. Sphinx-gallery is an extension that builds an HTML gallery of examples from any set of Python scripts.
+
+To contribute a new tutorial, here are the steps to follow:
+
+1. Create a notebook styled python file. If you want it executed while inserted into documentation, save the file under ``examples/tutorials/``. If your tutorial contains other auxiliary scripts which are not intended to be included into documentation, save them under ``examples/tutorials/scripts/``.
+
+   .. tip:: The syntax to write a "notebook styled python file" is very simple. In essence, you only need to write a slightly well formatted python file. Here is a useful guide of `how to structure your Python scripts for Sphinx-Gallery <https://sphinx-gallery.github.io/stable/syntax.html>`_.
+
+2. Put the tutorials into ``docs/source/tutorials.rst``. You should add it it both ``toctree``, which makes it appear in the sidebar content table, and ``cardlinkitem``, and specify the appropriate ``header``, ``description``, ``link``, ``image``, ``background`` (for image) and ``tags``.
+
+   ``link`` are the generated link, which is usually ``tutorials/<your_python_file_name>.html``. Some useful images can be found in ``docs/img/thumbnails``, but you can always use your own. Available background colors are: ``red``, ``pink``, ``purple``, ``deep-purple``, ``blue``, ``light-blue``, ``cyan``, ``teal``, ``green``, ``deep-orange``, ``brown``, ``indigo``.
+
+   In case you prefer to write your tutorial in jupyter, you can use `this script <https://gist.github.com/chsasank/7218ca16f8d022e02a9c0deb94a310fe>`_ to convert the notebook to python file. After conversion and addition to the project, please make sure the sections headings etc are in logical order.
+
+3. Build the tutorials. Since some of the tutorials contain complex AutoML examples, it's very inefficient to build them over and over again. Therefore, we cache the built tutorials in ``docs/source/tutorials``, so that the unchanged tutorials won't be rebuilt. To trigger the build, run ``make html``. This will execute the tutorials and convert the scripts into HTML files. How long it takes depends on your tutorial. As ``make html`` is not very debug-friendly, we suggest making the script runnable by itself before using this building tool.
+
+.. notes::
+
+   Some useful HOW-TOs in writing new tutorials:
+
+   * `How to force rebuilding one tutorial <https://sphinx-gallery.github.io/stable/configuration.html#rerunning-stale-examples>`_.
+   * `How to add images to notebooks <https://sphinx-gallery.github.io/stable/configuration.html#adding-images-to-notebooks>`_.
+   * `How to reference a tutorial in documentation <https://sphinx-gallery.github.io/stable/advanced.html#cross-referencing>`_.
 
 Chinese translation
 ^^^^^^^^^^^^^^^^^^^
+
+We only maintain a partial set of documents with Chinese translation. If you intend to contribute more, follow the steps:
+
+1. Add a ``xxx_zh.rst`` in the same folder where ``xxx.rst`` exists. 
+2. Run ``python tools/chineselink.py`` under ``docs`` folder, to generate a hash string in your created ``xxx_zh.rst``.
+3. Don't delete the hash string, add your translation after it.
+
+In case you modify an English document with Chinese translation already exists, you also need to run ``python tools/chineselink.py`` first to update the hash string, and update the Chinese translation contents accordingly.
