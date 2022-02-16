@@ -315,3 +315,30 @@ def test_arguments_kind():
 
     lstm = nni.trace(nn.LSTM)(input_size=2, hidden_size=2)
     assert lstm.trace_kwargs == {'input_size': 2, 'hidden_size': 2}
+
+
+@pytest.mark.skipif(sys.platform == 'linux', reason='Class trace based on inheritance suffers from inconsistent MRO order.')
+def test_subclass():
+    @nni.trace
+    class Super:
+        def __init__(self, a, b):
+            self._a = a
+            self._b = b
+
+    class Sub1(Super):
+        def __init__(self, c, d):
+            super().__init__(3, 4)
+            self._c = c
+            self._d = d
+
+    @nni.trace
+    class Sub2(Super):
+        def __init__(self, c, d):
+            super().__init__(3, 4)
+            self._c = c
+            self._d = d
+
+    obj = Sub1(1, 2)
+    assert obj.trace_kwargs == {'a': 3, 'b': 4}
+    obj = Sub2(1, 2)
+    assert obj.trace_kwargs == {'c': 1, 'd': 2}

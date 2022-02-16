@@ -85,9 +85,9 @@ class OptimizerConstructHelper(ConstructHelper):
         assert isinstance(optimizer_trace, Optimizer), \
             'It is not an instance of torch.nn.Optimizer.'
         return OptimizerConstructHelper(model,
-                                        optimizer_trace._get_nni_attr('symbol'),
-                                        *optimizer_trace._get_nni_attr('args'),
-                                        **optimizer_trace._get_nni_attr('kwargs'))
+                                        optimizer_trace.trace_symbol,
+                                        *optimizer_trace.trace_args,
+                                        **optimizer_trace.trace_kwargs)
 
 
 class LRSchedulerConstructHelper(ConstructHelper):

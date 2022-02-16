@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional, TypeVar, Union
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
 
-__all__ = ['trace', 'dump', 'load', 'PayloadTooLarge', 'Translatable', 'Traceable', 'is_traceable']
+__all__ = ['trace', 'dump', 'load', 'PayloadTooLarge', 'Translatable', 'Traceable', 'is_traceable', 'is_wrapped_with_trace']
 
 
 T = TypeVar('T')
@@ -82,11 +82,26 @@ class Translatable(abc.ABC):
 def is_traceable(obj: Any) -> bool:
     """
     Check whether an object is a traceable instance or type.
+
+    Note that an object is traceable only means that it implements the "Traceable" interface,
+    and the properties have been implemented. It doesn't necessary mean that its type is wrapped with trace,
+    because the properties could be added **after** the instance has been created.
     """
     return hasattr(obj, 'trace_copy') and \
         hasattr(obj, 'trace_symbol') and \
         hasattr(obj, 'trace_args') and \
         hasattr(obj, 'trace_kwargs')
+
+
+def is_wrapped_with_trace(cls_or_func: Any) -> bool:
+    """
+    Check whether a function or class is already wrapped with ``@nni.trace``.
+    If a class or function is already wrapped with trace, then the created object must be "traceable".
+    """
+    return getattr(cls_or_func, '_traced', False) and (
+        not hasattr(cls_or_func, '__dict__') or  # in case it's a function
+        '_traced' in cls_or_func.__dict__  # must be in this class, super-class traced doesn't count
+    )
 
 
 class SerializableObject(Traceable):
@@ -240,7 +255,7 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
 
     def wrap(cls_or_func):
         # already annotated, do nothing
-        if getattr(cls_or_func, '_traced', False):
+        if is_wrapped_with_trace(cls_or_func):
             return cls_or_func
         if isinstance(cls_or_func, type):
             cls_or_func = _trace_cls(cls_or_func, kw_only)
@@ -360,7 +375,7 @@ def _trace_cls(base, kw_only, call_super=True):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
-    if sys.platform == 'linux':
+    if sys.platform != 'linux':
         if not call_super:
             raise ValueError("'call_super' is mandatory to be set true on non-linux platform")
 
@@ -373,7 +388,11 @@ def _trace_cls(base, kw_only, call_super=True):
             original_init = base.__init__
             def new_init(self, *args, **kwargs):
                 args, kwargs = _formulate_arguments(original_init, args, kwargs, kw_only, is_class_init=True)
-                original_init(self, *args, **kwargs)
+                original_init(
+                    self,
+                    *[_argument_processor(arg) for arg in args],
+                    **{kw: _argument_processor(arg) for kw, arg in kwargs.items()}
+                )
                 inject_trace_info(self, base, args, kwargs)
 
             base.__init__ = new_init
