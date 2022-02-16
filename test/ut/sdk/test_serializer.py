@@ -129,7 +129,8 @@ def test_custom_class():
 
     module = nni.trace(Foo)(Foo(1), 5)
     dumped_module = nni.dump(module)
-    assert len(dumped_module) > 200  # should not be too longer if the serialization is correct
+    module = nni.load(dumped_module)
+    assert module.bb[0] == module.bb[999] == 6
 
     module = nni.trace(Foo)(nni.trace(Foo)(1), 5)
     dumped_module = nni.dump(module)
@@ -230,10 +231,15 @@ def test_multiprocessing_dataloader():
 
 
 def _test_multiprocessing_dataset_worker(dataset):
-    assert is_traceable(dataset)
+    if sys.platform == 'linux':
+        # on non-linux, the loaded object will become non-traceable
+        # due to an implementation limitation
+        assert is_traceable(dataset)
+    else:
+        from torch.utils.data import Dataset
+        assert isinstance(dataset, Dataset)
 
 
-@pytest.mark.skipif(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
 def test_multiprocessing_dataset():
     from torch.utils.data import Dataset
 
@@ -243,6 +249,7 @@ def test_multiprocessing_dataset():
     process = multiprocessing.Process(target=_test_multiprocessing_dataset_worker, args=(dataset, ))
     process.start()
     process.join()
+    assert process.exitcode == 0
 
 
 def test_type():
@@ -257,7 +264,8 @@ def test_lightning_earlystop():
     import nni.retiarii.evaluator.pytorch.lightning as pl
     from pytorch_lightning.callbacks.early_stopping import EarlyStopping
     trainer = pl.Trainer(callbacks=[nni.trace(EarlyStopping)(monitor="val_loss")])
-    trainer = nni.load(nni.dump(trainer))
+    pickle_size_limit = 4096 if sys.platform == 'linux' else 32768
+    trainer = nni.load(nni.dump(trainer, pickle_size_limit=pickle_size_limit))
     assert any(isinstance(callback, EarlyStopping) for callback in trainer.callbacks)
 
 
@@ -307,14 +315,3 @@ def test_arguments_kind():
 
     lstm = nni.trace(nn.LSTM)(input_size=2, hidden_size=2)
     assert lstm.trace_kwargs == {'input_size': 2, 'hidden_size': 2}
-
-
-if __name__ == '__main__':
-    # test_simple_class()
-    # test_external_class()
-    # test_nested_class()
-    # test_unserializable()
-    # test_basic_unit()
-    # test_generator()
-    test_pickle()
-    test_multiprocessing_dataset()
