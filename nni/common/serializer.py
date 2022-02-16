@@ -24,46 +24,42 @@ class PayloadTooLarge(Exception):
     pass
 
 
-class Traceable(abc.ABC):
+class Traceable:
     """
     A traceable object have copy and dict. Copy and mutate are used to copy the object for further mutations.
     Dict returns a TraceDictType to enable serialization.
     """
-    @abc.abstractmethod
     def trace_copy(self) -> 'Traceable':
         """
         Perform a shallow copy.
         NOTE: NONE of the attributes will be preserved.
         This is the one that should be used when you want to "mutate" a serializable object.
         """
-        ...
+        raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
     def trace_symbol(self) -> Any:
         """
         Symbol object. Could be a class or a function.
         ``get_hybrid_cls_or_func_name`` and ``import_cls_or_func_from_hybrid_name`` is a pair to
         convert the symbol into a string and convert the string back to symbol.
         """
-        ...
+        raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
     def trace_args(self) -> List[Any]:
         """
         List of positional arguments passed to symbol. Usually empty if ``kw_only`` is true,
         in which case all the positional arguments are converted into keyword arguments.
         """
-        ...
+        raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
     def trace_kwargs(self) -> Dict[str, Any]:
         """
         Dict of keyword arguments.
         """
-        ...
+        raise NotImplementedError()
 
 
 class Translatable(abc.ABC):
