@@ -13,7 +13,7 @@ from nni.retiarii.nn.pytorch.nn import BatchNorm2d, Linear, Conv2d, MultiheadAtt
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule
 from .enas import ReinforceController, ReinforceField
-from .utils import get_naive_match_and_replace, get_valuechoice_match_and_replace
+from .utils import get_naive_match_and_replace, get_sampling_valuechoice_match_and_replace
 from .superlayer import (PathSamplingMultiHeadAttention, PathSamplingSuperBatchNorm2d, PathSamplingSuperConv2d, 
                         PathSamplingSuperLinear, ENASValueChoice, 
                         RandomValueChoice)
@@ -85,10 +85,10 @@ class EnasModule(BaseOneShotLightningModule):
         input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
         layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
 
-        linear_replace = get_valuechoice_match_and_replace(Linear, ENASValueChoice, PathSamplingSuperLinear)
-        conv2d_replace = get_valuechoice_match_and_replace(Conv2d, ENASValueChoice, PathSamplingSuperConv2d)
-        batchnorm2d_replace = get_valuechoice_match_and_replace(BatchNorm2d, ENASValueChoice, PathSamplingSuperBatchNorm2d)
-        mhatt_replace = get_valuechoice_match_and_replace(MultiheadAttention, ENASValueChoice, PathSamplingMultiHeadAttention)
+        linear_replace = get_sampling_valuechoice_match_and_replace(Linear, ENASValueChoice, PathSamplingSuperLinear)
+        conv2d_replace = get_sampling_valuechoice_match_and_replace(Conv2d, ENASValueChoice, PathSamplingSuperConv2d)
+        batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(BatchNorm2d, ENASValueChoice, PathSamplingSuperBatchNorm2d)
+        mhatt_replace = get_sampling_valuechoice_match_and_replace(MultiheadAttention, ENASValueChoice, PathSamplingMultiHeadAttention)
         
         return [input_replace, layer_replace, linear_replace, conv2d_replace, batchnorm2d_replace, mhatt_replace]
 
@@ -185,10 +185,10 @@ class RandomSampleModule(BaseOneShotLightningModule):
         input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
         layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
 
-        linear_replace = get_valuechoice_match_and_replace(Linear,  RandomValueChoice, PathSamplingSuperLinear)
-        conv2d_replace = get_valuechoice_match_and_replace(Conv2d, RandomValueChoice, PathSamplingSuperConv2d)
-        batchnorm2d_replace = get_valuechoice_match_and_replace(BatchNorm2d, RandomValueChoice, PathSamplingSuperBatchNorm2d)
-        mhatt_replace = get_valuechoice_match_and_replace(MultiheadAttention, RandomValueChoice, PathSamplingMultiHeadAttention)
+        linear_replace = get_sampling_valuechoice_match_and_replace(Linear,  RandomValueChoice, PathSamplingSuperLinear)
+        conv2d_replace = get_sampling_valuechoice_match_and_replace(Conv2d, RandomValueChoice, PathSamplingSuperConv2d)
+        batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(BatchNorm2d, RandomValueChoice, PathSamplingSuperBatchNorm2d)
+        mhatt_replace = get_sampling_valuechoice_match_and_replace(MultiheadAttention, RandomValueChoice, PathSamplingMultiHeadAttention)
         
         return [input_replace, layer_replace, linear_replace, conv2d_replace, batchnorm2d_replace, mhatt_replace]
 

@@ -323,9 +323,9 @@ def get_naive_match_and_replace(match_type, to_sample_func, to_replace_func=None
     
     return naive_match_and_replace
 
-def get_valuechoice_match_and_replace(match_type, to_sample_func, to_replace_func):
+def get_sampling_valuechoice_match_and_replace(match_type, to_sample_func, to_replace_func):
     '''
-    A util function helps generate the naive valuechoice_match_and_replace function.
+    A util function helps generate the naive valuechoice_match_and_replace function for sampling-based nas methods.
 
     Parameters
     ----------
@@ -337,7 +337,7 @@ def get_valuechoice_match_and_replace(match_type, to_sample_func, to_replace_fun
         Takes an nn.Module and generate another module to be replaced. The return module will `forward` instead of the input module
         in the model.
     '''
-    def valuechoice_match_and_replace(module, name, nas_modules):
+    def sampling_valuechoice_match_and_replace(module, name, nas_modules):
         if isinstance(module, match_type):
             to_samples = []
             for k, v in module.trace_kwargs.items():
@@ -357,4 +357,28 @@ def get_valuechoice_match_and_replace(match_type, to_sample_func, to_replace_fun
                 to_replace = to_replace_func(module, name)
                 return to_samples, to_replace
     
-    return valuechoice_match_and_replace
+    return sampling_valuechoice_match_and_replace
+
+
+def get_differentiable_valuechoice_match_and_replace(match_type, func):
+    '''
+    A util function helps generate the naive valuechoice_match_and_replace function for differentiable nas methods.
+
+    Parameters
+    ----------
+    match_type : type
+        If the input module is of this type, the coming functions will be called.
+    func : Callable[[nn.Module], nn.Module]
+        Takes an nn.Module and generate another module to be sampled and replaced.
+    '''
+    def differentiable_valuechoice_match_and_replace(module, name, nas_modules):
+        if not isinstance(module, match_type):
+            return None
+        
+        for k, v in module.trace_kwargs.items():
+            if isinstance(v, nn.ValueChoice):
+                # we set nas_modules[v.label] here incase there are multiple valuechoices with the same label in one module
+                replace_res = func(module, name)
+                return replace_res, replace_res
+         
+    return differentiable_valuechoice_match_and_replace

@@ -1,13 +1,69 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from collections import OrderedDict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Conv2d
+
+from .differentiable_superlayer import DifferentiableSuperConv2d
+from .utils import get_differentiable_valuechoice_match_and_replace, get_naive_match_and_replace
 from .base_lightning import BaseOneShotLightningModule
-from .darts import DartsInputChoice, DartsLayerChoice
+
+
+class DartsLayerChoice(nn.Module):
+    def __init__(self, layer_choice):
+        super(DartsLayerChoice, self).__init__()
+        self.label = layer_choice.label
+        self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
+        self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
+
+    def forward(self, *args, **kwargs):
+        op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
+        alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
+        return torch.sum(op_results * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
+
+    def parameters(self):
+        for _, p in self.named_parameters():
+            yield p
+
+    def named_parameters(self):
+        for name, p in super(DartsLayerChoice, self).named_parameters():
+            if name == 'alpha':
+                continue
+            yield name, p
+
+    def export(self):
+        return list(self.op_choices.keys())[torch.argmax(self.alpha).item()]
+
+
+class DartsInputChoice(nn.Module):
+    def __init__(self, input_choice):
+        super(DartsInputChoice, self).__init__()
+        self.label = input_choice.label
+        self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
+        self.n_chosen = input_choice.n_chosen or 1
+
+    def forward(self, inputs):
+        inputs = torch.stack(inputs)
+        alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
+        return torch.sum(inputs * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
+
+    def parameters(self):
+        for _, p in self.named_parameters():
+            yield p
+
+    def named_parameters(self):
+        for name, p in super(DartsInputChoice, self).named_parameters():
+            if name == 'alpha':
+                continue
+            yield name, p
+
+    def export(self):
+        return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
+
 
 
 class DartsModule(BaseOneShotLightningModule):
@@ -69,26 +125,26 @@ class DartsModule(BaseOneShotLightningModule):
         # Note: This hook is currently kept for Proxyless NAS.
         pass
 
-    @property
-    def default_replace_dict(self):
-        return {
-            LayerChoice : DartsLayerChoice,
-            InputChoice : DartsInputChoice
-        }
+    @staticmethod
+    def match_and_replace():
+        
+        inputchoice_replace = get_naive_match_and_replace(InputChoice, DartsInputChoice)
+        layerchoice_replace = get_naive_match_and_replace(LayerChoice, DartsLayerChoice)
+
+        conv2d_valuechoice_replace = get_differentiable_valuechoice_match_and_replace(Conv2d, DifferentiableSuperConv2d)
+
+        return [inputchoice_replace, layerchoice_replace, conv2d_valuechoice_replace] 
 
     def configure_architecture_optimizers(self):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
         ctrl_params = {}
         for _, m in self.nas_modules:
             # TODO: unify layerchoice/inputchoice and valuechoice alpha         
-            if isinstance(m.alpha, dict):
-                for name, alpha in m.alpha:
-                    ctrl_params[name] = alpha
-            elif m.name in ctrl_params:
-                assert m.alpha.size() == ctrl_params[m.name].size(), 'Size of parameters with the same label should be same.'
-                m.alpha = ctrl_params[m.name]
+            if m.label in ctrl_params:
+                assert m.alpha.size() == ctrl_params[m.label].size(), 'Size of parameters with the same label should be same.'
+                m.alpha = ctrl_params[m.label]
             else:
-                ctrl_params[m.name] = m.alpha
+                ctrl_params[m.label] = m.alpha
         ctrl_optim = torch.optim.Adam(list(ctrl_params.values()), 3.e-4, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
         return ctrl_optim

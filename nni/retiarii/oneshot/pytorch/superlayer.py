@@ -125,7 +125,7 @@ class PathSamplingSuperLinear(nn.Linear, ValueChoiceSuperLayer):
         device = self.args.get('device', None)
         dtype = self.args.get('dtype', None)
 
-        super().__init__(self, max_in_features, max_out_features, bias, device, dtype)
+        super().__init__(max_in_features, max_out_features, bias, device, dtype)
 
     def forward(self, x):
         in_dim = self.sampled_candidate('in_features')
@@ -186,7 +186,7 @@ class PathSamplingSuperConv2d(nn.Conv2d, ValueChoiceSuperLayer):
         device = self.args.get('device', None)
         dtype = self.args.get('dtype', None)
 
-        super().__init__(self, max_in_channel, max_out_channel, self.max_kernel_size,
+        super().__init__(max_in_channel, max_out_channel, self.max_kernel_size,
             groups = min_groups, bias = bias, padding_mode = padding_mode, device = device, dtype = dtype)
 
     def forward(self, input):
@@ -274,7 +274,7 @@ class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
         device = self.args.get('device', None)
         dtype = self.args.get('dtype', None)
 
-        super().__init__(self, max_num_features, eps, momentum, affine, track_running_stats, device, dtype)
+        super().__init__(max_num_features, eps, momentum, affine, track_running_stats, device, dtype)
 
     def forward(self, input):
         # get sampled parameters
