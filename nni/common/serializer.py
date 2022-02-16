@@ -81,13 +81,12 @@ class Translatable(abc.ABC):
 
 def is_traceable(obj: Any) -> bool:
     """
-    Check whether an object is a traceable instance (not type).
+    Check whether an object is a traceable instance or type.
     """
     return hasattr(obj, 'trace_copy') and \
         hasattr(obj, 'trace_symbol') and \
         hasattr(obj, 'trace_args') and \
-        hasattr(obj, 'trace_kwargs') and \
-        not inspect.isclass(obj)
+        hasattr(obj, 'trace_kwargs')
 
 
 class SerializableObject(Traceable):
@@ -361,7 +360,7 @@ def _trace_cls(base, kw_only, call_super=True):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
-    if sys.platform != 'linux':
+    if sys.platform == 'linux':
         if not call_super:
             raise ValueError("'call_super' is mandatory to be set true on non-linux platform")
 
@@ -660,7 +659,7 @@ def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, 
     # Encodes a serializable object instance to json.
 
     # do nothing to instance that is not a serializable object and do not use trace
-    if not use_trace or not is_traceable(obj):
+    if not (use_trace and hasattr(obj, '__class__') and is_traceable(type(obj))):
         return obj
 
     if isinstance(obj.trace_symbol, property):
