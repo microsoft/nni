@@ -53,6 +53,6 @@ COPY dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl .
 RUN python3 -m pip install nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl
 RUN rm nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl
 
-ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/sbin:/usr/bin:/root/.local/bin
+ENV PATH=/root/.local/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/usr/sbin
 
 WORKDIR /root
