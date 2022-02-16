@@ -339,6 +339,7 @@ def test_subclass():
             self._d = d
 
     obj = Sub1(1, 2)
-    assert obj.trace_kwargs == {'a': 3, 'b': 4}
+    # There could be trace_kwargs for obj. Behavior is undefined.
+    assert obj._a == 3 and obj._c == 1
     obj = Sub2(1, 2)
     assert obj.trace_kwargs == {'c': 1, 'd': 2}

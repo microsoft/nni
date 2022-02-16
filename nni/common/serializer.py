@@ -29,6 +29,7 @@ class Traceable:
     A traceable object have copy and dict. Copy and mutate are used to copy the object for further mutations.
     Dict returns a TraceDictType to enable serialization.
     """
+
     def trace_copy(self) -> 'Traceable':
         """
         Perform a shallow copy.
@@ -215,7 +216,7 @@ def _make_class_traceable(cls: T, create_wrapper: bool = False) -> T:
         return wrapper
 
 
-def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]:
+def trace(cls_or_func: T = None, *, kw_only: bool = True, inheritable: bool = False) -> Union[T, Traceable]:
     """
     Annotate a function or a class if you want to preserve where it comes from.
     This is usually used in the following scenarios:
@@ -239,6 +240,9 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
     list and types. This can be useful to extract semantics, but can be tricky in some corner cases.
     Therefore, in some cases, some positional arguments will still be kept.
 
+    If ``inheritable`` is true, the trace information from superclass will also be available in subclass.
+    This however, will make the subclass un-trace-able. Note that this argument has no effect when tracing functions.
+
     .. warning::
 
         Generators will be first expanded into a list, and the resulting list will be further passed into the wrapped function/class.
@@ -258,7 +262,7 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
         if is_wrapped_with_trace(cls_or_func):
             return cls_or_func
         if isinstance(cls_or_func, type):
-            cls_or_func = _trace_cls(cls_or_func, kw_only)
+            cls_or_func = _trace_cls(cls_or_func, kw_only, inheritable=inheritable)
         elif _is_function(cls_or_func):
             cls_or_func = _trace_func(cls_or_func, kw_only)
         else:
@@ -371,7 +375,7 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None, ignore_comme
         return json_tricks.load(fp, obj_pairs_hooks=hooks, **json_tricks_kwargs)
 
 
-def _trace_cls(base, kw_only, call_super=True):
+def _trace_cls(base, kw_only, call_super=True, inheritable=False):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
@@ -386,6 +390,7 @@ def _trace_cls(base, kw_only, call_super=True):
             # This also doesn't work built-in types (e.g., OrderedDict), and the replacement
             # won't be effective any more if ``nni.trace`` is called in-place (e.g., ``nni.trace(nn.Conv2d)(...)``).
             original_init = base.__init__
+
             def new_init(self, *args, **kwargs):
                 args, kwargs = _formulate_arguments(original_init, args, kwargs, kw_only, is_class_init=True)
                 original_init(
@@ -406,7 +411,20 @@ def _trace_cls(base, kw_only, call_super=True):
                           "However, this could cause issues when using pickle. See https://github.com/microsoft/nni/issues/4434",
                           RuntimeWarning)
 
-    class wrapper(SerializableObject, base):
+    # This is trying to solve the case where superclass and subclass are both decorated with @nni.trace.
+    # We use a metaclass to "unwrap" the superclass.
+    # However, this doesn't work if:
+    # 1. Base class already has a customized metaclass. We will raise error in that class.
+    # 2. SerializableObject in ancester (instead of parent). I think this case is rare and I didn't handle this case yet. FIXME
+    if type(base) is type and not inheritable:
+        metaclass = _unwrap_metaclass
+    else:
+        metaclass = type
+        if SerializableObject in inspect.getmro(base):
+            raise TypeError(f"{base} has a superclass already decorated with trace, and it's using a customized metaclass {type(base)}. "
+                            "Please either use the default metaclass, or remove trace from the super-class.")
+
+    class wrapper(SerializableObject, base, metaclass=metaclass):
         def __init__(self, *args, **kwargs):
             # store a copy of initial parameters
             args, kwargs = _formulate_arguments(base.__init__, args, kwargs, kw_only, is_class_init=True)
@@ -488,6 +506,16 @@ def _copy_class_wrapper_attributes(base, wrapper):
                 pass
 
     wrapper.__wrapped__ = base
+
+
+class _unwrap_metaclass(type):
+    # When a subclass is created, it detects whether the super-class is already annotated with @nni.trace.
+    # If yes, it gets the ``__wrapped__`` inner class, so that it doesn't inherit SerializableObject twice.
+    # Note that this doesn't work when metaclass is already defined (such as ABCMeta). We give up in that case.
+
+    def __new__(cls, name, bases, dct):
+        bases = tuple([getattr(base, '__wrapped__', base) for base in bases])
+        return super().__new__(cls, name, bases, dct)
 
 
 class _pickling_object:

@@ -102,7 +102,8 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
     import torch.nn as nn
     assert issubclass(cls, nn.Module)
 
-    wrapper = trace(cls)
+    # subclass can still use trace info
+    wrapper = trace(cls, inheritable=True)
 
     class reset_wrapper(wrapper):
         def __init__(self, *args, **kwargs):
@@ -154,7 +155,9 @@ def _torchscript_patch(cls) -> None:
     import torch
     if hasattr(cls, '_get_nni_attr'):  # could not exist on non-linux
         cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
-    cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
-    cls.trace_args = torch.jit.unused(cls.trace_args)
-    cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
-    cls.trace_copy = torch.jit.ignore(cls.trace_copy)
+    if hasattr(cls, 'trace_symbol'):
+        # these must all exist or all non-exist
+        cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
+        cls.trace_args = torch.jit.unused(cls.trace_args)
+        cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
+        cls.trace_copy = torch.jit.ignore(cls.trace_copy)
