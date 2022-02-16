@@ -231,7 +231,7 @@ To contribute a new tutorial, here are the steps to follow:
 
 3. Build the tutorials. Since some of the tutorials contain complex AutoML examples, it's very inefficient to build them over and over again. Therefore, we cache the built tutorials in ``docs/source/tutorials``, so that the unchanged tutorials won't be rebuilt. To trigger the build, run ``make html``. This will execute the tutorials and convert the scripts into HTML files. How long it takes depends on your tutorial. As ``make html`` is not very debug-friendly, we suggest making the script runnable by itself before using this building tool.
 
-.. notes::
+.. note::
 
    Some useful HOW-TOs in writing new tutorials:
 
