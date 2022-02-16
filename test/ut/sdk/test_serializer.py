@@ -230,7 +230,7 @@ def test_multiprocessing_dataloader():
 
 
 def _test_multiprocessing_dataset_worker(dataset):
-    print(dataset)
+    assert is_traceable(dataset)
 
 
 @pytest.mark.skipif(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
