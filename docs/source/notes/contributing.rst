@@ -195,6 +195,22 @@ The built documentation can be found in ``docs/build/html`` folder.
 Writing new documents
 ^^^^^^^^^^^^^^^^^^^^^
 
+.. |link_example| raw:: html
+
+   <code class="docutils literal notranslate">`Link text &lt;https://domain.invalid/&gt;`_</code>
+
+.. |link_example_2| raw:: html
+
+   <code class="docutils literal notranslate">`Link text &lt;https://domain.invalid/&gt;`__</code>
+
+.. |githublink_example| raw:: html
+
+   <code class="docutils literal notranslate">:githublink:`path/to/file.ext`</code>
+
+.. |githublink_example_2| raw:: html
+
+   <code class="docutils literal notranslate">:githublink:`text &lt;path/to/file.ext&gt;`</code>
+
 `ReStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_ is our documentation language. Please find the reference of RST `here <https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html>`__.
 
 .. tip:: Sphinx has `an excellent cheatsheet of rst <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ which contains almost everything you might need to know to write a elegant document.
@@ -205,12 +221,12 @@ Writing new documents
 
 **Dealing with codes.** We recommend using ``.. code-block:: python`` to start a code block. The ``python`` here annotates the syntax highlighting.
 
-**Dealing with links.** Use `` `Link text <https://domain.invalid/>`_ `` for inline web links. Note that use one underline might cause `"duplicated target name" error <https://stackoverflow.com/questions/27420317/restructured-text-rst-http-links-underscore-vs-use>`_ when multiple targets share the same name. In that case, use double-underline to avoid the error: `` `Link text <https://domain.invalid/>`__ ``.
+**Dealing with links.** Use |link_example| for inline web links. Note that use one underline might cause `"duplicated target name" error <https://stackoverflow.com/questions/27420317/restructured-text-rst-http-links-underscore-vs-use>`_ when multiple targets share the same name. In that case, use double-underline to avoid the error: |link_example_2|.
 
 Other than built-in directives provided by Sphinx, we also provide some custom directives:
 
-* ``.. cardlinkitem::``: A tutorial card, useful in :doc:`../tutorial`.
-* ``:githublink:`path/to/file.ext` `` or ``:githublink:`text <path/to/file.ext>` ``: reference a file on the GitHub. Linked to the same commit id as where the documentation is built.
+* ``.. cardlinkitem::``: A tutorial card, useful in :doc:`../tutorials`.
+* |githublink_example| or |githublink_example_2|: reference a file on the GitHub. Linked to the same commit id as where the documentation is built.
 
 Writing new tutorials
 ^^^^^^^^^^^^^^^^^^^^^
