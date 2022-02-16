@@ -64,6 +64,9 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
         class PrimitiveOp(nn.Module):
             ...
     """
+    if is_basic_unit(cls):
+        return cls
+
     _check_wrapped(cls)
 
     import torch.nn as nn
@@ -77,7 +80,8 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
     # https://github.com/pytorch/pytorch/issues/54688
     # I'm not sure whether there will be potential issues
     import torch
-    cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
+    if hasattr(cls, '_get_nni_attr'):  # could not exist on non-linux
+        cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
     cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
     cls.trace_args = torch.jit.unused(cls.trace_args)
     cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
@@ -103,6 +107,8 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
     Currently, NNI might not complain in simple cases where ``@model_wrapper`` is actually not needed.
     But in future, we might enforce ``@model_wrapper`` to be required for base model.
     """
+    if is_model_wrapped(cls):
+        return cls
     _check_wrapped(cls)
 
     import torch.nn as nn
@@ -116,7 +122,7 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
                 super().__init__(*args, **kwargs)
 
     _copy_class_wrapper_attributes(wrapper, reset_wrapper)
-    reset_wrapper.__wrapped__ = wrapper.__wrapped__
+    reset_wrapper.__wrapped__ = getattr(wrapper, '__wrapped__', wrapper)
     reset_wrapper._nni_model_wrapper = True
     return reset_wrapper
 
@@ -134,5 +140,5 @@ def is_model_wrapped(cls_or_instance) -> bool:
 
 
 def _check_wrapped(cls: T) -> bool:
-    if getattr(cls, '_traced', False) or getattr(cls, '_nni_model_wrapper', False):
+    if getattr(cls, '_traced', False) or is_basic_unit(cls) or is_model_wrapped(cls):
         raise TypeError(f'{cls} is already wrapped with trace wrapper (basic_unit / model_wrapper / trace). Cannot wrap again.')

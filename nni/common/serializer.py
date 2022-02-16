@@ -5,6 +5,7 @@ import copy
 import functools
 import inspect
 import numbers
+import sys
 import types
 import warnings
 from io import IOBase
@@ -160,6 +161,15 @@ class SerializableObject(Traceable):
 
 def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, Any]) -> Any:
     # If an object is already created, this can be a fix so that the necessary info are re-injected into the object.
+    # Make obj complying with the interface of traceable, though we cannot change its base class.
+    obj.__dict__.update(_nni_symbol=symbol, _nni_args=args, _nni_kwargs=kwargs)
+
+    return obj
+
+
+def _make_class_traceable(cls: T, create_wrapper: bool = False) -> T:
+    # Make an already exist class traceable, without creating a new class.
+    # Should be used together with `inject_trace_info`.
 
     def getter_factory(x):
         return lambda self: self.__dict__['_nni_' + x]
@@ -184,17 +194,15 @@ def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, An
         'trace_copy': trace_copy
     }
 
-    if hasattr(obj, '__class__') and hasattr(obj, '__dict__'):
+    if not create_wrapper:
         for name, method in attributes.items():
-            setattr(obj.__class__, name, method)
+            setattr(cls, name, method)
+        return cls
     else:
-        wrapper = type('wrapper', (Traceable, type(obj)), attributes)
-        obj = wrapper(obj)  # pylint: disable=abstract-class-instantiated
-
-    # make obj complying with the interface of traceable, though we cannot change its base class
-    obj.__dict__.update(_nni_symbol=symbol, _nni_args=args, _nni_kwargs=kwargs)
-
-    return obj
+        # sometimes create_wrapper is mandatory, e.g., for built-in types like list/int.
+        # but I don't want to check here because it's unreliable.
+        wrapper = type('wrapper', (Traceable, cls), attributes)
+        return wrapper
 
 
 def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]:
@@ -357,6 +365,33 @@ def _trace_cls(base, kw_only, call_super=True):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
+    if sys.platform != 'linux':
+        if not call_super:
+            raise ValueError("'call_super' is mandatory to be set true on non-linux platform")
+
+        try:
+            # In non-linux envs, dynamically creating new classes doesn't work with pickle.
+            # We have to replace the ``__init__`` with a new ``__init__``.
+            # This, however, causes side-effects where the replacement is not intended.
+            # This also doesn't work built-in types (e.g., OrderedDict), and the replacement
+            # won't be effective any more if ``nni.trace`` is called in-place (e.g., ``nni.trace(nn.Conv2d)(...)``).
+            original_init = base.__init__
+            def new_init(self, *args, **kwargs):
+                args, kwargs = _formulate_arguments(original_init, args, kwargs, kw_only, is_class_init=True)
+                original_init(self, *args, **kwargs)
+                inject_trace_info(self, base, args, kwargs)
+
+            base.__init__ = new_init
+
+            base = _make_class_traceable(base)
+            return base
+
+        except TypeError:
+            warnings.warn("In-place __init__ replacement failed in `@nni.trace`, probably because the type is a built-in/extension type, "
+                          "and it's __init__ can't be replaced. `@nni.trace` is now falling back to the 'inheritance' approach. "
+                          "However, this could cause issues when using pickle. See https://github.com/microsoft/nni/issues/4434",
+                          RuntimeWarning)
+
     class wrapper(SerializableObject, base):
         def __init__(self, *args, **kwargs):
             # store a copy of initial parameters
@@ -403,6 +438,8 @@ def _trace_func(func, kw_only):
         elif hasattr(res, '__class__') and hasattr(res, '__dict__'):
             # is a class, inject interface directly
             # need to be done before primitive types because there could be inheritance here.
+            if not getattr(type(res), '_traced', False):
+                _make_class_traceable(type(res), False)  # in-place
             res = inject_trace_info(res, func, args, kwargs)
         elif isinstance(res, (collections.abc.Callable, types.ModuleType, IOBase)):
             raise TypeError(f'Try to add trace info to {res}, but functions and modules are not supported.')
@@ -412,6 +449,8 @@ def _trace_func(func, kw_only):
             # will be directly captured by python json encoder
             # and thus not possible to restore the trace parameters after dump and reload.
             # this is a known limitation.
+            new_type = _make_class_traceable(type(res), True)
+            res = new_type(res)  # re-creating the object
             res = inject_trace_info(res, func, args, kwargs)
         else:
             raise TypeError(f'Try to add trace info to {res}, but the type "{type(res)}" is unknown. '
@@ -558,7 +597,9 @@ def _import_cls_or_func_from_name(target: str) -> Any:
 
 def _strip_trace_type(traceable: Any) -> Any:
     if getattr(traceable, '_traced', False):
-        return traceable.__wrapped__
+        # sometimes, ``__wrapped__`` could be unavailable (e.g., with `inject_trace_info`)
+        # need to have a default value
+        return getattr(traceable, '__wrapped__', traceable)
     return traceable
 
 
