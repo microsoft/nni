@@ -285,7 +285,8 @@ class Experiment extends React.Component<{}, ExpListState> {
                 const searchInput = newValue.trim();
                 let result = originExperimentList.filter(
                     item =>
-                        item.experimentName.toLowerCase().includes(searchInput.toLowerCase()) ||
+                        (item.experimentName !== null &&
+                            item.experimentName.toLowerCase().includes(searchInput.toLowerCase())) ||
                         item.id.toLowerCase().includes(searchInput.toLowerCase())
                 );
                 result = this.commonSelectString(result, '');
@@ -400,13 +401,18 @@ class Experiment extends React.Component<{}, ExpListState> {
     private setSearchSource(): void {
         const { sortInfo, originExperimentList } = this.state;
         let { searchInputVal } = this.state;
+        let result = JSON.parse(JSON.stringify(originExperimentList));
         searchInputVal = searchInputVal.trim();
-        // hert re-search data for fix this status: filter first -> searchBox search result null -> close filter
-        const result = originExperimentList.filter(
-            item =>
-                item.experimentName.toLowerCase().includes(searchInputVal.toLowerCase()) ||
-                item.id.toLowerCase().includes(searchInputVal.toLowerCase())
-        );
+        // user input some value to filter trial [name, id] first...
+        if (searchInputVal !== '') {
+            // reset experiments list to first filter result
+            result = originExperimentList.filter(
+                item =>
+                    item.id.toLowerCase().includes(searchInputVal.toLowerCase()) ||
+                    (item.experimentName !== null &&
+                        item.experimentName.toLowerCase().includes(searchInputVal.toLowerCase()))
+            );
+        }
         this.setState(() => ({
             source: getSortedSource(result, sortInfo),
             selectedStatus: [],

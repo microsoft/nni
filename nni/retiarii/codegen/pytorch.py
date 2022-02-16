@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+import re
 from typing import Dict, List, Tuple, Any
 
 from nni.retiarii.operation_def.torch_op_def import ToDevice
@@ -38,14 +39,17 @@ def _sorted_incoming_edges(node: Node) -> List[Edge]:
     raise IllegalGraphError(node.graph, 'Node {} has bad inputs'.format(node.name))
 
 
-def _format_inputs(node: Node) -> Tuple[List[str], List[Any]]:
+def _format_inputs(node: Node, graph_name: str) -> Tuple[List[str], List[Any]]:
     """
-    Format the inputs of a given node
+    Format the inputs of a given node.
+    Inputs will be formatted with ``_format_variable_name``
 
     Parameters
     ----------
     node : Node
         a graph node, get and format its inputs
+    graph_name : str
+        subgraph name, to format variable names
 
     Returns
     -------
@@ -63,7 +67,7 @@ def _format_inputs(node: Node) -> Tuple[List[str], List[Any]]:
             assert isinstance(edge.head_slot, int)
             if edge.head.operation.io_names is not None:
                 # when input has names, e.g., forward(self, tensor1, tensor2, another_one)
-                inputs.append(edge.head.operation.io_names[edge.head_slot])
+                inputs.append(_format_variable_name(edge.head.operation.io_names[edge.head_slot], graph_name))
             else:
                 # when input has no name, e.g., forward(*_inputs)
                 inputs.append('_inputs[{}]'.format(edge.head_slot))
@@ -71,7 +75,7 @@ def _format_inputs(node: Node) -> Tuple[List[str], List[Any]]:
         else:
             if edge.head_slot is None:
                 # when the input comes from a single-output operator
-                inputs.append('{}'.format(edge.head.name))
+                inputs.append(_format_variable_name(edge.head.name, graph_name))
                 if edge.head.operation.type in ('prim::Constant', 'prim::GetAttr') and \
                         'value' in edge.head.operation.parameters:
                     inputs_value.append(edge.head.operation.parameters['value'])
@@ -79,26 +83,21 @@ def _format_inputs(node: Node) -> Tuple[List[str], List[Any]]:
                     inputs_value.append(None)
             else:
                 # when the input comes from a multi-output operator: needs to know which one it comes from
-                inputs.append('{}[{}]'.format(edge.head.name, edge.head_slot))
+                inputs.append('{}[{}]'.format(_format_variable_name(edge.head.name, graph_name), edge.head_slot))
                 inputs_value.append(None)
     return inputs, inputs_value
 
 
-def _remove_prefix(names, graph_name):
+def _format_variable_name(name: str, graph_name: str) -> str:
     """
-    variables name (full name space) is too long,
-    shorten the name by removing the prefix ```graph_name```
+    1. replace invalid characters in node name
+    2. variables name (full name space) is too long, shorten the name by removing the prefix ```graph_name```
     """
-    if isinstance(names, list):
-        converted_names = []
-        for name in names:
-            if name.startswith(graph_name):
-                converted_names.append(name[len(graph_name):])
-            else:
-                converted_names.append(name)
-        return converted_names
-    else:
-        return names[len(graph_name):] if names.startswith(graph_name) else names
+    name = name[len(graph_name):] if name.startswith(graph_name) else name
+    name = name.replace('/', '__')
+
+    # https://stackoverflow.com/questions/3303312/how-do-i-convert-a-string-to-a-valid-variable-name-in-python
+    return re.sub('\W|^(?=\d)','_', name)
 
 
 def generate_cuda_mapping(placement: Dict[Node, Device]) -> Dict[Device, int]:
@@ -139,7 +138,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
             pkg_name = node.operation.get_import_pkg()
             if pkg_name is not None:
                 import_pkgs.add(pkg_name)
-            node_code = node.operation.to_init_code(_remove_prefix(node.name, graph_name))
+            node_code = node.operation.to_init_code(_format_variable_name(node.name, graph_name))
             if node_code is not None:
                 if placement and node in placement and len(node_code) > 0:
                     if isinstance(placement[node], GPUDevice):
@@ -161,16 +160,14 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     sorted_nodes = graph.topo_sort()
     for node in sorted_nodes:
         if node.operation:
-            inputs, inputs_value = _format_inputs(node)
-            inputs = _remove_prefix(inputs, graph_name)
-            node_name = _remove_prefix(node.name, graph_name)
+            inputs, inputs_value = _format_inputs(node, graph_name)
+            node_name = _format_variable_name(node.name, graph_name)
             submodule_name = node_name
             if node.operation.type == 'shared':
-                submodule_name = _remove_prefix(node.operation.parameters['reference'], graph_name)
+                submodule_name = _format_variable_name(node.operation.parameters['reference'], graph_name)
             edge_codes.append(node.operation.to_forward_code(submodule_name, node_name, inputs, inputs_value))
 
-    output_names, _ = _format_inputs(graph.output_node)
-    output_names = _remove_prefix(output_names, graph_name)
+    output_names, _ = _format_inputs(graph.output_node, graph_name)
     if not output_names:
         raise RuntimeError('"forward" function should have return value(s): {}, {}, {}'.format(output_names, graph_name, graph.output_node))
     output_code = ', '.join(output_names)

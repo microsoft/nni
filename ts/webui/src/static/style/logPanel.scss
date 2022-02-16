@@ -38,6 +38,12 @@ $navBarMarginBottom: 18px;
     }
 }
 
+.logPanel {
+    .ms-Panel-main {
+        width: 80%;
+    }
+}
+
 .panel {
     padding: 0 38px;
 }

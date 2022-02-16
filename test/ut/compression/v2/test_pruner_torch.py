@@ -72,6 +72,16 @@ class PrunerTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
 
+    def test_level_pruner_bank(self):
+        model = TorchModel()
+        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.7}]
+        pruner = LevelPruner(model=model, config_list=config_list, mode='balance', balance_gran=[5])
+        pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        # round down cause to lower sparsity
+        assert sparsity_list[0]['total_sparsity'] == 0.6
+
     def test_l1_norm_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
