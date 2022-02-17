@@ -441,12 +441,24 @@ def _trace_cls(base, kw_only, call_super=True, inheritable=False):
             # The workaround solution is to use a fool class (_pickling_object) which pretends to be the pickled object.
             # We then put the original type, as well as args and kwargs in its `__new__` argument.
             # I suspect that their could still be problems when things get complex,
-            # e.g., the wrapped class has a custom pickling or `__new__`.
+            # e.g., the wrapped class has a custom pickling (`__reduce__``) or `__new__`.
             # But it can't be worse because the previous pickle doesn't work at all.
             #
             # Linked issue: https://github.com/microsoft/nni/issues/4434
             # SO: https://stackoverflow.com/questions/52185507/pickle-and-decorated-classes-picklingerror-not-the-same-object
-            return _pickling_object, (cloudpickle.dumps(type(self)), cloudpickle.dumps(self.__dict__))
+            type_ = cloudpickle.dumps(type(self))
+
+            # in case they have customized ``__getstate__``.
+            if hasattr(self, '__getstate__'):
+                obj_ = self.__getstate__()
+            else:
+                obj_ = self.__dict__
+
+            # Pickle can't handle type objects.
+            if '_nni_symbol' in obj_:
+                obj_['_nni_symbol'] = cloudpickle.dumps(obj_['_nni_symbol'])
+
+            return _pickling_object, (type_, obj_)
 
     _copy_class_wrapper_attributes(base, wrapper)
 
@@ -538,10 +550,17 @@ class _pickling_object:
 
     def __new__(cls, type_, data):
         type_ = cloudpickle.loads(type_)
-        data = cloudpickle.loads(data)
-        obj = type_.__new__(type_)
+
+        # restore type
+        if '_nni_symbol' in data:
+            data['_nni_symbol'] = cloudpickle.loads(data['_nni_symbol'])
+
         # https://docs.python.org/3/library/pickle.html#pickling-class-instances
-        obj.__dict__.update(data)
+        obj = type_.__new__(type_)
+        if hasattr(obj, '__setstate__'):
+            obj.__setstate__(data)
+        else:
+            obj.__dict__.update(data)
         return obj
 
 

@@ -269,6 +269,15 @@ def test_lightning_earlystop():
     assert any(isinstance(callback, EarlyStopping) for callback in trainer.callbacks)
 
 
+def test_pickle_trainer():
+    import pickle
+    import nni.retiarii.evaluator.pytorch.lightning as pl
+    trainer = pl.Trainer(max_epochs=1)
+    data = pickle.dumps(trainer)
+    trainer = pickle.loads(data)
+    assert isinstance(trainer, pl.Trainer)
+
+
 def test_generator():
     import torch.nn as nn
     import torch.optim as optim
