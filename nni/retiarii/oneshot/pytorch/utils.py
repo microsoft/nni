@@ -182,6 +182,17 @@ def replace_input_choice(root_module, init_fn, modules=None):
     return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
 
 
+class PseudoDataset:
+    """
+    A work around for distributed training to pretend that there were a dataset in the oneshot dataloader.
+    """
+    def __init__(self, len):
+        self.len = len
+
+    def __len__(self):
+        return len
+
+
 class InterleavedTrainValDataLoader(DataLoader):
     """
     Dataloader that yields both train data and validation data in a batch, with an order of (train_batch, val_batch). The shorter
@@ -208,6 +219,7 @@ class InterleavedTrainValDataLoader(DataLoader):
         self.val_loader = val_dataloader
         self.equal_len = len(train_dataloader) == len(val_dataloader)
         self.train_longer = len(train_dataloader) > len(val_dataloader)
+        self.dataset = PseudoDataset(len(self))
         super().__init__(None)
 
     def __iter__(self):
@@ -274,6 +286,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
     def __init__(self, train_dataloader, val_dataloader):
         self.train_loader = train_dataloader
         self.val_loader = val_dataloader
+        self.dataset = PseudoDataset(len(self))
         super().__init__(None)
 
     def __iter__(self):
