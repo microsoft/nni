@@ -26,7 +26,7 @@ class DartsLayerChoice(nn.Module):
         for _, p in self.named_parameters():
             yield p
 
-    def named_parameters(self):
+    def named_parameters(self, recurse=False):
         for name, p in super(DartsLayerChoice, self).named_parameters():
             if name == 'alpha':
                 continue
@@ -52,7 +52,7 @@ class DartsInputChoice(nn.Module):
         for _, p in self.named_parameters():
             yield p
 
-    def named_parameters(self):
+    def named_parameters(self, recurse=False):
         for name, p in super(DartsInputChoice, self).named_parameters():
             if name == 'alpha':
                 continue
