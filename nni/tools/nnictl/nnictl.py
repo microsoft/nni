@@ -31,13 +31,16 @@ def nni_info(*args):
         except pkg_resources.ResolutionError:
             print_error('Get version failed, please use `pip3 list | grep nni` to check nni version!')
     else:
-        print('please run "nnictl {positional argument} --help" to see nnictl guidance')
+        print('Please run "nnictl {positional argument} --help" to see nnictl guidance.')
 
 def get_parser():
     logging.getLogger().setLevel(logging.ERROR)
 
     '''Definite the arguments users need to follow and input'''
-    parser = argparse.ArgumentParser(prog='nnictl', description='use nnictl command to control nni experiments')
+    parser = argparse.ArgumentParser(
+        prog='nnictl',
+        description='**nnictl** is a command line tool, used to control experiments, '
+                    'such as start/stop/resume an experiment, start/stop WebUI, etc.')
     parser.add_argument('--version', '-v', action='store_true')
     parser.set_defaults(func=nni_info)
 
