@@ -270,10 +270,11 @@ def test_lightning_earlystop():
 
 def test_pickle_trainer():
     import nni.retiarii.evaluator.pytorch.lightning as pl
+    from pytorch_lightning import Trainer
     trainer = pl.Trainer(max_epochs=1)
     data = pickle.dumps(trainer)
     trainer = pickle.loads(data)
-    assert isinstance(trainer, pl.Trainer.__wrapped__)
+    assert isinstance(trainer, Trainer)
 
 
 def test_generator():
