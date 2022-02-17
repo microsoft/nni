@@ -379,7 +379,7 @@ def _trace_cls(base, kw_only, call_super=True, inheritable=False):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
-    if sys.platform == 'linux':
+    if sys.platform != 'linux':
         if not call_super:
             raise ValueError("'call_super' is mandatory to be set true on non-linux platform")
 
