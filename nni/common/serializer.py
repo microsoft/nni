@@ -379,7 +379,7 @@ def _trace_cls(base, kw_only, call_super=True, inheritable=False):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
-    if sys.platform != 'linux':
+    if sys.platform == 'linux':
         if not call_super:
             raise ValueError("'call_super' is mandatory to be set true on non-linux platform")
 
@@ -391,6 +391,10 @@ def _trace_cls(base, kw_only, call_super=True, inheritable=False):
             # won't be effective any more if ``nni.trace`` is called in-place (e.g., ``nni.trace(nn.Conv2d)(...)``).
             original_init = base.__init__
 
+            # Makes the new init have the exact same signature as the old one,
+            # so as to make pytorch-lightning happy.
+            # https://github.com/PyTorchLightning/pytorch-lightning/blob/4cc05b2cf98e49168a5f5dc265647d75d1d3aae9/pytorch_lightning/utilities/parsing.py#L143
+            @functools.wraps(original_init)
             def new_init(self, *args, **kwargs):
                 args, kwargs = _formulate_arguments(original_init, args, kwargs, kw_only, is_class_init=True)
                 original_init(
