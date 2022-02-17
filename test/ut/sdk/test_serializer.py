@@ -1,4 +1,5 @@
 import math
+import pickle
 import sys
 from pathlib import Path
 
@@ -200,8 +201,6 @@ def test_dataset():
 
 
 def test_pickle():
-    import pickle
-
     pickle.dumps(EmptyClass())
     obj = SimpleClass(1)
     obj = pickle.loads(pickle.dumps(obj))
@@ -270,12 +269,11 @@ def test_lightning_earlystop():
 
 
 def test_pickle_trainer():
-    import pickle
     import nni.retiarii.evaluator.pytorch.lightning as pl
     trainer = pl.Trainer(max_epochs=1)
     data = pickle.dumps(trainer)
     trainer = pickle.loads(data)
-    assert isinstance(trainer, pl.Trainer)
+    assert isinstance(trainer, pl.Trainer.__wrapped__)
 
 
 def test_generator():

@@ -446,7 +446,9 @@ def _trace_cls(base, kw_only, call_super=True, inheritable=False):
             #
             # Linked issue: https://github.com/microsoft/nni/issues/4434
             # SO: https://stackoverflow.com/questions/52185507/pickle-and-decorated-classes-picklingerror-not-the-same-object
-            type_ = cloudpickle.dumps(type(self))
+
+            # Store the inner class. The wrapped class couldn't be properly pickled.
+            type_ = cloudpickle.dumps(type(self).__wrapped__)
 
             # in case they have customized ``__getstate__``.
             if hasattr(self, '__getstate__'):
@@ -458,7 +460,7 @@ def _trace_cls(base, kw_only, call_super=True, inheritable=False):
             if '_nni_symbol' in obj_:
                 obj_['_nni_symbol'] = cloudpickle.dumps(obj_['_nni_symbol'])
 
-            return _pickling_object, (type_, obj_)
+            return _pickling_object, (type_, kw_only, obj_)
 
     _copy_class_wrapper_attributes(base, wrapper)
 
@@ -548,8 +550,10 @@ class _pickling_object:
     # Need `cloudpickle.load` on the callable because the callable is pickled with cloudpickle.
     # Used in `_trace_cls`.
 
-    def __new__(cls, type_, data):
+    def __new__(cls, type_, kw_only, data):
         type_ = cloudpickle.loads(type_)
+        # Restore the trace type
+        type_ = _trace_cls(type_, kw_only)
 
         # restore type
         if '_nni_symbol' in data:
