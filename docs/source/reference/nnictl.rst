@@ -5,11 +5,6 @@
 nnictl
 ======
 
-Introduction
-------------
-
-**nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc.
-
 .. argparse::
    :module: nni.tools.nnictl.nnictl
    :func: get_parser
