@@ -10,27 +10,34 @@ from .superlayer import ToSample
 
 class DifferentiableSuperConv2d(nn.Conv2d):
     """
-    Only ``kernel_size`` is supported.
-    而且 kernel_size 必须有明确大小，也就是大的必须完全包裹小的
-    此外必须都是奇数，禁止偶数 candidate
-    就是说禁止这种 candidate：
+    Only ``kernel_size`` is supported now. Kernel size must be odd numbers, and candidates should be strictly bigger or smaller
+    than each other. See examples below:
+    the following example is not allowed:
+        >>> ValueChoice(candidates = [(5, 3), (3, 5)])
            □ ■ ■ ■ □   □ □ □ □ □
-           □ ■ ■ ■ □   ■ ■ ■ ■ ■
+           □ ■ ■ ■ □   ■ ■ ■ ■ ■    # candidates are not strictly bigger or smaller
            □ ■ ■ ■ □   ■ ■ ■ ■ ■
            □ ■ ■ ■ □   ■ ■ ■ ■ ■
            □ ■ ■ ■ □   □ □ □ □ □
-    只允许这种 candiadte：
+        >>> ValueChoice(candidates = [(5, 5), (3, 5)])
+           ■ ■ ■ ■ ■   □ □ □ □ □
+           ■ ■ ■ ■ ■   ■ ■ ■ ■ ■
+           ■ ■ ■ ■ ■   ■ ■ ■ ■ ■    # candidates are not strictly bigger or smaller. the second dimension values are equal
+           ■ ■ ■ ■ ■   ■ ■ ■ ■ ■
+           ■ ■ ■ ■ ■   □ □ □ □ □
+    the following examples are valid:
+        >>> ValueChoice(candidates = [5, 3, 1])
            ■ ■ ■ ■ ■   □ □ □ □ □   □ □ □ □ □
            ■ ■ ■ ■ ■   □ ■ ■ ■ □   □ □ □ □ □
            ■ ■ ■ ■ ■   □ ■ ■ ■ □   □ □ ■ □ □
            ■ ■ ■ ■ ■   □ ■ ■ ■ □   □ □ □ □ □
            ■ ■ ■ ■ ■   □ □ □ □ □   □ □ □ □ □
-    或者这种：
-           ■ ■ ■ ■ ■ ■ ■ ■  □ □ □ □ □ □ □ □   □ □ □ □ □ □ □ □
-           ■ ■ ■ ■ ■ ■ ■ ■  □ ■ ■ ■ ■ ■ ■ □   □ □ □ □ □ □ □ □
-           ■ ■ ■ ■ ■ ■ ■ ■  □ ■ ■ ■ ■ ■ ■ □   □ □ ■ ■ ■ ■ □ □
-           ■ ■ ■ ■ ■ ■ ■ ■  □ ■ ■ ■ ■ ■ ■ □   □ □ □ □ □ □ □ □
-           ■ ■ ■ ■ ■ ■ ■ ■  □ □ □ □ □ □ □ □   □ □ □ □ □ □ □ □
+        >>> ValueChoice(candidates = [(5, 7), (3, 5), (1, 3)])
+           ■ ■ ■ ■ ■ ■ ■  □ □ □ □ □ □ □   □ □ □ □ □ □ □
+           ■ ■ ■ ■ ■ ■ ■  □ ■ ■ ■ ■ ■ □   □ □ □ □ □ □ □
+           ■ ■ ■ ■ ■ ■ ■  □ ■ ■ ■ ■ ■ □   □ □ ■ ■ ■ □ □
+           ■ ■ ■ ■ ■ ■ ■  □ ■ ■ ■ ■ ■ □   □ □ □ □ □ □ □
+           ■ ■ ■ ■ ■ ■ ■  □ □ □ □ □ □ □   □ □ □ □ □ □ □
     """
     def __init__(self, module, name):
         self.label = name
@@ -76,11 +83,11 @@ class DifferentiableSuperConv2d(nn.Conv2d):
         Parameters
         ----------
         matrix : Tensor[]
-            the big matrix to calculate lasso norm, including inner weights
+            the big matrix to calculate lasso norm, no need to zero-out inner weights
         inner_size : int, tuple
             the inner kernel size to be gotten rid of, ignore in_channel out_channel
         t : threshold
-        必须是 奇数
+            the threshold
         """
         if not isinstance(inner_size, tuple):
             inner_size = (inner_size, inner_size)
@@ -102,8 +109,7 @@ class DifferentiableSuperConv2d(nn.Conv2d):
             yield name, p
 
     def export(self):
-        return self.export_best_alpha()
-    
+        return torch.argsort(self.alpha).cpu().numpy().tolist()[0]
     
     def validate_kernel_size(self):
         kernel_size = self.args['kernel_size']
