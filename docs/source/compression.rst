@@ -25,3 +25,6 @@ For details, please refer to the following tutorials:
 
     Overview <compression/overview>
     Pruning <compression/pruning>
+    Pruning (legacy) <compressoin/pruning_legacy>
+    Quantization <compression/quantization>
+    Advanced Usage

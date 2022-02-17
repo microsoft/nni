@@ -32,6 +32,27 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_speed_up_thumb.png
+     :alt: Speed Up a Masked Model
+
+     :ref:`sphx_glr_tutorials_pruning_speed_up.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/pruning_speed_up
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Start and Manage a New Experiment">
 
 .. only:: html
@@ -53,7 +74,7 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Pruning Quickstart">
+    <div class="sphx-glr-thumbcontainer" tooltip="#. Pre-training a model -&gt; Pruning the model -&gt; Fine-tuning the model #. Pruning the model awar...">
 
 .. only:: html
 
