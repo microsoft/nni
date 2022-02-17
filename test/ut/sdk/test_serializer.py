@@ -317,7 +317,6 @@ def test_arguments_kind():
     assert lstm.trace_kwargs == {'input_size': 2, 'hidden_size': 2}
 
 
-@pytest.mark.skipif(sys.platform == 'linux', reason='Class trace based on inheritance suffers from inconsistent MRO order.')
 def test_subclass():
     @nni.trace
     class Super:
@@ -341,5 +340,8 @@ def test_subclass():
     obj = Sub1(1, 2)
     # There could be trace_kwargs for obj. Behavior is undefined.
     assert obj._a == 3 and obj._c == 1
+    assert isinstance(obj, Super)
     obj = Sub2(1, 2)
     assert obj.trace_kwargs == {'c': 1, 'd': 2}
+    assert issubclass(type(obj), Super)
+    assert isinstance(obj, Super)

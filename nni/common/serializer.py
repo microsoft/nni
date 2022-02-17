@@ -517,6 +517,16 @@ class _unwrap_metaclass(type):
         bases = tuple([getattr(base, '__wrapped__', base) for base in bases])
         return super().__new__(cls, name, bases, dct)
 
+    # Using a customized "bases" breaks default isinstance and issubclass.
+    # We recover this by overriding the subclass and isinstance behavior, which conerns wrapped class only.
+    def __subclasscheck__(cls, subclass):
+        inner_cls = getattr(cls, '__wrapped__', cls)
+        return inner_cls in inspect.getmro(subclass)
+
+    def __instancecheck__(cls, instance):
+        inner_cls = getattr(cls, '__wrapped__', cls)
+        return inner_cls in inspect.getmro(type(instance))
+
 
 class _pickling_object:
     # Need `cloudpickle.load` on the callable because the callable is pickled with cloudpickle.
