@@ -34,7 +34,7 @@ class EnasModule(BaseOneShotLightningModule):
     ctrl_steps_aggregate : int
         Number of steps that will be aggregated into one mini-batch for RL controller.
     grad_clip : float
-        Gradient clipping vlaue.
+        Gradient clipping value.
     custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
         The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
         replace dict will override the default replace dict of each NAS method.
