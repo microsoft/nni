@@ -20,6 +20,70 @@ from .import ts_management
 
 init(autoreset=True)
 
+_NNICTL_CREATE_HELP = '''
+You can use this command to create a new experiment, using the configuration specified in config file.
+
+After this command is successfully done, the context will be set as this experiment,
+which means the following command you issued is associated with this experiment,
+unless you explicitly change the context (not supported yet).
+
+Examples:
+
+*   Create a new experiment with the default port 8080: ::
+
+        nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
+
+*   Create a new experiment with specified port 8088: ::
+
+        nnictl create --config nni/examples/trials/mnist-pytorch/config.yml --port 8088
+
+*   Create a new experiment with specified port 8088 and debug mode: ::
+
+        nnictl create --config nni/examples/trials/mnist-pytorch/config.yml --port 8088 --debug
+
+.. note:: Debug mode will disable version check function in ``trial_keeper``.
+'''
+
+_NNICTL_RESUME_HELP = '''
+You can use this command to resume a stopped experiment.
+
+Example: resume an experiment with specified port 8088. ::
+
+    nnictl resume [experiment_id] --port 8088
+'''
+
+_NNICTL_UPDATE_SEARCH_SPACE_HELP = '''
+You can use this command to update an experiment's search space.
+
+Example: update experiment's new search space with file dir `examples/trials/mnist-pytorch/search_space.json`. ::
+
+    nnictl update searchspace [experiment_id] --filename examples/trials/mnist-pytorch/search_space.json
+'''
+
+_NNICTL_STOP_HELP = '''
+You can use this command to stop a running experiment or multiple experiments.
+
+Details & Examples:
+
+* If there is no id specified, and there is an experiment running, stop the running experiment, or print error message. ::
+
+        nnictl stop
+
+* If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment,
+  or will print error message. ::
+
+        nnictl stop [experiment_id]
+
+* If there is a port specified, and an experiment is running on that port, the experiment will be stopped. ::
+
+        nnictl stop --port 8080
+
+* Users could use ``nnictl stop --all`` to stop all experiments.
+* If the id ends with ``*``, nnictl will stop all experiments whose ids matchs the regular.
+* If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
+* If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
+'''
+
 if os.environ.get('COVERAGE_PROCESS_START'):
     import coverage
     coverage.process_startup()
@@ -41,72 +105,75 @@ def get_parser():
         prog='nnictl',
         description='**nnictl** is a command line tool, used to control experiments, '
                     'such as start/stop/resume an experiment, start/stop WebUI, etc.')
-    parser.add_argument('--version', '-v', action='store_true')
+    parser.add_argument('--version', '-v', action='store_true', help='Print the version info of nnictl')
     parser.set_defaults(func=nni_info)
 
     # create subparsers for args with sub values
     subparsers = parser.add_subparsers()
 
-    # parse the command of auto generating search space
-    parser_start = subparsers.add_parser('ss_gen', help='automatically generate search space file from trial code')
-    parser_start.add_argument('--trial_command', '-t', required=True, dest='trial_command', help='the command for running trial code')
-    parser_start.add_argument('--trial_dir', '-d', default='./', dest='trial_dir', help='the directory for running the command')
-    parser_start.add_argument('--file', '-f', default='nni_auto_gen_search_space.json', dest='file', help='the path of search space file')
-    parser_start.set_defaults(func=search_space_auto_gen)
-
     # parse start command
-    parser_start = subparsers.add_parser('create', help='create a new experiment')
-    parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
-    parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
-    parser_start.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
-    parser_start.add_argument('--url_prefix', '-u', dest='url_prefix', help=' set prefix url')
-    parser_start.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
+    parser_start = subparsers.add_parser('create', help=_NNICTL_CREATE_HELP)
+    parser_start.add_argument('--config', '-c', required=True, dest='config', help='Path to YAML configuration file of the experiment')
+    parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='The port of restful server')
+    parser_start.add_argument('--debug', '-d', action='store_true', help='Set debug mode')
+    parser_start.add_argument('--url_prefix', '-u', dest='url_prefix', help='Set prefix url')
+    parser_start.add_argument('--foreground', '-f', action='store_true', help='Set foreground mode, print log content to terminal')
     parser_start.set_defaults(func=create_experiment)
 
     # parse resume command
-    parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
+    parser_resume = subparsers.add_parser('resume', help=_NNICTL_RESUME_HELP)
     parser_resume.add_argument('id', help='The id of the experiment you want to resume')
-    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
-    parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
-    parser_resume.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
-    parser_resume.add_argument('--experiment_dir', '-e', help='resume experiment from external folder, specify the full path of ' \
-                               'experiment folder')
+    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='The port of restful server')
+    parser_resume.add_argument('--debug', '-d', action='store_true', help='Set debug mode')
+    parser_resume.add_argument('--foreground', '-f', action='store_true', help='Set foreground mode, print log content to terminal')
+    parser_resume.add_argument('--experiment_dir', '-e',
+                               help='Resume experiment from external folder, specify the full path of experiment folder')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse view command
-    parser_view = subparsers.add_parser('view', help='view a stopped experiment')
+    parser_view = subparsers.add_parser('view', help='You can use this command to view a stopped experiment.')
     parser_view.add_argument('id', help='The id of the experiment you want to view')
-    parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
-    parser_view.add_argument('--experiment_dir', '-e', help='view experiment from external folder, specify the full path of ' \
-                             'experiment folder')
+    parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='The port of restful server')
+    parser_view.add_argument('--experiment_dir', '-e',
+                             help='View experiment from external folder, specify the full path of experiment folder')
     parser_view.set_defaults(func=view_experiment)
 
     # parse update command
-    parser_updater = subparsers.add_parser('update', help='update the experiment')
+    parser_updater = subparsers.add_parser('update')
     #add subparsers for parser_updater
     parser_updater_subparsers = parser_updater.add_subparsers()
-    parser_updater_searchspace = parser_updater_subparsers.add_parser('searchspace', help='update searchspace')
-    parser_updater_searchspace.add_argument('id', nargs='?', help='the id of experiment')
-    parser_updater_searchspace.add_argument('--filename', '-f', required=True)
+    parser_updater_searchspace = parser_updater_subparsers.add_parser('searchspace', help=_NNICTL_UPDATE_SEARCH_SPACE_HELP)
+    parser_updater_searchspace.add_argument('id', nargs='?', help='ID of the experiment you want to set')
+    parser_updater_searchspace.add_argument('--filename', '-f', required=True, help='Path to new search space file')
     parser_updater_searchspace.set_defaults(func=update_searchspace)
-    parser_updater_concurrency = parser_updater_subparsers.add_parser('concurrency', help='update concurrency')
-    parser_updater_concurrency.add_argument('id', nargs='?', help='the id of experiment')
-    parser_updater_concurrency.add_argument('--value', '-v', required=True)
+    parser_updater_concurrency = parser_updater_subparsers.add_parser(
+        'concurrency', help="You can use this command to update an experiment's concurrency."
+    )
+    parser_updater_concurrency.add_argument('id', nargs='?', help='ID of the experiment you want to set')
+    parser_updater_concurrency.add_argument('--value', '-v', required=True, help='The number of allowed concurrent trials')
     parser_updater_concurrency.set_defaults(func=update_concurrency)
-    parser_updater_duration = parser_updater_subparsers.add_parser('duration', help='update duration')
-    parser_updater_duration.add_argument('id', nargs='?', help='the id of experiment')
-    parser_updater_duration.add_argument('--value', '-v', required=True, help='the unit of time should in {\'s\', \'m\', \'h\', \'d\'}')
+    parser_updater_duration = parser_updater_subparsers.add_parser(
+        'duration', help="You can use this command to update an experiment's maximum allowed duration."
+    )
+    parser_updater_duration.add_argument('id', nargs='?', help='ID of the experiment you want to set')
+    parser_updater_duration.add_argument(
+        '--value', '-v', required=True,
+        help="Strings like '1m' for one minute or '2h' for two hours. SUFFIX may be 's' for seconds, "
+             "'m' for minutes, 'h' for hours or 'd' for days."
+    )
     parser_updater_duration.set_defaults(func=update_duration)
-    parser_updater_trialnum = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
-    parser_updater_trialnum.add_argument('id', nargs='?', help='the id of experiment')
-    parser_updater_trialnum.add_argument('--value', '-v', required=True)
+    parser_updater_trialnum = parser_updater_subparsers.add_parser(
+        'trialnum', help="You can use this command to update an experiment's maximum trial number."
+    )
+    parser_updater_trialnum.add_argument('id', nargs='?', help='ID of the experiment you want to set')
+    parser_updater_trialnum.add_argument('--value', '-v', required=True, help='The new number of maxtrialnum you want to set')
     parser_updater_trialnum.set_defaults(func=update_trialnum)
 
     #parse stop command
-    parser_stop = subparsers.add_parser('stop', help='stop the experiment')
-    parser_stop.add_argument('id', nargs='?', help='the id of experiment, use \'all\' to stop all running experiments')
-    parser_stop.add_argument('--port', '-p', dest='port', type=int, help='the port of restful server')
-    parser_stop.add_argument('--all', '-a', action='store_true', help='stop all of experiments')
+    parser_stop = subparsers.add_parser('stop', help=_NNICTL_STOP_HELP)
+    parser_stop.add_argument('id', nargs='?', help='The id of experiment you want to stop')
+    parser_stop.add_argument('--port', '-p', dest='port', type=int, help='The port of restful server you want to stop')
+    parser_stop.add_argument('--all', '-a', action='store_true', help='Stop all the experiments')
     parser_stop.set_defaults(func=stop_experiment)
 
     #parse trial command
@@ -276,6 +343,13 @@ def get_parser():
     parser_top.add_argument('--time', '-t', dest='time', type=int, default=3, help='the time interval to update the experiment status, ' \
     'the unit is second')
     parser_top.set_defaults(func=monitor_experiment)
+
+    # parse the command of auto generating search space
+    parser_start = subparsers.add_parser('ss_gen', help='automatically generate search space file from trial code')
+    parser_start.add_argument('--trial_command', '-t', required=True, dest='trial_command', help='the command for running trial code')
+    parser_start.add_argument('--trial_dir', '-d', default='./', dest='trial_dir', help='the directory for running the command')
+    parser_start.add_argument('--file', '-f', default='nni_auto_gen_search_space.json', dest='file', help='the path of search space file')
+    parser_start.set_defaults(func=search_space_auto_gen)
 
     # jupyter-extension command
     jupyter_parser = subparsers.add_parser('jupyter-extension', help='install or uninstall JupyterLab extension (internal preview)')
