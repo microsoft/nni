@@ -18,8 +18,6 @@ jobs:
 
       echo "Working directory: ${PWD}"
       echo "NNI version: ${NNI_RELEASE}"
-
-      python3 -m pip install --upgrade pip setuptools
     displayName: Prepare
 
   - script: |
