@@ -5,6 +5,15 @@
 Change Log
 ==========
 
+Release 2.6.1 - 2/18/2022
+-------------------------
+
+Bug Fixes
+^^^^^^^^^
+
+* Fix a bug that new TPE does not support dict metrics.
+* Fix a bug that missing comma. (Thanks to @mrshu)
+
 Release 2.6 - 1/19/2022
 -----------------------
 
