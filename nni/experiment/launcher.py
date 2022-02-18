@@ -15,7 +15,6 @@ from typing import Optional, Tuple, List, Any
 
 import colorama
 
-import nni_node  # pylint: disable=wrong-import-order, import-error
 import nni.runtime.protocol
 
 from .config import ExperimentConfig
@@ -128,6 +127,7 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
     return proc
 
 def _start_rest_server(nni_manager_args, run_mode) -> Tuple[int, Popen]:
+    import nni_node
     node_dir = Path(nni_node.__path__[0])
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
@@ -224,6 +224,7 @@ def _start_rest_server_retiarii(config: ExperimentConfig, port: int, debug: bool
         args['start_mode'] = 'resume'
         args['readonly'] = 'true'
 
+    import nni_node
     node_dir = Path(nni_node.__path__[0])
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
