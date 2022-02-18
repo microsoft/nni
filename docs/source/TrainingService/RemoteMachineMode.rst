@@ -1,3 +1,4 @@
+====================================
 Run an Experiment on Remote Machines
 ====================================
 
@@ -5,8 +6,8 @@ NNI can run one experiment on multiple remote machines through SSH, called ``rem
 
 The OS of remote machines supports ``Linux``\ , ``Windows 10``\ , and ``Windows Server 2019``.
 
-Requirements
-------------
+Prerequisite
+============
 
 
 * 
@@ -21,18 +22,25 @@ Requirements
 * 
   Make sure the command of Trial is compatible with remote OSes, if you want to use remote Linux and Windows together. For example, the default python 3.x executable called ``python3`` on Linux, and ``python`` on Windows.
 
+Usage
+=====
+
+Remote setup
+------------
+
+
 Linux
 ^^^^^
 
 
-* Follow `installation <../Tutorial/InstallationLinux.rst>`__ to install NNI on the remote machine.
+* Follow `installation <../Tutorial/InstallationLinux.rst>`__ to install NNI on the remote Linux machine.
 
 Windows
 ^^^^^^^
 
 
 * 
-  Follow `installation <../Tutorial/InstallationWin.rst>`__ to install NNI on the remote machine.
+  Follow `installation <../Tutorial/InstallationWin.rst>`__ to install NNI on the remote Windows machine.
 
 * 
   Install and start ``OpenSSH Server``.
@@ -95,6 +103,8 @@ e.g. there are three machines, which can be logged in with username and password
 
 Install and run NNI on one of those three machines or another machine, which has network access to them.
 
+(one example of configuration of this training service)
+
 Use ``examples/trials/mnist-pytorch`` as the example. Below is content of ``examples/trials/mnist-pytorch/config_remote.yml``\ :
 
 .. code-block:: yaml
@@ -123,12 +133,23 @@ Use ``examples/trials/mnist-pytorch`` as the example. Below is content of ``exam
 
 Files in ``trialCodeDirectory`` will be uploaded to remote machines automatically. You can run below command on Windows, Linux, or macOS to spawn trials on remote Linux machines:
 
+
+
+(explain the configuration if necessary)
+
+
+
+(refer to a complete example config, and refer to training service reference)
+
 .. code-block:: bash
 
    nnictl create --config examples/trials/mnist-pytorch/config_remote.yml
 
+More features
+=============
+
 Configure python environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+============================
 
 By default, commands and scripts will be executed in the default environment in remote machine. If there are multiple python virtual environments in your remote machine, and you want to run experiments in a specific environment, then use **pythonPath** to specify a python environment on your remote machine. 
 
@@ -137,3 +158,11 @@ For example, with anaconda you can specify:
 .. code-block:: yaml
 
    pythonPath: /home/bob/.conda/envs/ENV-NAME/bin
+
+Configure distributed trial
+===========================
+
+(some training service, e.g., openpai, kubeflow, already supported distributed trial)
+
+Configure additional shared storage
+===================================
