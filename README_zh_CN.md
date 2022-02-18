@@ -21,7 +21,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 
 ## **最新消息！** &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)
 
-* **最新版本**：[v2.6 已发布](https://github.com/microsoft/nni/releases/tag/v2.6) - *2022年1月19日*
+* **最新版本**：[v2.6.1 已发布](https://github.com/microsoft/nni/releases/tag/v2.6.1) - *2022年2月18日*
 * **最新视频 demo**：[Youtube 入口](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - *上次更新：2021年5月26日*
 * **最新网络研讨会**: [介绍Retiarii：NNI 上的深度学习探索性训练框架](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - *2021年6月24日*
 * **最新互动渠道**: [Discussions](https://github.com/microsoft/nni/discussions)
