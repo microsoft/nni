@@ -29,7 +29,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
-* **New emoticons release**: [nnSpider](./docs/en_US/Tutorial/NNSpider.md)
+* **New emoticons release**: [nnSpider](./docs/source/Tutorial/NNSpider.md)
 <p align="center">
   <a href="#nni-spider"><img width="100%" src="docs/img/emoicons/home.svg" /></a>
 </p>
