@@ -5,4 +5,6 @@ from .darts import DartsTrainer
 from .enas import EnasTrainer
 from .proxyless import ProxylessTrainer
 from .random import SinglePathTrainer, RandomTrainer
-from .utils import replace_input_choice, replace_layer_choice
+from .differentiable import DartsModule, ProxylessModule, SNASModule
+from .sampling import EnasModule, RandomSampleModule
+from .utils import InterleavedTrainValDataLoader, ConcatenateTrainValDataLoader

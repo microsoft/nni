@@ -104,12 +104,11 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
             pid=proc.pid,
             logDir=config.experiment_working_directory,
             tag=[],
+            prefixUrl=url_prefix
         )
 
         _logger.info('Setting up...')
         rest.post(port, '/experiment', config.json(), url_prefix)
-
-        return proc
 
     except Exception as e:
         _logger.error('Create experiment failed')
@@ -117,6 +116,16 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
             with contextlib.suppress(Exception):
                 proc.kill()
         raise e
+
+    link = Path(config.experiment_working_directory, '_latest')
+    try:
+        link.unlink(missing_ok=True)
+        link.symlink_to(exp_id, target_is_directory=True)
+    except Exception:
+        if sys.platform != 'win32':
+            _logger.warning(f'Failed to create link {link}')
+
+    return proc
 
 def _start_rest_server(nni_manager_args, run_mode) -> Tuple[int, Popen]:
     node_dir = Path(nni_node.__path__[0])

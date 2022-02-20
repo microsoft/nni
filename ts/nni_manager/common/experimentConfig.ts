@@ -93,6 +93,7 @@ export interface DlcConfig extends TrainingServiceConfig {
     ecsSpec: string;
     region: string;
     nasDataSourceId: string;
+    ossDataSourceId?: string;
     accessKeyId: string;
     accessKeySecret: string;
     localStorageMountPoint: string;

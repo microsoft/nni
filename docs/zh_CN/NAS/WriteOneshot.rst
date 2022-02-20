@@ -1,1 +1,0 @@
-../../en_US/NAS/WriteOneshot.rst

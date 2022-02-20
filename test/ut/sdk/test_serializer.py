@@ -1,5 +1,4 @@
 import math
-import re
 import sys
 from pathlib import Path
 
@@ -15,6 +14,10 @@ from nni.common.serializer import is_traceable
 if True:  # prevent auto formatting
     sys.path.insert(0, Path(__file__).parent.as_posix())
     from imported.model import ImportTest
+
+    # this test cannot be directly put in this file. It will cause syntax error for python <= 3.7.
+    if tuple(sys.version_info) >= (3, 8):
+        from imported._test_serializer_py38 import test_positional_only
 
 
 @nni.trace
@@ -238,6 +241,36 @@ def test_generator():
     print(optimizer.trace_kwargs)
 
 
+def test_arguments_kind():
+    def foo(a, b, *c, **d):
+        pass
+
+    d = nni.trace(foo)(1, 2, 3, 4)
+    assert d.trace_args == [1, 2, 3, 4]
+    assert d.trace_kwargs == {}
+
+    d = nni.trace(foo)(a=1, b=2)
+    assert d.trace_kwargs == dict(a=1, b=2)
+
+    d = nni.trace(foo)(1, b=2)
+    # this is not perfect, but it's safe
+    assert d.trace_kwargs == dict(a=1, b=2)
+
+    def foo(a, *, b=3, c=5):
+        pass
+
+    d = nni.trace(foo)(1, b=2, c=3)
+    assert d.trace_kwargs == dict(a=1, b=2, c=3)
+
+    import torch.nn as nn
+    lstm = nni.trace(nn.LSTM)(2, 2)
+    assert lstm.input_size == 2
+    assert lstm.hidden_size == 2
+    assert lstm.trace_args == [2, 2]
+
+    lstm = nni.trace(nn.LSTM)(input_size=2, hidden_size=2)
+    assert lstm.trace_kwargs == {'input_size': 2, 'hidden_size': 2}
+
 
 if __name__ == '__main__':
     # test_simple_class()
@@ -245,4 +278,5 @@ if __name__ == '__main__':
     # test_nested_class()
     # test_unserializable()
     # test_basic_unit()
-    test_generator()
+    # test_generator()
+    test_arguments_kind()

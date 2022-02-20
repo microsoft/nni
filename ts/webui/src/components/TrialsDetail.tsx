@@ -45,7 +45,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         <div className='trial' id='tabsty'>
                             <Pivot
                                 defaultSelectedKey={'0'}
-                                className='detial-title'
+                                className='detail-title'
                                 onLinkClick={this.handleWhichTabs}
                                 selectedKey={whichChart}
                             >
