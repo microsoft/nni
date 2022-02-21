@@ -12,14 +12,46 @@ There are a few simple guidelines that you need to follow before providing your 
 Bug Reports and Feature Requests
 --------------------------------
 
-If you encountered a problem when using NNI, or have an idea for a new feature, please submit it to the `issue tracker <https://github.com/microsoft/nni/issues>`_ on GitHub.
+If you encountered a problem when using NNI, or have an idea for a new feature, your feedbacks are always welcome. Here are some possible channels:
 
-For bug reports, please specify the following details so that our maintainers can help resolve the issue:
+*  `File an issue <https://github.com/microsoft/nni/issues/new/choose>`_ on GitHub.
+*  Open or participate in a `discussion <https://github.com/microsoft/nni/discussions>`_.
+*  Discuss on the NNI `Gitter <https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge>`_ in NNI.
+*  Join IM discussion groups:
 
-* Setup details needs to be filled as specified in the issue template.
-* A scenario where the issue occurred (with details on how to reproduce it).
-* Errors and log messages that are displayed by the software.
-* Any other details that might be useful.
+   .. list-table::
+      :widths: 50 50
+      :header-rows: 1
+
+      * - Gitter
+        - WeChat
+      * - .. image:: https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png
+        - .. image:: https://github.com/scarlett2018/nniutil/raw/master/wechat.png
+
+Looking for an existing issue
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Before you create a new issue, please do a search in `open issues <https://github.com/microsoft/nni/issues>`_ to see if the issue or feature request has already been filed.
+
+Be sure to scan through the `most popular <https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3AFAQ+sort%3Areactions-%2B1-desc>`_ feature requests.
+
+If you find your issue already exists, make relevant comments and add your `reaction <https://github.com/blog/2119-add-reactions-to-pull-requests-issues-and-comments>`_. Use a reaction in place of a "+1" comment:
+
+* 👍 - upvote
+* 👎 - downvote
+
+If you cannot find an existing issue that describes your bug or feature, create a new issue following the guidelines below.
+
+Writing good bug reports or feature requests
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* File a single issue per problem and feature request. Do not enumerate multiple bugs or feature requests in the same issue.
+
+* Provide as much information as you think might relevant to the context (thinking the issue is assigning to you, what kinds of info you will need to debug it!!!). To give you a general idea about what kinds of info are useful for developers to dig out the issue, we had provided issue template for you.
+
+* Once you had submitted an issue, be sure to follow it for questions and discussions. 
+
+* Once the bug is fixed or feature is addressed, be sure to close the issue.
 
 Writing code
 ------------
@@ -28,6 +60,8 @@ There is always something more that is required, to make it easier to suit your 
 Before starting to write code, we recommend checking for `issues <https://github.com/microsoft/nni/issues>`_ on GitHub or open a new issue to initiate a discussion. There could be cases where people are already working on a fix, or similar features have already been under discussion.
 
 To contribute code, you first need to find the NNI code repo located on `GitHub <https://github.com/microsoft/nni>`_. Firstly, fork the repository under your own GitHub handle. After cloning the repository, add, commit, push and squash (if necessary) the changes with detailed commit messages to your fork. From where you can proceed to making a pull request. The pull request will then be reviewed by our core maintainers before merging into master branch. `Here <https://github.com/firstcontributions/first-contributions>`_ is a step-by-step guide for this process.
+
+Contributions to NNI should follow our code of conduct. Please see details :ref:`here <code-of-conduct>`.
 
 Find the code snippet that concerns you
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -258,10 +292,22 @@ To contribute a new tutorial, here are the steps to follow:
 Chinese translation
 ^^^^^^^^^^^^^^^^^^^
 
-We only maintain a partial set of documents with Chinese translation. If you intend to contribute more, follow the steps:
+We only maintain `a partial set of documents <https://github.com/microsoft/nni/issues/4298>`_ with Chinese translation. If you intend to contribute more, follow the steps:
 
 1. Add a ``xxx_zh.rst`` in the same folder where ``xxx.rst`` exists. 
 2. Run ``python tools/chineselink.py`` under ``docs`` folder, to generate a hash string in your created ``xxx_zh.rst``.
 3. Don't delete the hash string, add your translation after it.
 
 In case you modify an English document with Chinese translation already exists, you also need to run ``python tools/chineselink.py`` first to update the hash string, and update the Chinese translation contents accordingly.
+
+.. _code-of-conduct:
+
+Code of Conduct
+---------------
+
+This project has adopted the `Microsoft Open Source Code of Conduct <https://opensource.microsoft.com/codeofconduct/>`_.
+For more information see the `Code of Conduct FAQ <https://opensource.microsoft.com/codeofconduct/faq/>`_ or contact `opencode@microsoft.com <mailto:opencode@microsoft.com>`_ with any additional questions or comments.
+
+Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+
+When you submit a pull request, a CLA bot will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions provided by the bot. You will only need to do this once across all repos using our CLA.
