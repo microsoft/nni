@@ -70,11 +70,11 @@ class DartsModule(BaseOneShotLightningModule):
     The phase 1 is architecture step, in which model parameters are frozen and the architecture parameters are trained.
     The phase 2 is model step, in which architecture parameters are frozen and model parameters are trained.
 
-    {module_notes}
+    {{module_notes}}
 
     Parameters
     ----------
-    {module_params}
+    {{module_params}}
 
     {base_params}
 
@@ -94,7 +94,8 @@ class DartsModule(BaseOneShotLightningModule):
         module_params=BaseOneShotLightningModule._base_model_note,
     )
 
-    def __init__(self, arc_learning_rate=3.0E-4, unrolled=False):
+    def __init__(self, base_model, custom_replace_dict=None, arc_learning_rate=3.0E-4, unrolled=False):
+        super().__init__(base_model, custom_replace_dict=custom_replace_dict)
         self.arc_learning_rate = arc_learning_rate
         self.unrolled = unrolled
 

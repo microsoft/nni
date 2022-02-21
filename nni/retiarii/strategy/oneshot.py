@@ -1,14 +1,13 @@
 from .base import BaseStrategy
 
-_import_failed = False
-
 try:
     from nni.retiarii.oneshot.pytorch.strategy import DartsStrategy
-except ImportError:
-    _import_failed = True
+except ImportError as import_err:
+    _import_err = import_err
 
     class ImportFailedStrategy(BaseStrategy):
         def run(self, base_model, applied_mutators):
-            raise
+            raise _import_err
 
-    class DartsStrategy
+    # otherwise typing check will pointing to the wrong location
+    globals()['DartsStrategy'] = ImportFailedStrategy

@@ -8,6 +8,8 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 from torch.utils.data.sampler import RandomSampler
 
+from nni.retiarii import strategy, model_wrapper
+from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
@@ -26,6 +28,7 @@ class DepthwiseSeparableConv(nn.Module):
         return self.pointwise(self.depthwise(x))
 
 
+@model_wrapper
 class Net(pl.LightningModule):
     def __init__(self):
         super().__init__()
@@ -68,7 +71,6 @@ class Net(pl.LightningModule):
         return output
 
 
-@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def prepare_model_data():
     base_model = Net()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
@@ -86,14 +88,20 @@ def prepare_model_data():
     return base_model, train_loader, valid_loader, trainer_kwargs
 
 
+def prepare_retiarii_experiment_config():
+    config = RetiariiExeConfig()
+    config.execution_engine = 'oneshot'
+    return config
+
+
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_darts():
     base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    darts_model = DartsModule(cls.module)
-    para_loader = InterleavedTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(darts_model, para_loader)
+    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
+    strat = strategy.DartsStrategy()
+    experiment = RetiariiExperiment(base_model, cls, strategy=strat)
+    experiment.run(prepare_retiarii_experiment_config())
+    assert isinstance(experiment.export_top_models()[0], dict)
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')

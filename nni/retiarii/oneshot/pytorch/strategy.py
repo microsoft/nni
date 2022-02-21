@@ -11,7 +11,7 @@ from typing import Any, List, Optional, Type
 import torch.nn as nn
 from nni.retiarii.graph import Evaluator, Model
 from nni.retiarii.strategy.base import BaseStrategy
-from nni.retiarii.evaluator.pytorch.lightning import Lightning
+from nni.retiarii.evaluator.pytorch.lightning import Lightning, LightningModule
 from torch.utils.data import DataLoader
 
 from .base_lightning import BaseOneShotLightningModule
@@ -49,13 +49,16 @@ class OneShotStrategy(BaseStrategy):
         if not isinstance(base_model.evaluator, Lightning):
             raise TypeError('Evaluator needs to be a lightning evaluator to make one-shot strategy work.')
 
-        self.model: BaseOneShotLightningModule = self.oneshot_module(py_model, **self.oneshot_kwargs)
+        evaluator_module: LightningModule = base_model.evaluator.module
+        evaluator_module.set_model(py_model)
+
+        self.model: BaseOneShotLightningModule = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
         evaluator: Lightning = base_model.evaluator
         dataloader = self.get_dataloader(evaluator.train_dataloader, evaluator.val_dataloaders)
-        evaluator.trainer.fit(py_model, dataloader)
+        evaluator.trainer.fit(self.model, dataloader)
 
     def export_top_models(self, top_k: int = 1) -> List[Any]:
-        if self.model is not None:
+        if self.model is None:
             raise RuntimeError('One-shot strategy needs to be run before export.')
         if top_k != 1:
             warnings.warn('One-shot strategy currently only supports exporting top-1 model.', RuntimeWarning)

@@ -121,7 +121,7 @@ _validation_rules = {
 def preprocess_model(base_model, evaluator, applied_mutators, full_ir=True, dummy_input=None, oneshot=False):
     # TODO: this logic might need to be refactored into execution engine
     if oneshot:
-        mutators = process_oneshot_mutations(base_model, evaluator)
+        base_model_ir, mutators = process_oneshot_mutations(base_model, evaluator)
     elif full_ir:
         try:
             script_module = torch.jit.script(base_model)
@@ -201,10 +201,13 @@ class RetiariiExperiment(Experiment):
         self.applied_mutators = applied_mutators
         self.strategy = strategy
 
-        self._dispatcher = RetiariiAdvisor()
-        self._dispatcher_thread: Optional[Thread] = None
-        self._proc: Optional[Popen] = None
-        self._pipe: Optional[Pipe] = None
+        # FIXME: this is only a workaround
+        from nni.retiarii.oneshot.pytorch.strategy import OneShotStrategy
+        if not isinstance(strategy, OneShotStrategy):
+            self._dispatcher = RetiariiAdvisor()
+            self._dispatcher_thread: Optional[Thread] = None
+            self._proc: Optional[Popen] = None
+            self._pipe: Optional[Pipe] = None
 
         self.url_prefix = None
 
