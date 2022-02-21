@@ -71,11 +71,15 @@ class LayerChoice(Mutable):
 
         # map the named hierarchies to support weight inheritance for python engine
         if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
+            # handle cases where layer choices are nested
             # already has a mapping, will merge with it
             prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
             setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'{chosen}.{v}' for k, v in prev_mapping.items()})
         else:
-            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'': str(chosen)})
+            # "result" needs to know where to map itself.
+            # Ideally, we should put a _mapping_ in the module where "result" is located,
+            # but it's impossible to put mapping into parent module here.
+            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': str(chosen)})
         return result
 
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,

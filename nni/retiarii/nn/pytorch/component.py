@@ -47,7 +47,7 @@ class Repeat(Mutable):
             prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
             setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'blocks.{v}' for k, v in prev_mapping.items()})
         else:
-            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'': 'blocks'})
+            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': 'blocks'})
         return result
 
     def __init__(self,
