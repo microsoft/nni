@@ -13,7 +13,7 @@ from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
                                           DartsModule, EnasModule, SNASModule,
                                           InterleavedTrainValDataLoader,
-                                          ProxylessModule, RandomSampleModule)
+                                          ProxylessModule, RandomSamplingModule)
 
 
 class DepthwiseSeparableConv(nn.Module):
@@ -121,7 +121,7 @@ def test_random():
     base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
     cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader , **trainer_kwargs)
     cls.module.set_model(base_model)
-    random_model = RandomSampleModule(cls.module)
+    random_model = RandomSamplingModule(cls.module)
     cls.trainer.fit(random_model, cls.train_dataloader, cls.val_dataloaders)
 
 

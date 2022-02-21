@@ -6,5 +6,5 @@ from .enas import EnasTrainer
 from .proxyless import ProxylessTrainer
 from .random import SinglePathTrainer, RandomTrainer
 from .differentiable import DartsModule, ProxylessModule, SNASModule
-from .sampling import EnasModule, RandomSampleModule
+from .sampling import EnasModule, RandomSamplingModule
 from .utils import InterleavedTrainValDataLoader, ConcatenateTrainValDataLoader

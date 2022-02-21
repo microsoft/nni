@@ -135,7 +135,7 @@ class EnasModule(BaseOneShotLightningModule):
             return self.controller.resample()
 
 
-class RandomSampleModule(BaseOneShotLightningModule):
+class RandomSamplingModule(BaseOneShotLightningModule):
     """
     Random Sampling NAS Algorithm. In each epoch, model parameters are trained after a uniformly random sampling of each choice.
     The training result is also a random sample of the search space.
