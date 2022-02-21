@@ -10,6 +10,6 @@ pytest-azurepipelines
 pytest-cov
 rstcheck
 sphinx
-sphinx-argparse
+sphinx-argparse-nni >= 0.4.0
 sphinx-gallery
 git+https://github.com/bashtage/sphinx-material.git
