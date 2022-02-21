@@ -86,7 +86,7 @@ class RetiariiExeConfig(ConfigBase):
         if key == 'trial_code_directory' and not (str(value) == '.' or os.path.isabs(value)):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         if key == 'execution_engine':
-            assert value in ['base', 'py', 'cgo', 'benchmark'], f'The specified execution engine "{value}" is not supported.'
+            assert value in ['base', 'py', 'cgo', 'benchmark', 'oneshot'], f'The specified execution engine "{value}" is not supported.'
             self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + value
         self.__dict__[key] = value
 
@@ -151,6 +151,8 @@ def debug_mutated_model(base_model, trainer, applied_mutators):
 
     Specifically, it applies mutators (default to choose the first candidate for the choices)
     to generate a new model, then run this model locally.
+
+    The model will be parsed with graph execution engine.
 
     Parameters
     ----------
