@@ -144,7 +144,11 @@ class DartsModule(BaseOneShotLightningModule):
                 assert m.alpha.size() == ctrl_params[m.label].size(), 'Size of parameters with the same label should be same.'
                 m.alpha = ctrl_params[m.label]
             else:
-                ctrl_params[m.label] = m.alpha
+                if isinstance(m.alpha, dict):
+                    for k, v in m.alpha.items():
+                        ctrl_params[f'{m.label}_{k}'] = v
+                else:
+                    ctrl_params[m.label] = m.alpha
         ctrl_optim = torch.optim.Adam(list(ctrl_params.values()), 3.e-4, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
         return ctrl_optim
