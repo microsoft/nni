@@ -1,7 +1,9 @@
 """
 Pruning Quickstart
 ==================
-Model pruning usually has following paths:
+
+Model pruning is a technique to reduce the model size and computation by reducing model weight size or intermediate state size.
+It usually has following paths:
 
 #. Pre-training a model -> Pruning the model -> Fine-tuning the model
 #. Pruning the model aware training -> Fine-tuning the model

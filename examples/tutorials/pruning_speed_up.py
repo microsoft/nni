@@ -1,6 +1,6 @@
 """
-Speed Up a Masked Model
-=======================
+Speed Up Model with Mask
+========================
 
 Introduction
 ------------

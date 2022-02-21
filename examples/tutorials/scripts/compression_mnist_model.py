@@ -73,3 +73,19 @@ def evaluator(model):
     test_loss /= test_dataset_length
     accuracy = 100. * correct / test_dataset_length
     print('Average test loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(test_loss, correct, test_dataset_length, accuracy))
+
+def test_trt(engine):
+    test_loss = 0
+    correct = 0
+    time_elasped = 0
+    for data, target in test_loader:
+        output, time = engine.inference(data)
+        test_loss += F.nll_loss(output, target, reduction='sum').item()
+        pred = output.argmax(dim=1, keepdim=True)
+        correct += pred.eq(target.view_as(pred)).sum().item()
+        time_elasped += time
+    test_loss /= len(test_loader.dataset)
+
+    print('Loss: {}  Accuracy: {}%'.format(
+        test_loss, 100 * correct / len(test_loader.dataset)))
+    print("Inference elapsed_time (whole dataset): {}s".format(time_elasped))

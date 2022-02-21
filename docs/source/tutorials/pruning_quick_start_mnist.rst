@@ -20,7 +20,9 @@
 
 Pruning Quickstart
 ==================
-Model pruning usually has following paths:
+
+Model pruning is a technique to reduce the model size and computation by reducing model weight size or intermediate state size.
+It usually has following paths:
 
 #. Pre-training a model -> Pruning the model -> Fine-tuning the model
 #. Pruning the model aware training -> Fine-tuning the model
@@ -29,7 +31,7 @@ Model pruning usually has following paths:
 NNI supports the above three modes and mainly focuses on the pruning stage.
 Follow this tutorial for a quick look at how to use NNI to prune a model in a common practice.
 
-.. GENERATED FROM PYTHON SOURCE LINES 15-20
+.. GENERATED FROM PYTHON SOURCE LINES 17-22
 
 Preparation
 -----------
@@ -37,7 +39,7 @@ Preparation
 In this tutorial, we use a simple model and pre-train on MNIST dataset.
 If you are familiar with defining a model and training in pytorch, you can skip directly to `Pruning Model`_.
 
-.. GENERATED FROM PYTHON SOURCE LINES 20-40
+.. GENERATED FROM PYTHON SOURCE LINES 22-42
 
 .. code-block:: default
 
@@ -71,30 +73,14 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz to /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw/train-images-idx3-ubyte.gz
-    0it [00:00, ?it/s]      0%|          | 0/9912422 [00:00<?, ?it/s]      0%|          | 8192/9912422 [00:01<04:18, 38301.50it/s]      0%|          | 40960/9912422 [00:01<01:33, 105808.98it/s]      1%|1         | 106496/9912422 [00:01<00:49, 196831.14it/s]      2%|2         | 229376/9912422 [00:01<00:28, 345378.70it/s]      5%|4         | 475136/9912422 [00:02<00:14, 640212.48it/s]      8%|8         | 835584/9912422 [00:02<00:09, 1003163.72it/s]     17%|#6        | 1638400/9912422 [00:02<00:04, 1920098.61it/s]     30%|##9       | 2965504/9912422 [00:02<00:02, 3310670.85it/s]     40%|###9      | 3964928/9912422 [00:02<00:01, 3756550.69it/s]     50%|#####     | 4980736/9912422 [00:03<00:01, 4089641.01it/s]     61%|######    | 6029312/9912422 [00:03<00:00, 4358984.50it/s]     71%|#######1  | 7061504/9912422 [00:03<00:00, 4538765.06it/s]     82%|########1 | 8110080/9912422 [00:03<00:00, 4664931.71it/s]     92%|#########2| 9142272/9912422 [00:03<00:00, 5363833.41it/s]     98%|#########8| 9715712/9912422 [00:03<00:00, 5219376.61it/s]    9920512it [00:03, 2515889.70it/s]                             
-    Extracting /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw/train-images-idx3-ubyte.gz to /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz to /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw/train-labels-idx1-ubyte.gz
-    0it [00:00, ?it/s]      0%|          | 0/28881 [00:00<?, ?it/s]     28%|##8       | 8192/28881 [00:01<00:00, 38291.25it/s]    32768it [00:01, 29671.37it/s]                          
-    Extracting /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw/train-labels-idx1-ubyte.gz to /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz to /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw/t10k-images-idx3-ubyte.gz
-    0it [00:00, ?it/s]      0%|          | 0/1648877 [00:00<?, ?it/s]      1%|          | 16384/1648877 [00:01<00:21, 77610.45it/s]      3%|3         | 57344/1648877 [00:01<00:10, 146482.25it/s]      5%|5         | 90112/1648877 [00:01<00:10, 150860.63it/s]     13%|#2        | 212992/1648877 [00:01<00:04, 322055.47it/s]     28%|##7       | 458752/1648877 [00:02<00:01, 627694.08it/s]     56%|#####6    | 925696/1648877 [00:02<00:00, 1169966.38it/s]    1654784it [00:02, 741061.50it/s]                             
-    Extracting /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw/t10k-images-idx3-ubyte.gz to /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw
-    Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz to /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw/t10k-labels-idx1-ubyte.gz
-    0it [00:00, ?it/s]      0%|          | 0/4542 [00:00<?, ?it/s]    8192it [00:00, 9791.66it/s]             
-    Extracting /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw/t10k-labels-idx1-ubyte.gz to /home/ningshang/nni/examples/tutorials/scripts/data/MNIST/raw
-    Processing...
-    /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torchvision/datasets/mnist.py:464: UserWarning: The given NumPy array is not writeable, and PyTorch does not support non-writeable tensors. This means you can write to the underlying (supposedly non-writeable) NumPy array using the tensor. You may want to copy the array to protect its data or make it writeable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at  /pytorch/torch/csrc/utils/tensor_numpy.cpp:141.)
-      return torch.from_numpy(parsed.astype(m[2], copy=False)).view(*s)
-    Done!
-    Average test loss: 0.5361, Accuracy: 8106/10000 (81%)
-    Average test loss: 0.2713, Accuracy: 9178/10000 (92%)
-    Average test loss: 0.1832, Accuracy: 9457/10000 (95%)
+    Average test loss: 1.8381, Accuracy: 5939/10000 (59%)
+    Average test loss: 0.3143, Accuracy: 9045/10000 (90%)
+    Average test loss: 0.1928, Accuracy: 9387/10000 (94%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-51
+.. GENERATED FROM PYTHON SOURCE LINES 43-53
 
 Pruning Model
 -------------
@@ -107,7 +93,7 @@ This `config_list` means all layers whose type is `Linear` or `Conv2d` will be p
 except the layer named `fc3`, because `fc3` is `exclude`.
 The final sparsity ratio for each layer is 50%. The layer named `fc3` will not be pruned.
 
-.. GENERATED FROM PYTHON SOURCE LINES 51-60
+.. GENERATED FROM PYTHON SOURCE LINES 53-62
 
 .. code-block:: default
 
@@ -127,11 +113,11 @@ The final sparsity ratio for each layer is 50%. The layer named `fc3` will not b
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 61-62
+.. GENERATED FROM PYTHON SOURCE LINES 63-64
 
 Pruners usually require `model` and `config_list` as input arguments.
 
-.. GENERATED FROM PYTHON SOURCE LINES 62-74
+.. GENERATED FROM PYTHON SOURCE LINES 64-76
 
 .. code-block:: default
 
@@ -180,13 +166,13 @@ Pruners usually require `model` and `config_list` as input arguments.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-78
+.. GENERATED FROM PYTHON SOURCE LINES 77-80
 
 Speed up the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
 The model becomes smaller after speed-up,
 and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the masks across layers.
 
-.. GENERATED FROM PYTHON SOURCE LINES 78-87
+.. GENERATED FROM PYTHON SOURCE LINES 80-89
 
 .. code-block:: default
 
@@ -209,76 +195,24 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 
  .. code-block:: none
 
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) start to speed up the model
-    [2022-02-17 13:38:25] INFO (FixMaskConflict/MainThread) {'conv1': 1, 'conv2': 1}
     /home/ningshang/nni/nni/compression/pytorch/utils/mask_conflict.py:124: UserWarning: This overload of nonzero is deprecated:
             nonzero()
     Consider using one of the following signatures instead:
             nonzero(*, bool as_tuple) (Triggered internally at  /pytorch/torch/csrc/utils/python_arg_parser.cpp:766.)
       all_ones = (w_mask.flatten(1).sum(-1) == count).nonzero().squeeze(1).tolist()
-    [2022-02-17 13:38:25] INFO (FixMaskConflict/MainThread) dim0 sparsity: 0.500000
-    [2022-02-17 13:38:25] INFO (FixMaskConflict/MainThread) dim1 sparsity: 0.000000
-    [2022-02-17 13:38:25] INFO (FixMaskConflict/MainThread) Dectected conv prune dim" 0
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) infer module masks...
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for conv1
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::relu.5
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::max_pool2d.6
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for conv2
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::relu.7
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::max_pool2d.8
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::flatten.9
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for fc1
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::relu.10
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for fc2
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::relu.11
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for fc3
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::log_softmax.12
-    [2022-02-17 13:38:25] ERROR (nni.compression.pytorch.speedup.jit_translate/MainThread) aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
-    [2022-02-17 13:38:25] WARNING (nni.compression.pytorch.speedup.compressor/MainThread) Note: .aten::log_softmax.12 does not have corresponding mask inference object
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the fc3
     /home/ningshang/nni/nni/compression/pytorch/speedup/infer_mask.py:262: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the gradient for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations.
       if isinstance(self.output, torch.Tensor) and self.output.grad is not None:
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::relu.11
     /home/ningshang/nni/nni/compression/pytorch/speedup/compressor.py:282: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the gradient for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations.
       if last_output.grad is not None and tin.grad is not None:
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the fc2
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::relu.10
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the fc1
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::flatten.9
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::max_pool2d.8
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::relu.7
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the conv2
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::max_pool2d.6
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::relu.5
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the conv1
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) resolve the mask conflict
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace compressed modules...
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: conv1, op_type: Conv2d)
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::relu.5, op_type: aten::relu) which is func type
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::max_pool2d.6, op_type: aten::max_pool2d) which is func type
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: conv2, op_type: Conv2d)
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::relu.7, op_type: aten::relu) which is func type
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::max_pool2d.8, op_type: aten::max_pool2d) which is func type
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::flatten.9, op_type: aten::flatten) which is func type
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: fc1, op_type: Linear)
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace linear with new in_features: 128, out_features: 60
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::relu.10, op_type: aten::relu) which is func type
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: fc2, op_type: Linear)
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace linear with new in_features: 60, out_features: 42
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::relu.11, op_type: aten::relu) which is func type
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: fc3, op_type: Linear)
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace linear with new in_features: 42, out_features: 10
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::log_softmax.12, op_type: aten::log_softmax) which is func type
-    [2022-02-17 13:38:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) speedup done
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-89
+.. GENERATED FROM PYTHON SOURCE LINES 90-91
 
 the model will become real smaller after speed up
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-91
+.. GENERATED FROM PYTHON SOURCE LINES 91-93
 
 .. code-block:: default
 
@@ -305,14 +239,14 @@ the model will become real smaller after speed up
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-96
+.. GENERATED FROM PYTHON SOURCE LINES 94-98
 
 Fine-tuning Compacted Model
 ---------------------------
 Note that if the model has been sped up, you need to re-initialize a new optimizer for fine-tuning.
 Because speed up will replace the masked big layers with dense small ones.
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-100
+.. GENERATED FROM PYTHON SOURCE LINES 98-102
 
 .. code-block:: default
 
@@ -330,7 +264,7 @@ Because speed up will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  28.891 seconds)
+   **Total running time of the script:** ( 1 minutes  15.845 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:
