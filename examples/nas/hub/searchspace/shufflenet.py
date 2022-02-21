@@ -226,12 +226,14 @@ class ShuffleNetSpace(nn.Module):
                 if m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.BatchNorm2d):
-                torch.nn.init.constant_(m.weight, 1)
+                if m.weight is not None:
+                    torch.nn.init.constant_(m.weight, 1)
                 if m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0.0001)
                 torch.nn.init.constant_(m.running_mean, 0)
             elif isinstance(m, nn.BatchNorm1d):
-                torch.nn.init.constant_(m.weight, 1)
+                if m.weight is not None:
+                    torch.nn.init.constant_(m.weight, 1)
                 if m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0.0001)
                 torch.nn.init.constant_(m.running_mean, 0)
