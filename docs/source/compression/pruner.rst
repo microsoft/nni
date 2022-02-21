@@ -8,6 +8,7 @@ Level Pruner
 ^^^^^^^^^^^^
 
 ..  autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LevelPruner
+
 L1 Norm Pruner
 ^^^^^^^^^^^^^^
 

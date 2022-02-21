@@ -653,9 +653,12 @@ class ActivationAPoZRankPruner(ActivationPruner):
     Activation APoZ rank pruner is a pruner which prunes on the first weight dimension,
     with the smallest importance criterion ``APoZ`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
     The pruning criterion ``APoZ`` is explained in the paper `Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures <https://arxiv.org/abs/1607.03250>`__.
+
     The APoZ is defined as:
     :math:`APoZ_{c}^{(i)} = APoZ\left(O_{c}^{(i)}\right)=\frac{\sum_{k}^{N} \sum_{j}^{M} f\left(O_{c, j}^{(i)}(k)=0\right)}{N \times M}`
+
     Activation APoZ rank pruner also supports dependency-aware mode.
+
     Parameters
     ----------
     model : torch.nn.Module
@@ -704,6 +707,7 @@ class ActivationAPoZRankPruner(ActivationPruner):
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
+
     Examples
     --------
         >>> import nni
@@ -716,6 +720,7 @@ class ActivationAPoZRankPruner(ActivationPruner):
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
         >>> pruner = ActivationAPoZRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
         >>> masked_model, masks = pruner.compress()
+
     For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
     """
     def _activation_trans(self, output: Tensor) -> Tensor:
@@ -730,8 +735,11 @@ class ActivationMeanRankPruner(ActivationPruner):
     r"""
     Activation mean rank pruner is a pruner which prunes on the first weight dimension,
     with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
+
     The pruning criterion ``mean activation`` is explained in section 2.2 of the paper `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__.
+
     Activation mean rank pruner also supports dependency-aware mode.
+
     Parameters
     ----------
     model : torch.nn.Module
@@ -780,6 +788,7 @@ class ActivationMeanRankPruner(ActivationPruner):
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
+
     Examples
     --------
         >>> import nni
@@ -792,6 +801,7 @@ class ActivationMeanRankPruner(ActivationPruner):
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
         >>> pruner = ActivationMeanRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
         >>> masked_model, masks = pruner.compress()
+
     For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
     """
     def _activation_trans(self, output: Tensor) -> Tensor:
