@@ -182,7 +182,7 @@ def inverted_residual_choice_builder(
 
 
 @model_wrapper
-class ProxylessSpace(nn.Module):
+class ProxylessNAS(nn.Module):
     """
     The search space proposed by ProxylessNAS [proxylessnas]_ .
 

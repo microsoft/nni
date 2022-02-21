@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import Tuple, List, Union, Iterable
 
 try:
     from typing import Literal
@@ -301,7 +301,6 @@ def get_cell_builder(op_candidates: List[str], C_in: int, C: int,
     return cell_builder
 
 
-@model_wrapper
 class NDS(nn.Module):
     """
     The unified version of NASNet search space, implemented in
@@ -314,6 +313,8 @@ class NDS(nn.Module):
     [nds] has a speciality that it has mutable depths/widths.
     This is implemented by accepting a list of int as ``num_cells`` / ``width``.
 
+    References
+    ----------
     .. [nds] Radosavovic, Ilija and Johnson, Justin and Xie, Saining and Lo, Wan-Yen and Dollar, Piotr,
          "On Network Design Spaces for Visual Recognition". https://arxiv.org/abs/1905.13214
     """
@@ -322,8 +323,8 @@ class NDS(nn.Module):
                  op_candidates: List[str],
                  merge_op: Literal['all', 'loose_end'] = 'all',
                  num_nodes_per_cell: int = 4,
-                 width: Union[List[int], int] = 16,
-                 num_cells: Union[List[int], int] = 20,
+                 width: Union[Tuple[int], int] = 16,
+                 num_cells: Union[Tuple[int], int] = 20,
                  dataset: Literal['cifar', 'imagenet'] = 'imagenet',
                  auxiliary_loss: bool = False):
 
@@ -332,13 +333,13 @@ class NDS(nn.Module):
         self.auxiliary_loss = auxiliary_loss
 
         # preprocess the specified width and depth
-        if isinstance(width, list):
-            C = nn.ValueChoice(width, label='width')
+        if isinstance(width, Iterable):
+            C = nn.ValueChoice(list(width), label='width')
         else:
             C = width
 
-        if isinstance(num_cells, list):
-            num_cells = nn.ValueChoice(num_cells, label='depth')
+        if isinstance(num_cells, Iterable):
+            num_cells = nn.ValueChoice(list(num_cells), label='depth')
         num_cells_per_stage = [i * num_cells // 3 - (i - 1) * num_cells // 3 for i in range(3)]
 
         # auxiliary head is different for network targetted at different datasets
@@ -413,6 +414,231 @@ class NDS(nn.Module):
             return logits
 
     def set_drop_path_prob(self, drop_prob):
+        """
+        Set the drop probability of Drop-path [droppath] in the network.
+
+        References
+        ----------
+        .. [droppath] Gustav Larsson et al., FractalNet: Ultra-Deep Neural Networks without Residuals
+            https://arxiv.org/pdf/1605.07648v4.pdf
+        """
         for module in self.modules():
             if isinstance(module, DropPath_):
                 module.drop_prob = drop_prob
+
+
+_INIT_PARAMETER_DOCS = """
+
+    Parameters
+    ----------
+    width : int or tuple of int
+        A fixed initial width or a tuple of widths to choose from.
+    num_cells : int or tuple of int
+        A fixed number of cells (depths) to stack, or a tuple of depths to choose from.
+    dataset : "cifar" | "imagenet"
+        The essential differences are in "stem" cells, i.e., how they process the raw image input.
+        Choosing "imagenet" means more downsampling at the beginning of the network.
+    auxiliary_loss : bool
+        If true, another auxiliary classification head will produce the another prediction.
+        This makes the output of network two logits in the training phase.
+
+"""
+
+
+@model_wrapper
+class NASNet(NDS):
+    __doc__ = """Search space proposed in [nasnet].
+
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
+    Its operator candidates are :attribute:`~NASNet.NASNET_OPS`.
+    It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
+    """ + _INIT_PARAMETER_DOCS + """
+    References
+    ----------
+    .. [nasnet] B. Zoph, V. Vasudevan, J. Shlens, and Q. V. Le.,
+                Learning transferable architectures for scalable image recognition. In CVPR, 2018.
+    """
+
+    NASNET_OPS = [
+        'skip_connect',
+        'conv_3x1_1x3',
+        'conv_7x1_1x7',
+        'dil_conv_3x3',
+        'avg_pool_3x3',
+        'max_pool_3x3',
+        'max_pool_5x5',
+        'max_pool_7x7',
+        'conv_1x1',
+        'conv_3x3',
+        'sep_conv_3x3',
+        'sep_conv_5x5',
+        'sep_conv_7x7',
+    ]
+
+    def __init__(self,
+                 width: Union[Tuple[int], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 dataset: Literal['cifar', 'imagenet'] = 'cifar',
+                 auxiliary_loss: bool = False):
+        super().__init__(self.NASNET_OPS,
+                         merge_op='loose_end',
+                         num_nodes_per_cell=5,
+                         width=width,
+                         num_cells=num_cells,
+                         dataset=dataset,
+                         auxiliary_loss=auxiliary_loss)
+
+
+@model_wrapper
+class ENAS(NDS):
+    __doc__ = """Search space proposed in [enas].
+
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
+    Its operator candidates are :attribute:`~ENAS.ENAS_OPS`.
+    It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
+    """ + _INIT_PARAMETER_DOCS + """
+    References
+    ----------
+    .. [enas] H. Pham, M. Y. Guan, B. Zoph, Q. V. Le, and J. Dean.
+              Efficient neural architecture search via parameter sharing. In ICML, 2018.
+    """
+
+    ENAS_OPS = [
+        'skip_connect',
+        'sep_conv_3x3',
+        'sep_conv_5x5',
+        'avg_pool_3x3',
+        'max_pool_3x3',
+    ]
+
+    def __init__(self,
+                 width: Union[Tuple[int], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 dataset: Literal['cifar', 'imagenet'] = 'cifar',
+                 auxiliary_loss: bool = False):
+        super().__init__(self.ENAS_OPS,
+                         merge_op='loose_end',
+                         num_nodes_per_cell=5,
+                         width=width,
+                         num_cells=num_cells,
+                         dataset=dataset,
+                         auxiliary_loss=auxiliary_loss)
+
+
+@model_wrapper
+class AmoebaNet(NDS):
+    __doc__ = """Search space proposed in [amoeba].
+
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
+    Its operator candidates are :attribute:`~AmoebaNet.AMOEBA_OPS`.
+    It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
+    """ + _INIT_PARAMETER_DOCS + """
+    References
+    ----------
+    .. [amoeba] E. Real, A. Aggarwal, Y. Huang, and Q. V. Le.
+                Regularized evolution for image classifier architecture search. In AAAI, 2019.
+    """
+
+    AMOEBA_OPS = [
+        'skip_connect',
+        'sep_conv_3x3',
+        'sep_conv_5x5',
+        'sep_conv_7x7',
+        'avg_pool_3x3',
+        'max_pool_3x3',
+        'dil_sep_conv_3x3',
+        'conv_7x1_1x7',
+    ]
+
+    def __init__(self,
+                 width: Union[Tuple[int], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 dataset: Literal['cifar', 'imagenet'] = 'cifar',
+                 auxiliary_loss: bool = False):
+
+        super().__init__(self.AMOEBA_OPS,
+                         merge_op='loose_end',
+                         num_nodes_per_cell=5,
+                         width=width,
+                         num_cells=num_cells,
+                         dataset=dataset,
+                         auxiliary_loss=auxiliary_loss)
+
+
+@model_wrapper
+class PNAS(NDS):
+    __doc__ = """Search space proposed in [pnas].
+
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
+    Its operator candidates are :attribute:`~PNAS.PNAS_OPS`.
+    It has 5 nodes per cell, and the output is concatenation of all nodes in the cell.
+    """ + _INIT_PARAMETER_DOCS + """
+    References
+    ----------
+    .. [pnas] C. Liu, B. Zoph, M. Neumann, J. Shlens, W. Hua, L.-J. Li,
+              L. Fei-Fei, A. Yuille, J. Huang, and K. Murphy.
+              Progressive neural architecture search. In ECCV, 2018.
+    """
+
+    PNAS_OPS = [
+        'sep_conv_3x3',
+        'sep_conv_5x5',
+        'sep_conv_7x7',
+        'conv_7x1_1x7',
+        'skip_connect',
+        'avg_pool_3x3',
+        'max_pool_3x3',
+        'dil_conv_3x3',
+    ]
+
+    def __init__(self,
+                 width: Union[Tuple[int], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 dataset: Literal['cifar', 'imagenet'] = 'cifar',
+                 auxiliary_loss: bool = False):
+        super().__init__(self.PNAS_OPS,
+                         merge_op='all',
+                         num_nodes_per_cell=5,
+                         width=width,
+                         num_cells=num_cells,
+                         dataset=dataset,
+                         auxiliary_loss=auxiliary_loss)
+
+
+@model_wrapper
+class DARTS(NDS):
+    __doc__ = """Search space proposed in [darts].
+
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
+    Its operator candidates are :attribute:`~DARTS.DARTS_OPS`.
+    It has 4 nodes per cell, and the output is concatenation of all nodes in the cell.
+    """ + _INIT_PARAMETER_DOCS + """
+    References
+    ----------
+    .. [darts] H. Liu, K. Simonyan, and Y. Yang.
+               Darts: Differentiable architecture search. In ICLR, 2019.
+    """
+
+    DARTS_OPS = [
+        'none',
+        'max_pool_3x3',
+        'avg_pool_3x3',
+        'skip_connect',
+        'sep_conv_3x3',
+        'sep_conv_5x5',
+        'dil_conv_3x3',
+        'dil_conv_5x5',
+    ]
+
+    def __init__(self,
+                 width: Union[Tuple[int], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 dataset: Literal['cifar', 'imagenet'] = 'cifar',
+                 auxiliary_loss: bool = False):
+        super().__init__(self.DARTS_OPS,
+                         merge_op='all',
+                         num_nodes_per_cell=4,
+                         width=width,
+                         num_cells=num_cells,
+                         dataset=dataset,
+                         auxiliary_loss=auxiliary_loss)

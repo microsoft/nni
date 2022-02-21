@@ -3,7 +3,7 @@ from typing import Tuple, Optional, Callable
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
-from .proxylessnas import ConvBNReLU, InvertedResidual, ProxylessSpace, SeparableConv, make_divisible
+from .proxylessnas import ConvBNReLU, InvertedResidual, ProxylessNAS, SeparableConv, make_divisible
 
 
 class h_sigmoid(nn.Module):
@@ -49,8 +49,10 @@ class SELayer(nn.Module):
         return x * y
 
 
+# FIXME: need an unwrap API, or fix wrapping behavior
+
 @model_wrapper
-class MobileNetV3(ProxylessSpace):
+class MobileNetV3(ProxylessNAS.__wrapped__):
     """
     We use the following snipppet as reference.
     https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728
