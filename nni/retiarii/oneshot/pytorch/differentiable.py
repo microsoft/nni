@@ -63,17 +63,43 @@ class DartsInputChoice(nn.Module):
 
 
 class DartsModule(BaseOneShotLightningModule):
-    """
-    The DARTS module. Each iteration consists of 2 training phases. The phase 1 is architecture step, in which model parameters are
-    frozen and the architecture parameters are trained. The phase 2 is model step, in which architecture parameters are frozen and
-    model parameters are trained. See [darts] for details.
-    The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.
+    _darts_note = """
+    DARTS [darts] algorithm is one of the most fundamental one-shot algorithm.
+    
+    DARTS repeats iterations, where each iteration consists of 2 training phases.
+    The phase 1 is architecture step, in which model parameters are frozen and the architecture parameters are trained.
+    The phase 2 is model step, in which architecture parameters are frozen and model parameters are trained.
+
+    {module_notes}
+
+    Parameters
+    ----------
+    {module_params}
+
+    {base_params}
+
+    arc_learning_rate : float
+        Learning rate for architecture optimizer. Default: 3.0e-4
+    unrolled : bool
+        Unrolling 2nd gradient. Currently unsupported. Default: false
 
     Reference
     ----------
     .. [darts] H. Liu, K. Simonyan, and Y. Yang, “DARTS: Differentiable Architecture Search,” presented at the
         International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=S1eYHoC5FX
-    """
+    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+
+    __doc__ = _darts_note.format(
+        module_notes='The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.',
+        module_params=BaseOneShotLightningModule._base_model_note,
+    )
+
+    def __init__(self, arc_learning_rate=3.0E-4, unrolled=False):
+        self.arc_learning_rate = arc_learning_rate
+        self.unrolled = unrolled
+
+        if unrolled:
+            raise NotImplementedError('"unrolled = true" is not supported in DARTS yet.')
 
     def training_step(self, batch, batch_idx):
         # grad manually

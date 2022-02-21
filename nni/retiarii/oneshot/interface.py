@@ -23,3 +23,6 @@ class BaseOneShotTrainer(abc.ABC):
     @abc.abstractmethod
     def export(self) -> Any:
         pass
+
+    def to_strategy_and_evaluator(self) -> Any:
+        raise NotImplementedError()

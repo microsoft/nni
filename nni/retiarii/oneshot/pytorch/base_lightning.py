@@ -45,7 +45,20 @@ def _replace_module_with_type(root_module, replace_dict, modules):
 
 
 class BaseOneShotLightningModule(pl.LightningModule):
+
+    _custom_replace_dict_note = """
+    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
+        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
+        replace dict will override the default replace dict of each NAS method.
     """
+
+    _base_model_note = """
+    base_model : pl.LightningModule
+        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
+        be wrapped by this model.
+    """
+
+    __doc__ = """
     The base class for all one-shot NAS modules. Essential function such as preprocessing user's model, redirecting lightning
     hooks for user's model, configuring optimizers and exporting NAS result are implemented in this class.
 
@@ -57,13 +70,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     Parameters
     ----------
-    base_model : pl.LightningModule
-        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
-        be wrapped by this model.
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
-        replace dict will override the default replace dict of each NAS method.
-    """
+    """ + _base_model_note + _custom_replace_dict_note
+
     automatic_optimization = False
 
     def __init__(self, base_model, custom_replace_dict=None):

@@ -29,12 +29,15 @@ from nni.tools.nnictl.command_utils import kill_command
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
+from ..evaluator.pytorch.lightning import Classification
 from ..execution import list_models, set_execution_engine
 from ..execution.utils import get_mutation_dict
 from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
-from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation, process_evaluator_mutations
+from ..nn.pytorch.mutator import (
+    extract_mutation_from_pt_module, process_inline_mutation, process_evaluator_mutations, process_oneshot_mutations
+)
 from ..oneshot.interface import BaseOneShotTrainer
 from ..serializer import is_model_wrapped
 from ..strategy import BaseStrategy
@@ -115,9 +118,11 @@ _validation_rules = {
 }
 
 
-def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_input=None):
+def preprocess_model(base_model, evaluator, applied_mutators, full_ir=True, dummy_input=None, oneshot=False):
     # TODO: this logic might need to be refactored into execution engine
-    if full_ir:
+    if oneshot:
+        mutators = process_oneshot_mutations(base_model, evaluator)
+    elif full_ir:
         try:
             script_module = torch.jit.script(base_model)
         except Exception as e:
@@ -134,7 +139,7 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_
         mutators = process_inline_mutation(base_model_ir)
     else:
         base_model_ir, mutators = extract_mutation_from_pt_module(base_model)
-    base_model_ir.evaluator = trainer
+    base_model_ir.evaluator = evaluator
 
     if mutators is not None and applied_mutators:
         raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
@@ -144,7 +149,7 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_
     return base_model_ir, applied_mutators
 
 
-def debug_mutated_model(base_model, trainer, applied_mutators):
+def debug_mutated_model(base_model, evaluator, applied_mutators):
     """
     Locally run only one trial without launching an experiment for debug purpose, then exit.
     For example, it can be used to quickly check shape mismatch.
@@ -158,12 +163,12 @@ def debug_mutated_model(base_model, trainer, applied_mutators):
     ----------
     base_model : nni.retiarii.nn.pytorch.nn.Module
         the base model
-    trainer : nni.retiarii.evaluator
+    evaluator : nni.retiarii.graph.Evaluator
         the training class of the generated models
     applied_mutators : list
         a list of mutators that will be applied on the base model for generating a new model
     """
-    base_model_ir, applied_mutators = preprocess_model(base_model, trainer, applied_mutators)
+    base_model_ir, applied_mutators = preprocess_model(base_model, evaluator, applied_mutators)
     from ..strategy import _LocalDebugStrategy
     strategy = _LocalDebugStrategy()
     strategy.run(base_model_ir, applied_mutators)
@@ -171,14 +176,28 @@ def debug_mutated_model(base_model, trainer, applied_mutators):
 
 
 class RetiariiExperiment(Experiment):
-    def __init__(self, base_model: nn.Module, trainer: Union[Evaluator, BaseOneShotTrainer],
-                 applied_mutators: List[Mutator] = None, strategy: BaseStrategy = None):
+    def __init__(self, base_model: nn.Module, evaluator: Union[BaseOneShotTrainer, Evaluator] = None,
+                 applied_mutators: List[Mutator] = None, strategy: BaseStrategy = None,
+                 trainer: BaseOneShotTrainer = None):
+        if trainer is not None:
+            warnings.warn('Usage of `trainer` in RetiariiExperiment is deprecated and will be removed soon. '
+                          'Please consider specifying it as a positional argument, or use `evaluator`.', DeprecationWarning)
+            evaluator = trainer
+
+        if evaluator is None:
+            raise ValueError('Evaluator should not be none.')
+
+        if isinstance(evaluator, BaseOneShotTrainer):
+            # convert it into new-style evaluator+strategy
+            # classification is the only supported evaluator in the old implementation
+            strategy, evaluator = evaluator.to_strategy_and_evaluator()
+
         # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
         self.config: RetiariiExeConfig = None
         self.port: Optional[int] = None
 
         self.base_model = base_model
-        self.trainer = trainer
+        self.evaluator: Evaluator = evaluator
         self.applied_mutators = applied_mutators
         self.strategy = strategy
 
@@ -198,11 +217,11 @@ class RetiariiExperiment(Experiment):
 
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
-            self.base_model, self.trainer, self.applied_mutators,
+            self.base_model, self.evaluator, self.applied_mutators,
             full_ir=self.config.execution_engine not in ['py', 'benchmark'],
             dummy_input=self.config.dummy_input
         )
-        self.applied_mutators += process_evaluator_mutations(self.trainer, self.applied_mutators)
+        self.applied_mutators += process_evaluator_mutations(self.evaluator, self.applied_mutators)
 
         _logger.info('Start strategy...')
         search_space = dry_run_for_formatted_search_space(base_model_ir, self.applied_mutators)
@@ -304,8 +323,15 @@ class RetiariiExperiment(Experiment):
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        if isinstance(self.trainer, BaseOneShotTrainer):
-            self.trainer.fit()
+        if config is None:
+            warnings.warn('config = None is deprecate in future. If you are running a one-shot experiment, '
+                          'please consider creating a config and set execution engine to `oneshot`.', DeprecationWarning)
+            config = RetiariiExeConfig()
+            config.execution_engine = 'oneshot'
+
+        if config.execution_engine == 'oneshot':
+            base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
+            self.strategy.run(base_model_ir, self.applied_mutators)
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'
             self.config = config
@@ -390,10 +416,11 @@ class RetiariiExperiment(Experiment):
         """
         if formatter == 'code':
             assert self.config.execution_engine != 'py', 'You should use `dict` formatter when using Python execution engine.'
-        if isinstance(self.trainer, BaseOneShotTrainer):
-            assert top_k == 1, 'Only support top_k is 1 for now.'
-            return self.trainer.export()
-        else:
+        try:
+            # this currently works for one-shot algorithms
+            return self.strategy.export_top_models(top_k=top_k)
+        except NotImplementedError:
+            # when strategy hasn't implemented its own export logic
             all_models = filter(lambda m: m.metric is not None, list_models())
             assert optimize_mode in ['maximize', 'minimize']
             all_models = sorted(all_models, key=lambda m: m.metric, reverse=optimize_mode == 'maximize')

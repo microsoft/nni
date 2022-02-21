@@ -418,7 +418,7 @@ def process_oneshot_mutations(base_model: nn.Module, evaluator: Evaluator):
     # But unfortunately, this is the required interface of strategy.
     model = Model(_internal=True)
     model.python_object = base_model
-    model.evaluator = evaluator
+    # no need to set evaluator here because it will be set after this method is called
 
     return model, []
 
