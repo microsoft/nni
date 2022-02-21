@@ -117,7 +117,7 @@ Python
 * We recommend documenting all the methods and classes in your code. Follow `NumPy Docstring Style <https://numpydoc.readthedocs.io/en/latest/format.html>`__ for Python Docstring Conventions.
 
   * For function docstring, **description**, **Parameters**, and **Returns** are mandatory.
-  * For class docstring, **description**, **Attributes** are mandatory. The parameters of ``__init__`` should be documented in the docstring of docs.
+  * For class docstring, **description** is mandatory. Optionally **Parameters** and **Attributes**. The parameters of ``__init__`` should be documented in the docstring of class.
   * For docstring to describe ``dict``, which is commonly used in our hyper-parameter format description, please refer to `Internal Guideline on Writing Standards <https://ribokit.github.io/docs/text/>`_.
 
   .. tip:: `A cheatsheet provided by Sphinx <https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy>`__ shows a number of examples of docstring in numpy style.
@@ -239,7 +239,7 @@ To contribute a new tutorial, here are the steps to follow:
 
    .. tip:: The syntax to write a "notebook styled python file" is very simple. In essence, you only need to write a slightly well formatted python file. Here is a useful guide of `how to structure your Python scripts for Sphinx-Gallery <https://sphinx-gallery.github.io/stable/syntax.html>`_.
 
-2. Put the tutorials into ``docs/source/tutorials.rst``. You should add it it both ``toctree``, which makes it appear in the sidebar content table, and ``cardlinkitem``, and specify the appropriate ``header``, ``description``, ``link``, ``image``, ``background`` (for image) and ``tags``.
+2. Put the tutorials into ``docs/source/tutorials.rst``. You should add it both in ``toctree`` (to make it appear in the sidebar content table), and ``cardlinkitem`` (to create a card link), and specify the appropriate ``header``, ``description``, ``link``, ``image``, ``background`` (for image) and ``tags``.
 
    ``link`` are the generated link, which is usually ``tutorials/<your_python_file_name>.html``. Some useful images can be found in ``docs/img/thumbnails``, but you can always use your own. Available background colors are: ``red``, ``pink``, ``purple``, ``deep-purple``, ``blue``, ``light-blue``, ``cyan``, ``teal``, ``green``, ``deep-orange``, ``brown``, ``indigo``.
 
