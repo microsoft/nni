@@ -1,8 +1,10 @@
+=====
 WebUI
 =====
 
+***
 Q&A
----
+***
 
 There are many trials in the detail table but ``Default Metric`` graph is empty.
 ********************************************************************************
@@ -25,9 +27,9 @@ What should you do when your experiment is error
 ************************************************
 
 
-* Click the icon in the right of ``experiment status`` the and screenshot the error message. 
-* And then click the ``learrn about``to download ``nni-manager`` and ``dispatcher`` logfile.
-* Please open an issue from the `Feedback` in the `About` on nav and upload these message.
+* Click the icon in the right of ``experiment status`` and screenshot the error message. 
+* And then click the ``learn about`` to download ``nni-manager`` and ``dispatcher`` logfile.
+* Please file an issue from the `Feedback` in the `About` and upload above message.
 
 
 .. image:: ../../img/webui-img/experimentError.png
@@ -54,14 +56,16 @@ What should you do when your trial is failed
 
 * ``Log model`` will help you find the error reason. There are three buttons ``View trial log``, ``View trial error`` and ``View trial stdout`` on local mode. If you run on the OpenPAI or Kubeflow platform, you could see trial stdout and nfs log.
   If you have any question you could tell us in the issue.
-1. local mode:
+  local mode:
+  ^^^^^^^^^^^
 
 .. image:: ../../img/webui-img/detail/log-local.png
    :target: ../../img/webui-img/detail/log-local.png
    :alt: logOnLocal
 
 
-2. OpenPAI, Kubeflow and other mode:
+  OpenPAI, Kubeflow and other mode:
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. image:: ../../img/webui-img/detail-pai.png
    :target: ../../img/webui-img/detail-pai.png
@@ -77,10 +81,12 @@ How to use dict intermediate result
 
 
 
+**********************
 Experiments management
------------------------
+**********************
 
-Click the tab ``All experiments`` on the nav bar.
+Experiments management page could manage many experiments on your machine. 
+==========================================================================
 
 .. image:: ../../img/webui-img/managerExperimentList/experimentListNav.png
    :target: ../../img/webui-img/managerExperimentList/experimentListNav.png
@@ -111,9 +117,9 @@ Click the tab ``All experiments`` on the nav bar.
    :alt: filter button
 
 
-
+*****************
 View summary page
------------------
+*****************
 
 Click the tab ``Overview``.
 
@@ -129,7 +135,8 @@ Click the tab ``Overview``.
 
 * If you want to see experiment search space and config, please click the right button ``Search space`` and ``Config`` (when you hover on this button).
 
-   1. Search space file:
+   Search space file:
+   ^^^^^^^^^^^^^^^^^^
 
 
       .. image:: ../../img/webui-img/searchSpace.png
@@ -138,7 +145,8 @@ Click the tab ``Overview``.
 
 
 
-   2. Config file:
+   Config file:
+   ^^^^^^^^^^^^
 
 
       .. image:: ../../img/webui-img/config.png
@@ -177,10 +185,8 @@ Click the tab ``Overview``.
 
 
 
-* You can click ``About`` to see the version and report any questions.
-
 View job default metric
------------------------
+=======================
 
 
 * Click the tab ``Default metric`` to see the point graph of all trials. Hover to see its specific default metric and search space message.
@@ -201,7 +207,7 @@ View job default metric
 
 
 View hyper parameter
---------------------
+====================
 
 Click the tab ``Hyper-parameter`` to see the parallel graph.
 
@@ -230,7 +236,7 @@ Click the tab ``Trial Duration`` to see the bar graph.
 
 
 View Trial Intermediate Result Graph
-------------------------------------
+====================================
 
 Click the tab ``Intermediate Result`` to see the line graph.
 
@@ -253,7 +259,7 @@ You may find that these trials will get better or worse at an intermediate resul
 
 
 View trials status
-------------------
+==================
 
 Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
@@ -269,35 +275,41 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 * Support searching for a specific trial by its id, status, Trial No. and trial parameters.
 
-1. Trial id: 
+  Trial id: 
+  ^^^^^^^^^
 
 .. image:: ../../img/webui-img/detail/searchId.png
    :target: ../../img/webui-img/detail/searchId.png
    :alt: searchTrialId
 
 
-2. Trial No.: 
+  Trial No.: 
+  ^^^^^^^^^^
 
 .. image:: ../../img/webui-img/detail/searchNo.png
    :target: ../../img/webui-img/detail/searchNo.png
    :alt: searchTrialNo.
 
 
-3. Trial status:
+  Trial status:
+  ^^^^^^^^^^^^^
 
 .. image:: ../../img/webui-img/detail/searchStatus.png
    :target: ../../img/webui-img/detail/searchStatus.png
    :alt: searchStatus
 
-4. Trial parameters:
+  Trial parameters:
+  ^^^^^^^^^^^^^^^^^
 
-(1) parameters whose type is choice:
+  parameters whose type is choice:
+  """"""""""""""""""""""""""""""""
 
 .. image:: ../../img/webui-img/detail/searchParameterChoice.png
    :target: ../../img/webui-img/detail/searchParameterChoice.png
    :alt: searchParameterChoice
 
-(2) parameters whose type is not choice:
+  parameters whose type is not choice:
+  """"""""""""""""""""""""""""""""""""
 
 .. image:: ../../img/webui-img/detail/searchParameterRange.png
    :target: ../../img/webui-img/detail/searchParameterRange.png
