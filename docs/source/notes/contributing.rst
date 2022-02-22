@@ -220,7 +220,7 @@ Our documentation is located under ``docs/`` folder. The following command can b
    cd docs
    make html
 
-.. note:: If you experience issues in building documentation, and see errors like ``No matching distribution found for xxx``, please check your development environment and make sure dependencies have been properly installed: :ref:`get-started`.
+.. note:: If you experience issues in building documentation, and see errors like ``Could not import extension xxx (exception: No module named 'xxx')``, please check your development environment and make sure dependencies have been properly installed: :ref:`get-started`.
 
 It's also highly recommended taking care of **every WARNING** during the build, which is very likely the signal of a **deadlink** and other annoying issues. Our code check will also make sure that the documentation build completes with no warning.
 
