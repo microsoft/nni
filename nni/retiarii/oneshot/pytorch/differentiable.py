@@ -127,7 +127,6 @@ class DartsModule(BaseOneShotLightningModule):
 
     @staticmethod
     def match_and_replace():
-
         inputchoice_replace = get_naive_match_and_replace(InputChoice, DartsInputChoice)
         layerchoice_replace = get_naive_match_and_replace(LayerChoice, DartsLayerChoice)
 
@@ -310,12 +309,13 @@ class ProxylessModule(DartsModule):
         Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
     """
 
-    @property
-    def default_replace_dict(self):
-        return {
-            LayerChoice : ProxylessLayerChoice,
-            InputChoice : ProxylessInputChoice
-        }
+    @staticmethod
+    def match_and_replace():
+        inputchoice_replace = get_naive_match_and_replace(InputChoice, ProxylessInputChoice)
+        layerchoice_replace = get_naive_match_and_replace(LayerChoice, ProxylessLayerChoice)
+
+        return [inputchoice_replace, layerchoice_replace]
+
 
     def configure_architecture_optimizers(self):
         ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], 3.e-4,
@@ -393,9 +393,9 @@ class SNASModule(DartsModule):
 
         return self.model.on_epoch_start()
 
-    @property
-    def default_replace_dict(self):
-        return {
-            LayerChoice : SNASLayerChoice,
-            InputChoice : SNASInputChoice
-        }
+    @staticmethod
+    def match_and_replace():        
+        inputchoice_replace = get_naive_match_and_replace(InputChoice, SNASInputChoice)
+        layerchoice_replace = get_naive_match_and_replace(LayerChoice, SNASLayerChoice)
+
+        return [inputchoice_replace, layerchoice_replace]

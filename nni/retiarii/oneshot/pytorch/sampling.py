@@ -2,21 +2,25 @@
 # Licensed under the MIT license.
 
 import random
+
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
+import torch.optim as optim
+from nni.retiarii.nn.pytorch import InputChoice, LayerChoice
+from nni.retiarii.nn.pytorch.nn import (BatchNorm2d, Conv2d, Linear,
+                                        MultiheadAttention)
 
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
-from nni.retiarii.nn.pytorch.nn import BatchNorm2d, Linear, Conv2d, MultiheadAttention
-
-from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule
 from .enas import ReinforceController, ReinforceField
-from .utils import get_naive_match_and_replace, get_sampling_valuechoice_match_and_replace
-from .superlayer import (PathSamplingMultiHeadAttention, PathSamplingSuperBatchNorm2d, PathSamplingSuperConv2d, 
-                        PathSamplingSuperLinear, ENASValueChoice, 
-                        RandomValueChoice)
+from .random import PathSamplingInputChoice, PathSamplingLayerChoice
+from .sampling_superlayer import (ENASValueChoice,
+                                  PathSamplingMultiHeadAttention,
+                                  PathSamplingSuperBatchNorm2d,
+                                  PathSamplingSuperConv2d,
+                                  PathSamplingSuperLinear, RandomValueChoice)
+from .utils import (get_naive_match_and_replace,
+                    get_sampling_valuechoice_match_and_replace)
 
 
 class EnasModule(BaseOneShotLightningModule):
@@ -80,7 +84,7 @@ class EnasModule(BaseOneShotLightningModule):
         # to_samples : List[nn.Module]
         #   因为可能一个 Module 里有若干 Valuechoice，所以返回的是list
         # to_replace : nn.Module
-        #   替换只能是一个，所以返回 nn.Module 
+        #   替换只能是一个，所以返回 nn.Module
 
         input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
         layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
@@ -89,7 +93,7 @@ class EnasModule(BaseOneShotLightningModule):
         conv2d_replace = get_sampling_valuechoice_match_and_replace(Conv2d, ENASValueChoice, PathSamplingSuperConv2d)
         batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(BatchNorm2d, ENASValueChoice, PathSamplingSuperBatchNorm2d)
         mhatt_replace = get_sampling_valuechoice_match_and_replace(MultiheadAttention, ENASValueChoice, PathSamplingMultiHeadAttention)
-        
+
         return [input_replace, layer_replace, linear_replace, conv2d_replace, batchnorm2d_replace, mhatt_replace]
 
     def training_step(self, batch, batch_idx):
@@ -180,7 +184,7 @@ class RandomSampleModule(BaseOneShotLightningModule):
         # to_samples : List[nn.Module]
         #   因为可能一个 Module 里有若干 Valuechoice，所以返回的是list
         # to_replace : nn.Module
-        #   替换只能是一个，所以返回 nn.Module 
+        #   替换只能是一个，所以返回 nn.Module
 
         input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
         layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
@@ -189,7 +193,7 @@ class RandomSampleModule(BaseOneShotLightningModule):
         conv2d_replace = get_sampling_valuechoice_match_and_replace(Conv2d, RandomValueChoice, PathSamplingSuperConv2d)
         batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(BatchNorm2d, RandomValueChoice, PathSamplingSuperBatchNorm2d)
         mhatt_replace = get_sampling_valuechoice_match_and_replace(MultiheadAttention, RandomValueChoice, PathSamplingMultiHeadAttention)
-        
+
         return [input_replace, layer_replace, linear_replace, conv2d_replace, batchnorm2d_replace, mhatt_replace]
 
     def _resample(self):
