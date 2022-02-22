@@ -52,8 +52,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     _custom_replace_dict_note = """
     custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
-        replace dict will override the default replace dict of each NAS method.
+        The custom xxxChoice replace method. Keys should be ``xxxChoice`` type.
+        Values should callable accepting an ``nn.Module`` and returning an ``nn.module``.
+        This custom replace dict will override the default replace dict of each NAS method.
     """
 
     _base_model_note = """

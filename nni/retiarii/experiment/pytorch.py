@@ -190,6 +190,10 @@ class RetiariiExperiment(Experiment):
         if isinstance(evaluator, BaseOneShotTrainer):
             # convert it into new-style evaluator+strategy
             # classification is the only supported evaluator in the old implementation
+            warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
+                          'We will try to convert this trainer to our new implementation to run the algorithm. '
+                          'In case you want to stick to the old implementation, '
+                          'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
             strategy, evaluator = evaluator.to_strategy_and_evaluator()
 
         # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
