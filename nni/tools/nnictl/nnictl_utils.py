@@ -228,10 +228,13 @@ def stop_experiment(args):
                 experiment_info = experiments_dict.get(experiment_id)
                 if experiment_info is None:
                     print_warning('Get experiment {} metadata failed, {} time retry...'.format(experiment_id, i))
+                    time.sleep(0.5)
                 else:
                     break
             if experiment_info is None:
-                print_error('Experiment {} metadata getting failed, please manually check its status in `~/nni-experiments/.experiment`.')
+                print_error('Experiment {} metadata getting failed.'.format(experiment_id))
+                print_error('The experiments metadata in `.experiment` is:')
+                print_error(json.dumps(Experiments().get_all_experiments(), indent=4))
                 exit(1)
             rest_pid = experiment_info.get('pid')
             if rest_pid:
