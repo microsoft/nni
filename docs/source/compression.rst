@@ -27,3 +27,4 @@ For details, please refer to the following tutorials:
     Pruning <compression/pruning>
     Quantization <compression/quantization>
     Advanced Usage <compression/advanced_usage>
+    Reference <compression/reference>
