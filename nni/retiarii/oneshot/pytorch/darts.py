@@ -157,21 +157,6 @@ class DartsTrainer(BaseOneShotTrainer):
                                                         sampler=valid_sampler,
                                                         num_workers=self.workers)
 
-    def to_strategy_and_evaluator(self):
-        from nni.retiarii.evaluator.pytorch.lightning import Classification
-        from .strategy import DartsStrategy
-
-        evaluator = Classification(criterion=lambda: self.loss,
-                                   learning_rate=self.model_optim.param_groups[0]['lr'],
-                                   weight_decay=self.model_optim.param_groups[0].get('weight_decay', 0.),
-                                   optimizer=type(self.optimizer),
-                                   train_dataloader=self.train_loader,
-                                   valid_dataloader=self.valid_loader)
-        strategy = DartsStrategy(arc_learning_rate=self.ctrl_optim.param_groups[0]['lr'],
-                                 unrolled=False)
-
-        return strategy, evaluator
-
     def _train_one_epoch(self, epoch):
         self.model.train()
         meters = AverageMeterGroup()

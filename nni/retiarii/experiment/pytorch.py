@@ -29,7 +29,6 @@ from nni.tools.nnictl.command_utils import kill_command
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
-from ..evaluator.pytorch.lightning import Classification
 from ..execution import list_models, set_execution_engine
 from ..execution.utils import get_mutation_dict
 from ..graph import Evaluator
@@ -187,15 +186,6 @@ class RetiariiExperiment(Experiment):
         if evaluator is None:
             raise ValueError('Evaluator should not be none.')
 
-        if isinstance(evaluator, BaseOneShotTrainer):
-            # convert it into new-style evaluator+strategy
-            # classification is the only supported evaluator in the old implementation
-            warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
-                          'We will try to convert this trainer to our new implementation to run the algorithm. '
-                          'In case you want to stick to the old implementation, '
-                          'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
-            strategy, evaluator = evaluator.to_strategy_and_evaluator()
-
         # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
         self.config: RetiariiExeConfig = None
         self.port: Optional[int] = None
@@ -330,6 +320,14 @@ class RetiariiExperiment(Experiment):
         Run the experiment.
         This function will block until experiment finish or error.
         """
+        if isinstance(self.evaluator, BaseOneShotTrainer):
+            # TODO: will throw a deprecation warning soon
+            # warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
+            #               'We will try to convert this trainer to our new implementation to run the algorithm. '
+            #               'In case you want to stick to the old implementation, '
+            #               'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
+            self.evaluator.fit()
+
         if config is None:
             warnings.warn('config = None is deprecate in future. If you are running a one-shot experiment, '
                           'please consider creating a config and set execution engine to `oneshot`.', DeprecationWarning)
@@ -423,6 +421,9 @@ class RetiariiExperiment(Experiment):
         """
         if formatter == 'code':
             assert self.config.execution_engine != 'py', 'You should use `dict` formatter when using Python execution engine.'
+        if isinstance(self.evaluator, BaseOneShotTrainer):
+            assert top_k == 1, 'Only support top_k is 1 for now.'
+            return self.evaluator.export()
         try:
             # this currently works for one-shot algorithms
             return self.strategy.export_top_models(top_k=top_k)
