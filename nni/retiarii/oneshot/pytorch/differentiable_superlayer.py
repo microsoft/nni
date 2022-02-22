@@ -1,3 +1,4 @@
+from cgitb import small
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -50,7 +51,7 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
         self.out_channel_candidates = None
         if isinstance(max_out_channel, ValueChoice):
             self.out_channel_candidates = sorted(max_out_channel.candidates, reverse=True)
-            max_out_channel =  self.out_channel_candidates[-1]
+            max_out_channel =  self.out_channel_candidates[0]
 
         # kernel_size may be an int or tuple, we turn it into a tuple for simplicity
         self.max_kernel_size = self.pre_process_kernel_size()
@@ -112,7 +113,7 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
                 thresholds, should have a length of ``len(masks) - 1``
             indicator : Callable[[Tensor, float], float]
                 take a tensor and a threshold as input, and output the weight
-            
+
             Returns
             ----------
             weight : Tensor
@@ -123,9 +124,10 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
             # self.xxx_mask       = [ mask_0 , mask_1 , ... , mask_n-2, mask_n-1]
             # self.t_xxx          = [   t_0  ,   t_2  , ... ,  t_n-2 ]
             # So we zip the first n-1 items, and multiply masks[-1] in the end.
+            weight = torch.zeros_like(input_weight)
             for mask, t in zip(masks[:-1], thresholds):
                 cur_part = input_weight * mask
-                alpha = indicator(cur_part, t)                
+                alpha = indicator(cur_part, t)
                 weight = (weight + cur_part) * alpha
             # we do not consider skip-op here for out_channel/expansion candidates, which means at least the smallest channel
             # candidate is included
@@ -134,10 +136,10 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
             return weight
 
         if self.kernel_size_candidates is not None:
-            weight = weighted_sum_weight(weight, self.kernel_masks, Lasso_sigmoid)
-        
+            weight = weighted_sum_weight(weight, self.kernel_masks, self.t_kernel, Lasso_sigmoid)
+
         if self.out_channel_candidates is not None:
-            weight = weighted_sum_weight(weight, self.channel_masks, Lasso_sigmoid)
+            weight = weighted_sum_weight(weight, self.channel_masks, self.t_expansion, Lasso_sigmoid)
 
         output = self._conv_forward(input, weight, self.bias)
         return output
@@ -176,12 +178,12 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
 
         # sort kernel size in descending order
         self.kernel_size_candidates = sorted(candidates, key=lambda t : t[0], reverse=True)
-        for i in range(1, len(self.kernel_size_candidates)):
-            pre = self.kernel_size_candidates[i-1]
-            cur = self.kernel_size_candidates[i]
-            assert pre[1] <= cur[1], f'Kernel_size candidates should be larger or smaller than each other on both dimensions, but' \
-                f' found {pre} and {cur}.'
-        return self.kernel_size_candidates[-1]
+        for i in range(0, len(self.kernel_size_candidates) - 1):
+            bigger = self.kernel_size_candidates[i]
+            smaller = self.kernel_size_candidates[i + 1]
+            assert bigger[1] > smaller[1] or (bigger[1] == smaller[1] and bigger[0] > smaller[0]), f'Kernel_size candidates ' \
+                f'should be larger or smaller than each other on both dimensions, but found {bigger} and {smaller}.'
+        return self.kernel_size_candidates[0]
 
 
     def generate_architecture_params(self):
@@ -193,14 +195,14 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
             # kernel size mask
             self.kernel_masks = []
             for i in range(0, len(self.kernel_size_candidates) - 1):
-                big_size = self.kernel_size_candidates[i + 1]
-                small_size = self.kernel_size_candidates[i]
+                big_size = self.kernel_size_candidates[i]
+                small_size = self.kernel_size_candidates[i + 1]
                 mask = torch.zeros_like(self.weight)
                 mask[:, :, :big_size[0], :big_size[1]] = 1          # if self.weight.shape = (out, in, 7, 7), big_size = (5, 5) and
-                mask[:, :, :small_size[0], :small_size[1]] = 0      # small_size = (3, 3), mask will be something like:
+                mask[:, :, :small_size[0], :small_size[1]] = 0      # small_size = (3, 3), mask will look like:
                 self.kernel_masks.append(mask)                                                          #   0 0 0 0 0 0 0
             mask = torch.zeros_like(self.weight)                                                        #   0 1 1 1 1 1 0
-            mask[:, :, :self.kernel_size_candidates[-1][0], self.kernel_size_candidates[-1][1]] = 1     #   0 1 0 0 0 1 0
+            mask[:, :, :self.kernel_size_candidates[-1][0], :self.kernel_size_candidates[-1][1]] = 1     #   0 1 0 0 0 1 0
             self.kernel_masks.append(mask)                                                              #   0 1 0 0 0 1 0
                                                                                                         #   0 1 0 0 0 1 0
         if self.out_channel_candidates is not None:                                                     #   0 1 1 1 1 1 0
@@ -209,14 +211,14 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
             self.t_expansion = nn.Parameter(torch.rand(len(self.out_channel_candidates) - 1))
             self.alpha['out_channels'] = self.t_expansion
             self.channel_masks = []
-            mask = torch.zeros_like(self.weight)
-            mask[:self.out_channel_candidates[0]] = 1
-            self.channel_masks.append(mask)
-            for i in range(1, len(self.out_channel_candidates)):
-                big_channel, small_channel = self.out_channel_candidates[i], self.out_channel_candidates[i - 1]
+            for i in range(0, len(self.out_channel_candidates) - 1):
+                big_channel, small_channel = self.out_channel_candidates[i], self.out_channel_candidates[i + 1]
                 mask = torch.zeros_like(self.weight)
                 mask[:big_channel] = 1
                 mask[:small_channel] = 0
-                # if self.weight.shape = (32, in, W, H), big_channel = 16 and small_size = 8, mask will be something like:
+                # if self.weight.shape = (32, in, W, H), big_channel = 16 and small_size = 8, mask will look like:
                 # 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
                 self.channel_masks.append(mask)
+            mask = torch.zeros_like(self.weight)
+            mask[:self.out_channel_candidates[-1]] = 1
+            self.channel_masks.append(mask)
