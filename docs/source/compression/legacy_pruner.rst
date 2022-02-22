@@ -122,7 +122,7 @@ FPGM Pruner
 This is an one-shot pruner, which prunes filters with the smallest geometric median. FPGM chooses the filters with the most replaceable contribution.
 For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__.
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./pruning_concepts.html#dependency-awareode-for-output-channel-pruning>`__ for more details.
 
 Usage
 ^^^^^
@@ -168,7 +168,7 @@ For more details, please refer to `PRUNING FILTERS FOR EFFICIENT CONVNETS <https
 
 
 
-In addition, we also provide a dependency-aware mode for the L1FilterPruner. For more details about the dependency-aware mode, please reference `dependency-aware mode <./DependencyAware.rst>`__.
+In addition, we also provide a dependency-aware mode for the L1FilterPruner. For more details about the dependency-aware mode, please reference `dependency-aware mode <./pruning_concepts.html#dependency-awareode-for-output-channel-pruning>`__.
 
 Usage
 ^^^^^
@@ -225,7 +225,7 @@ L2Filter Pruner
 
 This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./pruning_concepts.html#dependency-awareode-for-output-channel-pruning>`__ for more details.
 
 Usage
 ^^^^^
@@ -258,7 +258,7 @@ The APoZ is defined as:
 :math:`APoZ_{c}^{(i)} = APoZ\left(O_{c}^{(i)}\right)=\frac{\sum_{k}^{N} \sum_{j}^{M} f\left(O_{c, j}^{(i)}(k)=0\right)}{N \times M}`
 
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./pruning_concepts.html#dependency-awareode-for-output-channel-pruning>`__ for more details.
 
 Usage
 ^^^^^
@@ -293,7 +293,7 @@ ActivationMeanRankFilter Pruner
 
 ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion ``mean activation`` is explained in section 2.2 of the paper `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__. Other pruning criteria mentioned in this paper will be supported in future release.
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./pruning_concepts.html#dependency-awareode-for-output-channel-pruning>`__ for more details.
 
 Usage
 ^^^^^
@@ -333,7 +333,7 @@ TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based 
 :math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
 
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./pruning_concepts.html#dependency-awareode-for-output-channel-pruning>`__ for more details.
 
 What's more, we provide a global-sort mode for this pruner which is aligned with paper implementation. Please set parameter 'global_sort' to True when instantiate TaylorFOWeightFilterPruner.
 

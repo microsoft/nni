@@ -27,21 +27,21 @@ Granularity
 Fine-grained pruning or unstructured pruning refers to pruning each individual weights separately.
 Coarse-grained pruning or structured pruning is pruning entire group of weights, such as a convolutional filter.
 
-`Level Pruner <pruner.rst#level-pruner>`__ is the only fine-grained pruner in NNI, all other pruners pruning the output channels on weights.
+`Level Pruner <pruner.html#level-pruner>`__ is the only fine-grained pruner in NNI, all other pruners pruning the output channels on weights.
 
 Dependency-aware Mode for Output Channel Pruning
 ------------------------------------------------
 
-Currently, we support ``dependency aware`` mode in several ``pruner``: `L1 Norm Pruner <pruner.rst#l1-norm-pruner>`__,
-`L2 Norm Pruner <pruner.rst#l2-norm-pruner>`__, `FPGM Pruner <pruner.rst#fpgm-pruner>`__, `Activation APoZ Rank Pruner <pruner.rst#activation-apoz-rank-pruner>`__,
-`Activation Mean Rank Pruner <pruner.rst#activation-mean-rank-pruner>`__, `Taylor FO Weight Pruner <pruner.rst#taylor-fo-weight-pruner>`__.
+Currently, we support ``dependency aware`` mode in several ``pruner``: `L1 Norm Pruner <pruner.html#l1-norm-pruner>`__,
+`L2 Norm Pruner <pruner.html#l2-norm-pruner>`__, `FPGM Pruner <pruner.html#fpgm-pruner>`__, `Activation APoZ Rank Pruner <pruner.html#activation-apoz-rank-pruner>`__,
+`Activation Mean Rank Pruner <pruner.html#activation-mean-rank-pruner>`__, `Taylor FO Weight Pruner <pruner.html#taylor-fo-weight-pruner>`__.
 
 In these pruning algorithms, the pruner will prune each layer separately. While pruning a layer,
 the algorithm will quantify the importance of each filter based on some specific rules(such as l1 norm), and prune the less important output channels.
 
 We use pruning convolutional layers as an example to explain ``dependency aware`` mode.
-As `dependency analysis utils <./CompressionUtils.rst>`__ shows, if the output channels of two convolutional layers(conv1, conv2) are added together,
-then these two convolutional layers have channel dependency with each other(more details please see `Compression Utils <./CompressionUtils.rst>`__\ ).
+As `dependency analysis utils <./compression_utils.html>`__ shows, if the output channels of two convolutional layers(conv1, conv2) are added together,
+then these two convolutional layers have channel dependency with each other(more details please see `Compression Utils <./compression_utils.html>`__\ ).
 Take the following figure as an example.
 
 .. image:: ../../img/mask_conflict.jpg
@@ -61,7 +61,7 @@ In the dependency-aware mode (``dependency_aware`` is set ``True``), the pruner 
    :target: ../../img/dependency-aware.jpg
    :alt: 
 
-Take the dependency-aware mode of `L1 Norm Pruner <pruner.rst#l1-norm-pruner>`__ as an example.
+Take the dependency-aware mode of `L1 Norm Pruner <pruner.html#l1-norm-pruner>`__ as an example.
 Specifically, the pruner will calculate the L1 norm (for example) sum of all the layers in the dependency set for each channel.
 Obviously, the number of channels that can actually be pruned of this dependency set in the end is determined by the minimum sparsity of layers in this dependency set (denoted by ``min_sparsity``).
 According to the L1 norm sum of each channel, the pruner will prune the same ``min_sparsity`` channels for all the layers.
