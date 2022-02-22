@@ -74,6 +74,8 @@ The NNI repository is large code-base. High-level speaking, it can be decomposed
 
 See :doc:`./architecture_overview` if you are interested in details.
 
+.. _get-started
+
 Get started with development
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -217,6 +219,8 @@ Our documentation is located under ``docs/`` folder. The following command can b
 
    cd docs
    make html
+
+.. note:: If you experience issues in building documentation, and see errors like ``No matching distribution found for xxx``, please check your development environment and make sure dependencies have been properly installed: :ref:`get-started`.
 
 It's also highly recommended taking care of **every WARNING** during the build, which is very likely the signal of a **deadlink** and other annoying issues. Our code check will also make sure that the documentation build completes with no warning.
 
