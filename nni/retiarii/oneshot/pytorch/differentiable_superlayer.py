@@ -79,7 +79,6 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
 
         weight = self.weight
 
-        
         def Lasso_sigmoid(matrix, t):
             """
             A trick that can make use of both the value of sign(lasso) and the gradient of sigmoid(lasso)
@@ -105,6 +104,7 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
             # self.t_xxx          =     (1)  [   t_1  , ... ,  t_n-2  ,   t_n-1 ]
             # So we multiply weight with ``self.mask[0]`` at the very beginning, and zip the rest part.
             weight = input_weight * masks[0]
+
             # Note that we need the smaller_shape, or the shape in the previous iteration here, so we use candidates[:-1] rather
             # than candidates[1:]
             for mask, t in zip(masks[0:], thresholds):
