@@ -1,7 +1,9 @@
 from .base import BaseStrategy
 
 try:
-    from nni.retiarii.oneshot.pytorch.strategy import DARTS, SNAS, Proxyless, ENAS, RandomOneShot
+    from nni.retiarii.oneshot.pytorch.strategy import (  # pylint: disable=unused-import
+        DARTS, SNAS, Proxyless, ENAS, RandomOneShot
+    )
 except ImportError as import_err:
     _import_err = import_err
 

@@ -9,10 +9,11 @@ import warnings
 from typing import Any, List, Optional, Type, Union, Tuple
 
 import torch.nn as nn
+from torch.utils.data import DataLoader
+
 from nni.retiarii.graph import Model
 from nni.retiarii.strategy.base import BaseStrategy
 from nni.retiarii.evaluator.pytorch.lightning import Lightning, LightningModule
-from torch.utils.data import DataLoader
 
 from .base_lightning import BaseOneShotLightningModule
 from .differentiable import DartsModule, ProxylessModule, SnasModule
@@ -29,7 +30,8 @@ class OneShotStrategy(BaseStrategy):
 
         self.model: Optional[BaseOneShotLightningModule] = None
 
-    def _get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader) -> Union[DataLoader, Tuple[DataLoader, DataLoader]]:
+    def _get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader) \
+        -> Union[DataLoader, Tuple[DataLoader, DataLoader]]:
         """
         One-shot strategy typically requires a customized dataloader.
 
