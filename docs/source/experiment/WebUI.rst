@@ -360,6 +360,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
+
 * Kill: you can kill a job that status is running.
 
 
