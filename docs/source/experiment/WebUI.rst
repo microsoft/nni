@@ -56,16 +56,16 @@ What should you do when your trial is failed
 
 * ``Log model`` will help you find the error reason. There are three buttons ``View trial log``, ``View trial error`` and ``View trial stdout`` on local mode. If you run on the OpenPAI or Kubeflow platform, you could see trial stdout and nfs log.
   If you have any question you could tell us in the issue.
-  local mode:
-  ^^^^^^^^^^^
+
+  **local mode:**
 
 .. image:: ../../img/webui-img/detail/log-local.png
    :target: ../../img/webui-img/detail/log-local.png
    :alt: logOnLocal
 
 
-  OpenPAI, Kubeflow and other mode:
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  **OpenPAI, Kubeflow and other mode:**
 
 .. image:: ../../img/webui-img/detail-pai.png
    :target: ../../img/webui-img/detail-pai.png
@@ -135,8 +135,8 @@ Click the tab ``Overview``.
 
 * If you want to see experiment search space and config, please click the right button ``Search space`` and ``Config`` (when you hover on this button).
 
-   Search space file:
-   ^^^^^^^^^^^^^^^^^^
+   **Search space file:**
+
 
 
       .. image:: ../../img/webui-img/searchSpace.png
@@ -145,8 +145,8 @@ Click the tab ``Overview``.
 
 
 
-   Config file:
-   ^^^^^^^^^^^^
+   **Config file:**
+
 
 
       .. image:: ../../img/webui-img/config.png
@@ -275,41 +275,47 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 * Support searching for a specific trial by its id, status, Trial No. and trial parameters.
 
-  Trial id: 
-  ^^^^^^^^^
+  **Trial id: **
+ 
+
 
 .. image:: ../../img/webui-img/detail/searchId.png
    :target: ../../img/webui-img/detail/searchId.png
    :alt: searchTrialId
 
 
-  Trial No.: 
-  ^^^^^^^^^^
+  **Trial No.: **
+
+
 
 .. image:: ../../img/webui-img/detail/searchNo.png
    :target: ../../img/webui-img/detail/searchNo.png
    :alt: searchTrialNo.
 
 
-  Trial status:
-  ^^^^^^^^^^^^^
+  **Trial status:**
+
+
 
 .. image:: ../../img/webui-img/detail/searchStatus.png
    :target: ../../img/webui-img/detail/searchStatus.png
    :alt: searchStatus
 
-  Trial parameters:
-  ^^^^^^^^^^^^^^^^^
 
-  parameters whose type is choice:
-  """"""""""""""""""""""""""""""""
+
+  **Trial parameters:**
+
+  ``parameters whose type is choice:``
+  
 
 .. image:: ../../img/webui-img/detail/searchParameterChoice.png
    :target: ../../img/webui-img/detail/searchParameterChoice.png
    :alt: searchParameterChoice
 
-  parameters whose type is not choice:
-  """"""""""""""""""""""""""""""""""""
+
+
+  ``parameters whose type is not choice:``
+  
 
 .. image:: ../../img/webui-img/detail/searchParameterRange.png
    :target: ../../img/webui-img/detail/searchParameterRange.png
