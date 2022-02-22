@@ -116,16 +116,12 @@ class PathSamplingSuperLinear(nn.Linear, ValueChoiceSuperLayer):
         self.name = name
         self.args = module.trace_kwargs
 
+        init_args = dict(self.args)
         # compulsory params
-        max_in_features = self.max_candidate('in_features')
-        max_out_features = self.max_candidate('out_features')
+        init_args['in_features'] = self.max_candidate('in_features')
+        init_args['out_features'] = self.max_candidate('out_features')
 
-        # optional and non-valuechoice params
-        bias = self.args.get('bias', True)
-        device = self.args.get('device', None)
-        dtype = self.args.get('dtype', None)
-
-        super().__init__(max_in_features, max_out_features, bias, device, dtype)
+        super().__init__(**init_args)
 
     def forward(self, x):
         in_dim = self.sampled_candidate('in_features')
@@ -149,7 +145,7 @@ class PathSamplingSuperConv2d(nn.Conv2d, ValueChoiceSuperLayer):
         padding : int, tuple(int)
         dilation : int, tuple(int)
         group : int
-    
+
     Warnings
     ----------
     Users are supposed to make sure that in different valuechoices with the same label, candidates with the same index should match
@@ -167,27 +163,21 @@ class PathSamplingSuperConv2d(nn.Conv2d, ValueChoiceSuperLayer):
         self.name = name
         self.args = module.trace_kwargs
 
+        init_args = dict(self.args)
         # compulsorty params
-        max_in_channel = self.max_candidate('in_channels')
-        max_out_channel = self.max_candidate('out_channels')
+        init_args['in_channels'] = self.max_candidate('in_channels')
+        init_args['out_channels'] = self.max_candidate('out_channels')
         # kernel_size may be an int or tuple, we turn it into a tuple for simplicity
-        self.max_kernel_size = self.max_kernel_size_candidate()
+        init_args['kernel_size'] = self.max_kernel_size = self.max_kernel_size_candidate()
         if not isinstance(self.max_kernel_size, tuple):
             self.max_kernel_size = (self.max_kernel_size, self.max_kernel_size)
 
         # optional params
         # stride, padding and dilation are not necessary for init funtion, since `Conv2d`` directly accessed them in `forward`,
         # which means we can set them just before calling Conv2d.forward
-        min_groups = self.min_candidate('groups', 1)
+        init_args['groups'] = self.min_candidate('groups', 1)
 
-        # non-valuechoice params
-        bias = self.args.get('bias', False)
-        padding_mode = self.args.get('padding_mode', 'zeros')
-        device = self.args.get('device', None)
-        dtype = self.args.get('dtype', None)
-
-        super().__init__(max_in_channel, max_out_channel, self.max_kernel_size,
-            groups = min_groups, bias = bias, padding_mode = padding_mode, device = device, dtype = dtype)
+        super().__init__(**init_args)
 
     def forward(self, input):
         in_chn = self.sampled_candidate('in_channels')
@@ -247,7 +237,7 @@ class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
         num_features : int
         eps : float
         momentum : float
-    
+
     Parameters
     ----------
     module : nn.Module
@@ -259,22 +249,17 @@ class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
         self.name = name
         self.args = module.trace_kwargs
 
+        init_args = dict(self.args)
         # compulsory params
-        max_num_features = self.max_candidate('num_features')
+        init_args['num_features'] = self.max_candidate('num_features')
 
         # optional params
         # the initial values of eps and momentum doesn't matter since they are directly accessed in forward
         # we just take max candidate for simplicity here
-        eps = self.max_candidate('eps', 1e-4)
-        momentum = self.max_candidate('momentum', .1)
+        init_args['eps'] = self.max_candidate('eps', 1e-4)
+        init_args['momentum'] = self.max_candidate('momentum', .1)
 
-        # non-valuechoice params
-        affine = self.args.get('affine', True)
-        track_running_stats = self.args.get('track_running_stats', True)
-        device = self.args.get('device', None)
-        dtype = self.args.get('dtype', None)
-
-        super().__init__(max_num_features, eps, momentum, affine, track_running_stats, device, dtype)
+        super().__init__(**init_args)
 
     def forward(self, input):
         # get sampled parameters
@@ -333,13 +318,13 @@ class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLaye
         kdim :int
         vdim : int
         dropout : float
-    
+
     Warnings
     ----------
     Users are supposed to make sure that in different valuechoices with the same label, candidates with the same index should match
     each other. For example, the divisibility constraint between `embed_dim` and `num_heads` in a multi-head attention module should
     be met. Users ought to design candidates carefully to prevent the module from breakdown.
-    
+
     Parameters
     ----------
     module : nn.Module
@@ -351,37 +336,28 @@ class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLaye
         self.name = name
         self.args = module.trace_kwargs
 
+        init_args = dict(self.args)
         # compulsory params
-        self.max_embed_dim = self.max_candidate('embed_dim')
-        num_heads = self.max_candidate('num_heads')
-        
+        init_args['embed_dim'] = self.max_embed_dim = self.max_candidate('embed_dim')
+        init_args['num_heads'] = self.max_candidate('num_heads')
+
         # optional params
-        kdim = self.max_candidate('kdim', self.max_embed_dim)
-        vdim = self.max_candidate('vdim', self.max_embed_dim)
-        dropout = self.max_candidate('dropout', 0.)
+        init_args['kdim'] = self.max_candidate('kdim', self.max_embed_dim)
+        init_args['vdim'] = self.max_candidate('vdim', self.max_embed_dim)
+        init_args['dropout'] = self.max_candidate('dropout', 0.)
 
-        # non-valuechoice params
-        bias = self.args.get('bias', True)
-        add_bias_kv = self.args.get('add_bias_kv', False)
-        add_zero_attn = self.args.get('add_zero_attn', False)
-        batch_first = self.args.get('batch_first', False)
-        device = self.args.get('device', None)
-        dtype = self.args.get('dtype', None)
+        super().__init__(**init_args)
 
-        super().__init__(self.max_embed_dim, num_heads, dropout, bias, add_bias_kv,
-            add_zero_attn, kdim, vdim, batch_first ,device, dtype)
-    
     def forward(self, query, key, value, key_padding_mask = None, need_weights = True, attn_mask = None):
         if self.batch_first:
             query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
 
         embed_dim = self.sampled_candidate('embed_dim')
-        kdim = self.sampled_candidate('kdim', embed_dim)
-        vdim = self.sampled_candidate('vdim', embed_dim)
         num_heads = self.sampled_candidate('num_heads')
+        self.dropout = self.sampled_candidate('dropout', 0.)
 
         in_proj_bias = torch.concat(
-            [self.in_proj_bias[:embed_dim], 
+            [self.in_proj_bias[:embed_dim],
              self.in_proj_bias[self.max_embed_dim : self.max_embed_dim + embed_dim],
              self.in_proj_bias[2 * self.max_embed_dim : 2 * self.max_embed_dim + embed_dim]], dim = 0) \
                        if self.in_proj_bias is not None else None
@@ -395,7 +371,20 @@ class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLaye
         out_proj_weight = self.out_proj.weight[:embed_dim, :embed_dim]
         out_proj_bias = self.out_proj.bias[:embed_dim]
 
-        if not self._qkv_same_embed_dim:
+        if self._qkv_same_embed_dim:
+
+            attn_output, attn_output_weights = F.multi_head_attention_forward(
+                query, key, value, embed_dim, num_heads,
+                in_proj_weight, in_proj_bias,
+                bias_k, bias_v, self.add_zero_attn,
+                self.dropout, out_proj_weight, out_proj_bias,
+                training=self.training,
+                key_padding_mask=key_padding_mask, need_weights=need_weights,
+                attn_mask=attn_mask)
+        else:
+            kdim = self.sampled_candidate('kdim', embed_dim)
+            vdim = self.sampled_candidate('vdim', embed_dim)
+
             q_proj = self.q_proj_weight[:embed_dim, :embed_dim]
             k_proj = self.k_proj_weight[:embed_dim, :kdim]
             v_proj = self.v_proj_weight[:embed_dim, :vdim]
@@ -409,15 +398,7 @@ class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLaye
                 key_padding_mask=key_padding_mask, need_weights=need_weights,
                 attn_mask=attn_mask, use_separate_proj_weight=True,
                 q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
-        else:
-            attn_output, attn_output_weights = F.multi_head_attention_forward(
-                query, key, value, embed_dim, num_heads,
-                in_proj_weight, in_proj_bias,
-                bias_k, bias_v, self.add_zero_attn,
-                self.dropout, out_proj_weight, out_proj_bias,
-                training=self.training,
-                key_padding_mask=key_padding_mask, need_weights=need_weights,
-                attn_mask=attn_mask)
+
         if self.batch_first:
             return attn_output.transpose(1, 0), attn_output_weights
         else:

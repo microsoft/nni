@@ -6,9 +6,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Conv2d
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Conv2d, BatchNorm2d
 
-from .differentiable_superlayer import DifferentiableSuperConv2d
+from .differentiable_superlayer import DifferentiableBatchNorm2d, DifferentiableSuperConv2d
 from .utils import get_differentiable_valuechoice_match_and_replace, get_naive_match_and_replace
 from .base_lightning import BaseOneShotLightningModule
 
@@ -127,19 +127,20 @@ class DartsModule(BaseOneShotLightningModule):
 
     @staticmethod
     def match_and_replace():
-        
+
         inputchoice_replace = get_naive_match_and_replace(InputChoice, DartsInputChoice)
         layerchoice_replace = get_naive_match_and_replace(LayerChoice, DartsLayerChoice)
 
         conv2d_valuechoice_replace = get_differentiable_valuechoice_match_and_replace(Conv2d, DifferentiableSuperConv2d)
+        batch_norm2d_valuechoice_replace = get_differentiable_valuechoice_match_and_replace(BatchNorm2d, DifferentiableBatchNorm2d)
 
-        return [inputchoice_replace, layerchoice_replace, conv2d_valuechoice_replace] 
+        return [inputchoice_replace, layerchoice_replace, conv2d_valuechoice_replace, batch_norm2d_valuechoice_replace]
 
     def configure_architecture_optimizers(self):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
         ctrl_params = {}
         for _, m in self.nas_modules:
-            # TODO: unify layerchoice/inputchoice and valuechoice alpha         
+            # TODO: unify layerchoice/inputchoice and valuechoice alpha
             if m.label in ctrl_params:
                 assert m.alpha.size() == ctrl_params[m.label].size(), 'Size of parameters with the same label should be same.'
                 m.alpha = ctrl_params[m.label]
