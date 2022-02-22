@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import math
 from typing import Optional, Callable, List, Tuple
 
@@ -56,6 +59,7 @@ class SeparableConv(nn.Sequential):
     In the original MobileNetV2 implementation, this is InvertedResidual when expand ratio = 1.
     Residual connection is added if input and output shape are the same.
     """
+
     def __init__(
         self,
         in_channels: int,
@@ -69,7 +73,7 @@ class SeparableConv(nn.Sequential):
         super().__init__(
             # dw
             ConvBNReLU(in_channels, in_channels, stride=stride, kernel_size=kernel_size, groups=in_channels,
-                        norm_layer=norm_layer, activation_layer=activation_layer),
+                       norm_layer=norm_layer, activation_layer=activation_layer),
             # pw-linear
             ConvBNReLU(in_channels, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
         )
@@ -131,7 +135,7 @@ class InvertedResidual(nn.Sequential):
                        norm_layer=norm_layer, activation_layer=activation_layer),
             # depth-wise
             ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch,
-                    norm_layer=norm_layer, activation_layer=activation_layer)
+                       norm_layer=norm_layer, activation_layer=activation_layer)
         ]
 
         if squeeze_and_excite:
@@ -237,7 +241,7 @@ class ProxylessNAS(nn.Module):
         self.dropout_layer = nn.Dropout(dropout_rate)
         self.classifier = nn.Linear(widths[-1], num_labels)
 
-        self.reset_parameters(bn_momentum=bn_momentum, bn_eps=bn_eps)
+        reset_parameters(self, bn_momentum=bn_momentum, bn_eps=bn_eps)
 
     def forward(self, x):
         x = self.first_conv(x)
@@ -256,31 +260,32 @@ class ProxylessNAS(nn.Module):
             return {'classifier.weight', 'classifier.bias'}
         return set()
 
-    def reset_parameters(self, model_init='he_fout', init_div_groups=False,
-                         bn_momentum=0.1, bn_eps=1e-5):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                if model_init == 'he_fout':
-                    n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                    if init_div_groups:
-                        n /= m.groups
-                    m.weight.data.normal_(0, math.sqrt(2. / n))
-                elif model_init == 'he_fin':
-                    n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
-                    if init_div_groups:
-                        n /= m.groups
-                    m.weight.data.normal_(0, math.sqrt(2. / n))
-                else:
-                    raise NotImplementedError
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
+
+def reset_parameters(model, model_init='he_fout', init_div_groups=False,
+                     bn_momentum=0.1, bn_eps=1e-5):
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d):
+            if model_init == 'he_fout':
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                if init_div_groups:
+                    n /= m.groups
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif model_init == 'he_fin':
+                n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
+                if init_div_groups:
+                    n /= m.groups
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            else:
+                raise NotImplementedError
+        elif isinstance(m, nn.BatchNorm2d):
+            m.weight.data.fill_(1)
+            m.bias.data.zero_()
+            m.momentum = bn_momentum
+            m.eps = bn_eps
+        elif isinstance(m, nn.Linear):
+            m.weight.data.normal_(0, 0.01)
+            if m.bias is not None:
                 m.bias.data.zero_()
-                m.momentum = bn_momentum
-                m.eps = bn_eps
-            elif isinstance(m, nn.Linear):
-                m.weight.data.normal_(0, 0.01)
-                if m.bias is not None:
-                    m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm1d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
+        elif isinstance(m, nn.BatchNorm1d):
+            m.weight.data.fill_(1)
+            m.bias.data.zero_()

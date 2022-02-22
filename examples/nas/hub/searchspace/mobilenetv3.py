@@ -1,9 +1,12 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Tuple, Optional, Callable
 
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
-from .proxylessnas import ConvBNReLU, InvertedResidual, ProxylessNAS, SeparableConv, make_divisible
+from .proxylessnas import ConvBNReLU, InvertedResidual, SeparableConv, make_divisible, reset_parameters
 
 
 class h_sigmoid(nn.Module):
@@ -49,10 +52,8 @@ class SELayer(nn.Module):
         return x * y
 
 
-# FIXME: need an unwrap API, or fix wrapping behavior
-
 @model_wrapper
-class MobileNetV3(ProxylessNAS.__wrapped__):
+class MobileNetV3(nn.Module):
     """
     We use the following snipppet as reference.
     https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728
@@ -62,15 +63,13 @@ class MobileNetV3(ProxylessNAS.__wrapped__):
                  base_widths: Tuple[int, ...] = (16, 16, 32, 64, 128, 256, 512, 1024),
                  width_multipliers: Tuple[float, ...] = (0.5, 0.625, 0.75, 1.0, 1.25, 1.5, 2.0),
                  expand_ratios: Tuple[int, ...] = (1, 2, 3, 4, 5, 6),
-                 dropout_rate: float = 0.,
-                 stem_width: int = 32,
-                 width_mult: float = 1.0,
+                 dropout_rate: float = 0.2,
                  bn_eps: float = 1e-3,
                  bn_momentum: float = 0.1):
         super().__init__()
 
         self.widths = [
-            nn.ValueChoice([make_divisible(base_width * mult, 8) for mult in self.width_multipliers], label=f'width_{i}')
+            nn.ValueChoice([make_divisible(base_width * mult, 8) for mult in width_multipliers], label=f'width_{i}')
             for i, base_width in enumerate(base_widths)
         ]
         self.expand_ratios = expand_ratios
@@ -108,11 +107,11 @@ class MobileNetV3(ProxylessNAS.__wrapped__):
         self.blocks = nn.Sequential(*blocks)
 
         self.classifier = nn.Sequential(
-            nn.Dropout(0.2),
+            nn.Dropout(dropout_rate),
             nn.Linear(self.widths[7], num_labels),
         )
 
-        self.reset_parameters()
+        reset_parameters(self, bn_momentum=bn_momentum, bn_eps=bn_eps)
 
     def forward(self, x):
         x = self.blocks(x)

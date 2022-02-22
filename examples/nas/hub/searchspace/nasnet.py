@@ -1,3 +1,12 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+"""File containing NASNet-series search space.
+
+The implementation is based on NDS.
+It's called ``nasnet.py`` simply because NASNet is the first to propose such structure.
+"""
+
 from typing import Tuple, List, Union, Iterable
 
 try:
@@ -238,13 +247,15 @@ class CellPreprocessor(nn.Module):
     """
 
     def __init__(self, C_prev: int, C: int, C_multiplier: int = 2):
+        super().__init__()
+
         # When this reduce is activated, the last cell must be a reduction cell.
         # Therefore, pprev either belongs to the last stage, or the stage before last stage (if last stage only has a reduction cell).
 
         self.C_multiplier = C_multiplier  # this mustn't be a value choice. I need ``==`` on this.
         self.pre0_reduce = FactorizedReduce(C_prev // C_multiplier, C)
-        self.pre0 = ReLUConvBN(C_prev, C, 1, 0)
-        self.pre1 = ReLUConvBN(C_prev, C, 1, 0)
+        self.pre0 = ReLUConvBN(C_prev, C, 1, 1, 0)
+        self.pre1 = ReLUConvBN(C_prev, C, 1, 1, 0)
 
     def forward(self, cells):
         assert len(cells) == 2
@@ -269,36 +280,76 @@ class CellPostprocessor(nn.Module):
         return [previous_cells[-1], this_cell]
 
 
-def get_cell_builder(op_candidates: List[str], C_in: int, C: int,
-                     num_nodes: int, merge_op: Literal['all', 'loose_end'],
-                     first_cell_reduce: bool):
-    # the cell builder is used in Repeat
-    # it takes an index that is the index in the repeat
-    def cell_builder(repeat_idx: int):
+class CellBuilder:
+    """The cell builder is used in Repeat.
+    Builds an cell each time it's "called".
+    Note that the builder is ephemeral, it can only be called once for every index.
+    """
+
+    def __init__(self, op_candidates: List[str], C_in: int, C: int,
+                 num_nodes: int, merge_op: Literal['all', 'loose_end'],
+                 first_cell_reduce: bool):
+        self.op_candidates = op_candidates
+        self.C_in = C_in
+        self.C = C
+        self.num_nodes = num_nodes
+        self.merge_op = merge_op
+        self.first_cell_reduce = first_cell_reduce
+        self._expect_idx = 0
+
+    def __call__(self, repeat_idx: int):
+        if self._expect_idx != repeat_idx:
+            raise ValueError(f'Expect index {self._expect_idx}, found {repeat_idx}')
+
+        # it takes an index that is the index in the repeat
         # number of predecessors for each cell is fixed to 2.
         num_predecessors = 2
         # number of ops per node is fixed to 2.
         num_ops_per_node = 2
 
         # reduction cell means stride = 2 and channel multiplied by 2.
-        if repeat_idx == 0 and first_cell_reduce:
+        if repeat_idx == 0 and self.first_cell_reduce:
             cell_type = 'reduce'
-            preprocessor = CellPreprocessor(C_in, C)
+            preprocessor = CellPreprocessor(self.C_in, self.C)
         else:
             cell_type = 'normal'
-            preprocessor = CellPreprocessor(C, C)
+            preprocessor = CellPreprocessor(self.C_in, self.C)
 
         ops_factory = [
             lambda node_index, op_index, input_index:
-            OPS[op](C, 2 if cell_type == 'reduce' and input_index < num_predecessors else 1, True)
-            for op in op_candidates
+            OPS[op](self.C, 2 if cell_type == 'reduce' and (
+                input_index is None or input_index < num_predecessors  # could be none when constructing search sapce
+            ) else 1, True)
+            for op in self.op_candidates
         ]
 
-        return nn.Cell(ops_factory, num_nodes, num_ops_per_node, num_predecessors, merge_op,
-                       preprocesser=preprocessor, postprocessor=CellPostprocessor(),
+        cell = nn.Cell(ops_factory, self.num_nodes, num_ops_per_node, num_predecessors, self.merge_op,
+                       preprocessor=preprocessor, postprocessor=CellPostprocessor(),
                        label=cell_type)
 
-    return cell_builder
+        # update state
+        self.C_in = self.C * len(cell.output_node_indices)
+        self._expect_idx += 1
+
+        return cell
+
+
+_INIT_PARAMETER_DOCS = """
+
+    Parameters
+    ----------
+    width : int or tuple of int
+        A fixed initial width or a tuple of widths to choose from.
+    num_cells : int or tuple of int
+        A fixed number of cells (depths) to stack, or a tuple of depths to choose from.
+    dataset : "cifar" | "imagenet"
+        The essential differences are in "stem" cells, i.e., how they process the raw image input.
+        Choosing "imagenet" means more downsampling at the beginning of the network.
+    auxiliary_loss : bool
+        If true, another auxiliary classification head will produce the another prediction.
+        This makes the output of network two logits in the training phase.
+
+"""
 
 
 class NDS(nn.Module):
@@ -312,6 +363,13 @@ class NDS(nn.Module):
 
     [nds] has a speciality that it has mutable depths/widths.
     This is implemented by accepting a list of int as ``num_cells`` / ``width``.
+    """ + _INIT_PARAMETER_DOCS + """
+    op_candidates : list of str
+        List of operator candidates. Must be from ``OPS``.
+    merge_op : ``all`` or ``loose_end``
+        See :class:`~nni.retiarii.nn.pytorch.Cell`.
+    num_nodes_per_cell : int
+        See :class:`~nni.retiarii.nn.pytorch.Cell`.
 
     References
     ----------
@@ -327,6 +385,7 @@ class NDS(nn.Module):
                  num_cells: Union[Tuple[int], int] = 20,
                  dataset: Literal['cifar', 'imagenet'] = 'imagenet',
                  auxiliary_loss: bool = False):
+        super().__init__()
 
         self.dataset = dataset
         self.num_labels = 10 if dataset == 'cifar' else 1000
@@ -372,14 +431,16 @@ class NDS(nn.Module):
             # C_in is only used in the first cell.
             # C_curr is number of channels for each operator in current stage.
             # C_out is usually `C * num_nodes_per_cell` because of concat operator.
-            cell_builder = get_cell_builder(op_candidates, C_prev, C_curr, num_nodes_per_cell, merge_op,
-                                            stage_idx > 0)
+            cell_builder = CellBuilder(op_candidates, C_prev, C_curr, num_nodes_per_cell, merge_op, stage_idx > 0)
             stage = nn.Repeat(cell_builder, num_cells_per_stage[stage_idx])
             self.stages.append(stage)
-            C_prev = C_prev, num_nodes_per_cell * C_curr
+
+            # this is originally,
+            # C_prev = num_nodes_per_cell * C_curr
+            # but due to loose end, it becomes
+            C_prev = len(stage[-1].output_node_indices) * C_curr
             if stage_idx == 2:
                 C_to_auxiliary = C_prev
-            self.stages.append(stage)
 
         if auxiliary_loss:
             assert isinstance(self.stages[2], nn.Sequential), 'Auxiliary loss can only be enabled in retrain mode.'
@@ -398,13 +459,13 @@ class NDS(nn.Module):
 
         for stage_idx, stage in enumerate(self.stages):
             if stage_idx == 2 and self.auxiliary_loss:
-                s = list(stage((s0, s1)).values())
+                s = list(stage([s0, s1]).values())
                 s0, s1 = s[-1]
                 if self.training:
                     # auxiliary loss is attached to the first cell of the last stage.
                     logits_aux = self.auxiliary_head(s[0][1])
             else:
-                s0, s1 = stage((s0, s1))
+                s0, s1 = stage([s0, s1])
 
         out = self.global_pooling(s1)
         logits = self.classifier(out.view(out.size(0), -1))
@@ -425,24 +486,6 @@ class NDS(nn.Module):
         for module in self.modules():
             if isinstance(module, DropPath_):
                 module.drop_prob = drop_prob
-
-
-_INIT_PARAMETER_DOCS = """
-
-    Parameters
-    ----------
-    width : int or tuple of int
-        A fixed initial width or a tuple of widths to choose from.
-    num_cells : int or tuple of int
-        A fixed number of cells (depths) to stack, or a tuple of depths to choose from.
-    dataset : "cifar" | "imagenet"
-        The essential differences are in "stem" cells, i.e., how they process the raw image input.
-        Choosing "imagenet" means more downsampling at the beginning of the network.
-    auxiliary_loss : bool
-        If true, another auxiliary classification head will produce the another prediction.
-        This makes the output of network two logits in the training phase.
-
-"""
 
 
 @model_wrapper

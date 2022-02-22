@@ -76,6 +76,10 @@ class Repeat(Mutable):
             blocks = [b(i) for i, b in enumerate(blocks)]
         return blocks
 
+    def __getitem__(self, index):
+        # shortcut for blocks[index]
+        return self.blocks[index]
+
 
 class NasBench201Cell(nn.Module):
     """

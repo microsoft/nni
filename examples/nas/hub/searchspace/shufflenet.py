@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
@@ -68,7 +71,9 @@ class ShuffleNetBlock(nn.Module):
                 c = self.mid_channels
             if token == "d":
                 # depth-wise conv
-                assert pc == c, "Depth-wise conv must not change channels."
+                if isinstance(pc, int) and isinstance(c, int):
+                    # check can only be done for static channels
+                    assert pc == c, "Depth-wise conv must not change channels."
                 result.append(nn.Conv2d(pc, c, self.kernel_size, self.stride if first_depth else 1, self.pad,
                                         groups=c, bias=False))
                 result.append(nn.BatchNorm2d(c, affine=self.affine))

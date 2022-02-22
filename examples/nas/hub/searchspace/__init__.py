@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from .mobilenetv3 import MobileNetV3
 from .nasbench101 import NasBench101
 from .nasbench201 import NasBench201

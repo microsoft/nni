@@ -8,7 +8,7 @@ import searchspace
 import nni.retiarii.evaluator.pytorch.lightning as pl
 from nni.retiarii.utils import ContextStack
 from nni.retiarii.execution.utils import _unpack_if_only_one
-from nni.retiarii.mutator import Sampler
+from nni.retiarii.mutator import InvalidMutation, Sampler
 from nni.retiarii.nn.pytorch.mutator import extract_mutation_from_pt_module
 
 
@@ -21,10 +21,21 @@ class RandomSampler(Sampler):
         return random.choice(candidates)
 
 
+def try_mutation_until_success(base_model, mutators, retry):
+    if not retry:
+        raise ValueError('Retry exhausted.')
+    try:
+        model = base_model
+        for mutator in mutators:
+            model = mutator.bind_sampler(RandomSampler()).apply(model)
+        return model
+    except InvalidMutation:
+        return try_mutation_until_success(base_model, mutators, retry - 1)
+
+
 def _test_searchspace_on_cifar10(searchspace):
     model, mutators = extract_mutation_from_pt_module(searchspace)
-    for mutator in mutators:
-        model = mutator.bind_sampler(RandomSampler()).apply(model)
+    model = try_mutation_until_success(model, mutators, 10)
 
     mutation = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
     with ContextStack('fixed', mutation):
@@ -53,6 +64,7 @@ def _test_searchspace_on_cifar10(searchspace):
     evaluator = pl.Classification(
         train_dataloader=train_dataloader,
         val_dataloaders=valid_dataloader,
+        export_onnx=False,
         max_epochs=1,
         limit_train_batches=0.1
     )
@@ -60,4 +72,5 @@ def _test_searchspace_on_cifar10(searchspace):
 
 
 if __name__ == '__main__':
-    _test_searchspace_on_cifar10(searchspace.ShuffleNetSpace(num_labels=10, channel_search=True))
+    ss = searchspace.DARTS(width=16, num_cells=4)
+    _test_searchspace_on_cifar10(ss)
