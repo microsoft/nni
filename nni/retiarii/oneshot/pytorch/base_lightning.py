@@ -50,15 +50,13 @@ def _replace_module_with_type(root_module: nn.Module, replace_dict: ReplaceDictT
 
 class BaseOneShotLightningModule(pl.LightningModule):
 
-    _custom_replace_dict_note = """
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
+    _custom_replace_dict_note = """custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
         The custom xxxChoice replace method. Keys should be ``xxxChoice`` type.
         Values should callable accepting an ``nn.Module`` and returning an ``nn.module``.
         This custom replace dict will override the default replace dict of each NAS method.
     """
 
-    _base_model_note = """
-    base_model : pl.LightningModule
+    _base_model_note = """base_model : pl.LightningModule
         The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
         be wrapped by this model.
     """
@@ -98,16 +96,18 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        # You can use self.architecture_optimizers or self.user_optimizers to get optimizers in
-        # your own training step.
+        """This is the implementation of what happens in training loops of one-shot algos.
+        It usually calls ``self.model.training_step`` which implements the real training recipe of the users' model.
+        """
         return self.model.training_step(batch, batch_idx)
 
     def configure_optimizers(self):
         """
         Combine architecture optimizers and user's model optimizers.
         You can overwrite configure_architecture_optimizers if architecture optimizers are needed in your NAS algorithm.
-        By now ``self.model`` is currently a :class:`nni.retiarii.evaluator.pytorch.lightning._SupervisedLearningModule`
-        and it only returns 1 optimizer. But for extendibility, codes for other return value types are also implemented.
+        For now ``self.model`` is tested against :class:`nni.retiarii.evaluator.pytorch.lightning._SupervisedLearningModule`
+        and it only returns 1 optimizer.
+        But for extendibility, codes for other return value types are also implemented.
         """
         # pylint: disable=assignment-from-none
         arc_optimizers = self.configure_architecture_optimizers()
@@ -191,8 +191,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
     @property
     def default_replace_dict(self):
         """
-        Default xxxChoice replace dict. This is called in ``__init__`` to get the default replace functions for your NAS algorithm.
-        Note that your default replace functions may be overridden by user-defined custom_replace_dict.
+        Default ``xxxChoice`` replace dict. This is called in ``__init__`` to get the default replace functions for your NAS algorithm.
+        Note that your default replace functions may be overridden by user-defined ``custom_replace_dict``.
 
         Returns
         ----------

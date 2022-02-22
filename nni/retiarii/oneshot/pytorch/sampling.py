@@ -17,7 +17,7 @@ from .enas import ReinforceController, ReinforceField
 
 class EnasModule(BaseOneShotLightningModule):
     _enas_note = """
-    The implementation of ENAS [enas]_. There are 2 steps in an epoch.
+    The implementation of ENAS :cite:p:`pham2018efficient`. There are 2 steps in an epoch.
     Firstly, training model parameters.
     Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
 
@@ -39,12 +39,6 @@ class EnasModule(BaseOneShotLightningModule):
         Number of steps that will be aggregated into one mini-batch for RL controller.
     ctrl_grad_clip : float
         Gradient clipping value of controller.
-
-    References
-    ----------
-    .. [enas] H. Pham, M. Guan, B. Zoph, Q. Le, and J. Dean, “Efficient Neural Architecture Search via Parameters Sharing,”
-        in Proceedings of the 35th International Conference on Machine Learning, Jul. 2018, pp. 4095-4104.
-        Available: https://proceedings.mlr.press/v80/pham18a.html
     """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
 
     __doc__ = _enas_note.format(

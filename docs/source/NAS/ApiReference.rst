@@ -105,4 +105,7 @@ Utilities
 
 ..  autofunction:: nni.retiarii.fixed_arch
 
+Citations
+---------
 
+.. bibliography::

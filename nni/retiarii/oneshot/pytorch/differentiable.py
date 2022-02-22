@@ -66,7 +66,7 @@ class DartsInputChoice(nn.Module):
 
 class DartsModule(BaseOneShotLightningModule):
     _darts_note = """
-    DARTS [darts]_ algorithm is one of the most fundamental one-shot algorithm.
+    DARTS :cite:p:`liu2018darts` algorithm is one of the most fundamental one-shot algorithm.
 
     DARTS repeats iterations, where each iteration consists of 2 training phases.
     The phase 1 is architecture step, in which model parameters are frozen and the architecture parameters are trained.
@@ -82,11 +82,6 @@ class DartsModule(BaseOneShotLightningModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-
-    References
-    ----------
-    .. [darts] H. Liu, K. Simonyan, and Y. Yang, “DARTS: Differentiable Architecture Search,” presented at the
-        International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=S1eYHoC5FX
     """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
 
     __doc__ = _darts_note.format(
@@ -305,7 +300,7 @@ class ProxylessInputChoice(nn.Module):
 
 class ProxylessModule(DartsModule):
     _proxyless_note = """
-    Implementation of ProxylessNAS [proxyless]_.
+    Implementation of ProxylessNAS :cite:p:`cai2018proxylessnas`.
     It's a DARTS-based method that resamples the architecture to reduce memory consumption.
     Essentially, it samples one path on forward,
     and implements its own backward to update the architecture parameters based on only one path.
@@ -318,11 +313,6 @@ class ProxylessModule(DartsModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-
-    References
-    ----------
-    .. [proxyless] H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware,” presented
-        at the International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
     """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
 
     __doc__ = _proxyless_note.format(
@@ -366,7 +356,7 @@ class SNASInputChoice(DartsInputChoice):
 
 class SnasModule(DartsModule):
     _snas_note = """
-    Implementation of SNAS [snas]_.
+    Implementation of SNAS :cite:p:`xie2018snas`.
     It's a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
     Essentially, it samples one path on forward,
     and implements its own backward to update the architecture parameters based on only one path.
@@ -385,11 +375,6 @@ class SnasModule(DartsModule):
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-
-    References
-    ----------
-    .. [snas] S. Xie, H. Zheng, C. Liu, and L. Lin, “SNAS: stochastic neural architecture search,” presented at the
-        International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=rylqooRqK7
     """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
 
     __doc__ = _snas_note.format(

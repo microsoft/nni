@@ -29,7 +29,7 @@ class OneShotStrategy(BaseStrategy):
 
         self.model: Optional[BaseOneShotLightningModule] = None
 
-    def get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader) -> Union[DataLoader, Tuple[DataLoader, DataLoader]]:
+    def _get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader) -> Union[DataLoader, Tuple[DataLoader, DataLoader]]:
         """
         One-shot strategy typically requires a customized dataloader.
 
@@ -59,7 +59,7 @@ class OneShotStrategy(BaseStrategy):
 
         self.model: BaseOneShotLightningModule = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
         evaluator: Lightning = base_model.evaluator
-        dataloader = self.get_dataloader(evaluator.train_dataloader, evaluator.val_dataloaders)
+        dataloader = self._get_dataloader(evaluator.train_dataloader, evaluator.val_dataloaders)
         if isinstance(dataloader, tuple):
             dataloader, val_loader = dataloader
             evaluator.trainer.fit(self.model, dataloader, val_loader)
@@ -80,7 +80,7 @@ class DARTS(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(DartsModule, **kwargs)
 
-    def get_dataloader(self, train_dataloader, val_dataloaders):
+    def _get_dataloader(self, train_dataloader, val_dataloaders):
         return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
 
 
@@ -90,7 +90,7 @@ class Proxyless(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(EnasModule, **kwargs)
 
-    def get_dataloader(self, train_dataloader, val_dataloaders):
+    def _get_dataloader(self, train_dataloader, val_dataloaders):
         return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
 
 
@@ -100,7 +100,7 @@ class SNAS(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(SnasModule, **kwargs)
 
-    def get_dataloader(self, train_dataloader, val_dataloaders):
+    def _get_dataloader(self, train_dataloader, val_dataloaders):
         return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
 
 
@@ -110,7 +110,7 @@ class ENAS(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(EnasModule, **kwargs)
 
-    def get_dataloader(self, train_dataloader, val_dataloaders):
+    def _get_dataloader(self, train_dataloader, val_dataloaders):
         return ConcatenateTrainValDataLoader(train_dataloader, val_dataloaders)
 
 
@@ -120,5 +120,5 @@ class RandomOneShot(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(RandomSamplingModule, **kwargs)
 
-    def get_dataloader(self, train_dataloader, val_dataloaders):
+    def _get_dataloader(self, train_dataloader, val_dataloaders):
         return train_dataloader, val_dataloaders
