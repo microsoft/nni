@@ -1,19 +1,18 @@
-=====
 WebUI
-=====
+#####
 
-***
+
 Q&A
 ***
 
 There are many trials in the detail table but ``Default Metric`` graph is empty.
-********************************************************************************
+================================================================================
 
 First you should know that ``Default metric`` and ``Hyper parameter`` graph only show succeeded trials.
 
 
 What should you do when you think the graph is strange, such as ``Default metric``, ``Hyper parameter``...
-**********************************************************************************************************
+==========================================================================================================
 
 * Download the experiment results(``experiment config``, ``trial message`` and ``intermeidate metrics``) from ``Experiment summary`` and then upload these results in your issue.
 
@@ -24,7 +23,7 @@ What should you do when you think the graph is strange, such as ``Default metric
 
 
 What should you do when your experiment is error
-************************************************
+================================================
 
 
 * Click the icon in the right of ``experiment status`` and screenshot the error message. 
@@ -38,7 +37,7 @@ What should you do when your experiment is error
 
 
 What should you do when your trial is failed
-********************************************
+============================================
 
 * ``Customized trial`` could be used in here. Just submit the same parameters to the experiment to rerun the trial.
 
@@ -65,7 +64,7 @@ What should you do when your trial is failed
 
 
 
-  **OpenPAI, Kubeflow and other mode:**
+**OpenPAI, Kubeflow and other mode:**
 
 .. image:: ../../img/webui-img/detail-pai.png
    :target: ../../img/webui-img/detail-pai.png
@@ -75,13 +74,12 @@ What should you do when your trial is failed
 
 
 How to use dict intermediate result
-***********************************
+===================================
 
 `The discussion <https://github.com/microsoft/nni/discussions/4289>`_ could help you.
 
 
 
-**********************
 Experiments management
 **********************
 
@@ -117,7 +115,6 @@ Experiments management page could manage many experiments on your machine.
    :alt: filter button
 
 
-*****************
 View summary page
 *****************
 
@@ -224,7 +221,7 @@ Click the tab ``Hyper-parameter`` to see the parallel graph.
 
 
 View Trial Duration
--------------------
+===================
 
 Click the tab ``Trial Duration`` to see the bar graph.
 
@@ -275,7 +272,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 * Support searching for a specific trial by its id, status, Trial No. and trial parameters.
 
-  **Trial id: **
+**Trial id:**
  
 
 
@@ -284,7 +281,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
    :alt: searchTrialId
 
 
-  **Trial No.: **
+**Trial No.:**
 
 
 
@@ -293,7 +290,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
    :alt: searchTrialNo.
 
 
-  **Trial status:**
+**Trial status:**
 
 
 
@@ -303,7 +300,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-  **Trial parameters:**
+**Trial parameters:**
 
   ``parameters whose type is choice:``
   
@@ -314,7 +311,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-  ``parameters whose type is not choice:``
+``parameters whose type is not choice:``
   
 
 .. image:: ../../img/webui-img/detail/searchParameterRange.png
