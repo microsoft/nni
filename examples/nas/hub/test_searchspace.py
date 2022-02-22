@@ -72,5 +72,5 @@ def _test_searchspace_on_cifar10(searchspace):
 
 
 if __name__ == '__main__':
-    ss = searchspace.DARTS(width=16, num_cells=4)
+    ss = searchspace.NASNet(width=8, num_cells=12)
     _test_searchspace_on_cifar10(ss)

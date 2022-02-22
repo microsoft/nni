@@ -229,38 +229,31 @@ class CellPreprocessor(nn.Module):
     Aligning the shape of predecessors.
 
     If the last cell is a reduction cell, ``pre0`` should be ``FactorizedReduce`` instead of ``ReLUConvBN``.
-    But in initialization, we can only know whether this cell is a reduction cell. We cannot know whether last cell is one.
+    But in initialization, we can only know whether this cell is a reduction cell. We are not sure about last cell.
 
-    Thus, we can only determine ``C_prev``, i.e., out channels of the last cell:
-    (a) For the first cell in the stage, ``C_prev`` is the out channels from the last stage.
-    (b) For other cases, ``C_prev`` is the out channels of this stage.
+    Thus, ``C_pprev`` takes a tuple of two integers.
+    The first one is ``C_pprev`` when previous cell is reduction cell.
+    The second one is ``C_pprev`` when previous cell is normal cell.
+    At runtime, we check the shape of predecessors, to determine whether the pervious cell was a reduction cell or not,
+    and we choose the correct branch correspondingly.
 
-    We have to check whether last cell is a reduction cell in the forward.
-    There are two cases where the last cell could be a reduction cell:
-    (i) This cell is a normal cell, belonging to the same stage as last cell.
-    (ii) This cell is also a reduction cell, and the last cell belongs to the last stage.
-    Although the two cases after different ``C_prev``, ``C_pprev`` should also be equal to ``C_prev // C_multiplier``.
-    Even if the last stage has only one cell, or the exact width of last stage is uncertain, this should be always equal.
-
-    This preprocessor assumes ``num_preprocessor == 2``.
-    ``C_multiplier`` is needed, which is by default 2.
+    See ``CellBuilder`` on how to calculate those channel numbers.
     """
 
-    def __init__(self, C_prev: int, C: int, C_multiplier: int = 2):
+    def __init__(self, C_pprev: Tuple[int, int], C_prev: int, C: int) -> None:
         super().__init__()
 
-        # When this reduce is activated, the last cell must be a reduction cell.
-        # Therefore, pprev either belongs to the last stage, or the stage before last stage (if last stage only has a reduction cell).
+        pprev_if_reduce, pprev_if_normal = C_pprev
 
-        self.C_multiplier = C_multiplier  # this mustn't be a value choice. I need ``==`` on this.
-        self.pre0_reduce = FactorizedReduce(C_prev // C_multiplier, C)
-        self.pre0 = ReLUConvBN(C_prev, C, 1, 1, 0)
+        # When this reduce is activated, the last cell must be a reduction cell.
+        self.pre0_reduce = FactorizedReduce(pprev_if_reduce, C)
+        self.pre0 = ReLUConvBN(pprev_if_normal, C, 1, 1, 0)
         self.pre1 = ReLUConvBN(C_prev, C, 1, 1, 0)
 
     def forward(self, cells):
         assert len(cells) == 2
         pprev, prev = cells
-        if pprev.size(2) == prev.size(2):
+        if pprev.size(2) != prev.size(2):
             # Resolution are different. It means the last cell is a reduction cell.
             # Need a factorize reduce for pprev.
             pprev = self.pre0_reduce(pprev)
@@ -268,7 +261,7 @@ class CellPreprocessor(nn.Module):
             pprev = self.pre0(pprev)
         prev = self.pre1(prev)
 
-        return pprev, prev
+        return [pprev, prev]
 
 
 class CellPostprocessor(nn.Module):
@@ -286,12 +279,13 @@ class CellBuilder:
     Note that the builder is ephemeral, it can only be called once for every index.
     """
 
-    def __init__(self, op_candidates: List[str], C_in: int, C: int,
+    def __init__(self, op_candidates: List[str], C_prev_in: int, C_in: int, C: int,
                  num_nodes: int, merge_op: Literal['all', 'loose_end'],
                  first_cell_reduce: bool):
+        self.C_prev_in = C_prev_in      # this should be the C_in of last stage.
+        self.C_in = C_in                # this should be the C_out of last stage.
+        self.C = C                      # this is NOT C_out of this stage, C_out = C * len(cell.output_node_indices)
         self.op_candidates = op_candidates
-        self.C_in = C_in
-        self.C = C
         self.num_nodes = num_nodes
         self.merge_op = merge_op
         self.first_cell_reduce = first_cell_reduce
@@ -301,23 +295,29 @@ class CellBuilder:
         if self._expect_idx != repeat_idx:
             raise ValueError(f'Expect index {self._expect_idx}, found {repeat_idx}')
 
-        # it takes an index that is the index in the repeat
-        # number of predecessors for each cell is fixed to 2.
+        # It takes an index that is the index in the repeat.
+        # Number of predecessors for each cell is fixed to 2.
         num_predecessors = 2
-        # number of ops per node is fixed to 2.
+        # Number of ops per node is fixed to 2.
         num_ops_per_node = 2
 
-        # reduction cell means stride = 2 and channel multiplied by 2.
-        if repeat_idx == 0 and self.first_cell_reduce:
-            cell_type = 'reduce'
-            preprocessor = CellPreprocessor(self.C_in, self.C)
+        # Reduction cell means stride = 2 and channel multiplied by 2.
+        is_reduction_cell = repeat_idx == 0 and self.first_cell_reduce
+
+        if repeat_idx == 0:
+            # The previous cell must be C_in, which is the output channels of last stage.
+            # The last cell must belong to last stage.
+            # If it's reduction cell, then it's the first cell in that stage. pprev = C_prev_in.
+            # Otherwise, pprev = C_in.
+            preprocessor = CellPreprocessor((self.C_prev_in, self.C_in), self.C_in, self.C)
         else:
-            cell_type = 'normal'
-            preprocessor = CellPreprocessor(self.C_in, self.C)
+            # The last cell belong to this stage.
+            # In either case, we use ``self.C_prev_in``, which is the calculated C_pprev.
+            preprocessor = CellPreprocessor((self.C_prev_in, self.C_prev_in), self.C_in, self.C)
 
         ops_factory = [
             lambda node_index, op_index, input_index:
-            OPS[op](self.C, 2 if cell_type == 'reduce' and (
+            OPS[op](self.C, 2 if is_reduction_cell and (
                 input_index is None or input_index < num_predecessors  # could be none when constructing search sapce
             ) else 1, True)
             for op in self.op_candidates
@@ -325,9 +325,10 @@ class CellBuilder:
 
         cell = nn.Cell(ops_factory, self.num_nodes, num_ops_per_node, num_predecessors, self.merge_op,
                        preprocessor=preprocessor, postprocessor=CellPostprocessor(),
-                       label=cell_type)
+                       label='reduce' if is_reduction_cell else 'normal')
 
         # update state
+        self.C_prev_in = self.C_in
         self.C_in = self.C * len(cell.output_node_indices)
         self._expect_idx += 1
 
@@ -415,25 +416,30 @@ class NDS(nn.Module):
                 nn.Conv2d(C, C, 3, stride=2, padding=1, bias=False),
                 nn.BatchNorm2d(C),
             )
-            C_prev, C_curr = C, C
+            C_pprev = C_prev = C_curr = C
         elif dataset == 'cifar':
             self.stem = nn.Sequential(
                 nn.Conv2d(3, 3 * C, 3, padding=1, bias=False),
                 nn.BatchNorm2d(3 * C)
             )
-            C_prev, C_curr = 3 * C, C
+            C_pprev = C_prev = 3 * C
+            C_curr = C
 
         self.stages = nn.ModuleList()
         for stage_idx in range(3):
             if stage_idx > 0:
                 C_curr *= 2
-            # for a stage, we get C_in, C_curr, and C_out.
+            # For a stage, we get C_in, C_curr, and C_out.
             # C_in is only used in the first cell.
             # C_curr is number of channels for each operator in current stage.
             # C_out is usually `C * num_nodes_per_cell` because of concat operator.
-            cell_builder = CellBuilder(op_candidates, C_prev, C_curr, num_nodes_per_cell, merge_op, stage_idx > 0)
+            cell_builder = CellBuilder(op_candidates, C_pprev, C_prev, C_curr, num_nodes_per_cell, merge_op, stage_idx > 0)
             stage = nn.Repeat(cell_builder, num_cells_per_stage[stage_idx])
             self.stages.append(stage)
+
+            # C_pprev is the C_in of last stage.
+            # This is useful to handle special cases for reduction cell.            
+            C_pprev = C_prev
 
             # this is originally,
             # C_prev = num_nodes_per_cell * C_curr
