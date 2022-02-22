@@ -83,19 +83,6 @@ sphinx_gallery_conf = {
     'default_thumb_file': os.path.join(os.path.dirname(__file__), '../img/thumbnails/nni_icon_blue.png'),
 }
 
-# The sphinx-gallery configuration has referenced pytorch-tutorials
-# https://github.com/pytorch/tutorials/blob/master/conf.py
-
-if os.getenv('GALLERY_PATTERN'):
-    # GALLERY_PATTERN is to be used when you want to work on a single
-    # tutorial.  Previously this was fed into filename_pattern, but
-    # if you do that, you still end up parsing all of the other Python
-    # files which takes a few seconds.  This strategy is better, as
-    # ignore_pattern also skips parsing.
-    # See https://github.com/sphinx-gallery/sphinx-gallery/issues/721
-    # for a more detailed description of the issue.
-    sphinx_gallery_conf['ignore_pattern'] = r'/(?!' + re.escape(os.getenv('GALLERY_PATTERN')) + r')[^/]+$'
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['../templates']
 

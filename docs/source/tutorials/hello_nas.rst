@@ -255,6 +255,8 @@ Simply choosing (i.e., instantiate) an exploration strategy as below.
 
  .. code-block:: none
 
+    [2022-02-22 18:55:27] INFO (hyperopt.utils/MainThread) Failed to load dill, try installing dill via "pip install dill" for enhanced pickling support.
+    [2022-02-22 18:55:27] INFO (hyperopt.fmin/MainThread) Failed to load dill, try installing dill via "pip install dill" for enhanced pickling support.
     /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/ray/autoscaler/_private/cli_logger.py:57: FutureWarning: Not all Ray CLI dependencies were found. In Ray 1.4+, the Ray CLI, autoscaler, and dashboard will only be usable via `pip install 'ray[default]'`. Please update your install command.
       warnings.warn(
 
@@ -454,6 +456,27 @@ Launch the experiment. The experiment should take several minutes to finish on a
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    [2022-02-22 18:55:28] INFO (nni.experiment/MainThread) Creating experiment, Experiment ID: 68a4xl2o
+    [2022-02-22 18:55:28] INFO (nni.experiment/MainThread) Connecting IPC pipe...
+    [2022-02-22 18:55:28] INFO (nni.experiment/MainThread) Starting web server...
+    [2022-02-22 18:55:29] INFO (nni.experiment/MainThread) Setting up...
+    [2022-02-22 18:55:30] INFO (nni.runtime.msg_dispatcher_base/Thread-3) Dispatcher started
+    [2022-02-22 18:55:30] INFO (nni.retiarii.experiment.pytorch/MainThread) Web UI URLs: http://127.0.0.1:8081 http://10.190.172.35:8081 http://192.168.49.1:8081 http://172.17.0.1:8081
+    [2022-02-22 18:55:30] INFO (nni.retiarii.experiment.pytorch/MainThread) Start strategy...
+    [2022-02-22 18:55:30] INFO (root/MainThread) Successfully update searchSpace.
+    [2022-02-22 18:55:30] INFO (nni.retiarii.strategy.bruteforce/MainThread) Random search running in fixed size mode. Dedup: on.
+    [2022-02-22 18:57:50] INFO (nni.retiarii.experiment.pytorch/Thread-4) Stopping experiment, please wait...
+    [2022-02-22 18:57:50] INFO (nni.retiarii.experiment.pytorch/MainThread) Strategy exit
+    [2022-02-22 18:57:50] INFO (nni.retiarii.experiment.pytorch/MainThread) Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...
+    [2022-02-22 18:57:51] INFO (nni.runtime.msg_dispatcher_base/Thread-3) Dispatcher exiting...
+    [2022-02-22 18:57:51] INFO (nni.retiarii.experiment.pytorch/Thread-4) Experiment stopped
+
 
 
 
@@ -547,7 +570,7 @@ Users can export top models after the exploration is done using ``export_top_mod
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  24.664 seconds)
+   **Total running time of the script:** ( 2 minutes  24.722 seconds)
 
 
 .. _sphx_glr_download_tutorials_hello_nas.py:
