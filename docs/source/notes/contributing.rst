@@ -74,7 +74,7 @@ The NNI repository is large code-base. High-level speaking, it can be decomposed
 
 See :doc:`./architecture_overview` if you are interested in details.
 
-.. _get-started
+.. _get-started:
 
 Get started with development
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
