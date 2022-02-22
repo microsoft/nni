@@ -79,73 +79,46 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
 
         weight = self.weight
 
-        # Note that ``self.xxx_mask`` and ``self.t_xxx`` have different lengths. There alignment is shown below:
-        # self.xxx_candidates = [  k0   ,   k1   , ... ,  k_n-2  ,   k_n-1 ] # ascending order
-        # self.xxx_mask       = [mask_0 , mask_1 , ... , mask_n-2, mask_n-1] # mask_n-1 is a matrix of ones
-        # self.t_xxx          =     1    [ t_1   , ... ,  t_n-2  ,   t_n-1 ]
-        # So we multiply weight with ``self.mask[0]`` at the very beginning, and zip the rest part.
         
-        if self.kernel_size_candidates is not None:
-            weight = weight * self.kernel_masks[0]
+        def Lasso_sigmoid(matrix, t):
+            """
+            A trick that can make use of both the value of sign(lasso) and the gradient of sigmoid(lasso)
+
+            Parameters
+            ----------
+            matrix : Tensor
+                the matrix to calculate lasso norm
+            t : float
+                the threshold
+            """
+            lasso = torch.norm(matrix) - t
+            indicator = torch.sign(lasso)
+            with torch.no_grad():
+                indicator -= F.sigmoid(lasso) 
+            indicator += F.sigmoid(lasso)
+            return indicator
+
+        def apply_Lasso(input_weight, masks, thresholds, indicator):
+            # Note that ``self.xxx_mask`` and ``self.t_xxx`` have different lengths. There alignment is shown below:
+            # self.xxx_candidates = [   k0   ,   k1   , ... ,  k_n-2  ,   k_n-1 ] # ascending order
+            # self.xxx_mask       = [ mask_0 , mask_1 , ... , mask_n-2, mask_n-1]
+            # self.t_xxx          =     (1)  [   t_1  , ... ,  t_n-2  ,   t_n-1 ]
+            # So we multiply weight with ``self.mask[0]`` at the very beginning, and zip the rest part.
+            weight = input_weight * masks[0]
             # Note that we need the smaller_shape, or the shape in the previous iteration here, so we use candidates[:-1] rather
             # than candidates[1:]
-            for mask, t, smaller_shape in zip(self.kernel_masks[1:], self.t_kernel, self.kernel_size_candidates[:-1]):
-                bigger_weight = self.weight * mask
-                # although the ``bigger_weight`` is of the same shape as ``processed_weight``, the outer line of it is zero-outed
-                alpha = self.sigmoid_Lasso_kernel(bigger_weight, t, smaller_shape)
-                weight *= 1 - alpha
-                weight += alpha * bigger_weight
+            for mask, t in zip(masks[0:], thresholds):
+                cur_part = input_weight * mask
+                weight += indicator(cur_part, t) * cur_part
 
-        # same as kernel_size candidates except Lasso function
+        if self.kernel_size_candidates is not None:
+            weight = apply_Lasso(weight, self.kernel_masks, Lasso_sigmoid)
+        
         if self.out_channel_candidates is not None:
-            processed_weight = weight
-            weight = processed_weight * self.channel_masks[0]
-            for mask, t, smaller_shape in zip(self.channel_masks[1:], self.t_expansion, self.out_channel_candidates[:-1]):
-                bigger_weight = processed_weight * mask
-                alpha = self.sigmoid_Lasso_channel(bigger_weight, t, smaller_shape)
-                weight *= 1 - alpha
-                weight += alpha * bigger_weight
+            weight = apply_Lasso(weight, self.channel_masks, Lasso_sigmoid)
 
         output = self._conv_forward(input ,weight, self.bias)
         return output
-
-    @staticmethod
-    def sigmoid_Lasso_kernel(matrix, t, inner_size):
-        """
-        calculate differentiable sigmoid lasso term for kernel size. see the paper for details.
-        Parameters
-        ----------
-        matrix : Tensor[]
-            the big matrix to calculate lasso norm, no need to zero-out inner weights
-        t : threshold
-            the threshold
-        inner_size : int, tuple
-            the inner kernel size to be gotten rid of, ignore in_channel out_channel
-        """
-        if not isinstance(inner_size, tuple):
-            inner_size = (inner_size, inner_size)
-        left = (matrix.shape[-2] - inner_size[0]) // 2
-        top = (matrix.shape[-1] - inner_size[1]) // 2
-        lasso = torch.norm(matrix) - torch.norm(matrix[:, :, left : left + inner_size[0], top : top + inner_size[1]])
-        sig = F.sigmoid(torch.square(lasso) - t)
-        return sig
-
-    @staticmethod
-    def sigmoid_Lasso_channel(matrix, t, inner_size):
-        """
-        calculate differentiable sigmoid lasso term for expansion ratio. see the paper for details.
-        Parameters
-        ----------
-        matrix : Tensor[]
-            the big matrix to calculate lasso norm, no need to zero-out inner weights
-        t : threshold
-            the threshold
-        inner_size : int
-            the inner out_channel count to be gotten rid of
-        """
-        lasso = torch.norm(matrix) - torch.norm(matrix[:, :inner_size])
-        sig = F.sigmoid(torch.square(lasso) - t)
-        return sig
 
     def parameters(self):
         for _, p in self.named_parameters():
@@ -186,7 +159,6 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
             cur = self.kernel_size_candidates[i]
             assert pre[1] <= cur[1], f'Kernel_size candidates should be larger or smaller than each other on both dimensions, but' \
                 f' found {pre} and {cur}.'
-
         return self.kernel_size_candidates[-1]
 
 
@@ -198,9 +170,22 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
             self.alpha['kernel_size'] = self.t_kernel
             # kernel size mask
             self.kernel_masks = []
-            for kernel_size in self.kernel_size_candidates:
+            mask = torch.zeros_like(self.weight)
+            mask[:, :, :self.kernel_size_candidates[0][0], self.kernel_size_candidates[0][1]]
+            self.kernel_masks.append(mask)
+            for i in range(1, len(self.kernel_size_candidates)):
+                big_size, small_size = self.kernel_size_candidates[i], self.kernel_size_candidates[i - 1]
                 mask = torch.zeros_like(self.weight)
-                mask[:,:,:kernel_size[0], :kernel_size[1]] = 1
+                mask[:, :, :big_size[0], :big_size[1]] = 1
+                mask[:, :, :small_size[0], :small_size[1]] = 0
+                # if self.weight.shape = (out, in, 7, 7), big_size = (5, 5) and small_size = (3, 3), mask will be something like:
+                #   0 0 0 0 0 0 0
+                #   0 1 1 1 1 1 0
+                #   0 1 0 0 0 1 0
+                #   0 1 0 0 0 1 0
+                #   0 1 0 0 0 1 0
+                #   0 1 1 1 1 1 0
+                #   0 0 0 0 0 0 0
                 self.kernel_masks.append(mask)
 
         if self.out_channel_candidates is not None:
@@ -208,7 +193,14 @@ class DifferentiableSuperConv2d(nn.Conv2d, object):
             self.t_expansion = nn.Parameter(torch.randn(len(self.out_channel_candidates) - 1))
             self.alpha['out_channels'] = self.t_expansion
             self.channel_masks = []
-            for out_channel in self.out_channel_candidates:
+            mask = torch.zeros_like(self.weight)
+            mask[:self.out_channel_candidates[0]] = 1
+            self.channel_masks.append(mask)
+            for i in range(1, len(self.out_channel_candidates)):
+                big_channel, small_channel = self.out_channel_candidates[i], self.out_channel_candidates[i - 1]
                 mask = torch.zeros_like(self.weight)
-                mask[:out_channel] = 1
+                mask[:big_channel] = 1
+                mask[:small_channel] = 0
+                # if self.weight.shape = (32, in, W, H), big_channel = 16 and small_size = 8, mask will be something like:
+                # 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
                 self.channel_masks.append(mask)

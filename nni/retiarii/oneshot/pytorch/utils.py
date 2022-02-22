@@ -269,7 +269,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
     Example
     --------
     Fit your dataloaders into a concatenated one.
-    >>> concat_loader = ConcatenateTrainValDataLoader(train_dataloader, val_datalodaer)
+    >>> concat_loader = ConcatenateTrainValDataLoader(train_dataloader, val_dataloader)
     Then you can use the ``concat_loader`` as a normal training loader.
     """
     def __init__(self, train_dataloader, val_dataloader):
