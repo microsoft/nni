@@ -1,3 +1,4 @@
+from locale import currency
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -76,25 +77,6 @@ class DifferentiableSuperConv2d(nn.Conv2d):
         # twice, which is not what we expect.
         weight = self.weight
 
-        def Lasso_sigmoid(matrix, t):
-            """
-            A trick that can make use of both the value of bool(lasso > t) and the gradient of sigmoid(lasso - t)
-
-            Parameters
-            ----------
-            matrix : Tensor
-                the matrix to calculate lasso norm
-            t : float
-                the threshold
-            """
-            lasso = torch.norm(matrix) - t
-            indicator = torch.sign(lasso)
-            with torch.no_grad():
-                indicator = indicator / 2 + .5 # realign indicator from (-1, 1) to (0, 1)
-                indicator -= F.sigmoid(lasso)
-            indicator += F.sigmoid(lasso)
-            return indicator
-
         def sum_weight(input_weight, masks, thresholds, indicator):
             """
             This is to get the weighted sum of weight.
@@ -132,10 +114,10 @@ class DifferentiableSuperConv2d(nn.Conv2d):
             return weight
 
         if self.kernel_size_candidates is not None:
-            weight = sum_weight(weight, self.kernel_masks, self.t_kernel, Lasso_sigmoid)
+            weight = sum_weight(weight, self.kernel_masks, self.t_kernel, self.Lasso_sigmoid)
 
         if self.out_channel_candidates is not None:
-            weight = sum_weight(weight, self.channel_masks, self.t_expansion, Lasso_sigmoid)
+            weight = sum_weight(weight, self.channel_masks, self.t_expansion, self.Lasso_sigmoid)
 
         output = self._conv_forward(input, weight, self.bias)
         return output
@@ -151,10 +133,66 @@ class DifferentiableSuperConv2d(nn.Conv2d):
             yield name, p
 
     def export(self):
+        """
+        result = {
+            'kernel_size': i,
+            'out_channels': j
+        }
+        which means the best candidate for an argument is the i-th one if candidates are sorted in descending order
+        """
         result = {}
-        for k, v in self.alpha.items():
-            result[k] = torch.argsort(v).cpu().numpy().tolist()[0]
+        eps = 1e-5
+        with torch.no_grad():
+            if self.kernel_size_candidates is not None:
+                weight = torch.zeros_like(self.weight)
+                for i in range(len(self.kernel_size_candidates) - 2, -1, 1):
+                    mask = self.kernel_masks[i]
+                    t = self.t_kernel[i]
+                    cur_part = self.weight * mask
+                    alpha = self.Lasso_sigmoid(cur_part, t)
+                    if alpha <= eps:
+                        result['kernel_size'] = i + 1
+                        break
+                    weight = (weight + cur_part) * alpha
+
+                if 'kernel_size' not in result:
+                    result['kernel_size'] = 0
+            else:
+                weight = self.weight
+
+            if self.out_channel_candidates is not None:
+                for i in range(len(self.out_channel_candidates) - 2, -1, 1):
+                    mask = self.channel_masks[i]
+                    t = self.t_expansion[i]
+                    alpha = self.Lasso_sigmoid(weight * mask, t)
+                    if alpha <= eps:
+                        result['out_channels'] = i
+
+                if 'out_channels' not in result:
+                    result['out_channels'] = 0
+
         return result
+
+    @staticmethod
+    def Lasso_sigmoid(matrix, t):
+        """
+        A trick that can make use of both the value of bool(lasso > t) and the gradient of sigmoid(lasso - t)
+
+        Parameters
+        ----------
+        matrix : Tensor
+            the matrix to calculate lasso norm
+        t : float
+            the threshold
+        """
+        lasso = torch.norm(matrix) - t
+        indicator = torch.sign(lasso)
+        with torch.no_grad():
+            indicator = indicator / 2 + .5 # realign indicator from (-1, 1) to (0, 1)
+            indicator -= F.sigmoid(lasso)
+        indicator += F.sigmoid(lasso)
+        return indicator
+
 
     def generate_architecture_params(self):
         self.alpha = {}
@@ -204,3 +242,9 @@ class DifferentiableBatchNorm2d(nn.BatchNorm2d):
 
         # no architecture parameter is needed for BatchNorm2d Layers
         self.alpha = nn.Parameter(torch.tensor([]))
+
+    def export(self):
+        """
+        No need to export ``BatchNorm2d``. Refer to the ``Conv2d`` layer that has the ``ValueChoice`` as ``out_channels``.
+        """
+        return -1
