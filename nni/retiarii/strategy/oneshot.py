@@ -1,7 +1,7 @@
 from .base import BaseStrategy
 
 try:
-    from nni.retiarii.oneshot.pytorch.strategy import DartsStrategy
+    from nni.retiarii.oneshot.pytorch.strategy import DARTS, SNAS, Proxyless, ENAS, RandomOneShot
 except ImportError as import_err:
     _import_err = import_err
 
@@ -10,4 +10,8 @@ except ImportError as import_err:
             raise _import_err
 
     # otherwise typing check will pointing to the wrong location
-    globals()['DartsStrategy'] = ImportFailedStrategy
+    globals()['DARTS'] = ImportFailedStrategy
+    globals()['SNAS'] = ImportFailedStrategy
+    globals()['Proxyless'] = ImportFailedStrategy
+    globals()['ENAS'] = ImportFailedStrategy
+    globals()['RandomOneShot'] = ImportFailedStrategy

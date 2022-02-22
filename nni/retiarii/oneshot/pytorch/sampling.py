@@ -13,16 +13,19 @@ from .enas import ReinforceController, ReinforceField
 
 
 class EnasModule(BaseOneShotLightningModule):
-    """
-    The ENAS module. There are 2 steps in an epoch. 1: training model parameters. 2: training ENAS RL agent. The agent will produce
-    a sample of model architecture to get the best reward.
-    The ENASModule should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.
+    _enas_note = """
+    The implementation of ENAS [enas]. There are 2 steps in an epoch.
+    Firstly, training model parameters.
+    Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
+
+    {{module_notes}}
 
     Parameters
     ----------
-    base_model : pl.LightningModule
-        he evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
-        be wrapped by this model.
+    {{module_params}}
+
+    {base_params}
+
     ctrl_kwargs : dict
         Optional kwargs that will be passed to :class:`ReinforceController`.
     entropy_weight : float
@@ -35,16 +38,19 @@ class EnasModule(BaseOneShotLightningModule):
         Number of steps that will be aggregated into one mini-batch for RL controller.
     grad_clip : float
         Gradient clipping value.
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
-        replace dict will override the default replace dict of each NAS method.
 
     Reference
     ----------
     .. [enas] H. Pham, M. Guan, B. Zoph, Q. Le, and J. Dean, “Efficient Neural Architecture Search via Parameters Sharing,”
         in Proceedings of the 35th International Conference on Machine Learning, Jul. 2018, pp. 4095-4104.
         Available: https://proceedings.mlr.press/v80/pham18a.html
-    """
+    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+
+    __doc__ = _enas_note.format(
+        module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.',
+        module_params=BaseOneShotLightningModule._base_model_note,
+    )
+
     def __init__(self, base_model, ctrl_kwargs = None,
                  entropy_weight = 1e-4, skip_weight = .8, baseline_decay = .999,
                  ctrl_steps_aggregate = 20, grad_clip = 0, custom_replace_dict = None):
@@ -136,19 +142,22 @@ class EnasModule(BaseOneShotLightningModule):
 
 
 class RandomSamplingModule(BaseOneShotLightningModule):
-    """
-    Random Sampling NAS Algorithm. In each epoch, model parameters are trained after a uniformly random sampling of each choice.
-    The training result is also a random sample of the search space.
+    _random_note = """
+    Random Sampling NAS Algorithm.
+    In each epoch, model parameters are trained after a uniformly random sampling of each choice.
+    Notably, the exporting result is **also a random sample** of the search space.
 
     Parameters
     ----------
-    base_model : pl.LightningModule
-        he evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
-        be wrapped by this model.
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
-        replace dict will override the default replace dict of each NAS method.
-    """
+    {{module_params}}
+
+    {base_params}
+    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+
+    __doc__ = _random_note.format(
+        module_params=BaseOneShotLightningModule._base_model_note,
+    )
+
     automatic_optimization = True
 
     def training_step(self, batch, batch_idx):

@@ -12,10 +12,6 @@ from nni.retiarii import strategy, model_wrapper
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
-from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
-                                          DartsModule, EnasModule, SNASModule,
-                                          InterleavedTrainValDataLoader,
-                                          ProxylessModule, RandomSamplingModule)
 
 
 class DepthwiseSeparableConv(nn.Module):
@@ -88,59 +84,42 @@ def prepare_model_data():
     return base_model, train_loader, valid_loader, trainer_kwargs
 
 
-def prepare_retiarii_experiment_config():
-    config = RetiariiExeConfig()
-    config.execution_engine = 'oneshot'
-    return config
-
-
-@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
-def test_darts():
+def _test_strategy(strategy_):
     base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
     cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    strat = strategy.DartsStrategy()
-    experiment = RetiariiExperiment(base_model, cls, strategy=strat)
-    experiment.run(prepare_retiarii_experiment_config())
+    experiment = RetiariiExperiment(base_model, cls, strategy=strategy_)
+
+    config = RetiariiExeConfig()
+    config.execution_engine = 'oneshot'
+
+    experiment.run(config)
+
     assert isinstance(experiment.export_top_models()[0], dict)
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
+def test_darts():
+    _test_strategy(strategy.DARTS())
+
+
+@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_proxyless():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    proxyless_model = ProxylessModule(cls.module)
-    para_loader = InterleavedTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(proxyless_model, para_loader)
+    _test_strategy(strategy.Proxyless())
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_enas():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    enas_model = EnasModule(cls.module)
-    concat_loader = ConcatenateTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(enas_model, concat_loader)
+    _test_strategy(strategy.ENAS())
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_random():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader , **trainer_kwargs)
-    cls.module.set_model(base_model)
-    random_model = RandomSamplingModule(cls.module)
-    cls.trainer.fit(random_model, cls.train_dataloader, cls.val_dataloaders)
+    _test_strategy(strategy.RandomOneShot())
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_snas():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    proxyless_model = SNASModule(cls.module, 1, use_temp_anneal=True)
-    para_loader = InterleavedTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(proxyless_model, para_loader)
+    _test_strategy(strategy.SNAS())
 
 
 if __name__ == '__main__':

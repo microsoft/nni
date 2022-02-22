@@ -1,14 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import Dict, Type, Callable, List, Optional
+
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
 
 from torch.optim.lr_scheduler import _LRScheduler
 
+ReplaceDictType = Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
 
-def _replace_module_with_type(root_module, replace_dict, modules):
+
+def _replace_module_with_type(root_module: nn.Module, replace_dict: ReplaceDictType, modules: List[nn.Module]):
     """
     Replace xxxChoice in user's model with NAS modules.
 
@@ -74,7 +78,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     automatic_optimization = False
 
-    def __init__(self, base_model, custom_replace_dict=None):
+    def __init__(self, base_model: pl.LightningModule, custom_replace_dict: Optional[ReplaceDictType] = None):
         super().__init__()
         assert isinstance(base_model, pl.LightningModule)
         self.model = base_model
