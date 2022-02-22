@@ -4,12 +4,14 @@ WebUI
 Q&A
 ---
 
-## There are many trials in the detail table but ``Default Metric`` graph is empty ##
+There are many trials in the detail table but ``Default Metric`` graph is empty.
+********************************************************************************
 
 First you should know that ``Default metric`` and ``Hyper parameter`` graph only show succeeded trials.
 
 
-## what should you do when you think the graph is strange, such as ``Default metric``, ``Hyper parameter``... ##
+What should you do when you think the graph is strange, such as ``Default metric``, ``Hyper parameter``...
+**********************************************************************************************************
 
 * Download the experiment results(``experiment config``, ``trial message`` and ``intermeidate metrics``) from ``Experiment summary`` and then upload these results in your issue.
 
@@ -19,7 +21,8 @@ First you should know that ``Default metric`` and ``Hyper parameter`` graph only
    :alt: summary
 
 
-## what should you do when your experiment is error ##
+What should you do when your experiment is error
+************************************************
 
 
 * Click the icon in the right of ``experiment status`` the and screenshot the error message. 
@@ -32,7 +35,8 @@ First you should know that ``Default metric`` and ``Hyper parameter`` graph only
    :alt: experimentError
 
 
-## what should you do when your trial is failed ##
+What should you do when your trial is failed
+********************************************
 
 * ``Customized trial`` could be used in here. Just submit the same parameters to the experiment to rerun the trial.
 
@@ -66,7 +70,8 @@ First you should know that ``Default metric`` and ``Hyper parameter`` graph only
 
 
 
-## how to use dict intermediate result ##
+How to use dict intermediate result
+***********************************
 
 `The discussion <https://github.com/microsoft/nni/discussions/4289>`_ could help you.
 
