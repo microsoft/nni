@@ -370,7 +370,8 @@ class SnasModule(DartsModule):
     gumbel_temperature : float
         The initial temperature used in gumbel-softmax.
     use_temp_anneal : bool
-        True: a linear annealing will be applied to gumbel_temperature. False: run at a fixed temperature. See [snas] for details.
+        If true, a linear annealing will be applied to ``gumbel_temperature``.
+        Otherwise, run at a fixed temperature. See :cite:t:`xie2018snas` for details.
     min_temp : float
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float
