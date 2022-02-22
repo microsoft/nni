@@ -117,10 +117,9 @@ Quantization algorithms compress the original network by reducing the number of 
 Model Speedup
 -------------
 
-
 The final goal of model compression is to reduce inference latency and model size.
 However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model.
 For example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms.
 Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model.
-The detailed tutorial of Masked Model Speedup can be found `here <../tutorials/pruning_speed_up.rst>`__.
-The detailed tutorial of Mixed Precision Quantization Model Speedup can be found `here <../Compression/QuantizationSpeedup.rst>`__.
+The detailed tutorial of Speed Up Model with Mask can be found `here <../tutorials/pruning_speed_up.rst>`__.
+The detailed tutorial of Speed Up Model with Calibration Config can be found `here <../tutorials/quantization_speed_up.rst>`__.
