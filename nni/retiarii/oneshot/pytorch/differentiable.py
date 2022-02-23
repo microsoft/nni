@@ -394,7 +394,7 @@ class SNASModule(DartsModule):
         return self.model.on_epoch_start()
 
     @staticmethod
-    def match_and_replace():        
+    def match_and_replace():
         inputchoice_replace = get_naive_match_and_replace(InputChoice, SNASInputChoice)
         layerchoice_replace = get_naive_match_and_replace(LayerChoice, SNASLayerChoice)
 

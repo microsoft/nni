@@ -301,7 +301,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
 
 def get_naive_match_and_replace(match_type, to_sample_func, to_replace_func=None):
     '''
-    A util function that helps generate the naive match_and_replace function. 
+    A util function that helps generate the naive match_and_replace function.
 
     Parameters
     ----------
@@ -320,7 +320,7 @@ def get_naive_match_and_replace(match_type, to_sample_func, to_replace_func=None
                 if to_replace_func is not None else to_sample
             return to_sample, to_replace
         return None
-    
+
     return naive_match_and_replace
 
 def get_sampling_valuechoice_match_and_replace(match_type, to_sample_func, to_replace_func):
@@ -352,11 +352,11 @@ def get_sampling_valuechoice_match_and_replace(match_type, to_sample_func, to_re
                     nas_modules[v.label].add_candidates(f'{name}_{k}', v.candidates)
                     module.trace_kwargs[k] = nas_modules[v.label]
                     to_samples.append(nas_modules[v.label])
-            
+
             if len(to_samples) > 0:
                 to_replace = to_replace_func(module, name)
                 return to_samples, to_replace
-    
+
     return sampling_valuechoice_match_and_replace
 
 
@@ -374,11 +374,11 @@ def get_differentiable_valuechoice_match_and_replace(match_type, func):
     def differentiable_valuechoice_match_and_replace(module, name, nas_modules):
         if not isinstance(module, match_type):
             return None
-        
+
         for k, v in module.trace_kwargs.items():
             if isinstance(v, nn.ValueChoice):
                 # we set nas_modules[v.label] here incase there are multiple valuechoices with the same label in one module
                 replace_res = func(module, name)
                 return replace_res, replace_res
-         
+
     return differentiable_valuechoice_match_and_replace
