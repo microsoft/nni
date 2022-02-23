@@ -51,10 +51,10 @@ Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML file's 
     podCount: 1
     ecsSpec: ecs.c6.large
     region: cn-hangzhou
-    nasDataSourceId: ${your_nas_data_source_id}
     accessKeyId: ${your_ak_id}
     accessKeySecret: ${your_ak_key}
-    nasDataSourceId: ${your_nas_data_source_id}     # NAS datasource ID，e.g., datat56by9n1xt0a
+    nasDataSourceId: ${your_nas_data_source_id}     # NAS datasource ID, e.g., datat56by9n1xt0a
+    ossDataSourceId: ${your_oss_data_source_id}     # OSS datasource ID, in case your data is on oss
     localStorageMountPoint: /home/admin/workspace/  # default NAS path on DSW
     containerStorageMountPoint: /root/data/         # default NAS path on DLC container, change it according your setting
 

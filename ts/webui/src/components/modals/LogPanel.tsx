@@ -90,6 +90,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                     isFooterAtBottom={true}
                     isLightDismiss={true}
                     onLightDismissClick={closeDrawer}
+                    className='logPanel'
                 >
                     <Pivot selectedKey={activeTab} style={{ minHeight: 190 }}>
                         <PivotItem headerText='Dispatcher log' key='dispatcher'>

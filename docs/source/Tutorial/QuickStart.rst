@@ -196,7 +196,7 @@ Change ``python3`` to ``python`` of the ``trialCommand`` field in the **config_d
 
    nnictl create --config nni\examples\trials\mnist-pytorch\config_detailed.yml
 
-.. Note:: ``nnictl`` is a command line tool that can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click :doc:`here <Nnictl>` for more usage of ``nnictl``.
+.. Note:: ``nnictl`` is a command line tool that can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click :doc:`here <../reference/nnictl>` for more usage of ``nnictl``.
 
 Wait for the message ``INFO: Successfully started experiment!`` in the command line. This message indicates that your experiment has been successfully started. And this is what we expect to get:
 
