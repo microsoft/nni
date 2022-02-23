@@ -221,11 +221,12 @@ Our documentation is located under ``docs/`` folder. The following command can b
    make html
 
 .. note::
-   
+
    If you experience issues in building documentation, and see errors like:
       
    * ``Could not import extension xxx (exception: No module named 'xxx')`` : please check your development environment and make sure dependencies have been properly installed: :ref:`get-started`.
    * ``unsupported pickle protocol: 5``: please upgrade to Python 3.8.
+   * ``autodoc: No module named 'xxx'``: some dependencies in ``dependencies/`` are not installed. In this case, documentation can be still mostly successfully built, but some API reference could be missing.
 
 It's also highly recommended taking care of **every WARNING** during the build, which is very likely the signal of a **deadlink** and other annoying issues. Our code check will also make sure that the documentation build completes with no warning.
 
