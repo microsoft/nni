@@ -5,7 +5,7 @@ Customize New Compression Algorithm
 
 In order to simplify the process of writing new compression algorithms, we have designed simple and flexible programming interface, which covers pruning and quantization. Below, we first demonstrate how to customize a new pruning algorithm and then demonstrate how to customize a new quantization algorithm.
 
-**Important Note** To better understand how to customize new pruning/quantization algorithms, users should first understand the framework that supports various pruning algorithms in NNI. Reference `Framework overview of model compression <legacy_framework.html>`__
+**Important Note** To better understand how to customize new pruning/quantization algorithms, users should first understand the framework that supports various pruning algorithms in NNI. Reference :doc:`Framework overview of model compression <legacy_framework>`
 
 Customize a new pruning algorithm
 ---------------------------------
@@ -136,7 +136,7 @@ To write a new quantization algorithm, you can write a class that inherits ``nni
 Customize backward function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sometimes it's necessary for a quantization operation to have a customized backward function, such as `Straight-Through Estimator <https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste>`__\ , user can customize a backward function as follow:
+Sometimes it's necessary for a quantization operation to have a customized backward function, such as `Straight-Through Estimator <https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste>`__ , user can customize a backward function as follow:
 
 .. code-block:: python
 

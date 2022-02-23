@@ -35,7 +35,7 @@ The overall compression pipeline in NNI. For compressing a pretrained model, pru
 
 .. note::
   Since NNI compression algorithms are not meant to compress model while NNI speedup tool can truly compress model and reduce latency.
-  To obtain a truly compact model, users should conduct `model speedup <../tutorials/pruning_speed_up.html>`__.
+  To obtain a truly compact model, users should conduct :doc:`model speedup <../tutorials/pruning_speed_up>`.
   The interface and APIs are unified for both PyTorch and TensorFlow, currently only PyTorch version has been supported, TensorFlow version will be supported in future.
 
 
@@ -55,37 +55,37 @@ Pruning algorithms compress the original network by removing redundant weights o
 
    * - Name
      - Brief Introduction of Algorithm
-   * - `Level Pruner <pruner.html#level-pruner>`__
+   * - :ref:`level-pruner`
      - Pruning the specified ratio on each weight based on absolute values of weights
-   * - `L1 Norm Pruner <pruner.html#l1-norm-pruner>`__
+   * - :ref:`l1-norm-pruner`
      - Pruning output channels with the smallest L1 norm of weights (Pruning Filters for Efficient Convnets) `Reference Paper <https://arxiv.org/abs/1608.08710>`__
-   * - `L2 Norm Pruner <pruner.html#l2-norm-pruner>`__
+   * - :ref:`l2-norm-pruner`
      - Pruning output channels with the smallest L2 norm of weights
-   * - `FPGM Pruner <pruner.html#fpgm-pruner>`__
+   * - :ref:`fpgm-pruner`
      - Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration `Reference Paper <https://arxiv.org/abs/1811.00250>`__
-   * - `Slim Pruner <pruner.html#slim-pruner>`__
+   * - :ref:`slim-pruner`
      - Pruning output channels by pruning scaling factors in BN layers(Learning Efficient Convolutional Networks through Network Slimming) `Reference Paper <https://arxiv.org/abs/1708.06519>`__
-   * - `Activation APoZ Rank Pruner <pruner.html#activation-apoz-rank-pruner>`__
+   * - :ref:`activation-apoz-rank-pruner`
      - Pruning output channels based on the metric APoZ (average percentage of zeros) which measures the percentage of zeros in activations of (convolutional) layers. `Reference Paper <https://arxiv.org/abs/1607.03250>`__
-   * - `Activation Mean Rank Pruner <pruner.html#activation-mean-rank-pruner>`__
+   * - :ref:`activation-mean-rank-pruner`
      - Pruning output channels based on the metric that calculates the smallest mean value of output activations
-   * - `Taylor FO Weight Pruner <pruner.html#taylor-fo-weight-pruner>`__
+   * - :ref:`taylor-fo-weight-pruner`
      - Pruning filters based on the first order taylor expansion on weights(Importance Estimation for Neural Network Pruning) `Reference Paper <http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf>`__
-   * - `ADMM Pruner <pruner.html#admm-pruner>`__
+   * - :ref:`admm-pruner`
      - Pruning based on ADMM optimization technique `Reference Paper <https://arxiv.org/abs/1804.03294>`__
-   * - `Linear Pruner <pruner.html#linear-pruner>`__
+   * - :ref:`linear-pruner`
      - Sparsity ratio increases linearly during each pruning rounds, in each round, using a basic pruner to prune the model.
-   * - `AGP Pruner <pruner.html#agp-pruner>`__
+   * - :ref:`agp-pruner`
      - Automated gradual pruning (To prune, or not to prune: exploring the efficacy of pruning for model compression) `Reference Paper <https://arxiv.org/abs/1710.01878>`__
-   * - `Lottery Ticket Pruner <pruner.html#lottery-ticket-pruner>`__
+   * - :ref:`lottery-ticket-pruner`
      - The pruning process used by "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks". It prunes a model iteratively. `Reference Paper <https://arxiv.org/abs/1803.03635>`__
-   * - `Simulated Annealing Pruner <pruner.html#simulated-annealing-pruner>`__
+   * - :ref:`simulated-annealing-pruner`
      - Automatic pruning with a guided heuristic search method, Simulated Annealing algorithm `Reference Paper <https://arxiv.org/abs/1907.03141>`__
-   * - `Auto Compress Pruner <pruner.html#auto-compress-pruner>`__
+   * - :ref:`auto-compress-pruner`
      - Automatic pruning by iteratively call SimulatedAnnealing Pruner and ADMM Pruner `Reference Paper <https://arxiv.org/abs/1907.03141>`__
-   * - `AMC Pruner <pruner.html#amc-pruner>`__
+   * - :ref:`amc-pruner`
      - AMC: AutoML for Model Compression and Acceleration on Mobile Devices `Reference Paper <https://arxiv.org/abs/1802.03494>`__
-   * - `Movement Pruner <pruner.html#movement-pruner>`__
+   * - :ref:`movement-pruner`
      - Movement Pruning: Adaptive Sparsity by Fine-Tuning `Reference Paper <https://arxiv.org/abs/2005.07683>`__
 
 
@@ -100,17 +100,17 @@ Quantization algorithms compress the original network by reducing the number of 
 
    * - Name
      - Brief Introduction of Algorithm
-   * - `Naive Quantizer <quantizer.html#naive-quantizer>`__
+   * - :ref:`naive-quantizer`
      - Quantize weights to default 8 bits
-   * - `QAT Quantizer <quantizer.html#qat-quantizer>`__
+   * - :ref:`qat-quantizer`
      - Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. `Reference Paper <http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf>`__
-   * - `DoReFa Quantizer <quantizer.html#dorefa-quantizer>`__
+   * - :ref:`dorefa-quantizer`
      - DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. `Reference Paper <https://arxiv.org/abs/1606.06160>`__
-   * - `BNN Quantizer <quantizer.html#bnn-quantizer>`__
+   * - :ref:`bnn-quantizer`
      - Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. `Reference Paper <https://arxiv.org/abs/1602.02830>`__
-   * - `LSQ Quantizer <quantizer.html#lsq-quantizer>`__
+   * - :ref:`lsq-quantizer`
      - Learned step size quantization. `Reference Paper <https://arxiv.org/pdf/1902.08153.pdf>`__
-   * - `Observer Quantizer <quantizer.html#observer-quantizer>`__
+   * - :ref:`observer-quantizer`
      - Post training quantizaiton. Collect quantization information during calibration with observers.
 
 
@@ -121,5 +121,5 @@ The final goal of model compression is to reduce inference latency and model siz
 However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model.
 For example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms.
 Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model.
-The detailed tutorial of Speed Up Model with Mask can be found `here <../tutorials/pruning_speed_up.html>`__.
-The detailed tutorial of Speed Up Model with Calibration Config can be found `here <../tutorials/quantization_speed_up.html>`__.
+The detailed tutorial of Speed Up Model with Mask can be found :doc:`here <../tutorials/pruning_speed_up>`.
+The detailed tutorial of Speed Up Model with Calibration Config can be found :doc:`here <../tutorials/quantization_speed_up>`.

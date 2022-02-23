@@ -38,7 +38,7 @@ class ObserverQuantizer(Quantizer):
             - quant_types : List[str]
                 Type of quantization you want to apply, currently support 'weight', 'input', 'output'.
             - quant_bits : Union[int, Dict[str, int]]
-                Bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8},
+                Bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
                 when the type is int, all quantization types share same bits length.
             - op_types : List[str]
                 Types of nn.module you want to apply quantization, eg. 'Conv2d'.

@@ -6,4 +6,4 @@ Model Quantization with NNI
 
     Quickstart <../tutorials/quantization_quick_start_mnist>
     Speed Up <../tutorials/quantization_speed_up>
-    Quantizer Reference <quantizer>
+    Quantizer Reference <../reference/quantizer>
