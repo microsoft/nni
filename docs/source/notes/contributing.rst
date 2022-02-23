@@ -74,7 +74,7 @@ The NNI repository is large code-base. High-level speaking, it can be decomposed
 
 See :doc:`./architecture_overview` if you are interested in details.
 
-.. _get-started:
+.. _get-started-dev:
 
 Get started with development
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -156,7 +156,7 @@ Python
   * For class docstring, **description** is mandatory. Optionally **Parameters** and **Attributes**. The parameters of ``__init__`` should be documented in the docstring of class.
   * For docstring to describe ``dict``, which is commonly used in our hyper-parameter format description, please refer to `Internal Guideline on Writing Standards <https://ribokit.github.io/docs/text/>`_.
 
-  .. tip:: `A cheatsheet provided by Sphinx <https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy>`__ shows a number of examples of docstring in numpy style.
+  .. tip:: Basically, you can use :ref:`ReStructuredText <restructuredtext-intro>` syntax in docstrings, without some exceptions. For example, custom headings are not allowed in docstrings.
 
 TypeScript
 ^^^^^^^^^^
@@ -224,7 +224,7 @@ Our documentation is located under ``docs/`` folder. The following command can b
 
    If you experience issues in building documentation, and see errors like:
       
-   * ``Could not import extension xxx (exception: No module named 'xxx')`` : please check your development environment and make sure dependencies have been properly installed: :ref:`get-started`.
+   * ``Could not import extension xxx (exception: No module named 'xxx')`` : please check your development environment and make sure dependencies have been properly installed: :ref:`get-started-dev`.
    * ``unsupported pickle protocol: 5``: please upgrade to Python 3.8.
    * ``autodoc: No module named 'xxx'``: some dependencies in ``dependencies/`` are not installed. In this case, documentation can be still mostly successfully built, but some API reference could be missing.
 
@@ -259,6 +259,8 @@ Writing new documents
 
    <code class="docutils literal notranslate">:githublink:`text &lt;path/to/file.ext&gt;`</code>
 
+.. _restructuredtext-intro:
+
 `ReStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_ is our documentation language. Please find the reference of RST `here <https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html>`__.
 
 .. tip:: Sphinx has `an excellent cheatsheet of rst <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ which contains almost everything you might need to know to write a elegant document.
@@ -269,7 +271,7 @@ Writing new documents
 
 **Dealing with codes.** We recommend using ``.. code-block:: python`` to start a code block. The ``python`` here annotates the syntax highlighting.
 
-**Dealing with links.** Use |link_example_3| for links to another doc (no suffix like ``.rst``). Use |link_example| for inline web links. Note that use one underline might cause `"duplicated target name" error <https://stackoverflow.com/questions/27420317/restructured-text-rst-http-links-underscore-vs-use>`_ when multiple targets share the same name. In that case, use double-underline to avoid the error: |link_example_2|.
+**Dealing with links.** Use |link_example_3| for links to another doc (no suffix like ``.rst``). To reference a specific section, please use ``:ref:`` (see `Cross-referencing arbitrary locations <https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#cross-referencing-arbitrary-locations>`_). For general links that ``:doc:`` and ``:ref:`` can't handle, you can also use |link_example| for inline web links. Note that use one underline might cause `"duplicated target name" error <https://stackoverflow.com/questions/27420317/restructured-text-rst-http-links-underscore-vs-use>`_ when multiple targets share the same name. In that case, use double-underline to avoid the error: |link_example_2|.
 
 Other than built-in directives provided by Sphinx, we also provide some custom directives:
 
