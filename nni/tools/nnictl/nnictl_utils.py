@@ -222,6 +222,7 @@ def stop_experiment(args):
     if experiment_id_list:
         for experiment_id in experiment_id_list:
             print_normal('Stopping experiment %s' % experiment_id)
+            # FIXME: Retry should be placed to `Experiments`, need review both python and ts code.
             # retry up to 10 times to get the experiment metadata
             for i in range(1, 11):
                 experiments_dict = Experiments().get_all_experiments()
