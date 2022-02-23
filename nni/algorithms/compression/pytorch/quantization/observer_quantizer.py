@@ -75,14 +75,17 @@ class ObserverQuantizer(Quantizer):
 
         Other settings (such as quant_type and op_names) can be configured.
 
-    About the compress API
-    ----------------------
+    Notes
+    -----
+
+    **About the compress API**
+
     Before the `compress` API is called, the model will only record tensors' statistics and no quantization process will be executed.
     After the `compress` API is called, the model will NOT record tensors' statistics any more. The quantization scale and zero point will
     be generated for each tensor and will be used to quantize each tensor during inference (we call it evaluation mode)
 
-    About calibration
-    -----------------
+    **About calibration**
+
     Usually we pick up about 100 training/evaluation examples for calibration. If you found the accuracy is a bit low, try
     to reduce the number of calibration examples.
     """

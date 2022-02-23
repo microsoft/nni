@@ -123,10 +123,10 @@ class QAT_Quantizer(Quantizer):
         by implementing in floating-point arithmetic the rounding behavior of the quantization scheme:
 
         * Weights are quantized before they are convolved with the input. If batch normalization (see [17]) is used for the layer,
-        the batch normalization parameters are “folded into” the weights before quantization.
+            the batch normalization parameters are “folded into” the weights before quantization.
         * Activations are quantized at points where they would be during inference,
-        e.g. after the activation function is applied to a convolutional or fully connected layer’s output,
-        or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
+            e.g. after the activation function is applied to a convolutional or fully connected layer’s output,
+            or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
 
     Parameters
     ----------
@@ -169,8 +169,11 @@ class QAT_Quantizer(Quantizer):
     For detailed example please refer to
     :githublink:`examples/model_compress/quantization/QAT_torch_quantizer.py <examples/model_compress/quantization/QAT_torch_quantizer.py>`.
 
-    Batch normalization folding
-    ---------------------------
+    Notes
+    -----
+
+    **Batch normalization folding**
+
     Batch normalization folding is supported in QAT quantizer. It can be easily enabled by passing an argument `dummy_input` to
     the quantizer, like:
 
@@ -188,8 +191,8 @@ class QAT_Quantizer(Quantizer):
     graph. Note that when the quantization aware training process is finished, the folded weight/bias would be restored after calling
     `quantizer.export_model`.
 
-    Quantization dtype and scheme customization
-    -------------------------------------------
+    **Quantization dtype and scheme customization**
+
     Different backends on different devices use different quantization strategies (i.e. dtype (int or uint) and
     scheme (per-tensor or per-channel and symmetric or affine)). QAT quantizer supports customization of mainstream dtypes and schemes.
     There are two ways to set them. One way is setting them globally through a function named `set_quant_scheme_dtype` like:
@@ -225,8 +228,8 @@ class QAT_Quantizer(Quantizer):
             'quant_scheme': 'per_tensor_affine'
         }]
 
-    Multi-GPU training
-    ------------------
+    **Multi-GPU training**
+
     QAT quantizer natively supports multi-gpu training (DataParallel and DistributedDataParallel). Note that the quantizer
     instantiation should happen before you wrap your model with DataParallel or DistributedDataParallel. For example:
 
