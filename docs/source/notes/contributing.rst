@@ -247,6 +247,10 @@ Writing new documents
 
    <code class="docutils literal notranslate">`Link text &lt;https://domain.invalid/&gt;`__</code>
 
+.. |link_example_3| raw:: html
+
+   <code class="docutils literal notranslate">:doc:`./relative/to/my_doc`</code>
+
 .. |githublink_example| raw:: html
 
    <code class="docutils literal notranslate">:githublink:`path/to/file.ext`</code>
@@ -265,7 +269,7 @@ Writing new documents
 
 **Dealing with codes.** We recommend using ``.. code-block:: python`` to start a code block. The ``python`` here annotates the syntax highlighting.
 
-**Dealing with links.** Use |link_example| for inline web links. Note that use one underline might cause `"duplicated target name" error <https://stackoverflow.com/questions/27420317/restructured-text-rst-http-links-underscore-vs-use>`_ when multiple targets share the same name. In that case, use double-underline to avoid the error: |link_example_2|.
+**Dealing with links.** Use |link_example_3| for links to another doc (no suffix like ``.rst``). Use |link_example| for inline web links. Note that use one underline might cause `"duplicated target name" error <https://stackoverflow.com/questions/27420317/restructured-text-rst-http-links-underscore-vs-use>`_ when multiple targets share the same name. In that case, use double-underline to avoid the error: |link_example_2|.
 
 Other than built-in directives provided by Sphinx, we also provide some custom directives:
 
