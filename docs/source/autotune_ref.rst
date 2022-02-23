@@ -23,6 +23,8 @@ Tuner
 ..  autoclass:: nni.algorithms.hpo.tpe_tuner.TpeTuner
     :members:
 
+..  autoclass:: nni.algorithms.hpo.tpe_tuner.TpeArguments
+
 ..  autoclass:: nni.algorithms.hpo.random_tuner.RandomTuner
     :members:
 
