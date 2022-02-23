@@ -62,6 +62,10 @@ extensions = [
 # Add mock modules
 autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter']
 
+autodoc_typehints = 'description'
+autodoc_typehints_description_target = 'documented'
+autodoc_inherit_docstrings = False
+
 # Sphinx gallery examples
 sphinx_gallery_conf = {
     'examples_dirs': '../../examples/tutorials',   # path to your example scripts
