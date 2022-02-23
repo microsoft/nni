@@ -5,8 +5,8 @@ WebUI
 Q&A
 ---
 
-There are many trials in the detail table but ``Default Metric`` chart is empty.
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+There are many trials in the detail table but ``Default Metric`` chart is empty
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 First you should know that ``Default metric`` and ``Hyper parameter`` chart only show succeeded trials.
 
@@ -93,7 +93,6 @@ Experiments management
 ----------------------
 
 Experiments management page could manage many experiments on your machine. 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -134,7 +133,7 @@ Experiments management page could manage many experiments on your machine.
 
 
 View summary page
------------------
+^^^^^^^^^^^^^^^^^
 
 Click the tab ``Overview``.
 
