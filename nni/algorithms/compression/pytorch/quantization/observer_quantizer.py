@@ -64,7 +64,8 @@ class ObserverQuantizer(Quantizer):
         >>> calibration(model, calib_loader)
         >>> quantizer.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/quantization/observer_quantizer.py <examples/model_compress/quantization/observer_quantizer.py>`.
+    For detailed example please refer to
+    :githublink:`examples/model_compress/quantization/observer_quantizer.py <examples/model_compress/quantization/observer_quantizer.py>`.
 
     .. note::
         This quantizer is still under development for now. Some quantizer settings are hard-coded:

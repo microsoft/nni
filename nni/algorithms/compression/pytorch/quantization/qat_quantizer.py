@@ -117,12 +117,16 @@ class QAT_Quantizer(Quantizer):
     ..
 
         We propose an approach that simulates quantization effects in the forward pass of training.
-        Backpropagation still happens as usual, and all weights and biases are stored in floating point so that they can be easily nudged by small amounts.
+        Backpropagation still happens as usual, and all weights and biases are stored in floating point
+        so that they can be easily nudged by small amounts.
         The forward propagation pass however simulates quantized inference as it will happen in the inference engine,
         by implementing in floating-point arithmetic the rounding behavior of the quantization scheme:
 
-        * Weights are quantized before they are convolved with the input. If batch normalization (see [17]) is used for the layer, the batch normalization parameters are “folded into” the weights before quantization.
-        * Activations are quantized at points where they would be during inference, e.g. after the activation function is applied to a convolutional or fully connected layer’s output, or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
+        * Weights are quantized before they are convolved with the input. If batch normalization (see [17]) is used for the layer,
+        the batch normalization parameters are “folded into” the weights before quantization.
+        * Activations are quantized at points where they would be during inference,
+        e.g. after the activation function is applied to a convolutional or fully connected layer’s output,
+        or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
 
     Parameters
     ----------
@@ -162,7 +166,8 @@ class QAT_Quantizer(Quantizer):
         >>> quantizer.compress()
         >>> # Training Process...
 
-    For detailed example please refer to :githublink:`examples/model_compress/quantization/QAT_torch_quantizer.py <examples/model_compress/quantization/QAT_torch_quantizer.py>`.
+    For detailed example please refer to
+    :githublink:`examples/model_compress/quantization/QAT_torch_quantizer.py <examples/model_compress/quantization/QAT_torch_quantizer.py>`.
 
     Batch normalization folding
     ---------------------------

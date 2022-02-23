@@ -17,8 +17,8 @@ class LsqQuantizer(Quantizer):
 
     ..
 
-        The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation layer's quantizer step size,
-        such that it can be learned in conjunction with other network parameters.
+        The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation
+        layer's quantizer step size, such that it can be learned in conjunction with other network parameters.
 
     Parameters
     ----------
@@ -55,7 +55,8 @@ class LsqQuantizer(Quantizer):
         >>> quantizer.compress()
         >>> # Training Process...
 
-    For detailed example please refer to :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`.
+    For detailed example please refer to
+    :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`.
 
     """
 

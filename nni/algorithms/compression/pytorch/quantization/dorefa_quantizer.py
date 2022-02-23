@@ -48,7 +48,8 @@ class DoReFaQuantizer(Quantizer):
         >>> quantizer.compress()
         >>> # Training Process...
 
-    For detailed example please refer to  :githublink:`examples/model_compress/quantization/DoReFaQuantizer_torch_mnist.py <examples/model_compress/quantization/DoReFaQuantizer_torch_mnist.py>`.
+    For detailed example please refer to
+    :githublink:`examples/model_compress/quantization/DoReFaQuantizer_torch_mnist.py <examples/model_compress/quantization/DoReFaQuantizer_torch_mnist.py>`.
 
     """
 

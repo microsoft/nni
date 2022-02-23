@@ -24,7 +24,8 @@ class ClipGrad(QuantGrad):
 class BNNQuantizer(Quantizer):
     r"""
     Binarized Neural Networks, as defined in:
-    `Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1 <https://arxiv.org/abs/1602.02830>`__\ ,
+    `Binarized Neural Networks: Training Deep Neural Networks with Weights and
+    Activations Constrained to +1 or -1 <https://arxiv.org/abs/1602.02830>`__\ ,
 
     ..
 
@@ -63,12 +64,14 @@ class BNNQuantizer(Quantizer):
         >>> quantizer.compress()
         >>> # Training Process...
 
-    For detailed example please refer to :githublink:`examples/model_compress/quantization/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>`.
+    For detailed example please refer to
+    :githublink:`examples/model_compress/quantization/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>`.
 
     Results
     -------
 
-    We implemented one of the experiments in `Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1 <https://arxiv.org/abs/1602.02830>`__\ ,
+    We implemented one of the experiments in
+    `Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1 <https://arxiv.org/abs/1602.02830>`__,
     we quantized the **VGGNet** for CIFAR-10 in the paper. Our experiments results are as follows:
 
     .. list-table::
@@ -80,7 +83,8 @@ class BNNQuantizer(Quantizer):
         * - VGGNet
             - 86.93%
 
-    The experiments code can be found at :githublink:`examples/model_compress/quantization/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` 
+    The experiments code can be found at
+    :githublink:`examples/model_compress/quantization/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>`
     """
 
     def __init__(self, model, config_list, optimizer):
