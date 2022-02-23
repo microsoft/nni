@@ -810,6 +810,8 @@ class Shared(unittest.TestCase):
             elif i == 2:
                 assert choice.candidates == [5, 6]
         assert d.evaluate([2, 3, 5]) == 20
+        expect = [x + y + 3 * z for x in [1, 2] for y in [3, 4] for z in [5, 6]]
+        assert list(d.all_options()) == expect
 
         a = nn.ValueChoice(['cat', 'dog'])
         b = nn.ValueChoice(['milk', 'coffee'])
@@ -885,6 +887,9 @@ class Shared(unittest.TestCase):
             for divisor in divisors:
                 lst = [value if choice.label == 'value' else divisor for choice in result.inner_choices()]
                 assert result.evaluate(lst) == original_make_divisible(value, divisor)
+
+        assert len(list(result.all_options())) == 30
+        assert max(result.all_options()) == 135
 
     def test_valuechoice_in_evaluator(self):
         def foo():

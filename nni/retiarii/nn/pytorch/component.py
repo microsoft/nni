@@ -1,11 +1,12 @@
 import copy
+import warnings
 from collections import OrderedDict
 from typing import Callable, List, Union, Tuple, Optional
 
 import torch
 import torch.nn as nn
 
-from .api import LayerChoice
+from .api import LayerChoice, ValueChoice, ValueChoiceX
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
 from .utils import Mutable, generate_new_label, get_fixed_value
@@ -25,9 +26,11 @@ class Repeat(Mutable):
         If a list, it should be of length ``max_depth``, the modules will be instantiated in order and a prefix will be taken.
         If a function, it will be called (the argument is the index) to instantiate a module.
         Otherwise the module will be deep-copied.
-    depth : int or tuple of int
-        If one number, the block will be repeated by a fixed number of times. If a tuple, it should be (min, max),
+    depth : int or tuple of int or ValueChoice
+        If one number, the block will be repeated by a fixed number of times.
+        If a tuple, it should be (min, max),
         meaning that the block will be repeated at least `min` times and at most `max` times.
+        If a ValueChoice, it should choose from a series of positive integers.
     """
 
     @classmethod
@@ -36,9 +39,18 @@ class Repeat(Mutable):
                                           List[Callable[[int], nn.Module]],
                                           nn.Module,
                                           List[nn.Module]],
-                            depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
-        repeat = get_fixed_value(label)
-        return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
+                            depth: Union[int, Tuple[int, int], ValueChoice], *, label: Optional[str] = None):
+        if isinstance(depth, tuple):
+            # this will create a value choice
+            # and in its ``__new__``, a fixed value will be returned
+            depth = cls.create_depth_value_choice(depth[0], depth[1], label)
+        return nn.Sequential(*cls._replicate_and_instantiate(blocks, depth))
+
+    @staticmethod
+    def create_depth_value_choice(min_depth: int, max_depth: int, label: Optional[str] = None) -> ValueChoice:
+        label = generate_new_label(label)
+        value_choice = ValueChoice(list(range(min_depth, max_depth + 1)), label=label)
+        return value_choice
 
     def __init__(self,
                  blocks: Union[Callable[[int], nn.Module],
@@ -47,15 +59,32 @@ class Repeat(Mutable):
                                List[nn.Module]],
                  depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
         super().__init__()
-        self._label = generate_new_label(label)
-        self.min_depth = depth if isinstance(depth, int) else depth[0]
-        self.max_depth = depth if isinstance(depth, int) else depth[1]
+
+        if isinstance(depth, ValueChoiceX):
+            if label is not None:
+                warnings.warn(
+                    'In repeat, `depth` is already a ValueChoice, but `label` is still set. It will be ignored.',
+                    RuntimeWarning
+                )
+            self.depth_choice = depth
+            all_values = list(self.depth_choice.all_options())
+            self.min_depth = min(all_values)
+            self.max_depth = max(all_values)
+        elif isinstance(depth, tuple):
+            self.min_depth = depth if isinstance(depth, int) else depth[0]
+            self.max_depth = depth if isinstance(depth, int) else depth[1]
+            self.depth_choice = self.create_depth_value_choice(self.min_depth, self.max_depth, label)
+        elif isinstance(depth, int):
+            self.min_depth = self.max_depth = depth
+            self.depth_choice = depth
+        else:
+            raise TypeError(f'Unsupported "depth" type: {type(depth)}')
         assert self.max_depth >= self.min_depth > 0
         self.blocks = nn.ModuleList(self._replicate_and_instantiate(blocks, self.max_depth))
 
     @property
     def label(self):
-        return self._label
+        return self.depth_choice.label
 
     def forward(self, x):
         for block in self.blocks:
@@ -75,6 +104,10 @@ class Repeat(Mutable):
         if not isinstance(blocks[0], nn.Module):
             blocks = [b(i) for i, b in enumerate(blocks)]
         return blocks
+
+    def __getitem__(self, index):
+        # shortcut for blocks[index]
+        return self.blocks[index]
 
 
 class NasBench201Cell(nn.Module):
