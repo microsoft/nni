@@ -79,7 +79,7 @@ See :doc:`./architecture_overview` if you are interested in details.
 Get started with development
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-NNI development environment supports Ubuntu 1604 (or above), and Windows 10 with Python 3. We recommend using `conda <https://docs.conda.io/>`_ on Windows.
+NNI development environment supports Ubuntu 1604 (or above), and Windows 10 with Python 3.7+ (documentation build requires Python 3.8+). We recommend using `conda <https://docs.conda.io/>`_ on Windows.
 
 1. Fork the NNI's GitHub repository and clone the forked repository to your machine.
 
@@ -220,7 +220,12 @@ Our documentation is located under ``docs/`` folder. The following command can b
    cd docs
    make html
 
-.. note:: If you experience issues in building documentation, and see errors like ``Could not import extension xxx (exception: No module named 'xxx')``, please check your development environment and make sure dependencies have been properly installed: :ref:`get-started`.
+.. note::
+   
+   If you experience issues in building documentation, and see errors like:
+      
+   * ``Could not import extension xxx (exception: No module named 'xxx')`` : please check your development environment and make sure dependencies have been properly installed: :ref:`get-started`.
+   * ``unsupported pickle protocol: 5``: please upgrade to Python 3.8.
 
 It's also highly recommended taking care of **every WARNING** during the build, which is very likely the signal of a **deadlink** and other annoying issues. Our code check will also make sure that the documentation build completes with no warning.
 
