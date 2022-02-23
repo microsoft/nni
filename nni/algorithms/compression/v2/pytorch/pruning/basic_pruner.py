@@ -725,7 +725,9 @@ class ActivationAPoZRankPruner(ActivationPruner):
     trainer : Callable[[Module, Optimizer, Callable], None]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
         The model will be trained or inferenced `training_epochs` epochs.
+
         Example::
+
             def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
                 training = model.training
                 model.train(mode=True)
@@ -806,7 +808,9 @@ class ActivationMeanRankPruner(ActivationPruner):
     trainer : Callable[[Module, Optimizer, Callable], None]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
         The model will be trained or inferenced `training_epochs` epochs.
+
         Example::
+
             def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
                 training = model.training
                 model.train(mode=True)
