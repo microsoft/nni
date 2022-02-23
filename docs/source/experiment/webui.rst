@@ -1,20 +1,21 @@
 WebUI
-#####
+=====
 
 
 Q&A
-***
+---
 
-There are many trials in the detail table but ``Default Metric`` graph is empty.
-================================================================================
+There are many trials in the detail table but ``Default Metric`` chart is empty.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First you should know that ``Default metric`` and ``Hyper parameter`` graph only show succeeded trials.
+First you should know that ``Default metric`` and ``Hyper parameter`` chart only show succeeded trials.
 
 
-What should you do when you think the graph is strange, such as ``Default metric``, ``Hyper parameter``...
-==========================================================================================================
+What should you do when you think the chart is strange, such as ``Default metric``, ``Hyper parameter``...
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Download the experiment results(``experiment config``, ``trial message`` and ``intermeidate metrics``) from ``Experiment summary`` and then upload these results in your issue.
+
 
 
 .. image:: ../../img/webui-img/summary.png
@@ -22,13 +23,14 @@ What should you do when you think the graph is strange, such as ``Default metric
    :alt: summary
 
 
-What should you do when your experiment is error
-================================================
 
+What should you do when your experiment has error
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Click the icon in the right of ``experiment status`` and screenshot the error message. 
 * And then click the ``learn about`` to download ``nni-manager`` and ``dispatcher`` logfile.
 * Please file an issue from the `Feedback` in the `About` and upload above message.
+
 
 
 .. image:: ../../img/webui-img/experimentError.png
@@ -36,10 +38,13 @@ What should you do when your experiment is error
    :alt: experimentError
 
 
-What should you do when your trial is failed
-============================================
+
+What should you do when your trial fails
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ``Customized trial`` could be used in here. Just submit the same parameters to the experiment to rerun the trial.
+
+
 
 .. image:: ../../img/webui-img/detail/customizedTrialButton.png
    :target: ../../img/webui-img/detail/customizedTrialButton.png
@@ -53,38 +58,44 @@ What should you do when your trial is failed
 
 
 
+
 * ``Log model`` will help you find the error reason. There are three buttons ``View trial log``, ``View trial error`` and ``View trial stdout`` on local mode. If you run on the OpenPAI or Kubeflow platform, you could see trial stdout and nfs log.
   If you have any question you could tell us in the issue.
 
-  **local mode:**
-
-.. image:: ../../img/webui-img/detail/log-local.png
-   :target: ../../img/webui-img/detail/log-local.png
-   :alt: logOnLocal
+   **local mode:**
 
 
 
-**OpenPAI, Kubeflow and other mode:**
+   .. image:: ../../img/webui-img/detail/log-local.png
+      :target: ../../img/webui-img/detail/log-local.png
+      :alt: logOnLocal
 
-.. image:: ../../img/webui-img/detail-pai.png
-   :target: ../../img/webui-img/detail-pai.png
-   :alt: detailPai
 
+
+   **OpenPAI, Kubeflow and other mode:**
+
+
+
+   .. image:: ../../img/webui-img/detail-pai.png
+      :target: ../../img/webui-img/detail-pai.png
+      :alt: detailPai
 
 
 
 How to use dict intermediate result
-===================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `The discussion <https://github.com/microsoft/nni/discussions/4289>`_ could help you.
 
 
 
 Experiments management
-**********************
+----------------------
 
 Experiments management page could manage many experiments on your machine. 
-==========================================================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 
 .. image:: ../../img/webui-img/managerExperimentList/experimentListNav.png
    :target: ../../img/webui-img/managerExperimentList/experimentListNav.png
@@ -94,6 +105,8 @@ Experiments management page could manage many experiments on your machine.
 
 * On the ``All experiments`` page, you can see all the experiments on your machine. 
 
+
+
 .. image:: ../../img/webui-img/managerExperimentList/expList.png
    :target: ../../img/webui-img/managerExperimentList/expList.png
    :alt: Experiments list
@@ -101,6 +114,8 @@ Experiments management page could manage many experiments on your machine.
 
 
 * When you want to see more details about an experiment you could click the trial id, look that:
+
+
 
 .. image:: ../../img/webui-img/managerExperimentList/toAnotherExp.png
    :target: ../../img/webui-img/managerExperimentList/toAnotherExp.png
@@ -110,18 +125,22 @@ Experiments management page could manage many experiments on your machine.
 
 * If has many experiments on the table, you can use the ``filter`` button.
 
+
+
 .. image:: ../../img/webui-img/managerExperimentList/expFilter.png
    :target: ../../img/webui-img/managerExperimentList/expFilter.png
    :alt: filter button
 
 
+
 View summary page
-*****************
+-----------------
 
 Click the tab ``Overview``.
 
 
 * On the overview tab, you can see the experiment information and status and the performance of ``top trials``.
+
 
 
 .. image:: ../../img/webui-img/full-oview.png
@@ -136,9 +155,9 @@ Click the tab ``Overview``.
 
 
 
-      .. image:: ../../img/webui-img/searchSpace.png
-         :target: ../../img/webui-img/searchSpace.png
-         :alt: searchSpace
+   .. image:: ../../img/webui-img/searchSpace.png
+      :target: ../../img/webui-img/searchSpace.png
+      :alt: searchSpace
 
 
 
@@ -146,13 +165,14 @@ Click the tab ``Overview``.
 
 
 
-      .. image:: ../../img/webui-img/config.png
-         :target: ../../img/webui-img/config.png
-         :alt: config
+   .. image:: ../../img/webui-img/config.png
+      :target: ../../img/webui-img/config.png
+      :alt: config
 
 
 
 * You can view and download ``nni-manager/dispatcher log files`` on here.
+
 
 
 .. image:: ../../img/webui-img/review-log.png
@@ -164,15 +184,15 @@ Click the tab ``Overview``.
 * If your experiment has many trials, you can change the refresh interval here.
 
 
+
 .. image:: ../../img/webui-img/refresh-interval.png
    :target: ../../img/webui-img/refresh-interval.png
    :alt: refresh
 
 
 
-
-
 * You can change some experiment configurations such as ``maxExecDuration``, ``maxTrialNum`` and ``trial concurrency`` on here.
+
 
 
 .. image:: ../../img/webui-img/edit-experiment-param.png
@@ -181,12 +201,11 @@ Click the tab ``Overview``.
 
 
 
-
 View job default metric
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^
 
+* Click the tab ``Default metric`` to see the point chart of all trials. Hover to see its specific default metric and search space message.
 
-* Click the tab ``Default metric`` to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
 
 .. image:: ../../img/webui-img/default-metric.png
@@ -198,20 +217,23 @@ View job default metric
 * Turn on the switch named ``Optimization curve`` to see the experiment's optimization curve.
 
 
+
 .. image:: ../../img/webui-img/best-curve.png
    :target: ../../img/webui-img/best-curve.png
    :alt: bestCurveGraph
 
 
-View hyper parameter
-====================
 
-Click the tab ``Hyper-parameter`` to see the parallel graph.
+View hyper parameter
+^^^^^^^^^^^^^^^^^^^^
+
+Click the tab ``Hyper-parameter`` to see the parallel chart.
 
 
 * You can click the ``add/remove`` button to add or remove axes.
 * Drag the axes to swap axes on the chart.
 * You can select the percentage to see top trials.
+
 
 
 .. image:: ../../img/webui-img/hyperPara.png
@@ -221,9 +243,10 @@ Click the tab ``Hyper-parameter`` to see the parallel graph.
 
 
 View Trial Duration
-===================
+^^^^^^^^^^^^^^^^^^^
 
-Click the tab ``Trial Duration`` to see the bar graph.
+Click the tab ``Trial Duration`` to see the bar chart.
+
 
 
 .. image:: ../../img/webui-img/trial_duration.png
@@ -232,10 +255,11 @@ Click the tab ``Trial Duration`` to see the bar graph.
 
 
 
-View Trial Intermediate Result Graph
-====================================
+View Trial Intermediate Result chart
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Click the tab ``Intermediate Result`` to see the line graph.
+Click the tab ``Intermediate Result`` to see the line chart.
+
 
 
 .. image:: ../../img/webui-img/trials_intermeidate.png
@@ -244,9 +268,10 @@ Click the tab ``Intermediate Result`` to see the line graph.
 
 
 
-The trial may have many intermediate results in the training process. In order to see the trend of some trials more clearly, we set a filtering function for the intermediate result graph.
+The trial may have many intermediate results in the training process. In order to see the trend of some trials more clearly, we set a filtering function for the intermediate result chart.
 
 You may find that these trials will get better or worse at an intermediate result. This indicates that it is an important and relevant intermediate result. To take a closer look at the point here, you need to enter its corresponding X-value at #Intermediate. Then input the range of metrics on this intermedia result. In the picture below, we choose the No. 4 intermediate result and set the range of metrics to 0.8-1.
+
 
 
 .. image:: ../../img/webui-img/filter-intermediate.png
@@ -256,12 +281,13 @@ You may find that these trials will get better or worse at an intermediate resul
 
 
 View trials status
-==================
+^^^^^^^^^^^^^^^^^^
 
 Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 * Trial detail: trial's id, trial's duration, start time, end time, status, accuracy, and search space file.
+
 
 
 .. image:: ../../img/webui-img/detail-local.png
@@ -272,54 +298,60 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 * Support searching for a specific trial by its id, status, Trial No. and trial parameters.
 
-**Trial id:**
- 
+   **Trial id:**
+   
 
 
-.. image:: ../../img/webui-img/detail/searchId.png
-   :target: ../../img/webui-img/detail/searchId.png
-   :alt: searchTrialId
-
-
-**Trial No.:**
+   .. image:: ../../img/webui-img/detail/searchId.png
+      :target: ../../img/webui-img/detail/searchId.png
+      :alt: searchTrialId
 
 
 
-.. image:: ../../img/webui-img/detail/searchNo.png
-   :target: ../../img/webui-img/detail/searchNo.png
-   :alt: searchTrialNo.
-
-
-**Trial status:**
+   **Trial No.:**
 
 
 
-.. image:: ../../img/webui-img/detail/searchStatus.png
-   :target: ../../img/webui-img/detail/searchStatus.png
-   :alt: searchStatus
+   .. image:: ../../img/webui-img/detail/searchNo.png
+      :target: ../../img/webui-img/detail/searchNo.png
+      :alt: searchTrialNo.
 
 
 
-**Trial parameters:**
-
-  ``parameters whose type is choice:``
-  
-
-.. image:: ../../img/webui-img/detail/searchParameterChoice.png
-   :target: ../../img/webui-img/detail/searchParameterChoice.png
-   :alt: searchParameterChoice
+   **Trial status:**
 
 
 
-``parameters whose type is not choice:``
-  
+   .. image:: ../../img/webui-img/detail/searchStatus.png
+      :target: ../../img/webui-img/detail/searchStatus.png
+      :alt: searchStatus
 
-.. image:: ../../img/webui-img/detail/searchParameterRange.png
-   :target: ../../img/webui-img/detail/searchParameterRange.png
-   :alt: searchParameterRange
+
+
+   **Trial parameters:**
+
+      ``parameters whose type is choice:``
+      
+
+
+      .. image:: ../../img/webui-img/detail/searchParameterChoice.png
+         :target: ../../img/webui-img/detail/searchParameterChoice.png
+         :alt: searchParameterChoice
+
+
+
+      ``parameters whose type is not choice:``
+      
+
+
+      .. image:: ../../img/webui-img/detail/searchParameterRange.png
+         :target: ../../img/webui-img/detail/searchParameterRange.png
+         :alt: searchParameterRange
+
 
 
 * The button named ``Add column`` can select which column to show on the table. If you run an experiment whose final result is a dict, you can see other keys in the table. You can choose the column ``Intermediate count`` to watch the trial's progress.
+
 
 
 .. image:: ../../img/webui-img/addColumn.png
@@ -331,9 +363,11 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 * If you want to compare some trials, you can select them and then click ``Compare`` to see the results.
 
 
+
 .. image:: ../../img/webui-img/select-trial.png
    :target: ../../img/webui-img/select-trial.png
    :alt: selectTrialGraph
+
 
 
 .. image:: ../../img/webui-img/compare.png
@@ -341,10 +375,12 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
    :alt: compareTrialsGraph
 
 
-* ``Tensorboard`` please refer `doc <Tensorboard.rst>`__.
+
+* ``Tensorboard`` please refer `doc <Tensorboard.rst>`_.
 
 
 * You can use the button named ``Copy as python`` to copy the trial's parameters.
+
 
 
 .. image:: ../../img/webui-img/copyParameter.png
@@ -354,7 +390,8 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-* Intermediate Result Graph: you can see the default metric in this graph by clicking the intermediate button.
+* Intermediate Result chart: you can see the default metric in this chart by clicking the intermediate button.
+
 
 
 .. image:: ../../img/webui-img/intermediate.png
@@ -365,6 +402,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 * Kill: you can kill a job that status is running.
+
 
 
 .. image:: ../../img/webui-img/kill-running.png
