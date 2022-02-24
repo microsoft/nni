@@ -3,6 +3,8 @@ Model Evaluators
 
 A model evaluator is for training and validating each generated model. They are necessary to evaluate the performance of new explored models.
 
+.. _functional-evaluator:
+
 Customize Evaluator with Any Function
 -------------------------------------
 
@@ -150,12 +152,16 @@ FunctionalEvaluator
     :members:
     :noindex:
 
+.. _classification-evaluator:
+
 Classification
 ^^^^^^^^^^^^^^
 
 ..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Classification
     :members:
     :noindex:
+
+.. _regression-evaluator:
 
 Regression
 ^^^^^^^^^^

@@ -16,11 +16,15 @@ To make users easily express a model space within their PyTorch/TensorFlow model
 
 .. note:: We can actively adding more mutation primitives. If you have any suggestions, feel free to `ask here <https://github.com/microsoft/nni/issues>`__.
 
+.. _nas-layer-choice:
+
 LayerChoice
 ^^^^^^^^^^^
 
 .. autoclass:: nni.retiarii.nn.pytorch.LayerChoice
    :members:
+
+.. _nas-input-choice:
 
 InputChoice
 ^^^^^^^^^^^
@@ -31,11 +35,15 @@ InputChoice
 .. autoclass:: nni.retiarii.nn.pytorch.ChosenInputs
    :members:
 
+.. _nas-value-choice:
+
 ValueChoice
 ^^^^^^^^^^^
 
 .. autoclass:: nni.retiarii.nn.pytorch.ValueChoice
    :members:
+
+.. _nas-repeat:
 
 Repeat
 ^^^^^^
@@ -43,11 +51,15 @@ Repeat
 .. autoclass:: nni.retiarii.nn.pytorch.Repeat
    :members:
 
+.. _nas-cell:
+
 Cell
 ^^^^
 
 .. autoclass:: nni.retiarii.nn.pytorch.Cell
    :members:
+
+.. _nas-cell-101:
 
 NasBench101Cell
 ^^^^^^^^^^^^^^^
@@ -55,11 +67,15 @@ NasBench101Cell
 .. autoclass:: nni.retiarii.nn.pytorch.NasBench101Cell
    :members:
 
+.. _nas-cell-201:
+
 NasBench201Cell
 ^^^^^^^^^^^^^^^
 
 .. autoclass:: nni.retiarii.nn.pytorch.NasBench201Cell
    :members:
+
+.. _hyper-modules:
 
 Hyper-module Library (experimental)
 -----------------------------------
@@ -67,6 +83,8 @@ Hyper-module Library (experimental)
 Hyper-module is a (PyTorch) module which contains many architecture/hyperparameter candidates for this module. By using hypermodule in user defined model, NNI will help users automatically find the best architecture/hyperparameter of the hyper-modules for this model. This follows the design philosophy of Retiarii that users write DNN model as a space.
 
 We are planning to support some of the hyper-modules commonly used in the community, such as AutoDropout, AutoActivation. These are considered complementary to :ref:`mutation-primitives`, as they are often more concrete, specific, and tailored for particular needs.
+
+.. _nas-autoactivation:
 
 AutoActivation
 ^^^^^^^^^^^^^^

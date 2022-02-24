@@ -49,55 +49,104 @@ During such process, we list out the core engineering challenges (which are also
 * **Exploration strategy:**: The exploration strategy details how to explore the search space (which is often exponentially large). It encompasses the classical exploration-exploitation trade-off since, on the one hand, it is desirable to find well-performing architectures quickly, while on the other hand, premature convergence to a region of suboptimal architectures should be avoided. In NNI, we have also provided a list of strategies. Some of them are powerful, but time consuming, while others might be suboptimal but really efficient. Users can always find one that matches their need.
 * **Performance estimation / evaluator**: The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. In NNI, this process is implemented with *evaluator*, which is responsible of estimating a model's performance. The simplest option is to perform a standard training and validation of the architecture on data. But this is computationally expensive. More efficient evaluators can be implemented with our provided interface.
 
-.. rubric:: Writing Search Space
+.. rubric:: Writing Model Space
 
-The following APIs are provided for writing a new search space.
-
-
-
-
-
-There are two types of model space exploration approach: **Multi-trial NAS** and **One-shot NAS**. Mutli-trial NAS trains each sampled model in the model space independently, while One-shot NAS samples the model from a super model. After constructing the model space, users can use either exploration appraoch to explore the model space. 
-
-
-Multi-trial NAS means each sampled model from model space is trained independently. A typical multi-trial NAS is `NASNet <https://arxiv.org/abs/1707.07012>`__. The algorithm to sample models from model space is called exploration strategy. NNI has supported the following exploration strategies for multi-trial NAS.
+The following APIs are provided to ease the engineering effort of writing a new search space.
 
 .. list-table::
    :header-rows: 1
    :widths: auto
 
-   * - Exploration Strategy Name
-     - Brief Introduction of Algorithm
-   * - Random Strategy
-     - Randomly sampling new model(s) from user defined model space. (``nni.retiarii.strategy.Random``)
-   * - Grid Search
-     - Sampling new model(s) from user defined model space using grid search algorithm. (``nni.retiarii.strategy.GridSearch``)
-   * - Regularized Evolution
-     - Generating new model(s) from generated models using `regularized evolution algorithm <https://arxiv.org/abs/1802.01548>`__ . (``nni.retiarii.strategy.RegularizedEvolution``)
-   * - TPE Strategy
-     - Sampling new model(s) from user defined model space using `TPE algorithm <https://papers.nips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__ . (``nni.retiarii.strategy.TPEStrategy``)
-   * - RL Strategy
-     - It uses `PPO algorithm <https://arxiv.org/abs/1707.06347>`__ to sample new model(s) from user defined model space. (``nni.retiarii.strategy.PolicyBasedRL``)
+   * - Name
+     - Type
+     - Brief Description
+   * - :ref:`nas-layer-choice`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Select from some PyTorch modules
+   * - :ref:`nas-input-choice`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Select from some inputs (tensors)
+   * - :ref:`nas-value-choice`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Select from some candidate values
+   * - :ref:`nas-repeat`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Repeat a block by a variable number of times
+   * - :ref:`nas-cell`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Cell structure popularly used in literature
+   * - :ref:`nas-cell-101`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Cell structure (variant) proposed by NAS-Bench-101
+   * - :ref:`nas-cell-201`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Cell structure (variant) proposed by NAS-Bench-201
+   * - :ref:`nas-autoactivation`
+     - :ref:`Hyper-modules <hyper-modules>`
+     - Searching for activation functions
+   * - :doc:`Mutator <mutator>`
+     - :doc:`mutator`
+     - Flexible mutations on graphs
 
+.. rubric:: Exploring the Search Space
 
-Please refer to `here <./multi_trial_nas.rst>`__ for detailed usage of multi-trial NAS.
-
-One-shot NAS means building model space into a super-model, training the super-model with weight sharing, and then sampling models from the super-model to find the best one. `DARTS <https://arxiv.org/abs/1806.09055>`__ is a typical one-shot NAS.
-Below is the supported one-shot NAS algorithms. More one-shot NAS will be supported soon.
+We provide the following (built-in) algorithms to explore the user-defined search space.
 
 .. list-table::
    :header-rows: 1
    :widths: auto
 
-   * - One-shot Algorithm Name
-     - Brief Introduction of Algorithm
-   * - `ENAS <ENAS.rst>`__
-     - `Efficient Neural Architecture Search via Parameter Sharing <https://arxiv.org/abs/1802.03268>`__. In ENAS, a controller learns to discover neural network architectures by searching for an optimal subgraph within a large computational graph. It uses parameter sharing between child models to achieve fast speed and excellent performance.
-   * - `DARTS <DARTS.rst>`__
-     - `DARTS: Differentiable Architecture Search <https://arxiv.org/abs/1806.09055>`__ introduces a novel algorithm for differentiable network architecture search on bilevel optimization.
-   * - `SPOS <SPOS.rst>`__
-     - `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ constructs a simplified supernet trained with a uniform path sampling method and applies an evolutionary algorithm to efficiently search for the best-performing architectures.
-   * - `ProxylessNAS <Proxylessnas.rst>`__
-     - `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/abs/1812.00332>`__. It removes proxy, directly learns the architectures for large-scale target tasks and target hardware platforms.
+   * - Name
+     - Type
+     - Brief Description
+   * - :ref:`random-strategy`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Randomly sample an architecture each time
+   * - :ref:`grid-search-strategy`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Traverse the search space and try all possibilities
+   * - :ref:`regularized-evolution-strategy`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Evolution algorithm for NAS. `Reference <https://arxiv.org/abs/1802.01548>`__
+   * - :ref:`tpe-strategy`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Tree-structured Parzen Estimator (TPE). `Reference <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__
+   * - :ref:`policy-based-rl-strategy`
+     - :ref:`Multi-trial <multi-trial-nas>`
+     - Policy-based reinforcement learning, based on implementation of tianshou. `Reference <https://arxiv.org/abs/1611.01578>`__
+   * - :ref:`darts-strategy`
+     - :ref:`One-shot <one-shot-nas>`
+     - Continuous relaxation of the architecture representation, allowing efficient search of the architecture using gradient descent. `Reference <https://arxiv.org/abs/1806.09055>`__
+   * - :ref:`enas-strategy`
+     - :ref:`One-shot <one-shot-nas>`
+     - RL controller learns to generate the best network on a super-net. `Reference <https://arxiv.org/abs/1802.03268>`__
+   * - :ref:`fbnet-strategy`
+     - :ref:`One-shot <one-shot-nas>`
+     - Choose the best block by using Gumbel Softmax random sampling and differentiable training. `Reference <https://arxiv.org/abs/1812.03443>`__
+   * - :ref:`spos-strategy`
+     - :ref:`One-shot <one-shot-nas>`
+     - Train a super-net with uniform path sampling. `Reference <https://arxiv.org/abs/1904.00420>`__
+   * - :ref:`proxylessnas-strategy`
+     - :ref:`One-shot <one-shot-nas>`
+     - A low-memory-consuming optimized version of differentiable architecture search. `Reference <https://arxiv.org/abs/1812.00332>`__
 
-Please refer to `here <one_shot_nas.rst>`__ for detailed usage of one-shot NAS algorithms.
+.. rubric:: Evaluators
+
+The evaluator APIs can be used to build performance assessment component of your neural architecture search process.
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Name
+     - Based on
+     - Brief Description
+   * - :ref:`functional-evaluator`
+     - General
+     - Evaluate with any Python function
+   * - :ref:`classification-evaluator`
+     - `PyTorch Lightning <https://www.pytorchlightning.ai/>`__
+     - For classification tasks
+   * - :ref:`regression-evaluator`
+     - `PyTorch Lightning <https://www.pytorchlightning.ai/>`__
+     - For regression tasks

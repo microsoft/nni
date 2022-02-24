@@ -3,6 +3,8 @@ Exploration Strategy
 
 There are two types of model space exploration approach: **Multi-trial NAS** and **One-shot NAS**. Mutli-trial NAS trains each sampled model in the model space independently, while One-shot NAS samples the model from a super model. After constructing the model space, users can use either exploration approach to explore the model space. 
 
+.. _multi-trial-nas:
+
 Multi-trial strategy
 --------------------
 
@@ -18,12 +20,16 @@ To use an exploration strategy, users simply instantiate an exploration strategy
 
 Rather than using ``strategy.Random``, users can choose one of the strategies from below.
 
+.. _random-strategy:
+
 Random
 ^^^^^^
 
 .. autoclass:: nni.retiarii.strategy.Random
    :members:
    :noindex:
+
+.. _grid-search-strategy:
 
 GridSearch
 ^^^^^^^^^^
@@ -32,12 +38,16 @@ GridSearch
    :members:
    :noindex:
 
+.. _regularized-evolution-strategy:
+
 RegularizedEvolution
 ^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: nni.retiarii.strategy.RegularizedEvolution
    :members:
    :noindex:
+
+.. _tpe-strategy:
 
 TPE
 ^^^
@@ -46,6 +56,7 @@ TPE
    :members:
    :noindex:
 
+.. _policy-based-rl-strategy:
 
 PolicyBasedRL
 ^^^^^^^^^^^^^
@@ -54,11 +65,14 @@ PolicyBasedRL
    :members:
    :noindex:
 
+.. _one-shot-nas:
 
 One-shot strategy
 -----------------
 
 One-shot NAS algorithms leverage weight sharing among models in neural architecture search space to train a supernet, and use this supernet to guide the selection of better models. This type of algorihtms greatly reduces computational resource compared to independently training each model from scratch (which we call "Multi-trial NAS"). NNI has supported many popular One-shot NAS algorithms as following.
+
+.. _darts-strategy:
 
 DARTS
 ^^^^^
@@ -113,6 +127,8 @@ Limitations
 
 * DARTS doesn't support DataParallel and needs to be customized in order to support DistributedDataParallel.
 
+.. _enas-strategy:
+
 ENAS
 ^^^^
 
@@ -144,6 +160,8 @@ Examples
 
    # view more options for search
    python3 search.py -h
+
+.. _fbnet-strategy:
 
 FBNet
 ^^^^^
@@ -274,9 +292,10 @@ To run the tutorial, follow the steps below:
    * `Subnet <https://drive.google.com/file/d/160rkuwB7y7qlBZNM3W_T53cb6MQIYHIE/view?usp=sharing>`__
    * `ONNX model <https://drive.google.com/file/d/1s-v-aOiMv0cqBspPVF3vSGujTbn_T_Uo/view?usp=sharing>`__
 
+.. _spos-strategy:
 
-Single Path One-Shot (SPOS)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SPOS
+^^^^
 
 Proposed in `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ is a one-shot NAS method that addresses the difficulties in training One-Shot NAS models by constructing a simplified supernet trained with an uniform path sampling method, so that all underlying architectures (and their weights) get trained fully and equally. An evolutionary algorithm is then applied to efficiently search for the best-performing architectures without any fine tuning.
 
@@ -352,6 +371,8 @@ Reproduction is still undergoing. Due to the gap between official release and or
 
 * Evolution phase is almost aligned with official repo. Our evolution algorithm shows a converging trend and reaches ~65% accuracy at the end of search. Nevertheless, this result is not on par with paper. For details, please refer to `this issue <https://github.com/megvii-model/SinglePathOneShot/issues/6>`__.
 * Retrain phase is not aligned. Our retraining code, which uses the architecture released by the authors, reaches 72.14% accuracy, still having a gap towards 73.61% by official release and 74.3% reported in original paper.
+
+.. _proxylessnas-strategy:
 
 ProxylessNAS
 ^^^^^^^^^^^^
