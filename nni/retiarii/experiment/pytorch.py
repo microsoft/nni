@@ -43,6 +43,9 @@ from ..strategy.utils import dry_run_for_formatted_search_space
 _logger = logging.getLogger(__name__)
 
 
+__all__ = ['RetiariiExeConfig', 'RetiariiExperiment']
+
+
 @dataclass(init=False)
 class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None

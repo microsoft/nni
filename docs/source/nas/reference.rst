@@ -1,121 +1,79 @@
 Retiarii API Reference
 ======================
 
-.. Inline Mutation APIs
-.. --------------------
+nni.retiarii
+------------
 
-.. ..  autoclass:: nni.retiarii.nn.pytorch.LayerChoice
-..     :members:
+..  automodule:: nni.retiarii
+    :imported-members:
+    :members:
 
-.. ..  autoclass:: nni.retiarii.nn.pytorch.InputChoice
-..     :members:
+nni.retiarii.codegen
+--------------------
 
-.. ..  autoclass:: nni.retiarii.nn.pytorch.ValueChoice
-..     :members:
+..  automodule:: nni.retiarii.codegen
+    :imported-members:
+    :members:
 
-.. ..  autoclass:: nni.retiarii.nn.pytorch.ChosenInputs
-..     :members:
+nni.retiarii.converter
+----------------------
 
-.. ..  autoclass:: nni.retiarii.nn.pytorch.Repeat
-..     :members:
+..  automodule:: nni.retiarii.converter
+    :imported-members:
+    :members:
 
-.. ..  autoclass:: nni.retiarii.nn.pytorch.Cell
-..     :members:
+nni.retiarii.evaluator
+----------------------
 
-.. Graph Mutation APIs
-.. -------------------
+..  automodule:: nni.retiarii.evaluator
+    :imported-members:
+    :members:
 
-.. ..  autoclass:: nni.retiarii.Mutator
-..     :members:
+..  automodule:: nni.retiarii.evaluator.pytorch
+    :imported-members:
+    :members:
 
-.. ..  autoclass:: nni.retiarii.Model
-..     :members:
+nni.retiarii.execution
+----------------------
 
-.. ..  autoclass:: nni.retiarii.Graph
-..     :members:
+..  automodule:: nni.retiarii.execution
+    :imported-members:
+    :members:
+    :undoc-members:
 
-.. ..  autoclass:: nni.retiarii.Node
-..     :members:
+nni.retiarii.experiment.pytorch
+-------------------------------
 
-.. ..  autoclass:: nni.retiarii.Edge
-..     :members:
+..  automodule:: nni.retiarii.experiment.pytorch
+    :members:
 
-.. ..  autoclass:: nni.retiarii.Operation
-..     :members:
+nni.retiarii.nn.pytorch
+-----------------------
 
-.. Evaluators
-.. ----------
+Please refer to:
 
-.. ..  autoclass:: nni.retiarii.evaluator.FunctionalEvaluator
-..     :members:
+* :doc:`construct_space`.
+* :doc:`mutator`.
+* `torch.nn reference <https://pytorch.org/docs/stable/nn.html>`_.
 
-.. ..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.LightningModule
-..     :members:
+nni.retiarii.oneshot
+--------------------
 
-.. ..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Classification
-..     :members:
-
-.. ..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Regression
-..     :members:
-
-.. Oneshot Trainers
-.. ----------------
-
-.. ..  autoclass:: nni.retiarii.oneshot.pytorch.DartsTrainer
-..     :members:
-
-.. ..  autoclass:: nni.retiarii.oneshot.pytorch.EnasTrainer
-..     :members:
-
-.. ..  autoclass:: nni.retiarii.oneshot.pytorch.ProxylessTrainer
-..     :members:
-
-.. ..  autoclass:: nni.retiarii.oneshot.pytorch.SinglePathTrainer
-..     :members:
-
-.. Exploration Strategies
-.. ----------------------
-
-.. ..  autoclass:: nni.retiarii.strategy.Random
-..     :members:
-
-.. ..  autoclass:: nni.retiarii.strategy.GridSearch
-..     :members:
-
-.. ..  autoclass:: nni.retiarii.strategy.RegularizedEvolution
-..     :members:
-
-.. ..  autoclass:: nni.retiarii.strategy.TPEStrategy
-..     :members:
-
-.. ..  autoclass:: nni.retiarii.strategy.PolicyBasedRL
-..     :members:
-
-.. Retiarii Experiments
-.. --------------------
-
-.. ..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExperiment
-..     :members:
-
-.. ..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExeConfig
-..     :members:
-
-.. CGO Execution
-.. -------------
-
-.. ..  autofunction:: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule
-
-.. ..  autofunction:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification
-
-.. ..  autofunction:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression
-
-.. Utilities
-.. ---------
-
-.. ..  autofunction:: nni.retiarii.basic_unit
-
-.. ..  autofunction:: nni.retiarii.model_wrapper
-
-.. ..  autofunction:: nni.retiarii.fixed_arch
+..  automodule:: nni.retiarii.oneshot
+    :imported-members:
+    :members:
 
 
+nni.retiarii.operation_def
+--------------------------
+
+..  automodule:: nni.retiarii.operation_def
+    :imported-members:
+    :members:
+
+nni.retiarii.strategy
+---------------------
+
+..  automodule:: nni.retiarii.strategy
+    :imported-members:
+    :members:

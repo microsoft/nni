@@ -21,13 +21,34 @@ class Repeat(Mutable):
     Parameters
     ----------
     blocks : function, list of function, module or list of module
-        The block to be repeated. If not a list, it will be replicated into a list.
+        The block to be repeated. If not a list, it will be replicated (**deep-copied**) into a list.
         If a list, it should be of length ``max_depth``, the modules will be instantiated in order and a prefix will be taken.
         If a function, it will be called (the argument is the index) to instantiate a module.
         Otherwise the module will be deep-copied.
     depth : int or tuple of int
         If one number, the block will be repeated by a fixed number of times. If a tuple, it should be (min, max),
-        meaning that the block will be repeated at least `min` times and at most `max` times.
+        meaning that the block will be repeated at least ``min`` times and at most ``max`` times.
+
+
+    Examples
+    --------
+    Block() will be deep copied and repeated 3 times. ::
+
+        self.blocks = nn.Repeat(Block(), 3)
+
+    Block() will be repeated 1, 2, or 3 times. ::
+
+        self.blocks = nn.Repeat(Block(), (1, 3))
+
+    Can be used together with layer choice.
+    With deep copy, the 3 layers will have the same label, thus share the choice. ::
+
+        self.blocks = nn.Repeat(nn.LayerChoice([...]), (1, 3))
+
+    To make the three layer choices independent,
+    we need a factory function that accepts index (0, 1, 2, ...) and returns the module of the ``index``-th layer. ::
+
+        self.blocks = nn.Repeat(lambda index: nn.LayerChoice([...], label=f'layer{index}'), (1, 3))
     """
 
     @classmethod
@@ -141,6 +162,10 @@ class NasBench201Cell(nn.Module):
             self.layers.append(node_ops)
 
     def forward(self, inputs):
+        """
+        The forward of input choice is simply selecting first on all choices.
+        It shouldn't be called directly by users in most cases.
+        """
         tensors = [inputs]
         for layer in self.layers:
             current_tensor = []

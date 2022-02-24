@@ -1,7 +1,7 @@
 Execution Engines
 =================
 
-Execution engine is for running Retiarii Experiment. NNI supports three execution engines, users can choose a speicific engine according to the type of their model mutation definition and their requirements for cross-model optimizations. 
+Execution engine is for running Retiarii Experiment. NNI supports three execution engines, users can choose a specific engine according to the type of their model mutation definition and their requirements for cross-model optimizations. 
 
 * **Pure-python execution engine** is the default engine, it supports the model space expressed by `inline mutation API <./MutationPrimitives.rst>`__. 
 
@@ -53,6 +53,8 @@ Three steps are need to use graph-based execution engine.
 
 For exporting top models, graph-based execution engine supports exporting source code for top models by running ``exp.export_top_models(formatter='code')``.
 
+.. _cgo-execution-engine:
+
 CGO Execution Engine (experimental)
 -----------------------------------
 
@@ -103,4 +105,16 @@ We have already implemented two trainers: :class:`nni.retiarii.evaluator.pytorch
 Advanced users can also implement their own trainers by inheriting ``MultiModelSupervisedLearningModule``.
 
 Sometimes, a mutated model cannot be executed (e.g., due to shape mismatch). When a trial running multiple models contains 
-a bad model, CGO execution engine will re-run each model independently in seperate trials without cross-model optimizations.
+a bad model, CGO execution engine will re-run each model independently in separate trials without cross-model optimizations.
+
+References
+^^^^^^^^^^
+
+..  automodule:: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule
+    :members:
+
+..  automodule:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification
+    :members:
+
+..  automodule:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression
+    :members:

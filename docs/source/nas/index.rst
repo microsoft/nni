@@ -6,14 +6,16 @@ Retiarii for Neural Architecture Search
    :titlesonly:
 
    construct_space
-   search_strategy
+   exploration_strategy
    evaluator
    advanced_usage
+   reference
 
 .. attention:: NNI's latest NAS supports are all based on Retiarii Framework, users who are still on `early version using NNI NAS v1.0 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ shall migrate your work to Retiarii as soon as possible.
 
-Motivation
-----------
+.. Using rubric to prevent the section heading to be include into toc
+
+.. rubric:: Motivation
 
 Automatic neural architecture search is playing an increasingly important role in finding better models. Recent research has proven the feasibility of automatic NAS and has led to models that beat many manually designed and tuned models. Representative works include `NASNet <https://arxiv.org/abs/1707.07012>`__, `ENAS <https://arxiv.org/abs/1802.03268>`__, `DARTS <https://arxiv.org/abs/1806.09055>`__, `Network Morphism <https://arxiv.org/abs/1806.10282>`__, and `Evolution <https://arxiv.org/abs/1703.01041>`__. In addition, new innovations continue to emerge.
 
@@ -25,23 +27,29 @@ In summary, we highlight the following features for Retiarii:
 * SOTA NAS algorithms are built-in to be used for exploring model search space.
 * System-level optimizations are implemented for speeding up the exploration.
 
-Overview
---------
+.. rubric:: Overview
 
 High-level speaking, aiming to solve any particular task with neural architecture search typically requires: search space design, search strategy selection, and performance evaluation. The three components work together with the following loop (the figure is from the famous `NAS survey <https://arxiv.org/abs/1808.05377>`__):
 
 .. image:: ../../img/nas_abstract_illustration.png
 
-Concretely, A search strategy selects an architecture from a predefined search space. The architecture is passed to a performance evaluation to get a score, which represents how well this architecture performs on a particular task. We iterate this process until the search process is able to find the best architecture.
+To be consistent, we will use the following terminologies throughout our documentation:
+
+Some frequently used terminologies in this document:
+
+* *Model search space*: it means a set of models from which the best model is explored/searched. Sometimes we use *search space* or *model space* in short.
+* *Exploration strategy*: the algorithm that is used to explore a model search space.
+* *Model evaluator*: it is used to train a model and evaluate the model's performance.
+
+Concretely, A exploration strategy selects an architecture from a predefined search space. The architecture is passed to a performance evaluation to get a score, which represents how well this architecture performs on a particular task. We iterate this process until the search process is able to find the best architecture.
 
 During such process, we list out the core engineering challenges (which are also pointed out by the famous `NAS survey <https://arxiv.org/abs/1808.05377>`__) and the solutions NNI has provided to tackling them:
 
 * **Search space design:** The search space defines which architectures can be represented in principle. Incorporating prior knowledge about typical properties of architectures well-suited for a task can reduce the size of the search space and simplify the search. However, this also introduces a human bias, which may prevent finding novel architectural building blocks that go beyond the current human knowledge. In NNI, we provide a wide range of APIs to build the search space. There are high-level APIs, that incorporate human knowledge about what makes a good architecture or search space. There are also low-level APIs, that is a list of primitives to construct a network from operator to operator.
-* **Search strategy:**: The search strategy details how to explore the search space (which is often exponentially large). It encompasses the classical exploration-exploitation trade-off since, on the one hand, it is desirable to find well-performing architectures quickly, while on the other hand, premature convergence to a region of suboptimal architectures should be avoided. In NNI, we have also provided a list of strategies. Some of them are powerful, but time consuming, while others might be suboptimal but really efficient. Users can always find one that matches their need.
+* **Exploration strategy:**: The exploration strategy details how to explore the search space (which is often exponentially large). It encompasses the classical exploration-exploitation trade-off since, on the one hand, it is desirable to find well-performing architectures quickly, while on the other hand, premature convergence to a region of suboptimal architectures should be avoided. In NNI, we have also provided a list of strategies. Some of them are powerful, but time consuming, while others might be suboptimal but really efficient. Users can always find one that matches their need.
 * **Performance estimation / evaluator**: The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. In NNI, this process is implemented with *evaluator*, which is responsible of estimating a model's performance. The simplest option is to perform a standard training and validation of the architecture on data. But this is computationally expensive. More efficient evaluators can be implemented with our provided interface.
 
-Writing Search Space
---------------------
+.. rubric:: Writing Search Space
 
 The following APIs are provided for writing a new search space.
 
@@ -51,9 +59,6 @@ The following APIs are provided for writing a new search space.
 
 There are two types of model space exploration approach: **Multi-trial NAS** and **One-shot NAS**. Mutli-trial NAS trains each sampled model in the model space independently, while One-shot NAS samples the model from a super model. After constructing the model space, users can use either exploration appraoch to explore the model space. 
 
-
-Multi-trial NAS
----------------
 
 Multi-trial NAS means each sampled model from model space is trained independently. A typical multi-trial NAS is `NASNet <https://arxiv.org/abs/1707.07012>`__. The algorithm to sample models from model space is called exploration strategy. NNI has supported the following exploration strategies for multi-trial NAS.
 
@@ -77,9 +82,6 @@ Multi-trial NAS means each sampled model from model space is trained independent
 
 Please refer to `here <./multi_trial_nas.rst>`__ for detailed usage of multi-trial NAS.
 
-One-shot NAS
-------------
-
 One-shot NAS means building model space into a super-model, training the super-model with weight sharing, and then sampling models from the super-model to find the best one. `DARTS <https://arxiv.org/abs/1806.09055>`__ is a typical one-shot NAS.
 Below is the supported one-shot NAS algorithms. More one-shot NAS will be supported soon.
 
@@ -99,12 +101,3 @@ Below is the supported one-shot NAS algorithms. More one-shot NAS will be suppor
      - `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/abs/1812.00332>`__. It removes proxy, directly learns the architectures for large-scale target tasks and target hardware platforms.
 
 Please refer to `here <one_shot_nas.rst>`__ for detailed usage of one-shot NAS algorithms.
-
-Reference and Feedback
-----------------------
-
-* `Quick Start <./QuickStart.rst>`__ ;
-* `Construct Your Model Space <./construct_space.rst>`__ ;
-* `Retiarii: A Deep Learning Exploratory-Training Framework <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ ;
-* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__ for this feature in GitHub ;
-* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__ for this feature in GitHub .

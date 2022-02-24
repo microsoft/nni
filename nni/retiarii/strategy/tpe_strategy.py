@@ -39,7 +39,7 @@ class TPESampler(Sampler):
         return chosen
 
 
-class TPEStrategy(BaseStrategy):
+class TPE(BaseStrategy):
     """
     The Tree-structured Parzen Estimator (TPE) [bergstrahpo]_ is a sequential model-based optimization (SMBO) approach.
     SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements,
@@ -92,3 +92,6 @@ class TPEStrategy(BaseStrategy):
                     to_be_deleted.append(_id)
             for _id in to_be_deleted:
                 del self.running_models[_id]
+
+
+TPEStrategy = TPE
