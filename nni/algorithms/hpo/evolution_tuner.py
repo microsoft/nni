@@ -3,7 +3,8 @@
 
 """
 evolution_tuner.py
-"""
+"""                         
+from __future__ import annotations
 
 import copy
 import random
@@ -16,25 +17,29 @@ from schema import Schema, Optional
 import nni
 from nni import ClassArgsValidator
 from nni.tuner import Tuner
+from nni.typehint import Literal
 from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
 
 logger = logging.getLogger(__name__)
 
 class Individual:
     """
-    Indicidual class to store the indv info.
+    Individual class to store the indv info.
 
     Parameters
     ----------
-    config : str
+    config
         Search space.
-    info : str
+    info
         The str to save information of individual.
-    result : float
+    result
         The final metric of a individual.
     """
 
-    def __init__(self, config=None, info=None, result=None):
+    def __init__(self,
+            config: str | None = None,
+            info: str | None = None,
+            result: float | None = None):
         self.config = config
         self.result = result
         self.info = info
@@ -59,11 +64,9 @@ class EvolutionTuner(Tuner):
 
     Parameters
     ----------
-    optimize_mode : str
-        *maximize or minimize, optional, default = maximize*
+    optimize_mode
         If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
-    population_size : int
-        *int value (should > 0), optional, default = 20*
+    population_size
         The initial size of the population (trial num) in the evolution tuner. The larger population size, the better evolution performance.
         It's suggested that ``population_size`` be much larger than ``concurrency`` so users can get the most out of the algorithm. 
         And at least ``concurrency``, or the tuner will fail on its first generation of parameters.
@@ -80,7 +83,9 @@ class EvolutionTuner(Tuner):
                 population_size: 100
     """
 
-    def __init__(self, optimize_mode="maximize", population_size=32):
+    def __init__(self,
+            optimize_mode: Literal['minimize', 'maximize'] = 'minimize',
+            population_size: int = 32):
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.population_size = population_size
 
