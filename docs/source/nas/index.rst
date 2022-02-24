@@ -1,6 +1,15 @@
 Retiarii for Neural Architecture Search
 =======================================
 
+.. toctree::
+   :hidden:
+   :titlesonly:
+
+   construct_space
+   search_strategy
+   evaluator
+   advanced_usage
+
 .. attention:: NNI's latest NAS supports are all based on Retiarii Framework, users who are still on `early version using NNI NAS v1.0 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ shall migrate your work to Retiarii as soon as possible.
 
 Motivation

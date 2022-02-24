@@ -22,7 +22,7 @@ Neural Network Intelligence
 
     Overview
     Auto (Hyper-parameter) Tuning <hyperparameter_tune>
-    Neural Architecture Search <nas>
+    Neural Architecture Search <nas/index>
     Model Compression <model_compression>
     Feature Engineering <feature_engineering>
 

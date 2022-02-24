@@ -102,6 +102,7 @@ Available Operators
 Here is a list of available operators used in NDS.
 
 .. automodule:: nni.nas.benchmarks.nds.constants
+   :noindex:
 
 API Documentation
 ^^^^^^^^^^^^^^^^^

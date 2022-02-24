@@ -21,7 +21,9 @@ class LayerChoice(Mutable):
     """
     Layer choice selects one of the ``candidates``, then apply it on inputs and return results.
 
-    Layer choice does not allow itself to be nested.
+    It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model.
+
+    *New in v2.2:* Layer choice can be nested.
 
     Parameters
     ----------
@@ -41,6 +43,20 @@ class LayerChoice(Mutable):
     choices : list of Module
         Deprecated. A list of all candidate modules in the layer choice module.
         ``list(layer_choice)`` is recommended, which will serve the same purpose.
+
+    Examples
+    --------
+
+    ::
+        # import nni.retiarii.nn.pytorch as nn
+        # declared in `__init__` method
+        self.layer = nn.LayerChoice([
+            ops.PoolBN('max', channels, 3, stride, 1),
+            ops.SepConv(channels, channels, 3, stride, 1),
+            nn.Identity()
+        ])
+        # invoked in `forward` method
+        out = self.layer(x)
 
     Notes
     -----
