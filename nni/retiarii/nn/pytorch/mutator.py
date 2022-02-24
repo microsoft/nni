@@ -144,6 +144,7 @@ class RepeatMutator(Mutator):
         return chain
 
     def mutate(self, model):
+        import pdb; pdb.set_trace()
         min_depth = self.nodes[0].operation.parameters['min_depth']
         max_depth = self.nodes[0].operation.parameters['max_depth']
         if min_depth < max_depth:

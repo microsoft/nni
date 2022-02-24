@@ -6,10 +6,12 @@ from typing import Callable, List, Union, Tuple, Optional
 import torch
 import torch.nn as nn
 
+from nni.retiarii.utils import NoContextError
+
 from .api import LayerChoice, ValueChoice, ValueChoiceX
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
-from .utils import Mutable, generate_new_label, get_fixed_value
+from .utils import Mutable, generate_new_label
 
 
 __all__ = ['Repeat', 'Cell', 'NasBench101Cell', 'NasBench101Mutator', 'NasBench201Cell']
@@ -42,9 +44,11 @@ class Repeat(Mutable):
                             depth: Union[int, Tuple[int, int], ValueChoice], *, label: Optional[str] = None):
         if isinstance(depth, tuple):
             # this will create a value choice
-            # and in its ``__new__``, a fixed value will be returned
+            # and for fixed mode, in its ``__new__``, a fixed value will be returned
             depth = cls.create_depth_value_choice(depth[0], depth[1], label)
-        return nn.Sequential(*cls._replicate_and_instantiate(blocks, depth))
+        if isinstance(depth, int):
+            return nn.Sequential(*cls._replicate_and_instantiate(blocks, depth))
+        raise NoContextError(f'Not in fixed mode, or {depth} not an integer.')
 
     @staticmethod
     def create_depth_value_choice(min_depth: int, max_depth: int, label: Optional[str] = None) -> ValueChoice:
