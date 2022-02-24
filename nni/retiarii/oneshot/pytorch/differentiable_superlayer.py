@@ -109,7 +109,7 @@ class DifferentiableSuperConv2d(nn.Conv2d):
                 weight = (weight + cur_part) * alpha
             # we do not consider skip-op here for out_channel/expansion candidates, which means at least the smallest channel
             # candidate is included
-            weight += input_weight * mask[-1]
+            weight += input_weight * masks[-1]
 
             return weight
 
@@ -145,31 +145,32 @@ class DifferentiableSuperConv2d(nn.Conv2d):
         with torch.no_grad():
             if self.kernel_size_candidates is not None:
                 weight = torch.zeros_like(self.weight)
-                for i in range(len(self.kernel_size_candidates) - 2, -1, 1):
+                # ascending order 
+                for i in range(len(self.kernel_size_candidates) - 2, -1, -1):
                     mask = self.kernel_masks[i]
                     t = self.t_kernel[i]
                     cur_part = self.weight * mask
                     alpha = self.Lasso_sigmoid(cur_part, t)
-                    if alpha <= eps:
-                        result['kernel_size'] = i + 1
+                    if alpha <= eps: # takes the smaller one
+                        result['kernel_size'] = self.kernel_size_candidates[i + 1]
                         break
                     weight = (weight + cur_part) * alpha
 
                 if 'kernel_size' not in result:
-                    result['kernel_size'] = 0
+                    result['kernel_size'] = self.kernel_size_candidates[0]
             else:
                 weight = self.weight
 
             if self.out_channel_candidates is not None:
-                for i in range(len(self.out_channel_candidates) - 2, -1, 1):
+                for i in range(len(self.out_channel_candidates) - 2, -1, -1):
                     mask = self.channel_masks[i]
                     t = self.t_expansion[i]
                     alpha = self.Lasso_sigmoid(weight * mask, t)
                     if alpha <= eps:
-                        result['out_channels'] = i
+                        result['out_channels'] = self.out_channel_candidates[i + 1]
 
                 if 'out_channels' not in result:
-                    result['out_channels'] = 0
+                    result['out_channels'] = self.out_channel_candidates[0]
 
         return result
 
@@ -186,9 +187,9 @@ class DifferentiableSuperConv2d(nn.Conv2d):
             the threshold
         """
         lasso = torch.norm(matrix) - t
-        indicator = torch.sign(lasso)
+        indicator = (lasso > 0).float() # torch.sign(lasso)
         with torch.no_grad():
-            indicator = indicator / 2 + .5 # realign indicator from (-1, 1) to (0, 1)
+#            indicator = indicator / 2 + .5 # realign indicator from (-1, 1) to (0, 1)
             indicator -= F.sigmoid(lasso)
         indicator += F.sigmoid(lasso)
         return indicator
