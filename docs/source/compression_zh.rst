@@ -27,3 +27,6 @@ NNI 中也内置了一些主流的模型压缩算法。
 
     概述 <compression/overview>
     模型剪枝 <compression/pruning>
+    模型量化 <compression/quantization>
+    高级用法 <compression/advanced_usage>
+    参考 <compression/reference>
