@@ -220,7 +220,7 @@ class InterleavedTrainValDataLoader(DataLoader):
             self.train_dataloader = train_dataloader
             self.val_dataloader = val_dataloader
         else: # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
-            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle = False, overfit_batches = 0)
+            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle = True, overfit_batches = 0)
             self.train_dataloader = TrainerDataLoadingMixin._update_dataloader(train_dataloader, train_sampler)
             val_sampler = TrainerDataLoadingMixin._get_distributed_sampler(val_dataloader, shuffle = False, overfit_batches = 0)
             self.val_dataloader = TrainerDataLoadingMixin._update_dataloader(val_dataloader, val_sampler)
@@ -295,7 +295,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
             self.train_dataloader = train_dataloader
             self.val_dataloader = val_dataloader
         else: # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
-            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle = False, overfit_batches = 0)
+            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle = True, overfit_batches = 0)
             self.train_dataloader = TrainerDataLoadingMixin._update_dataloader(train_dataloader, train_sampler)
             val_sampler = TrainerDataLoadingMixin._get_distributed_sampler(val_dataloader, shuffle = False, overfit_batches = 0)
             self.val_dataloader = TrainerDataLoadingMixin._update_dataloader(val_dataloader, val_sampler)
