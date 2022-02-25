@@ -73,19 +73,10 @@ The job name format is something like ``nni_exp_{experiment_id}_trial_{trial_id}
 
 .. note:: For OpenPAI training service, NNI will start an additional rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is ``8080``, the rest server will listen on ``8081``, to receive metrics from trial job running in Kubernetes. So you should ``enable 8081`` TCP port in your firewall rule to allow incoming traffic.
 
-Once a trial job is completed, you can go to NNI WebUI's overview page (like ``http://localhost:8080/oview``) to check trial's information.
+Once a trial job is completed, you can go to NNI WebUI's overview page (like ``http://localhost:8080/oview``) to check trial's information. For example, you can expand a trial information in trial list view, click the logPath link like:
 
-* Expand a trial information in trial list view, click the logPath link like:
-
-  .. image:: ../../img/nni_webui_joblist.png
-     :scale: 30%
-
-* And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
-
-  .. image:: ../../img/nni_trial_hdfs_output.jpg
-     :scale: 80%
-
-  You can see there are three files in the output folder: ``stderr``, ``stdout``, and ``trial.log``.
+.. image:: ../../img/nni_webui_joblist.png
+    :scale: 30%
 
 Configuration References
 ------------------------
