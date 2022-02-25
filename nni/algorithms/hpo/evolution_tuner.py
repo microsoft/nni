@@ -79,7 +79,7 @@ class EvolutionTuner(Tuner):
                 population_size: 100
     """
 
-    def __init__(self, optimize_mode='minimize', population_size=32):
+    def __init__(self, optimize_mode='maximize', population_size=32):
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.population_size = population_size
 
