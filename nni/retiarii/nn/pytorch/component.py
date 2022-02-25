@@ -11,7 +11,7 @@ from nni.retiarii.utils import NoContextError
 from .api import LayerChoice, ValueChoice, ValueChoiceX
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
-from .utils import Mutable, generate_new_label
+from .utils import Mutable, generate_new_label, get_fixed_value
 
 
 __all__ = ['Repeat', 'Cell', 'NasBench101Cell', 'NasBench101Mutator', 'NasBench201Cell']
@@ -43,18 +43,13 @@ class Repeat(Mutable):
                                           List[nn.Module]],
                             depth: Union[int, Tuple[int, int], ValueChoice], *, label: Optional[str] = None):
         if isinstance(depth, tuple):
-            # this will create a value choice
-            # and for fixed mode, in its ``__new__``, a fixed value will be returned
-            depth = cls.create_depth_value_choice(depth[0], depth[1], label)
+            # we can't create a value choice here,
+            # otherwise we will have two value choices, one created here, another in init.
+            depth = get_fixed_value(label)
         if isinstance(depth, int):
+            # if depth is a valuechoice, it should be already an int
             return nn.Sequential(*cls._replicate_and_instantiate(blocks, depth))
         raise NoContextError(f'Not in fixed mode, or {depth} not an integer.')
-
-    @staticmethod
-    def create_depth_value_choice(min_depth: int, max_depth: int, label: Optional[str] = None) -> ValueChoice:
-        label = generate_new_label(label)
-        value_choice = ValueChoice(list(range(min_depth, max_depth + 1)), label=label)
-        return value_choice
 
     def __init__(self,
                  blocks: Union[Callable[[int], nn.Module],
@@ -77,7 +72,7 @@ class Repeat(Mutable):
         elif isinstance(depth, tuple):
             self.min_depth = depth if isinstance(depth, int) else depth[0]
             self.max_depth = depth if isinstance(depth, int) else depth[1]
-            self.depth_choice = self.create_depth_value_choice(self.min_depth, self.max_depth, label)
+            self.depth_choice = ValueChoice(list(range(self.min_depth, self.max_depth + 1)), label=label)
         elif isinstance(depth, int):
             self.min_depth = self.max_depth = depth
             self.depth_choice = depth

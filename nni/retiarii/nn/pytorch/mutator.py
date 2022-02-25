@@ -144,15 +144,13 @@ class RepeatMutator(Mutator):
         return chain
 
     def mutate(self, model):
-        import pdb; pdb.set_trace()
-        min_depth = self.nodes[0].operation.parameters['min_depth']
-        max_depth = self.nodes[0].operation.parameters['max_depth']
-        if min_depth < max_depth:
-            chosen_depth = self.choice(list(range(min_depth, max_depth + 1)))
         for node in self.nodes:
             # the logic here is similar to layer choice. We find cell attached to each node.
             target: Graph = model.graphs[node.operation.cell_name]
             chain = self._retrieve_chain_from_graph(target)
+            # and we get the chosen depth (by value choice)
+            node_in_model = model.get_node_by_name(node.name)
+            chosen_depth = node_in_model.operation.parameters['depth']
             for edge in chain[chosen_depth - 1].outgoing_edges:
                 edge.remove()
             target.add_edge((chain[chosen_depth - 1], None), (target.output_node, None))
@@ -185,6 +183,8 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     # `pc_nodes` are arguments of basic units. They can be compositions.
     pc_nodes: List[Tuple[Node, str, ValueChoiceX]] = []
     for node in model.get_nodes():
+        # arguments used in operators like Conv2d
+        # argument `valuechoice` used in generated repeat cell
         for name, choice in node.operation.parameters.items():
             if isinstance(choice, ValueChoiceX):
                 # e.g., (conv_node, "out_channels", ValueChoice([1, 3]))
@@ -220,9 +220,10 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     repeat_nodes = _group_by_label(filter(lambda d: d.operation.parameters.get('mutation') == 'repeat',
                                           model.get_nodes_by_type('_cell')))
     for node_list in repeat_nodes:
+        # this check is not completely reliable, because it only checks max and min
         assert _is_all_equal(map(lambda node: node.operation.parameters['max_depth'], node_list)) and \
             _is_all_equal(map(lambda node: node.operation.parameters['min_depth'], node_list)), \
-            'Repeat with the same label must have the same number of candidates.'
+            'Repeat with the same label must have the same candidates.'
         mutator = RepeatMutator(node_list)
         applied_mutators.append(mutator)
 

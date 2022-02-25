@@ -521,14 +521,39 @@ class GraphIR(unittest.TestCase):
                 return self.block(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 1)
-        mutator = mutators[0].bind_sampler(EnumerateSampler())
-        model1 = mutator.apply(model)
-        model2 = mutator.apply(model)
-        model3 = mutator.apply(model)
-        self.assertTrue((self._get_converted_pytorch_model(model1)(torch.zeros(1, 16)) == 3).all())
-        self.assertTrue((self._get_converted_pytorch_model(model2)(torch.zeros(1, 16)) == 4).all())
-        self.assertTrue((self._get_converted_pytorch_model(model3)(torch.zeros(1, 16)) == 5).all())
+        self.assertEqual(len(mutators), 2 + self.value_choice_incr)
+        samplers = [EnumerateSampler() for _ in range(len(mutators))]
+        for target in [3, 4, 5]:
+            new_model = _apply_all_mutators(model, mutators, samplers)
+            self.assertTrue((self._get_converted_pytorch_model(new_model)(torch.zeros(1, 16)) == target).all())
+
+    def test_repeat_static(self):
+        class AddOne(nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(lambda index: nn.LayerChoice([AddOne(), nn.Identity()]), 4)
+
+            def forward(self, x):
+                return self.block(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 4)
+        sampler = RandomSampler()
+
+        result = []
+        for _ in range(50):
+            new_model = model
+            for mutator in mutators:
+                new_model = mutator.bind_sampler(sampler).apply(new_model)
+            result.append(self._get_converted_pytorch_model(new_model)(torch.zeros(1, 1)).item())
+
+        for x in [1, 2, 3]:
+            self.assertIn(float(x), result)
 
     def test_repeat_complex(self):
         class AddOne(nn.Module):
@@ -545,8 +570,8 @@ class GraphIR(unittest.TestCase):
                 return self.block(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 2)
-        self.assertEqual(set([mutator.label for mutator in mutators]), {'lc', 'rep'})
+        self.assertEqual(len(mutators), 3 + self.value_choice_incr)
+        self.assertEqual(set([mutator.label for mutator in mutators if mutator.label is not None]), {'lc', 'rep'})
 
         sampler = RandomSampler()
         for _ in range(10):
@@ -567,7 +592,7 @@ class GraphIR(unittest.TestCase):
                 return self.block(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 4)
+        self.assertEqual(len(mutators), 5 + self.value_choice_incr)
 
         result = []
         for _ in range(20):
