@@ -89,4 +89,5 @@ class TPE(BaseStrategy):
                 del self.running_models[_id]
 
 
+# alias for backward compatibility
 TPEStrategy = TPE
