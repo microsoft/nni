@@ -35,19 +35,17 @@ High-level speaking, aiming to solve any particular task with neural architectur
 
 To be consistent, we will use the following terminologies throughout our documentation:
 
-Some frequently used terminologies in this document:
-
 * *Model search space*: it means a set of models from which the best model is explored/searched. Sometimes we use *search space* or *model space* in short.
-* *Exploration strategy*: the algorithm that is used to explore a model search space.
+* *Exploration strategy*: the algorithm that is used to explore a model search space. Sometimes we also call it *search strategy*.
 * *Model evaluator*: it is used to train a model and evaluate the model's performance.
 
-Concretely, A exploration strategy selects an architecture from a predefined search space. The architecture is passed to a performance evaluation to get a score, which represents how well this architecture performs on a particular task. We iterate this process until the search process is able to find the best architecture.
+Concretely, an exploration strategy selects an architecture from a predefined search space. The architecture is passed to a performance evaluation to get a score, which represents how well this architecture performs on a particular task. This process is repeated until the search process is able to find the best architecture.
 
-During such process, we list out the core engineering challenges (which are also pointed out by the famous `NAS survey <https://arxiv.org/abs/1808.05377>`__) and the solutions NNI has provided to tackling them:
+During such process, we list out the core engineering challenges (which are also pointed out by the famous `NAS survey <https://arxiv.org/abs/1808.05377>`__) and the solutions NNI has provided to address them:
 
-* **Search space design:** The search space defines which architectures can be represented in principle. Incorporating prior knowledge about typical properties of architectures well-suited for a task can reduce the size of the search space and simplify the search. However, this also introduces a human bias, which may prevent finding novel architectural building blocks that go beyond the current human knowledge. In NNI, we provide a wide range of APIs to build the search space. There are high-level APIs, that incorporate human knowledge about what makes a good architecture or search space. There are also low-level APIs, that is a list of primitives to construct a network from operator to operator.
-* **Exploration strategy:**: The exploration strategy details how to explore the search space (which is often exponentially large). It encompasses the classical exploration-exploitation trade-off since, on the one hand, it is desirable to find well-performing architectures quickly, while on the other hand, premature convergence to a region of suboptimal architectures should be avoided. In NNI, we have also provided a list of strategies. Some of them are powerful, but time consuming, while others might be suboptimal but really efficient. Users can always find one that matches their need.
-* **Performance estimation / evaluator**: The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. In NNI, this process is implemented with *evaluator*, which is responsible of estimating a model's performance. The simplest option is to perform a standard training and validation of the architecture on data. But this is computationally expensive. More efficient evaluators can be implemented with our provided interface.
+* **Search space design:** The search space defines which architectures can be represented in principle. Incorporating prior knowledge about typical properties of architectures well-suited for a task can reduce the size of the search space and simplify the search. However, this also introduces a human bias, which may prevent finding novel architectural building blocks that go beyond the current human knowledge. In NNI, we provide a wide range of APIs to build the search space. There are :doc:`high-level APIs <construct_space>`, that enables incorporating human knowledge about what makes a good architecture or search space. There are also :doc:`low-level APIs <mutator>`, that is a list of primitives to construct a network from operator to operator.
+* **Exploration strategy:** The exploration strategy details how to explore the search space (which is often exponentially large). It encompasses the classical exploration-exploitation trade-off since, on the one hand, it is desirable to find well-performing architectures quickly, while on the other hand, premature convergence to a region of suboptimal architectures should be avoided. In NNI, we have also provided :doc:`a list of strategies <exploration_strategy>`. Some of them are powerful, but time consuming, while others might be suboptimal but really efficient. Users can always find one that matches their need.
+* **Performance estimation / evaluator:** The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. In NNI, this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. The choices of evaluators also range from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations.
 
 .. rubric:: Writing Model Space
 
@@ -58,7 +56,7 @@ The following APIs are provided to ease the engineering effort of writing a new 
    :widths: auto
 
    * - Name
-     - Type
+     - Category
      - Brief Description
    * - :ref:`nas-layer-choice`
      - :ref:`Multi-trial <multi-trial-nas>`
@@ -97,7 +95,7 @@ We provide the following (built-in) algorithms to explore the user-defined searc
    :widths: auto
 
    * - Name
-     - Type
+     - Category
      - Brief Description
    * - :ref:`random-strategy`
      - :ref:`Multi-trial <multi-trial-nas>`
@@ -139,14 +137,14 @@ The evaluator APIs can be used to build performance assessment component of your
    :widths: auto
 
    * - Name
-     - Based on
+     - Type
      - Brief Description
    * - :ref:`functional-evaluator`
      - General
      - Evaluate with any Python function
    * - :ref:`classification-evaluator`
-     - `PyTorch Lightning <https://www.pytorchlightning.ai/>`__
+     - Built upon `PyTorch Lightning <https://www.pytorchlightning.ai/>`__
      - For classification tasks
    * - :ref:`regression-evaluator`
-     - `PyTorch Lightning <https://www.pytorchlightning.ai/>`__
+     - Built upon `PyTorch Lightning <https://www.pytorchlightning.ai/>`__
      - For regression tasks

@@ -69,7 +69,7 @@ To enable CGO execution engine, you need to follow these steps:
 2. Add configurations for remote training service
 3. Add configurations for CGO engine
 
-  .. code-block:: python
+.. code-block:: python
   
     exp = RetiariiExperiment(base_model, trainer, mutators, strategy)
     config = RetiariiExeConfig('remote')
@@ -110,11 +110,11 @@ a bad model, CGO execution engine will re-run each model independently in separa
 References
 ^^^^^^^^^^
 
-..  automodule:: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule
+..  autoclass:: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule
     :members:
 
-..  automodule:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification
+..  autoclass:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification
     :members:
 
-..  automodule:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression
+..  autoclass:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression
     :members:

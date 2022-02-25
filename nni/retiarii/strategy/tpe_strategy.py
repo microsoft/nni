@@ -41,7 +41,8 @@ class TPESampler(Sampler):
 
 class TPE(BaseStrategy):
     """
-    The Tree-structured Parzen Estimator (TPE) :footcite:p:`bergstra2011algorithms` is a sequential model-based optimization (SMBO) approach.
+    The Tree-structured Parzen Estimator (TPE) :footcite:p:`bergstra2011algorithms`
+    is a sequential model-based optimization (SMBO) approach.
     SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements,
     and then subsequently choose new hyperparameters to test based on this model.
     """
