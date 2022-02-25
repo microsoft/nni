@@ -100,7 +100,7 @@ class Repeat(Mutable):
 
 class NasBench201Cell(nn.Module):
     """
-    Cell structure that is proposed in NAS-Bench-201 [nasbench201]_ .
+    Cell structure that is proposed in NAS-Bench-201 :footcite:p:`dong2019bench`.
 
     This cell is a densely connected DAG with ``num_tensors`` nodes, where each node is tensor.
     For every i < j, there is an edge from i-th node to j-th node.
@@ -126,11 +126,6 @@ class NasBench201Cell(nn.Module):
         Number of tensors in the cell (input included). Default: 4
     label : str
         Identifier of the cell. Cell sharing the same label will semantically share the same choice.
-
-    References
-    ----------
-    .. [nasbench201] Dong, X. and Yang, Y., 2020. Nas-bench-201: Extending the scope of reproducible neural architecture search.
-        arXiv preprint arXiv:2001.00326.
     """
 
     @staticmethod

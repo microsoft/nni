@@ -32,8 +32,8 @@ _cell_op_factory_type = Callable[[int, int, Optional[int]], nn.Module]
 
 class Cell(nn.Module):
     """
-    Cell structure [zophnas]_ [zophnasnet]_ that is popularly used in NAS literature.
-    [nds]_ is a good summary of how this structure works in practice.
+    Cell structure :footcite:p:`zoph2017neural,zoph2018learning,liu2018darts` that is popularly used in NAS literature.
+    :footcite:t:`radosavovic2019network` is a good summary of how this structure works in practice.
 
     A cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from
     ``op_candidates``, and takes one input from previous nodes and predecessors. Predecessor means the input of cell.
@@ -134,14 +134,6 @@ class Cell(nn.Module):
 
         cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, preprocessor=Preprocessor())
         cell([torch.randn(1, 16, 48, 48), torch.randn(1, 64, 48, 48)])  # the two inputs will be sent to conv1 and conv2 respectively
-
-    References
-    ----------
-    .. [zophnas] Barret Zoph, Quoc V. Le, "Neural Architecture Search with Reinforcement Learning". https://arxiv.org/abs/1611.01578
-    .. [zophnasnet] Barret Zoph, Vijay Vasudevan, Jonathon Shlens, Quoc V. Le,
-        "Learning Transferable Architectures for Scalable Image Recognition". https://arxiv.org/abs/1707.07012
-    .. [nds] Radosavovic, Ilija and Johnson, Justin and Xie, Saining and Lo, Wan-Yen and Dollar, Piotr,
-        "On Network Design Spaces for Visual Recognition". https://arxiv.org/abs/1905.13214
     """
 
     def __init__(self,

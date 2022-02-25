@@ -77,3 +77,5 @@ nni.retiarii.strategy
 ..  automodule:: nni.retiarii.strategy
     :imported-members:
     :members:
+
+.. footbibliography::

@@ -219,7 +219,7 @@ class _NasBench101CellFixed(nn.Module):
 
 class NasBench101Cell(Mutable):
     """
-    Cell structure that is proposed in NAS-Bench-101 [nasbench101]_ .
+    Cell structure that is proposed in NAS-Bench-101 :footcite:p:`ying2019bench`.
 
     This cell is usually used in evaluation of NAS algorithms because there is a "comprehensive analysis" of this search space
     available, which includes a full architecture-dataset that "maps 423k unique architectures to metrics
@@ -275,11 +275,6 @@ class NasBench101Cell(Mutable):
         Maximum number of edges in the cell. Default: 9.
     label : str
         Identifier of the cell. Cell sharing the same label will semantically share the same choice.
-
-    References
-    ----------
-    .. [nasbench101] Ying, Chris, et al. "Nas-bench-101: Towards reproducible neural architecture search."
-        International Conference on Machine Learning. PMLR, 2019.
     """
 
     @staticmethod

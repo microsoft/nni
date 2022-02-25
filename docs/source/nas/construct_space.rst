@@ -59,6 +59,8 @@ Cell
 .. autoclass:: nni.retiarii.nn.pytorch.Cell
    :members:
 
+.. footbibliography::
+
 .. _nas-cell-101:
 
 NasBench101Cell
@@ -67,6 +69,8 @@ NasBench101Cell
 .. autoclass:: nni.retiarii.nn.pytorch.NasBench101Cell
    :members:
 
+.. footbibliography::
+
 .. _nas-cell-201:
 
 NasBench201Cell
@@ -74,6 +78,8 @@ NasBench201Cell
 
 .. autoclass:: nni.retiarii.nn.pytorch.NasBench201Cell
    :members:
+
+.. footbibliography::
 
 .. _hyper-modules:
 

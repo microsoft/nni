@@ -1,4 +1,4 @@
-.. 60cb924d0ec522b7709acf4f8cff3f16
+.. 6695b072fc6178d35159b76dbf575930
 
 ####################
 Python API 参考
@@ -9,6 +9,6 @@ Python API 参考
     :maxdepth: 1
 
     自动调优 <autotune_ref>
-    NAS <NAS/ApiReference>
+    NAS <nas/reference>
     模型压缩 <Compression/CompressionReference>
     Python API <Tutorial/HowToLaunchFromPython>
