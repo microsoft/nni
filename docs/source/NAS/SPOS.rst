@@ -59,7 +59,7 @@ Step 2. Evolution Search
 
 Single Path One-Shot leverages evolution algorithm to search for the best architecture. In the paper, the search module, which is responsible for testing the sampled architecture, recalculates all the batch norm for a subset of training images, and evaluates the architecture on the full validation set.
 
-In this example, we have an incomplete implementation of the evolution search. The example only support training from scratch. Inheriting weights from pretrained supernet is not supported yet. To search with the regularized evolution strategy, run
+In this example, it will inherit the `state_dict` of supernet from `./data/checkpoint-150000.pth.tar`, and search the best architecture with the regularized evolution strategy. Search in the supernet with the following command
 
 .. code-block:: bash
 
@@ -90,7 +90,6 @@ Known Limitations
 
 
 * Block search only. Channel search is not supported yet.
-* In the search phase, training from the scratch is required. Inheriting weights from supernet is not supported yet.
 
 Current Reproduction Results
 ----------------------------
