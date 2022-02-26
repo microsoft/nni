@@ -171,10 +171,14 @@ class AutoMaskInference:
             # apply the input mask
             for tid, in_tensor in enumerate(self.dummy_input):
                 if isinstance(in_tensor, torch.Tensor) and self.in_masks[tid] is not None:
+                    # in_tensor.data = in_tensor.data * \
+                    #     self.in_masks[tid] + \
+                    #     (1-self.in_masks[tid]) * self.in_constants[tid]
+                    # issue-4540 when two tensors are multiplied, the constants part make
+                    # the propagation weaker, and lead to shape misaligment. Currently, we
+                    # donnot support the constant folding, so, we just remove the constant here
                     in_tensor.data = in_tensor.data * \
-                        self.in_masks[tid] + \
-                        (1-self.in_masks[tid]) * self.in_constants[tid]
-
+                        self.in_masks[tid]
 
     def __apply_weight_mask(self):
         """
