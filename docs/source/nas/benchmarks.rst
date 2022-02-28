@@ -1,12 +1,12 @@
 NAS Benchmarks
 ==============
 
-.. code-block::
+.. toctree::
+   :hidden:
 
-   ..  toctree::
-      :hidden:
+   Example usage of NAS benchmarks </tutorials/nasbench_as_dataset>
 
-      Example Usages <BenchmarksExample>
+.. note:: :doc:`Example usage of NAS benchmarks </tutorials/nasbench_as_dataset>`.
 
 Introduction
 ------------
