@@ -1,23 +1,23 @@
-Run an Experiment on AdaptDL
-============================
+AdaptDL Training Service
+========================
 
-Now NNI supports running experiment on `AdaptDL <https://github.com/petuum/adaptdl>`__. Before starting to use NNI AdaptDL mode, you should have a Kubernetes cluster, either on-premises or `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__\ , a Ubuntu machine on which `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ is setup to connect to your Kubernetes cluster. In AdaptDL mode, your trial program will run as AdaptDL job in Kubernetes cluster.
-
+Now NNI supports running experiment on `AdaptDL <https://github.com/petuum/adaptdl>`__, which is a resource-adaptive deep learning training and scheduling framework. With AdaptDL training service, your trial program will run as AdaptDL job in Kubernetes cluster.
 AdaptDL aims to make distributed deep learning easy and efficient in dynamic-resource environments such as shared clusters and the cloud.
 
-Prerequisite for Kubernetes Service
------------------------------------
+Prerequisite
+------------
 
+Before starting to use NNI AdaptDL training service, you should have a Kubernetes cluster, either on-premises or `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__\ , a Ubuntu machine on which `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ is setup to connect to your Kubernetes cluster.
 
 #. A **Kubernetes** cluster using Kubernetes 1.14 or later with storage. Follow this guideline to set up Kubernetes `on Azure <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__\ , or `on-premise <https://kubernetes.io/docs/setup/>`__ with `cephfs <https://kubernetes.io/docs/concepts/storage/storage-classes/#ceph-rbd>`__\ , or `microk8s with storage add-on enabled <https://microk8s.io/docs/addons>`__.
 #. Helm install **AdaptDL Scheduler** to your Kubernetes cluster. Follow this `guideline <https://adaptdl.readthedocs.io/en/latest/installation/install-adaptdl.html>`__ to setup AdaptDL scheduler.
-#. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use ``$(HOME)/.kube/config`` as kubeconfig file's path. You can also specify other kubeconfig files by setting the ** KUBECONFIG** environment variable. Refer this `guideline <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig.
+#. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use ``$(HOME)/.kube/config`` as kubeconfig file's path. You can also specify other kubeconfig files by setting the **KUBECONFIG** environment variable. Refer this `guideline <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig.
 #. If your NNI trial job needs GPU resource, you should follow this `guideline <https://github.com/NVIDIA/k8s-device-plugin>`__ to configure **Nvidia device plugin for Kubernetes**.
 #. (Optional) Prepare a **NFS server** and export a general purpose mount as external storage.
-#. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart.rst>`__.
+#. Install **NNI**\ , follow the install guide :doc:`../installation`.
 
-Verify Prerequisites
-^^^^^^^^^^^^^^^^^^^^
+Verify the Prerequisites
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -34,10 +34,10 @@ Verify Prerequisites
    kubectl api-versions | grep adaptdl
    # Expected: adaptdl.petuum.com/v1
 
-Run an experiment
------------------
+Usage
+-----
 
-We have a CIFAR10 example that fully leverages the AdaptDL scheduler under ``examples/trials/cifar10_pytorch`` folder. (\ ``main_adl.py`` and ``config_adl.yaml``\ )
+We have a CIFAR10 example that fully leverages the AdaptDL scheduler under :githublink:`examples/trials/cifar10_pytorch` folder. (:githublink:`main_adl.py <examples/trials/cifar10_pytorch/main_adl.py>` and :githublink:`config_adl.yaml <examples/trials/cifar10_pytorch/config_adl.yaml>`)
 
 Here is a template configuration specification to use AdaptDL as a training service.
 
@@ -75,9 +75,10 @@ Here is a template configuration specification to use AdaptDL as a training serv
        storageClass: dfs
        storageSize: 1Gi
 
-Those configs not mentioned below, are following the
-`default specs defined </Tutorial/ExperimentConfig.rst#configuration-spec>`__  in the NNI doc.
+..  note::
+    This configuration is written following the specification of `legacy experiment configuration <https://nni.readthedocs.io/en/v2.6/Tutorial/ExperimentConfig.html>`__. It is still supported, and will be updated to the latest version in future release.
 
+The following explains the configuration fields of AdaptDL training service.
 
 * **trainingServicePlatform**\ : Choose ``adl`` to use the Kubernetes cluster with AdaptDL scheduler.
 * **nniManagerIp**\ : *Required* to get the correct info and metrics back from the cluster, for ``adl`` training service.
@@ -103,6 +104,9 @@ Those configs not mentioned below, are following the
     * **storageClass**\ : check `Kubernetes storage documentation <https://kubernetes.io/docs/concepts/storage/storage-classes/>`__ for how to use the appropriate ``storageClass``.
     * **storageSize**\ : this value should be large enough to fit your model's checkpoints, or it could cause "disk quota exceeded" error.
 
+More Features
+-------------
+
 NFS Storage
 ^^^^^^^^^^^
 
@@ -121,7 +125,6 @@ The ``adl`` training service can then mount it to the kubernetes for every trial
 
 Use cases:
 
-
 * If your training trials depend on a dataset of large size, you may want to download it first onto the NFS first,
   and mount it so that it can be shared across multiple trials.
 * The storage for containers are ephemeral and the trial containers will be deleted after a trial's lifecycle is over.
@@ -131,7 +134,7 @@ Use cases:
 In short, it is not limited how a trial wants to read from or write on the NFS storage, so you may use it flexibly as per your needs.
 
 Monitor via Log Stream
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 Follow the log streaming of a certain trial:
 
@@ -149,7 +152,7 @@ However you may still be able to access the past trial logs
 according to the following approach.
 
 Monitor via TensorBoard
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 In the context of NNI, an experiment has multiple trials.
 For easy comparison across trials for a model tuning process,

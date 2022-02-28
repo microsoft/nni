@@ -25,6 +25,7 @@ Neural Network Intelligence
     Neural Architecture Search <nas/index>
     Model Compression <model_compression>
     Feature Engineering <feature_engineering>
+    Experiment <experiment/overview>
 
 ..  toctree::
     :maxdepth: 2

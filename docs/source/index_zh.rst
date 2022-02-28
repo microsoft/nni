@@ -1,4 +1,4 @@
-.. e7ae6e8abbe989e4b49ec348c0fb6c67
+.. a533c818ceeb6667df82045885d5ccb5
 
 ###########################
 Neural Network Intelligence
@@ -18,6 +18,7 @@ Neural Network Intelligence
     神经网络架构搜索<nas/index>
     模型压缩<model_compression>
     特征工程<feature_engineering>
+    NNI实验 <experiment/overview>
     参考<reference>
     示例与解决方案<CommunitySharings/community_sharings>
     研究和出版物 <ResearchPublications>
