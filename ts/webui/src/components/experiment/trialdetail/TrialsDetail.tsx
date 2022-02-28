@@ -2,10 +2,10 @@ import * as React from 'react';
 import { Stack, Pivot, PivotItem } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { AppContext } from '@/App';
-import DefaultPoint from './graph/DefaultMetricPoint';
-import Duration from './graph/Duration';
-import Para from './graph/Para';
-import Intermediate from './graph/Intermediate';
+import DefaultPoint from './chart/DefaultMetricPoint';
+import Duration from './chart/Duration';
+import Para from './chart/Para';
+import Intermediate from './chart/Intermediate';
 import TableList from './table/TableList';
 import '@style/button.scss';
 import '@style/logPath.scss';
@@ -14,7 +14,7 @@ import '@style/pagination.scss';
 import '@style/experiment/overview/overviewTitle.scss';
 import '@style/experiment/trialdetail/search.scss';
 import '@style/experiment/trialdetail/tensorboard.scss';
-import '@/style/table.scss';
+import '@style/table.scss';
 import '@style/common/trialStatus.css';
 
 /**

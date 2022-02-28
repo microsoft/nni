@@ -7,7 +7,7 @@ import LogPanel from '@components/nav/slideNav/LogPanel';
 import { BestMetricContext } from '../Overview';
 import { styles } from './basicInfoStyles';
 import '@style/common/experimentStatusColor.scss';
-import '@/style/experiment/overview/basic.scss';
+import '@style/experiment/overview/basic.scss';
 
 export const BasicInfo = (): any => {
     const labelId: string = useId('callout-label');

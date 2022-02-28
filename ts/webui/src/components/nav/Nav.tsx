@@ -7,7 +7,14 @@ import ExperimentSummaryPanel from './slideNav/ExperimentSummaryPanel';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './slideNav/NNItabs';
 import { EXPERIMENT } from '@static/datamodel';
 import { gap15, stackStyle } from '@components/fluent/ChildrenGap';
-import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, ChevronRightMed } from '@components/fluent/Icon';
+import {
+    infoIconAbout,
+    timeIcon,
+    disableUpdates,
+    requency,
+    closeTimer,
+    ChevronRightMed
+} from '@components/fluent/Icon';
 import '@style/nav/nav.scss';
 import '@style/icon.scss';
 

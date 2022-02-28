@@ -20,14 +20,14 @@
     "isolatedModules": false,
     "noEmit": true,
     "jsx": "preserve",
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@static/*": ["src/static/*"],
-      "@style/*": ["src/static/style/*"],
-      "@model/*": ["src/static/model/*"]
-    }
+        "@/*": ["src/*"],
+        "@components/*": ["src/components/*"],
+        "@static/*": ["src/static/*"],
+        "@style/*": ["src/static/style/*"],
+        "@model/*": ["src/static/model/*"]
+      }
   },
   "include": [
     "src"

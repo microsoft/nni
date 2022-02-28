@@ -262,12 +262,12 @@ module.exports = function(webpackEnv) {
       extensions: paths.moduleFileExtensions
         .map(ext => `.${ext}`)
         .filter(ext => useTypeScript || !ext.includes('ts')),
-        alias: { 
-          '@': paths.appSrc,
-          '@components': `${paths.appSrc}/components`,
-          '@style': `${paths.appSrc}/static/style`,
-          '@model': `${paths.appSrc}/static/model`,
-          '@static': `${paths.appSrc}/static`
+      alias: { 
+        '@': paths.appSrc,
+        '@components': `${paths.appSrc}/components`,
+        '@static': `${paths.appSrc}/static`,
+        '@style': `${paths.appSrc}/static/style`,
+        '@model': `${paths.appSrc}/static/model`
       },
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding

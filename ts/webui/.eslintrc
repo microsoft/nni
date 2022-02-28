@@ -51,15 +51,15 @@
         "react": {
             "version": "detect"
         },
-        "webpack": "./scripts/config/webpack.config.js",
+        "webpack": "./scripts/config/webpack.config.dev.js",
         "import/resolver": {
-          "alias": {
-            "@/*": ["src/*"],
-            "@components/*": ["src/components/*"],
-            "@style/*": ["src/static/style/*"],
-            "@model/*": ["src/static/model/*"],
-            "@static/*": ["src/static/*"]
-          }
+            "alias": {
+                "@/*": ["src/*"],
+                "@components/*": ["src/components/*"],
+                "@static/*": ["src/static/*"],
+                "@style/*": ["src/static/style/*"],
+                "@model/*": ["src/static/model/*"]
+            }
         },
         "ignorePatterns": [
             "node_modules/",

@@ -5,7 +5,7 @@ import { Trial } from '@static/model/trial';
 import { AppContext } from '@/App';
 import { Title } from './Title';
 import SuccessTable from './table/SuccessTable';
-import DefaultPoint from '../trialdetail/graph/DefaultMetricPoint';
+import DefaultPoint from '../trialdetail/chart/DefaultMetricPoint';
 import { BasicInfo } from './params/BasicInfo';
 import { ExpDuration } from './count/ExpDuration';
 import { ExpDurationContext } from './count/ExpDurationContext';

@@ -12,13 +12,7 @@ import {
 } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '@static/const';
-import {
-    convertDuration,
-    formatTimestamp,
-    copyAndSort,
-    parametersType,
-    parseMetrics
-} from '@static/function';
+import { convertDuration, formatTimestamp, copyAndSort, parametersType, parseMetrics } from '@static/function';
 import { TableObj, SortInfo, SearchItems } from '@static/interface';
 import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction';
 import { blocked, copy, LineChart, tableListIcon } from '@components/fluent/Icon';

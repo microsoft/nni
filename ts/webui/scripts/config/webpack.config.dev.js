@@ -31,9 +31,9 @@ const config = {
         alias: { 
             '@': paths.appSrc,
             '@components': `${paths.appSrc}/components`,
+            '@static': `${paths.appSrc}/static`,
             '@style': `${paths.appSrc}/static/style`,
-            '@model': `${paths.appSrc}/static/model`,
-            '@static': `${paths.appSrc}/static`
+            '@model': `${paths.appSrc}/static/model`
         },
         extensions: paths.moduleFileExtensions.map(ext => `.${ext}`),
     },
