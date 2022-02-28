@@ -21,7 +21,9 @@ class LayerChoice(Mutable):
     """
     Layer choice selects one of the ``candidates``, then apply it on inputs and return results.
 
-    Layer choice does not allow itself to be nested.
+    It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model.
+
+    *New in v2.2:* Layer choice can be nested.
 
     Parameters
     ----------
@@ -41,6 +43,21 @@ class LayerChoice(Mutable):
     choices : list of Module
         Deprecated. A list of all candidate modules in the layer choice module.
         ``list(layer_choice)`` is recommended, which will serve the same purpose.
+
+    Examples
+    --------
+
+    ::
+
+        # import nni.retiarii.nn.pytorch as nn
+        # declared in `__init__` method
+        self.layer = nn.LayerChoice([
+            ops.PoolBN('max', channels, 3, stride, 1),
+            ops.SepConv(channels, channels, 3, stride, 1),
+            nn.Identity()
+        ])
+        # invoked in `forward` method
+        out = self.layer(x)
 
     Notes
     -----
@@ -150,6 +167,10 @@ class LayerChoice(Mutable):
         return list(self)
 
     def forward(self, x):
+        """
+        The forward of layer choice is simply running the first candidate module.
+        It shouldn't be called directly by users in most cases.
+        """
         warnings.warn('You should not run forward of this module directly.')
         return self._first_module(x)
 
@@ -168,6 +189,10 @@ ReductionType = Literal['mean', 'concat', 'sum', 'none']
 class InputChoice(Mutable):
     """
     Input choice selects ``n_chosen`` inputs from ``choose_from`` (contains ``n_candidates`` keys).
+
+    It is mainly for choosing (or trying) different connections. It takes several tensors and chooses ``n_chosen`` tensors from them.
+    When specific inputs are chosen, ``InputChoice`` will become :class:`ChosenInputs`.
+
     Use ``reduction`` to specify how chosen inputs are reduced into one output. A few options are:
 
     * ``none``: do nothing and return the list directly.
@@ -189,6 +214,16 @@ class InputChoice(Mutable):
         Prior distribution used in random sampling.
     label : str
         Identifier of the input choice.
+
+    Examples
+    --------
+    ::
+
+        # import nni.retiarii.nn.pytorch as nn
+        # declared in `__init__` method
+        self.input_switch = nn.InputChoice(n_chosen=1)
+        # invoked in `forward` method, choose one from the three
+        out = self.input_switch([tensor1, tensor2, tensor3])
     """
 
     @classmethod
@@ -230,6 +265,10 @@ class InputChoice(Mutable):
         return self._label
 
     def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
+        """
+        The forward of input choice is simply the first item of ``candidate_inputs``.
+        It shouldn't be called directly by users in most cases.
+        """
         warnings.warn('You should not run forward of this module directly.')
         return candidate_inputs[0]
 
@@ -260,6 +299,9 @@ class ChosenInputs(nn.Module):
         self.reduction = reduction
 
     def forward(self, candidate_inputs):
+        """
+        Compute the reduced input based on ``chosen`` and ``reduction``.
+        """
         return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
 
     def _tensor_reduction(self, reduction_type, tensor_list):
@@ -661,11 +703,13 @@ ValueChoiceOrAny = TypeVar('ValueChoiceOrAny', ValueChoiceX, Any)
 
 class ValueChoice(ValueChoiceX, Mutable):
     """
-    ValueChoice is to choose one from ``candidates``.
+    ValueChoice is to choose one from ``candidates``. The most common use cases are:
 
-    In most use scenarios, ValueChoice should be passed to the init parameters of a serializable module. For example,
+    * Used as input arguments of :class:`~nni.retiarii.basic_unit`
+      (i.e., modules in ``nni.retiarii.nn.pytorch`` and user-defined modules decorated with ``@basic_unit``).
+    * Used as input arguments of evaluator (*new in v2.7*).
 
-    .. code-block:: python
+    It can be used in parameters of operators: ::
 
         class Net(nn.Module):
             def __init__(self):
@@ -675,37 +719,83 @@ class ValueChoice(ValueChoiceX, Mutable):
             def forward(self, x):
                 return self.conv(x)
 
-    In case, you want to search a parameter that is used repeatedly, this is also possible by sharing the same value choice instance.
-    (Sharing the label should have the same effect.) For example,
+    Or evaluator: ::
 
-    .. code-block:: python
+        def train_and_evaluate(model_cls, learning_rate):
+            ...
 
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                hidden_dim = nn.ValueChoice([128, 512])
-                self.fc = nn.Sequential(
-                    nn.Linear(64, hidden_dim),
-                    nn.Linear(hidden_dim, 10)
-                )
+        self.evaluator = FunctionalEvaluator(train_and_evaluate, learning_rate=nn.ValueChoice([1e-3, 1e-2, 1e-1]))
 
-                # the following code has the same effect.
-                # self.fc = nn.Sequential(
-                #     nn.Linear(64, nn.ValueChoice([128, 512], label='dim')),
-                #     nn.Linear(nn.ValueChoice([128, 512], label='dim'), 10)
-                # )
+    Value choices supports arithmetic operators, which is particularly useful when searching for a network width multiplier: ::
 
-            def forward(self, x):
-                return self.fc(x)
+        # init
+        scale = nn.ValueChoice([1.0, 1.5, 2.0])
+        self.conv1 = nn.Conv2d(3, round(scale * 16))
+        self.conv2 = nn.Conv2d(round(scale * 16), round(scale * 64))
+        self.conv3 = nn.Conv2d(round(scale * 64), round(scale * 256))
 
-    Note that ValueChoice should be used directly. Transformations like ``nn.Linear(32, nn.ValueChoice([64, 128]) * 2)``
-    are not supported.
+        # forward
+        return self.conv3(self.conv2(self.conv1(x)))
 
-    Another common use case is to initialize the values to choose from in init and call the module in forward to get the chosen value.
+    Or when kernel size and padding are coupled so as to keep the output size constant: ::
+
+        # init
+        ks = nn.ValueChoice([3, 5, 7])
+        self.conv = nn.Conv2d(3, 16, kernel_size=ks, padding=(ks - 1) // 2)
+
+        # forward
+        return self.conv(x)
+
+    Or when several layers are concatenated for a final layer. ::
+
+        # init
+        self.linear1 = nn.Linear(3, nn.ValueChoice([1, 2, 3], label='a'))
+        self.linear2 = nn.Linear(3, nn.ValueChoice([4, 5, 6], label='b'))
+        self.final = nn.Linear(nn.ValueChoice([1, 2, 3], label='a') + nn.ValueChoice([4, 5, 6], label='b'), 2)
+
+        # forward
+        return self.final(torch.cat([self.linear1(x), self.linear2(x)], 1))
+
+    Some advanced operators are also provided, such as :meth:`ValueChoice.max` and :meth:`ValueChoice.cond`.
+
+    .. tip::
+
+        All the APIs have an optional argument called ``label``,
+        mutations with the same label will share the same choice. A typical example is, ::
+
+            self.net = nn.Sequential(
+                nn.Linear(10, nn.ValueChoice([32, 64, 128], label='hidden_dim')),
+                nn.Linear(nn.ValueChoice([32, 64, 128], label='hidden_dim'), 3)
+            )
+
+        Sharing the same value choice instance has the similar effect. ::
+
+            class Net(nn.Module):
+                def __init__(self):
+                    super().__init__()
+                    hidden_dim = nn.ValueChoice([128, 512])
+                    self.fc = nn.Sequential(
+                        nn.Linear(64, hidden_dim),
+                        nn.Linear(hidden_dim, 10)
+                    )
+
+    .. warning::
+
+        It looks as if a specific candidate has been chosen (e.g., how it looks like when you can put ``ValueChoice``
+        as a parameter of ``nn.Conv2d``), but in fact it's a syntax sugar as because the basic units and evaluators
+        do all the underlying works. That means, you cannot assume that ``ValueChoice`` can be used in the same way
+        as its candidates. For example, the following usage will NOT work: ::
+
+            self.blocks = []
+            for i in range(nn.ValueChoice([1, 2, 3])):
+                self.blocks.append(Block())
+
+            # NOTE: instead you should probably write
+            # self.blocks = nn.Repeat(Block(), (1, 3))
+
+    Another use case is to initialize the values to choose from in init and call the module in forward to get the chosen value.
     Usually, this is used to pass a mutable value to a functional API like ``torch.xxx`` or ``nn.functional.xxx```.
-    For example,
-
-    .. code-block:: python
+    For example, ::
 
         class Net(nn.Module):
             def __init__(self):
@@ -747,6 +837,10 @@ class ValueChoice(ValueChoiceX, Mutable):
         return self._label
 
     def forward(self):
+        """
+        The forward of input choice is simply the first value of ``candidates``.
+        It shouldn't be called directly by users in most cases.
+        """
         warnings.warn('You should not run forward of this module directly.')
         return self.candidates[0]
 
@@ -785,4 +879,8 @@ class Placeholder(nn.Module):
         super().__init__()
 
     def forward(self, x):
+        """
+        Forward of placeholder is not meaningful.
+        It returns input directly.
+        """
         return x
