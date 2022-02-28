@@ -27,7 +27,8 @@
 //     ["v2.6", "/en/v2.6/"],
 //     ["v2.5", "/en/v2.5/"],
 //     ["v2.4", "/en/v2.4/"],
-//     ["v2.3", "/en/v2.3/"]
+//     ["v2.3", "/en/v2.3/"],
+//     ["test-version", "/en/test-version"]
 // ];
 // The above code is injected by readthedocs in production.
 
@@ -73,7 +74,12 @@ function remove_version_dropdown() {
 }
 
 function add_version_dropdown() {
-    const prev_versions = Object.assign({}, ...READTHEDOCS_VERSIONS.map(([k, v]) => ({ [k]: v })));
+    const prev_versions = Object.assign(
+        {},
+        ...READTHEDOCS_VERSIONS
+            .filter(([k, v]) => (k === 'stable' || k == 'latest' || k.startsWith('v')))
+            .map(([k, v]) => ({ [k]: v }))
+    );
 
     const current_version = 'v: ' + READTHEDOCS_DATA["version"];
     $(".navheader").append(create_dropdown(current_version, prev_versions));
