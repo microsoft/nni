@@ -1,12 +1,12 @@
-**Run an Experiment on Aliyun PAI-DSW + PAI-DLC**
-===================================================
+PAI-DLC Training Service
+========================
 
-NNI supports running an experiment on `PAI-DSW <https://help.aliyun.com/document_detail/194831.html>`__ , submit trials to `PAI-DLC <https://help.aliyun.com/document_detail/165137.html>`__ called dlc mode.
+NNI supports running an experiment on `PAI-DSW <https://help.aliyun.com/document_detail/194831.html>`__ , submit trials to `PAI-DLC <https://help.aliyun.com/document_detail/165137.html>`__ which is deep learning containers based on Alibaba ACK.
 
 PAI-DSW server performs the role to submit a job while PAI-DLC is where the training job runs.
 
-Setup environment
------------------
+Prerequisite
+------------
 
 Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart.rst>`__.
 
@@ -24,8 +24,8 @@ Step 4. Open your PAI-DSW server command line, download and install PAI-DLC pyth
    pip install ./pai-dlc-20201203  # pai-dlc-20201203 refer to unzipped sdk file name, replace it accordingly.
 
 
-Run an experiment
------------------
+Usage
+-----
 
 Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML file's content is like:
 
@@ -78,6 +78,6 @@ Run the following commands to start the example experiment:
 Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.3``.
 
 Monitor your job
-----------------
+^^^^^^^^^^^^^^^^
 
 To monitor your job on DLC, you need to visit `DLC  <https://pai-dlc.console.aliyun.com/#/jobs>`__ to check job status.
