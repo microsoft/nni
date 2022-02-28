@@ -11,27 +11,6 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Get started with NAS on MNIST">
-
-.. only:: html
-
- .. figure:: /tutorials/images/thumb/sphx_glr_nas_quick_start_mnist_thumb.png
-     :alt: Get started with NAS on MNIST
-
-     :ref:`sphx_glr_tutorials_nas_quick_start_mnist.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /tutorials/nas_quick_start_mnist
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------">
 
 .. only:: html
@@ -134,6 +113,48 @@ Tutorials
    :hidden:
 
    /tutorials/quantization_speed_up
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="In this tutorial, we show how to use NAS Benchmarks as datasets. For research purposes we somet...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_nasbench_as_dataset_thumb.png
+     :alt: Use NAS Benchmarks as Datasets
+
+     :ref:`sphx_glr_tutorials_nasbench_as_dataset.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/nasbench_as_dataset
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This is the 101 tutorial of Neural Architecture Search (NAS) on NNI. In this tutorial, we will ...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_hello_nas_thumb.png
+     :alt: Hello, NAS!
+
+     :ref:`sphx_glr_tutorials_hello_nas.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/hello_nas
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

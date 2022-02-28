@@ -8,7 +8,8 @@ Tutorials
    :hidden:
 
    tutorials/nni_experiment
-   tutorials/nas_quick_start_mnist
+   tutorials/hello_nas
+   tutorials/nasbench_as_dataset
    tutorials/pruning_quick_start_mnist
    tutorials/pruning_speed_up
    tutorials/quantization_quick_start_mnist
@@ -24,11 +25,19 @@ Tutorials
    :tags: Experiment/HPO
 
 .. cardlinkitem::
-   :header: Get started with NAS on MNIST
-   :description: bla bla bla bla
-   :link: tutorials/nas_quick_start_mnist.html
+   :header: Hello, NAS!
+   :description: Beginners' NAS tutorial on how to search for neural architectures for MNIST dataset.
+   :link: tutorials/hello_nas.html
    :image: ../img/thumbnails/overview-30.png
    :background: cyan
+   :tags: NAS
+
+.. cardlinkitem::
+   :header: Use NAS Benchmarks as Datasets
+   :description: Query data from popular NAS benchmarks from our preprocessed benchmark database.
+   :link: tutorials/nasbench_as_dataset.html
+   :image: ../img/thumbnails/overview-30.png
+   :background: pink
    :tags: NAS
 
 .. cardlinkitem::
