@@ -1,7 +1,7 @@
-Express Mutations with Mutators
-===============================
+Construct Space with Mutators
+=============================
 
-Besides the inline mutation APIs demonstrated `here <./MutationPrimitives.rst>`__, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. Those inline mutation APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
+Besides the inline mutation APIs demonstrated :ref:`above <mutation-primitives>`, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. Those inline mutation APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
 
 .. note:: Mutator and inline mutation APIs cannot be used together.
 
@@ -37,7 +37,7 @@ User-defined mutator should inherit ``Mutator`` class, and implement mutation lo
 
 The input of ``mutate`` is graph IR (Intermediate Representation) of the base model (please refer to `here <./ApiReference.rst>`__ for the format and APIs of the IR), users can mutate the graph using the graph's member functions (e.g., ``get_nodes_by_label``, ``update_operation``). The mutation operations can be combined with the API ``self.choice``, in order to express a set of possible mutations. In the above example, the node's operation can be changed to any operation from ``candidate_op_list``.
 
-Use placehoder to make mutation easier: ``nn.Placeholder``. If you want to mutate a subgraph or node of your model, you can define a placeholder in this model to represent the subgraph or node. Then, use mutator to mutate this placeholder to make it real modules.
+Use placeholder to make mutation easier: ``nn.Placeholder``. If you want to mutate a subgraph or node of your model, you can define a placeholder in this model to represent the subgraph or node. Then, use mutator to mutate this placeholder to make it real modules.
 
 .. code-block:: python
 
@@ -51,7 +51,7 @@ Use placehoder to make mutation easier: ``nn.Placeholder``. If you want to mutat
 
 ``label`` is used by mutator to identify this placeholder. The other parameters are the information that is required by mutator. They can be accessed from ``node.operation.parameters`` as a dict, it could include any information that users want to put to pass it to user defined mutator. The complete example code can be found in :githublink:`Mnasnet base model <examples/nas/multi-trial/mnasnet/base_mnasnet.py>`.
 
-Starting an experiment is almost the same as using inline mutation APIs. The only difference is that the applied mutators should be passed to ``RetiariiExperiment``. Below is a simple example.
+Starting an experiment is almost the same as using inline mutation APIs. The only difference is that the applied mutators should be passed to :class:`nni.retiarii.experiment.pytorch.RetiariiExperiment`. Below is a simple example.
 
 .. code-block:: python
 
@@ -62,3 +62,51 @@ Starting an experiment is almost the same as using inline mutation APIs. The onl
   exp_config.max_trial_number = 10
   exp_config.training_service.use_active_gpu = False
   exp.run(exp_config, 8081)
+
+References
+----------
+
+Placeholder
+^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.nn.pytorch.Placeholder
+    :members:
+    :noindex:
+
+Mutator
+^^^^^^^
+
+..  autoclass:: nni.retiarii.Mutator
+    :members:
+    :noindex:
+
+..  autoclass:: nni.retiarii.Sampler
+    :members:
+    :noindex:
+
+..  autoclass:: nni.retiarii.InvalidMutation
+    :members:
+    :noindex:
+
+Graph
+^^^^^
+
+..  autoclass:: nni.retiarii.Model
+    :members:
+    :noindex:
+
+..  autoclass:: nni.retiarii.Graph
+    :members:
+    :noindex:
+
+..  autoclass:: nni.retiarii.Node
+    :members:
+    :noindex:
+
+..  autoclass:: nni.retiarii.Edge
+    :members:
+    :noindex:
+
+..  autoclass:: nni.retiarii.Operation
+    :members:
+    :noindex:

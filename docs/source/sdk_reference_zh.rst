@@ -1,4 +1,4 @@
-.. eae0c27456038e2fd824467860ea3a81
+.. 577f3d11c9b75f47c5a100db2be97e8f
 
 ####################
 Python API 参考
@@ -9,5 +9,4 @@ Python API 参考
     :maxdepth: 1
 
     自动调优 <autotune_ref>
-    NAS <NAS/ApiReference>
     Python API <Tutorial/HowToLaunchFromPython>

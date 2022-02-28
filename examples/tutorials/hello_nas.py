@@ -66,7 +66,7 @@ class Net(nn.Module):
 # Define Model Mutations
 # ^^^^^^^^^^^^^^^^^^^^^^
 #
-# A base model is only one concrete model not a model space. We provide :doc:`API and Primitives </NAS/MutationPrimitives>`
+# A base model is only one concrete model not a model space. We provide :doc:`API and Primitives </nas/construct_space>`
 # for users to express how the base model can be mutated. That is, to build a model space which includes many models.
 #
 # Based on the above base model, we can define a model space as below.
@@ -150,20 +150,21 @@ model_space
 # It can be used like normal PyTorch module.
 # ``nn.ValueChoice`` takes a list of candidate values, one will be chosen to take effect for each sampled model.
 #
-# More detailed API description and usage can be found :doc:`here </NAS/construct_space>`.
+# More detailed API description and usage can be found :doc:`here </nas/construct_space>`.
 #
 # .. note::
 #
 #     We are actively enriching the mutation APIs, to facilitate easy construction of model space.
 #     If the currently supported mutation APIs cannot express your model space,
-#     please refer to :doc:`this doc </NAS/Mutators>` for customizing mutators.
+#     please refer to :doc:`this doc </nas/mutator>` for customizing mutators.
 #
 # Explore the Defined Model Space
 # -------------------------------
 #
 # There are basically two exploration approaches: (1) search by evaluating each sampled model independently,
-# which is the search approach in multi-trial NAS and (2) one-shot weight-sharing based search, which is used in one-shot NAS.
-# We demonstrate the first approach in this tutorial. Users can refer to :doc:`here </NAS/OneshotTrainer>` for the second approach.
+# which is the search approach in :ref:`multi-trial NAS <multi-trial-nas>`
+# and (2) one-shot weight-sharing based search, which is used in one-shot NAS.
+# We demonstrate the first approach in this tutorial. Users can refer to :ref:`here <one-shot-nas>` for the second approach.
 #
 # First, users need to pick a proper exploration strategy to explore the defined model space.
 # Second, users need to pick or customize a model evaluator to evaluate the performance of each explored model.
@@ -171,7 +172,7 @@ model_space
 # Pick an exploration strategy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# Retiarii supports many :doc:`exploration strategies </NAS/ExplorationStrategies>`.
+# Retiarii supports many :doc:`exploration strategies </nas/exploration_strategy>`.
 #
 # Simply choosing (i.e., instantiate) an exploration strategy as below.
 
@@ -182,9 +183,13 @@ search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is
 # Pick or customize a model evaluator
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# In the exploration process, the exploration strategy repeatedly generates new models. A model evaluator is for training and validating each generated model to obtain the model's performance. The performance is sent to the exploration strategy for the strategy to generate better models.
+# In the exploration process, the exploration strategy repeatedly generates new models. A model evaluator is for training
+# and validating each generated model to obtain the model's performance.
+# The performance is sent to the exploration strategy for the strategy to generate better models.
 #
-# Retiarii has provided :doc:`built-in model evaluators </NAS/ModelEvaluators>`, but to start with, it is recommended to use ``FunctionalEvaluator``, that is, to wrap your own training and evaluation code with one single function. This function should receive one single model class and uses ``nni.report_final_result`` to report the final score of this model.
+# Retiarii has provided :doc:`built-in model evaluators </nas/evaluator>`, but to start with,
+# it is recommended to use ``FunctionalEvaluator``, that is, to wrap your own training and evaluation code with one single function.
+# This function should receive one single model class and uses ``nni.report_final_result`` to report the final score of this model.
 #
 # An example here creates a simple evaluator that runs on MNIST dataset, trains for 2 epochs, and reports its validation accuracy.
 
@@ -266,7 +271,7 @@ evaluator = FunctionalEvaluator(evaluate_model)
 # The ``train_epoch`` and ``test_epoch`` here can be any customized function, where users can write their own training recipe.
 #
 # It is recommended that the :doc:``evaluate_model`` here accepts no additional arguments other than ``model_cls``.
-# However, in the `advanced tutorial </NAS/ModelEvaluators>`, we will show how to use additional arguments in case you actually need those.
+# However, in the `advanced tutorial </nas/evaluator>`, we will show how to use additional arguments in case you actually need those.
 # In future, we will support mutation on the arguments of evaluators, which is commonly called "Hyper-parmeter tuning".
 #
 # Launch an Experiment
@@ -290,7 +295,7 @@ exp_config.trial_concurrency = 2  # will run two trials concurrently
 # ``use_active_gpu`` should be set true if you wish to use an occupied GPU (possibly running a GUI).
 
 exp_config.trial_gpu_number = 1
-exp_config.training_service.use_active_gpu = False
+exp_config.training_service.use_active_gpu = True
 
 # %%
 # Launch the experiment. The experiment should take several minutes to finish on a workstation with 2 GPUs.
@@ -298,14 +303,15 @@ exp_config.training_service.use_active_gpu = False
 exp.run(exp_config, 8081)
 
 # %%
-# Users can also run Retiarii Experiment with :doc:`different training services <../training_services>` besides ``local`` training service.
+# Users can also run Retiarii Experiment with :doc:`different training services </experiment/training_service>`
+# besides ``local`` training service.
 #
 # Visualize the Experiment
 # ------------------------
 #
 # Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment.
 # For example, open ``localhost:8081`` in your browser, 8081 is the port that you set in ``exp.run``.
-# Please refer to :doc:`here <../Tutorial/WebUI>` for details.
+# Please refer to :doc:`here </experiment/webui>` for details.
 #
 # We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__).
 # This can be used by clicking ``Visualization`` in detail panel for each trial.

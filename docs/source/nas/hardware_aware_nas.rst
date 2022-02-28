@@ -1,7 +1,7 @@
 Hardware-aware NAS
 ==================
 
-.. contents::
+.. This file should be rewritten as a tutorial
 
 End-to-end Multi-trial SPOS Demo
 --------------------------------
@@ -61,14 +61,14 @@ To run the one-shot ProxylessNAS demo, first install nn-Meter by running:
 
 Then run one-shot ProxylessNAS demo:
 
-```bash
-python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware <hardware> --reference_latency <reference latency (ms)>
-```
+.. code-block:: bash
+
+   python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware <hardware> --reference_latency <reference latency (ms)>
 
 How the demo works
 ^^^^^^^^^^^^^^^^^^
 
-In the implementation of ProxylessNAS ``trainer``, we provide a ``HardwareLatencyEstimator`` which currently builds a lookup table, that stores the measured latency of each candidate building block in the search space. The latency sum of all building blocks in a candidate model will be treated as the model inference latency. The latency prediction is obtained by ``nn-Meter``. ``HardwareLatencyEstimator`` predicts expected latency for the mixed operation based on the path weight of `ProxylessLayerChoice`. With leveraging ``nn-Meter`` in NNI, users can apply ProxylessNAS to search efficient DNN models on more types of edge devices. 
+In the implementation of ProxylessNAS ``trainer``, we provide a ``HardwareLatencyEstimator`` which currently builds a lookup table, that stores the measured latency of each candidate building block in the search space. The latency sum of all building blocks in a candidate model will be treated as the model inference latency. The latency prediction is obtained by ``nn-Meter``. ``HardwareLatencyEstimator`` predicts expected latency for the mixed operation based on the path weight of ``ProxylessLayerChoice``. With leveraging ``nn-Meter`` in NNI, users can apply ProxylessNAS to search efficient DNN models on more types of edge devices. 
 
 Despite of ``applied_hardware`` and ``reference_latency``, There are some other parameters related to hardware-aware ProxylessNAS training in this :githublink:`example <examples/nas/oneshot/proxylessnas/main.py>`:
 
