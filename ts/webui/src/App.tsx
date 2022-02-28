@@ -1,14 +1,15 @@
 import * as React from 'react';
 import { Stack } from '@fluentui/react';
-import { COLUMN } from './static/const';
-import { EXPERIMENT, TRIALS } from './static/datamodel';
-import { isManagerExperimentPage } from './static/function';
-import Nav from './components/nav/Nav';
-import { SlideNavBtns } from './components/nav/slideNav/SlideNavBtns';
-import MessageInfo from './components/common/MessageInfo';
-import './static/style/App.scss';
-import './static/style/common/common.scss';
-import './static/style/experiment/trialdetail/trialsDetail.scss';
+const { EXPERIMENT, TRIALS } = require('@function/datamodel');
+const COLUMN = require('@function/const');
+const isManagerExperimentPage = require('@function/function');
+const Nav = require('@components/nav/Nav');
+const SlideNavBtns = require('@components/nav/slideNav/SlideNavBtns');
+const MessageInfo = require('@components/common/MessageInfo');
+
+require('@style/App.scss');
+require('@style/common/common.scss');
+require('@style/experiment/trialdetail/trialsDetail.scss');
 
 const echarts = require('echarts/lib/echarts');
 echarts.registerTheme('nni_theme', {

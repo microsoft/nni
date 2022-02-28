@@ -28,6 +28,13 @@ const config = {
     optimization: { minimize: false },
     resolve: {
         modules: [ 'node_modules' ],
+        alias: { 
+            '@': paths.appSrc,
+            '@components': `${paths.appSrc}/components`,
+            '@style': `${paths.appSrc}/static/style`,
+            '@model': `${paths.appSrc}/static/model`,
+            '@function': `${paths.appSrc}/static`
+        },
         extensions: paths.moduleFileExtensions.map(ext => `.${ext}`),
     },
     module: {
