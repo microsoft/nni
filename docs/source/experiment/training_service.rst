@@ -12,7 +12,6 @@ NNI has supported many training services listed below. Users can go through each
     Kubeflow <kubeflow>
     AdaptDL <adaptdl>
     FrameworkController <frameworkcontroller>
-    DLTS <dlts>
     AML <aml>
     PAI-DLC <paidlc>
     Hybrid <hybrid>
@@ -35,8 +34,6 @@ NNI has supported many training services listed below. Users can go through each
       - Running trials on AdaptDL, an elastic DNN model training platform
     * - FrameworkController
       - Running trials with FrameworkController, a DNN model training framework on Kubernetes
-    * - DLTS
-      - Running trials on DLTS, which well supports Windows
     * - AML
       - Running trials on AML cloud service
     * - PAI-DLC

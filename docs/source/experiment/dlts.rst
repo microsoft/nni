@@ -1,4 +1,0 @@
-DLTS Training Service
-=====================
-
-TBD
