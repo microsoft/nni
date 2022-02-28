@@ -6,24 +6,23 @@ To run your trials on `AzureML <https://azure.microsoft.com/en-us/services/machi
 Prerequisite
 ------------
 
-1. Install NNI, follow the install guide: :doc:`../Tutorial/QuickStart`.   
-2. Create an Azure account/subscription using this `link <https://azure.microsoft.com/en-us/free/services/machine-learning/>`__. If you already have an Azure account/subscription, skip this step.
-3. Install the Azure CLI on your machine, follow the install guide `here <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>`__.
-4. Authenticate to your Azure subscription from the CLI. To authenticate interactively, open a command line or terminal and use the following command:
+1. Create an Azure account/subscription using this `link <https://azure.microsoft.com/en-us/free/services/machine-learning/>`__. If you already have an Azure account/subscription, skip this step.
+2. Install the Azure CLI on your machine, follow the install guide `here <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>`__.
+3. Authenticate to your Azure subscription from the CLI. To authenticate interactively, open a command line or terminal and use the following command:
 
    .. code-block:: bash
 
       az login
 
-5. Log into your Azure account with a web browser and create a Machine Learning resource. You will need to choose a resource group and specific a workspace name. Then download ``config.json`` which will be used later.
+4. Log into your Azure account with a web browser and create a Machine Learning resource. You will need to choose a resource group and specific a workspace name. Then download ``config.json`` which will be used later.
 
    .. image:: ../../img/aml_workspace.png
 
-6. Create an AML cluster as the compute target.
+5. Create an AML cluster as the compute target.
 
    .. image:: ../../img/aml_cluster.png
 
-7. Open a command line and install AML package environment.
+6. Open a command line and install AML package environment.
 
    .. code-block:: bash
 
@@ -32,6 +31,8 @@ Prerequisite
 
 Usage
 -----
+
+We show an example configuration here with YAML (Python configuration should be similar).
 
 .. code-block:: yaml
 
@@ -58,7 +59,7 @@ Compared with :doc:`local` and :doc:`remote`, OpenPAI training service supports 
    * - Field name
      - Description
    * - dockerImage
-     - Required field. The docker image name used in job. If you don't want to build your own, NNI has provided image `msranni/nni <https://hub.docker.com/r/msranni/nni>`__, which is up-to-date with every NNI release.
+     - Required field. The docker image name used in job. If you don't want to build your own, NNI has provided a docker image `msranni/nni <https://hub.docker.com/r/msranni/nni>`__, which is up-to-date with every NNI release.
    * - subscriptionId
      - Required field. The subscription id of your account, can be found in ``config.json`` described above.
    * - resourceGroup
@@ -66,7 +67,7 @@ Compared with :doc:`local` and :doc:`remote`, OpenPAI training service supports 
    * - workspaceName
      - Required field. The workspace name of your account, can be found in ``config.json`` described above.
    * - computeTarget
-     - Required field. The compute cluster name you want to use in your AML workspace. `refer <https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target>`__ See Step 6 above.
+     - Required field. The compute cluster name you want to use in your AML workspace. See `reference <https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target>`__ and Step 5 above.
    * - maxTrialNumberPerGpu
      - Optional field. Default 1. Used to specify the max concurrency trial number on a GPU device.
    * - useActiveGpu
