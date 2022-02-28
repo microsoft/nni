@@ -253,7 +253,6 @@ module.exports = function(webpackEnv) {
       // if there are any conflicts. This matches Node resolution mechanism.
       // https://github.com/facebook/create-react-app/issues/253
       modules: ['node_modules', paths.appNodeModules].concat(modules.additionalModulePaths || []),
-      // modules: ['node_modules', 'src'],
       // These are the reasonable defaults supported by the Node ecosystem.
       // We also include JSX as a common component filename extension to support
       // some tools, although we do not recommend using it, see:
@@ -268,7 +267,7 @@ module.exports = function(webpackEnv) {
           '@components': `${paths.appSrc}/components`,
           '@style': `${paths.appSrc}/static/style`,
           '@model': `${paths.appSrc}/static/model`,
-          '@function': `${paths.appSrc}/static`
+          '@static': `${paths.appSrc}/static`
       },
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding

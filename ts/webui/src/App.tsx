@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Stack } from '@fluentui/react';
-const { EXPERIMENT, TRIALS } = require('@function/datamodel');
-const COLUMN = require('@function/const');
-const isManagerExperimentPage = require('@function/function');
-const Nav = require('@components/nav/Nav');
-const SlideNavBtns = require('@components/nav/slideNav/SlideNavBtns');
-const MessageInfo = require('@components/common/MessageInfo');
+import NavCon from '@components/nav/Nav';
+import { SlideNavBtns } from '@components/nav/slideNav/SlideNavBtns';
+import MessageInfo from '@components/common/MessageInfo';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { COLUMN } from '@static/const';
+import { isManagerExperimentPage } from '@static/function';
 
 require('@style/App.scss');
 require('@style/common/common.scss');
@@ -182,7 +182,7 @@ class App extends React.Component<{}, AppState> {
                     <Stack className='nni' style={{ minHeight: window.innerHeight }}>
                         <div className='header'>
                             <div className='headerCon'>
-                                <Nav changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
+                                <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
                             </div>
                         </div>
                         <Stack className='contentBox'>

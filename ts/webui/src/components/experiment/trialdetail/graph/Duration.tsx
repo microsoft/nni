@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
-import { TableObj, EventMap } from '../../../../static/interface';
-import { filterDuration, convertDuration } from '../../../../static/function';
+import { TableObj, EventMap } from '@static/interface';
+import { filterDuration, convertDuration } from '@static/function';
 import 'echarts/lib/chart/bar';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';

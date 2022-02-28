@@ -1,7 +1,7 @@
 import React from 'react';
 import { Stack, Icon } from '@fluentui/react';
 import { TitleContext } from './TitleContext';
-import '../../../static/style/experiment/overview/overviewTitle.scss';
+import '@style/experiment/overview/overviewTitle.scss';
 
 export const Title = (): any => (
     <TitleContext.Consumer>

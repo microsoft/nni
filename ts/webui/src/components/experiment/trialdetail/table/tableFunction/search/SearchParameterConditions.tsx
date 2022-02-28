@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Stack, PrimaryButton, Dropdown, IDropdownOption } from '@fluentui/react';
-import { EXPERIMENT } from '../../../../../../static/datamodel';
+import { EXPERIMENT } from '@static/datamodel';
 import { getDropdownOptions, getSearchInputValueBySearchList } from './searchFunction';
-import { gap10 } from '../../../../../fluent/ChildrenGap';
+import { gap10 } from '@components/fluent/ChildrenGap';
 
 // This file is for filtering trial parameters and trial status
 

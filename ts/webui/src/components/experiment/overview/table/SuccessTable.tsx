@@ -14,15 +14,15 @@ import {
     ScrollbarVisibility
 } from '@fluentui/react';
 import DefaultMetric from './DefaultMetric';
-import OpenRow from '../../../common/OpenRow';
-import CopyButton from '../../../common/CopyButton';
-import { convertDuration, copyAndSort } from '../../../../static/function';
-import { TRIALS } from '../../../../static/datamodel';
-import { SortInfo } from '../../../../static/interface';
-import { DETAILTABS } from '../../../nav/slideNav/NNItabs';
-import '../../../../static/style/experiment/overview/succTable.scss';
-import '../../../../static/style/common/trialStatus.css';
-import '../../../../static/style/openRow.scss';
+import OpenRow from '@components/common/OpenRow';
+import CopyButton from '@components/common/CopyButton';
+import { convertDuration, copyAndSort } from '@static/function';
+import { TRIALS } from '@static/datamodel';
+import { SortInfo } from '@static/interface';
+import { DETAILTABS } from '@components/nav/slideNav/NNItabs';
+import '@style/experiment/overview/succTable.scss';
+import '@style/common/trialStatus.css';
+import '@style/openRow.scss';
 
 interface SuccessTableProps {
     trialIds: string[];

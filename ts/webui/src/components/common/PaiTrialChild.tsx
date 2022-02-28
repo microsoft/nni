@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DOWNLOAD_IP } from '../../static/const';
+import { DOWNLOAD_IP } from '@static/const';
 import LogPathChild from './LogPathChild';
 
 interface PaiTrialChildProps {

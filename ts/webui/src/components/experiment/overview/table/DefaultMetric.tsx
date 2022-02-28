@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { TRIALS } from '../../../../static/datamodel';
-import { formatAccuracy } from '../../../../static/function';
+import { TRIALS } from '@static/datamodel';
+import { formatAccuracy } from '@static/function';
 
 // oview page table: default metric column render
 interface DefaultMetricProps {

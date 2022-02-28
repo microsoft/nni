@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import copy from 'copy-to-clipboard';
 import { IconButton, FontSizes, TooltipHost } from '@fluentui/react';
-import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
+import { TOOLTIP_BACKGROUND_COLOR } from '@static/const';
 
 const COPIED_TOOLTIP_CLOSE_DELAY = 1000;
 

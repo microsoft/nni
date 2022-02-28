@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DefaultButton, Icon, Dropdown, DatePicker, DayOfWeek } from '@fluentui/react';
-import { EXPERIMENTSTATUS } from '../../static/const';
+import { EXPERIMENTSTATUS } from '@static/const';
 import { fillOptions } from './expFunction';
 
 interface FilterBtnsProps {

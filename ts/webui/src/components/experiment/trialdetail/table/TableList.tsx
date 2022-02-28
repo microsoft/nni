@@ -10,28 +10,28 @@ import {
     DirectionalHint,
     Checkbox
 } from '@fluentui/react';
-import { EXPERIMENT, TRIALS } from '../../../../static/datamodel';
-import { TOOLTIP_BACKGROUND_COLOR } from '../../../../static/const';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { TOOLTIP_BACKGROUND_COLOR } from '@static/const';
 import {
     convertDuration,
     formatTimestamp,
     copyAndSort,
     parametersType,
     parseMetrics
-} from '../../../../static/function';
-import { TableObj, SortInfo, SearchItems } from '../../../../static/interface';
+} from '@static/function';
+import { TableObj, SortInfo, SearchItems } from '@static/interface';
 import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction';
-import { blocked, copy, LineChart, tableListIcon } from '../../../fluent/Icon';
+import { blocked, copy, LineChart, tableListIcon } from '@components/fluent/Icon';
 import ChangeColumnComponent from '../ChangeColumnComponent';
 import Compare from './tableFunction/Compare';
 import Customize from './tableFunction/CustomizedTrial';
 import TensorboardUI from './tableFunction/tensorboard/TensorboardUI';
 import Search from './tableFunction/search/Search';
 import KillJob from './tableFunction/killTrial/Killjob';
-import ExpandableDetails from '../../../common/ExpandableDetails';
-import PaginationTable from '../../../common/PaginationTable';
-import CopyButton from '../../../common/CopyButton';
-import { Trial } from '../../../../static/model/trial';
+import ExpandableDetails from '@components/common/ExpandableDetails';
+import PaginationTable from '@components/common/PaginationTable';
+import CopyButton from '@components/common/CopyButton';
+import { Trial } from '@model/trial';
 
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');

@@ -1,21 +1,21 @@
 import * as React from 'react';
 import { Stack, Pivot, PivotItem } from '@fluentui/react';
-import { EXPERIMENT, TRIALS } from '../../../../static/datamodel';
-import { AppContext } from '../../../../App';
-import DefaultPoint from '../graph/DefaultMetricPoint';
-import Duration from '../graph/Duration';
-import Para from '../graph/Para';
-import Intermediate from '../graph/Intermediate';
-import TableList from './TableList';
-import '../../../../static/style/button.scss';
-import '../../../../static/style/logPath.scss';
-import '../../../../static/style/openRow.scss';
-import '../../../../static/style/pagination.scss';
-import '../../../../static/style/experiment/overview/overviewTitle.scss';
-import '../../../../static/style/experiment/trialdetail/search.scss';
-import '../../../../static/style/experiment/trialdetail/tensorboard.scss';
-import '../../../../static/style/table.scss';
-import '../../../../static/style/common/trialStatus.css';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { AppContext } from '@/App';
+import DefaultPoint from './graph/DefaultMetricPoint';
+import Duration from './graph/Duration';
+import Para from './graph/Para';
+import Intermediate from './graph/Intermediate';
+import TableList from './table/TableList';
+import '@style/button.scss';
+import '@style/logPath.scss';
+import '@style/openRow.scss';
+import '@style/pagination.scss';
+import '@style/experiment/overview/overviewTitle.scss';
+import '@style/experiment/trialdetail/search.scss';
+import '@style/experiment/trialdetail/tensorboard.scss';
+import '@/style/table.scss';
+import '@style/common/trialStatus.css';
 
 /**
  * single experiment

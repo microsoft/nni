@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useContext } from 'react';
 import axios from 'axios';
 import { Dropdown } from '@fluentui/react';
-import { EXPERIMENT } from '../../../../static/datamodel';
-import { toSeconds } from '../../../../static/experimentConfig';
-import { AppContext } from '../../../../App';
+import { AppContext } from '@/App';
+import { MANAGER_IP, MAX_TRIAL_NUMBERS } from '@static/const';
+import { EXPERIMENT } from '@static/datamodel';
+import { toSeconds } from '@static/experimentConfig';
 import { EditExpeParamContext } from './context';
 import { durationUnit } from '../overviewConst';
-import { MANAGER_IP, MAX_TRIAL_NUMBERS } from '../../../../static/const';
-import { Edit, CheckMark, Cancel } from '../../../fluent/Icon';
-import MessageInfo from '../../../common/MessageInfo';
-import '../../../../static/style/experiment/overview/count.scss';
+import { Edit, CheckMark, Cancel } from '@components/fluent/Icon';
+import MessageInfo from '@components/common/MessageInfo';
+import '@style/experiment/overview/count.scss';
 
 const DurationInputRef = React.createRef<HTMLInputElement>();
 

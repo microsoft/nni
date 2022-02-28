@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 
-import { getPrefix } from '../../../static/function';
+import { getPrefix } from '@static/function';
 
 const OVERVIEWTABS = (
     <NavLink to='/oview' activeClassName='selected' className='common-tabs'>

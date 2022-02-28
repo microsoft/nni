@@ -1,13 +1,13 @@
 import React from 'react';
 import { Stack, ProgressIndicator, TooltipHost, DirectionalHint } from '@fluentui/react';
-import { EXPERIMENT } from '../../../../static/datamodel';
-import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR } from '../../../../static/const';
-import { convertDuration, convertTimeAsUnit } from '../../../../static/function';
+import { EXPERIMENT } from '@static/datamodel';
+import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR } from '@static/const';
+import { convertDuration, convertTimeAsUnit } from '@static/function';
 import { EditExperimentParam } from './EditExperimentParam';
 import { ExpDurationContext } from './ExpDurationContext';
 import { EditExpeParamContext } from './context';
 import { leftProgress, rightEidtParam, progressHeight } from './commonStyle';
-import '../../../../static/style/experiment/overview/count.scss';
+import '@style/experiment/overview/count.scss';
 
 export const ExpDuration = (): any => (
     <ExpDurationContext.Consumer>

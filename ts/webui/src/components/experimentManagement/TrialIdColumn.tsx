@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Stack } from '@fluentui/react';
-import { AllExperimentList } from '../../static/interface';
+import { AllExperimentList } from '@static/interface';
 import CopyButton from '../common/CopyButton';
 
 interface TrialIdColumnProps {

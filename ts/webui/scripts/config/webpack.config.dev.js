@@ -33,7 +33,7 @@ const config = {
             '@components': `${paths.appSrc}/components`,
             '@style': `${paths.appSrc}/static/style`,
             '@model': `${paths.appSrc}/static/model`,
-            '@function': `${paths.appSrc}/static`
+            '@static': `${paths.appSrc}/static`
         },
         extensions: paths.moduleFileExtensions.map(ext => `.${ext}`),
     },

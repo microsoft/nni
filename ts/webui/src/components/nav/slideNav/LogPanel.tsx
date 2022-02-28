@@ -1,11 +1,11 @@
 import * as React from 'react';
 import axios from 'axios';
 import { Stack, StackItem, Panel, PrimaryButton, DefaultButton, Pivot, PivotItem } from '@fluentui/react';
-import { infoIcon } from '../../fluent/Icon';
-import { DOWNLOAD_IP } from '../../../static/const';
-import { downFile } from '../../../static/function';
-import MonacoHTML from '../../common/MonacoEditor';
-import '../../../static/style/logPanel.scss';
+import { DOWNLOAD_IP } from '@static/const';
+import { downFile } from '@static/function';
+import { infoIcon } from '@components/fluent/Icon';
+import MonacoHTML from '@components/common/MonacoEditor';
+import '@style/logPanel.scss';
 
 interface LogPanelProps {
     closePanel: () => void;

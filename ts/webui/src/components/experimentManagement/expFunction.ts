@@ -1,5 +1,5 @@
-import { AllExperimentList, SortInfo } from '../../static/interface';
-import { copyAndSort } from '../../static/function';
+import { AllExperimentList, SortInfo } from '@static/interface';
+import { copyAndSort } from '@static/function';
 
 function compareDate(date1: Date, date2: Date): boolean {
     if (date1 !== undefined && date2 !== undefined) {

@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { downFile } from '../../../static/function';
 import { Stack, PrimaryButton, DefaultButton, Panel, StackItem } from '@fluentui/react';
-import { DRAWEROPTION } from '../../../static/const';
-import { EXPERIMENT, TRIALS } from '../../../static/datamodel';
-import { caclMonacoEditorHeight } from '../../../static/function';
 import MonacoEditor from 'react-monaco-editor';
-import '../../../static/style/logPanel.scss';
+import { downFile } from '@static/function';
+import { DRAWEROPTION } from '@static/const';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { caclMonacoEditorHeight } from '@static/function';
+import '@style/logPanel.scss';
 
 interface ExpDrawerProps {
     closeExpDrawer: () => void;

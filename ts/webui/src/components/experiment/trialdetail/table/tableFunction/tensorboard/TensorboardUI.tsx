@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import { DefaultButton, IContextualMenuProps } from '@fluentui/react';
-import { MANAGER_IP } from '../../../../../../static/const';
-import { disableTensorboard, getTensorboardMenu } from '../../../../../../static/function';
-import { Tensorboard } from '../../../../../../static/interface';
+import { MANAGER_IP } from '@static/const';
+import { disableTensorboard, getTensorboardMenu } from '@static/function';
+import { Tensorboard } from '@static/interface';
 import TensorboardDialog from './TensorboardDialog';
 
 function TensorboardUI(props): any {

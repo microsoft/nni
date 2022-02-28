@@ -54,10 +54,11 @@
         "webpack": "./scripts/config/webpack.config.js",
         "import/resolver": {
           "alias": {
+            "@/*": ["src/*"],
             "@components/*": ["src/components/*"],
             "@style/*": ["src/static/style/*"],
             "@model/*": ["src/static/model/*"],
-            "@function/*": ["src/static/*"]
+            "@static/*": ["src/static/*"]
           }
         },
         "ignorePatterns": [

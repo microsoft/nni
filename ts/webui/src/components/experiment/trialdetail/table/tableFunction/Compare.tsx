@@ -2,11 +2,11 @@ import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Stack, Modal, IconButton, IDragOptions, ContextualMenu, Dropdown, IDropdownOption } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
-import { TooltipForIntermediate, TableObj, SingleAxis } from '../../../../../static/interface';
-import { contentStyles, iconButtonStyles } from '../../../../fluent/ModalTheme';
-import { convertDuration, parseMetrics } from '../../../../../static/function';
-import { EXPERIMENT, TRIALS } from '../../../../../static/datamodel';
-import '../../../../../static/style/experiment/trialdetail/compare.scss';
+import { TooltipForIntermediate, TableObj, SingleAxis } from '@static/interface';
+import { contentStyles, iconButtonStyles } from '@components/fluent/ModalTheme';
+import { convertDuration, parseMetrics } from '@static/function';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import '@style/experiment/trialdetail/compare.scss';
 
 /***
  * Compare file is designed for [each trial intermediate result, trials compare model]

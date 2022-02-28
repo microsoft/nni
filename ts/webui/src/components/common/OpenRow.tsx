@@ -1,18 +1,18 @@
 import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
 import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui/react';
-import { Trial } from '../../static/model/trial';
-import { MANAGER_IP, RETIARIIPARAMETERS } from '../../static/const';
-import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { reformatRetiariiParameter } from '../../static/function';
 import JSONTree from 'react-json-tree';
+import { Trial } from '@model/trial';
+import { MANAGER_IP, RETIARIIPARAMETERS } from '@static/const';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { reformatRetiariiParameter } from '@static/function';
 import PaiTrialLog from './PaiTrialLog';
 import TrialLog from './TrialLog';
 import MessageInfo from './MessageInfo';
 import PanelMonacoEditor from './PanelMonacoEditor';
-import '../../static/style/experiment/overview/overview.scss';
-import '../../static/style/copyParameter.scss';
-import '../../static/style/openRow.scss';
+import '@style/experiment/overview/overview.scss';
+import '@style/copyParameter.scss';
+import '@style/openRow.scss';
 
 /**
  *  netron URL must be synchronized with ts/nni_manager/rest_server/index.ts`.

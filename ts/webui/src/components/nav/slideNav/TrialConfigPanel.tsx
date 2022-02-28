@@ -2,11 +2,11 @@ import * as React from 'react';
 import { Stack, Panel, PrimaryButton } from '@fluentui/react';
 import lodash from 'lodash';
 import MonacoEditor from 'react-monaco-editor';
-import { EXPERIMENT } from '../../../static/datamodel';
-import { MONACO } from '../../../static/const';
-import { convertDuration, caclMonacoEditorHeight } from '../../../static/function';
-import { prettyStringify } from '../../../static/jsonutil';
-import '../../../static/style/logPanel.scss';
+import { EXPERIMENT } from '@static/datamodel';
+import { MONACO } from '@static/const';
+import { convertDuration, caclMonacoEditorHeight } from '@static/function';
+import { prettyStringify } from '@static/jsonutil';
+import '@static/style/logPanel.scss';
 
 interface LogDrawerProps {
     hideConfigPanel: () => void;

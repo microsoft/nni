@@ -8,8 +8,8 @@ import {
     DirectionalHint,
     SearchBox
 } from '@fluentui/react';
-import { EXPERIMENT } from '../../../../../../static/datamodel';
-import { SearchItems } from '../../../../../../static/interface';
+import { EXPERIMENT } from '@static/datamodel';
+import { SearchItems } from '@static/interface';
 import SearchParameterConditions from './SearchParameterConditions';
 import GeneralSearch from './GeneralSearch';
 import { classNames, isChoiceType } from './searchFunction';

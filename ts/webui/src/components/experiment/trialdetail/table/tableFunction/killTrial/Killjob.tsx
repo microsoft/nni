@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Stack, FocusTrapCallout, DefaultButton, FocusZone, PrimaryButton } from '@fluentui/react';
-import { killJob } from '../../../../../../static/function';
-import { blocked } from '../../../../../fluent/Icon';
-import { styles } from '../../../../overview/params/basicInfoStyles';
+import { killJob } from '@static/function';
+import { blocked } from '@components/fluent/Icon';
+import { styles } from '@components/experiment/overview/params/basicInfoStyles';
 
 interface KillJobState {
     isCalloutVisible: boolean;

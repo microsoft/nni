@@ -2,10 +2,10 @@ import * as React from 'react';
 import axios from 'axios';
 import { Stack, StackItem, PrimaryButton, DefaultButton } from '@fluentui/react';
 import { Dialog, DialogType, DialogFooter } from '@fluentui/react/lib/Dialog';
-import { MANAGER_IP } from '../../../../../static/const';
-import { EXPERIMENT, TRIALS } from '../../../../../static/datamodel';
-import { warining, errorBadge, completed } from '../../../../fluent/Icon';
-import '../../../../../static/style/experiment/trialdetail/customized.scss';
+import { MANAGER_IP } from '@static/const';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { warining, errorBadge, completed } from '@components/fluent/Icon';
+import '@style/experiment/trialdetail/customized.scss';
 
 /**
  * customized trial file is for

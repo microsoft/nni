@@ -1,7 +1,7 @@
 import { mergeStyleSets } from '@fluentui/react';
-import { trialJobStatus } from '../../../../../../static/const';
-import { EXPERIMENT } from '../../../../../../static/datamodel';
-import { TableObj, SearchItems } from '../../../../../../static/interface';
+import { trialJobStatus } from '@static/const';
+import { EXPERIMENT } from '@static/datamodel';
+import { TableObj, SearchItems } from '@static/interface';
 
 const classNames = mergeStyleSets({
     menu: {

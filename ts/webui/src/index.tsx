@@ -4,10 +4,10 @@ import App from './App';
 import { getPrefix } from './static/function';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 const Overview = lazy(() => import('./components/experiment/overview/Overview'));
-const TrialsDetail = lazy(() => import('./components/experiment/trialdetail/table/TrialsDetail'));
+const TrialsDetail = lazy(() => import('./components/experiment/trialdetail/TrialsDetail'));
 const ExperimentManagerIndex = lazy(() => import('./components/experimentManagement/ExperimentManagerIndex'));
-import './static/style/index.css';
-import './static/style/loading.scss';
+import '@style/index.css';
+import '@style/loading.scss';
 import * as serviceWorker from './serviceWorker';
 
 const path = getPrefix();

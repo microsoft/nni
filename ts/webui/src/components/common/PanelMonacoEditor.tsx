@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Stack, Panel, PrimaryButton } from '@fluentui/react';
 import MonacoEditor from 'react-monaco-editor';
-import { caclMonacoEditorHeight } from '../../static/function';
-import '../../static/style/logPanel.scss';
+import { caclMonacoEditorHeight } from '@static/function';
+import '@style/logPanel.scss';
 
 interface LogPanelProps {
     hideConfigPanel: () => void;

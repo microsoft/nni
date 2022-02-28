@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn, IStackTokens } from '@fluentui/react';
-import { ExperimentsManager } from '../../static/model/experimentsManager';
-import { expformatTimestamp, copyAndSort } from '../../static/function';
-import { AllExperimentList, SortInfo } from '../../static/interface';
-import MessageInfo from '../common/MessageInfo';
+import { ExperimentsManager } from '@model/experimentsManager';
+import { expformatTimestamp, copyAndSort } from '@static/function';
+import { AllExperimentList, SortInfo } from '@static/interface';
+import MessageInfo from '@components/common/MessageInfo';
 import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
 import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
@@ -11,12 +11,12 @@ import TrialIdColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
 import { TitleContext } from '../experiment/overview/TitleContext';
 import { Title } from '../experiment/overview/Title';
-import '../../static/style/App.scss';
-import '../../static/style/nav/nav.scss';
-import '../../static/style/common/common.scss';
-import '../../static/style/common/experimentStatusColor.scss';
-import '../../static/style/common/trialStatus.css';
-import '../../static/style/experimentManagement/experiment.scss';
+import '@style/App.scss';
+import '@style/nav/nav.scss';
+import '@style/common/common.scss';
+import '@style/common/experimentStatusColor.scss';
+import '@style/common/trialStatus.css';
+import '@style/experimentManagement/experiment.scss';
 
 const expTokens: IStackTokens = {
     childrenGap: 25

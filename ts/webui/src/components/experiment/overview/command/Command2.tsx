@@ -1,9 +1,9 @@
 import React from 'react';
 import { TooltipHost, DirectionalHint } from '@fluentui/react';
-import { EXPERIMENT } from '../../../../static/datamodel';
+import { EXPERIMENT } from '@static/datamodel';
 import { leftProgress } from '../count/commonStyle';
-import { TOOLTIP_BACKGROUND_COLOR } from '../../../../static/const';
-import '../../../../static/style/experiment/overview/command.scss';
+import { TOOLTIP_BACKGROUND_COLOR } from '@static/const';
+import '@style/experiment/overview/command.scss';
 
 export const Command2 = (): any => {
     return (

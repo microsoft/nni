@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Stack, Icon, Dropdown, DefaultButton } from '@fluentui/react';
-import { EXPERIMENT, TRIALS } from '../../../static/datamodel';
-import { Trial } from '../../../static/model/trial';
-import { AppContext } from '../../../App';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { Trial } from '@static/model/trial';
+import { AppContext } from '@/App';
 import { Title } from './Title';
 import SuccessTable from './table/SuccessTable';
 import DefaultPoint from '../trialdetail/graph/DefaultMetricPoint';
@@ -14,9 +14,9 @@ import { Command1 } from './command/Command1';
 import { Command2 } from './command/Command2';
 import { TitleContext } from './TitleContext';
 import { itemStyleSucceed, entriesOption } from './overviewConst';
-import '../../../static/style/experiment/overview/overview.scss';
-import '../../../static/style/experiment/overview/topTrial.scss';
-import '../../../static/style/logPath.scss';
+import '@style/experiment/overview/overview.scss';
+import '@style/experiment/overview/topTrial.scss';
+import '@style/logPath.scss';
 
 /**
  * single experiment

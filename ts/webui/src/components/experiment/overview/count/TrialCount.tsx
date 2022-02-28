@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Stack, TooltipHost, ProgressIndicator, DirectionalHint, IStackTokens } from '@fluentui/react';
-import { EXPERIMENT, TRIALS } from '../../../../static/datamodel';
-import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR, MAX_TRIAL_NUMBERS } from '../../../../static/const';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR, MAX_TRIAL_NUMBERS } from '@static/const';
 import { EditExperimentParam } from './EditExperimentParam';
 import { EditExpeParamContext } from './context';
 import { ExpDurationContext } from './ExpDurationContext';

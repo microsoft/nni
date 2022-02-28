@@ -1,15 +1,15 @@
 import * as React from 'react';
 import axios from 'axios';
-import { WEBUIDOC, MANAGER_IP } from '../../static/const';
 import { Stack, StackItem, CommandBarButton, IContextualMenuProps } from '@fluentui/react';
 import { Link } from 'react-router-dom';
-import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, ChevronRightMed } from '../fluent/Icon';
+import { WEBUIDOC, MANAGER_IP } from '@static/const';
 import ExperimentSummaryPanel from './slideNav/ExperimentSummaryPanel';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './slideNav/NNItabs';
-import { EXPERIMENT } from '../../static/datamodel';
-import { gap15, stackStyle } from '../fluent/ChildrenGap';
-import '../../static/style/nav/nav.scss';
-import '../../static/style/icon.scss';
+import { EXPERIMENT } from '@static/datamodel';
+import { gap15, stackStyle } from '@components/fluent/ChildrenGap';
+import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, ChevronRightMed } from '@components/fluent/Icon';
+import '@style/nav/nav.scss';
+import '@style/icon.scss';
 
 interface NavState {
     version: string;

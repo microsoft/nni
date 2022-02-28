@@ -4,7 +4,7 @@ import MediaQuery from 'react-responsive';
 import TrialConfigPanel from './TrialConfigPanel';
 import LogPanel from './LogPanel';
 import IconButtonTemplate from './IconButtonTemplet';
-import '../../../static/style/nav/slideNavBtns.scss';
+import '@style/nav/slideNavBtns.scss';
 
 /***
  * this file is the container of [config, search space, dispatcher/nnimanager log]

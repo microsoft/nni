@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import { Stack, Callout, Link, IconButton } from '@fluentui/react';
 import { useId } from '@uifabric/react-hooks';
-import { EXPERIMENT } from '../../../../static/datamodel';
-import { formatTimestamp } from '../../../../static/function';
-import LogPanel from '../../../nav/slideNav/LogPanel';
+import { EXPERIMENT } from '@static/datamodel';
+import { formatTimestamp } from '@static/function';
+import LogPanel from '@components/nav/slideNav/LogPanel';
 import { BestMetricContext } from '../Overview';
 import { styles } from './basicInfoStyles';
-import '../../../../static/style/common/experimentStatusColor.scss';
-import '../../../../static/style/experiment/overview/basic.scss';
+import '@style/common/experimentStatusColor.scss';
+import '@/style/experiment/overview/basic.scss';
 
 export const BasicInfo = (): any => {
     const labelId: string = useId('callout-label');

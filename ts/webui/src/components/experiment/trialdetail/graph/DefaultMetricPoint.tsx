@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Toggle, Stack } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
-import { EXPERIMENT, TRIALS } from '../../../../static/datamodel';
-import { Trial } from '../../../../static/model/trial';
-import { TooltipForAccuracy, EventMap } from '../../../../static/interface';
-import { reformatRetiariiParameter } from '../../../../static/function';
+import { Trial } from '@model/trial';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { TooltipForAccuracy, EventMap } from '@static/interface';
+import { reformatRetiariiParameter } from '@static/function';
 import 'echarts/lib/chart/scatter';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
