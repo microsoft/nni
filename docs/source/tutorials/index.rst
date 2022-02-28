@@ -11,6 +11,27 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_speed_up_thumb.png
+     :alt: Speed Up Model with Mask
+
+     :ref:`sphx_glr_tutorials_pruning_speed_up.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/pruning_speed_up
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Start and Manage a New Experiment">
 
 .. only:: html
@@ -29,6 +50,69 @@ Tutorials
    :hidden:
 
    /tutorials/nni_experiment
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Model pruning is a technique to reduce the model size and computation by reducing model weight ...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_quick_start_mnist_thumb.png
+     :alt: Pruning Quickstart
+
+     :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/pruning_quick_start_mnist
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Quantization reduces model size and speeds up inference time by reducing the number of bits req...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_quantization_quick_start_mnist_thumb.png
+     :alt: Quantization Quickstart
+
+     :ref:`sphx_glr_tutorials_quantization_quick_start_mnist.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/quantization_quick_start_mnist
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip=" Introduction ------------">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_quantization_speed_up_thumb.png
+     :alt: Speed Up Model with Calibration Config
+
+     :ref:`sphx_glr_tutorials_quantization_speed_up.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/quantization_speed_up
 
 .. raw:: html
 

@@ -14,3 +14,4 @@ References
     Launch from Python <Tutorial/HowToLaunchFromPython>
     Shared Storage <Tutorial/HowToUseSharedStorage>
     Tensorboard <Tutorial/Tensorboard>
+    Compression <compression/reference>
