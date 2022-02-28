@@ -13,7 +13,7 @@ NNI has provided query tools so that users can easily get the retrieve the data 
 # -------------
 # This tutorial assumes that you have already prepared your NAS benchmarks under cache directory
 # (by default, ``~/.cache/nni/nasbenchmark``).
-# If you haven't, please follow the data preparation guide in :doc:`../NAS/Benchmarks`.
+# If you haven't, please follow the data preparation guide in :doc:`/nas/benchmarks`.
 #
 # As a result, the directory should look like:
 

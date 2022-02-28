@@ -1,4 +1,4 @@
-.. 84c45eb2b0a2f307a1c2568dc7bab842
+.. a533c818ceeb6667df82045885d5ccb5
 
 ###########################
 Neural Network Intelligence
@@ -15,7 +15,7 @@ Neural Network Intelligence
     入门<Tutorial/QuickStart>
     教程<tutorials>
     自动（超参数）调优 <hyperparameter_tune>
-    神经网络架构搜索<nas>
+    神经网络架构搜索<nas/index>
     模型压缩<model_compression>
     特征工程<feature_engineering>
     NNI实验 <experiment/overview>

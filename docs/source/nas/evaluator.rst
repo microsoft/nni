@@ -3,10 +3,12 @@ Model Evaluators
 
 A model evaluator is for training and validating each generated model. They are necessary to evaluate the performance of new explored models.
 
+.. _functional-evaluator:
+
 Customize Evaluator with Any Function
 -------------------------------------
 
-The simplest way to customize a new evaluator is with functional APIs, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to FunctionEvaluator as its initialization parameters (note that they will be `serialized <./Serialization.rst>`__). In this way, users get everything under their control, but expose less information to the framework and as a result, further optimizations like `CGO <./ExecutionEngines.rst#cgo-execution-engine-experimental>`__ might be not feasible. An example is as belows:
+The simplest way to customize a new evaluator is with functional APIs, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to FunctionEvaluator as its initialization parameters (note that they will be :doc:`serialized <./serialization>`). In this way, users get everything under their control, but expose less information to the framework and as a result, further optimizations like :ref:`CGO <cgo-execution-engine>` might be not feasible. An example is as belows:
 
 .. code-block:: python
 
@@ -68,12 +70,6 @@ For example,
   evaluator = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=10)
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Classification
-    :noindex:
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Regression
-    :noindex:
 
 Customize Evaluator with PyTorch-Lightning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -145,3 +141,39 @@ Then, users need to wrap everything (including LightningModule, trainer and data
                              train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
     experiment = RetiariiExperiment(base_model, lightning, mutators, strategy)
+
+References
+----------
+
+FunctionalEvaluator
+^^^^^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.evaluator.FunctionalEvaluator
+    :members:
+    :noindex:
+
+.. _classification-evaluator:
+
+Classification
+^^^^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Classification
+    :members:
+    :noindex:
+
+.. _regression-evaluator:
+
+Regression
+^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Regression
+    :members:
+    :noindex:
+
+Lightning
+^^^^^^^^^
+
+..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Lightning
+    :members:
+    :noindex:
+

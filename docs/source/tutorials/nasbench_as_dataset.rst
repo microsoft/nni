@@ -32,7 +32,7 @@ Prerequisites
 -------------
 This tutorial assumes that you have already prepared your NAS benchmarks under cache directory
 (by default, ``~/.cache/nni/nasbenchmark``).
-If you haven't, please follow the data preparation guide in :doc:`../NAS/Benchmarks`.
+If you haven't, please follow the data preparation guide in :doc:`/nas/benchmarks`.
 
 As a result, the directory should look like:
 
@@ -116,7 +116,7 @@ Use the following architecture as an example:
 
  .. code-block:: none
 
-    [2022-02-22 18:52:29] INFO (nni.nas.benchmarks.utils/MainThread) "/home/yugzhan/.cache/nni/nasbenchmark/nasbench101-209f5694.db" already exists. Checking hash.
+    [2022-02-28 13:48:51] INFO (nni.nas.benchmarks.utils/MainThread) "/home/yugzhan/.cache/nni/nasbenchmark/nasbench101-209f5694.db" already exists. Checking hash.
     {'config': {'arch': {'input1': [0],
                          'input2': [1],
                          'input3': [2],
@@ -260,7 +260,7 @@ Use the following architecture as an example:
 
  .. code-block:: none
 
-    [2022-02-22 18:52:36] INFO (nni.nas.benchmarks.utils/MainThread) "/home/yugzhan/.cache/nni/nasbenchmark/nasbench201-b2b60732.db" already exists. Checking hash.
+    [2022-02-28 13:49:09] INFO (nni.nas.benchmarks.utils/MainThread) "/home/yugzhan/.cache/nni/nasbenchmark/nasbench201-b2b60732.db" already exists. Checking hash.
     {'config': {'arch': {'0_1': 'avg_pool_3x3',
                          '0_2': 'conv_1x1',
                          '0_3': 'conv_1x1',
@@ -436,7 +436,7 @@ Use none as a wildcard.
 
  .. code-block:: none
 
-    [2022-02-22 18:52:47] INFO (nni.nas.benchmarks.utils/MainThread) "/home/yugzhan/.cache/nni/nasbenchmark/nds-5745c235.db" already exists. Checking hash.
+    [2022-02-28 13:49:36] INFO (nni.nas.benchmarks.utils/MainThread) "/home/yugzhan/.cache/nni/nasbenchmark/nds-5745c235.db" already exists. Checking hash.
     {'best_test_acc': 90.48,
      'best_train_acc': 96.356,
      'best_train_loss': 0.116,
@@ -803,7 +803,7 @@ Count number.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  25.047 seconds)
+   **Total running time of the script:** ( 1 minutes  2.214 seconds)
 
 
 .. _sphx_glr_download_tutorials_nasbench_as_dataset.py:
