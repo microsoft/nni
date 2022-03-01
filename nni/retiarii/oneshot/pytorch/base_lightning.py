@@ -52,35 +52,47 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     _custom_replace_dict_note = """custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
         The custom xxxChoice replace method. Keys should be ``xxxChoice`` type.
-        Values should callable accepting an ``nn.Module`` and returning an ``nn.module``.
+        Values should callable accepting an ``nn.Module`` and returning an ``nn.Module``.
         This custom replace dict will override the default replace dict of each NAS method.
     """
 
-    _base_model_note = """base_model : pl.LightningModule
-        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
-        be wrapped by this model.
+    _inner_module_note = """inner_module : pytorch_lightning.LightningModule
+        It's a `LightningModule <https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html>`__
+        that defines computations, train/val loops, optimizers in a single class.
+        When used in NNI, the ``inner_module`` is the combination of instances of evaluator + base model
+        (to be precise, a base model wrapped with LightningModule in evaluator).
     """
 
     __doc__ = """
-    The base class for all one-shot NAS modules. Essential function such as preprocessing user's model, redirecting lightning
-    hooks for user's model, configuring optimizers and exporting NAS result are implemented in this class.
+    The base class for all one-shot NAS modules.
+
+    In NNI, we try to separate the "search" part and "training" part in one-shot NAS.
+    The "training" part is defined with evaluator interface (has to be lightning evaluator interface to work with oneshot).
+    Since the lightning evaluator has already broken down the training into minimal building blocks,
+    we can re-assemble them after combining them with the "search" part of a particular algorithm.
+
+    After the re-assembling, this module has defined all the search + training. The experiment can use a lightning trainer
+    (which is another part in the evaluator) to train this module, so as to complete the search process.
+
+    Essential function such as preprocessing user's model, redirecting lightning hooks for user's model,
+    configuring optimizers and exporting NAS result are implemented in this class.
 
     Attributes
     ----------
     nas_modules : List[nn.Module]
-        The replace result of a specific NAS method. xxxChoice will be replaced with some other modules with respect to the
-        NAS method.
+        The replace result of a specific NAS method.
+        xxxChoice will be replaced with some other modules with respect to the NAS method.
 
     Parameters
     ----------
-    """ + _base_model_note + _custom_replace_dict_note
+    """ + _inner_module_note + _custom_replace_dict_note
 
     automatic_optimization = False
 
-    def __init__(self, base_model: pl.LightningModule, custom_replace_dict: Optional[ReplaceDictType] = None):
+    def __init__(self, inner_module: pl.LightningModule, custom_replace_dict: Optional[ReplaceDictType] = None):
         super().__init__()
-        assert isinstance(base_model, pl.LightningModule)
-        self.model = base_model
+        assert isinstance(inner_module, pl.LightningModule)
+        self.model = inner_module
 
         # replace xxxChoice with respect to NAS alg
         # replaced modules are stored in self.nas_modules

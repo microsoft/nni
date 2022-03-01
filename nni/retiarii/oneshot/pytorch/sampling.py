@@ -43,11 +43,11 @@ class EnasModule(BaseOneShotLightningModule):
 
     __doc__ = _enas_note.format(
         module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.',
-        module_params=BaseOneShotLightningModule._base_model_note,
+        module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
     def __init__(self,
-                 base_model: pl.LightningModule,
+                 inner_module: pl.LightningModule,
                  ctrl_kwargs: Dict[str, Any] = None,
                  entropy_weight: float = 1e-4,
                  skip_weight: float = .8,
@@ -55,7 +55,7 @@ class EnasModule(BaseOneShotLightningModule):
                  ctrl_steps_aggregate: float = 20,
                  ctrl_grad_clip: float = 0,
                  custom_replace_dict: Optional[ReplaceDictType] = None):
-        super().__init__(base_model, custom_replace_dict)
+        super().__init__(inner_module, custom_replace_dict)
 
         self.nas_fields = [ReinforceField(name, len(module),
                                           isinstance(module, PathSamplingLayerChoice) or module.n_chosen == 1)
@@ -155,7 +155,7 @@ class RandomSamplingModule(BaseOneShotLightningModule):
     """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
 
     __doc__ = _random_note.format(
-        module_params=BaseOneShotLightningModule._base_model_note,
+        module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
     automatic_optimization = True

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """Strategy integration of one-shot.
 
 This file is put here simply because it relies on "pytorch".

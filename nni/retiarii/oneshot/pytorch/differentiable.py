@@ -86,13 +86,13 @@ class DartsModule(BaseOneShotLightningModule):
 
     __doc__ = _darts_note.format(
         module_notes='The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.',
-        module_params=BaseOneShotLightningModule._base_model_note,
+        module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
-    def __init__(self, base_model: pl.LightningModule,
+    def __init__(self, inner_module: pl.LightningModule,
                  custom_replace_dict: Optional[ReplaceDictType] = None,
                  arc_learning_rate: float = 3.0E-4):
-        super().__init__(base_model, custom_replace_dict=custom_replace_dict)
+        super().__init__(inner_module, custom_replace_dict=custom_replace_dict)
         self.arc_learning_rate = arc_learning_rate
 
     def training_step(self, batch, batch_idx):
@@ -317,7 +317,7 @@ class ProxylessModule(DartsModule):
 
     __doc__ = _proxyless_note.format(
         module_notes='This module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.',
-        module_params=BaseOneShotLightningModule._base_model_note,
+        module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
     @property
@@ -380,16 +380,16 @@ class SnasModule(DartsModule):
 
     __doc__ = _snas_note.format(
         module_notes='This module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.',
-        module_params=BaseOneShotLightningModule._base_model_note,
+        module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
-    def __init__(self, base_model,
+    def __init__(self, inner_module,
                  custom_replace_dict: Optional[ReplaceDictType] = None,
                  arc_learning_rate: float = 3.0e-4,
                  gumbel_temperature: float = 1.,
                  use_temp_anneal: bool = False,
                  min_temp: float = .33):
-        super().__init__(base_model, custom_replace_dict, arc_learning_rate=arc_learning_rate)
+        super().__init__(inner_module, custom_replace_dict, arc_learning_rate=arc_learning_rate)
         self.temp = gumbel_temperature
         self.init_temp = gumbel_temperature
         self.use_temp_anneal = use_temp_anneal

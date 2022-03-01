@@ -175,6 +175,72 @@ def debug_mutated_model(base_model, evaluator, applied_mutators):
 
 
 class RetiariiExperiment(Experiment):
+    """
+    The entry for a NAS experiment.
+    Users can use this class to start/stop or inspect an experiment, like exporting the results.
+
+    Experiment is a sub-class of :class:`nni.experiment.Experiment`, there are many similarities such as
+    configurable training service to distributed running the experiment on remote server.
+    But unlike :class:`nni.experiment.Experiment`, RetiariiExperiment doesn't support configure:
+
+    - ``trial_code_directory``, which can only be current working directory.
+    - ``search_space``, which is auto-generated in NAS.
+    - ``trial_command``, which must be ``python -m nni.retiarii.trial_entry`` to launch the modulized trial code.
+
+    RetiariiExperiment also doesn't have tuner/assessor/advisor, because they are also implemented in strategy.
+
+    Also, unlike :class:`nni.experiment.Experiment` which is bounded to a node server, 
+    RetiariiExperiment optionally starts a node server to schedule the trials, when the strategy is a multi-trial strategy.
+    When the strategy is one-shot, the step of launching node server is omitted, and the experiment is run locally by default.
+
+    Configurations of experiments, such as execution engine, number of GPUs allocated,
+    should be put into a :class:`RetiariiExeConfig` and used as an argument of :meth:`RetiariiExperiment.run`.
+
+    Parameters
+    ----------
+    base_model : nn.Module
+        The model defining the search space / base skeleton without mutation.
+        It should be wrapped by decorator ``nni.retiarii.model_wrapper``.
+    evaluator : nni.retiarii.Evaluator, default = None
+        Evaluator for the experiment.
+        If you are using a one-shot trainer, it should be placed here, although this usage is deprecated.
+    applied_mutators : list of nni.retiarii.Mutator, default = None
+        Mutators os mutate the base model. If none, mutators are skipped.
+        Note that when ``base_model`` uses inline mutations (e.g., LayerChoice), ``applied_mutators`` must be empty / none.
+    strategy : nni.retiarii.strategy.BaseStrategy, default = None
+        Exploration strategy. Can be multi-trial or one-shot.
+    trainer : BaseOneShotTrainer
+        Kept for compatibility purposes.
+
+    Examples
+    --------
+    Multi-trial NAS:
+    >>> base_model = Net()
+    >>> search_strategy = strategy.Random()
+    >>> model_evaluator = FunctionalEvaluator(evaluate_model)
+    >>> exp = RetiariiExperiment(base_model, model_evaluator, [], search_strategy)
+    >>> exp_config = RetiariiExeConfig('local')
+    >>> exp_config.trial_concurrency = 2
+    >>> exp_config.max_trial_number = 20
+    >>> exp_config.training_service.use_active_gpu = False
+    >>> exp.run(exp_config, 8081)
+
+    One-shot NAS:
+    >>> base_model = Net()
+    >>> search_strategy = strategy.DARTS()
+    >>> evaluator = pl.Classification(train_dataloader=train_loader, val_dataloaders=valid_loader)
+    >>> exp = RetiariiExperiment(base_model, evaluator, [], search_strategy)
+    >>> exp_config = RetiariiExeConfig()
+    >>> exp_config.execution_engine = 'oneshot'  # must be set of one-shot strategy
+    >>> exp.run(exp_config)
+
+    Export top models:
+    >>> for model_dict in exp.export_top_models(formatter='dict'):
+    ...     print(model_dict)
+    >>> with nni.retarii.fixed_arch(model_dict):
+    ...     final_model = Net()
+    """
+
     def __init__(self, base_model: nn.Module, evaluator: Union[BaseOneShotTrainer, Evaluator] = None,
                  applied_mutators: List[Mutator] = None, strategy: BaseStrategy = None,
                  trainer: BaseOneShotTrainer = None):
