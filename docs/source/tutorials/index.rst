@@ -11,14 +11,14 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Get started with NAS on MNIST">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduction ------------">
 
 .. only:: html
 
- .. figure:: /tutorials/images/thumb/sphx_glr_nas_quick_start_mnist_thumb.png
-     :alt: Get started with NAS on MNIST
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_speed_up_thumb.png
+     :alt: Speed Up Model with Mask
 
-     :ref:`sphx_glr_tutorials_nas_quick_start_mnist.py`
+     :ref:`sphx_glr_tutorials_pruning_speed_up.py`
 
 .. raw:: html
 
@@ -28,7 +28,7 @@ Tutorials
 .. toctree::
    :hidden:
 
-   /tutorials/nas_quick_start_mnist
+   /tutorials/pruning_speed_up
 
 .. raw:: html
 
@@ -50,6 +50,111 @@ Tutorials
    :hidden:
 
    /tutorials/nni_experiment
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Model pruning is a technique to reduce the model size and computation by reducing model weight ...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_quick_start_mnist_thumb.png
+     :alt: Pruning Quickstart
+
+     :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/pruning_quick_start_mnist
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Quantization reduces model size and speeds up inference time by reducing the number of bits req...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_quantization_quick_start_mnist_thumb.png
+     :alt: Quantization Quickstart
+
+     :ref:`sphx_glr_tutorials_quantization_quick_start_mnist.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/quantization_quick_start_mnist
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip=" Introduction ------------">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_quantization_speed_up_thumb.png
+     :alt: Speed Up Model with Calibration Config
+
+     :ref:`sphx_glr_tutorials_quantization_speed_up.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/quantization_speed_up
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="In this tutorial, we show how to use NAS Benchmarks as datasets. For research purposes we somet...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_nasbench_as_dataset_thumb.png
+     :alt: Use NAS Benchmarks as Datasets
+
+     :ref:`sphx_glr_tutorials_nasbench_as_dataset.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/nasbench_as_dataset
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This is the 101 tutorial of Neural Architecture Search (NAS) on NNI. In this tutorial, we will ...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_hello_nas_thumb.png
+     :alt: Hello, NAS!
+
+     :ref:`sphx_glr_tutorials_hello_nas.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/hello_nas
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
