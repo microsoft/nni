@@ -4,7 +4,7 @@ References
 ..  toctree::
     :maxdepth: 2
 
-    nnictl Commands <Tutorial/Nnictl>
+    nnictl Commands <reference/nnictl>
     Experiment Configuration <reference/experiment_config>
     Experiment Configuration (legacy) <Tutorial/ExperimentConfig>
     Search Space <Tutorial/SearchSpaceSpec>
@@ -14,3 +14,4 @@ References
     Launch from Python <Tutorial/HowToLaunchFromPython>
     Shared Storage <Tutorial/HowToUseSharedStorage>
     Tensorboard <Tutorial/Tensorboard>
+    Compression <compression/reference>

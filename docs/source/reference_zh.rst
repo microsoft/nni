@@ -1,4 +1,4 @@
-.. 5f17887878bae5d51cf177a1c995c003
+.. e29a21e77a74847fc6a45deeb126bb54
 
 参考
 ==================
@@ -6,7 +6,7 @@
 ..  toctree::
     :maxdepth: 2
 
-    nnictl 命令 <Tutorial/Nnictl>
+    nnictl 命令 <reference/nnictl>
     Experiment 配置 <reference/experiment_config>
     Experiment 配置（遗产） <Tutorial/ExperimentConfig>
     搜索空间<Tutorial/SearchSpaceSpec>
