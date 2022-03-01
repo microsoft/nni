@@ -672,11 +672,11 @@ class GraphIR(unittest.TestCase):
 
         orig_model = Net()
         model, mutators = self._get_model_with_mutators(orig_model)
-        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        samplers = [EnumerateSampler() for _ in range(len(mutators))]
         inp = torch.randn(1, 3, 5, 5)
 
         for i in range(4):
-            model_new = self._get_converted_pytorch_model(mutator.apply(model))
+            model_new = self._get_converted_pytorch_model(_apply_all_mutators(model, mutators, samplers))
             with original_state_dict_hooks(model_new):
                 model_new.load_state_dict(orig_model.state_dict(), strict=False)
 
