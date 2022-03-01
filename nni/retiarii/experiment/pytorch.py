@@ -189,7 +189,7 @@ class RetiariiExperiment(Experiment):
 
     RetiariiExperiment also doesn't have tuner/assessor/advisor, because they are also implemented in strategy.
 
-    Also, unlike :class:`nni.experiment.Experiment` which is bounded to a node server, 
+    Also, unlike :class:`nni.experiment.Experiment` which is bounded to a node server,
     RetiariiExperiment optionally starts a node server to schedule the trials, when the strategy is a multi-trial strategy.
     When the strategy is one-shot, the step of launching node server is omitted, and the experiment is run locally by default.
 
