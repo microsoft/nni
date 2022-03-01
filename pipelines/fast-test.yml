@@ -5,6 +5,14 @@ trigger:
 stages:
 - stage: lint
   jobs:
+
+  - job: copyright
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - script: test/vso_tools/copyright_check.py
+      displayName: Check copyright header
+
   - job: docs
     pool:
       vmImage: ubuntu-latest
@@ -42,6 +50,9 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
+    - script:  test/vso_tools/copyright_check.py
+
+
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
