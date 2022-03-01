@@ -59,6 +59,7 @@ extensions = [
     'inplace_translation',
     'cardlinkitem',
     'patch_docutils',
+    'patch_autodoc',
 ]
 
 # Add mock modules
