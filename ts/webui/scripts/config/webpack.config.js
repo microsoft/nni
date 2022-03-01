@@ -258,7 +258,8 @@ module.exports = function(webpackEnv) {
       // https://github.com/facebook/create-react-app/issues/253
       // modules: ['node_modules', paths.appNodeModules].concat(modules.additionalModulePaths || []),
       modules: ['node_modules', 'src'],
-      alias: { 
+      alias: {
+        'react-native': 'react-native-web',
         '@': paths.appSrc,
         '@components': `${paths.appSrc}/components`,
         '@static': `${paths.appSrc}/static`,

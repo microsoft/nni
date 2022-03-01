@@ -7,9 +7,9 @@ import MessageInfo from '@components/common/MessageInfo';
 import { COLUMN } from '@static/const';
 import { isManagerExperimentPage } from '@static/function';
 
-require('@style/App.scss');
-require('@style/common/common.scss');
-require('@style/experiment/trialdetail/trialsDetail.scss');
+import '@style/App.scss';
+import '@style/common/common.scss';
+import '@style/experiment/trialdetail/trialsDetail.scss';
 
 const echarts = require('echarts/lib/echarts');
 echarts.registerTheme('nni_theme', {
