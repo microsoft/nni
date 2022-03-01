@@ -179,17 +179,21 @@ class TableList extends React.Component<TableListProps, TableListState> {
         checked?: boolean
     ): void => {
         const { displayedItems, selectedRowIds } = this.state;
-        const items = JSON.parse(JSON.stringify(displayedItems));
-        const temp = selectedRowIds;
-        if (checked === true) {
-            temp.push(id);
+        const latestDisplayedItems = JSON.parse(JSON.stringify(displayedItems));
+        let latestSelectedRowIds = selectedRowIds;
+
+        if (checked === false) {
+            latestSelectedRowIds = latestSelectedRowIds.filter(item => item !== id);
+        } else {
+            latestSelectedRowIds.push(id);
         }
-        items.forEach(item => {
+
+        latestDisplayedItems.forEach(item => {
             if (item.id === id) {
                 item._checked = !!checked;
             }
         });
-        this.setState(() => ({ displayedItems: items, selectedRowIds: temp }));
+        this.setState(() => ({ displayedItems: latestDisplayedItems, selectedRowIds: latestSelectedRowIds }));
     };
 
     private changeSelectTrialIds = (): void => {

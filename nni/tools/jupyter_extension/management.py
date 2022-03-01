@@ -5,8 +5,6 @@ import os
 
 from jupyter_core.paths import jupyter_config_dir, jupyter_data_dir
 
-import nni_node
-
 def _get_jupyter_lab_version():
     try:
         import jupyterlab
@@ -33,10 +31,17 @@ _v2_backend_config_content = {
     }
 }
 
-_frontend_src = Path(nni_node.__path__[0], 'jupyter-extension')
-_frontend_dst = Path(jupyter_data_dir(), 'labextensions', 'nni-jupyter-extension')
+_import_nni_node_failed = False
+try:
+    import nni_node
+    _frontend_src = Path(nni_node.__path__[0], 'jupyter-extension')
+    _frontend_dst = Path(jupyter_data_dir(), 'labextensions', 'nni-jupyter-extension')
+except ImportError:
+    _import_nni_node_failed = True
 
 def install():
+    if _import_nni_node_failed:
+        raise ImportError('Import `nni_node` failed. nni is not properly installed.')
     _backend_config_file.parent.mkdir(parents=True, exist_ok=True)
     _backend_config_file.write_text(json.dumps(_backend_config_content))
 
@@ -55,6 +60,8 @@ def install():
         shutil.copytree(_frontend_src, _frontend_dst)
 
 def uninstall():
+    if _import_nni_node_failed:
+        raise ImportError('Import `nni_node` failed. nni is not properly installed.')
     _backend_config_file.unlink()
     if jupyter_lab_major_version == '2':
         _v2_backend_config_file.unlink()
