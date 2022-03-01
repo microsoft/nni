@@ -41,7 +41,9 @@ class LightningModule(pl.LightningModule):
 
 
 Trainer = nni.trace(pl.Trainer)
+Trainer.__doc__ = 'Traced version of ``pytorch_lightning.Trainer``.'
 DataLoader = nni.trace(torch_data.DataLoader)
+DataLoader.__doc__ = 'Traced version of ``torch.utils.data.DataLoader``.'
 
 @nni.trace
 class Lightning(Evaluator):

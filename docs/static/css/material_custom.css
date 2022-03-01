@@ -47,3 +47,8 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
 .md-nav span.caption {
     margin-top: 1.25em;
 }
+
+/* citation style */
+.citation dt {
+    padding-right: 1em;
+}
