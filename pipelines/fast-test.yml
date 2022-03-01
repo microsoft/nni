@@ -50,9 +50,6 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - script:  test/vso_tools/copyright_check.py
-
-
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
