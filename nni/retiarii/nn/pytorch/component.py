@@ -6,7 +6,7 @@ from typing import Callable, List, Union, Tuple, Optional
 import torch
 import torch.nn as nn
 
-from nni.retiarii.utils import NoContextError
+from nni.retiarii.utils import NoContextError, STATE_DICT_PY_MAPPING_PARTIAL
 
 from .api import LayerChoice, ValueChoice, ValueChoiceX
 from .cell import Cell
@@ -46,9 +46,20 @@ class Repeat(Mutable):
             # we can't create a value choice here,
             # otherwise we will have two value choices, one created here, another in init.
             depth = get_fixed_value(label)
+
         if isinstance(depth, int):
             # if depth is a valuechoice, it should be already an int
-            return nn.Sequential(*cls._replicate_and_instantiate(blocks, depth))
+            result = nn.Sequential(*cls._replicate_and_instantiate(blocks, depth))
+
+            if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
+                # already has a mapping, will merge with it
+                prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
+                setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'blocks.{v}' for k, v in prev_mapping.items()})
+            else:
+                setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': 'blocks'})
+
+            return result
+
         raise NoContextError(f'Not in fixed mode, or {depth} not an integer.')
 
     def __init__(self,
