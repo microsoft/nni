@@ -10,7 +10,7 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - script: test/vso_tools/copyright_check.py
+    - script: python test/vso_tools/copyright_check.py
       displayName: Check copyright header
 
   - job: docs
