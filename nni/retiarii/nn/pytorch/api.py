@@ -567,7 +567,8 @@ class ValueChoiceX(Translatable):
     def __index__(self) -> NoReturn:
         # https://docs.python.org/3/reference/datamodel.html#object.__index__
         raise RuntimeError("`__index__` is not allowed on ValueChoice, which means you can't "
-                           "use int(), float(), complex(), range() on a ValueChoice.")
+                           "use int(), float(), complex(), range() on a ValueChoice. "
+                           "To cast the type of ValueChoice, please try `ValueChoice.to_int()` or `ValueChoice.to_float()`.")
 
     def __bool__(self) -> NoReturn:
         raise RuntimeError('Cannot use bool() on ValueChoice. That means, using ValueChoice in a if-clause is illegal. '
