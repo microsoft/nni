@@ -51,14 +51,13 @@
         "react": {
             "version": "detect"
         },
-        "webpack": "./scripts/config/webpack.config.dev.js",
         "import/resolver": {
             "alias": {
-                "@/*": ["src/*"],
-                "@components/*": ["src/components/*"],
-                "@static/*": ["src/static/*"],
-                "@style/*": ["src/static/style/*"],
-                "@model/*": ["src/static/model/*"]
+                "@": "src",
+                "@components": "src/components",
+                "@static": "src/static",
+                "@style": "src/static/style",
+                "@model": "src/static/model"
             }
         },
         "ignorePatterns": [

@@ -284,7 +284,7 @@ function formatComplexTypeValue(value: any): string | number {
     if (['number', 'string'].includes(typeof value)) {
         return value;
     } else {
-        return value !== undefined ? value.toString() : '';
+        return value.toString();
     }
 }
 

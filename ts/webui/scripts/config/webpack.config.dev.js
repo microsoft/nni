@@ -27,7 +27,7 @@ const config = {
     },
     optimization: { minimize: false },
     resolve: {
-        modules: [ 'node_modules' ],
+        modules: [ 'node_modules', 'src' ],
         alias: { 
             '@': paths.appSrc,
             '@components': `${paths.appSrc}/components`,

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Stack } from '@fluentui/react';
-import NavCon from '@components/nav/Nav';
 import { SlideNavBtns } from '@components/nav/slideNav/SlideNavBtns';
-import MessageInfo from '@components/common/MessageInfo';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import NavCon from '@components/nav/Nav';
+import MessageInfo from '@components/common/MessageInfo';
 import { COLUMN } from '@static/const';
 import { isManagerExperimentPage } from '@static/function';
 
