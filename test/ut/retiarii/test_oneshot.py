@@ -8,12 +8,10 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 from torch.utils.data.sampler import RandomSampler
 
+from nni.retiarii import strategy, model_wrapper
+from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
-from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
-                                          DartsModule, EnasModule, SNASModule,
-                                          InterleavedTrainValDataLoader,
-                                          ProxylessModule, RandomSampleModule)
 
 
 class DepthwiseSeparableConv(nn.Module):
@@ -26,6 +24,7 @@ class DepthwiseSeparableConv(nn.Module):
         return self.pointwise(self.depthwise(x))
 
 
+@model_wrapper
 class Net(pl.LightningModule):
     def __init__(self):
         super().__init__()
@@ -68,7 +67,6 @@ class Net(pl.LightningModule):
         return output
 
 
-@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def prepare_model_data():
     base_model = Net()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
@@ -86,53 +84,42 @@ def prepare_model_data():
     return base_model, train_loader, valid_loader, trainer_kwargs
 
 
+def _test_strategy(strategy_):
+    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
+    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
+    experiment = RetiariiExperiment(base_model, cls, strategy=strategy_)
+
+    config = RetiariiExeConfig()
+    config.execution_engine = 'oneshot'
+
+    experiment.run(config)
+
+    assert isinstance(experiment.export_top_models()[0], dict)
+
+
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_darts():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    darts_model = DartsModule(cls.module)
-    para_loader = InterleavedTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(darts_model, para_loader)
+    _test_strategy(strategy.DARTS())
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_proxyless():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    proxyless_model = ProxylessModule(cls.module)
-    para_loader = InterleavedTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(proxyless_model, para_loader)
+    _test_strategy(strategy.Proxyless())
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_enas():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    enas_model = EnasModule(cls.module)
-    concat_loader = ConcatenateTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(enas_model, concat_loader)
+    _test_strategy(strategy.ENAS())
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_random():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader , **trainer_kwargs)
-    cls.module.set_model(base_model)
-    random_model = RandomSampleModule(cls.module)
-    cls.trainer.fit(random_model, cls.train_dataloader, cls.val_dataloaders)
+    _test_strategy(strategy.RandomOneShot())
 
 
 @pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def test_snas():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    proxyless_model = SNASModule(cls.module, 1, use_temp_anneal=True)
-    para_loader = InterleavedTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(proxyless_model, para_loader)
+    _test_strategy(strategy.SNAS())
 
 
 if __name__ == '__main__':

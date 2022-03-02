@@ -49,6 +49,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib.bibtex',
     # 'nbsphinx',  # nbsphinx has conflicts with sphinx-gallery.
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
@@ -61,6 +62,9 @@ extensions = [
 
 # Add mock modules
 autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter']
+
+# Bibliography files
+bibtex_bibfiles = ['refs.bib']
 
 # Sphinx gallery examples
 sphinx_gallery_conf = {

@@ -1,14 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import Dict, Type, Callable, List, Optional
+
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
 
 from torch.optim.lr_scheduler import _LRScheduler
 
+ReplaceDictType = Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
 
-def _replace_module_with_type(root_module, replace_dict, modules):
+
+def _replace_module_with_type(root_module: nn.Module, replace_dict: ReplaceDictType, modules: List[nn.Module]):
     """
     Replace xxxChoice in user's model with NAS modules.
 
@@ -45,31 +49,50 @@ def _replace_module_with_type(root_module, replace_dict, modules):
 
 
 class BaseOneShotLightningModule(pl.LightningModule):
+
+    _custom_replace_dict_note = """custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
+        The custom xxxChoice replace method. Keys should be ``xxxChoice`` type.
+        Values should callable accepting an ``nn.Module`` and returning an ``nn.Module``.
+        This custom replace dict will override the default replace dict of each NAS method.
     """
-    The base class for all one-shot NAS modules. Essential function such as preprocessing user's model, redirecting lightning
-    hooks for user's model, configuring optimizers and exporting NAS result are implemented in this class.
+
+    _inner_module_note = """inner_module : pytorch_lightning.LightningModule
+        It's a `LightningModule <https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html>`__
+        that defines computations, train/val loops, optimizers in a single class.
+        When used in NNI, the ``inner_module`` is the combination of instances of evaluator + base model
+        (to be precise, a base model wrapped with LightningModule in evaluator).
+    """
+
+    __doc__ = """
+    The base class for all one-shot NAS modules.
+
+    In NNI, we try to separate the "search" part and "training" part in one-shot NAS.
+    The "training" part is defined with evaluator interface (has to be lightning evaluator interface to work with oneshot).
+    Since the lightning evaluator has already broken down the training into minimal building blocks,
+    we can re-assemble them after combining them with the "search" part of a particular algorithm.
+
+    After the re-assembling, this module has defined all the search + training. The experiment can use a lightning trainer
+    (which is another part in the evaluator) to train this module, so as to complete the search process.
+
+    Essential function such as preprocessing user's model, redirecting lightning hooks for user's model,
+    configuring optimizers and exporting NAS result are implemented in this class.
 
     Attributes
     ----------
     nas_modules : List[nn.Module]
-        The replace result of a specific NAS method. xxxChoice will be replaced with some other modules with respect to the
-        NAS method.
+        The replace result of a specific NAS method.
+        xxxChoice will be replaced with some other modules with respect to the NAS method.
 
     Parameters
     ----------
-    base_model : pl.LightningModule
-        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model, and base_model will
-        be wrapped by this model.
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should return an ``nn.module``. This custom
-        replace dict will override the default replace dict of each NAS method.
-    """
+    """ + _inner_module_note + _custom_replace_dict_note
+
     automatic_optimization = False
 
-    def __init__(self, base_model, custom_replace_dict=None):
+    def __init__(self, inner_module: pl.LightningModule, custom_replace_dict: Optional[ReplaceDictType] = None):
         super().__init__()
-        assert isinstance(base_model, pl.LightningModule)
-        self.model = base_model
+        assert isinstance(inner_module, pl.LightningModule)
+        self.model = inner_module
 
         # replace xxxChoice with respect to NAS alg
         # replaced modules are stored in self.nas_modules
@@ -85,16 +108,18 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        # You can use self.architecture_optimizers or self.user_optimizers to get optimizers in
-        # your own training step.
+        """This is the implementation of what happens in training loops of one-shot algos.
+        It usually calls ``self.model.training_step`` which implements the real training recipe of the users' model.
+        """
         return self.model.training_step(batch, batch_idx)
 
     def configure_optimizers(self):
         """
         Combine architecture optimizers and user's model optimizers.
         You can overwrite configure_architecture_optimizers if architecture optimizers are needed in your NAS algorithm.
-        By now ``self.model`` is currently a :class:`nni.retiarii.evaluator.pytorch.lightning._SupervisedLearningModule`
-        and it only returns 1 optimizer. But for extendibility, codes for other return value types are also implemented.
+        For now ``self.model`` is tested against :class:`nni.retiarii.evaluator.pytorch.lightning._SupervisedLearningModule`
+        and it only returns 1 optimizer.
+        But for extendibility, codes for other return value types are also implemented.
         """
         # pylint: disable=assignment-from-none
         arc_optimizers = self.configure_architecture_optimizers()
@@ -178,8 +203,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
     @property
     def default_replace_dict(self):
         """
-        Default xxxChoice replace dict. This is called in ``__init__`` to get the default replace functions for your NAS algorithm.
-        Note that your default replace functions may be overridden by user-defined custom_replace_dict.
+        Default ``xxxChoice`` replace dict. This is called in ``__init__`` to get the default replace functions for your NAS algorithm.
+        Note that your default replace functions may be overridden by user-defined ``custom_replace_dict``.
 
         Returns
         ----------

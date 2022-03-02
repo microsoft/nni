@@ -60,38 +60,12 @@ Evaluators
 ..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Regression
     :members:
 
-Oneshot Trainers
-----------------
-
-..  autoclass:: nni.retiarii.oneshot.pytorch.DartsTrainer
-    :members:
-
-..  autoclass:: nni.retiarii.oneshot.pytorch.EnasTrainer
-    :members:
-
-..  autoclass:: nni.retiarii.oneshot.pytorch.ProxylessTrainer
-    :members:
-
-..  autoclass:: nni.retiarii.oneshot.pytorch.SinglePathTrainer
-    :members:
-
 Exploration Strategies
 ----------------------
 
-..  autoclass:: nni.retiarii.strategy.Random
+..  automodule:: nni.retiarii.strategy
     :members:
-
-..  autoclass:: nni.retiarii.strategy.GridSearch
-    :members:
-
-..  autoclass:: nni.retiarii.strategy.RegularizedEvolution
-    :members:
-
-..  autoclass:: nni.retiarii.strategy.TPEStrategy
-    :members:
-
-..  autoclass:: nni.retiarii.strategy.PolicyBasedRL
-    :members:
+    :imported-members:
 
 Retiarii Experiments
 --------------------
@@ -111,6 +85,17 @@ CGO Execution
 
 ..  autofunction:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression
 
+One-shot Implementation
+-----------------------
+
+..  automodule:: nni.retiarii.oneshot
+    :members:
+    :imported-members:
+
+..  automodule:: nni.retiarii.oneshot.pytorch
+    :members:
+    :imported-members:
+
 Utilities
 ---------
 
@@ -120,4 +105,7 @@ Utilities
 
 ..  autofunction:: nni.retiarii.fixed_arch
 
+Citations
+---------
 
+.. bibliography::
