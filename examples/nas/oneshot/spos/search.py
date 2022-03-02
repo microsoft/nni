@@ -154,7 +154,7 @@ def _main():
 
     evaluator = FunctionalEvaluator(evaluate_acc, criterion=criterion, args=args, train_dataset=train_dataset, val_dataset=val_dataset)
     evolution_strategy = strategy.RegularizedEvolution(
-        # model_filter=LatencyFilter(threshold=100, predictor=base_latency_predictor),
+        model_filter=LatencyFilter(threshold=100, predictor=base_latency_predictor),
         sample_size=1, population_size=2, cycles=2)
     exp = RetiariiExperiment(base_model, evaluator, strategy=evolution_strategy)
 
@@ -163,7 +163,7 @@ def _main():
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = False
     exp_config.execution_engine = 'base'
-    # exp_config.dummy_input = [1, 3, 224, 224]
+    exp_config.dummy_input = [1, 3, 224, 224]
 
     exp.run(exp_config, 8084)
 
