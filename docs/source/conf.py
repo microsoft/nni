@@ -45,6 +45,7 @@ release = 'v2.6'
 extensions = [
     'sphinx_gallery.gen_gallery',
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinxarg4nni.ext',
     'sphinx.ext.napoleon',
@@ -60,6 +61,9 @@ extensions = [
     'cardlinkitem',
     'patch_docutils',
 ]
+
+autosummary_imported_members = True
+autosummary_generate = True
 
 # Add mock modules
 autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter']
