@@ -1,19 +1,17 @@
 import argparse
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 import pytest
-import nni.retiarii.nn.pytorch.nn as nn
 from torchvision import transforms
 from torchvision.datasets import MNIST
 from torch.utils.data.sampler import RandomSampler
 
+from nni.retiarii import strategy, model_wrapper
+from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
-from nni.retiarii.nn.pytorch import LayerChoice, Repeat, ValueChoice
-from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
-                                          DartsModule, EnasModule, SNASModule,
-                                          ParallelTrainValDataLoader,
-                                          ProxylessModule, RandomSampleModule)
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, ValueChoice
 
 
 class DepthwiseSeparableConv(nn.Module):
@@ -25,7 +23,9 @@ class DepthwiseSeparableConv(nn.Module):
     def forward(self, x):
         return self.pointwise(self.depthwise(x))
 
-class Net(pl.LightningModule):
+
+@model_wrapper
+class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, 1)
@@ -39,10 +39,10 @@ class Net(pl.LightningModule):
             nn.Dropout(.75)
         ])
         self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(9216, ValueChoice(candidates=[64,128,256], label = 'shanghai'))
-        self.fc2 = nn.Linear(ValueChoice(candidates=[64,128,256], label = 'shanghai'), 10)
+        self.fc1 = nn.Linear(9216, ValueChoice(candidates=[64, 128, 256], label='shanghai'))
+        self.fc2 = nn.Linear(ValueChoice(candidates=[64, 128, 256], label='shanghai'), 10)
         self.rpfc = nn.Linear(10, 10)
-        
+
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.max_pool2d(self.conv2(x), 2)
@@ -54,95 +54,67 @@ class Net(pl.LightningModule):
         x = self.rpfc(x)
         output = F.log_softmax(x, dim=1)
         return output
-    
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-        output = self(x)
-        loss = nn.CrossEntropyLoss()
-        return loss(output, y)
-    
-    def validation_step(self, batch, batch_idx):
-        x, y = batch
-        pred = self(x).argmax(1, True)
-        acc = pred.eq(y.view_as(pred)).sum().item()/ len(y)
-        return acc
-    
-    def configure_optimizers(self):
-        optim = torch.optim.Adagrad(self.parameters(), 1, 0)
-        return optim
 
 
-@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
 def prepare_model_data():
     base_model = Net()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = MNIST('data/mnist', train = True, download=True, transform=transform)
+    train_dataset = MNIST('data/mnist', train=True, download=True, transform=transform)
     train_random_sampler = RandomSampler(train_dataset, True, int(len(train_dataset) / 10))
-    train_loader = DataLoader(train_dataset, 64, sampler = train_random_sampler)
-    valid_dataset = MNIST('data/mnist', train = False, download=True, transform=transform)
+    train_loader = DataLoader(train_dataset, 64, sampler=train_random_sampler)
+    valid_dataset = MNIST('data/mnist', train=False, download=True, transform=transform)
     valid_random_sampler = RandomSampler(valid_dataset, True, int(len(valid_dataset) / 10))
-    valid_loader = DataLoader(valid_dataset, 64, sampler = valid_random_sampler)
+    valid_loader = DataLoader(valid_dataset, 64, sampler=valid_random_sampler)
 
     trainer_kwargs = {
-        'max_epochs' : 1
+        'max_epochs': 1
     }
 
     return base_model, train_loader, valid_loader, trainer_kwargs
 
 
-@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
+def _test_strategy(strategy_):
+    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
+    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
+    experiment = RetiariiExperiment(base_model, cls, strategy=strategy_)
+
+    config = RetiariiExeConfig()
+    config.execution_engine = 'oneshot'
+
+    experiment.run(config)
+
+    assert isinstance(experiment.export_top_models()[0], dict)
+
+
+@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_darts():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    darts_model = DartsModule(cls.module)
-    para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(darts_model, para_loader)
+    _test_strategy(strategy.DARTS())
 
 
-@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
+@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_proxyless():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    proxyless_model = ProxylessModule(cls.module)
-    para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(proxyless_model, para_loader)
+    _test_strategy(strategy.Proxyless())
 
 
-@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
+@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_enas():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    enas_model = EnasModule(cls.module)
-    concat_loader = ConcatenateTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(enas_model, concat_loader)
+    _test_strategy(strategy.ENAS())
 
 
-@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
+@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_random():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader , **trainer_kwargs)
-    cls.module.set_model(base_model)
-    random_model = RandomSampleModule(cls.module)
-    cls.trainer.fit(random_model, cls.train_dataloader, cls.val_dataloaders)
+    _test_strategy(strategy.RandomOneShot())
 
 
-@pytest.mark.skipif(pl.__version__< '1.0', reason='Incompatible APIs')
+@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_snas():
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
-    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
-    cls.module.set_model(base_model)
-    proxyless_model = SNASModule(cls.module, 1, use_temp_anneal=True)
-    para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(proxyless_model, para_loader)
+    _test_strategy(strategy.SNAS())
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='all', metavar='E',
-        help='experiment to run, default = all' )
+                        help='experiment to run, default = all')
     args = parser.parse_args()
 
     if args.exp == 'all':

@@ -182,11 +182,11 @@ def replace_input_choice(root_module, init_fn, modules=None):
     return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
 
 
-class ParallelTrainValDataLoader(DataLoader):
+class InterleavedTrainValDataLoader(DataLoader):
     """
-    Dataloader that yields both train data and validation data in a batch, with an order of
-    (train_batch, val_batch). The shorter one will be upsampled (repeated) to the length
-    of the longer one, and the tail of the last repeat will be dropped.
+    Dataloader that yields both train data and validation data in a batch, with an order of (train_batch, val_batch). The shorter
+    one will be upsampled (repeated) to the length of the longer one, and the tail of the last repeat will be dropped. This enables
+    users to train both model parameters and architecture parameters in parallel in an epoch.
 
     Some NAS algorithms, i.e. DARTS and Proxyless, require this type of dataloader.
 
@@ -200,7 +200,7 @@ class ParallelTrainValDataLoader(DataLoader):
     Example
     --------
     Fit your dataloaders into a parallel one.
-    >>> para_loader = ParallelTrainValDataLoader(train_dataloader, val_datalodaer)
+    >>> para_loader = InterleavedTrainValDataLoader(train_dataloader, val_dataloader)
     Then you can use the ``para_loader`` as a normal training loader.
     """
     def __init__(self, train_dataloader, val_dataloader):
@@ -247,9 +247,9 @@ class ParallelTrainValDataLoader(DataLoader):
 
 class ConcatenateTrainValDataLoader(DataLoader):
     """
-    Dataloader that yields validation data after training data in an epoch. You will get a batch with
-    the form of (batch, source) in the training step, where ``source`` is a ``str`` whose value is
-    either 'train' or 'val', indicating which dataloader the batch comes from.
+    Dataloader that yields validation data after training data in an epoch. You will get a batch with the form of (batch, source) in the
+    training step, where ``source`` is a string which is either 'train' or 'val', indicating which dataloader the batch comes from. This
+    enables users to train model parameters first in an epoch, and then train architecture parameters.
 
     Some NAS algorithms, i.e. ENAS, may require this type of dataloader.
 
@@ -263,13 +263,12 @@ class ConcatenateTrainValDataLoader(DataLoader):
     Warnings
     ----------
     If you set ``limit_train_batches`` of the trainer, the validation batches may be skipped.
-    Consider downsampling the train dataset and the validation dataset instead if you want to
-    shorten the length of data.
+    Consider downsampling the train dataset and the validation dataset instead if you want to shorten the length of data.
 
     Example
     --------
     Fit your dataloaders into a concatenated one.
-    >>> concat_loader = ConcatenateTrainValDataLoader(train_dataloader, val_dataloader)
+    >>> concat_loader = ConcatenateTrainValDataLoader(train_dataloader, val_datalodaer)
     Then you can use the ``concat_loader`` as a normal training loader.
     """
     def __init__(self, train_dataloader, val_dataloader):

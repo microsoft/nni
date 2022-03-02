@@ -84,6 +84,8 @@ class Model:
 
     Attributes
     ----------
+    python_object
+        Python object of base model. It will be none when the base model is not available.
     python_class
         Python class that base model is converted from.
     python_init_params
@@ -110,6 +112,7 @@ class Model:
     def __init__(self, _internal=False):
         assert _internal, '`Model()` is private, use `model.fork()` instead'
         self.model_id: int = uid('model')
+        self.python_object: Optional[Any] = None  # type is uncertain because it could differ between DL frameworks
         self.python_class: Optional[Type] = None
         self.python_init_params: Optional[Dict[str, Any]] = None
 
@@ -119,7 +122,7 @@ class Model:
         self.graphs: Dict[str, Graph] = {}
         self.evaluator: Optional[Evaluator] = None
 
-        self.history: List['Model'] = []
+        self.history: List['Mutation'] = []
 
         self.metric: Optional[MetricData] = None
         self.intermediate_metrics: List[MetricData] = []

@@ -4,7 +4,7 @@
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, NoReturn, Union, Optional, List, Type
+from typing import Dict, Union, Optional, List, Type
 
 import pytorch_lightning as pl
 import torch.nn as nn
@@ -33,11 +33,11 @@ class LightningModule(pl.LightningModule):
     Lightning modules used in NNI should inherit this class.
     """
 
-    def set_model(self, model: Union[Type[nn.Module], nn.Module]) -> NoReturn:
-        if isinstance(model, type):
-            self.model = model()
-        else:
+    def set_model(self, model: Union[Type[nn.Module], nn.Module]) -> None:
+        if isinstance(model, nn.Module):
             self.model = model
+        else:
+            self.model = model()
 
 
 Trainer = nni.trace(pl.Trainer)
@@ -248,7 +248,7 @@ class Classification(Lightning):
         L2 weight decay. default: 0
     optimizer : Optimizer
         Class for optimizer (not an instance). default: ``Adam``
-    train_dataloders : DataLoader
+    train_dataloaders : DataLoader
         Used in ``trainer.fit()``. A PyTorch DataLoader with training samples.
         If the ``lightning_module`` has a predefined train_dataloader method this will be skipped.
     val_dataloaders : DataLoader or List of DataLoader
@@ -301,7 +301,7 @@ class Regression(Lightning):
         L2 weight decay. default: 0
     optimizer : Optimizer
         Class for optimizer (not an instance). default: ``Adam``
-    train_dataloders : DataLoader
+    train_dataloaders : DataLoader
         Used in ``trainer.fit()``. A PyTorch DataLoader with training samples.
         If the ``lightning_module`` has a predefined train_dataloader method this will be skipped.
     val_dataloaders : DataLoader or List of DataLoader

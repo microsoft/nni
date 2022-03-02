@@ -19,8 +19,7 @@ import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
 import { NNIExperimentsManager } from './core/nniExperimentsManager';
 import { NNITensorboardManager } from './core/nniTensorboardManager';
-import { NNIRestServer } from './rest_server/nniRestServer';
-
+import { RestServer } from './rest_server';
 
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number, platform: string,
@@ -124,9 +123,8 @@ mkDirP(getLogDir())
     .then(async () => {
         try {
             await initContainer(foreground, mode);
-            const restServer: NNIRestServer = component.get(NNIRestServer);
+            const restServer: RestServer = component.get(RestServer);
             await restServer.start();
-            getLogger('main').info(`Rest server listening on: ${restServer.endPoint}`);
         } catch (err) {
             getLogger('main').error(`${err.stack}`);
             throw err;

@@ -1,11 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import Dict, Type, Callable, List, Optional
+
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
 
 from torch.optim.lr_scheduler import _LRScheduler
+
+ReplaceDictType = Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
 
 
 def _replace_module_with_type(root_module, prior_replace, default_replace):
@@ -61,25 +65,49 @@ def _replace_module_with_type(root_module, prior_replace, default_replace):
                 apply(child)
 
     apply(root_module)
+
     return modules.items()
 
 
+
 class BaseOneShotLightningModule(pl.LightningModule):
+
+    _custom_replace_dict_note = """custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
+        The custom xxxChoice replace method. Keys should be ``xxxChoice`` type.
+        Values should callable accepting an ``nn.Module`` and returning an ``nn.Module``.
+        This custom replace dict will override the default replace dict of each NAS method.
     """
-    The base class for all one-shot NAS models. Essential function such as preprocessing user's model,
-    redirecting lightning hooks for user's model, configuring optimizers and exporting NAS result are
-    implemented in this class.
+
+    _inner_module_note = """inner_module : pytorch_lightning.LightningModule
+        It's a `LightningModule <https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html>`__
+        that defines computations, train/val loops, optimizers in a single class.
+        When used in NNI, the ``inner_module`` is the combination of instances of evaluator + base model
+        (to be precise, a base model wrapped with LightningModule in evaluator).
+    """
+
+    __doc__ = """
+    The base class for all one-shot NAS modules.
+
+    In NNI, we try to separate the "search" part and "training" part in one-shot NAS.
+    The "training" part is defined with evaluator interface (has to be lightning evaluator interface to work with oneshot).
+    Since the lightning evaluator has already broken down the training into minimal building blocks,
+    we can re-assemble them after combining them with the "search" part of a particular algorithm.
+
+    After the re-assembling, this module has defined all the search + training. The experiment can use a lightning trainer
+    (which is another part in the evaluator) to train this module, so as to complete the search process.
+
+    Essential function such as preprocessing user's model, redirecting lightning hooks for user's model,
+    configuring optimizers and exporting NAS result are implemented in this class.
 
     Attributes
     ----------
     nas_modules : List[nn.Module]
-        modules a paticular NAS method replaces with
+        The replace result of a specific NAS method.
+        xxxChoice will be replaced with some other modules with respect to the NAS method.
 
     Parameters
     ----------
-    base_model : pl.LightningModule
-        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model,
-        and base_model will be wrapped by this model.
+    """ + _inner_module_note + _custom_replace_dict_note + """
     custom_match_and_replace : List[Callable[[nn.Module], (nn.Module, nn.Moduel)]]
         The custom xxxChoice match and replace method. Each method should take an nn.Module and yields
         two modules (to_sample, to_replace). The ''to_sample'' will be placed in ''self.nas_module'' to be
@@ -100,17 +128,17 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        # You can use self.architecture_optimizers or self.user_optimizers to get optimizers in
-        # your own training step.
+        """This is the implementation of what happens in training loops of one-shot algos.
+        It usually calls ``self.model.training_step`` which implements the real training recipe of the users' model.
+        """
         return self.model.training_step(batch, batch_idx)
 
     def configure_optimizers(self):
         """
         Combine architecture optimizers and user's model optimizers.
-        Overwrite configure_architecture_optimizers if architecture optimizers
-        are needed in your NAS algorithm.
-        By now ``self.model`` is currently a :class:`nni.retiarii.evaluator.pytorch.lightning.
-        _SupervisedLearningModule`, and it only returns 1 optimizer.
+        You can overwrite configure_architecture_optimizers if architecture optimizers are needed in your NAS algorithm.
+        For now ``self.model`` is tested against :class:`nni.retiarii.evaluator.pytorch.lightning._SupervisedLearningModule`
+        and it only returns 1 optimizer.
         But for extendibility, codes for other return value types are also implemented.
         """
         # pylint: disable=assignment-from-none
@@ -122,7 +150,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             arc_optimizers = [arc_optimizers]
         self.arc_optim_count = len(arc_optimizers)
 
-        # The third return value ``frequency`` and ``monitor`` are ignored because lightning requires
+        # The return values ``frequency`` and ``monitor`` are ignored because lightning requires
         # ``len(optimizers) == len(frequency)``, and gradient backword is handled manually.
         # For data structure of variables below, please see pytorch lightning docs of ``configure_optimizers``.
         w_optimizers, lr_schedulers, self.frequencies, monitor = \
@@ -182,14 +210,13 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def configure_architecture_optimizers(self):
         """
-        Hook kept for subclasses. Each specific NAS method returns the optimizer of architecture
-        parameters. Note that lr schedulers are not supported now for architecture_optimizers.
+        Hook kept for subclasses. A specific NAS method inheriting this base class should return its architecture optimizers here
+        if architecture parameters are needed. Note that lr schedulers are not supported now for architecture_optimizers.
 
         Returns
         ----------
         arc_optimizers : List[Optimizer], Optimizer
-            Optimizers used by a specific NAS algorithm for its architecture parameters.
-            Return None if no architecture optimizers are needed.
+            Optimizers used by a specific NAS algorithm. Return None if no architecture optimizers are needed.
         """
         return None
 
@@ -211,9 +238,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def call_lr_schedulers(self, batch_index):
         """
-        Function that imitates lightning trainer's behaviour of calling user's lr schedulers. Since
-        auto_optimization is turned off by this class, you can use this function to make schedulers
-        behave as they were automatically handled by the lightning trainer.
+        Function that imitates lightning trainer's behaviour of calling user's lr schedulers. Since auto_optimization is turned off
+        by this class, you can use this function to make schedulers behave as they were automatically handled by the lightning trainer.
 
         Parameters
         ----------
@@ -250,9 +276,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def call_user_optimizers(self, method):
         """
-        Function that imitates lightning trainer's behaviour of calling user's optimizers. Since
-        auto_optimization is turned off by this class, you can use this function to make user
-        optimizers behave as they were automatically handled by the lightning trainer.
+        Function that imitates lightning trainer's behavior of calling user's optimizers. Since auto_optimization is turned off by this
+        class, you can use this function to make user optimizers behave as they were automatically handled by the lightning trainer.
 
         Parameters
         ----------
@@ -284,14 +309,13 @@ class BaseOneShotLightningModule(pl.LightningModule):
     @property
     def architecture_optimizers(self):
         """
-        Get architecture optimizers from all optimizers. Use this to get your architecture optimizers
-        in training stage.
+        Get architecture optimizers from all optimizers. Use this to get your architecture optimizers in ``training_step``.
 
         Returns
         ----------
         opts : List[Optimizer], Optimizer, None
-            Architecture optimizers you defined in ``configure_architecture_optimizers``. This
-            will be None if there is no architecture optimizers.
+            Architecture optimizers defined in ``configure_architecture_optimizers``. This will be None if there is no
+            architecture optimizers.
         """
         opts = self.optimizers()
         if isinstance(opts,list):
@@ -308,7 +332,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     @property
     def user_optimizers(self):
         """
-        Get user optimizers from all optimizers. Use this to get user optimizers in training stage.
+        Get user optimizers from all optimizers. Use this to get user optimizers in ``training_step``.
 
         Returns
         ----------
@@ -326,13 +350,13 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def export(self):
         """
-        Export the NAS result, idealy the best choice of each nas_modules.
-        You may implement an export method for your customized nas_module.
+        Export the NAS result, ideally the best choice of each nas_modules.
+        You may implement an ``export`` method for your customized nas_module.
 
         Returns
         --------
         result : Dict[str, int]
-            Keys are names of nas_modules, and values are the choice index of it.
+            Keys are names of nas_modules, and values are the choice indices of them.
         """
         result = {}
         for name, module in self.nas_modules:

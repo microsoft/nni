@@ -1,0 +1,74 @@
+parameters:
+- name: platform
+  type: string
+
+steps:
+- template: config-version.yml
+  parameters:
+    platform: ${{ parameters.platform }}
+
+- script: |
+    echo "##vso[task.setvariable variable=PLATFORM]${{ parameters.platform }}"
+    python test/vso_tools/pip_use_prefix.py python-packages
+  displayName: Prepare
+
+- script: |
+    cp dependencies/recommended_legacy.txt dependencies/recommended.txt
+  displayName: (legacy) Activate legacy dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
+
+- script: |
+    set -e
+    echo '===== develop ====='
+    ./pip-install -r dependencies/develop.txt
+    echo '===== required ====='
+    ./pip-install -r dependencies/required.txt
+    echo '===== required extra ====='
+    ./pip-install -r dependencies/required_extra.txt
+    echo '===== recommended ====='
+    ./pip-install -r dependencies/recommended.txt
+    echo '===== fix shebang ====='
+    python test/vso_tools/fix_shebang.py python-packages/bin
+  displayName: (POSIX) Install Python packages
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
+
+# FIXME: It does not stop on failure. Tried "ErrorActionPreference" with no luck.
+- powershell: |
+    echo '===== develop ====='
+    ./pip-install -r dependencies/develop.txt
+    echo '===== required ====='
+    ./pip-install -r dependencies/required.txt
+    echo '===== required extra ====='
+    ./pip-install -r dependencies/required_extra.txt
+    echo '===== recommended ====='
+    ./pip-install -r dependencies/recommended.txt
+  displayName: (Windows) Install Python packages
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
+
+# FIXME:
+# numpy version may change several times during installation, and it has an ABI change in recent versions.
+# We must make sure ConfigSpaceNNI is built against correct numpy version, or it will fail on import.
+- script: |
+    python -m pip uninstall -y ConfigSpaceNNI
+    ./pip-install --no-cache-dir ConfigSpaceNNI
+  displayName: (Ubuntu) Rebuild ConfigSpaceNNI
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
+
+- script: |
+    yarn --cwd ts/nni_manager install
+  displayName: Install NNI Manager dependencies
+
+- script: |
+    yarn --cwd ts/webui install
+  displayName: Install Web UI dependencies
+
+- script: |
+    python test/vso_tools/pack_dependencies.py $(Build.ArtifactStagingDirectory)
+  displayName: Create cache archive
+
+- task: UniversalPackages@0
+  inputs:
+    command: publish
+    vstsFeedPublish: NNIOpenSource/dependencies
+    vstsFeedPackagePublish: dependencies-${{ parameters.platform }}
+  displayName: Upload cache archive

@@ -15,7 +15,6 @@ from typing import Optional, Tuple, List, Any
 
 import colorama
 
-import nni_node  # pylint: disable=wrong-import-order, import-error
 import nni.runtime.protocol
 
 from .config import ExperimentConfig
@@ -104,12 +103,11 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
             pid=proc.pid,
             logDir=config.experiment_working_directory,
             tag=[],
+            prefixUrl=url_prefix
         )
 
         _logger.info('Setting up...')
         rest.post(port, '/experiment', config.json(), url_prefix)
-
-        return proc
 
     except Exception as e:
         _logger.error('Create experiment failed')
@@ -118,7 +116,18 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
                 proc.kill()
         raise e
 
+    link = Path(config.experiment_working_directory, '_latest')
+    try:
+        link.unlink(missing_ok=True)
+        link.symlink_to(exp_id, target_is_directory=True)
+    except Exception:
+        if sys.platform != 'win32':
+            _logger.warning(f'Failed to create link {link}')
+
+    return proc
+
 def _start_rest_server(nni_manager_args, run_mode) -> Tuple[int, Popen]:
+    import nni_node
     node_dir = Path(nni_node.__path__[0])
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
@@ -215,6 +224,7 @@ def _start_rest_server_retiarii(config: ExperimentConfig, port: int, debug: bool
         args['start_mode'] = 'resume'
         args['readonly'] = 'true'
 
+    import nni_node
     node_dir = Path(nni_node.__path__[0])
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')

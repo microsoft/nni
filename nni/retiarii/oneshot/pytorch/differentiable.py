@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 
 from collections import OrderedDict
+from typing import Optional
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,13 +12,13 @@ from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Conv2d, BatchNorm2
 
 from .differentiable_superlayer import DifferentiableBatchNorm2d, DifferentiableSuperConv2d
 from .utils import get_differentiable_valuechoice_match_and_replace, get_naive_match_and_replace
-from .base_lightning import BaseOneShotLightningModule
+from .base_lightning import BaseOneShotLightningModule, ReplaceDictType
 
 
 class DartsLayerChoice(nn.Module):
     def __init__(self, layer_choice):
         super(DartsLayerChoice, self).__init__()
-        self.label = layer_choice.label
+        self.name = layer_choice.label
         self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
         self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
 
@@ -29,7 +31,7 @@ class DartsLayerChoice(nn.Module):
         for _, p in self.named_parameters():
             yield p
 
-    def named_parameters(self):
+    def named_parameters(self, recurse=False):
         for name, p in super(DartsLayerChoice, self).named_parameters():
             if name == 'alpha':
                 continue
@@ -42,7 +44,7 @@ class DartsLayerChoice(nn.Module):
 class DartsInputChoice(nn.Module):
     def __init__(self, input_choice):
         super(DartsInputChoice, self).__init__()
-        self.label = input_choice.label
+        self.name = input_choice.label
         self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
         self.n_chosen = input_choice.n_chosen or 1
 
@@ -55,7 +57,7 @@ class DartsInputChoice(nn.Module):
         for _, p in self.named_parameters():
             yield p
 
-    def named_parameters(self):
+    def named_parameters(self, recurse=False):
         for name, p in super(DartsInputChoice, self).named_parameters():
             if name == 'alpha':
                 continue
@@ -65,27 +67,42 @@ class DartsInputChoice(nn.Module):
         return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
 
 
-
 class DartsModule(BaseOneShotLightningModule):
-    """
-    The DARTS module. In each iteration, there are 2 training phases. The phase 1 is architecture
-    step, in which the model parameters are frozen and the alphas are optimized. The phase 2 is model
-    step, in wchich the alphas are frozen and the model parameters are optimized. In this step, the
-    output of each choice are sumed up with respect to their alpha value. The result of DARTS
-    is argmax in alpha. See [darts] for details.
-    The DARTS Model should be trained with :class:`nni.retiarii.oneshot.utils.ParallelTraiValDataloader`.
+    _darts_note = """
+    DARTS :cite:p:`liu2018darts` algorithm is one of the most fundamental one-shot algorithm.
 
-    Reference
+    DARTS repeats iterations, where each iteration consists of 2 training phases.
+    The phase 1 is architecture step, in which model parameters are frozen and the architecture parameters are trained.
+    The phase 2 is model step, in which architecture parameters are frozen and model parameters are trained.
+
+    The current implementation is for DARTS in first order. Second order (unrolled) is not supported yet.
+
+    {{module_notes}}
+
+    Parameters
     ----------
-    .. [darts] H. Liu, K. Simonyan, and Y. Yang, “DARTS: Differentiable Architecture Search,” presented at the
-        International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=S1eYHoC5FX
-    """
+    {{module_params}}
+    {base_params}
+    arc_learning_rate : float
+        Learning rate for architecture optimizer. Default: 3.0e-4
+    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+
+    __doc__ = _darts_note.format(
+        module_notes='The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.',
+        module_params=BaseOneShotLightningModule._inner_module_note,
+    )
+
+    def __init__(self, inner_module: pl.LightningModule,
+                 custom_replace_dict: Optional[ReplaceDictType] = None,
+                 arc_learning_rate: float = 3.0E-4):
+        super().__init__(inner_module, custom_replace_dict=custom_replace_dict)
+        self.arc_learning_rate = arc_learning_rate
 
     def training_step(self, batch, batch_idx):
         # grad manually
         arc_optim = self.architecture_optimizers
 
-        # The ParallelTrainValDataLoader yields both train and val data in a batch
+        # The InterleavedTrainValDataLoader yields both train and val data in a batch
         trn_batch, val_batch = batch
 
         # phase 1: architecture step
@@ -245,7 +262,7 @@ class ProxylessLayerChoice(nn.Module):
 class ProxylessInputChoice(nn.Module):
     def __init__(self, input_choice):
         super().__init__()
-        self.ops = nn.ModuleList(input_choice)
+        self.num_input_candidates = input_choice.n_candidates
         self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1E-3)
         self._binary_gates = nn.Parameter(torch.randn(input_choice.n_candidates) * 1E-3)
         self.sampled = None
@@ -297,17 +314,26 @@ class ProxylessInputChoice(nn.Module):
 
 
 class ProxylessModule(DartsModule):
-    """
-    The Proxyless Module. This is a darts-based method. What it differs from darts is that it resample
-    the architecture according to alphas to select only one path a time to reduce memory consumption.
-    The ProxylessModule should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.ParallelTraiValDataloader`.
+    _proxyless_note = """
+    Implementation of ProxylessNAS :cite:p:`cai2018proxylessnas`.
+    It's a DARTS-based method that resamples the architecture to reduce memory consumption.
+    Essentially, it samples one path on forward,
+    and implements its own backward to update the architecture parameters based on only one path.
 
-    Reference
+    {{module_notes}}
+
+    Parameters
     ----------
-    .. [proxyless] H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target
-        Task and Hardware,” presented at the International Conference on Learning Representations,
-        Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
-    """
+    {{module_params}}
+    {base_params}
+    arc_learning_rate : float
+        Learning rate for architecture optimizer. Default: 3.0e-4
+    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+
+    __doc__ = _proxyless_note.format(
+        module_notes='This module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.',
+        module_params=BaseOneShotLightningModule._inner_module_note,
+    )
 
     @staticmethod
     def match_and_replace():
@@ -333,53 +359,60 @@ class ProxylessModule(DartsModule):
 
 class SNASLayerChoice(DartsLayerChoice):
     def forward(self, *args, **kwargs):
-        self.one_hot = F.gumbel_softmax(self.alpha, self.temp)
+        one_hot = F.gumbel_softmax(self.alpha, self.temp)
         op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
         alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
-        yhat = torch.sum(op_results * self.one_hot.view(*alpha_shape), 0)
+        yhat = torch.sum(op_results * one_hot.view(*alpha_shape), 0)
         return yhat
+
 
 class SNASInputChoice(DartsInputChoice):
     def forward(self, inputs):
-        self.one_hot = F.gumbel_softmax(self.alpha, self.temp)
+        one_hot = F.gumbel_softmax(self.alpha, self.temp)
         inputs = torch.stack(inputs)
         alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
-        yhat = torch.sum(inputs * self.one_hot.view(*alpha_shape), 0)
+        yhat = torch.sum(inputs * one_hot.view(*alpha_shape), 0)
         return yhat
 
-class SNASModule(DartsModule):
-    """
-    The SNAS Module. This is a darts-based method. It uses gumble-softmax to simulate an one-hot distribution to
-    select only one path a time. The SNAS Module should be trained with
-    :class:`nni.retiarii.oneshot.utils.ParallelTrainValDataLoader`.
+
+class SnasModule(DartsModule):
+    _snas_note = """
+    Implementation of SNAS :cite:p:`xie2018snas`.
+    It's a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
+    Essentially, it samples one path on forward,
+    and implements its own backward to update the architecture parameters based on only one path.
+
+    {{module_notes}}
 
     Parameters
     ----------
-    base_model : pl.LightningModule
-        The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
-        is wrapped by base_model, and base_model will be wrapped by this model.
-    gumble_temperature : float
-        The initial temperature used in gumble-softmax.
+    {{module_params}}
+    {base_params}
+    gumbel_temperature : float
+        The initial temperature used in gumbel-softmax.
     use_temp_anneal : bool
-        If this is set to True, a linear annealing will be applied to gumble_temperature. Otherwise
-        SNAS will run at a fixed temperature. See [snas] for details.
+        If true, a linear annealing will be applied to ``gumbel_temperature``.
+        Otherwise, run at a fixed temperature. See :cite:t:`xie2018snas` for details.
     min_temp : float
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
-        return an nn.module. This custom replace dict will override the default replace
-        dict of each NAS method.
+    arc_learning_rate : float
+        Learning rate for architecture optimizer. Default: 3.0e-4
+    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
 
-    Reference
-    ----------
-    .. [snas] S. Xie, H. Zheng, C. Liu, and L. Lin, “SNAS: stochastic neural architecture search,” presented at the
-        International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=rylqooRqK7
-    """
-    def __init__(self, base_model, gumble_temperature = 1., use_temp_anneal = False,
-                 min_temp = .33, custom_replace_dict=None):
-        super().__init__(base_model, custom_replace_dict)
-        self.temp = gumble_temperature
-        self.init_temp = gumble_temperature
+    __doc__ = _snas_note.format(
+        module_notes='This module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.',
+        module_params=BaseOneShotLightningModule._inner_module_note,
+    )
+
+    def __init__(self, inner_module,
+                 custom_replace_dict: Optional[ReplaceDictType] = None,
+                 arc_learning_rate: float = 3.0e-4,
+                 gumbel_temperature: float = 1.,
+                 use_temp_anneal: bool = False,
+                 min_temp: float = .33):
+        super().__init__(inner_module, custom_replace_dict, arc_learning_rate=arc_learning_rate)
+        self.temp = gumbel_temperature
+        self.init_temp = gumbel_temperature
         self.use_temp_anneal = use_temp_anneal
         self.min_temp = min_temp
 

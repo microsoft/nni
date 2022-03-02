@@ -1,19 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import random
+from typing import Dict, Any, Optional
 
+import random
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-from nni.retiarii.nn.pytorch import InputChoice, LayerChoice
-from nni.retiarii.nn.pytorch.nn import (BatchNorm2d, Conv2d, Linear,
-                                        MultiheadAttention)
 
-from .base_lightning import BaseOneShotLightningModule
+from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice
+from .random import PathSamplingLayerChoice, PathSamplingInputChoice
+from .base_lightning import BaseOneShotLightningModule, ReplaceDictType
 from .enas import ReinforceController, ReinforceField
-from .random import PathSamplingInputChoice, PathSamplingLayerChoice
 from .sampling_superlayer import (ENASValueChoice,
                                   PathSamplingMultiHeadAttention,
                                   PathSamplingSuperBatchNorm2d,
@@ -24,17 +23,17 @@ from .utils import (get_naive_match_and_replace,
 
 
 class EnasModule(BaseOneShotLightningModule):
-    """
-    The ENAS module. In each epoch, model parameters are first trained with weight sharing, followed by
-    the ENAS RL agent. The agent will produce a sample of model architecture, and the reward function
-    is used to train the agent.
-    The ENASModule should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.
+    _enas_note = """
+    The implementation of ENAS :cite:p:`pham2018efficient`. There are 2 steps in an epoch.
+    Firstly, training model parameters.
+    Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
+
+    {{module_notes}}
 
     Parameters
     ----------
-    base_model : pl.LightningModule
-        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model,
-        and base_model will be wrapped by this model.
+    {{module_params}}
+    {base_params}
     ctrl_kwargs : dict
         Optional kwargs that will be passed to :class:`ReinforceController`.
     entropy_weight : float
@@ -45,23 +44,25 @@ class EnasModule(BaseOneShotLightningModule):
         Decay factor of baseline. New baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
     ctrl_steps_aggregate : int
         Number of steps that will be aggregated into one mini-batch for RL controller.
-    grad_clip : float
-        Gradient clipping vlaue
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
-        return an nn.module. This custom replace dict will override the default replace
-        dict of each NAS method.
+    ctrl_grad_clip : float
+        Gradient clipping value of controller.
+    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
 
-    Reference
-    ----------
-    .. [enas] H. Pham, M. Guan, B. Zoph, Q. Le, and J. Dean, “Efficient Neural Architecture Search via Parameters Sharing,”
-        in Proceedings of the 35th International Conference on Machine Learning, Jul. 2018, pp. 4095-4104.
-        Available: https://proceedings.mlr.press/v80/pham18a.html
-    """
-    def __init__(self, base_model, ctrl_kwargs = None,
-                 entropy_weight = 1e-4, skip_weight = .8, baseline_decay = .999,
-                 ctrl_steps_aggregate = 20, grad_clip = 0, custom_match_and_replace=None):
-        super().__init__(base_model, custom_match_and_replace)
+    __doc__ = _enas_note.format(
+        module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.',
+        module_params=BaseOneShotLightningModule._inner_module_note,
+    )
+
+    def __init__(self,
+                 inner_module: pl.LightningModule,
+                 ctrl_kwargs: Dict[str, Any] = None,
+                 entropy_weight: float = 1e-4,
+                 skip_weight: float = .8,
+                 baseline_decay: float = .999,
+                 ctrl_steps_aggregate: float = 20,
+                 ctrl_grad_clip: float = 0,
+                 custom_replace_dict: Optional[ReplaceDictType] = None):
+        super().__init__(inner_module, custom_replace_dict)
 
         self.nas_fields = [ReinforceField(name, len(module),
                                           isinstance(module, PathSamplingLayerChoice) or module.n_chosen == 1)
@@ -73,7 +74,7 @@ class EnasModule(BaseOneShotLightningModule):
         self.baseline_decay = baseline_decay
         self.baseline = 0.
         self.ctrl_steps_aggregate = ctrl_steps_aggregate
-        self.grad_clip = grad_clip
+        self.ctrl_grad_clip = ctrl_grad_clip
 
     def configure_architecture_optimizers(self):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
@@ -89,10 +90,10 @@ class EnasModule(BaseOneShotLightningModule):
         input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
         layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
 
-        linear_replace = get_sampling_valuechoice_match_and_replace(Linear, ENASValueChoice, PathSamplingSuperLinear)
-        conv2d_replace = get_sampling_valuechoice_match_and_replace(Conv2d, ENASValueChoice, PathSamplingSuperConv2d)
-        batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(BatchNorm2d, ENASValueChoice, PathSamplingSuperBatchNorm2d)
-        mhatt_replace = get_sampling_valuechoice_match_and_replace(MultiheadAttention, ENASValueChoice, PathSamplingMultiHeadAttention)
+        linear_replace = get_sampling_valuechoice_match_and_replace(nn.Linear, ENASValueChoice, PathSamplingSuperLinear)
+        conv2d_replace = get_sampling_valuechoice_match_and_replace(nn.Conv2d, ENASValueChoice, PathSamplingSuperConv2d)
+        batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(nn.BatchNorm2d, ENASValueChoice, PathSamplingSuperBatchNorm2d)
+        mhatt_replace = get_sampling_valuechoice_match_and_replace(nn.MultiheadAttention, ENASValueChoice, PathSamplingMultiHeadAttention)
 
         return [input_replace, layer_replace, linear_replace, conv2d_replace, batchnorm2d_replace, mhatt_replace]
 
@@ -119,7 +120,7 @@ class EnasModule(BaseOneShotLightningModule):
             self._resample()
             with torch.no_grad():
                 logits = self.model(x)
-            # get the default metric of self.model
+            # use the default metric of self.model as reward function
             if len(self.model.metrics) == 1:
                 _, metric = next(iter(self.model.metrics.items()))
             else:
@@ -140,12 +141,15 @@ class EnasModule(BaseOneShotLightningModule):
             self.manual_backward(rnn_step_loss)
 
             if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
-                if self.grad_clip > 0:
-                    nn.utils.clip_grad_norm_(self.controller.parameters(), self.grad_clip)
+                if self.ctrl_grad_clip > 0:
+                    nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
                 arc_opt.step()
                 arc_opt.zero_grad()
 
     def _resample(self):
+        """
+        Resample the architecture as ENAS result. This doesn't require an ``export`` method in nas_modules to work.
+        """
         result = self.controller.resample()
         for name, module in self.nas_modules:
             module.sampled = result[name]
@@ -156,22 +160,22 @@ class EnasModule(BaseOneShotLightningModule):
             return self.controller.resample()
 
 
-class RandomSampleModule(BaseOneShotLightningModule):
-    """
-    Random Sampling NAS Algorithm. In each epoch, model parameters are trained after a uniformly random
-    sampling of each choice. The training result is also a random sample of the search space.
-    The RandomSample Module should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.
+class RandomSamplingModule(BaseOneShotLightningModule):
+    _random_note = """
+    Random Sampling NAS Algorithm.
+    In each epoch, model parameters are trained after a uniformly random sampling of each choice.
+    Notably, the exporting result is **also a random sample** of the search space.
 
     Parameters
     ----------
-    base_model : pl.LightningModule
-        The evaluator in ``nni.retiarii.evaluator.lightning``. User defined model is wrapped by base_model,
-        and base_model will be wrapped by this model.
-    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
-        return an nn.module. This custom replace dict will override the default replace
-        dict of each NAS method.
-    """
+    {{module_params}}
+    {base_params}
+    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+
+    __doc__ = _random_note.format(
+        module_params=BaseOneShotLightningModule._inner_module_note,
+    )
+
     automatic_optimization = True
 
     def training_step(self, batch, batch_idx):
@@ -189,16 +193,18 @@ class RandomSampleModule(BaseOneShotLightningModule):
         input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
         layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
 
-        linear_replace = get_sampling_valuechoice_match_and_replace(Linear,  RandomValueChoice, PathSamplingSuperLinear)
-        conv2d_replace = get_sampling_valuechoice_match_and_replace(Conv2d, RandomValueChoice, PathSamplingSuperConv2d)
-        batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(BatchNorm2d, RandomValueChoice, PathSamplingSuperBatchNorm2d)
-        mhatt_replace = get_sampling_valuechoice_match_and_replace(MultiheadAttention, RandomValueChoice, PathSamplingMultiHeadAttention)
+        linear_replace = get_sampling_valuechoice_match_and_replace(nn.Linear, RandomValueChoice, PathSamplingSuperLinear)
+        conv2d_replace = get_sampling_valuechoice_match_and_replace(nn.Conv2d, RandomValueChoice, PathSamplingSuperConv2d)
+        batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(nn.BatchNorm2d, RandomValueChoice, PathSamplingSuperBatchNorm2d)
+        mhatt_replace = get_sampling_valuechoice_match_and_replace(nn.MultiheadAttention, RandomValueChoice, PathSamplingMultiHeadAttention)
 
         return [input_replace, layer_replace, linear_replace, conv2d_replace, batchnorm2d_replace, mhatt_replace]
 
     def _resample(self):
-        # The simplest sampling-based NAS method.
-        # Each NAS module is uniformly sampled.
+        """
+        Resample the architecture as RandomSample result. This is simply a uniformly sampling that doesn't require an ``export``
+        method in nas_modules to work.
+        """
         result = {}
         for name, module in self.nas_modules:
             if name not in result:
