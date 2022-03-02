@@ -311,7 +311,7 @@ exp.run(exp_config, 8081)
 #
 # Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment.
 # For example, open ``localhost:8081`` in your browser, 8081 is the port that you set in ``exp.run``.
-# Please refer to :doc:`here </experiment/webui>` for details.
+# Please refer to :doc:`here </experiment/webportal>` for details.
 #
 # We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__).
 # This can be used by clicking ``Visualization`` in detail panel for each trial.
@@ -336,7 +336,7 @@ def evaluate_model_with_visualization(model_cls):
     evaluate_model(model_cls)
 
 # %%
-# Relaunch the experiment, and a button is shown on WebUI.
+# Relaunch the experiment, and a button is shown on webportal.
 #
 # .. image:: ../../img/netron_entrance_webui.png
 #

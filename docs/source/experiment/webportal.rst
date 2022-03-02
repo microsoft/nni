@@ -428,8 +428,6 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-* ``Tensorboard`` please refer `doc <Tensorboard.rst>`_.
-
 
 * You can use the button named ``Copy as python`` to copy the trial's parameters.
 

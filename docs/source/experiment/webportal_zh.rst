@@ -430,8 +430,6 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-* ``Tensorboard`` please refer `doc <Tensorboard.rst>`_.
-
 
 * 可使用 ``Copy as python`` 按钮来拷贝 Trial 的参数。
 
