@@ -1,18 +1,19 @@
 Web 界面
-=====
+=======
 
 
 Q&A
 ---
 
-在 detail 的表格里明明有很多 trial 但是 Default Metric 图是空的没有数据
+在 detail 页面的表格里明明有很多 trial 但是 Default Metric 图是空的没有数据
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. note::
    首先你要明白 ``Default metric`` 和 ``Hyper parameter`` 图只展示成功 trial。
 
 
 当你觉得 ``Default metric``、``Hyper parameter`` 图有问题的时候应该做什么
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * 从 Experiment summary 下载实验结果（实验配置，trial 信息，中间值），并把这些结果上传进 issue 里。
 
@@ -107,7 +108,7 @@ NNI 会自动获取 Trial 的输出文件夹下的 ``tensorboard`` 子文件夹�
     log_dir = os.path.join(os.environ["NNI_OUTPUT_DIR"], 'tensorboard')
 
 起 Tensorboard
-""""""""""""""""""
+""""""""""""""
 
 * 就像 compare 功能一样，你先选择一些 trial 一块去启动 tensorboard。然后点击 ``Tensorboard`` 按钮。
 
@@ -141,7 +142,7 @@ NNI 会自动获取 Trial 的输出文件夹下的 ``tensorboard`` 子文件夹�
 
 
 实验管理
-----------------------
+--------
 
 实验管理页面能统筹你机器上的所有实验。 
 
@@ -184,7 +185,7 @@ NNI 会自动获取 Trial 的输出文件夹下的 ``tensorboard`` 子文件夹�
 
 
 实验详情
--------
+--------
 
 
 查看实验 overview 页面
@@ -254,7 +255,7 @@ NNI 会自动获取 Trial 的输出文件夹下的 ``tensorboard`` 子文件夹�
 
 
 查看 trial 最终结果
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 * ``Default metric`` 是所有 trial 的最终结果图。 在每一个结果上悬停鼠标可以看到 trial 信息，比如 trial id、No. 超参等。
 
@@ -308,7 +309,7 @@ NNI 会自动获取 Trial 的输出文件夹下的 ``tensorboard`` 子文件夹�
 
 
 查看 Trial 中间结果
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 单击 ``Intermediate Result`` 标签查看折线图。
 
