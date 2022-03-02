@@ -30,7 +30,7 @@ Q&A
 
 * 点击实验状态右边的小图标把 error 信息截屏。
 * 然后点击 learn about 去下载 log 文件。And then click the ``learn about`` to download ``nni-manager`` and ``dispatcher`` logfile.
-* 点击 webui 导航栏的 About 按钮点 Feedback 开一个 issue，附带上以上的截屏和 log 信息。
+* 点击页面导航栏的 About 按钮点 Feedback 开一个 issue，附带上以上的截屏和 log 信息。
 
 
 
@@ -63,7 +63,7 @@ Q&A
 * ``Log 模块``能帮助你找到错误原因。 有三个按钮： ``View trial log``, ``View trial error`` 和 ``View trial stdout``可查 log。如果你用 OpenPai 或者 Kubeflow，你能看到 trial stdout 和 nfs log。
     有任何问题请在 issue 里联系我们。
 
-   **local mode:**
+   **local mode：**
 
 
 
@@ -73,13 +73,14 @@ Q&A
 
 
 
-   **OpenPAI, Kubeflow and other mode:**
+   **OpenPAI, Kubeflow and other mode：**
 
 
 
    .. image:: ../../img/webui-img/detail-pai.png
       :target: ../../img/webui-img/detail-pai.png
       :alt: detailPai
+
 
 
 

@@ -1,4 +1,4 @@
-WebUI
+Webportal
 =====
 
 
@@ -92,7 +92,7 @@ How to use dict intermediate result
 How to use tensorboard
 ^^^^^^^^^^^^^^^^^^^^^^
 
-You can launch a tensorboard process cross one or multi trials within webui since NNI v2.2. This feature supports local training service and reuse mode training service with shared storage for now, and will support more scenarios in later nni version.
+You can launch a tensorboard process cross one or multi trials within webportal since NNI v2.2. This feature supports local training service and reuse mode training service with shared storage for now, and will support more scenarios in later nni version.
 
 .. note::
    Make sure tensorboard installed in your environment. If you never used tensorboard, here are getting start tutorials for your reference, `tensorboard with tensorflow <https://www.tensorflow.org/tensorboard/get_started>`__, `tensorboard with pytorch <https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html>`__.
