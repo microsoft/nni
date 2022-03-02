@@ -60,26 +60,26 @@ Q&A
 
 
 
-* ``Log 模块``能帮助你找到错误原因。 有三个按钮： ``View trial log``, ``View trial error`` 和 ``View trial stdout``可查 log。如果你用 OpenPai 或者 Kubeflow，你能看到 trial stdout 和 nfs log。
+* ``Log 模块`` 能帮助你找到错误原因。 有三个按钮： ``View trial log``, ``View trial error`` 和 ``View trial stdout`` 可查 log。如果你用 OpenPai 或者 Kubeflow，你能看到 trial stdout 和 nfs log。
     有任何问题请在 issue 里联系我们。
 
-   **local mode：**
+**local mode：**
 
 
 
-   .. image:: ../../img/webui-img/detail/log-local.png
-      :target: ../../img/webui-img/detail/log-local.png
-      :alt: logOnLocal
+.. image:: ../../img/webui-img/detail/log-local.png
+   :target: ../../img/webui-img/detail/log-local.png
+   :alt: logOnLocal
 
 
 
-   **OpenPAI, Kubeflow and other mode：**
+**OpenPAI, Kubeflow and other mode：**
 
 
 
-   .. image:: ../../img/webui-img/detail-pai.png
-      :target: ../../img/webui-img/detail-pai.png
-      :alt: detailPai
+.. image:: ../../img/webui-img/detail-pai.png
+   :target: ../../img/webui-img/detail-pai.png
+   :alt: detailPai
 
 
 
