@@ -13,3 +13,4 @@ References
     Supported Framework Library <SupportedFramework_Library>
     Launch from Python <Tutorial/HowToLaunchFromPython>
     Tensorboard <Tutorial/Tensorboard>
+    Compression <compression/reference>
