@@ -110,6 +110,7 @@ class LatencyFilter:
 
 def _main():
     parser = argparse.ArgumentParser("SPOS Evolutional Search")
+    parser.add_argument("--port", type=int, default=8084)
     parser.add_argument("--imagenet-dir", type=str, default="./data/imagenet")
     parser.add_argument("--checkpoint", type=str, default="./data/checkpoint-150000.pth.tar")
     parser.add_argument("--spos-preprocessing", action="store_true", default=False,
@@ -122,6 +123,9 @@ def _main():
     parser.add_argument("--test-batch-size", type=int, default=512)
     parser.add_argument("--log-frequency", type=int, default=10)
     parser.add_argument("--label-smoothing", type=float, default=0.1)
+    parser.add_argument("--evolution-sample-size", type=int, default=10)
+    parser.add_argument("--evolution-population-size", type=int, default=50)
+    parser.add_argument("--evolution-cycles", type=int, default=10)
 
     args = parser.parse_args()
 
@@ -155,17 +159,18 @@ def _main():
     evaluator = FunctionalEvaluator(evaluate_acc, criterion=criterion, args=args, train_dataset=train_dataset, val_dataset=val_dataset)
     evolution_strategy = strategy.RegularizedEvolution(
         model_filter=LatencyFilter(threshold=100, predictor=base_latency_predictor),
-        sample_size=1, population_size=2, cycles=2)
+        sample_size=args.evolution_sample_size, population_size=args.evolution_population_size, cycles=args.evolution_cycles)
     exp = RetiariiExperiment(base_model, evaluator, strategy=evolution_strategy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.trial_concurrency = 2
     exp_config.trial_gpu_number = 1
+    exp_config.max_trial_number = args.evolution_cycles
     exp_config.training_service.use_active_gpu = False
     exp_config.execution_engine = 'base'
     exp_config.dummy_input = [1, 3, 224, 224]
 
-    exp.run(exp_config, 8084)
+    exp.run(exp_config, args.port)
 
     print('Exported models:')
     for i, model in enumerate(exp.export_top_models(formatter='dict')):
