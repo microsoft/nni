@@ -13,7 +13,7 @@ from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule, ReplaceDictType
 from .enas import ReinforceController, ReinforceField
-from .sampling_superlayer import (ENASValueChoice,
+from .superlayer.sampling import (ENASValueChoice,
                                   PathSamplingMultiHeadAttention,
                                   PathSamplingSuperBatchNorm2d,
                                   PathSamplingSuperConv2d,

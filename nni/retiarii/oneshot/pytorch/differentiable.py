@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Conv2d, BatchNorm2d
 
-from .differentiable_superlayer import DifferentiableBatchNorm2d, DifferentiableSuperConv2d
+from .superlayer.differentiable import DifferentiableBatchNorm2d, DifferentiableSuperConv2d
 from .utils import get_differentiable_valuechoice_match_and_replace, get_naive_match_and_replace
 from .base_lightning import BaseOneShotLightningModule, ReplaceDictType
 
