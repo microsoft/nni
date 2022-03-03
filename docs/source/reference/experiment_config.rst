@@ -584,6 +584,10 @@ Detailed usage can be found `here <../TrainingService/DlcMode.rst>`__.
       - ``str``
       - The NAS datasource id configurated in PAI-DLC side.
 
+    * - ossDataSourceId
+      - ``str``
+      - The OSS datasource id configurated in PAI-DLC side, this is optional.
+
     * - accessKeyId
       - ``str``
       - The accessKeyId of your cloud account.

@@ -4,7 +4,7 @@ References
 ..  toctree::
     :maxdepth: 2
 
-    nnictl Commands <Tutorial/Nnictl>
+    nnictl Commands <reference/nnictl>
     Experiment Configuration <reference/experiment_config>
     Experiment Configuration (legacy) <Tutorial/ExperimentConfig>
     Search Space <Tutorial/SearchSpaceSpec>

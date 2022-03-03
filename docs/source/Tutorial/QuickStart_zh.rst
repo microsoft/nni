@@ -1,4 +1,4 @@
-.. de9c05c0da9751f920113d0b169494a2
+.. 90b7c298df11d68ba419a1feaf453cfc
 
 快速入门
 ==========
@@ -198,7 +198,7 @@ Windows
 
    nnictl create --config nni\examples\trials\mnist-pytorch\config_detailed.yml
 
-.. Note:: ``nnictl`` 是一个命令行工具，用来控制 NNI experiment，如启动、停止、继续 experiment，启动、停止 NNIBoard 等等。 点击 :doc:`这里 <Nnictl>` 查看 ``nnictl`` 的更多用法。
+.. Note:: ``nnictl`` 是一个命令行工具，用来控制 NNI experiment，如启动、停止、继续 experiment，启动、停止 NNIBoard 等等。 点击 :doc:`这里 <../reference/nnictl>` 查看 ``nnictl`` 的更多用法。
 
 在命令行中等待输出 ``INFO: Successfully started experiment!`` 。 此消息表明实验已成功启动。 期望的输出如下：
 

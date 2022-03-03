@@ -214,9 +214,9 @@ def original_state_dict_hooks(model: Any):
             # no mapping
             local_map = {}
 
-        if '' in local_map:
+        if '__self__' in local_map:
             # special case, overwrite prefix
-            tar_prefix = local_map[''] + '.'
+            tar_prefix = local_map['__self__'] + '.'
 
         for key, value in local_map.items():
             if key != '' and key not in module._modules:  # not a sub-module, probably a parameter
