@@ -4,7 +4,7 @@
 import math
 import operator
 import warnings
-from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar
+from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar, Sequence
 
 import torch
 import torch.nn as nn
@@ -16,7 +16,7 @@ from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace, No
 from .utils import Mutable, generate_new_label, get_fixed_value
 
 
-__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
+__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'HyperParameterChoice', 'Placeholder', 'ChosenInputs']
 
 
 class LayerChoice(Mutable):
@@ -786,7 +786,10 @@ class ValueChoice(ValueChoiceX, Mutable):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
 
 
-class HyperParameterChoice(Mutable):
+ValueType = TypeVar('ValueType')
+
+
+class HyperParameterChoice:
     """
     :class:`HyperParameterChoice` chooses one hyper-parameter from ``candidates``.
     It's quite similar to :class:`ValueChoice`, but unlike :class:`ValueChoice`,
@@ -850,8 +853,6 @@ class HyperParameterChoice(Mutable):
         # w/o HyperParmaeterChoice
         blocks = Repeat(Block(), (3, 9))
 
-    Also, 
-
     Examples
     --------
     Get a dynamic-shaped parameter. Because ``torch.zeros`` is not a basic unit, we can't use :class:`ValueChoice` on it.
@@ -863,12 +864,15 @@ class HyperParameterChoice(Mutable):
 
     # FIXME: prior is designed but not supported yet
 
-    def __new__(cls, candidates: List[Any], *,
+    def __new__(cls, candidates: List[ValueType], *,
                 prior: Optional[List[float]] = None,
-                default: Union[Callable[[List[Any]], Any], Any],
-                label: Optional[str] = None):
+                default: Union[Callable[[List[ValueType]], ValueType], ValueType] = None,
+                label: Optional[str] = None) -> ValueType:
         # Actually, creating a `HyperParameterChoice` never creates one.
         # It always return a fixed value, and register a ParameterSpec
+
+        if default is None:
+            default = cls.FIRST
 
         try:
             return cls.create_fixed_module(candidates, label=label)
@@ -876,7 +880,9 @@ class HyperParameterChoice(Mutable):
             return cls.create_default(candidates, default, label)
 
     @staticmethod
-    def create_default(candidates: List[Any], default: Union[Callable[[List[Any]], Any], Any], label: Optional[str]):
+    def create_default(candidates: List[ValueType],
+                       default: Union[Callable[[List[ValueType]], ValueType], ValueType],
+                       label: Optional[str]) -> ValueType:
         if default not in candidates:
             # could be callable
             try:
@@ -895,17 +901,28 @@ class HyperParameterChoice(Mutable):
             True,           # yes, categorical
         )
 
+        # there could be duplicates. Dedup is done in mutator
         ModelNamespace.current_context().parameter_specs.append(parameter_spec)
 
         return default
 
     @classmethod
-    def create_fixed_module(cls, candidates: List[Any], *, label: Optional[str] = None, **kwargs):
+    def create_fixed_module(cls, candidates: List[ValueType], *, label: Optional[str] = None, **kwargs) -> ValueType:
         # same as ValueChoice
         value = get_fixed_value(label)
         if value not in candidates:
             raise ValueError(f'Value {value} does not belong to the candidates: {candidates}.')
         return value
+
+    @staticmethod
+    def FIRST(sequence: Sequence[ValueType]) -> ValueType:
+        """Get the first item of sequence. Useful in ``default`` argument."""
+        return sequence[0]
+
+    @staticmethod
+    def LAST(sequence: Sequence[ValueType]) -> ValueType:
+        """Get the last item of sequence. Useful in ``default`` argument."""
+        return sequence[-1]
 
 
 @basic_unit

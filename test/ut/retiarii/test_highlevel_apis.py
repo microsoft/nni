@@ -17,7 +17,7 @@ from nni.retiarii.graph import Model
 from nni.retiarii.nn.pytorch.api import ValueChoice
 from nni.retiarii.nn.pytorch.mutator import process_evaluator_mutations, process_inline_mutation, extract_mutation_from_pt_module
 from nni.retiarii.serializer import model_wrapper
-from nni.retiarii.utils import ContextStack, original_state_dict_hooks
+from nni.retiarii.utils import ContextStack, NoContextError, original_state_dict_hooks
 
 
 class EnumerateSampler(Sampler):
@@ -799,6 +799,65 @@ class Python(GraphIR):
 
     @unittest.skip
     def test_valuechoice_getitem_functional_expression(self): ...
+
+    def test_hyperparameter_choice(self):
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.aux = nn.HyperParameterChoice([False, True])
+
+            def forward(self, x):
+                return x
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 1)
+        sampler = EnumerateSampler()
+        model1 = _apply_all_mutators(model, mutators, sampler)
+        model2 = _apply_all_mutators(model, mutators, sampler)
+        self.assertEqual(self._get_converted_pytorch_model(model1).aux, False)
+        self.assertEqual(self._get_converted_pytorch_model(model2).aux, True)
+
+    def test_hyperparameter_choice_parameter(self):
+        class Inner(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.aux = torch.nn.Parameter(
+                    torch.zeros(1, nn.HyperParameterChoice([64, 128, 256], label='a'), 3, 3)
+                )
+
+            def forward(self):
+                return self.aux
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.choice = nn.HyperParameterChoice([64, 128, 256], label='a')
+                self.inner = Inner()
+
+            def forward(self):
+                param = self.inner()
+                assert param.size(1) == self.choice
+                return param
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 1)
+        sampler = RandomSampler()
+        result_pool = set()
+        for _ in range(20):
+            model = _apply_all_mutators(model, mutators, sampler)
+            result = self._get_converted_pytorch_model(model)()
+            result_pool.add(result.size(1))
+        self.assertSetEqual(result_pool, {64, 128, 256})
+
+    def test_hyperparameter_choice_no_model_wrapper(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.choice = nn.HyperParameterChoice([64, 128, 256], label='a')
+
+        with self.assertRaises(NoContextError):
+            model = Net()
 
     def test_cell_loose_end(self):
         @model_wrapper

@@ -112,7 +112,8 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
 
     class reset_wrapper(wrapper):
         def __init__(self, *args, **kwargs):
-            with ModelNamespace():
+            self._model_namespace = ModelNamespace()
+            with self._model_namespace:
                 super().__init__(*args, **kwargs)
 
     _copy_class_wrapper_attributes(wrapper, reset_wrapper)

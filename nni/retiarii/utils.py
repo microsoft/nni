@@ -162,12 +162,18 @@ class ModelNamespace:
     def _simple_name(self) -> str:
         return self.key + ''.join(['_' + str(k) for k in self.name_path])
 
+    def __repr__(self):
+        return f'ModelNamespace(name={self._simple_name()}, num_specs={len(self.parameter_specs)})'
+
     # Access the current context in the model #
 
     @staticmethod
     def current_context(key: str = _DEFAULT_MODEL_NAMESPACE) -> 'ModelNamespace':
         """Get the current context in key."""
-        return ContextStack.top(key)
+        try:
+            return ContextStack.top(key)
+        except NoContextError:
+            raise NoContextError('ModelNamespace context is missing. You might have forgotten to use `@model_wrapper`.')
 
     @staticmethod
     def next_label(key: str = _DEFAULT_MODEL_NAMESPACE) -> str:
