@@ -272,7 +272,8 @@ class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
         self.eps = self.sampled_candidate('eps', 1e-4)
         self.momentum = self.sampled_candidate('momentum', .1)
 
-        # code below are simply coppied from pytorch v1.10.1 source code since directly setting weight or bias is not allowed.
+        # region
+        # code below are simply copied from pytorch v1.10.1 source code since directly setting weight or bias is not allowed.
         # please turn to pytorch source code if you have any problem with code below
         self._check_input_dim(input)
         if self.momentum is None:
@@ -290,8 +291,7 @@ class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
             bn_training = True
         else:
             bn_training = (self.running_mean is None) and (self.running_var is None)
-        # code above are simply coppied from pytorch v1.10.1 source code since directly setting weight or bias is not allowed.
-        # please turn to pytorch source code if you have any problem with code above
+        # endregion
 
         return F.batch_norm(
             input,

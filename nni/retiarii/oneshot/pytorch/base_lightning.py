@@ -1,73 +1,140 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Dict, Type, Callable, List, Optional
+import warnings
+from typing import Dict, Type, Callable, List, Optional, Union, Any, Tuple
 
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
 
 from torch.optim.lr_scheduler import _LRScheduler
+from typeguard import TypeWarning
 
-ReplaceDictType = Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
+from nni.common.hpo_utils import ParameterSpec
+
+MutateHook = Callable[[nn.Module, str, Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
 
 
-def _replace_module_with_type(root_module, prior_replace, default_replace):
+class BaseSuperNetModule(nn.Module):
     """
-    Replace xxxChoice in user's model with NAS modules.valuechoice
+    Mutated module in super-net.
+    Usually, the feed-forward of the module itself is undefined.
+    It has to be resampled with ``resample()`` so that a specific path is selected.
+
+    A super-net module usually corresponds to one sample. But two exceptions:
+
+    * A module can have multiple sample point. For example, a convolution-2d can sample kernel size, channels at the same time.
+    * Multiple modules can share one sample point. For example, multiple layer choices with the same label.
+    """
+
+    def resample(self, memo: Dict[str, Any] = None) -> None:
+        """
+        Resample the super-net module.
+
+        Parameters
+        ----------
+        memo : Dict[str, Any]
+            Used to ensure the consistency of samples with the same label.
+        """
+        raise NotImplementedError()
+
+    def export(self, memo: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Export the final architecture within this module.
+        It should have the same keys as ``space_spec()``.
+
+        Parameters
+        ----------
+        memo : Dict[str, Any]
+            Use memo to avoid the same label gets exported multiple times.
+        """
+        raise NotImplementedError()
+
+    def space_spec(self) -> Dict[str, ParameterSpec]:
+        """
+        Space specification.
+        Mapping from spec name to ParameterSpec. The names in choices should be in the same format of export.
+
+        For example: ::
+
+            {"layer1": ["conv", "pool"]}
+        """
+        raise NotImplementedError()
+
+
+def traverse_and_mutate_submodules(
+    root_module: nn.Module, hooks: List[MutateHook], topdown: bool = True
+) -> List[BaseSuperNetModule]:
+    """
+    Traverse the module-tree of ``root_module``, and call ``hooks`` on every tree node.
 
     Parameters
     ----------
     root_module : nn.Module
-        User-defined module with xxxChoice in it. In fact, since this method is
-        called in the ``__init__`` of ``BaseOneShotLightningModule``, this will be a
-        pl.LightningModule.
-    prior_match_and_replace : List[Callable[[nn.Module, Dict[str, Any]], (nn.Module, nn.Module)]]
-        Takes an nn.Module as input and returns another nn.Module if replacement is needed or
-        to override default replace method, otherwise returns None to leave it as default. Prior
-        means if this method returns a not None result for a module, the following
-        ''match_and_replace'' will be ignored.
-    match_and_replace : List[Callable[[nn.Module, Dict[str, Any]], (nn.Module, nn.Module)]]
-        Takes an nn.Module as input and returns another nn.Module if replacement is needed.
-        Returns None otherwise.
+        User-defined model space.
+        Since this method is called in the ``__init__`` of :class:`BaseOneShotLightningModule`,
+        it's usually a ``pytorch_lightning.LightningModule``.
+        The mutation will be in-place on ``root_module``.
+    hooks : List[MutationHook]
+        List of mutation hooks. See :class:`BaseOneShotLightningModule` for how to write hooks.
+        When a hook returns an module, the module will be replaced (mutated) to the new module.
+    topdown : bool, default = False
+        If topdown is true, hooks are first called, before traversing its sub-module (i.e., pre-order DFS).
+        Otherwise, sub-modules are first traversed, before calling hooks on this node (i.e., post-order DFS).
 
     Returns
     ----------
     modules : Dict[str, nn.Module]
         The replace result.
     """
-    modules = {}
+    memo = {}
+
+    module_list = []
 
     def apply(m):
         for name, child in m.named_children():
-            replace_result = None
-            if prior_replace is not None:
-                for f in prior_replace:
-                    replace_result = f(child, name, modules)
-                    if replace_result is not None:
-                        break
+            # post-order DFS
+            if not topdown:
+                apply(child)
 
-            if replace_result is None:
-                for f in default_replace:
-                    replace_result = f(child, name, modules)
-                    if replace_result is not None:
-                        break
+            mutate_result = None
 
-            if replace_result is not None:
-                to_samples, to_replace = replace_result
-                setattr(m, name, to_replace)
-                if not isinstance(to_samples, list):
-                    to_samples = [to_samples] # just to unify iteration code
-                for to_sample in to_samples:
-                    if to_sample.label not in modules.keys():
-                        modules[to_sample.label] = to_sample
-            else:
+            for hook in hooks:
+                mutate_result = hook(child, name, memo)
+
+                # parse the mutate result
+                if isinstance(mutate_result, tuple):
+                    mutate_result, suppress = mutate_result
+                elif mutate_result is True:
+                    raise ValueError('Mutation hook cannot return a single `true`.')
+                elif not mutate_result:
+                    mutate_result, suppress = None, False
+                elif isinstance(mutate_result, nn.Module):
+                    suppress = True
+                else:
+                    raise TypeError(f'Mutation hook returned {mutate_result} of unsupported type: {type(mutate_result)}.')
+
+                if mutate_result is not None:
+                    if not isinstance(mutate_result, BaseSuperNetModule):
+                        warnings.warn("Mutation hook didn't return a BaseSuperNetModule. It will be ignored in hooked module list.",
+                                      TypeWarning)
+                    setattr(m, name, mutate_result)
+
+                # if suppress, no further mutation hooks are called
+                if suppress:
+                    break
+
+            if isinstance(mutate_result, BaseSuperNetModule):
+                module_list.append(mutate_result)
+
+            # pre-order DFS
+            if topdown:
                 apply(child)
 
     apply(root_module)
 
-    return modules.items()
-
+    return module_list
 
 
 class BaseOneShotLightningModule(pl.LightningModule):
@@ -113,12 +180,15 @@ class BaseOneShotLightningModule(pl.LightningModule):
         two modules (to_sample, to_replace). The ''to_sample'' will be placed in ''self.nas_module'' to be
         sampled, and the ''to_replace'' will replace the input module and forward instead of it.
     """
+
     automatic_optimization = False
 
     def __init__(self, base_model, custom_match_and_replace=None):
         super().__init__()
         assert isinstance(base_model, pl.LightningModule)
         self.model = base_model
+
+        # traverse the model, calling hooks on every submodule
 
         # replace xxxChoice with respect to NAS alg
         # replaced modules are stored in self.nas_modules
@@ -158,8 +228,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
         if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):
             raise Exception(
-            "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
-        )
+                "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
+            )
 
         # variables used to handle optimizer frequency
         self.cur_optimizer_step = 0
@@ -181,10 +251,10 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_fit_end(self):
         return self.model.on_train_end()
 
-    def on_train_batch_start(self, batch, batch_idx, unused = 0):
+    def on_train_batch_start(self, batch, batch_idx, unused=0):
         return self.model.on_train_batch_start(batch, batch_idx, unused)
 
-    def on_train_batch_end(self, outputs, batch, batch_idx, unused = 0):
+    def on_train_batch_end(self, outputs, batch, batch_idx, unused=0):
         return self.model.on_train_batch_end(outputs, batch, batch_idx, unused)
 
     def on_epoch_start(self):
@@ -205,7 +275,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_after_backward(self):
         return self.model.on_after_backward()
 
-    def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val = None, gradient_clip_algorithm = None):
+    def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val=None, gradient_clip_algorithm=None):
         return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
 
     def configure_architecture_optimizers(self):
@@ -248,14 +318,14 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         def apply(lr_scheduler):
             # single scheduler is called every epoch
-            if  isinstance(lr_scheduler, _LRScheduler) and \
-                self.trainer.is_last_batch:
+            if isinstance(lr_scheduler, _LRScheduler) and \
+                    self.trainer.is_last_batch:
                 lr_schedulers.step()
             # lr_scheduler_config is called as configured
             elif isinstance(lr_scheduler, dict):
                 interval = lr_scheduler['interval']
                 frequency = lr_scheduler['frequency']
-                if  (
+                if (
                         interval == 'step' and
                         batch_index % frequency == 0
                     ) or \
@@ -263,8 +333,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
                         interval == 'epoch' and
                         self.trainer.is_last_batch and
                         (self.trainer.current_epoch + 1) % frequency == 0
-                    ):
-                        lr_scheduler.step()
+                ):
+                    lr_scheduler.step()
 
         lr_schedulers = self.lr_schedulers()
 
@@ -318,7 +388,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             architecture optimizers.
         """
         opts = self.optimizers()
-        if isinstance(opts,list):
+        if isinstance(opts, list):
             # pylint: disable=unsubscriptable-object
             arc_opts = opts[:self.arc_optim_count]
             if len(arc_opts) == 1:
@@ -340,7 +410,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             Optimizers defined by user's model. This will be None if there is no user optimizers.
         """
         opts = self.optimizers()
-        if isinstance(opts,list):
+        if isinstance(opts, list):
             # pylint: disable=unsubscriptable-object
             return opts[self.arc_optim_count:]
         # If there is only 1 optimizer and no architecture optimizer

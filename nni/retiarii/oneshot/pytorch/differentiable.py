@@ -167,7 +167,7 @@ class DartsModule(BaseOneShotLightningModule):
                 else:
                     ctrl_params[m.label] = m.alpha
         ctrl_optim = torch.optim.Adam(list(ctrl_params.values()), 3.e-4, betas=(0.5, 0.999),
-                                           weight_decay=1.0E-3)
+                                      weight_decay=1.0E-3)
         return ctrl_optim
 
 
@@ -342,10 +342,9 @@ class ProxylessModule(DartsModule):
 
         return [inputchoice_replace, layerchoice_replace]
 
-
     def configure_architecture_optimizers(self):
         ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], 3.e-4,
-                                           weight_decay=0, betas=(0, 0.999), eps=1e-8)
+                                      weight_decay=0, betas=(0, 0.999), eps=1e-8)
         return ctrl_optim
 
     def _resample(self):
@@ -421,8 +420,8 @@ class SnasModule(DartsModule):
             self.temp = (1 - self.trainer.current_epoch / self.trainer.max_epochs) * (self.init_temp - self.min_temp) + self.min_temp
             self.temp = max(self.temp, self.min_temp)
 
-            for _, nas_module in self.nas_modules:
-                nas_module.temp = self.temp
+        for _, nas_module in self.nas_modules:
+            nas_module.temp = self.temp
 
         return self.model.on_epoch_start()
 
