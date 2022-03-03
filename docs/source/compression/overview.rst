@@ -1,9 +1,9 @@
 Model Compression Overview
 ==========================
 
-Deep neural networks (DNNs) have achieved great success in many tasks.
+Deep neural networks (DNNs) have achieved great success in many tasks like image recognition and language translation.
 However, typical neural networks are both computationally expensive and energy-intensive,
-can be difficult to be deployed on devices with low computation resources or with strict latency requirements.
+which can be difficult to be deployed on devices with low computation resources or with strict latency requirements.
 Therefore, a natural thought is to perform model compression to reduce model size and accelerate model training/inference without losing performance significantly.
 Model compression techniques can be divided into two categories: pruning and quantization.
 The pruning methods explore the redundancy in the model weights and try to remove/prune the redundant and uncritical weights.
