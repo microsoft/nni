@@ -145,7 +145,7 @@ class ModelNamespace:
         # the next thing up is [1, 2, 2, 4].
         # `reset_uid` to count from zero for "model_wrapper_1_2_2_4"
         try:
-            parent_context: ModelNamespace = ModelNamespace.current_context(self.key)
+            parent_context: 'ModelNamespace' = ModelNamespace.current_context(self.key)
             next_uid = uid(parent_context._simple_name())
             self.name_path = parent_context.name_path + [next_uid]
             ContextStack.push(self.key, self)
