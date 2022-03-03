@@ -5,6 +5,7 @@ import copy
 import functools
 import inspect
 import numbers
+import sys
 import types
 import warnings
 from io import IOBase
@@ -13,7 +14,7 @@ from typing import Any, Dict, List, Optional, TypeVar, Union
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
 
-__all__ = ['trace', 'dump', 'load', 'PayloadTooLarge', 'Translatable', 'Traceable', 'is_traceable']
+__all__ = ['trace', 'dump', 'load', 'PayloadTooLarge', 'Translatable', 'Traceable', 'is_traceable', 'is_wrapped_with_trace']
 
 
 T = TypeVar('T')
@@ -23,46 +24,43 @@ class PayloadTooLarge(Exception):
     pass
 
 
-class Traceable(abc.ABC):
+class Traceable:
     """
     A traceable object have copy and dict. Copy and mutate are used to copy the object for further mutations.
     Dict returns a TraceDictType to enable serialization.
     """
-    @abc.abstractmethod
+
     def trace_copy(self) -> 'Traceable':
         """
         Perform a shallow copy.
         NOTE: NONE of the attributes will be preserved.
         This is the one that should be used when you want to "mutate" a serializable object.
         """
-        ...
+        raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
     def trace_symbol(self) -> Any:
         """
         Symbol object. Could be a class or a function.
         ``get_hybrid_cls_or_func_name`` and ``import_cls_or_func_from_hybrid_name`` is a pair to
         convert the symbol into a string and convert the string back to symbol.
         """
-        ...
+        raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
     def trace_args(self) -> List[Any]:
         """
         List of positional arguments passed to symbol. Usually empty if ``kw_only`` is true,
         in which case all the positional arguments are converted into keyword arguments.
         """
-        ...
+        raise NotImplementedError()
 
     @property
-    @abc.abstractmethod
     def trace_kwargs(self) -> Dict[str, Any]:
         """
         Dict of keyword arguments.
         """
-        ...
+        raise NotImplementedError()
 
 
 class Translatable(abc.ABC):
@@ -84,13 +82,27 @@ class Translatable(abc.ABC):
 
 def is_traceable(obj: Any) -> bool:
     """
-    Check whether an object is a traceable instance (not type).
+    Check whether an object is a traceable instance or type.
+
+    Note that an object is traceable only means that it implements the "Traceable" interface,
+    and the properties have been implemented. It doesn't necessary mean that its type is wrapped with trace,
+    because the properties could be added **after** the instance has been created.
     """
     return hasattr(obj, 'trace_copy') and \
         hasattr(obj, 'trace_symbol') and \
         hasattr(obj, 'trace_args') and \
-        hasattr(obj, 'trace_kwargs') and \
-        not inspect.isclass(obj)
+        hasattr(obj, 'trace_kwargs')
+
+
+def is_wrapped_with_trace(cls_or_func: Any) -> bool:
+    """
+    Check whether a function or class is already wrapped with ``@nni.trace``.
+    If a class or function is already wrapped with trace, then the created object must be "traceable".
+    """
+    return getattr(cls_or_func, '_traced', False) and (
+        not hasattr(cls_or_func, '__dict__') or  # in case it's a function
+        '_traced' in cls_or_func.__dict__  # must be in this class, super-class traced doesn't count
+    )
 
 
 class SerializableObject(Traceable):
@@ -160,6 +172,15 @@ class SerializableObject(Traceable):
 
 def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, Any]) -> Any:
     # If an object is already created, this can be a fix so that the necessary info are re-injected into the object.
+    # Make obj complying with the interface of traceable, though we cannot change its base class.
+    obj.__dict__.update(_nni_symbol=symbol, _nni_args=args, _nni_kwargs=kwargs)
+
+    return obj
+
+
+def _make_class_traceable(cls: T, create_wrapper: bool = False) -> T:
+    # Make an already exist class traceable, without creating a new class.
+    # Should be used together with `inject_trace_info`.
 
     def getter_factory(x):
         return lambda self: self.__dict__['_nni_' + x]
@@ -184,20 +205,18 @@ def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, An
         'trace_copy': trace_copy
     }
 
-    if hasattr(obj, '__class__') and hasattr(obj, '__dict__'):
+    if not create_wrapper:
         for name, method in attributes.items():
-            setattr(obj.__class__, name, method)
+            setattr(cls, name, method)
+        return cls
     else:
-        wrapper = type('wrapper', (Traceable, type(obj)), attributes)
-        obj = wrapper(obj)  # pylint: disable=abstract-class-instantiated
-
-    # make obj complying with the interface of traceable, though we cannot change its base class
-    obj.__dict__.update(_nni_symbol=symbol, _nni_args=args, _nni_kwargs=kwargs)
-
-    return obj
+        # sometimes create_wrapper is mandatory, e.g., for built-in types like list/int.
+        # but I don't want to check here because it's unreliable.
+        wrapper = type('wrapper', (Traceable, cls), attributes)
+        return wrapper
 
 
-def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]:
+def trace(cls_or_func: T = None, *, kw_only: bool = True, inheritable: bool = False) -> Union[T, Traceable]:
     """
     Annotate a function or a class if you want to preserve where it comes from.
     This is usually used in the following scenarios:
@@ -221,6 +240,9 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
     list and types. This can be useful to extract semantics, but can be tricky in some corner cases.
     Therefore, in some cases, some positional arguments will still be kept.
 
+    If ``inheritable`` is true, the trace information from superclass will also be available in subclass.
+    This however, will make the subclass un-trace-able. Note that this argument has no effect when tracing functions.
+
     .. warning::
 
         Generators will be first expanded into a list, and the resulting list will be further passed into the wrapped function/class.
@@ -237,10 +259,10 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
 
     def wrap(cls_or_func):
         # already annotated, do nothing
-        if getattr(cls_or_func, '_traced', False):
+        if is_wrapped_with_trace(cls_or_func):
             return cls_or_func
         if isinstance(cls_or_func, type):
-            cls_or_func = _trace_cls(cls_or_func, kw_only)
+            cls_or_func = _trace_cls(cls_or_func, kw_only, inheritable=inheritable)
         elif _is_function(cls_or_func):
             cls_or_func = _trace_func(cls_or_func, kw_only)
         else:
@@ -353,17 +375,92 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None, ignore_comme
         return json_tricks.load(fp, obj_pairs_hooks=hooks, **json_tricks_kwargs)
 
 
-def _trace_cls(base, kw_only, call_super=True):
+def _trace_cls(base, kw_only, call_super=True, inheritable=False):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
-    class wrapper(SerializableObject, base):
+    if sys.platform != 'linux':
+        if not call_super:
+            raise ValueError("'call_super' is mandatory to be set true on non-linux platform")
+
+        try:
+            # In non-linux envs, dynamically creating new classes doesn't work with pickle.
+            # We have to replace the ``__init__`` with a new ``__init__``.
+            # This, however, causes side-effects where the replacement is not intended.
+            # This also doesn't work built-in types (e.g., OrderedDict), and the replacement
+            # won't be effective any more if ``nni.trace`` is called in-place (e.g., ``nni.trace(nn.Conv2d)(...)``).
+            original_init = base.__init__
+
+            # Makes the new init have the exact same signature as the old one,
+            # so as to make pytorch-lightning happy.
+            # https://github.com/PyTorchLightning/pytorch-lightning/blob/4cc05b2cf98e49168a5f5dc265647d75d1d3aae9/pytorch_lightning/utilities/parsing.py#L143
+            @functools.wraps(original_init)
+            def new_init(self, *args, **kwargs):
+                args, kwargs = _formulate_arguments(original_init, args, kwargs, kw_only, is_class_init=True)
+                original_init(
+                    self,
+                    *[_argument_processor(arg) for arg in args],
+                    **{kw: _argument_processor(arg) for kw, arg in kwargs.items()}
+                )
+                inject_trace_info(self, base, args, kwargs)
+
+            base.__init__ = new_init
+
+            base = _make_class_traceable(base)
+            return base
+
+        except TypeError:
+            warnings.warn("In-place __init__ replacement failed in `@nni.trace`, probably because the type is a built-in/extension type, "
+                          "and it's __init__ can't be replaced. `@nni.trace` is now falling back to the 'inheritance' approach. "
+                          "However, this could cause issues when using pickle. See https://github.com/microsoft/nni/issues/4434",
+                          RuntimeWarning)
+
+    # This is trying to solve the case where superclass and subclass are both decorated with @nni.trace.
+    # We use a metaclass to "unwrap" the superclass.
+    # However, this doesn't work if:
+    # 1. Base class already has a customized metaclass. We will raise error in that class.
+    # 2. SerializableObject in ancester (instead of parent). I think this case is rare and I didn't handle this case yet. FIXME
+    if type(base) is type and not inheritable:
+        metaclass = _unwrap_metaclass
+    else:
+        metaclass = type
+        if SerializableObject in inspect.getmro(base):
+            raise TypeError(f"{base} has a superclass already decorated with trace, and it's using a customized metaclass {type(base)}. "
+                            "Please either use the default metaclass, or remove trace from the super-class.")
+
+    class wrapper(SerializableObject, base, metaclass=metaclass):
         def __init__(self, *args, **kwargs):
             # store a copy of initial parameters
             args, kwargs = _formulate_arguments(base.__init__, args, kwargs, kw_only, is_class_init=True)
 
             # calling serializable object init to initialize the full object
             super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=call_super)
+
+        def __reduce__(self):
+            # The issue that decorator and pickler doesn't play well together is well known.
+            # The workaround solution is to use a fool class (_pickling_object) which pretends to be the pickled object.
+            # We then put the original type, as well as args and kwargs in its `__new__` argument.
+            # I suspect that their could still be problems when things get complex,
+            # e.g., the wrapped class has a custom pickling (`__reduce__``) or `__new__`.
+            # But it can't be worse because the previous pickle doesn't work at all.
+            #
+            # Linked issue: https://github.com/microsoft/nni/issues/4434
+            # SO: https://stackoverflow.com/questions/52185507/pickle-and-decorated-classes-picklingerror-not-the-same-object
+
+            # Store the inner class. The wrapped class couldn't be properly pickled.
+            type_ = cloudpickle.dumps(type(self).__wrapped__)
+
+            # in case they have customized ``__getstate__``.
+            if hasattr(self, '__getstate__'):
+                obj_ = self.__getstate__()
+            else:
+                obj_ = self.__dict__
+
+            # Pickle can't handle type objects.
+            if '_nni_symbol' in obj_:
+                obj_['_nni_symbol'] = cloudpickle.dumps(obj_['_nni_symbol'])
+
+            return _pickling_object, (type_, kw_only, obj_)
 
     _copy_class_wrapper_attributes(base, wrapper)
 
@@ -391,6 +488,8 @@ def _trace_func(func, kw_only):
         elif hasattr(res, '__class__') and hasattr(res, '__dict__'):
             # is a class, inject interface directly
             # need to be done before primitive types because there could be inheritance here.
+            if not getattr(type(res), '_traced', False):
+                _make_class_traceable(type(res), False)  # in-place
             res = inject_trace_info(res, func, args, kwargs)
         elif isinstance(res, (collections.abc.Callable, types.ModuleType, IOBase)):
             raise TypeError(f'Try to add trace info to {res}, but functions and modules are not supported.')
@@ -400,6 +499,8 @@ def _trace_func(func, kw_only):
             # will be directly captured by python json encoder
             # and thus not possible to restore the trace parameters after dump and reload.
             # this is a known limitation.
+            new_type = _make_class_traceable(type(res), True)
+            res = new_type(res)  # re-creating the object
             res = inject_trace_info(res, func, args, kwargs)
         else:
             raise TypeError(f'Try to add trace info to {res}, but the type "{type(res)}" is unknown. '
@@ -423,6 +524,48 @@ def _copy_class_wrapper_attributes(base, wrapper):
                 pass
 
     wrapper.__wrapped__ = base
+
+
+class _unwrap_metaclass(type):
+    # When a subclass is created, it detects whether the super-class is already annotated with @nni.trace.
+    # If yes, it gets the ``__wrapped__`` inner class, so that it doesn't inherit SerializableObject twice.
+    # Note that this doesn't work when metaclass is already defined (such as ABCMeta). We give up in that case.
+
+    def __new__(cls, name, bases, dct):
+        bases = tuple([getattr(base, '__wrapped__', base) for base in bases])
+        return super().__new__(cls, name, bases, dct)
+
+    # Using a customized "bases" breaks default isinstance and issubclass.
+    # We recover this by overriding the subclass and isinstance behavior, which conerns wrapped class only.
+    def __subclasscheck__(cls, subclass):
+        inner_cls = getattr(cls, '__wrapped__', cls)
+        return inner_cls in inspect.getmro(subclass)
+
+    def __instancecheck__(cls, instance):
+        inner_cls = getattr(cls, '__wrapped__', cls)
+        return inner_cls in inspect.getmro(type(instance))
+
+
+class _pickling_object:
+    # Need `cloudpickle.load` on the callable because the callable is pickled with cloudpickle.
+    # Used in `_trace_cls`.
+
+    def __new__(cls, type_, kw_only, data):
+        type_ = cloudpickle.loads(type_)
+        # Restore the trace type
+        type_ = _trace_cls(type_, kw_only)
+
+        # restore type
+        if '_nni_symbol' in data:
+            data['_nni_symbol'] = cloudpickle.loads(data['_nni_symbol'])
+
+        # https://docs.python.org/3/library/pickle.html#pickling-class-instances
+        obj = type_.__new__(type_)
+        if hasattr(obj, '__setstate__'):
+            obj.__setstate__(data)
+        else:
+            obj.__dict__.update(data)
+        return obj
 
 
 def _argument_processor(arg):
@@ -533,7 +676,9 @@ def _import_cls_or_func_from_name(target: str) -> Any:
 
 def _strip_trace_type(traceable: Any) -> Any:
     if getattr(traceable, '_traced', False):
-        return traceable.__wrapped__
+        # sometimes, ``__wrapped__`` could be unavailable (e.g., with `inject_trace_info`)
+        # need to have a default value
+        return getattr(traceable, '__wrapped__', traceable)
     return traceable
 
 
@@ -598,7 +743,7 @@ def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, 
     # Encodes a serializable object instance to json.
 
     # do nothing to instance that is not a serializable object and do not use trace
-    if not use_trace or not is_traceable(obj):
+    if not (use_trace and hasattr(obj, '__class__') and is_traceable(type(obj))):
         return obj
 
     if isinstance(obj.trace_symbol, property):
