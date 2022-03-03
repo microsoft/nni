@@ -17,7 +17,7 @@ Prerequisite
 
 4. Make sure the command of Trial is compatible with remote OSes, if you want to use remote Linux and Windows together. For example, the default python 3.x executable called ``python3`` on Linux, and ``python`` on Windows.
 
-There are several steps for Windows server.
+In addition, there are several steps for Windows server.
 
 1. Install and start ``OpenSSH Server``.
 
@@ -50,13 +50,12 @@ There are several steps for Windows server.
 Usage
 -----
 
-Use ``examples/trials/mnist-pytorch`` as the example. Suppose there are two machines, which can be logged in with username and password or key authentication of SSH. Install and run NNI on one of those machines or another machine, which has network access to them. Here is a template configuration specification.
+Use ``examples/trials/mnist-pytorch`` as the example. Suppose there are two machines, which can be logged in with username and password or key authentication of SSH. Here is a template configuration specification.
 
 .. code-block:: yaml
 
    searchSpaceFile: search_space.json
    trialCommand: python3 mnist.py
-   trialCodeDirectory: .  # default value, can be omitted
    trialGpuNumber: 0
    trialConcurrency: 4
    maxTrialNumber: 20
@@ -77,7 +76,7 @@ Use ``examples/trials/mnist-pytorch`` as the example. Suppose there are two mach
 
 The example configuration is saved in ``examples/trials/mnist-pytorch/config_remote.yml``.
 
-Files in ``trialCodeDirectory`` will be uploaded to remote machines automatically. You can run below command on Windows, Linux, or macOS to spawn trials on remote Linux machines:
+You can run below command on Windows, Linux, or macOS to spawn trials on remote Linux machines:
 
 .. code-block:: bash
 
@@ -97,11 +96,12 @@ For example, with anaconda you can specify:
 
    pythonPath: /home/bob/.conda/envs/ENV-NAME/bin
 
-Configure distributed trial
+Configure shared storage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-(some training service, e.g., openpai, kubeflow, already supported distributed trial)
-
+Remote training service support shared storage, which can help use your own storage during using NNI. Follow the guide `here <./shared_storage.rst>`__ to learn how to use shared storage.
 
 Monitor via TensorBoard
 ^^^^^^^^^^^^^^^^^^^^^^^
+
+Remote training service support trial visualization via TensorBoard. Follow the guide `here <./tensorboard.rst>`__ to learn how to use TensorBoard.
