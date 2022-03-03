@@ -207,6 +207,7 @@ interface AllExperimentList {
     pid: number;
     webuiUrl: string[];
     logDir: string[];
+    prefixUrl: string;
 }
 
 interface Tensorboard {

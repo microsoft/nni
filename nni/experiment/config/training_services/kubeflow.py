@@ -44,6 +44,14 @@ class KubeflowConfig(TrainingServiceConfig):
     master: Optional[KubeflowRoleConfig] = None
     reuse_mode: Optional[bool] = True #set reuse mode as true for v2 config
 
+    def _canonicalize(self, parents):
+        super()._canonicalize(parents)
+        # kubeflow does not need these fields, set empty string for type check
+        if self.trial_command is None:
+            self.trial_command = ''
+        if self.trial_code_directory is None:
+            self.trial_code_directory = ''
+
     def _validate_canonical(self):
         super()._validate_canonical()
         assert self.operator in ['tf-operator', 'pytorch-operator']

@@ -15,7 +15,6 @@ from typing import Optional, Tuple, List, Any
 
 import colorama
 
-import nni_node  # pylint: disable=wrong-import-order, import-error
 import nni.runtime.protocol
 
 from .config import ExperimentConfig
@@ -104,12 +103,11 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
             pid=proc.pid,
             logDir=config.experiment_working_directory,
             tag=[],
+            prefixUrl=url_prefix
         )
 
         _logger.info('Setting up...')
         rest.post(port, '/experiment', config.json(), url_prefix)
-
-        return proc
 
     except Exception as e:
         _logger.error('Create experiment failed')
@@ -118,7 +116,18 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
                 proc.kill()
         raise e
 
+    link = Path(config.experiment_working_directory, '_latest')
+    try:
+        link.unlink(missing_ok=True)
+        link.symlink_to(exp_id, target_is_directory=True)
+    except Exception:
+        if sys.platform != 'win32':
+            _logger.warning(f'Failed to create link {link}')
+
+    return proc
+
 def _start_rest_server(nni_manager_args, run_mode) -> Tuple[int, Popen]:
+    import nni_node
     node_dir = Path(nni_node.__path__[0])
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
@@ -215,6 +224,7 @@ def _start_rest_server_retiarii(config: ExperimentConfig, port: int, debug: bool
         args['start_mode'] = 'resume'
         args['readonly'] = 'true'
 
+    import nni_node
     node_dir = Path(nni_node.__path__[0])
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
@@ -253,14 +263,17 @@ def _save_experiment_information(experiment_id: str, port: int, start_time: int,
 
 
 def get_stopped_experiment_config(exp_id, exp_dir=None):
+    config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
+    config = ExperimentConfig(**config_json)
+    if exp_dir and not os.path.samefile(exp_dir, config.experiment_working_directory):
+        msg = 'Experiment working directory provided in command line (%s) is different from experiment config (%s)'
+        _logger.warning(msg, exp_dir, config.experiment_working_directory)
+        config.experiment_working_directory = exp_dir
+    return config
+
+def get_stopped_experiment_config_json(exp_id, exp_dir=None):
     if exp_dir:
-        exp_config = Config(exp_id, exp_dir).get_config()
-        config = ExperimentConfig(**exp_config)
-        if not os.path.samefile(exp_dir, config.experiment_working_directory):
-            msg = 'Experiment working directory provided in command line (%s) is different from experiment config (%s)'
-            _logger.warning(msg, exp_dir, config.experiment_working_directory)
-            config.experiment_working_directory = exp_dir
-        return config
+        return Config(exp_id, exp_dir).get_config()
     else:
         update_experiment()
         experiments_config = Experiments()
@@ -268,9 +281,8 @@ def get_stopped_experiment_config(exp_id, exp_dir=None):
         experiment_metadata = experiments_dict.get(exp_id)
         if experiment_metadata is None:
             _logger.error('Id %s not exist!', exp_id)
-            return
+            return None
         if experiment_metadata['status'] != 'STOPPED':
             _logger.error('Only stopped experiments can be resumed or viewed!')
-            return
-        experiment_config = Config(exp_id, experiment_metadata['logDir']).get_config()
-        return ExperimentConfig(**experiment_config)
+            return None
+        return Config(exp_id, experiment_metadata['logDir']).get_config()

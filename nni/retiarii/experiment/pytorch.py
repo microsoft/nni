@@ -6,6 +6,7 @@ import logging
 import os
 import socket
 import time
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
@@ -33,8 +34,9 @@ from ..execution.utils import get_mutation_dict
 from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
-from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation
+from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation, process_evaluator_mutations
 from ..oneshot.interface import BaseOneShotTrainer
+from ..serializer import is_model_wrapped
 from ..strategy import BaseStrategy
 from ..strategy.utils import dry_run_for_formatted_search_space
 
@@ -81,7 +83,7 @@ class RetiariiExeConfig(ConfigBase):
         if key in fixed_attrs and fixed_attrs[key] != value:
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
-        if key == 'trial_code_directory' and not (value == Path('.') or os.path.isabs(value)):
+        if key == 'trial_code_directory' and not (str(value) == '.' or os.path.isabs(value)):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         if key == 'execution_engine':
             assert value in ['base', 'py', 'cgo', 'benchmark'], f'The specified execution engine "{value}" is not supported.'
@@ -183,12 +185,22 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
+        self.url_prefix = None
+
+        # check for sanity
+        if not is_model_wrapped(base_model):
+            warnings.warn(colorama.Style.BRIGHT + colorama.Fore.RED +
+                          '`@model_wrapper` is missing for the base model. The experiment might still be able to run, '
+                          'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
+                          RuntimeWarning)
+
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
             self.base_model, self.trainer, self.applied_mutators,
             full_ir=self.config.execution_engine not in ['py', 'benchmark'],
             dummy_input=self.config.dummy_input
         )
+        self.applied_mutators += process_evaluator_mutations(self.trainer, self.applied_mutators)
 
         _logger.info('Start strategy...')
         search_space = dry_run_for_formatted_search_space(base_model_ir, self.applied_mutators)
@@ -211,6 +223,8 @@ class RetiariiExperiment(Experiment):
             Whether to start in debug mode.
         """
         atexit.register(self.stop)
+
+        self.config = self.config.canonical_copy()
 
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':

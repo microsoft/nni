@@ -19,7 +19,8 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     LotteryTicketPruner
 )
 
-sys.path.append('../../models')
+from pathlib import Path
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from cifar10.vgg import VGG
 
 
@@ -130,7 +131,7 @@ if __name__ == '__main__':
     elif args.pruner == 'lottery':
         kw_args['reset_weight'] = args.reset_weight
         iterative_pruner = LotteryTicketPruner
-    
+
     pruner = iterative_pruner(model, config_list, **kw_args)
     pruner.compress()
     _, model, masks, _, _ = pruner.get_best_result()
