@@ -1,4 +1,4 @@
-.. 19ce4f2ee1d3c4f1be277ab09ba40092
+.. 17c605ea82d48433b253d73f48d297d9
 
 参考
 ==================
@@ -14,5 +14,4 @@
     SDK API 参考 <sdk_reference>
     支持的框架和库 <SupportedFramework_Library>
     从 Python 发起实验 <Tutorial/HowToLaunchFromPython>
-    共享存储 <Tutorial/HowToUseSharedStorage>
     Tensorboard <Tutorial/Tensorboard>
