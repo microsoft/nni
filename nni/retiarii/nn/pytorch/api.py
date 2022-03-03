@@ -9,9 +9,10 @@ from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoRetur
 import torch
 import torch.nn as nn
 
+from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import Translatable
 from nni.retiarii.serializer import basic_unit
-from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
+from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace, NoContextError
 from .utils import Mutable, generate_new_label, get_fixed_value
 
 
@@ -754,7 +755,6 @@ class ValueChoice(ValueChoiceX, Mutable):
         self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
         assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
         self._label = generate_new_label(label)
-        self._accessor = []
 
     @property
     def label(self):
@@ -784,6 +784,128 @@ class ValueChoice(ValueChoiceX, Mutable):
 
     def __repr__(self):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
+
+
+class HyperParameterChoice(Mutable):
+    """
+    :class:`HyperParameterChoice` chooses one hyper-parameter from ``candidates``.
+    It's quite similar to :class:`ValueChoice`, but unlike :class:`ValueChoice`,
+    it always returns a fixed value, even at the construction of base model.
+
+    This makes it highly flexible (e.g., can be used in for-loop, if-condition, as argument of any function). For example: ::
+
+        self.has_auxiliary_head = HyperParameterChoice([False, True])
+        # this will raise error if you use `ValueChoice`
+        if self.has_auxiliary_head is True:  # or self.has_auxiliary_head
+            self.auxiliary_head = Head()
+        else:
+            self.auxiliary_head = None
+        print(type(self.has_auxiliary_head))  # <class 'bool'>
+
+    The working mechanism of :class:`HyperParameterChoice` is that, it registers itself
+    in the ``model_wrapper``, as a hyper-parameter of the model, and then returns the value specified with ``default``.
+    At base model construction, the default value will be used (as a mocked hyper-parameter).
+    In trial, the hyper-parameter selected by strategy will be used.
+
+    Although flexible, we still recommend using :class:`ValueChoice` in favor of :class:`HyperParameterChoice`,
+    because information are lost when using :class:`HyperParameterChoice` in exchange of its flexibility,
+    making it incompatible with one-shot strategies and non-python execution engines.
+
+    .. warning::
+
+        :class:`HyperParameterChoice` can NOT be nested.
+
+    .. tip::
+
+        Although called :class:`HyperParameterChoice`, it's meant to tune hyper-parameter of architecture.
+        It's NOT used to tune model-training hyper-parameters like ``learning_rate``.
+        If you need to tune ``learning_rate``, please use :class:`ValueChoice` on arguments of :class:`nni.retiarii.Evaluator`.
+
+    Parameters
+    ----------
+    candidates : list of any
+        List of values to choose from.
+    prior : list of float
+        Prior distribution to sample from. Currently has no effect.
+    default : Callable[[List[Any]], Any] or Any
+        Function that selects one from ``candidates``, or a candidate.
+        Use :meth:`HyperParameterChoice.FIRST` or :meth:`HyperParameterChoice:LAST` to take the first or last item.
+        Default: :meth:`HyperParameterChoice.FIRST`
+    label : str
+        Identifier of the value choice.
+
+    Warnings
+    --------
+    :class:`HyperParameterChoice` is incompatible with one-shot strategies and non-python execution engines.
+
+    Sometimes, the same search space implemented **without** :class:`HyperParameterChoice` can be simpler, and explored
+    with more types of search strategies. For example, the following usages are equivalent: ::
+
+        # with HyperParameterChoice
+        depth = nn.HyperParameterChoice(list(range(3, 10)))
+        blocks = []
+        for i in range(depth):
+            blocks.append(Block())
+
+        # w/o HyperParmaeterChoice
+        blocks = Repeat(Block(), (3, 9))
+
+    Also, 
+
+    Examples
+    --------
+    Get a dynamic-shaped parameter. Because ``torch.zeros`` is not a basic unit, we can't use :class:`ValueChoice` on it.
+    >>> parameter_dim = nn.HyperParameterChoice([64, 128, 256])
+    >>> self.token = nn.Parameter(torch.zeros(1, parameter_dim, 32, 32))
+    """
+
+    # FIXME: fix signature in docs
+
+    # FIXME: prior is designed but not supported yet
+
+    def __new__(cls, candidates: List[Any], *,
+                prior: Optional[List[float]] = None,
+                default: Union[Callable[[List[Any]], Any], Any],
+                label: Optional[str] = None):
+        # Actually, creating a `HyperParameterChoice` never creates one.
+        # It always return a fixed value, and register a ParameterSpec
+
+        try:
+            return cls.create_fixed_module(candidates, label=label)
+        except NoContextError:
+            return cls.create_default(candidates, default, label)
+
+    @staticmethod
+    def create_default(candidates: List[Any], default: Union[Callable[[List[Any]], Any], Any], label: Optional[str]):
+        if default not in candidates:
+            # could be callable
+            try:
+                default = default(candidates)
+            except TypeError as e:
+                if 'not callable' in str(e):
+                    raise TypeError("`default` is not in `candidates`, and it's also not callable.")
+                raise
+
+        label = generate_new_label(label)
+        parameter_spec = ParameterSpec(
+            label,          # name
+            'choice',       # TODO: support more types
+            candidates,     # value
+            (label,),       # we don't have nested now
+            True,           # yes, categorical
+        )
+
+        ModelNamespace.current_context().parameter_specs.append(parameter_spec)
+
+        return default
+
+    @classmethod
+    def create_fixed_module(cls, candidates: List[Any], *, label: Optional[str] = None, **kwargs):
+        # same as ValueChoice
+        value = get_fixed_value(label)
+        if value not in candidates:
+            raise ValueError(f'Value {value} does not belong to the candidates: {candidates}.')
+        return value
 
 
 @basic_unit
