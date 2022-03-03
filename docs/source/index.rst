@@ -20,7 +20,6 @@ Neural Network Intelligence
     :caption: Advanced Materials
     :hidden:
 
-    Overview
     Auto (Hyper-parameter) Tuning <hyperparameter_tune>
     Neural Architecture Search <nas>
     Model Compression <model_compression>
@@ -41,7 +40,7 @@ Neural Network Intelligence
     Use Cases and Solutions <CommunitySharings/community_sharings>
     Research and Publications <ResearchPublications>
     FAQ <Tutorial/FAQ>
-    How to Contribute <contribution>
+    Contribution Guide <notes/contributing>
     Change Log <Release>
 
 

@@ -232,7 +232,6 @@ class InterleavedTrainValDataLoader(DataLoader):
     def __iter__(self):
         self.train_iter = iter(self.train_dataloader)
         self.val_iter = iter(self.val_dataloader)
-        return self
 
     def __next__(self):
         try:

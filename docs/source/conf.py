@@ -45,7 +45,7 @@ extensions = [
     'sphinx_gallery.gen_gallery',
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
-    'sphinxarg.ext',
+    'sphinxarg4nni.ext',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',

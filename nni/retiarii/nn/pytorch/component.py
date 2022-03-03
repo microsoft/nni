@@ -5,6 +5,8 @@ from typing import Callable, List, Union, Tuple, Optional
 import torch
 import torch.nn as nn
 
+from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
+
 from .api import LayerChoice
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
@@ -38,7 +40,15 @@ class Repeat(Mutable):
                                           List[nn.Module]],
                             depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
         repeat = get_fixed_value(label)
-        return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
+        result = nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
+
+        if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
+            # already has a mapping, will merge with it
+            prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
+            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'blocks.{v}' for k, v in prev_mapping.items()})
+        else:
+            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': 'blocks'})
+        return result
 
     def __init__(self,
                  blocks: Union[Callable[[int], nn.Module],

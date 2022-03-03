@@ -119,7 +119,7 @@ class Model:
         self.graphs: Dict[str, Graph] = {}
         self.evaluator: Optional[Evaluator] = None
 
-        self.history: List['Model'] = []
+        self.history: List['Mutation'] = []
 
         self.metric: Optional[MetricData] = None
         self.intermediate_metrics: List[MetricData] = []
