@@ -1,3 +1,5 @@
+:orphan:
+
 Python API Reference
 ====================
 

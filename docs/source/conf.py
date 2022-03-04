@@ -60,13 +60,21 @@ extensions = [
     'inplace_translation',
     'cardlinkitem',
     'patch_docutils',
+    'patch_autodoc',
 ]
 
 autosummary_imported_members = True
+autosummary_ignore_module_all = False
 autosummary_generate = True
 
 # Add mock modules
 autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter']
+
+autosummary_mock_imports = [
+    'nni.retiarii.codegen.tensorflow',
+    'nni.nas.benchmarks.nasbench101.db_gen',
+    'nni.tools.jupyter_extension.management',
+] + autodoc_mock_imports
 
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']

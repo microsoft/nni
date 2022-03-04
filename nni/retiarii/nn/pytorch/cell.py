@@ -32,7 +32,9 @@ _cell_op_factory_type = Callable[[int, int, Optional[int]], nn.Module]
 
 class Cell(nn.Module):
     """
-    Cell structure :footcite:p:`zoph2017neural,zoph2018learning,liu2018darts` that is popularly used in NAS literature.
+    Cell structure that is popularly used in NAS literature.
+
+    Refer to :footcite:t:`zoph2017neural,zoph2018learning,liu2018darts` for details.
     :footcite:t:`radosavovic2019network` is a good summary of how this structure works in practice.
 
     A cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from

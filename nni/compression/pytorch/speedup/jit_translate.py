@@ -14,12 +14,14 @@ logger.setLevel(logging.INFO)
 def translate_list(list_node, speedup=None):
     """
     Get the list of values from the list construct node.
+
     Parameters
-    ---------
+    ----------
     list_node: Torch.C.Value
         The cpp node of the target list.
     speedup: ModuleSpeed
         The Module speedup module.
+
     Returns
     -------
     values: list
@@ -45,12 +47,14 @@ def translate_list(list_node, speedup=None):
 def parse_constant(cvalue, speedup):
     """
     Parse the constant values from this Node
+
     Parameters
     ----------
     cvalue: Torch.C.Value
         The cpp node of the target constant value.
     speedup: ModelSpeedup
         The Model speedup module.
+
     Returns
     -------
     value: int/float/tensor
