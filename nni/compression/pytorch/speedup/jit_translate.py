@@ -10,6 +10,19 @@ import torch
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+# to exclude partial
+
+__all__ = [
+    'adaptive_avgpool_python', 'add_python', 'avgpool2d_python', 'cat_python', 'contiguous_python',
+    'div_python', 'dropout_python', 'exp_python', 'flatten_python', 'floor_div_python', 'gelu_python',
+    'getattr_python', 'jit_to_python_function', 'matmul_python', 'mean_python',
+    'mul_python', 'num2tensor_python', 'parse_constant', 'permute_python', 'relu_inplace_python',
+    'relu_python', 'reshape_python', 'select_python', 'sigmoid_python', 'size_python', 'slice_python',
+    'softmax_python', 'squeeze_python', 'to_python', 'toint_python', 'torch', 'trans_from_jit_to_python',
+    'translate_list', 'transpose2_python', 'transpose_python', 'tupleunpack_python', 'typeas_python',
+    'unsqueeze_python', 'upsample_bilinear2d_python', 'view_python'
+]
+
 
 def translate_list(list_node, speedup=None):
     """
