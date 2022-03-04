@@ -1,7 +1,7 @@
 Model Compression Overview
 ==========================
 
-Deep neural networks (DNNs) have achieved great success in many tasks like image recognition and language translation.
+Deep neural networks (DNNs) have achieved great success in many tasks like embedded development and scenarios that needs rapid feedbacks.
 However, typical neural networks are both computationally expensive and energy-intensive,
 which can be difficult to be deployed on devices with low computation resources or with strict latency requirements.
 Therefore, a natural thought is to perform model compression to reduce model size and accelerate model training/inference without losing performance significantly.
@@ -25,11 +25,11 @@ On the other hand, users could easily customize their new compression algorithms
 
 There are several core features supported by NNI model compression:
 
-* Supports many popular pruning and quantization algorithms.
-* Automates model pruning and quantization process with state-of-the-art strategies and NNI's auto tuning power.
-* Speeds up a compressed model to make it have lower inference latency and also make it smaller.
-* Provides friendly and easy-to-use compression utilities for users to dive into the compression process and results.
-* Concises interface for users to customize their own compression algorithms.
+* Support many popular pruning and quantization algorithms.
+* Automate model pruning and quantization process with state-of-the-art strategies and NNI's auto tuning power.
+* Speed up a compressed model to make it have lower inference latency and also make it smaller.
+* Provide friendly and easy-to-use compression utilities for users to dive into the compression process and results.
+* Concise interface for users to customize their own compression algorithms.
 
 
 Compression Pipeline
@@ -39,18 +39,13 @@ Compression Pipeline
    :target: ../../img/compression_flow.jpg
    :alt: 
 
-The overall compression pipeline in NNI is shown above. For compressing a pretrained model, pruning and quantization can be used alone or in combination. 
+The overall compression pipeline in NNI is shown above. For compressing a pretrained model, pruning and quantization can be used alone or in combination.
+If users want to apply both, a sequential mode is recommended as common practise.
 
 .. note::
-  Note that NNI compression algorithms are not meant to compress model but for applying masks on weights. Whereas NNI’s speedup tool can truly compress model and reduce latency.
-  To obtain a truly compact model, users should conduct :doc:`model speedup <../tutorials/pruning_speed_up>`. The following figure shows how compression and speeding up work on your models.
+  Note that NNI pruners or quantizers are not meant to physically compact the model but for simulating the compression effect. Whereas NNI speedup tool can truly compress model by changing the network architecture and therefore reduce latency.
+  To obtain a truly compact model, users should conduct :doc:`pruning speedup <../tutorials/pruning_speed_up>` or :doc:`quantizaiton speedup <../tutorials/quantization_speed_up>`. 
   The interface and APIs are unified for both PyTorch and TensorFlow. Currently only PyTorch version has been supported, and TensorFlow version will be supported in future.
-
-
-.. image:: ../../img/pipeline_compress.jpg
-   :target: ../../img/pipeline_compress.jpg
-   :alt:
-
 
 
 Supported Algorithms
@@ -134,6 +129,14 @@ Model Speedup
 The final goal of model compression is to reduce inference latency and model size.
 However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model.
 For example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms.
-Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model.
+Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model. The following figure shows how NNI prunes and speeds up your models. 
+
+
+.. image:: ../../img/pipeline_compress.jpg
+   :target: ../../img/pipeline_compress.jpg
+   :alt:
+
+
+
 The detailed tutorial of Speed Up Model with Mask can be found :doc:`here <../tutorials/pruning_speed_up>`.
 The detailed tutorial of Speed Up Model with Calibration Config can be found :doc:`here <../tutorials/quantization_speed_up>`.
