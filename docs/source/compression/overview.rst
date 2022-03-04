@@ -13,6 +13,7 @@ We further elaborate on the two methods, pruning and quantization, in the follow
 
 .. image:: ../../img/prune_quant.jpg
    :target: ../../img/prune_quant.jpg
+   :scale: 40%
    :alt:
 
 
@@ -134,6 +135,7 @@ Given the output masks and quantization bits produced by those algorithms, NNI c
 
 .. image:: ../../img/pipeline_compress.jpg
    :target: ../../img/pipeline_compress.jpg
+   :scale: 40%
    :alt:
 
 
