@@ -68,7 +68,7 @@ autosummary_ignore_module_all = False
 autosummary_generate = True
 
 # Add mock modules
-autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter']
+autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter', 'azureml']
 
 autosummary_mock_imports = [
     'nni.retiarii.codegen.tensorflow',
