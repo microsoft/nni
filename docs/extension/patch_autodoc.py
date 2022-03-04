@@ -2,9 +2,11 @@
 
 import inspect
 import os
-from typing import List, Any
+from typing import List, Tuple, List
 
 import sphinx
+from docutils import nodes
+from docutils.nodes import Node
 
 
 class ClassNewBlacklistPatch:
@@ -52,7 +54,8 @@ def trial_tool_import_patch(*args, **kwargs):
 class FindAutosummaryFilesPatch:
     """Ignore certain files as they are completely un-importable."""
 
-    original = None
+    find_autosummary_original = None
+    get_table_original = None
 
     blacklist = [
         'nni.retiarii.codegen.tensorflow',
@@ -61,26 +64,91 @@ class FindAutosummaryFilesPatch:
     ]
 
     def restore(self, *args, **kwargs):
-        assert self.original is not None
-        sphinx.ext.autosummary.generate.find_autosummary_in_files = self.original
+        assert self.find_autosummary_original is not None and self.get_table_original is not None
+        sphinx.ext.autosummary.generate.find_autosummary_in_files = self.find_autosummary_original
+        sphinx.ext.autosummary.Autosummary.get_table = self.get_table_original
 
     def patch(self, app, config):
+        from sphinx.ext.autosummary import Autosummary
         from sphinx.ext.autosummary.generate import AutosummaryEntry
 
-        self.original = sphinx.ext.autosummary.generate.find_autosummary_in_files
+        self.find_autosummary_original = sphinx.ext.autosummary.generate.find_autosummary_in_files
+        self.get_table_original = Autosummary.get_table
 
         def find_autosummary_in_files(filenames: List[str]) -> List[AutosummaryEntry]:
-            items: List[AutosummaryEntry] = self.original(filenames)
+            items: List[AutosummaryEntry] = self.find_autosummary_original(filenames)
             items = [item for item in items if item.name not in config.autosummary_mock_imports]
             return items
 
+        def get_table(autosummary, items: List[Tuple[str, str, str, str]]) -> List[Node]:
+            col_spec, autosummary_table = self.get_table_original(autosummary, items)
+            if 'toctree' in autosummary.options:
+                # probably within modules
+                table = autosummary_table[0]
+                tgroup = table[0]
+                tbody = tgroup[-1]
+                for row in tbody:
+                    entry = row[0]
+                    paragraph = entry[0]
+                    pending_xref = paragraph[0]
+
+                    # get the reference path and check whether it has been generated
+                    # if path to reference is changed, this should also be changed
+                    reftarget_path = 'reference/_modules/' + pending_xref['reftarget']
+
+                    if reftarget_path in autosummary.env.found_docs:
+                        # make :py:obj:`xxx` looks like a :doc:`xxx`
+                        pending_xref['refdomain'] = 'std'
+                        pending_xref['reftype'] = 'doc'
+                        pending_xref['refexplicit'] = False
+                        pending_xref['refwarn'] = True
+                        pending_xref['reftarget'] = '/' + reftarget_path
+                        pending_xref['refkeepformat'] = True
+
+            return [col_spec, autosummary_table]
+
         sphinx.ext.autosummary.generate.find_autosummary_in_files = find_autosummary_in_files
+        sphinx.ext.autosummary.Autosummary.get_table = get_table
+
+
+class ResolveDocPatch:
+    """Keep literal format in :doc: resolver"""
+
+    original = None
+
+    def restore(self, *args, **kwargs):
+        assert self.original is not None
+        sphinx.domains.std.StandardDomain._resolve_doc_xref = self.original
+
+    def patch(self, *args, **kwargs):
+        self.original = sphinx.domains.std.StandardDomain._resolve_doc_xref
+
+        def doc_xref_resolver(std_domain, env, fromdocname, builder, typ, target, node, contnode):
+            if not node.get('refkeepformat'):
+                # redirect to original implementation to make it safer
+                return self.original(std_domain, env, fromdocname, builder, typ, target, node, contnode)
+
+            # directly reference to document by source name; can be absolute or relative
+            from sphinx.domains.std import docname_join, make_refnode
+            refdoc = node.get('refdoc', fromdocname)
+            docname = docname_join(refdoc, node['reftarget'])
+            if docname not in env.all_docs:
+                return None
+            else:
+                innernode = node[0]  # no astext here, to keep literal intact
+                return make_refnode(builder, fromdocname, docname, None, innernode)
+
+        sphinx.domains.std.StandardDomain._resolve_doc_xref = doc_xref_resolver
 
 
 def setup(app):
     # See life-cycle of sphinx app here:
     # https://www.sphinx-doc.org/en/master/extdev/appapi.html#sphinx-core-events
     patch = ClassNewBlacklistPatch()
+    app.connect('env-before-read-docs', patch.patch)
+    app.connect('env-merge-info', patch.restore)
+
+    patch = ResolveDocPatch()
     app.connect('env-before-read-docs', patch.patch)
     app.connect('env-merge-info', patch.restore)
 
