@@ -11,6 +11,11 @@ Quantization refers to compressing models by reducing the number of bits require
 We further elaborate on the two methods, pruning and quantization, in the following chapters. Besides, the figure below visualizes the difference between these two methods.
 
 
+.. image:: ../../img/prune_quant.jpg
+   :target: ../../img/prune_quant.jpg
+   :alt:
+
+
 
 NNI provides an easy-to-use toolkit to help users design and use model pruning and quantization algorithms.
 For users to compress their models, they only need to add several lines in their code.
@@ -37,9 +42,16 @@ Compression Pipeline
 The overall compression pipeline in NNI is shown above. For compressing a pretrained model, pruning and quantization can be used alone or in combination. 
 
 .. note::
-  Since NNI compression algorithms are not meant to compress model while NNI speedup tool can truly compress model and reduce latency.
-  To obtain a truly compact model, users should conduct :doc:`model speedup <../tutorials/pruning_speed_up>`.
+  Note that NNI compression algorithms are not meant to compress model but for applying masks on weights. Whereas NNI’s speedup tool can truly compress model and reduce latency.
+  To obtain a truly compact model, users should conduct :doc:`model speedup <../tutorials/pruning_speed_up>`. The following figure shows how compression and speeding up work on your models.
   The interface and APIs are unified for both PyTorch and TensorFlow. Currently only PyTorch version has been supported, and TensorFlow version will be supported in future.
+
+
+.. image:: ../../img/pipeline_compress.jpg
+   :target: ../../img/pipeline_compress.jpg
+   :alt:
+
+
 
 Supported Algorithms
 --------------------
