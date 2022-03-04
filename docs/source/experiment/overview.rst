@@ -17,5 +17,5 @@ Before reading the following content, you are recommended to go through the quic
     :maxdepth: 2
 
     Training Services <training_service>
-    WebUI <webui>
+    Webportal <webportal>
     Experiment Management <exp_management>
