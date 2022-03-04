@@ -8,7 +8,6 @@ from nni.retiarii.serializer import basic_unit
 
 from .api import LayerChoice
 from .utils import generate_new_label
-from ...utils import version_larger_equal
 
 __all__ = ['AutoActivation']
 
@@ -99,22 +98,20 @@ class UnaryTanh(nn.Module):
     def forward(self, x):
         return torch.tanh(x)
 
-if not version_larger_equal(torch.__version__, TorchVersion):
-    @basic_unit
-    class UnaryAsinh(nn.Module):
-        def forward(self, x):
-            return torch.asinh(x)
+@basic_unit
+class UnaryAsinh(nn.Module):
+    def forward(self, x):
+        return torch.asinh(x)
 
 @basic_unit
 class UnaryAtan(nn.Module):
     def forward(self, x):
         return torch.atan(x)
 
-if not version_larger_equal(torch.__version__, TorchVersion):
-    @basic_unit
-    class UnarySinc(nn.Module):
-        def forward(self, x):
-            return torch.sinc(x)
+@basic_unit
+class UnarySinc(nn.Module):
+    def forward(self, x):
+        return torch.sinc(x)
 
 @basic_unit
 class UnaryMax(nn.Module):
@@ -149,11 +146,8 @@ class UnaryErf(nn.Module):
 unary_modules = ['UnaryIdentity', 'UnaryNegative', 'UnaryAbs', 'UnarySquare', 'UnaryPow',
     'UnarySqrt', 'UnaryMul', 'UnaryAdd', 'UnaryLogAbs', 'UnaryExp', 'UnarySin', 'UnaryCos',
     'UnarySinh', 'UnaryCosh', 'UnaryTanh', 'UnaryAtan', 'UnaryMax',
-    'UnaryMin', 'UnarySigmoid', 'UnaryLogExp', 'UnaryExpSquare', 'UnaryErf']
-
-if not version_larger_equal(torch.__version__, TorchVersion):
-    unary_modules.append('UnaryAsinh')
-    unary_modules.append('UnarySinc')
+    'UnaryMin', 'UnarySigmoid', 'UnaryLogExp', 'UnaryExpSquare', 'UnaryErf',
+    'UnaryAsinh', 'UnarySinc']
 
 # ============== binary function modules ==============
 

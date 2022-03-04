@@ -157,7 +157,13 @@ def _torchscript_patch(cls) -> None:
         cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
     if hasattr(cls, 'trace_symbol'):
         # these must all exist or all non-exist
-        cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
-        cls.trace_args = torch.jit.unused(cls.trace_args)
-        cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
-        cls.trace_copy = torch.jit.ignore(cls.trace_copy)
+        try:
+            cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
+            cls.trace_args = torch.jit.unused(cls.trace_args)
+            cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
+            cls.trace_copy = torch.jit.ignore(cls.trace_copy)
+        except AttributeError as e:
+            if 'property' in str(e):
+                raise RuntimeError('Trace on PyTorch module failed. Your PyTorch version might be outdated. '
+                                   'Please try to upgrade PyTorch.')
+            raise
