@@ -13,7 +13,10 @@ from typeguard import TypeWarning
 
 from nni.common.hpo_utils import ParameterSpec
 
-MutateHook = Callable[[nn.Module, str, Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
+__all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
+
+
+MutationHook = Callable[[nn.Module, str, Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
 
 
 class BaseSuperNetModule(nn.Module):
@@ -24,8 +27,11 @@ class BaseSuperNetModule(nn.Module):
 
     A super-net module usually corresponds to one sample. But two exceptions:
 
-    * A module can have multiple sample point. For example, a convolution-2d can sample kernel size, channels at the same time.
-    * Multiple modules can share one sample point. For example, multiple layer choices with the same label.
+    * A module can have multiple parameter spec. For example, a convolution-2d can sample kernel size, channels at the same time.
+    * Multiple modules can share one parameter spec. For example, multiple layer choices with the same label.
+
+    For value choice compositions, the parameter spec are bounded to the underlying (original) value choices,
+    rather than their compositions.
     """
 
     def resample(self, memo: Dict[str, Any] = None) -> None:
@@ -42,7 +48,7 @@ class BaseSuperNetModule(nn.Module):
     def export(self, memo: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Export the final architecture within this module.
-        It should have the same keys as ``space_spec()``.
+        It should have the same keys as ``search_space_spec()``.
 
         Parameters
         ----------
@@ -51,9 +57,9 @@ class BaseSuperNetModule(nn.Module):
         """
         raise NotImplementedError()
 
-    def space_spec(self) -> Dict[str, ParameterSpec]:
+    def search_space_spec(self) -> Dict[str, ParameterSpec]:
         """
-        Space specification.
+        Space specification (sample points).
         Mapping from spec name to ParameterSpec. The names in choices should be in the same format of export.
 
         For example: ::
@@ -64,7 +70,7 @@ class BaseSuperNetModule(nn.Module):
 
 
 def traverse_and_mutate_submodules(
-    root_module: nn.Module, hooks: List[MutateHook], topdown: bool = True
+    root_module: nn.Module, hooks: List[MutationHook], topdown: bool = True
 ) -> List[BaseSuperNetModule]:
     """
     Traverse the module-tree of ``root_module``, and call ``hooks`` on every tree node.
@@ -101,25 +107,27 @@ def traverse_and_mutate_submodules(
             mutate_result = None
 
             for hook in hooks:
-                mutate_result = hook(child, name, memo)
+                hook_suggest = hook(child, name, memo)
 
                 # parse the mutate result
-                if isinstance(mutate_result, tuple):
-                    mutate_result, suppress = mutate_result
-                elif mutate_result is True:
-                    raise ValueError('Mutation hook cannot return a single `true`.')
-                elif not mutate_result:
-                    mutate_result, suppress = None, False
-                elif isinstance(mutate_result, nn.Module):
+                if isinstance(hook_suggest, tuple):
+                    hook_suggest, suppress = hook_suggest
+                elif hook_suggest is True:
+                    hook_suggest, suppress = None, True
+                elif not hook_suggest:
+                    hook_suggest, suppress = None, False
+                elif isinstance(hook_suggest, nn.Module):
                     suppress = True
                 else:
-                    raise TypeError(f'Mutation hook returned {mutate_result} of unsupported type: {type(mutate_result)}.')
+                    raise TypeError(f'Mutation hook returned {hook_suggest} of unsupported type: {type(hook_suggest)}.')
 
-                if mutate_result is not None:
-                    if not isinstance(mutate_result, BaseSuperNetModule):
+                if hook_suggest is not None:
+                    if not isinstance(hook_suggest, BaseSuperNetModule):
                         warnings.warn("Mutation hook didn't return a BaseSuperNetModule. It will be ignored in hooked module list.",
                                       TypeWarning)
-                    setattr(m, name, mutate_result)
+                    setattr(m, name, hook_suggest)
+
+                    mutate_result = hook_suggest
 
                 # if suppress, no further mutation hooks are called
                 if suppress:
@@ -139,10 +147,28 @@ def traverse_and_mutate_submodules(
 
 class BaseOneShotLightningModule(pl.LightningModule):
 
-    _custom_replace_dict_note = """custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-        The custom xxxChoice replace method. Keys should be ``xxxChoice`` type.
-        Values should callable accepting an ``nn.Module`` and returning an ``nn.Module``.
-        This custom replace dict will override the default replace dict of each NAS method.
+    _mutation_hooks_note = """mutation_hooks : List[MutationHook]
+        Mutation hooks are callable that inputs an Module and returns a :class:`BaseSuperNetModule`.
+        They are called in :meth:`traverse_and_mutate_submodules`, on each submodules.
+        For each submodule, the hook list are called subsequently,
+        the later hooks can see the result from previous hooks.
+        The modules that are processed by ``mutation_hooks`` will be replaced by the returned module,
+        stored in ``nas_modules``, and be the focus of the NAS algorithm.
+        The hook list will be appended by ``default_mutation_hooks`` in each one-shot module.
+        To be more specific, the input arguments are three arguments:
+        (1) a module that might be processed,
+        (2) name of the module in its parent module, and
+        (3) a memo dict whose usage depends on the particular algorithm.
+        Note that there won't be any hooks called on root module.
+        The returned arguments can be also one of the three kinds:
+        (1) :class:`BaseSuperNetModule` or None, and boolean,
+        (2) boolean, and
+        (3) :class:`BaseSuperNetModule` or None.
+        The boolean value is ``suppress`` indicates whether the folliwng hooks should be called.
+        When it's true, it suppresses the subsequent hooks, and they will never be invoked.
+        Without boolean value specified, it's assumed to be false.
+        If a none value appears on the place of :class:`BaseSuperNetModule`, it means the hook suggests to
+        keep the module unchanged, and nothing will happen.
     """
 
     _inner_module_note = """inner_module : pytorch_lightning.LightningModule
@@ -168,31 +194,29 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     Attributes
     ----------
-    nas_modules : List[nn.Module]
-        The replace result of a specific NAS method.
-        xxxChoice will be replaced with some other modules with respect to the NAS method.
+    nas_modules : List[BaseSuperNetModule]
+        Modules that have been mutated, which the search algorithms should care about.
 
     Parameters
     ----------
-    """ + _inner_module_note + _custom_replace_dict_note + """
-    custom_match_and_replace : List[Callable[[nn.Module], (nn.Module, nn.Moduel)]]
-        The custom xxxChoice match and replace method. Each method should take an nn.Module and yields
-        two modules (to_sample, to_replace). The ''to_sample'' will be placed in ''self.nas_module'' to be
-        sampled, and the ''to_replace'' will replace the input module and forward instead of it.
-    """
+    """ + _inner_module_note + _mutation_hooks_note
 
     automatic_optimization = False
 
-    def __init__(self, base_model, custom_match_and_replace=None):
+    def default_mutation_hooks(self) -> List[MutationHook]:
+        """Override this to define class-default mutation hooks."""
+        return []
+
+    def __init__(self, base_model: pl.LightningModule, mutation_hooks: List[MutationHook] = None):
         super().__init__()
         assert isinstance(base_model, pl.LightningModule)
         self.model = base_model
 
-        # traverse the model, calling hooks on every submodule
+        # append the default hooks
+        mutation_hooks = (mutation_hooks or []) + self.default_mutation_hooks()
 
-        # replace xxxChoice with respect to NAS alg
-        # replaced modules are stored in self.nas_modules
-        self.nas_modules = _replace_module_with_type(self.model, custom_match_and_replace, self.match_and_replace())
+        # traverse the model, calling hooks on every submodule
+        self.nas_modules = traverse_and_mutate_submodules(self.model, mutation_hooks, topdown=True)
 
     def forward(self, x):
         return self.model(x)
@@ -289,22 +313,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
             Optimizers used by a specific NAS algorithm. Return None if no architecture optimizers are needed.
         """
         return None
-
-    @staticmethod
-    def match_and_replace():
-        """
-        Default xxxChoice replace method. This is called in __init__ to get the default replace
-        functions for your NAS algorithm. Note that your default replace functions will be
-        override by user-defined custom_replace_dict.
-
-        Returns
-        ----------
-        match_and_replace_funcs : List[Callable[[nn.Module], (nn.Module, nn.Module)]]
-            The replace function list. Each function takes an nn.Module and yields two modules like
-            ''to_sample, to_replace''. The ''to_sample'' will be placed in ''self.nas_module'' to be
-            sampled, and the ''to_replace'' will replace the input module and forward instead of it.
-        """
-        return []
 
     def call_lr_schedulers(self, batch_index):
         """
