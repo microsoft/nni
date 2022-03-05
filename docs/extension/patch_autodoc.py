@@ -1,4 +1,12 @@
-"""Hack autodoc to get more fine-grained docstring rendering contol."""
+"""Hack autodoc to get more fine-grained docstring rendering contol.
+
+autodoc and autosummary didn't expose many of their controls to sphinx users via config.
+To customize them, the "correct" approach seems to copy and paste all their code and rewrite some part.
+To avoid doing this, I monkey-patched some of the functions to keep the changes minimal.
+
+Note that some of them are related to sphinx internal APIs, which can be broken when sphinx got upgraded.
+Try to keep them updated, or pin to a particular sphinx version.
+"""
 
 import inspect
 import os
@@ -40,7 +48,9 @@ def disable_trace_patch(*args, **kwargs):
 
 
 def trial_tool_import_patch(*args, **kwargs):
-    """Insert dummy trial tool variable to ensure trial_tool can be imported."""
+    """Insert dummy trial tool variable to ensure trial_tool can be imported.
+    See nni/tools/trial_tool/constants.py
+    """
     os.environ.update({
         'NNI_OUTPUT_DIR': '/tmp',
         'NNI_PLATFORM': 'unittest',
@@ -51,17 +61,21 @@ def trial_tool_import_patch(*args, **kwargs):
     })
 
 
-class FindAutosummaryFilesPatch:
-    """Ignore certain files as they are completely un-importable."""
+class AutoSummaryPatch:
+    """Ignore certain files as they are completely un-importable. It patches:
+
+    - find_autosummary_in_files: Some modules cannot be imported at all due to dependency issues or some special design.
+      They need to skipped when running autosummary generate.
+    - Autosummary.get_table: The original autosummary creates an index for each module, and the module links in autosummary table
+      points to the corresponding generated module page (by using ``:py:module:xxx``). This doesn't work for us,
+      because we have used automodule else (other than autosummary) in our docs, and to avoid duplicate index,
+      we have to set ``:noindex:`` in autosummary template (see docs/templates/autosummary/module.rst).
+      This breaks most of the links, where they fail to link to generated module page by using index.
+      We here update the python domain role, to a general domain role (``:doc:``), and link to the page directly.
+    """
 
     find_autosummary_original = None
     get_table_original = None
-
-    blacklist = [
-        'nni.retiarii.codegen.tensorflow',
-        'nni.nas.benchmarks.nasbench101.db_gen',
-        'nni.tools.jupyter_extension.management',
-    ]
 
     def restore(self, *args, **kwargs):
         assert self.find_autosummary_original is not None and self.get_table_original is not None
@@ -103,6 +117,7 @@ class FindAutosummaryFilesPatch:
                         pending_xref['refexplicit'] = False
                         pending_xref['refwarn'] = True
                         pending_xref['reftarget'] = '/' + reftarget_path
+                        # a special tag to enable `ResolveDocPatch`
                         pending_xref['refkeepformat'] = True
 
             return [col_spec, autosummary_table]
@@ -112,7 +127,8 @@ class FindAutosummaryFilesPatch:
 
 
 class ResolveDocPatch:
-    """Keep literal format in :doc: resolver"""
+    """Original :doc: role throws away all the format, and keep raw text only.
+    We wish to keep module names literal. This patch is to keep literal format in :doc: resolver."""
 
     original = None
 
@@ -157,6 +173,6 @@ def setup(app):
     # autosummary generate happens at builder-inited
     app.connect('config-inited', trial_tool_import_patch)
 
-    autosummary_patch = FindAutosummaryFilesPatch()
+    autosummary_patch = AutoSummaryPatch()
     app.connect('config-inited', autosummary_patch.patch)
     app.connect('env-merge-info', autosummary_patch.restore)
