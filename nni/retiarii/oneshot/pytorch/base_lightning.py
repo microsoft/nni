@@ -68,6 +68,15 @@ class BaseSuperNetModule(nn.Module):
         """
         raise NotImplementedError()
 
+    @classmethod
+    def mutate(cls, module: nn.Module, name: str, memo: Dict[str, Any]) -> \
+            Union['BaseSuperNetModule', bool, Tuple['BaseSuperNetModule', bool]]:
+        """This is a mutation hook that creates a :class:`BaseSuperNetModule`.
+        The method should be implemented in each specific super-net module,
+        because they usually have specific rules about what kind of modules to operate on.
+        """
+        raise NotImplementedError()
+
 
 def traverse_and_mutate_submodules(
     root_module: nn.Module, hooks: List[MutationHook], topdown: bool = True
@@ -149,21 +158,27 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     _mutation_hooks_note = """mutation_hooks : List[MutationHook]
         Mutation hooks are callable that inputs an Module and returns a :class:`BaseSuperNetModule`.
-        They are called in :meth:`traverse_and_mutate_submodules`, on each submodules.
-        For each submodule, the hook list are called subsequently,
+        They are invoked in :meth:`traverse_and_mutate_submodules`, on each submodules.
+        For each submodule, the hook list are invoked subsequently,
         the later hooks can see the result from previous hooks.
         The modules that are processed by ``mutation_hooks`` will be replaced by the returned module,
         stored in ``nas_modules``, and be the focus of the NAS algorithm.
+
         The hook list will be appended by ``default_mutation_hooks`` in each one-shot module.
+
         To be more specific, the input arguments are three arguments:
-        (1) a module that might be processed,
-        (2) name of the module in its parent module, and
-        (3) a memo dict whose usage depends on the particular algorithm.
+
+        #. a module that might be processed,
+        #. name of the module in its parent module, and
+        #. a memo dict whose usage depends on the particular algorithm.
+
         Note that there won't be any hooks called on root module.
         The returned arguments can be also one of the three kinds:
-        (1) :class:`BaseSuperNetModule` or None, and boolean,
-        (2) boolean, and
-        (3) :class:`BaseSuperNetModule` or None.
+
+        #. :class:`BaseSuperNetModule` or None, and boolean,
+        #. boolean, and
+        #. :class:`BaseSuperNetModule` or None.
+
         The boolean value is ``suppress`` indicates whether the folliwng hooks should be called.
         When it's true, it suppresses the subsequent hooks, and they will never be invoked.
         Without boolean value specified, it's assumed to be false.

@@ -22,6 +22,77 @@ from .utils import (get_naive_match_and_replace,
                     get_sampling_valuechoice_match_and_replace)
 
 
+class PathSamplingLayer(nn.Module):
+    """
+    Mixed module, in which fprop is decided by exactly one or multiple (sampled) module.
+    If multiple module is selected, the result will be sumed and returned.
+
+    Attributes
+    ----------
+    sampled : int or list of int
+        Sampled module indices.
+    mask : tensor
+        A multi-hot bool 1D-tensor representing the sampled mask.
+    """
+
+    def __init__(self, paths: Dict[str, nn.Module]):
+        super().__init__()
+        self.op_names = []
+        for name, module in layer_choice.named_children():
+            self.add_module(name, module)
+            self.op_names.append(name)
+        assert self.op_names, 'There has to be at least one op to choose from.'
+        self.sampled = None  # sampled can be either a list of indices or an index
+        self.label = layer_choice.label
+
+    def forward(self, *args, **kwargs):
+        assert self.sampled is not None, 'At least one path needs to be sampled before fprop.'
+        if isinstance(self.sampled, list):
+            return sum([getattr(self, self.op_names[i])(*args, **kwargs) for i in self.sampled])  # pylint: disable=not-an-iterable
+        else:
+            return getattr(self, self.op_names[self.sampled])(*args, **kwargs)  # pylint: disable=invalid-sequence-index
+
+    def __len__(self):
+        return len(self.op_names)
+
+    @property
+    def mask(self):
+        return _get_mask(self.sampled, len(self))
+
+
+class PathSamplingInputChoice(nn.Module):
+    """
+    Mixed input. Take a list of tensor as input, select some of them and return the sum.
+
+    Attributes
+    ----------
+    sampled : int or list of int
+        Sampled module indices.
+    mask : tensor
+        A multi-hot bool 1D-tensor representing the sampled mask.
+    """
+
+    def __init__(self, input_choice):
+        super(PathSamplingInputChoice, self).__init__()
+        self.n_candidates = input_choice.n_candidates
+        self.n_chosen = input_choice.n_chosen
+        self.sampled = None
+        self.label = input_choice.label
+
+    def forward(self, input_tensors):
+        if isinstance(self.sampled, list):
+            return sum([input_tensors[t] for t in self.sampled])  # pylint: disable=not-an-iterable
+        else:
+            return input_tensors[self.sampled]
+
+    def __len__(self):
+        return self.n_candidates
+
+    @property
+    def mask(self):
+        return _get_mask(self.sampled, len(self))
+
+
 class EnasModule(BaseOneShotLightningModule):
     _enas_note = """
     The implementation of ENAS :cite:p:`pham2018efficient`. There are 2 steps in an epoch.
@@ -170,7 +241,7 @@ class RandomSamplingModule(BaseOneShotLightningModule):
     ----------
     {{module_params}}
     {base_params}
-    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
     __doc__ = _random_note.format(
         module_params=BaseOneShotLightningModule._inner_module_note,
@@ -183,7 +254,7 @@ class RandomSamplingModule(BaseOneShotLightningModule):
         return self.model.training_step(batch, batch_idx)
 
     @staticmethod
-    def match_and_replace():
+    def default_mutation_hooks():
         # 返回 to_samples, to_replace
         # to_samples : List[nn.Module]
         #   因为可能一个 Module 里有若干 Valuechoice，所以返回的是list
