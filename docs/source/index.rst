@@ -21,7 +21,7 @@ Neural Network Intelligence
     :hidden:
 
     Overview
-    Auto Hyperparameter Optimization <hpo>
+    Auto Hyperparameter Optimization <hpo/overview>
     Neural Architecture Search <nas/index>
     Model Compression <compression>
     Feature Engineering <feature_engineering>
