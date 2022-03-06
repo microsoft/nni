@@ -22,9 +22,10 @@ Neural Network Intelligence
 
     Overview
     Auto Hyperparameter Optimization <hpo>
-    Neural Architecture Search <nas>
-    Model Compression <model_compression>
+    Neural Architecture Search <nas/index>
+    Model Compression <compression>
     Feature Engineering <feature_engineering>
+    Experiment <experiment/overview>
 
 ..  toctree::
     :maxdepth: 2

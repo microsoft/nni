@@ -12,5 +12,5 @@ References
     SDK API References <sdk_reference>
     Supported Framework Library <SupportedFramework_Library>
     Launch from Python <Tutorial/HowToLaunchFromPython>
-    Shared Storage <Tutorial/HowToUseSharedStorage>
     Tensorboard <Tutorial/Tensorboard>
+    Compression <compression/reference>

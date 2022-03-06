@@ -7,6 +7,4 @@ Python API Reference
     :maxdepth: 1
 
     Auto Tune <autotune_ref>
-    NAS <NAS/ApiReference>
-    Compression <Compression/CompressionReference>
     Python API <Tutorial/HowToLaunchFromPython>
