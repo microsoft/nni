@@ -101,4 +101,5 @@ After you are familiar with basic usage, you can explore more HPO features:
   * :doc:`nnictl: Use command line tool to create and manage experiments </reference/nnictl>`
   * :doc:`Custom tuner: Implement your own tuner <custom_algorithm>`
   * :doc:`Tensorboard support <tensorboard>`
+  * :doc:`Tuner benchmark <hpo_benchmark>`
   * :doc:`NNI Annotation (legacy) <nni_annotation>`

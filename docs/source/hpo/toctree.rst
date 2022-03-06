@@ -4,7 +4,11 @@ FIXME
     search_space
     tuners
     assessors
-    custom_algorithm.rst
-    custom_algorithm_installation.rst
-    tensorboard.rst
-    nni_annotation.rst
+    custom_algorithm
+    custom_algorithm_installation
+    tensorboard
+    hpo_benchmark
+    hpo_benchmark_stats
+    nni_annotation
+    /tutorials/hpo_quickstart_tensorflow/main
+    /tutorials/hpo_quickstart_tensorflow/model

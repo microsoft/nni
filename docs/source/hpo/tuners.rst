@@ -95,6 +95,6 @@ Comparison
 
 These articles have compared built-in tuners' performance on some different tasks:
 
-:doc:`/hpo_benchmark_stats`
+:doc:`hpo_benchmark_stats`
 
 :doc:`/CommunitySharings/HpoComparison`
