@@ -1,4 +1,4 @@
-Customize-Tuner
+Customize Tuner
 ===============
 
 NNI provides state-of-the-art tuning algorithm in builtin-tuners. NNI supports to build a tuner by yourself for tuning demand.

@@ -1,5 +1,5 @@
-Builtin-Assessors
-=================
+Assessor: Early Stopping
+========================
 
 In order to save on computing resources, NNI supports an early stopping policy and has an interface called **Assessor** to do this job.
 

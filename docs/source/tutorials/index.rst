@@ -161,6 +161,58 @@ Tutorials
 
 
 
+.. _sphx_glr_tutorials_hpo_quickstart_tensorflow:
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The tutorial consists of 4 steps: ">
+
+.. only:: html
+
+ .. figure:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_main_thumb.png
+     :alt: NNI HPO Quickstart with TensorFlow
+
+     :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_main.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/hpo_quickstart_tensorflow/main
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="It can be run directly and will have the exact same result as original version.">
+
+.. only:: html
+
+ .. figure:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_model_thumb.png
+     :alt: Port TensorFlow Quickstart to NNI
+
+     :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_model.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/hpo_quickstart_tensorflow/model
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
 .. only:: html
 
  .. rst-class:: sphx-glr-signature

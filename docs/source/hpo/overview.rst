@@ -1,14 +1,6 @@
 Hyperparameter Optimization Overview
 ====================================
 
-.. toctree::
-    :hidden:
-    :titlesonly:
-
-    search_space
-    tuners
-    assessors
-
 Auto hyperparameter optimization (HPO), or auto tuning, is one of the key features of NNI.
 
 Introduction to HPO
@@ -98,21 +90,15 @@ Tutorials
 To start using NNI HPO, choose the tutorial of your favorite framework:
 
   * PyTorch MNIST tutorial
-  * TensorFlow MNIST tutorial
-  * Scikit-learn classification tutorial
-
-(FIXME: link)
+  * :doc:`TensorFlow MNIST tutorial </tutorials/hpo_quickstart_tensorflow/main>`
 
 Extra Features
 --------------
 
 After you are familiar with basic usage, you can explore more HPO features:
 
-  * Assessor: Early stop non-optimal models
-  * nnictl: Use command line tool to create and manage experiments
-  * Custom tuner: Implement your own tuner
-  * Tensorboard support
-  * Shared storage (experimental)
-  * NNI Annotation (legacy)
-
-(FIXME: link)
+  * :doc:`Assessor: Early stop non-optimal models <assessors>`
+  * :doc:`nnictl: Use command line tool to create and manage experiments </reference/nnictl>`
+  * :doc:`Custom tuner: Implement your own tuner <custom_algorithm>`
+  * :doc:`Tensorboard support <tensorboard>`
+  * :doc:`NNI Annotation (legacy) <nni_annotation>`
