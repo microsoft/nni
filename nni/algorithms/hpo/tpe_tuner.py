@@ -38,7 +38,7 @@ class TpeArguments(NamedTuple):
     To avoid confusing with trials' hyper-parameters, they are called "arguments" in TPE source code.
 
     Parameters
-    ==========
+    ----------
     constant_liar_type
         TPE algorithm itself does not support parallel tuning.
         This parameter specifies how to optimize for trial_concurrency > 1.
@@ -93,7 +93,8 @@ class TpeTuner(Tuner):
 
     .. _paper: https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf
 
-    **Example config**: (FIXME: heading does not work here)
+    Examples
+    --------
 
     .. code-block::
 
@@ -123,7 +124,7 @@ class TpeTuner(Tuner):
         }
 
     Parameters
-    ==========
+    ----------
     optimze_mode
         Whether optimize to minimize or maximize trial result.
     seed
@@ -351,7 +352,7 @@ def adaptive_parzen_normal(args, history_mus, prior_mu, prior_sigma):
     this function is used for everything other than "choice" and "randint".
 
     Parameters
-    ==========
+    ----------
     args: TpeArguments
         Algorithm arguments.
     history_mus: 1-d array of float
@@ -363,7 +364,7 @@ def adaptive_parzen_normal(args, history_mus, prior_mu, prior_sigma):
         σ value of normal search space.
 
     Returns
-    =======
+    -------
     Tuple of three 1-d float arrays: (weight, µ, σ).
 
     The tuple represents N+1 "vicinity of observations" and each one's weight,

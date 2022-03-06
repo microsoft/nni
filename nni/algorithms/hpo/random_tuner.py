@@ -26,7 +26,8 @@ class RandomTuner(Tuner):
     """
     A naive tuner that generates fully random hyperparameters.
 
-    Example config:
+    Examples
+    --------
 
     .. code-block::
 
