@@ -595,6 +595,9 @@ class AttentionWeightDependency(Dependency):
         The method implemented here can work for Huggingface transformers but may not correctly
         capture transformers written in other fashions (e.g., torch.nn.Transformer).
 
+        e.g., O(matmul(matmul(Q, K), V)), you can insert any other operations in this attention
+        workflow except `aten::matmul` and `Linear`.
+
         Parameters
         ----------
         model : torch.nn.Module
@@ -605,87 +608,84 @@ class AttentionWeightDependency(Dependency):
             if we already have the traced graph of the target model, we do not
             need to trace the model again.
         """
-        super(AttentionWeightDependency, self).__init__(
-            model, dummy_input, traced_model)
-
-    def _get_parent_layers(self, node):
-        """
-        Find the nearest parent linear layers for the target node.
-
-        Parameters
-        ---------
-        node : torch._C.Node
-            target node.
-
-        Returns
-        -------
-        parent_layers: list
-            nearest parent linear layers for the target worknode.
-        """
-        parent_layers = []
-        queue = []
-        queue.append(node)
-        while queue:
-            curnode = queue.pop(0)
-            if curnode.op_type == 'Linear':
-                if curnode.name not in parent_layers:
-                    parent_layers.append(curnode.name)
-                continue
-            if curnode.op_type == 'LayerNorm':
-                continue
-            parents = self.graph.find_predecessors(curnode.unique_name)
-            parents = [self.graph.name_to_node[name] for name in parents]
-            for parent in parents:
-                queue.append(parent)
-        return parent_layers
-
-    def _get_children_layers(self, node):
-        """
-        Find the nearest children linear layers for the target node.
-
-        Parameters
-        ---------
-        node : torch._C.Node
-            target node.
-
-        Returns
-        -------
-        children_layers: list
-            nearest children linear layers for the target worknode.
-        """
-        children_layers = []
-        queue = []
-        queue.append(node)
-        while queue:
-            curnode = queue.pop(0)
-            if curnode.op_type == 'Linear':
-                if curnode.name not in children_layers:
-                    children_layers.append(curnode.name)
-                continue
-            if curnode.op_type == 'LayerNorm':
-                continue
-            children = self.graph.find_successors(curnode.unique_name)
-            children = [self.graph.name_to_node[name] for name in children]
-            for child in children:
-                queue.append(child)
-        return children_layers
+        self._grouped_node_names = []
+        super(AttentionWeightDependency, self).__init__(model, dummy_input, traced_model)
 
     def build_dependency(self):
         """
         For every matmul operation, find the immediate parent and children Linear operations.
-        If we get three parents and one children, add these four weights as a dependecy group.
+        If we get three parents and/or one children, add these four weights as a dependecy group.
         """
         self.graph.unpack_manually()
         for node in self.graph.nodes_py.nodes_op:
-            layers = []
+            op_name = node.unique_name
+            self.dependency[op_name] = []
+            # assume this is `aten::matmul` op of attention probabilities matmul V.
             if node.op_type == 'aten::matmul':
-                parent_layers = self._get_parent_layers(node)
-                children_layers = self._get_children_layers(node)
-                if len(parent_layers) == 3 and len(children_layers) == 1:
-                    layers.extend(parent_layers)
-                    layers.extend(children_layers)
+                layers = []
+                parent_nodes = self._get_nodes(node, {'aten::matmul': None, 'Linear': None})
+                # the aten::matmul of Q and k^T, the Linear of `value`
+                if len(parent_nodes['aten::matmul']) == 1 and len(parent_nodes['Linear']) == 1:
+                    current_node = self.graph.name_to_node[parent_nodes['aten::matmul'][0]]
+                    layers.extend(parent_nodes['Linear'])
+                else:
+                    continue
+                parent_nodes = self._get_nodes(current_node, {'aten::matmul': None, 'Linear': None})
+                # the Linear of `query` and `key`
+                if len(parent_nodes['aten::matmul']) == 0 and len(parent_nodes['Linear']) == 2:
+                    layers.extend(parent_nodes['Linear'])
+                else:
+                    continue
 
-            self.dependency[node.name] = layers
+                # find if there exist output layer
+                child_nodes = self._get_nodes(node, {'aten::matmul': None, 'Linear': None}, find_parents=False)
+                # the Linear of `output`
+                if len(child_nodes['aten::matmul']) == 0 and len(child_nodes['Linear']) == 1:
+                    layers.extend(child_nodes['Linear'])
+                self._grouped_node_names.extend(layers)
+                self.dependency[op_name].extend(layers)
+
+    def _get_nodes(self, node, targets, find_parents=True):
+        """
+        Parameters
+        ----------
+        node : torch._C.Node
+            Current started node.
+        targets : Dict[str, int]
+            A target dict, {op_type: max_finding_number}. If max_finding_number is None, it means no limited.
+            Otherwise, if finding associated nodes reach the max_finding_number, the remaining associated node
+            will no longer log, even if it qualifies.
+        find_parents : bool
+            Find the predecessors if set True, find the successors if set False.
+        """
+        if find_parents:
+            find_next_nodes = self.graph.find_predecessors
+        else:
+            find_next_nodes = self.graph.find_successors
+        target_types = list(targets.keys())
+        target_nodes = {target_type: set() for target_type in target_types}
+        next_nodes = find_next_nodes(node.unique_name)
+        queue = set([self.graph.name_to_node[unique_name] for unique_name in next_nodes])
+        while queue:
+            if not target_types:
+                break
+            current_node = queue.pop()
+            op_name = current_node.unique_name
+            op_type = current_node.op_type
+            if op_name in self._grouped_node_names:
+                continue
+            if op_type in target_types:
+                target_nodes[op_type].add(op_name)
+                if targets[op_type] is not None and targets[op_type] <= len(target_nodes[op_type]):
+                    target_types.remove(op_type)
+                continue
+            # stop search with 'aten::matmul' & 'Linear'
+            if op_type in ['aten::matmul', 'Linear']:
+                continue
+            next_nodes = find_next_nodes(op_name)
+            queue.update([self.graph.name_to_node[unique_name] for unique_name in next_nodes])
+        target_nodes = {k: list(v) for k, v in target_nodes.items()}
+        return target_nodes
 
     @property
     def dependency_sets(self):
@@ -696,15 +696,13 @@ class AttentionWeightDependency(Dependency):
         -------
         dependency_sets : list
             list of the dependency sets.
-            Each dependency set is a 4-element list of module names, with the first three elements being the projection
-            matrices for Q, K, V (in any order), and the last element being the dense matrix.
+            Each dependency set is a 3 or 4-element list of module names, with the first three elements being the projection
+            matrices for Q, K, V (in any order), and the last element being the dense matrix (if has).
         """
         d_sets = []
         for node in self.graph.nodes_py.nodes_op:
-            if node.op_type != 'aten::matmul' or node.name not in self.dependency or len(self.dependency[node.name]) != 4:
-                continue
-            d_sets.append(self.dependency[node.name])
-
+            if self.dependency[node.name]:
+                d_sets.append(self.dependency[node.name])
         return d_sets
 
     def export(self, filepath):

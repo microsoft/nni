@@ -185,10 +185,10 @@ class NormPruner(BasicPruner):
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
 
-        If prune the model in an attention way, make sure you have (self-attention-like, QKV projection) structure in your model,
-        and they are implemented with `torch.nn.Linear` (like Bert implemented in hugging face).
-        In this mode, NNI will find these three Linear layers in each attention,
-        then apply the mask on the same position among three layers as possible.
+        If prune the model in an attention way, make sure you have (self-attention-like, O(matmul(matmul(Q, K), V)),
+        O is not required) structure in your model, and `QKVO` are implemented with `torch.nn.Linear` and `matmul` is
+        implemented with `torch.matmul` (like Bert implemented in huggingface). In this mode, NNI will find `QKV`
+        Linear layers in each attention, then apply the mask on the same position among three layers as possible.
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
@@ -667,10 +667,10 @@ class TaylorFOWeightPruner(BasicPruner):
         That means a single layer may not reach or exceed the sparsity setting in config,
         but the total pruned weights meet the sparsity setting.
 
-        If prune the model in an attention way, make sure you have (self-attention-like, QKV projection) structure in your model,
-        and they are implemented with `torch.nn.Linear` (like Bert implemented in hugging face).
-        In this mode, NNI will find these three Linear layers in each attention,
-        then apply the mask on the same position among three layers as possible.
+        If prune the model in an attention way, make sure you have (self-attention-like, O(matmul(matmul(Q, K), V)),
+        O is not required) structure in your model, and `QKVO` are implemented with `torch.nn.Linear` and `matmul` is
+        implemented with `torch.matmul` (like Bert implemented in huggingface). In this mode, NNI will find `QKV`
+        Linear layers in each attention, then apply the mask on the same position among three layers as possible.
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.

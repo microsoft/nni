@@ -181,10 +181,18 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
 
 class AttentionSparsityAllocator(SparsityAllocator):
     """
-    A specific allocator for attention has a structure like self-attention in Bert.
-    In this sparsity allocator, :math:`Q_{proj}`, :math:`K_{proj}`, :math:`V_{proj}` of the same attention head will in one group.
-    Sparsity allocator will combine their metrics and share the mask among these three weights in one group.
-    Note that by default, assuming QKV are implemented with `torch.nn.Linear`.
+    A specific allocator for attention which has a structure like self-attention in Huggingface BertModel.
+    In this sparsity allocator, :math:`Q_{proj}`, :math:`K_{proj}`, :math:`V_{proj}, :math:`O_{proj}` (optional) of the
+    same attention head will be in one pruning group. Sparsity allocator will combine `QKV` metrics and share the mask
+    among these `QKV` weights in one group.
+
+    If the :math:`O_{proj}` also should be pruned, only input channels will be pruned base on `QKV` masks,
+    and this may not comply with the sparsity ratio set in config_list.
+
+    Attentions with `O(matmul(matmul(Q, K), V))` (3 or 4 torch.nn.Linear and 2 aten::matmul) structures can use this
+    allocator. Any other operations can be inserted in this attention workflow except `aten::matmul` and `Linear`.
+
+    Note that by default, assuming `QKVO` are implemented with `torch.nn.Linear`.
     """
     def __init__(self, pruner: Pruner, dim: int, dummy_input: Any):
         super().__init__(pruner, dim=dim)
@@ -234,6 +242,9 @@ class AttentionSparsityAllocator(SparsityAllocator):
 
         # Calculate group metric.
         for idx, group_metric_dict in grouped_metrics.items():
+            # if group_metric_dict is empty, skip this group
+            if not group_metric_dict:
+                continue
             group_metric = self._group_metric_calculate(group_metric_dict)
             for name in group_metric_dict.keys():
                 metrics[name] = group_metric
@@ -241,7 +252,7 @@ class AttentionSparsityAllocator(SparsityAllocator):
             # Special rule based output layer mask generation.
             output_layer_name = self.attention_name_groups[idx][-1]
             if output_layer_name in metrics and self.dim and len(self.dim) == 1 and self.dim[0] == 0:
-                # Don't use colculated metric, use group metric.
+                # Don't use calculated metric, use group metric.
                 metrics[output_layer_name] = None
                 metric = group_metric
                 wrapper = self.pruner.get_modules_wrapper()[output_layer_name]
@@ -259,7 +270,7 @@ class AttentionSparsityAllocator(SparsityAllocator):
                 if wrapper.bias_mask is not None:
                     masks[output_layer_name]['bias'] = wrapper.bias_mask.clone().detach()
 
-        # Complement the full sparsity, generate masks for other layer (not in attention) weights
+        # Complement the full sparsity, generate masks for other layer (not attention output layers) weights
         for name, wrapper in self.pruner.get_modules_wrapper().items():
             sparsity_rate = wrapper.config['total_sparsity']
             assert name in metrics, 'Metric of {} is not calculated.'.format(name)
