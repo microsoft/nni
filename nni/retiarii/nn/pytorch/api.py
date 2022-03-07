@@ -789,15 +789,15 @@ class ValueChoice(ValueChoiceX, Mutable):
 ValueType = TypeVar('ValueType')
 
 
-class HyperParameterChoice:
-    """
-    :class:`HyperParameterChoice` chooses one hyper-parameter from ``candidates``.
+class ModelParameterChoice:
+    """Internal API. :class:`ModelParameterChoice` chooses one hyper-parameter from ``candidates``.
+
     It's quite similar to :class:`ValueChoice`, but unlike :class:`ValueChoice`,
     it always returns a fixed value, even at the construction of base model.
 
     This makes it highly flexible (e.g., can be used in for-loop, if-condition, as argument of any function). For example: ::
 
-        self.has_auxiliary_head = HyperParameterChoice([False, True])
+        self.has_auxiliary_head = ModelParameterChoice([False, True])
         # this will raise error if you use `ValueChoice`
         if self.has_auxiliary_head is True:  # or self.has_auxiliary_head
             self.auxiliary_head = Head()
@@ -805,22 +805,22 @@ class HyperParameterChoice:
             self.auxiliary_head = None
         print(type(self.has_auxiliary_head))  # <class 'bool'>
 
-    The working mechanism of :class:`HyperParameterChoice` is that, it registers itself
+    The working mechanism of :class:`ModelParameterChoice` is that, it registers itself
     in the ``model_wrapper``, as a hyper-parameter of the model, and then returns the value specified with ``default``.
     At base model construction, the default value will be used (as a mocked hyper-parameter).
     In trial, the hyper-parameter selected by strategy will be used.
 
-    Although flexible, we still recommend using :class:`ValueChoice` in favor of :class:`HyperParameterChoice`,
-    because information are lost when using :class:`HyperParameterChoice` in exchange of its flexibility,
+    Although flexible, we still recommend using :class:`ValueChoice` in favor of :class:`ModelParameterChoice`,
+    because information are lost when using :class:`ModelParameterChoice` in exchange of its flexibility,
     making it incompatible with one-shot strategies and non-python execution engines.
 
     .. warning::
 
-        :class:`HyperParameterChoice` can NOT be nested.
+        :class:`ModelParameterChoice` can NOT be nested.
 
     .. tip::
 
-        Although called :class:`HyperParameterChoice`, it's meant to tune hyper-parameter of architecture.
+        Although called :class:`ModelParameterChoice`, it's meant to tune hyper-parameter of architecture.
         It's NOT used to tune model-training hyper-parameters like ``learning_rate``.
         If you need to tune ``learning_rate``, please use :class:`ValueChoice` on arguments of :class:`nni.retiarii.Evaluator`.
 
@@ -832,20 +832,20 @@ class HyperParameterChoice:
         Prior distribution to sample from. Currently has no effect.
     default : Callable[[List[Any]], Any] or Any
         Function that selects one from ``candidates``, or a candidate.
-        Use :meth:`HyperParameterChoice.FIRST` or :meth:`HyperParameterChoice:LAST` to take the first or last item.
-        Default: :meth:`HyperParameterChoice.FIRST`
+        Use :meth:`ModelParameterChoice.FIRST` or :meth:`ModelParameterChoice.LAST` to take the first or last item.
+        Default: :meth:`ModelParameterChoice.FIRST`
     label : str
         Identifier of the value choice.
 
     Warnings
     --------
-    :class:`HyperParameterChoice` is incompatible with one-shot strategies and non-python execution engines.
+    :class:`ModelParameterChoice` is incompatible with one-shot strategies and non-python execution engines.
 
-    Sometimes, the same search space implemented **without** :class:`HyperParameterChoice` can be simpler, and explored
+    Sometimes, the same search space implemented **without** :class:`ModelParameterChoice` can be simpler, and explored
     with more types of search strategies. For example, the following usages are equivalent: ::
 
-        # with HyperParameterChoice
-        depth = nn.HyperParameterChoice(list(range(3, 10)))
+        # with ModelParameterChoice
+        depth = nn.ModelParameterChoice(list(range(3, 10)))
         blocks = []
         for i in range(depth):
             blocks.append(Block())
@@ -856,7 +856,7 @@ class HyperParameterChoice:
     Examples
     --------
     Get a dynamic-shaped parameter. Because ``torch.zeros`` is not a basic unit, we can't use :class:`ValueChoice` on it.
-    >>> parameter_dim = nn.HyperParameterChoice([64, 128, 256])
+    >>> parameter_dim = nn.ModelParameterChoice([64, 128, 256])
     >>> self.token = nn.Parameter(torch.zeros(1, parameter_dim, 32, 32))
     """
 
