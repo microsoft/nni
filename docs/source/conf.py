@@ -63,8 +63,11 @@ extensions = [
     'patch_autodoc',
 ]
 
+# Autosummary related settings
 autosummary_imported_members = True
 autosummary_ignore_module_all = False
+
+# Auto-generate stub files before building docs
 autosummary_generate = True
 
 # Add mock modules
