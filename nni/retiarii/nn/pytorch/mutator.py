@@ -285,7 +285,7 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
     namespace: ModelNamespace = pytorch_model._model_namespace
     for param_spec in namespace.parameter_specs:
         assert param_spec.categorical and param_spec.type == 'choice'
-        node = graph.add_node(f'param_spec_{param_spec.name}', 'HyperParameterChoice', {'candidates': param_spec.values})
+        node = graph.add_node(f'param_spec_{param_spec.name}', 'ModelParameterChoice', {'candidates': param_spec.values})
         node.label = param_spec.name
 
     for name, module in pytorch_model.named_modules():

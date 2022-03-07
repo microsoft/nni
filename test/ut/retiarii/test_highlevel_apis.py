@@ -805,7 +805,7 @@ class Python(GraphIR):
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
-                self.aux = nn.HyperParameterChoice([False, True])
+                self.aux = nn.ModelParameterChoice([False, True])
 
             def forward(self, x):
                 return x
@@ -823,7 +823,7 @@ class Python(GraphIR):
             def __init__(self):
                 super().__init__()
                 self.aux = torch.nn.Parameter(
-                    torch.zeros(1, nn.HyperParameterChoice([64, 128, 256], label='a'), 3, 3)
+                    torch.zeros(1, nn.ModelParameterChoice([64, 128, 256], label='a'), 3, 3)
                 )
 
             def forward(self):
@@ -832,7 +832,7 @@ class Python(GraphIR):
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
-                self.choice = nn.HyperParameterChoice([64, 128, 256], label='a')
+                self.choice = nn.ModelParameterChoice([64, 128, 256], label='a')
                 self.inner = Inner()
 
             def forward(self):
@@ -854,7 +854,7 @@ class Python(GraphIR):
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
-                self.choice = nn.HyperParameterChoice([64, 128, 256], label='a')
+                self.choice = nn.ModelParameterChoice([64, 128, 256], label='a')
 
         with self.assertRaises(NoContextError):
             model = Net()

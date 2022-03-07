@@ -137,7 +137,7 @@ class ModelNamespace:
         self.name_path: List[int] = []
 
         # parameter specs.
-        # Currently only used trace calls of HyperParameterChoice.
+        # Currently only used trace calls of ModelParameterChoice.
         self.parameter_specs: List[ParameterSpec] = []
 
     def __enter__(self):

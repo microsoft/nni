@@ -16,7 +16,7 @@ from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace, No
 from .utils import Mutable, generate_new_label, get_fixed_value
 
 
-__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'HyperParameterChoice', 'Placeholder', 'ChosenInputs']
+__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'ModelParameterChoice', 'Placeholder', 'ChosenInputs']
 
 
 class LayerChoice(Mutable):
@@ -868,7 +868,7 @@ class ModelParameterChoice:
                 prior: Optional[List[float]] = None,
                 default: Union[Callable[[List[ValueType]], ValueType], ValueType] = None,
                 label: Optional[str] = None) -> ValueType:
-        # Actually, creating a `HyperParameterChoice` never creates one.
+        # Actually, creating a `ModelParameterChoice` never creates one.
         # It always return a fixed value, and register a ParameterSpec
 
         if default is None:
