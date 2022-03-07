@@ -5,7 +5,7 @@ Retiarii for Neural Architecture Search
    :hidden:
    :titlesonly:
 
-   Quick Start <../tutorials/hello_nas>
+   Quick Start <../tutorials/cp_hello_nas_quickstart>
    construct_space
    exploration_strategy
    evaluator

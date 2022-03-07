@@ -2,3 +2,6 @@ build/
 
 # legacy build
 _build/
+
+# ignored copied rst in tutorials
+**/tutorials/cp_*.rst
