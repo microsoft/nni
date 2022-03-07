@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import warnings
-from typing import Dict, Type, Callable, List, Optional, Union, Any, Tuple
+from typing import Dict, Callable, List, Union, Any, Tuple
 
 import pytorch_lightning as pl
 import torch.optim as optim
@@ -11,71 +11,12 @@ import torch.nn as nn
 from torch.optim.lr_scheduler import _LRScheduler
 from typeguard import TypeWarning
 
-from nni.common.hpo_utils import ParameterSpec
+from .supermodule.base import BaseSuperNetModule
 
 __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
 
 
 MutationHook = Callable[[nn.Module, str, Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
-
-
-class BaseSuperNetModule(nn.Module):
-    """
-    Mutated module in super-net.
-    Usually, the feed-forward of the module itself is undefined.
-    It has to be resampled with ``resample()`` so that a specific path is selected.
-
-    A super-net module usually corresponds to one sample. But two exceptions:
-
-    * A module can have multiple parameter spec. For example, a convolution-2d can sample kernel size, channels at the same time.
-    * Multiple modules can share one parameter spec. For example, multiple layer choices with the same label.
-
-    For value choice compositions, the parameter spec are bounded to the underlying (original) value choices,
-    rather than their compositions.
-    """
-
-    def resample(self, memo: Dict[str, Any] = None) -> None:
-        """
-        Resample the super-net module.
-
-        Parameters
-        ----------
-        memo : Dict[str, Any]
-            Used to ensure the consistency of samples with the same label.
-        """
-        raise NotImplementedError()
-
-    def export(self, memo: Dict[str, Any] = None) -> Dict[str, Any]:
-        """
-        Export the final architecture within this module.
-        It should have the same keys as ``search_space_spec()``.
-
-        Parameters
-        ----------
-        memo : Dict[str, Any]
-            Use memo to avoid the same label gets exported multiple times.
-        """
-        raise NotImplementedError()
-
-    def search_space_spec(self) -> Dict[str, ParameterSpec]:
-        """
-        Space specification (sample points).
-        Mapping from spec name to ParameterSpec. The names in choices should be in the same format of export.
-
-        For example: ::
-
-            {"layer1": ["conv", "pool"]}
-        """
-        raise NotImplementedError()
-
-    @classmethod
-    def mutate(cls, module: nn.Module, name: str, memo: Dict[str, Any]) -> \
-            Union['BaseSuperNetModule', bool, Tuple['BaseSuperNetModule', bool]]:
-        """This is a mutation hook that creates a :class:`BaseSuperNetModule`.
-        The method should be implemented in each specific super-net module,
-        because they usually have specific rules about what kind of modules to operate on.
-        """
-        raise NotImplementedError()
 
 
 def traverse_and_mutate_submodules(

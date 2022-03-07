@@ -1,51 +1,247 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import itertools
+import random
+from typing import Optional, List, Tuple, Union, Type, Dict, Any
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class ToSample:
+from nni.common.serializer import is_traceable
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
+from nni.retiarii.nn.pytorch.api import ValueChoiceX
+from nni.retiarii.oneshot.pytorch.base_lightning import BaseOneShotLightningModule
+
+from .base import BaseSuperNetModule, ParameterSpec
+
+
+class PathSamplingLayer(BaseSuperNetModule):
     """
-    Base class for all xxxChoice to be sampled. Different attributes candidates are sampled at once.
+    Mixed module, in which fprop is decided by exactly one or multiple (sampled) module.
+    If multiple modules are selected, the result will be summed and returned.
 
     Attributes
     ----------
+    _sampled : int or list of str
+        Sampled module indices.
     label : str
-        the identifier of all ToSample objects
-    n_candidates : int
-        the length of candidates
-    sampled : int
-        the index of the sampled candidate. should not be larger than `n_candidates`
-    candidates : Dict[str, List[Any]]
-        the candidates for different attributes
-
-    Parameters
-    ----------
-    label : str
-        the identifier of all ToSample objects
-    n_candidates : int
-        the length of candidates
-    sampled : int
-        the index of the sampled candidate. should not be larger than `n_candidates`
+        Name of the choice.
     """
-    def __init__(self, label, n_candidates = 0, sampled = -1) -> None:
+
+    def __init__(self, paths: List[Tuple[str, nn.Module]], label: str):
+        super().__init__()
+        self.op_names = []
+        for name, module in paths:
+            self.add_module(name, module)
+            self.op_names.append(name)
+        assert self.op_names, 'There has to be at least one op to choose from.'
+        self.sampled: Optional[Union[List[str], str]] = None  # sampled can be either a list of indices or an index
         self.label = label
+
+    def resample(self, memo):
+        """Random choose one path if label is not found in memo."""
+        if self.label in memo:
+            self._sampled = memo[self.label]
+        else:
+            self._sampled = random.choice(self.op_names)
+            memo[self.label] = self._sampled
+
+    def export(self, memo):
+        """Random choose one name if label isn't found in memo."""
+        if self.label in memo:
+            return {}  # nothing new to export
+        return {self.label: random.choice(self.op_names)}
+
+    def search_space_spec(self):
+        return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ), True)}
+
+    @classmethod
+    def mutate(cls, module, name, memo):
+        if isinstance(module, LayerChoice):
+            return cls(list(module.named_children()), module.label)
+
+    def forward(self, *args, **kwargs):
+        if not self._sampled:
+            raise ValueError('At least one path needs to be sampled before fprop.')
+        sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
+
+        res = [getattr(self, samp)(*args, **kwargs) for samp in sampled]
+        if len(res) == 1:
+            return res[0]
+        else:
+            return sum(res)
+
+    def __len__(self):
+        return len(self.op_names)
+
+
+class PathSamplingInput(nn.Module):
+    """
+    Mixed input. Take a list of tensor as input, select some of them and return the sum.
+
+    Attributes
+    ----------
+    _sampled : int or list of int
+        Sampled input indices.
+    """
+
+    def __init__(self, n_candidates: int, n_chosen: int, label: str):
+        super().__init__()
         self.n_candidates = n_candidates
-        self.candidates = {}
-        self.sampled = sampled
+        self.n_chosen = n_chosen
+        self._sampled: Optional[Union[List[int], int]] = None
+        self.label = label
 
-    def sampled_candidate(self, attr_name):
-        return self.candidates[attr_name][self.sampled]
+    def _random_choose_n(self):
+        sampling = list(range(self.n_candidates))
+        random.shuffle(sampling)
+        sampling = sorted(sampling[:self.n_chosen])
+        if len(sampling) == 1:
+            return sampling[0]
+        else:
+            return sampling
 
-    def add_candidates(self, attr, candidates = []):
-        assert len(candidates) == self.n_candidates, 'For ValueChoice with the same label, the number of candidates should also be ' \
-            f'the same. ValueChoice `{self.label}` expects candidatas with a length of {self.n_candidates}, but got ' \
-            f'{len(candidates)} for `{attr}`.'
-        self.candidates[attr] = candidates
+    def resample(self, memo):
+        """Random choose one path / multiple paths if label is not found in memo.
+        If one path is selected, only one integer will be in ``self._sampled``.
+        If multiple paths are selected, a list will be in ``self._sampled``.
+        """
+        if self.label in memo:
+            self._sampled = memo[self.label]
+        else:
+            memo[self.label] = self._random_choose_n()
+
+    def export(self, memo):
+        """Random choose one name if label isn't found in memo."""
+        if self.label in memo:
+            return {}  # nothing new to export
+        return {self.label: self._random_choose_n()}
+
+    def search_space_spec(self):
+        # FIXME: no way to express n choose k currently
+        return {self.label: ParameterSpec(self.label, 'choice', list(range(self.n_candidates)), (self.label, ), True)}
+
+    @classmethod
+    def mutate(cls, module, name, memo):
+        if isinstance(module, InputChoice):
+            if module.reduction != 'sum':
+                raise ValueError('Only input choice of sum reduction is supported.')
+            return cls(module.n_candidates, module.n_chosen, module.label)
+
+    def forward(self, input_tensors):
+        if not self._sampled:
+            raise ValueError('At least one path needs to be sampled before fprop.')
+        if len(input_tensors) != self.n_candidates:
+            raise ValueError(f'Expect {self.n_candidates} input tensors, found {len(input_tensors)}.')
+        sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
+        res = [input_tensors[samp] for samp in sampled]
+        if len(res) == 1:
+            return res[0]
+        else:
+            return sum(res)
 
     def __len__(self):
         return self.n_candidates
+
+
+class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
+    """
+    Utility class for all operators with ValueChoice as its arguments.
+    """
+
+    def __init__(self, **module_kwargs):
+        # Get init default
+        init_kwargs = {}
+
+        self._mutable_arguments: Dict[str, Any] = {}
+
+        for key, value in module_kwargs.items():
+            if isinstance(value, ValueChoiceX):
+                init_kwargs[key] = self.init_argument(value)
+                self._mutable_arguments[key] = value
+            else:
+                init_kwargs[key] = value
+
+        super().__init__(**init_kwargs)
+
+    def resample(self, memo):
+        """Random choose one path if label is not found in memo."""
+        if self.label in memo:
+            self._sampled = memo[self.label]
+        else:
+            self._sampled = random.choice(self.op_names)
+            memo[self.label] = self._sampled
+
+    def export(self, memo):
+        """Random choose one name if label isn't found in memo."""
+        if self.label in memo:
+            return {}  # nothing new to export
+        return {self.label: random.choice(self.op_names)}
+
+    def search_space_spec(self):
+        return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ), True)}
+
+    @classmethod
+    def mutate(cls, module, name, memo):
+        if isinstance(module, cls.bound_type) and is_traceable(module):
+            # has valuechoice or not
+            has_valuechoice = False
+            for arg in itertools.chain(module.trace_args, module.trace_kwargs.values()):
+                if isinstance(arg, ValueChoiceX):
+                    has_valuechoice = True
+
+            if has_valuechoice:
+                if module.trace_args:
+                    raise ValueError('ValueChoice on class arguments cannot appear together with ``trace_args``. '
+                                     'Please enable ``kw_only`` on nni.trace.')
+
+                # save type and kwargs
+                return cls(cls.bound_type, module.trace_kwargs)
+
+    def default_argument(self, value_choice: ValueChoiceX):
+        """Subclass override this method to customize init argument of super-op. For Example, ::
+
+            def default_argument(self, value_choice):
+                return max(value_choice.candidates)
+        """
+        raise NotImplementedError()
+
+
+
+class PathSamplingSuperLinear(FineGrainedPathSamplingMixin, nn.Linear):
+    """
+    The Linear layer to replace original linear with valuechoices in its parameter list. It construct the biggest weight matrix first,
+    and slice it before every forward according to the sampled value. Supported parameters are listed below:
+        in_features : int
+        out_features : int
+
+    Parameters
+    ----------
+    module : nn.Module:
+        module to be replaced
+    name : str
+        the unique identifier of `module`
+    """
+        self.name = name
+        self.args = module.trace_kwargs
+
+        init_args = dict(self.args)
+        # compulsory params
+        init_args['in_features'] = self.max_candidate('in_features')
+        init_args['out_features'] = self.max_candidate('out_features')
+
+        super().__init__(**init_args)
+
+    def forward(self, x):
+        in_dim = self.sampled_candidate('in_features')
+        out_dim = self.sampled_candidate('out_features')
+
+        weights = self.weight[:out_dim, :in_dim]
+        bias = self.bias[:out_dim]
+
+        return F.linear(x, weights, bias)
 
 
 class ValueChoiceSuperLayer:
