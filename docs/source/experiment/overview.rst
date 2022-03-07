@@ -17,5 +17,5 @@ Before reading the following content, you are recommended to go through the quic
     :maxdepth: 2
 
     Training Services <training_service>
-    Webportal <webportal>
+    Web Portal <web_portal>
     Experiment Management <exp_management>

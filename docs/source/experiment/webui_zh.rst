@@ -1,4 +1,4 @@
-.. bd2f4f408d21adedb9da83b987c2ed94
+.. 1f92c8fa8fbaa1300343c01b53541b92
 
 Web 界面
 ========
@@ -89,58 +89,6 @@ Q&A
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `The discussion <https://github.com/microsoft/nni/discussions/4289>`_ 能帮助你。
-
-
-怎样去使用 tensorboard
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-用 nni 2.2 版本以上起一个 tensorboard 或者多 trials 进程。现在这个功能支持本地 training service 和 shared storage 下的 resue mode training service。以后的版本会支持更多谢谢。
-
-.. note::
-   确保你的环境里已经成功安装了 tensorboard。如果你从没有用过 tensorboard， 请参考链接 `tensorboard with tensorflow <https://www.tensorflow.org/tensorboard/get_started>`__, `tensorboard with pytorch <https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html>`__。
-
-
-保存 Log
-""""""""
-
-NNI 会自动获取 Trial 的输出文件夹下的 ``tensorboard`` 子文件夹作为 tensorboard logdir。 所以在 Trial 的源代码中，你需要将 tensorboard 日志保存在 ``NNI_OUTPUT_DIR/tensorboard`` 下。 此日志路径可以连接为： 
-
-.. code-block:: python
-
-    log_dir = os.path.join(os.environ["NNI_OUTPUT_DIR"], 'tensorboard')
-
-起 Tensorboard
-""""""""""""""
-
-* 就像 compare 功能一样，你先选择一些 trial 一块去启动 tensorboard。然后点击 ``Tensorboard`` 按钮。
-
-.. image:: ../../img/Tensorboard_1.png
-   :target: ../../img/Tensorboard_1.png
-   :alt: 
-
-* 点击浮窗 ``OK`` 按钮会自动跳转到 tensorboard 页面。
-
-.. image:: ../../img/Tensorboard_2.png
-   :target: ../../img/Tensorboard_2.png
-   :alt: 
-
-* 在 tensorboard 页面你可以看到选中的 trial id。
-
-.. image:: ../../img/Tensorboard_3.png
-   :target: ../../img/Tensorboard_3.png
-   :alt: 
-
-停掉 tensorboard
-""""""""""""""""
-
-
-如果你想打开曾经起过的 tensorboard 页面，点击 tensorboard 按钮下的对应 id 即可。也可以停掉所有起过的 tensorboard。
-
-.. image:: ../../img/Tensorboard_4.png
-   :target: ../../img/Tensorboard_4.png
-   :alt: 
-
-
 
 
 实验管理
