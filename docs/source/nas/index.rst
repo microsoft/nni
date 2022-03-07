@@ -60,25 +60,25 @@ The following APIs are provided to ease the engineering effort of writing a new 
      - Category
      - Brief Description
    * - :ref:`nas-layer-choice`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Select from some PyTorch modules
    * - :ref:`nas-input-choice`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Select from some inputs (tensors)
    * - :ref:`nas-value-choice`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Select from some candidate values
    * - :ref:`nas-repeat`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Repeat a block by a variable number of times
    * - :ref:`nas-cell`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Cell structure popularly used in literature
    * - :ref:`nas-cell-101`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Cell structure (variant) proposed by NAS-Bench-101
    * - :ref:`nas-cell-201`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Cell structure (variant) proposed by NAS-Bench-201
    * - :ref:`nas-autoactivation`
      - :ref:`Hyper-modules <hyper-modules>`
