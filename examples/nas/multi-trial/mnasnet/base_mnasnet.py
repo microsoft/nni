@@ -5,7 +5,7 @@ import warnings
 import torch
 import torch.nn as torch_nn
 import torch.nn.functional as F
-from nni.retiarii.serializer import model_wrapper
+from nni.retiarii import model_wrapper
 
 import sys
 from pathlib import Path
