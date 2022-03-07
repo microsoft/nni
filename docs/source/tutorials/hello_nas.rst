@@ -534,7 +534,7 @@ For instance,
 
 .. GENERATED FROM PYTHON SOURCE LINES 339-347
 
-Relaunch the experiment, and a button is shown on WebUI.
+Relaunch the experiment, and a button is shown on webportal.
 
 .. image:: ../../img/netron_entrance_webui.png
 

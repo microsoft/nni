@@ -219,7 +219,9 @@ class _NasBench101CellFixed(nn.Module):
 
 class NasBench101Cell(Mutable):
     """
-    Cell structure that is proposed in NAS-Bench-101 :footcite:p:`ying2019bench`.
+    Cell structure that is proposed in NAS-Bench-101.
+
+    Refer to :footcite:t:`ying2019bench` for details.
 
     This cell is usually used in evaluation of NAS algorithms because there is a "comprehensive analysis" of this search space
     available, which includes a full architecture-dataset that "maps 423k unique architectures to metrics

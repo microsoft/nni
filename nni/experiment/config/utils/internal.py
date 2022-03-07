@@ -20,6 +20,15 @@ import nni.runtime.config
 
 from .public import is_missing
 
+__all__ = [
+    'get_base_path', 'set_base_path', 'unset_base_path', 'resolve_path',
+    'case_insensitive', 'camel_case',
+    'is_instance', 'validate_type', 'is_path_like',
+    'guess_config_type', 'guess_list_config_type',
+    'training_service_config_factory', 'load_training_service_config',
+    'get_ipv4_address'
+]
+
 ## handle relative path ##
 
 _current_base_path = None

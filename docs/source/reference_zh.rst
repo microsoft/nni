@@ -1,4 +1,6 @@
-.. e29a21e77a74847fc6a45deeb126bb54
+.. 317504c3009932f8a566616e85a9700f
+
+:orphan:
 
 参考
 ==================
@@ -14,5 +16,4 @@
     SDK API 参考 <sdk_reference>
     支持的框架和库 <SupportedFramework_Library>
     从 Python 发起实验 <Tutorial/HowToLaunchFromPython>
-    共享存储 <Tutorial/HowToUseSharedStorage>
     Tensorboard <Tutorial/Tensorboard>
