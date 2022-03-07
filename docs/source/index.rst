@@ -32,7 +32,11 @@ Neural Network Intelligence
     :caption: References
     :hidden:
 
-    References <reference>
+    nnictl Commands <reference/nnictl>
+    Experiment Configuration <reference/experiment_config>
+    Experiment Configuration (legacy) <Tutorial/ExperimentConfig>
+    Search Space <Tutorial/SearchSpaceSpec>
+    Python API <reference/_modules/nni>
 
 ..  toctree::
     :maxdepth: 2

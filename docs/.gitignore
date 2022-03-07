@@ -2,3 +2,6 @@ build/
 
 # legacy build
 _build/
+
+# auto-generated reference table
+_modules/
