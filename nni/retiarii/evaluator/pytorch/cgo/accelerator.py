@@ -70,7 +70,7 @@ class BypassPlugin(TrainingTypePlugin):
         # bypass device placement from pytorch lightning
         pass
 
-    def setup(self,) -> None:
+    def setup(self) -> None:
         pass
 
     @property
