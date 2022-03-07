@@ -293,6 +293,8 @@ class ModelProfiler:
             'Name',
             'Type',
             'Weight Shape',
+            'Input Size',
+            'Output Size',
             'FLOPs',
             '#Params',
         ]
@@ -307,6 +309,8 @@ class ModelProfiler:
                 result['name'],
                 result['module_type'],
                 str(result['weight_shape']),
+                result['input_size'],
+                result['output_size'],
                 flops_count,
                 result['params'],
             ]
@@ -314,6 +318,7 @@ class ModelProfiler:
             if has_multi_use:
                 row_values.append(name_counter[result['name']])
             table.add_row(row_values)
+        table.align["Name"] = "l"
         return table
 
 

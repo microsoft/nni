@@ -1,13 +1,15 @@
-pylint
-flake8
-sphinx
-sphinx-argparse
-sphinx-rtd-theme
-sphinxcontrib-websupport
-nbsphinx
-pytest
-pytest-cov
-pytest-azurepipelines
 coverage
+cython
+flake8
 ipython
 jupyterlab
+nbsphinx
+pylint
+pytest
+pytest-azurepipelines
+pytest-cov
+rstcheck
+sphinx
+sphinx-argparse-nni >= 0.4.0
+sphinx-gallery
+git+https://github.com/bashtage/sphinx-material.git

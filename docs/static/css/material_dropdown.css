@@ -1,0 +1,61 @@
+/* https://codepen.io/mildrenben/pen/RPwQEY */
+
+.drop {
+    width: 125px;
+    vertical-align: middle;
+}
+
+.drop button {
+    color: inherit;
+    font-weight: 700;
+    font-size: .65rem;
+    cursor: pointer;
+}
+
+.drop button:after {
+    content: "\e5c5";
+    padding: 0 0 0.3rem 0.2rem;
+    font-size: 0.5rem;
+    font-family: "Material Icons";
+    display: inline-block;
+    transition: all 0.2s ease;
+    transform: rotate(0);
+    transform-origin: 65% 30%;
+}
+
+.drop button.active:after {
+    transform: rotate(180deg);
+}
+
+.drop ul {
+    position: absolute;
+    left: 0;
+    top: 6em;
+    transition: all 0.1s ease;
+    padding: .625em 0;
+    margin-top: -0.9rem;
+    transform: scale(0);
+    transform-origin: 0 0;
+    background: #fcfcfc;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.16), 0 2px 8px 0 rgba(0, 0, 0, 0.12);
+}
+
+.drop ul.active {
+    transform: scale(1);
+}
+
+.drop ul li {
+    display: block;
+    width: 100%;
+}
+
+.drop ul li a.md-nav__link {
+    width: 100%;
+    padding: .4rem 1em;
+    display: inline-block;
+    white-space: pre;
+    box-sizing: border-box;
+    color: rgba(0, 0, 0, .87);
+    margin-top: 0;
+    font-size: .75rem;
+}
