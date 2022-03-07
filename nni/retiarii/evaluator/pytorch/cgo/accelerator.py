@@ -4,6 +4,7 @@
 from typing import Any, List, Optional, Union
 
 import torch
+from torch.nn import Module
 from pytorch_lightning.accelerators.accelerator import Accelerator
 from pytorch_lightning.plugins.environments import ClusterEnvironment
 from pytorch_lightning.plugins.training_type.training_type_plugin import TrainingTypePlugin
@@ -70,7 +71,7 @@ class BypassPlugin(TrainingTypePlugin):
         # bypass device placement from pytorch lightning
         pass
 
-    def setup(self) -> None:
+    def setup(self, model: Module) -> None:
         pass
 
     @property

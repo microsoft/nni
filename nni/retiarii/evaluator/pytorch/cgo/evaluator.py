@@ -101,7 +101,6 @@ class _MultiModelSupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-@nni.trace
 class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
     """
     Lightning Module of SupervisedLearning for Cross-Graph Optimization.
@@ -126,7 +125,6 @@ class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
         super().__init__(criterion, metrics, learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 
-@nni.trace
 class _ClassificationModule(MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
@@ -174,7 +172,6 @@ class Classification(Lightning):
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
 
-@nni.trace
 class _RegressionModule(MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,
