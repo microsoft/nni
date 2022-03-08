@@ -10,11 +10,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from nni.common.serializer import is_traceable
+from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from nni.retiarii.oneshot.pytorch.base_lightning import BaseOneShotLightningModule
 
-from .base import BaseSuperNetModule, ParameterSpec
+from .base import BaseSuperNetModule
 
 
 class PathSamplingLayer(BaseSuperNetModule):
@@ -73,9 +74,6 @@ class PathSamplingLayer(BaseSuperNetModule):
             return res[0]
         else:
             return sum(res)
-
-    def __len__(self):
-        return len(self.op_names)
 
 
 class PathSamplingInput(nn.Module):
@@ -145,9 +143,6 @@ class PathSamplingInput(nn.Module):
             return res[0]
         else:
             return sum(res)
-
-    def __len__(self):
-        return self.n_candidates
 
 
 class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
@@ -253,6 +248,7 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
 
 class PathSamplingLinear(FineGrainedPathSamplingMixin, nn.Linear):
     """
+    TBD
     The Linear layer to replace original linear with valuechoices in its parameter list. It construct the biggest weight matrix first,
     and slice it before every forward according to the sampled value. Supported parameters are listed below:
         in_features : int
@@ -288,6 +284,7 @@ class PathSamplingLinear(FineGrainedPathSamplingMixin, nn.Linear):
 
 class PathSamplingConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
     """
+    TBD
     The Conv2d layer to replace original conv2d with valuechoices in its parameter list. It construct the biggest weight matrix first,
     and slice it before every forward according to the sampled value.
     Supported valuechoice parameters are listed below:
@@ -394,6 +391,7 @@ class PathSamplingConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
 
 class PathSamplingBatchNorm2d(FineGrainedPathSamplingMixin, nn.BatchNorm2d):
     """
+    TBD
     The BatchNorm2d layer to replace original bn2d with valuechoice in its parameter list. It construct the biggest mean and variation
     tensor first, and slice it before every forward according to the sampled value. Supported parameters are listed below:
         num_features : int
@@ -448,6 +446,7 @@ class PathSamplingBatchNorm2d(FineGrainedPathSamplingMixin, nn.BatchNorm2d):
 
 class PathSamplingMultiHeadAttention(FineGrainedPathSamplingMixin, nn.MultiheadAttention):
     """
+    TBD
     The MultiHeadAttention layer to replace original mhattn with valuechoice in its parameter list. It construct the biggest Q, K,
     V and some other tensors first, and slice it before every forward according to the sampled value. Supported parameters are listed
     below:

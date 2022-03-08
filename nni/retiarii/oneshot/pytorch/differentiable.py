@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""Experimental version of differentiable one-shot implementation."""
+
 from collections import OrderedDict
 from typing import Optional
 import pytorch_lightning as pl

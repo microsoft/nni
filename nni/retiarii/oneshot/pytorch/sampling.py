@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""Experimental version of sampling-based one-shot implementation."""
+
 from typing import Dict, Any, Optional
 
 import random
