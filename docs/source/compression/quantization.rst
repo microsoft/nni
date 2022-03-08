@@ -1,9 +1,9 @@
 Model Quantization with NNI
 ===========================
 
-..  toctree::
+.. toctree::
     :maxdepth: 2
 
     Quickstart <../tutorials/quantization_quick_start_mnist>
+    Quantizer Reference <quantizer>
     Speed Up <../tutorials/quantization_speed_up>
-    Quantizer Reference <../reference/quantizer>
