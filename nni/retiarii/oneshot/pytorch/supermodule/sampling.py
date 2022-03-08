@@ -235,7 +235,7 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
                                      'Please enable ``kw_only`` on nni.trace.')
 
                 # save type and kwargs
-                return cls(module.trace_kwargs)
+                return cls(**module.trace_kwargs)
 
     def get_argument(self, name: str) -> Any:
         if name in self._mutable_arguments:
@@ -251,7 +251,7 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
         raise NotImplementedError()
 
 
-class PathSamplingSuperLinear(FineGrainedPathSamplingMixin, nn.Linear):
+class PathSamplingLinear(FineGrainedPathSamplingMixin, nn.Linear):
     """
     The Linear layer to replace original linear with valuechoices in its parameter list. It construct the biggest weight matrix first,
     and slice it before every forward according to the sampled value. Supported parameters are listed below:
@@ -269,7 +269,7 @@ class PathSamplingSuperLinear(FineGrainedPathSamplingMixin, nn.Linear):
     bound_type = nn.Linear
 
     def default_argument(self, name: str, value_choice: ValueChoiceX):
-        if name not in ['in_features', 'out_features', 'bias']:
+        if name not in ['in_features', 'out_features']:
             raise NotImplementedError(f'Unsupported value choice on argument: {name}')
         return max(value_choice.all_options())
 
@@ -286,7 +286,7 @@ class PathSamplingSuperLinear(FineGrainedPathSamplingMixin, nn.Linear):
         return F.linear(input, weight, bias)
 
 
-class PathSamplingSuperConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
+class PathSamplingConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
     """
     The Conv2d layer to replace original conv2d with valuechoices in its parameter list. It construct the biggest weight matrix first,
     and slice it before every forward according to the sampled value.
@@ -313,10 +313,10 @@ class PathSamplingSuperConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
         the unique identifier of `module`
     """
 
-    bound_type = nn.Conv2d
+    bound_type = nn.BatchNorm2d
 
     def default_argument(self, name: str, value_choice: ValueChoiceX):
-        if name not in ['in_channels', 'out_channels', 'groups', 'kernel_size', 'padding', 'dilation', 'bias']:
+        if name not in ['in_channels', 'out_channels', 'groups', 'kernel_size', 'padding', 'dilation']:
             raise NotImplementedError(f'Unsupported value choice on argument: {name}')
 
         if name == 'kernel_size':
@@ -347,6 +347,7 @@ class PathSamplingSuperConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
         in_chn = self.get_argument('in_channels')
         out_chn = self.get_argument('out_channels')
         kernel_size = self.get_argument('kernel_size')
+
         if isinstance(kernel_size, tuple):
             sampled_kernel_a, sampled_kernel_b = kernel_size
         else:
@@ -366,11 +367,11 @@ class PathSamplingSuperConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
         #   □ □ □ □ □   □ □ □ □ □
         max_kernel_a, max_kernel_b = self.kernel_size
         kernel_a_left, kernel_b_top = (max_kernel_a - sampled_kernel_a) // 2, (max_kernel_b - sampled_kernel_b) // 2
-        
+
         weight = self.weight[:out_chn,
-                            :in_chn // self.groups,
-                            kernel_a_left: kernel_a_left + sampled_kernel_a,
-                            kernel_b_top: kernel_b_top + sampled_kernel_b]
+                             :in_chn // self.groups,
+                             kernel_a_left: kernel_a_left + sampled_kernel_a,
+                             kernel_b_top: kernel_b_top + sampled_kernel_b]
         if self.bias is not None:
             if out_chn < self.out_channels:
                 bias = self.bias[:out_chn]
@@ -383,21 +384,24 @@ class PathSamplingSuperConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
         # The following three attributes must be tuples, since Conv2d will convert them in init if they are not.
         stride = self.get_argument('stride')
         padding = self.get_argument('padding')
-        dilation = self.get_argument('dilation'1)
+        dilation = self.get_argument('dilation')
 
         if self.padding_mode != 'zeros':
             return F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
                             weight, bias, stride, (0, 0), dilation, groups)
-        return F.conv2d(input, weight, bias, self.stride, self.padding, self.dilation, groups)
+        return F.conv2d(input, weight, bias, stride, padding, dilation, groups)
 
 
-class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
+class PathSamplingBatchNorm2d(FineGrainedPathSamplingMixin, nn.BatchNorm2d):
     """
     The BatchNorm2d layer to replace original bn2d with valuechoice in its parameter list. It construct the biggest mean and variation
     tensor first, and slice it before every forward according to the sampled value. Supported parameters are listed below:
         num_features : int
         eps : float
         momentum : float
+
+    Momentum is required to be float.
+    PyTorch batchnorm supports a case where momentum can be none, which is not supported here.
 
     Parameters
     ----------
@@ -407,70 +411,42 @@ class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
         the unique identifier of `module`
     """
 
-    def __init__(self, module, name):
-        self.name = name
-        self.args = module.trace_kwargs
+    def default_argument(self, name: str, value_choice: ValueChoiceX):
+        if name not in ['num_features', 'eps', 'momentum']:
+            raise NotImplementedError(f'Unsupported value choice on argument: {name}')
 
-        init_args = dict(self.args)
-        # compulsory params
-        init_args['num_features'] = self.max_candidate('num_features')
-
-        # optional params
-        # the initial values of eps and momentum doesn't matter since they are directly accessed in forward
-        # we just take max candidate for simplicity here
-        init_args['eps'] = self.max_candidate('eps', 1e-4)
-        init_args['momentum'] = self.max_candidate('momentum', .1)
-
-        super().__init__(**init_args)
+        return max(value_choice.all_options())
 
     def forward(self, input):
         # get sampled parameters
-        num_features = self.sampled_candidate('num_features')
+        num_features = self.get_argument('num_features')
+        eps = self.get_argument('eps')
+        momentum = self.get_argument('momentum')
+
         weight = self.weight[:num_features]
         bias = self.bias[:num_features]
         running_mean = self.running_mean[:num_features]
         running_var = self.running_var[:num_features]
 
-        self.eps = self.sampled_candidate('eps', 1e-4)
-        self.momentum = self.sampled_candidate('momentum', .1)
-
-        # region
-        # code below are simply copied from pytorch v1.10.1 source code since directly setting weight or bias is not allowed.
-        # please turn to pytorch source code if you have any problem with code below
-        self._check_input_dim(input)
-        if self.momentum is None:
-            exponential_average_factor = 0.0
-        else:
-            exponential_average_factor = self.momentum
-        if self.training and self.track_running_stats:
-            if self.num_batches_tracked is not None:
-                self.num_batches_tracked = self.num_batches_tracked + 1
-                if self.momentum is None:
-                    exponential_average_factor = 1.0 / float(self.num_batches_tracked)
-                else:
-                    exponential_average_factor = self.momentum
         if self.training:
             bn_training = True
         else:
             bn_training = (self.running_mean is None) and (self.running_var is None)
-        # endregion
 
         return F.batch_norm(
             input,
             # If buffers are not to be tracked, ensure that they won't be updated
-            running_mean
-            if not self.training or self.track_running_stats
-            else None,
+            running_mean if not self.training or self.track_running_stats else None,
             running_var if not self.training or self.track_running_stats else None,
             weight,
             bias,
             bn_training,
-            exponential_average_factor,
-            self.eps,
+            momentum,  # originally exponential_average_factor in pytorch code
+            eps,
         )
 
 
-class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLayer):
+class PathSamplingMultiHeadAttention(FineGrainedPathSamplingMixin, nn.MultiheadAttention):
     """
     The MultiHeadAttention layer to replace original mhattn with valuechoice in its parameter list. It construct the biggest Q, K,
     V and some other tensors first, and slice it before every forward according to the sampled value. Supported parameters are listed
@@ -495,58 +471,47 @@ class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLaye
         the unique identifier of `module`
     """
 
-    def __init__(self, module, name):
-        self.name = name
-        self.args = module.trace_kwargs
+    def default_argument(self, name: str, value_choice: ValueChoiceX) -> Any:
+        if name not in ['embed_dim', 'num_heads', 'kdim', 'vdim', 'dropout']:
+            raise NotImplementedError(f'Unsupported value choice on argument: {name}')
 
-        init_args = dict(self.args)
-        # compulsory params
-        init_args['embed_dim'] = self.max_embed_dim = self.max_candidate('embed_dim')
-        init_args['num_heads'] = self.max_candidate('num_heads')
+        return max(value_choice.all_options())
 
-        # optional params
-        init_args['kdim'] = self.max_candidate('kdim', self.max_embed_dim)
-        init_args['vdim'] = self.max_candidate('vdim', self.max_embed_dim)
-        init_args['dropout'] = self.max_candidate('dropout', 0.)
-
-        super().__init__(**init_args)
+    @staticmethod
+    def _slice_qkv_weight(src_tensor: torch.Tensor, unit_dim: int, slice_dim: int) -> torch.Tensor:
+        if unit_dim == slice_dim:
+            return src_tensor
+        # slice the parts for q, k, v respectively
+        return torch.cat([src_tensor[i * unit_dim: i * unit_dim + slice_dim] for i in range(3)], 0)
 
     def forward(self, query, key, value, key_padding_mask=None, need_weights=True, attn_mask=None):
         if self.batch_first:
             query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
 
-        embed_dim = self.sampled_candidate('embed_dim')
-        num_heads = self.sampled_candidate('num_heads')
-        self.dropout = self.sampled_candidate('dropout', 0.)
+        embed_dim = self.get_argument('embed_dim')
+        num_heads = self.get_argument('num_heads')
+        dropout = self.get_argument('dropout')
 
-        in_proj_bias = torch.concat(
-            [self.in_proj_bias[:embed_dim],
-             self.in_proj_bias[self.max_embed_dim: self.max_embed_dim + embed_dim],
-             self.in_proj_bias[2 * self.max_embed_dim: 2 * self.max_embed_dim + embed_dim]], dim=0) \
-            if self.in_proj_bias is not None else None
-        in_proj_weight = torch.concat(
-            [self.in_proj_weight[:embed_dim, :embed_dim],
-             self.in_proj_weight[self.max_embed_dim: self.max_embed_dim + embed_dim, :embed_dim],
-             self.in_proj_weight[2 * self.max_embed_dim: 2 * self.max_embed_dim + embed_dim, :embed_dim]], dim=0) \
-            if self.in_proj_weight is not None else None
+        # in projection weights & biases has q, k, v weights concatenated together
+        if self.in_proj_bias is not None:
+            in_proj_bias = self._slice_qkv_weight(self.in_proj_bias, self.embed_dim, embed_dim)
+        else:
+            in_proj_bias = None
+
+        if self.in_proj_weight is not None:
+            in_proj_weight = self._slice_qkv_weight(self.in_proj_weight[:, :embed_dim], self.embed_dim, embed_dim)
+        else:
+            in_proj_weight = None
+
         bias_k = self.bias_k[:, :, :embed_dim] if self.bias_k is not None else None
         bias_v = self.bias_v[:, :, :embed_dim] if self.bias_v is not None else None
         out_proj_weight = self.out_proj.weight[:embed_dim, :embed_dim]
         out_proj_bias = self.out_proj.bias[:embed_dim]
 
-        if self._qkv_same_embed_dim:
-
-            attn_output, attn_output_weights = F.multi_head_attention_forward(
-                query, key, value, embed_dim, num_heads,
-                in_proj_weight, in_proj_bias,
-                bias_k, bias_v, self.add_zero_attn,
-                self.dropout, out_proj_weight, out_proj_bias,
-                training=self.training,
-                key_padding_mask=key_padding_mask, need_weights=need_weights,
-                attn_mask=attn_mask)
-        else:
-            kdim = self.sampled_candidate('kdim', embed_dim)
-            vdim = self.sampled_candidate('vdim', embed_dim)
+        # The rest part is basically same as pytorch
+        if not self._qkv_same_embed_dim:
+            kdim = self.get_argument('kdim')
+            vdim = self.get_argument('vdim')
 
             q_proj = self.q_proj_weight[:embed_dim, :embed_dim]
             k_proj = self.k_proj_weight[:embed_dim, :kdim]
@@ -556,11 +521,20 @@ class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLaye
                 query, key, value, embed_dim, num_heads,
                 in_proj_weight, in_proj_bias,
                 bias_k, bias_v, self.add_zero_attn,
-                self.dropout, out_proj_weight, out_proj_bias,
+                dropout, out_proj_weight, out_proj_bias,
                 training=self.training,
                 key_padding_mask=key_padding_mask, need_weights=need_weights,
                 attn_mask=attn_mask, use_separate_proj_weight=True,
                 q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
+        else:
+            attn_output, attn_output_weights = F.multi_head_attention_forward(
+                query, key, value, embed_dim, num_heads,
+                in_proj_weight, in_proj_bias,
+                bias_k, bias_v, self.add_zero_attn,
+                dropout, out_proj_weight, out_proj_bias,
+                training=self.training,
+                key_padding_mask=key_padding_mask, need_weights=need_weights,
+                attn_mask=attn_mask)
 
         if self.batch_first:
             return attn_output.transpose(1, 0), attn_output_weights
