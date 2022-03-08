@@ -259,7 +259,7 @@ class PathSamplingSuperLinear(FineGrainedPathSamplingMixin, nn.Linear):
             raise NotImplementedError(f'Unsupported value choice on argument: {name}')
         return max(value_choice.all_options())
 
-
+    def forward(self, input):
         self.name = name
         self.args = module.trace_kwargs
 
