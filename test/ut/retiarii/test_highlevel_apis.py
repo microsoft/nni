@@ -756,6 +756,8 @@ class GraphIR(unittest.TestCase):
                 model = mutator.bind_sampler(sampler).apply(model)
             self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(2, 10)).size() == torch.Size([2, 16]))
 
+    @unittest.skipIf(torch.__version__.startswith('1.7') or torch.__version__.startswith('1.8'),
+                     'Old PyTorch does not have sinc and asinh')
     def test_autoactivation(self):
         @model_wrapper
         class Net(nn.Module):
