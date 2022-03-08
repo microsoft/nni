@@ -39,6 +39,8 @@ class ParameterSpec(NamedTuple):
 
     categorical: bool               # Whether this paramter is categorical (unordered) or numerical (ordered)
     size: int = None                # If it's categorical, how many candidates it has
+    chosen_size: Optional[int] = 1  # If it's categorical, it should choose how many candidates.
+                                    # By default, 1. If none, arbitrary number of candidates can be chosen.
 
     # uniform distributed
     low: float = None               # Lower bound of uniform parameter

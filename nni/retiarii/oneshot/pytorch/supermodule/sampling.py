@@ -55,7 +55,8 @@ class PathSamplingLayer(BaseSuperNetModule):
         return {self.label: random.choice(self.op_names)}
 
     def search_space_spec(self):
-        return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ), True)}
+        return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ),
+                                          True, size=len(self.op_names))}
 
     @classmethod
     def mutate(cls, module, name, memo):
@@ -121,8 +122,10 @@ class PathSamplingInput(nn.Module):
         return {self.label: self._random_choose_n()}
 
     def search_space_spec(self):
-        # FIXME: no way to express n choose k currently
-        return {self.label: ParameterSpec(self.label, 'choice', list(range(self.n_candidates)), (self.label, ), True)}
+        return {
+            self.label: ParameterSpec(self.label, 'choice', list(range(self.n_candidates)),
+                                      (self.label, ), True, size=self.n_candidates, chosen_size=self.n_chosen)
+        }
 
     @classmethod
     def mutate(cls, module, name, memo):
@@ -152,6 +155,8 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
     Utility class for all operators with ValueChoice as its arguments.
     """
 
+    bound_type: Type[nn.Module]
+
     def __init__(self, **module_kwargs):
         # Concerned arguments
         self._mutable_arguments: Dict[str, ValueChoiceX] = {}
@@ -166,11 +171,14 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
             else:
                 init_kwargs[key] = value
 
+        # Sampling arguments. This should have the same number of keys as `_mutable_arguments`
+        self._sampled: Optional[Dict[str, Any]] = None
+
         # get all inner leaf value choices
         self._space_spec: Dict[str, ParameterSpec] = {}
         for value_choice in self._mutable_arguments.values():
             for choice in value_choice.inner_choices():
-                param_spec = ParameterSpec(choice.label, 'choice', choice.candidates, (choice.label, ), True)
+                param_spec = ParameterSpec(choice.label, 'choice', choice.candidates, (choice.label, ), True, size=len(choice.candidates))
                 if choice.label in self._space_spec:
                     if param_spec != self._space_spec[choice.label]:
                         raise ValueError('Value choice conflict: same label with different candidates: '
@@ -227,7 +235,12 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
                                      'Please enable ``kw_only`` on nni.trace.')
 
                 # save type and kwargs
-                return cls(cls.bound_type, module.trace_kwargs)
+                return cls(module.trace_kwargs)
+
+    def get_argument(self, name: str) -> Any:
+        if name in self._mutable_arguments:
+            return self._sampled[name]
+        return getattr(self, name)
 
     def default_argument(self, name: str, value_choice: ValueChoiceX):
         """Subclass override this method to customize init argument of super-op. For Example, ::
@@ -236,7 +249,6 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
                 return max(value_choice.candidates)
         """
         raise NotImplementedError()
-
 
 
 class PathSamplingSuperLinear(FineGrainedPathSamplingMixin, nn.Linear):
@@ -254,118 +266,27 @@ class PathSamplingSuperLinear(FineGrainedPathSamplingMixin, nn.Linear):
         the unique identifier of `module`
     """
 
+    bound_type = nn.Linear
+
     def default_argument(self, name: str, value_choice: ValueChoiceX):
         if name not in ['in_features', 'out_features', 'bias']:
             raise NotImplementedError(f'Unsupported value choice on argument: {name}')
         return max(value_choice.all_options())
 
     def forward(self, input):
-        self.name = name
-        self.args = module.trace_kwargs
+        in_features = self.get_argument('in_features')
+        out_features = self.get_argument('out_features')
 
-        init_args = dict(self.args)
-        # compulsory params
-        init_args['in_features'] = self.max_candidate('in_features')
-        init_args['out_features'] = self.max_candidate('out_features')
+        weight = self.weight[:out_features, :in_features]
+        if self.bias is None:
+            bias = self.bias
+        else:
+            bias = self.bias[:out_features]
 
-        super().__init__(**init_args)
-
-    def forward(self, x):
-        in_dim = self.sampled_candidate('in_features')
-        out_dim = self.sampled_candidate('out_features')
-
-        weights = self.weight[:out_dim, :in_dim]
-        bias = self.bias[:out_dim]
-
-        return F.linear(x, weights, bias)
+        return F.linear(input, weight, bias)
 
 
-class ValueChoiceSuperLayer:
-    """
-    Layer that has at least one valuechoice in it param list. Basic functions such as getting max/min/sampled candidates are
-    implemented in this class.
-
-    Attributes
-    ----------
-    name : str
-        the unique identifier of the module it replaced
-    args : Dict[str, Any]
-        the parameter list of the original module
-
-    Parameters
-    ----------
-    module : nn.Module:
-        module to be replaced
-    module_name : str
-        the unique identifier of `module`
-    """
-
-    def max_candidate(self, attr_name, default = None):
-        attr = self.args.get(attr_name, default)
-        if isinstance(attr, ToSample):
-            return max(attr.candidates[f'{self.name}_{attr_name}'])
-        return attr
-
-    def min_candidate(self, attr_name, default = None):
-        attr = self.args.get(attr_name, default)
-        if isinstance(attr, ToSample):
-            return min(attr.candidates[f'{self.name}_{attr_name}'])
-        return attr
-
-    def sampled_candidate(self, attr_name, default = None):
-        attr = self.args.get(attr_name, default)
-        if isinstance(attr, ToSample):
-            return attr.sampled_candidate(f'{self.name}_{attr_name}')
-        return attr
-
-
-class ENASValueChoice(ToSample):
-    def __init__(self, value_choice):
-        super().__init__(value_choice.label, len(value_choice.candidates))
-        self.n_chosen = 1
-
-
-class RandomValueChoice(ToSample):
-    def __init__(self, value_choice):
-        super().__init__(value_choice.label, len(value_choice.candidates))
-
-
-class PathSamplingSuperLinear(nn.Linear, ValueChoiceSuperLayer):
-    """
-    The Linear layer to replace original linear with valuechoices in its parameter list. It construct the biggest weight matrix first,
-    and slice it before every forward according to the sampled value. Supported parameters are listed below:
-        in_features : int
-        out_features : int
-
-    Parameters
-    ----------
-    module : nn.Module:
-        module to be replaced
-    name : str
-        the unique identifier of `module`
-    """
-    def __init__(self, module, name) -> None:
-        self.name = name
-        self.args = module.trace_kwargs
-
-        init_args = dict(self.args)
-        # compulsory params
-        init_args['in_features'] = self.max_candidate('in_features')
-        init_args['out_features'] = self.max_candidate('out_features')
-
-        super().__init__(**init_args)
-
-    def forward(self, x):
-        in_dim = self.sampled_candidate('in_features')
-        out_dim = self.sampled_candidate('out_features')
-
-        weights = self.weight[:out_dim, :in_dim]
-        bias = self.bias[:out_dim]
-
-        return F.linear(x, weights, bias)
-
-
-class PathSamplingSuperConv2d(nn.Conv2d, ValueChoiceSuperLayer):
+class PathSamplingSuperConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
     """
     The Conv2d layer to replace original conv2d with valuechoices in its parameter list. It construct the biggest weight matrix first,
     and slice it before every forward according to the sampled value.
@@ -391,41 +312,48 @@ class PathSamplingSuperConv2d(nn.Conv2d, ValueChoiceSuperLayer):
     name : str
         the unique identifier of `module`
     """
-    def __init__(self, module, name):
-        self.name = name
-        self.args = module.trace_kwargs
 
-        init_args = dict(self.args)
-        # compulsorty params
-        init_args['in_channels'] = self.max_candidate('in_channels')
-        init_args['out_channels'] = self.max_candidate('out_channels')
-        # kernel_size may be an int or tuple, we turn it into a tuple for simplicity
-        init_args['kernel_size'] = self.max_kernel_size = self.max_kernel_size_candidate()
-        if not isinstance(self.max_kernel_size, tuple):
-            self.max_kernel_size = (self.max_kernel_size, self.max_kernel_size)
+    bound_type = nn.Conv2d
 
-        # optional params
-        # stride, padding and dilation are not necessary for init funtion, since `Conv2d`` directly accessed them in `forward`,
-        # which means we can set them just before calling Conv2d.forward
-        init_args['groups'] = self.min_candidate('groups', 1)
+    def default_argument(self, name: str, value_choice: ValueChoiceX):
+        if name not in ['in_channels', 'out_channels', 'groups', 'kernel_size', 'padding', 'dilation', 'bias']:
+            raise NotImplementedError(f'Unsupported value choice on argument: {name}')
 
-        super().__init__(**init_args)
+        if name == 'kernel_size':
+            def int2tuple(ks):
+                if isinstance(ks, int):
+                    return (ks, ks)
+                return ks
+
+            all_kernel_sizes = set(value_choice.all_options())
+            if any(isinstance(ks, tuple) for ks in all_kernel_sizes):
+                # maximum kernel should be calculated on every dimension
+                return (
+                    max(int2tuple(ks)[0] for ks in all_kernel_sizes),
+                    max(int2tuple(ks)[1] for ks in all_kernel_sizes)
+                )
+            else:
+                return max(all_kernel_sizes)
+
+        elif name == 'groups':
+            # minimum groups, maximum kernel
+            return min(value_choice.all_options())
+
+        else:
+            return max(value_choice.all_options())
 
     def forward(self, input):
-        in_chn = self.sampled_candidate('in_channels')
-        out_chn = self.sampled_candidate('out_channels')
-        kernel_size = self.sampled_candidate('kernel_size')
-        sampled_kernel_a, sampled_kernel_b = kernel_size \
-            if isinstance(kernel_size, tuple) else kernel_size, kernel_size
-
-        # Users are supposed to make sure that candidates with the same index match each other.
-        # No need to figure if the following three attributes are tuples or not, since Conv2d will handel them.
-        self.stride = self.sampled_candidate('stride', 1)
-        self.padding = self.sampled_candidate('padding', 0)
-        self.dilation = self.sampled_candidate('dilation', 1)
+        # get sampled in/out channels and kernel size
+        in_chn = self.get_argument('in_channels')
+        out_chn = self.get_argument('out_channels')
+        kernel_size = self.get_argument('kernel_size')
+        if isinstance(kernel_size, tuple):
+            sampled_kernel_a, sampled_kernel_b = kernel_size
+        else:
+            sampled_kernel_a = sampled_kernel_b = kernel_size
 
         # F.conv2d will handle `groups`, but we still need to slice weight tensor
-        self.groups = self.sampled_candidate('groups', 1)
+        groups = self.get_argument('groups')
 
         # take the small kernel from the center and round it to floor(left top)
         # Example:
@@ -436,30 +364,31 @@ class PathSamplingSuperConv2d(nn.Conv2d, ValueChoiceSuperLayer):
         #   □ ■ ■ ■ □   □ ■ ■ □ □
         #   □ ■ ■ ■ □   □ □ □ □ □
         #   □ □ □ □ □   □ □ □ □ □
-        max_kernel_a, max_kernel_b = self.max_kernel_size
+        max_kernel_a, max_kernel_b = self.kernel_size
         kernel_a_left, kernel_b_top = (max_kernel_a - sampled_kernel_a) // 2, (max_kernel_b - sampled_kernel_b) // 2
-        weight = self.weight[:out_chn, :in_chn // self.groups,
-            kernel_a_left : kernel_a_left + sampled_kernel_a,
-            kernel_b_top : kernel_b_top + sampled_kernel_b]
-        bias = self.bias[:out_chn] if self.bias is not None else None
+        
+        weight = self.weight[:out_chn,
+                            :in_chn // self.groups,
+                            kernel_a_left: kernel_a_left + sampled_kernel_a,
+                            kernel_b_top: kernel_b_top + sampled_kernel_b]
+        if self.bias is not None:
+            if out_chn < self.out_channels:
+                bias = self.bias[:out_chn]
+            else:
+                bias = self.bias
+        else:
+            bias = None
 
-        return self._conv_forward(input, weight, bias)
+        # Users are supposed to make sure that candidates with the same index match each other.
+        # The following three attributes must be tuples, since Conv2d will convert them in init if they are not.
+        stride = self.get_argument('stride')
+        padding = self.get_argument('padding')
+        dilation = self.get_argument('dilation'1)
 
-    def max_kernel_size_candidate(self):
-        kernel_size = self.args['kernel_size']
-
-        if not isinstance(kernel_size, ToSample):
-            return kernel_size
-
-        candidates = kernel_size.candidates[f'{self.name}_kernel_size']
-        if not isinstance(candidates[0], tuple):
-            return max(candidates)
-
-        maxa, maxb = 0, 0
-        for a, b in candidates:
-            a = max(a, maxa)
-            b = max(b, maxb)
-        return maxa, maxb
+        if self.padding_mode != 'zeros':
+            return F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
+                            weight, bias, stride, (0, 0), dilation, groups)
+        return F.conv2d(input, weight, bias, self.stride, self.padding, self.dilation, groups)
 
 
 class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
@@ -477,6 +406,7 @@ class PathSamplingSuperBatchNorm2d(nn.BatchNorm2d, ValueChoiceSuperLayer):
     name : str
         the unique identifier of `module`
     """
+
     def __init__(self, module, name):
         self.name = name
         self.args = module.trace_kwargs
@@ -564,6 +494,7 @@ class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLaye
     name : str
         the unique identifier of `module`
     """
+
     def __init__(self, module, name):
         self.name = name
         self.args = module.trace_kwargs
@@ -580,7 +511,7 @@ class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLaye
 
         super().__init__(**init_args)
 
-    def forward(self, query, key, value, key_padding_mask = None, need_weights = True, attn_mask = None):
+    def forward(self, query, key, value, key_padding_mask=None, need_weights=True, attn_mask=None):
         if self.batch_first:
             query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
 
@@ -590,14 +521,14 @@ class PathSamplingMultiHeadAttention(nn.MultiheadAttention, ValueChoiceSuperLaye
 
         in_proj_bias = torch.concat(
             [self.in_proj_bias[:embed_dim],
-             self.in_proj_bias[self.max_embed_dim : self.max_embed_dim + embed_dim],
-             self.in_proj_bias[2 * self.max_embed_dim : 2 * self.max_embed_dim + embed_dim]], dim = 0) \
-                       if self.in_proj_bias is not None else None
+             self.in_proj_bias[self.max_embed_dim: self.max_embed_dim + embed_dim],
+             self.in_proj_bias[2 * self.max_embed_dim: 2 * self.max_embed_dim + embed_dim]], dim=0) \
+            if self.in_proj_bias is not None else None
         in_proj_weight = torch.concat(
             [self.in_proj_weight[:embed_dim, :embed_dim],
-             self.in_proj_weight[self.max_embed_dim : self.max_embed_dim + embed_dim, :embed_dim],
-             self.in_proj_weight[2 * self.max_embed_dim : 2 * self.max_embed_dim + embed_dim, :embed_dim]], dim = 0) \
-                         if self.in_proj_weight is not None else None
+             self.in_proj_weight[self.max_embed_dim: self.max_embed_dim + embed_dim, :embed_dim],
+             self.in_proj_weight[2 * self.max_embed_dim: 2 * self.max_embed_dim + embed_dim, :embed_dim]], dim=0) \
+            if self.in_proj_weight is not None else None
         bias_k = self.bias_k[:, :, :embed_dim] if self.bias_k is not None else None
         bias_v = self.bias_v[:, :, :embed_dim] if self.bias_v is not None else None
         out_proj_weight = self.out_proj.weight[:embed_dim, :embed_dim]
