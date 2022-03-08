@@ -5,7 +5,7 @@ import inspect
 import warnings
 from typing import Any, TypeVar, Union
 
-from nni.common.serializer import Traceable, is_traceable, trace, _copy_class_wrapper_attributes
+from nni.common.serializer import Traceable, is_traceable, is_wrapped_with_trace, trace, _copy_class_wrapper_attributes
 from .utils import ModelNamespace
 
 __all__ = ['get_init_parameters_or_fail', 'serialize', 'serialize_cls', 'basic_unit', 'model_wrapper',
@@ -64,7 +64,8 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
         class PrimitiveOp(nn.Module):
             ...
     """
-    _check_wrapped(cls)
+    if _check_wrapped(cls, 'basic_unit'):
+        return cls
 
     import torch.nn as nn
     assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
@@ -72,15 +73,7 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
     cls = trace(cls)
     cls._nni_basic_unit = basic_unit_tag
 
-    # HACK: for torch script
-    # https://github.com/pytorch/pytorch/pull/45261
-    # https://github.com/pytorch/pytorch/issues/54688
-    # I'm not sure whether there will be potential issues
-    import torch
-    cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
-    cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
-    cls.trace_args = torch.jit.unused(cls.trace_args)
-    cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
+    _torchscript_patch(cls)
 
     return cls
 
@@ -103,12 +96,14 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
     Currently, NNI might not complain in simple cases where ``@model_wrapper`` is actually not needed.
     But in future, we might enforce ``@model_wrapper`` to be required for base model.
     """
-    _check_wrapped(cls)
+    if _check_wrapped(cls, 'model_wrapper'):
+        return cls
 
     import torch.nn as nn
     assert issubclass(cls, nn.Module)
 
-    wrapper = trace(cls)
+    # subclass can still use trace info
+    wrapper = trace(cls, inheritable=True)
 
     class reset_wrapper(wrapper):
         def __init__(self, *args, **kwargs):
@@ -116,8 +111,12 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
                 super().__init__(*args, **kwargs)
 
     _copy_class_wrapper_attributes(wrapper, reset_wrapper)
-    reset_wrapper.__wrapped__ = wrapper.__wrapped__
+    reset_wrapper.__wrapped__ = getattr(wrapper, '__wrapped__', wrapper)
     reset_wrapper._nni_model_wrapper = True
+    reset_wrapper._traced = True
+
+    _torchscript_patch(cls)
+
     return reset_wrapper
 
 
@@ -133,6 +132,32 @@ def is_model_wrapped(cls_or_instance) -> bool:
     return getattr(cls_or_instance, '_nni_model_wrapper', False)
 
 
-def _check_wrapped(cls: T) -> bool:
-    if getattr(cls, '_traced', False) or getattr(cls, '_nni_model_wrapper', False):
-        raise TypeError(f'{cls} is already wrapped with trace wrapper (basic_unit / model_wrapper / trace). Cannot wrap again.')
+def _check_wrapped(cls: T, rewrap: str) -> bool:
+    wrapped = None
+    if is_model_wrapped(cls):
+        wrapped = 'model_wrapper'
+    elif is_basic_unit(cls):
+        wrapped = 'basic_unit'
+    elif is_wrapped_with_trace(cls):
+        wrapped = 'nni.trace'
+    if wrapped:
+        if wrapped != rewrap:
+            raise TypeError(f'{cls} is already wrapped with {wrapped}. Cannot rewrap with {rewrap}.')
+        return True
+    return False
+
+
+def _torchscript_patch(cls) -> None:
+    # HACK: for torch script
+    # https://github.com/pytorch/pytorch/pull/45261
+    # https://github.com/pytorch/pytorch/issues/54688
+    # I'm not sure whether there will be potential issues
+    import torch
+    if hasattr(cls, '_get_nni_attr'):  # could not exist on non-linux
+        cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
+    if hasattr(cls, 'trace_symbol'):
+        # these must all exist or all non-exist
+        cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
+        cls.trace_args = torch.jit.unused(cls.trace_args)
+        cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
+        cls.trace_copy = torch.jit.ignore(cls.trace_copy)
