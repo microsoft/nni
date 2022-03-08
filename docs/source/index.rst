@@ -20,8 +20,7 @@ Neural Network Intelligence
     :caption: Advanced Materials
     :hidden:
 
-    Overview
-    Auto Hyperparameter Optimization <hpo/overview>
+    Auto Hyperparameter Optimization <hpo/index>
     Neural Architecture Search <nas/index>
     Model Compression <compression>
     Feature Engineering <feature_engineering>
@@ -44,8 +43,6 @@ Neural Network Intelligence
     FAQ <Tutorial/FAQ>
     How to Contribute <contribution>
     Change Log <Release>
-
-    (FIXME) <hpo/toctree>
 
 
 
