@@ -7,8 +7,8 @@
 
     模型剪枝 <pruning>
     模型量化 <quantization>
+    用户配置 <compression_config_list>
     高级用法 <advanced_usage>
-    参考 <reference>
 
 深度神经网络（DNNs）在许多领域都取得了巨大的成功。 然而，典型的神经网络是
 计算和能源密集型的，很难将其部署在计算资源匮乏

@@ -1,5 +1,5 @@
-Model Compression in NNI
-========================
+Model Compression with NNI
+==========================
 
 .. toctree::
     :hidden:
@@ -7,8 +7,8 @@ Model Compression in NNI
 
     Pruning <pruning>
     Quantization <quantization>
+    Config Specification <compression_config_list>
     Advanced Usage <advanced_usage>
-    Reference <reference>
 
 .. attention::
 
