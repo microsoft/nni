@@ -113,7 +113,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         #. name of the module in its parent module, and
         #. a memo dict whose usage depends on the particular algorithm.
 
-        Note that there won't be any hooks called on root module.
+        Note that the memo should be read/written by hooks.
+        There won't be any hooks called on root module.
         The returned arguments can be also one of the three kinds:
 
         #. :class:`BaseSuperNetModule` or None, and boolean,

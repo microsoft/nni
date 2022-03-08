@@ -19,7 +19,7 @@ from .base import BaseSuperNetModule, ParameterSpec
 
 class PathSamplingLayer(BaseSuperNetModule):
     """
-    Mixed module, in which fprop is decided by exactly one or multiple (sampled) module.
+    Mixed layer, in which fprop is decided by exactly one inner layer or sum of multiple (sampled) layers.
     If multiple modules are selected, the result will be summed and returned.
 
     Attributes
@@ -46,7 +46,7 @@ class PathSamplingLayer(BaseSuperNetModule):
             self._sampled = memo[self.label]
         else:
             self._sampled = random.choice(self.op_names)
-            memo[self.label] = self._sampled
+        return {self.label: self._sampled}
 
     def export(self, memo):
         """Random choose one name if label isn't found in memo."""
@@ -111,7 +111,8 @@ class PathSamplingInput(nn.Module):
         if self.label in memo:
             self._sampled = memo[self.label]
         else:
-            memo[self.label] = self._random_choose_n()
+            self._sampled = self._random_choose_n()
+        return {self.label: self._sampled}
 
     def export(self, memo):
         """Random choose one name if label isn't found in memo."""
@@ -152,36 +153,64 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
     """
 
     def __init__(self, **module_kwargs):
-        # Get init default
-        init_kwargs = {}
+        # Concerned arguments
+        self._mutable_arguments: Dict[str, ValueChoiceX] = {}
 
-        self._mutable_arguments: Dict[str, Any] = {}
+        # get init default
+        init_kwargs = {}
 
         for key, value in module_kwargs.items():
             if isinstance(value, ValueChoiceX):
-                init_kwargs[key] = self.init_argument(value)
+                init_kwargs[key] = self.init_argument(key, value)
                 self._mutable_arguments[key] = value
             else:
                 init_kwargs[key] = value
 
+        # get all inner leaf value choices
+        self._space_spec: Dict[str, ParameterSpec] = {}
+        for value_choice in self._mutable_arguments.values():
+            for choice in value_choice.inner_choices():
+                param_spec = ParameterSpec(choice.label, 'choice', choice.candidates, (choice.label, ), True)
+                if choice.label in self._space_spec:
+                    if param_spec != self._space_spec[choice.label]:
+                        raise ValueError('Value choice conflict: same label with different candidates: '
+                                         f'{param_spec} vs. {self._space_spec[choice.label]}')
+                else:
+                    self._space_spec[choice.label] = param_spec
+
         super().__init__(**init_kwargs)
 
     def resample(self, memo):
-        """Random choose one path if label is not found in memo."""
-        if self.label in memo:
-            self._sampled = memo[self.label]
-        else:
-            self._sampled = random.choice(self.op_names)
-            memo[self.label] = self._sampled
+        """Random sample for each leaf value choice."""
+        result = {}
+        for label in self._space_spec:
+            if label in memo:
+                result[label] = memo[label]
+            else:
+                result[label] = random.choice(self._space_spec[label])
+
+        # composits to kwargs
+        # example: result = {"exp_ratio": 3}, self._sampled = {"in_channels": 48, "out_channels": 96}
+        self._sampled = {}
+        for key, value in self._mutable_arguments.items():
+            choice_inner_values = []
+            for choice in value.inner_choices():
+                choice_inner_values.append(result[choice.label])
+            self._sampled[key] = value.evaluate(choice_inner_values)
+        self._sampled = result
+
+        return result
 
     def export(self, memo):
-        """Random choose one name if label isn't found in memo."""
-        if self.label in memo:
-            return {}  # nothing new to export
-        return {self.label: random.choice(self.op_names)}
+        """Export is also random for each leaf value choice."""
+        result = {}
+        for label in self._space_spec:
+            if label not in memo:
+                result[label] = random.choice(self._space_spec[label])
+        return result
 
     def search_space_spec(self):
-        return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ), True)}
+        return self._space_spec
 
     @classmethod
     def mutate(cls, module, name, memo):
@@ -200,10 +229,10 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
                 # save type and kwargs
                 return cls(cls.bound_type, module.trace_kwargs)
 
-    def default_argument(self, value_choice: ValueChoiceX):
+    def default_argument(self, name: str, value_choice: ValueChoiceX):
         """Subclass override this method to customize init argument of super-op. For Example, ::
 
-            def default_argument(self, value_choice):
+            def default_argument(self, name, value_choice):
                 return max(value_choice.candidates)
         """
         raise NotImplementedError()
@@ -224,6 +253,13 @@ class PathSamplingSuperLinear(FineGrainedPathSamplingMixin, nn.Linear):
     name : str
         the unique identifier of `module`
     """
+
+    def default_argument(self, name: str, value_choice: ValueChoiceX):
+        if name not in ['in_features', 'out_features', 'bias']:
+            raise NotImplementedError(f'Unsupported value choice on argument: {name}')
+        return max(value_choice.all_options())
+
+
         self.name = name
         self.args = module.trace_kwargs
 

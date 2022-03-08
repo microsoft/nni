@@ -23,7 +23,7 @@ class BaseSuperNetModule(nn.Module):
     rather than their compositions.
     """
 
-    def resample(self, memo: Dict[str, Any] = None) -> None:
+    def resample(self, memo: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Resample the super-net module.
 
@@ -31,6 +31,11 @@ class BaseSuperNetModule(nn.Module):
         ----------
         memo : Dict[str, Any]
             Used to ensure the consistency of samples with the same label.
+
+        Returns
+        -------
+        dict
+            Sampled result. If nothing new is sampled, it should return an empty dict.
         """
         raise NotImplementedError()
 
