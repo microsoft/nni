@@ -200,7 +200,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
             # replace the module with a new instance whose n_models is set
             # n_models must be set in __init__, otherwise it cannot be captured by serialize_cls
-            new_module_init_params = model.evaluator.module.trace_kwargs.copy()
+            new_module_init_params = model.evaluator.module.dump_kwargs().copy()
 
             # MultiModelSupervisedLearningModule hides n_models of _MultiModelSupervisedLearningModule from users
             new_module_init_params['n_models'] = len(multi_model)
