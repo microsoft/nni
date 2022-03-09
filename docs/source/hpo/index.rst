@@ -18,3 +18,4 @@ Hyperparameter Optimization
     Search Space <search_space>
     Tuners <tuners>
     Assessors <assessors>
+    Advanced Usage <advanced_toctree.rst>
