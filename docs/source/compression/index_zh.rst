@@ -1,8 +1,16 @@
-.. d371fe9f337e7c445c2f3016fc939aaf
+.. 1d14b9d13cdd660f8e9dcb2abed0b185
 
-#################
 模型压缩
-#################
+========
+
+..  toctree::
+    :hidden:
+    :maxdepth: 2
+
+    模型剪枝 <pruning>
+    模型量化 <quantization>
+    用户配置 <compression_config_list>
+    高级用法 <advanced_usage>
 
 深度神经网络（DNNs）在许多领域都取得了巨大的成功。 然而，典型的神经网络是
 计算和能源密集型的，很难将其部署在计算资源匮乏
@@ -19,14 +27,3 @@ NNI 中也内置了一些主流的模型压缩算法。
 用户可以进一步利用 NNI 的自动调优功能找到最佳的压缩模型，
 该功能在自动模型压缩部分有详细介绍。
 另一方面，用户可以使用 NNI 的接口自定义新的压缩算法。
-
-详细信息，参考以下教程：
-
-..  toctree::
-    :maxdepth: 2
-
-    概述 <compression/overview>
-    模型剪枝 <compression/pruning>
-    模型量化 <compression/quantization>
-    高级用法 <compression/advanced_usage>
-    参考 <compression/reference>

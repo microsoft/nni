@@ -22,7 +22,7 @@ Neural Network Intelligence
 
     Hyperparameter Optimization <hpo/index>
     Neural Architecture Search <nas/index>
-    Model Compression <compression>
+    Model Compression <compression/index>
     Feature Engineering <feature_engineering>
     Experiment <experiment/overview>
 
