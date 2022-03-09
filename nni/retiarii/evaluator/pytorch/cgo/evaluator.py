@@ -31,7 +31,7 @@ class _MultiModelSupervisedLearningModule(LightningModule):
         self.metrics = nn.ModuleDict({name: cls() for name, cls in metrics.items()})
         self.metrics_args = metrics
         self.n_models = n_models
-    
+
     def dump_kwargs(self):
         kwargs = {}
         kwargs['criterion'] = self.criterion_cls
