@@ -20,7 +20,7 @@ Neural Network Intelligence
     :caption: Advanced Materials
     :hidden:
 
-    Auto Hyperparameter Optimization <hpo/index>
+    Hyperparameter Optimization <hpo/index>
     Neural Architecture Search <nas/index>
     Model Compression <compression>
     Feature Engineering <feature_engineering>
