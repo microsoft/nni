@@ -105,7 +105,7 @@ Neural Network Intelligence
       # Step 1. define a config_list
       config_list = [{
           'quant_types': ['input', 'weight'],
-          'quant_bits':  {'input': 8, 'weight': 8},
+          'quant_bits': {'input': 8, 'weight': 8},
           'op_types': ['Conv2d']
       }]
 
