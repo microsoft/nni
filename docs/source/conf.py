@@ -59,6 +59,7 @@ extensions = [
     # Custom extensions in extension/ folder.
     'inplace_translation',
     'cardlinkitem',
+    'codesnippetcard',
     'patch_docutils',
     'patch_autodoc',
 ]

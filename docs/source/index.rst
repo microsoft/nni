@@ -49,7 +49,134 @@ Neural Network Intelligence
     How to Contribute <contribution>
     Change Log <Release>
 
+.. raw:: html
 
+   <div class="codesnippet-card-container">
+
+.. codesnippetcard::
+   :icon: ../img/thumbnails/hpo-icon-small.png
+   :title: Hyper-parameter Tuning
+   :link: autotune_ref
+
+   .. code-block::
+
+      params = nni.get_next_parameter()
+
+      class Net(nn.Module):
+          ...
+
+      model = Net()
+      optimizer = optim.SGD(model.parameters(), params['lr'], params['momentum'])
+
+      for epoch in range(10):
+          train(...)
+
+      accuracy = test(model)
+      nni.report_final_result(accuracy)
+
+.. codesnippetcard::
+   :icon: ../img/thumbnails/pruning-icon-small.png
+   :title: Model Pruning
+   :link: tutorials/pruning_quick_start_mnist
+
+   .. code-block::
+
+      # Step 1. define a config_list
+      config_list = [{
+          'sparsity': 0.8,
+          'op_types': ['Conv2d']
+      }]
+
+      # Step 2. generate masks for simulated pruning
+      wrapped_masked_model, masks = L1NormPruner(model, config_list).compress()
+
+      # Step 3. replace the modules in the model with smaller ones, for real speed up
+      ModelSpeedup(unwrapped_model, dummy_input, masks).speedup_model()
+
+.. codesnippetcard::
+   :icon: ../img/thumbnails/quantization-icon-small.png
+   :title: Quantization
+   :link: tutorials/quantization_speed_up
+
+   .. code-block::
+
+      # Step 1. define a config_list
+      config_list = [{
+          'quant_types': ['input', 'weight'],
+          'quant_bits':  {'input': 8, 'weight': 8},
+          'op_types': ['Conv2d']
+      }]
+
+      # Step 2. quantize the model and training if it is needed by quantizer
+      quantizer = QAT_Quantizer(model, config_list)
+      quantizer.compress()
+      # Training...
+
+      # Step 3. export calibration config and generate TensorRT engine for real speed up
+      calibration_config = quantizer.export_model(model_path, calibration_path)
+      engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=batch_size)
+      engine.compress()
+
+.. codesnippetcard::
+   :icon: ../img/thumbnails/multi-trial-nas-icon-small.png
+   :title: Neural Architecture Search
+   :link: tutorials/hello_nas
+
+   .. code-block:: diff
+
+      # define model space
+      -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
+      +   self.conv2 = nn.LayerChoice([
+      +       nn.Conv2d(32, 64, 3, 1),
+      +       DepthwiseSeparableConv(32, 64)
+      +   ])
+      # search strategy + evaluator
+      search_strategy = RegularizedEvolution(dedup=True)
+      evaluator = FunctionalEvaluator(train_and_evaluate)
+
+      # run experiment
+      RetiariiExperiment(model_space, evaluator, strategy).run()
+
+.. codesnippetcard::
+   :icon: ../img/thumbnails/one-shot-nas-icon-small.png
+   :title: One-shot NAS
+   :link: nas/index
+
+   .. code-block::
+
+      # define model space
+      space = AnySearchSpace()
+
+      # get a darts trainer
+      trainer = DartsTrainer(space, loss, metrics)
+      trainer.fit()
+
+      # get final searched architecture
+      arch = trainer.export()
+
+.. codesnippetcard::
+   :icon: ../img/thumbnails/feature-engineering-icon-small.png
+   :title: Feature Engineering
+   :link: FeatureEngineering/Overview
+
+   .. code-block::
+
+      selector = GBDTSelector()
+      selector.fit(X_train, y_train,
+                  lgb_params = lgb_params,
+                  eval_ratio = eval_ratio,
+                  early_stopping_rounds = early_stopping_rounds,
+                  importance_type = importance_type,
+                  num_boost_round = num_boost_round)
+
+      # get selected features
+      features = selector.get_selected_features(topk=topk)
+
+.. End of code snippet card
+
+.. raw:: html
+
+   </div>
 
 .. raw:: html
 

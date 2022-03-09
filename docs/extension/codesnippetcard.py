@@ -2,110 +2,111 @@
 Code snippet card, used in index page.
 """
 
-import os
-
 from docutils.parsers.rst import Directive, directives
 from docutils.statemachine import StringList
 from docutils import nodes
 
-TAG_TEMPLATE = """<span class="card-link-tag">{tag}</span>"""
+from sphinx.addnodes import pending_xref
 
-TAGS_TEMPLATE = """
-    <p class="card-link-summary">{tags}</p>
-"""
 
-CARD_TEMPLATE = """
+CARD_TEMPLATE_HEADER = """
 .. raw:: html
 
-    <div class="card-link admonition">
+    <div class="codesnippet-card admonition">
 
-    <a href="{link}">
+    <div class="codesnippet-card-body">
 
-    <div class="card-link-body">
+    <div class="codesnippet-card-title-container">
 
-    <div class="card-link-text">
+    <div class="codesnippet-card-icon">
 
-    <div class="card-link-title-container">
-        <h4>{header}</h4>
-    </div>
-
-    <p class="card-link-summary">{description}</p>
-
-    {tags}
-
-    </div>
-
-    <div class="card-link-icon circle {image_background}">
-
-.. image:: {image}
+.. image:: {icon}
 
 .. raw:: html
 
     </div>
 
+    <h3>{title}</h3>
     </div>
 
-    </a>
+"""
+
+CARD_TEMPLATE_FOOTER = """
+.. raw:: html
 
     </div>
 """
 
+CARD_TEMPLATE_LINK_CONTAINER_HEADER = """
+.. raw:: html
 
-class CustomCardItemDirective(Directive):
+    <div class="codesnippet-card-footer">
+"""
+
+CARD_TEMPLATE_LINK = """
+.. raw:: html
+
+    <div class="codesnippet-card-link">
+    For a full tutorial, please go here.
+    <span class="material-icons right">arrow_forward</span>
+    </div>
+"""
+
+
+class CodeSnippetCardDirective(Directive):
     option_spec = {
-        'header': directives.unchanged,
-        'image': directives.unchanged,
-        'background': directives.unchanged,
+        'icon': directives.unchanged,
+        'title': directives.unchanged,
         'link': directives.unchanged,
-        'description': directives.unchanged,
-        'tags': directives.unchanged
     }
 
+    has_content = True
+
     def run(self):
-        env = self.state.document.settings.env
+        anchor_node = nodes.paragraph()
 
         try:
-            if 'header' in self.options:
-                header = self.options['header']
-            else:
-                raise ValueError('header not found')
-
-            if 'link' in self.options:
-                link = directives.uri(self.options['link'])
-            else:
-                raise ValueError('link not found')
-
-            if 'image' in self.options:
-                image = directives.uri(self.options['image'])
-            else:
-                image = os.path.join(os.path.relpath(env.app.srcdir, env.app.confdir), '../img/thumbnails/nni_icon_white.png')
-
-            image_background = self.options.get('background', 'indigo')
-            description = self.options.get('description', '')
-
-            tags = self.options.get('tags', '').strip().split('/')
-            tags = [t.strip() for t in tags if t.strip()]
-
+            title = self.options['title']
+            link = directives.uri(self.options['link'])
+            icon = directives.uri(self.options['icon'])
         except ValueError as e:
             print(e)
             raise
 
-        if tags:
-            tags_rst = TAGS_TEMPLATE.format(tags=''.join([TAG_TEMPLATE.format(tag=tag) for tag in tags]))
-        else:
-            tags_rst = ''
-
-        card_rst = CARD_TEMPLATE.format(header=header,
-                                        image=image,
-                                        image_background=image_background,
-                                        link=link,
-                                        description=description,
-                                        tags=tags_rst)
+        # header, title, icon...
+        card_rst = CARD_TEMPLATE_HEADER.format(title=title, icon=icon)
         card_list = StringList(card_rst.split('\n'))
-        card = nodes.paragraph()
-        self.state.nested_parse(card_list, self.content_offset, card)
-        return [card]
+        self.state.nested_parse(card_list, self.content_offset, anchor_node)
+
+        # code snippet
+        self.state.nested_parse(self.content, self.content_offset, anchor_node)
+
+        # close body
+        self.state.nested_parse(StringList(CARD_TEMPLATE_FOOTER.split('\n')), self.content_offset, anchor_node)
+
+        # start footer
+        self.state.nested_parse(StringList(CARD_TEMPLATE_LINK_CONTAINER_HEADER.split('\n')), self.content_offset, anchor_node)
+
+        # full tutorial link
+        link_node = pending_xref(CARD_TEMPLATE_LINK,
+                                 reftype='doc',
+                                 refdomain='std',
+                                 reftarget=link,
+                                 refexplicit=False,
+                                 refwarn=True,
+                                 refkeepformat=True)
+        # refkeepformat is handled in `patch_autodoc.py`
+        self.state.nested_parse(StringList(CARD_TEMPLATE_LINK.split('\n')), self.content_offset, link_node)
+        anchor_node += link_node
+
+        # close footer
+        self.state.nested_parse(StringList(CARD_TEMPLATE_FOOTER.split('\n')), self.content_offset, anchor_node)
+
+        # close whole
+        self.state.nested_parse(StringList(CARD_TEMPLATE_FOOTER.split('\n')), self.content_offset, anchor_node)
+
+        return [anchor_node]
 
 
 def setup(app):
-    app.add_directive('cardlinkitem', CustomCardItemDirective)
+    app.add_directive('codesnippetcard', CodeSnippetCardDirective)
