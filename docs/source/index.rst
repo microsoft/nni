@@ -83,17 +83,20 @@ Neural Network Intelligence
 
    .. code-block::
 
-      # Step 1. define a config_list
-      config_list = [{
+      # define a config_list
+      config = [{
           'sparsity': 0.8,
           'op_types': ['Conv2d']
       }]
 
-      # Step 2. generate masks for simulated pruning
-      wrapped_masked_model, masks = L1NormPruner(model, config_list).compress()
+      # generate masks for simulated pruning
+      wrapped_model, masks = \
+          L1NormPruner(model, config). \
+          compress()
 
-      # Step 3. replace the modules in the model with smaller ones, for real speed up
-      ModelSpeedup(unwrapped_model, dummy_input, masks).speedup_model()
+      # apply the masks for real speed up
+      ModelSpeedup(unwrapped_model, input, masks). \
+          speedup_model()
 
 .. codesnippetcard::
    :icon: ../img/thumbnails/quantization-icon-small.png
@@ -102,21 +105,24 @@ Neural Network Intelligence
 
    .. code-block::
 
-      # Step 1. define a config_list
-      config_list = [{
+      # define a config_list
+      config = [{
           'quant_types': ['input', 'weight'],
           'quant_bits': {'input': 8, 'weight': 8},
           'op_types': ['Conv2d']
       }]
 
-      # Step 2. quantize the model and training if it is needed by quantizer
-      quantizer = QAT_Quantizer(model, config_list)
+      # in case quantizer needs a extra training
+      quantizer = QAT_Quantizer(model, config)
       quantizer.compress()
       # Training...
 
-      # Step 3. export calibration config and generate TensorRT engine for real speed up
-      calibration_config = quantizer.export_model(model_path, calibration_path)
-      engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=batch_size)
+      # export calibration config and
+      # generate TensorRT engine for real speed up
+      calibration_config = quantizer.export_model(
+          model_path, calibration_path)
+      engine = ModelSpeedupTensorRT(
+          model, input_shape, config=calib_config)
       engine.compress()
 
 .. codesnippetcard::
@@ -133,11 +139,13 @@ Neural Network Intelligence
       +       DepthwiseSeparableConv(32, 64)
       +   ])
       # search strategy + evaluator
-      search_strategy = RegularizedEvolution(dedup=True)
-      evaluator = FunctionalEvaluator(train_and_evaluate)
+      strategy = RegularizedEvolution()
+      evaluator = FunctionalEvaluator(
+          train_eval_fn)
 
       # run experiment
-      RetiariiExperiment(model_space, evaluator, strategy).run()
+      RetiariiExperiment(model_space,
+          evaluator, strategy).run()
 
 .. codesnippetcard::
    :icon: ../img/thumbnails/one-shot-nas-icon-small.png
@@ -168,12 +176,12 @@ Neural Network Intelligence
           X_train, y_train,
           lgb_params=lgb_params,
           eval_ratio=eval_ratio,
-          early_stopping_rounds=early_stopping_rounds,
-          importance_type=importance_type,
-          num_boost_round=num_boost_round)
+          early_stopping_rounds=10,
+          importance_type='gain',
+          num_boost_round=1000)
 
       # get selected features
-      features = selector.get_selected_features(topk=topk)
+      features = selector.get_selected_features()
 
 .. End of code snippet card
 
