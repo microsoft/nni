@@ -1,22 +1,38 @@
-Model Compression Overview
+Model Compression with NNI
 ==========================
 
-Deep neural networks (DNNs) have achieved great success in many tasks like embedded development and scenarios that needs rapid feedbacks.
+.. toctree::
+    :hidden:
+    :maxdepth: 2
+
+    Pruning <pruning>
+    Quantization <quantization>
+    Config Specification <compression_config_list>
+    Advanced Usage <advanced_usage>
+
+.. attention::
+
+  NNI's model pruning framework has been upgraded to a more powerful version (named pruning v2 before nni v2.6).
+  The old version (`named pruning before nni v2.6 <https://nni.readthedocs.io/en/v2.6/Compression/pruning.html>`_) will be out of maintenance. If for some reason you have to use the old pruning,
+  v2.6 is the last nni version to support old pruning version.
+
+.. Using rubric to prevent the section heading to be include into toc
+
+.. rubric:: Overview
+
+Deep neural networks (DNNs) have achieved great success in many tasks like computer vision, nature launguage processing, speech processing.
 However, typical neural networks are both computationally expensive and energy-intensive,
 which can be difficult to be deployed on devices with low computation resources or with strict latency requirements.
 Therefore, a natural thought is to perform model compression to reduce model size and accelerate model training/inference without losing performance significantly.
 Model compression techniques can be divided into two categories: pruning and quantization.
 The pruning methods explore the redundancy in the model weights and try to remove/prune the redundant and uncritical weights.
-Quantization refers to compressing models by reducing the number of bits required to represent weights or activations functions.
+Quantization refers to compress models by reducing the number of bits required to represent weights or activations.
 We further elaborate on the two methods, pruning and quantization, in the following chapters. Besides, the figure below visualizes the difference between these two methods.
-
 
 .. image:: ../../img/prune_quant.jpg
    :target: ../../img/prune_quant.jpg
    :scale: 40%
    :alt:
-
-
 
 NNI provides an easy-to-use toolkit to help users design and use model pruning and quantization algorithms.
 For users to compress their models, they only need to add several lines in their code.
@@ -33,8 +49,7 @@ There are several core features supported by NNI model compression:
 * Concise interface for users to customize their own compression algorithms.
 
 
-Compression Pipeline
---------------------
+.. rubric:: Compression Pipeline
 
 .. image:: ../../img/compression_flow.jpg
    :target: ../../img/compression_flow.jpg
@@ -49,13 +64,7 @@ If users want to apply both, a sequential mode is recommended as common practise
   The interface and APIs are unified for both PyTorch and TensorFlow. Currently only PyTorch version has been supported, and TensorFlow version will be supported in future.
 
 
-Supported Algorithms
---------------------
-
-The supported model compression algorithms include pruning algorithms and quantization algorithms.
-
-Pruning Algorithms
-^^^^^^^^^^^^^^^^^^
+.. rubric:: Supported Pruning Algorithms
 
 Pruning algorithms compress the original network by removing redundant weights or channels of layers, which can reduce model complexity and mitigate the over-fitting issue.
 
@@ -99,8 +108,7 @@ Pruning algorithms compress the original network by removing redundant weights o
      - Movement Pruning: Adaptive Sparsity by Fine-Tuning `Reference Paper <https://arxiv.org/abs/2005.07683>`__
 
 
-Quantization Algorithms
-^^^^^^^^^^^^^^^^^^^^^^^
+.. rubric:: Supported Quantization Algorithms
 
 Quantization algorithms compress the original network by reducing the number of bits required to represent weights or activations, which can reduce the computations and the inference time.
 
@@ -124,21 +132,19 @@ Quantization algorithms compress the original network by reducing the number of 
      - Post training quantizaiton. Collect quantization information during calibration with observers.
 
 
-Model Speedup
--------------
+.. rubric:: Model Speedup
 
 The final goal of model compression is to reduce inference latency and model size.
 However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model.
 For example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms.
-Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model. The following figure shows how NNI prunes and speeds up your models. 
+Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model.
 
+The following figure shows how NNI prunes and speeds up your models. 
 
 .. image:: ../../img/pipeline_compress.jpg
    :target: ../../img/pipeline_compress.jpg
    :scale: 40%
    :alt:
-
-
 
 The detailed tutorial of Speed Up Model with Mask can be found :doc:`here <../tutorials/pruning_speed_up>`.
 The detailed tutorial of Speed Up Model with Calibration Config can be found :doc:`here <../tutorials/quantization_speed_up>`.
