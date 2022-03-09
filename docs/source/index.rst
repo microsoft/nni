@@ -66,7 +66,9 @@ Neural Network Intelligence
           ...
 
       model = Net()
-      optimizer = optim.SGD(model.parameters(), params['lr'], params['momentum'])
+      optimizer = optim.SGD(model.parameters(),
+                            params['lr'],
+                            params['momentum'])
 
       for epoch in range(10):
           train(...)
@@ -162,12 +164,13 @@ Neural Network Intelligence
    .. code-block::
 
       selector = GBDTSelector()
-      selector.fit(X_train, y_train,
-                  lgb_params = lgb_params,
-                  eval_ratio = eval_ratio,
-                  early_stopping_rounds = early_stopping_rounds,
-                  importance_type = importance_type,
-                  num_boost_round = num_boost_round)
+      selector.fit(
+          X_train, y_train,
+          lgb_params=lgb_params,
+          eval_ratio=eval_ratio,
+          early_stopping_rounds=early_stopping_rounds,
+          importance_type=importance_type,
+          num_boost_round=num_boost_round)
 
       # get selected features
       features = selector.get_selected_features(topk=topk)

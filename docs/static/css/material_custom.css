@@ -81,24 +81,37 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
 }
 
 /* Similar to cardlink, but used in codesnippet in index page. see sphinx_gallery.css */
+.codesnippet-card-container {
+    display: flex;
+    flex-flow: wrap row;
+}
 
 .codesnippet-card.admonition {
     border-left: 0;
     padding: 0;
-    margin: 1rem 1rem 2rem 0rem;
-    width: 50%;
+    margin: .5rem 1rem 1rem 0rem;
+    width: 47%;
+}
+
+@media only screen and (max-width:59.9375em) {
+    .codesnippet-card.admonition {
+        width: 100%;
+    }
 }
 
 .codesnippet-card .codesnippet-card-body {
     min-height: 4rem;
     position: relative;
-    padding: 0.9rem 0.9rem 0 0.9rem;
+    padding: 0.9rem 0.9rem 3rem 0.9rem;
 }
 
 .codesnippet-card .codesnippet-card-footer {
     padding: 0.8rem 0.9rem;
     border-top: 1px solid #ddd;
     margin: 0 !important;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
 }
 
 .codesnippet-card a:not(:hover) {
