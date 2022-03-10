@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import inspect
+import os
 import warnings
 from typing import Any, TypeVar, Union
 
@@ -64,6 +65,12 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
         class PrimitiveOp(nn.Module):
             ...
     """
+
+    # Internal flag. See nni.trace
+    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
+    if nni_trace_flag.lower() == 'disable':
+        return cls
+
     _check_wrapped(cls)
 
     import torch.nn as nn
@@ -103,6 +110,12 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
     Currently, NNI might not complain in simple cases where ``@model_wrapper`` is actually not needed.
     But in future, we might enforce ``@model_wrapper`` to be required for base model.
     """
+
+    # Internal flag. See nni.trace
+    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
+    if nni_trace_flag.lower() == 'disable':
+        return cls
+
     _check_wrapped(cls)
 
     import torch.nn as nn
