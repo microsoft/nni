@@ -18,6 +18,7 @@ from nni.retiarii.oneshot.pytorch.supermodule.valuechoice_utils import dedup_inn
 
 from .base import BaseSuperNetModule
 from .valuechoice_utils import *
+from .operators import SuperConv2dMixin, SuperLinearMixin
 
 
 class PathSamplingLayer(BaseSuperNetModule):
@@ -234,6 +235,13 @@ class FineGrainedPathSamplingMixin(BaseSuperNetModule):
                 return max(value_choice.candidates)
         """
         raise NotImplementedError()
+
+    def forward(self, *args, **kwargs):
+        return super().forward(...)
+
+
+class PathSamplingLayer(FineGrainedPathSamplingMixin, SuperConv2dMixin):
+    pass
 
 
 class PathSamplingLinear(FineGrainedPathSamplingMixin, nn.Linear):
