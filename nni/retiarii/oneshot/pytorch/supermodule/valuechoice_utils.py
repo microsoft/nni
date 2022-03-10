@@ -10,6 +10,8 @@ from nni.retiarii.nn.pytorch.api import ValueChoiceX
 
 Choice = Any
 
+__all__ = ['dedup_inner_choices', 'evaluate_value_choice_with_dict', 'traverse_all_options']
+
 
 def dedup_inner_choices(value_choices: List[ValueChoiceX]) -> Dict[str, ParameterSpec]:
     """Find all leaf nodes in ``value_choices``,

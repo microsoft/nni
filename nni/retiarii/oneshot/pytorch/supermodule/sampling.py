@@ -14,8 +14,10 @@ from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from nni.retiarii.oneshot.pytorch.base_lightning import BaseOneShotLightningModule
+from nni.retiarii.oneshot.pytorch.supermodule.valuechoice_utils import dedup_inner_choices, evaluate_value_choice_with_dict
 
 from .base import BaseSuperNetModule
+from .valuechoice_utils import *
 
 
 class PathSamplingLayer(BaseSuperNetModule):
@@ -170,16 +172,7 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
         self._sampled: Optional[Dict[str, Any]] = None
 
         # get all inner leaf value choices
-        self._space_spec: Dict[str, ParameterSpec] = {}
-        for value_choice in self._mutable_arguments.values():
-            for choice in value_choice.inner_choices():
-                param_spec = ParameterSpec(choice.label, 'choice', choice.candidates, (choice.label, ), True, size=len(choice.candidates))
-                if choice.label in self._space_spec:
-                    if param_spec != self._space_spec[choice.label]:
-                        raise ValueError('Value choice conflict: same label with different candidates: '
-                                         f'{param_spec} vs. {self._space_spec[choice.label]}')
-                else:
-                    self._space_spec[choice.label] = param_spec
+        self._space_spec: Dict[str, ParameterSpec] = dedup_inner_choices(self._mutable_arguments.values())
 
         super().__init__(**init_kwargs)
 
@@ -196,11 +189,7 @@ class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
         # example: result = {"exp_ratio": 3}, self._sampled = {"in_channels": 48, "out_channels": 96}
         self._sampled = {}
         for key, value in self._mutable_arguments.items():
-            choice_inner_values = []
-            for choice in value.inner_choices():
-                choice_inner_values.append(result[choice.label])
-            self._sampled[key] = value.evaluate(choice_inner_values)
-        self._sampled = result
+            self._sampled[key] = evaluate_value_choice_with_dict(value, result)
 
         return result
 
