@@ -15,65 +15,45 @@ from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from .valuechoice_utils import traverse_all_options
 
 
-def _slice_weight(weight: torch.Tensor,
-                  slice_: Union[slice, Dict[slice, float],
-                                Tuple[Union[slice, Dict[slice, float]]]]) -> torch.Tensor:
-    if not isinstance(slice_, tuple):
-        slice_ = (slice_,)
+def _slice_weight(weight: torch.Tensor, slice_: Union[Tuple[slice], Dict[Tuple[slice], int]]) -> torch.Tensor:
+    # slice_ can be a tuple of slice, e.g., ([3:6], [2:4])
+    # or tuple of slice -> float, e.g. {([3:6],): 0.6, ([2:4],): 0.3}
 
-    # now slice_ is always a tuple
-    # each element can be a slice, e.g., [3:6]
-    # or a slice -> float, e.g. {[3:6]: 0.6, [2:4]: 0.3}
-    # we first handle weighted case, then simple slice
+    if isinstance(slice_, dict):
+        # for weighted case, we get the corresponding masks. e.g.,
+        # {([3:6],): 0.6, ([2:4],): 0.3} => [0, 0, 0.3, 0.9, 0.6, 0.6] (if the whole length is 6)
+        # this mask is broadcasted and multiplied onto the weight
 
-    # for weighted case, we get the corresponding masks. e.g.,
-    # {[3:6]: 0.6, [2:4]: 0.3} => [0, 0, 0.3, 0.9, 0.6, 0.6] (if the whole length is 6)
-    # this mask is broadcasted and multiplied onto the weight
+        new_weight = []
 
-    # convert weighted slice to ordinary slice after they are processed
-    ordinary_slice: List[slice] = []
+        for sl, wt in slice_.items():
+            # create a mask with weight w
+            with torch.no_grad():
+                mask = torch.zeros_like(weight)
+                mask[sl] = 1
 
-    for i in range(len(slice_)):
-        if isinstance(slice_[i], dict):
-            new_weight = []
+            new_weight.append((mask * wt) * weight)
 
-            for s, w in slice_[i].items():
-                # create a mask with weight w
-                with torch.no_grad():
-                    size = weight.size(i)
-                    mask = torch.zeros(size, dtype=weight.dtype, device=weight.device)
-                    mask[s] = 1
+        weight = sum(new_weight)
 
-                    target_shape = [1] * weight.ndim
-                    target_shape[i] = size
-                    mask = mask.view(*target_shape)
+    else:
+        # for unweighted case, we slice it directly.
 
-                new_weight.append((mask * w) * weight)
+        # sometimes, we don't need slice.
+        # this saves an op on computational graph, which will hopefully make training faster
+        no_effect = True
+        for i in range(len(slice_)):
+            s = slice_[i]
+            if not (
+                (s.start is None or s.start == 0) and
+                (s.stop is None or s.stop >= weight.size(i)) and
+                s.step in (1, None)
+            ):
+                no_effect = False
+        if no_effect:
+            return weight
 
-            weight = sum(new_weight)
-
-            ordinary_slice.append(slice(None))
-
-        else:
-            # an ordinary slice
-            ordinary_slice.append(slice_[i])
-
-    # sometimes, we don't need slice.
-    # this saves an op on computational graph, which will hopefully make training faster
-    no_effect = True
-    for i in range(len(ordinary_slice)):
-        s = ordinary_slice[i]
-        if not (
-            (s.start is None or s.start == 0) and
-            (s.stop is None or s.stop >= weight.size(i)) and
-            s.step in (1, None)
-        ):
-            no_effect = False
-    if no_effect:
-        return weight
-
-    ordinary_slice = tuple(ordinary_slice)
-    return weight[ordinary_slice]
+        return weight[slice_]
 
 
 class SuperLinearMixin(nn.Linear):
@@ -110,10 +90,12 @@ class SuperLinearMixin(nn.Linear):
         if self.bias is None:
             bias = self.bias
         else:
-            bias = _slice_weight(self.bias, out_features)
+            bias = _slice_weight(self.bias, (out_features, ))
 
         return F.linear(input, weight, bias)
 
+
+_int_or_tuple = Union[int, Tuple[int, int]]
 
 
 class SuperConv2dMixin(nn.Conv2d):
@@ -122,6 +104,7 @@ class SuperConv2dMixin(nn.Conv2d):
     - ``in_channels``
     - ``out_channels``
     - ``groups`` (only supported in path sampling)
+    - ``stride`` (only supported in path sampling)
     - ``kernel_size``
     - ``padding`` (only supported in path sampling)
     - ``dilation`` (only supported in path sampling)
@@ -142,82 +125,91 @@ class SuperConv2dMixin(nn.Conv2d):
 
     bound_type = nn.Conv2d
 
+    @staticmethod
+    def _to_tuple(value: _int_or_tuple) -> Tuple[int, int]:
+        if isinstance(value, int):
+            return (value, value)
+        return value
+
+    def _to_kernel_slice(self, kernel_size: _int_or_tuple) -> Tuple[slice, slice, slice, slice]:
+        # slice the kernel size in the center
+        kernel_a, kernel_b = self._to_tuple(kernel_size)
+
+        max_kernel_a, max_kernel_b = self.kernel_size  # self.kernel_size must be a tuple
+        kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a) // 2, (max_kernel_b - kernel_b) // 2
+
+        return None, None, slice(kernel_a_left, kernel_a_left + kernel_a), slice(kernel_b_top, kernel_b_top + kernel_b)
+
     def init_argument(self, name: str, value_choice: ValueChoiceX):
-        if name not in ['in_channels', 'out_channels', 'groups', 'kernel_size', 'padding', 'dilation']:
+        if name not in ['in_channels', 'out_channels', 'groups', 'stride', 'kernel_size', 'padding', 'dilation']:
             raise NotImplementedError(f'Unsupported value choice on argument: {name}')
 
-        if name == 'kernel_size':
-            def int2tuple(ks):
-                if isinstance(ks, int):
-                    return (ks, ks)
-                return ks
-
-            all_kernel_sizes = set(value_choice.all_options())
-            if any(isinstance(ks, tuple) for ks in all_kernel_sizes):
+        if name == ['kernel_size', 'padding']:
+            all_sizes = set(traverse_all_options(value_choice))
+            if any(isinstance(sz, tuple) for sz in all_sizes):
                 # maximum kernel should be calculated on every dimension
                 return (
-                    max(int2tuple(ks)[0] for ks in all_kernel_sizes),
-                    max(int2tuple(ks)[1] for ks in all_kernel_sizes)
+                    max(self._to_tuple(sz)[0] for sz in all_sizes),
+                    max(self._to_tuple(sz)[1] for sz in all_sizes)
                 )
             else:
-                return max(all_kernel_sizes)
+                return max(all_sizes)
 
         elif name == 'groups':
             # minimum groups, maximum kernel
-            return min(value_choice.all_options())
+            return min(traverse_all_options(value_choice))
 
         else:
-            return max(value_choice.all_options())
+            return max(traverse_all_options(value_choice))
 
     def forward(self, input: torch.Tensor,
                 in_channels: Union[int, Dict[int, float]],
                 out_channels: Union[int, Dict[int, float]],
-                groups: int,
-                kernel_size: Union[int, Tuple[int, int], Dict[Union[int, Tuple[int, int]], float]],
-                padding: Union[int, Tuple[int, int], Dict[Union[int, Tuple[int, int]], float]],
-                dilation: int) -> torch.Tensor:
-        # get sampled in/out channels and kernel size
-        in_chn = self.get_argument('in_channels')
-        out_chn = self.get_argument('out_channels')
-        kernel_size = self.get_argument('kernel_size')
+                kernel_size: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
+                stride: _int_or_tuple,
+                padding: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
+                dilation: int,
+                groups: int) -> torch.Tensor:
 
-        if isinstance(kernel_size, tuple):
-            sampled_kernel_a, sampled_kernel_b = kernel_size
-        else:
-            sampled_kernel_a = sampled_kernel_b = kernel_size
-
-        # F.conv2d will handle `groups`, but we still need to slice weight tensor
-        groups = self.get_argument('groups')
-
-        # take the small kernel from the center and round it to floor(left top)
-        # Example:
-        #   max_kernel = 5*5, sampled_kernel = 3*3, then we take [1: 4]
-        #   max_kernel = 5*5, sampled_kernel = 2*2, then we take [1: 3]
-        #   □ □ □ □ □   □ □ □ □ □
-        #   □ ■ ■ ■ □   □ ■ ■ □ □
-        #   □ ■ ■ ■ □   □ ■ ■ □ □
-        #   □ ■ ■ ■ □   □ □ □ □ □
-        #   □ □ □ □ □   □ □ □ □ □
-        max_kernel_a, max_kernel_b = self.kernel_size
-        kernel_a_left, kernel_b_top = (max_kernel_a - sampled_kernel_a) // 2, (max_kernel_b - sampled_kernel_b) // 2
-
-        weight = self.weight[:out_chn,
-                             :in_chn // self.groups,
-                             kernel_a_left: kernel_a_left + sampled_kernel_a,
-                             kernel_b_top: kernel_b_top + sampled_kernel_b]
-        if self.bias is not None:
-            if out_chn < self.out_channels:
-                bias = self.bias[:out_chn]
+        if groups > 1:
+            # We use groups to slice input weights
+            if isinstance(in_channels, int):
+                in_channels = in_channels // groups
             else:
-                bias = self.bias
-        else:
-            bias = None
+                in_channels = {ch // groups: wt for ch, wt in in_channels.items()}
 
-        # Users are supposed to make sure that candidates with the same index match each other.
-        # The following three attributes must be tuples, since Conv2d will convert them in init if they are not.
-        stride = self.get_argument('stride')
-        padding = self.get_argument('padding')
-        dilation = self.get_argument('dilation')
+        # slice prefix
+        if isinstance(in_channels, dict):
+            in_channels = {(slice(dim),): wt for dim, wt in in_channels.items()}
+        else:
+            in_channels = (slice(in_channels),)
+
+        if isinstance(out_channels, dict):
+            out_channels = {(None, slice(dim)): wt for dim, wt in out_channels.items()}
+        else:
+            out_channels = (None, slice(out_channels))
+
+        weight = _slice_weight(self.weight, out_channels)
+        weight = _slice_weight(weight, in_channels)
+
+        # slice center
+        if isinstance(kernel_size, dict):
+            kernel_slice = {self._to_kernel_slice(ks): wt for ks, wt in kernel_size.items()}
+            # ignore the weighted padding, use maximum padding here
+            padding = self.padding  # must be a tuple
+        else:
+            kernel_slice = self._to_kernel_slice(kernel_size)
+
+        weight = _slice_weight(weight, kernel_slice)
+
+        if self.bias is None:
+            bias = self.bias
+        else:
+            bias = _slice_weight(self.bias, out_channels)
+
+        # The rest parameters only need to be converted to tuple
+        stride = self._to_tuple(stride)
+        dilation = self._to_tuple(dilation)
 
         if self.padding_mode != 'zeros':
             return F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
