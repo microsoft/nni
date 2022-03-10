@@ -25,6 +25,13 @@ Tutorials
    :tags: Experiment/HPO
 
 .. cardlinkitem::
+   :header: HPO Quickstart with TensorFlow
+   :description: Use HPO to tune a TensorFlow MNIST model
+   :link: tutorials/hpo_quickstart_tensorflow/main.html
+   :image: ../img/thumbnails/overview-33.png
+   :tags: HPO
+
+.. cardlinkitem::
    :header: Hello, NAS!
    :description: Beginners' NAS tutorial on how to search for neural architectures for MNIST dataset.
    :link: tutorials/hello_nas.html

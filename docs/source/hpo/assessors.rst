@@ -1,5 +1,5 @@
-Builtin-Assessors
-=================
+Assessor: Early Stopping
+========================
 
 In order to save on computing resources, NNI supports an early stopping policy and has an interface called **Assessor** to do this job.
 
@@ -9,11 +9,11 @@ Here is an experimental result of MNIST after using the 'Curvefitting' Assessor 
 
 Implemented code directory: :githublink:`config_assessor.yml <examples/trials/mnist-pytorch/config_assessor.yml>`
 
-..  image:: ../img/Assessor.png
+..  image:: ../../img/Assessor.png
 
 ..  toctree::
     :maxdepth: 1
 
-    Overview<./Assessor/BuiltinAssessor>
-    Medianstop<./Assessor/MedianstopAssessor>
-    Curvefitting<./Assessor/CurvefittingAssessor>
+    Overview<../Assessor/BuiltinAssessor>
+    Medianstop<../Assessor/MedianstopAssessor>
+    Curvefitting<../Assessor/CurvefittingAssessor>

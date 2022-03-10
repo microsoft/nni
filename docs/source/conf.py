@@ -79,6 +79,10 @@ autosummary_mock_imports = [
     'nni.tools.jupyter_extension.management',
 ] + autodoc_mock_imports
 
+autodoc_typehints = 'description'
+autodoc_typehints_description_target = 'documented'
+autodoc_inherit_docstrings = False
+
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']
 
