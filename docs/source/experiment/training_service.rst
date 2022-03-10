@@ -16,6 +16,7 @@ NNI has supported many training services listed below. Users can go through each
     PAI-DLC <paidlc>
     Hybrid <hybrid>
     Customize a Training Service <customize>
+    Shared Storage <shared_storage>
 
 ..  list-table::
     :header-rows: 1

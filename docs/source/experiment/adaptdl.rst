@@ -19,20 +19,20 @@ Before starting to use NNI AdaptDL training service, you should have a Kubernete
 Verify the Prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: bash
+..  code-block:: bash
 
-   nnictl --version
-   # Expected: <version_number>
+    nnictl --version
+    # Expected: <version_number>
 
-.. code-block:: bash
+..  code-block:: bash
 
-   kubectl version
-   # Expected that the kubectl client version matches the server version.
+    kubectl version
+    # Expected that the kubectl client version matches the server version.
 
-.. code-block:: bash
+..  code-block:: bash
 
-   kubectl api-versions | grep adaptdl
-   # Expected: adaptdl.petuum.com/v1
+    kubectl api-versions | grep adaptdl
+    # Expected: adaptdl.petuum.com/v1
 
 Usage
 -----
@@ -41,41 +41,41 @@ We have a CIFAR10 example that fully leverages the AdaptDL scheduler under :gith
 
 Here is a template configuration specification to use AdaptDL as a training service.
 
-.. code-block:: yaml
+..  code-block:: yaml
 
-   authorName: default
-   experimentName: minimal_adl
+    authorName: default
+    experimentName: minimal_adl
 
-   trainingServicePlatform: adl
-   nniManagerIp: 10.1.10.11
-   logCollection: http
+    trainingServicePlatform: adl
+    nniManagerIp: 10.1.10.11
+    logCollection: http
 
-   tuner:
-     builtinTunerName: GridSearch
-   searchSpacePath: search_space.json
+    tuner:
+      builtinTunerName: GridSearch
+    searchSpacePath: search_space.json
 
-   trialConcurrency: 2
-   maxTrialNum: 2
+    trialConcurrency: 2
+    maxTrialNum: 2
 
-   trial:
-     adaptive: false # optional.
-     image: <image_tag>
-     imagePullSecrets:  # optional
-       - name: stagingsecret
-     codeDir: .
-     command: python main.py
-     gpuNum: 1
-     cpuNum: 1  # optional
-     memorySize: 8Gi  # optional
-     nfs: # optional
-       server: 10.20.41.55
-       path: /
-       containerMountPath: /nfs
-     checkpoint: # optional
-       storageClass: dfs
-       storageSize: 1Gi
+    trial:
+      adaptive: false # optional.
+      image: <image_tag>
+      imagePullSecrets:  # optional
+        - name: stagingsecret
+      codeDir: .
+      command: python main.py
+      gpuNum: 1
+      cpuNum: 1  # optional
+      memorySize: 8Gi  # optional
+      nfs: # optional
+        server: 10.20.41.55
+        path: /
+        containerMountPath: /nfs
+      checkpoint: # optional
+        storageClass: dfs
+        storageSize: 1Gi
 
-..  note::
+..  warning::
     This configuration is written following the specification of `legacy experiment configuration <https://nni.readthedocs.io/en/v2.6/Tutorial/ExperimentConfig.html>`__. It is still supported, and will be updated to the latest version in future release.
 
 The following explains the configuration fields of AdaptDL training service.

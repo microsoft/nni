@@ -1,10 +1,11 @@
 <div align="center">
 <img src="docs/img/nni_logo.png" width="300"/>
   
-**A lightweight toolkit that automates feature engineering, neural architecture search, hyperparameter tuning, and model compression.**
+  </br>
   
-</div>
-
+**Automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning.**
+  </br>
+  
 [![MIT licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/full%20test%20-%20linux?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=62&branchName=master)
 [![Issues](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen)
@@ -12,6 +13,7 @@
 [![Pull Requests](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen)
 [![Version](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases)
 [![Documentation Status](https://readthedocs.org/projects/nni/badge/?version=stable)](https://nni.readthedocs.io/en/stable/?badge=stable)
+</div>
 
 ______________________________________________________________________
 
