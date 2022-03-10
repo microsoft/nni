@@ -11,7 +11,6 @@ Neural Network Intelligence
     :caption: Get Started
     :hidden:
 
-    Installation <installation>
     QuickStart <Tutorial/QuickStart>
     Tutorials <tutorials>
 
@@ -44,6 +43,7 @@ Neural Network Intelligence
     Use Cases and Solutions <CommunitySharings/community_sharings>
     Research and Publications <ResearchPublications>
     FAQ <Tutorial/FAQ>
+    build_from_source
     How to Contribute <contribution>
     Change Log <Release>
 
