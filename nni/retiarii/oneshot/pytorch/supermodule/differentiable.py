@@ -84,7 +84,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
             yield name, p
 
 
-class DifferentiableMixedInput(BaseOneShotLightningModule):
+class DifferentiableMixedInput(BaseSuperNetModule):
     """
     TBD
     """

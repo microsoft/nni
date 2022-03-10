@@ -3,7 +3,7 @@
 
 import itertools
 import random
-from typing import Optional, List, Tuple, Union, Type, Dict, Any
+from typing import Optional, List, Tuple, Union, Type, Dict, Any, Callable
 
 import torch
 import torch.nn as nn
@@ -40,7 +40,7 @@ class PathSamplingLayer(BaseSuperNetModule):
             self.add_module(name, module)
             self.op_names.append(name)
         assert self.op_names, 'There has to be at least one op to choose from.'
-        self.sampled: Optional[Union[List[str], str]] = None  # sampled can be either a list of indices or an index
+        self._sampled: Optional[Union[List[str], str]] = None  # sampled can be either a list of indices or an index
         self.label = label
 
     def resample(self, memo):
@@ -78,7 +78,7 @@ class PathSamplingLayer(BaseSuperNetModule):
             return sum(res)
 
 
-class PathSamplingInput(nn.Module):
+class PathSamplingInput(BaseSuperNetModule):
     """
     Mixed input. Take a list of tensor as input, select some of them and return the sum.
 
@@ -147,14 +147,15 @@ class PathSamplingInput(nn.Module):
             return sum(res)
 
 
-class FineGrainedPathSamplingMixin(BaseOneShotLightningModule):
+class FineGrainedPathSamplingMixin(BaseSuperNetModule):
     """
     Utility class for all operators with ValueChoice as its arguments.
     """
 
-    bound_type: Type[nn.Module]
+    bound_type: Type[nn.Module]                         # defined in operator mixin
+    init_argument: Callable[[str, ValueChoiceX], Any]   # defined in operator mixin
 
-    def __init__(self, **module_kwargs):
+    def __init__(self, module_kwargs):
         # Concerned arguments
         self._mutable_arguments: Dict[str, ValueChoiceX] = {}
 
