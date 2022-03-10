@@ -76,7 +76,7 @@ def clean():
 if sys.platform == 'linux' or sys.platform == 'darwin':
     node_executable = 'node'
     _arch = 'x64' if platform.machine() == 'x86_64' else platform.machine()
-    node_spec = f'node-{node_version}-{sys.platform}-' + ('x64' if platform.machine() == 'x86_64' else platform.machine())
+    node_spec = f'node-{node_version}-{sys.platform}-' + _arch
     node_download_url = f'https://nodejs.org/dist/{node_version}/{node_spec}.tar.xz'
     node_extractor = lambda data: tarfile.open(fileobj=BytesIO(data), mode='r:xz')
     node_executable_in_tarball = 'bin/node'
