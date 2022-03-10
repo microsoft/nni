@@ -24,8 +24,6 @@ Windows
 
 .. Note:: If there is an error like ``Segmentation fault``, please refer to the :doc:`FAQ <FAQ>`.
 
-.. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`. If you want to use docker, refer to :doc:`HowToUseDocker <HowToUseDocker>`.
-
 
 "Hello World" example on MNIST
 ------------------------------
