@@ -1,11 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import logging
 from schema import Schema, Optional
 
 from nni import ClassArgsValidator
 from nni.assessor import Assessor, AssessResult
+from nni.typehint import Literal
 from nni.utils import extract_scalar_history
 
 logger = logging.getLogger('medianstop_Assessor')
@@ -18,18 +21,34 @@ class MedianstopClassArgsValidator(ClassArgsValidator):
         }).validate(kwargs)
 
 class MedianstopAssessor(Assessor):
-    """MedianstopAssessor is The median stopping rule stops a pending trial X at step S
+    """
+    The median stopping rule stops a pending trial X at step S
     if the trial’s best objective value by step S is strictly worse than the median value
     of the running averages of all completed trials’ objectives reported up to step S
 
+    The algorithm is mentioned in Google Vizer: A Service for Black-Box Optimization. (`paper`__)
+
+    .. _paper: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.assessor.name = 'Medianstop'
+        config.tuner.class_args = {
+            'optimize_mode': 'maximize'
+        }
+
     Parameters
     ----------
-    optimize_mode : str
-        optimize mode, 'maximize' or 'minimize'
-    start_step : int
-        only after receiving start_step number of reported intermediate results
+    optimize_mode
+        Whether optimize to minimize or maximize trial result.
+    start_step
+        Only after receiving start_step number of reported intermediate results.
     """
-    def __init__(self, optimize_mode='maximize', start_step=0):
+
+    def __init__(self, optimize_mode: Literal['minimize', 'maximize'] = 'maximize', start_step: int = 0):
         self._start_step = start_step
         self._running_history = dict()
         self._completed_avg_history = dict()

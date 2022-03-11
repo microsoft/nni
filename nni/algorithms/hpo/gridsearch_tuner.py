@@ -64,7 +64,7 @@ _logger = logging.getLogger('nni.tuner.gridsearch')
 
 class GridSearchTuner(Tuner):
     """
-    The original grid search approach performs an exhaustive search through a space consists of ``choice``s and ``randint``s.
+    The original grid search approach performs an exhaustive search through a space consists of ``choice`` and ``randint``.
 
     This implementation extends grid search to support all NNI search spaces.
 
@@ -74,7 +74,7 @@ class GridSearchTuner(Tuner):
     1. Divide the search space into a grid.
     2. Perform an exhaustive searth throught the grid.
     3. Subdivide the grid into a finer-grained one.
-    3. Goto step 2, until experiment end.
+    4. Goto step 2, until experiment end.
 
     As a deterministic algorithm, grid search has no argument.
 

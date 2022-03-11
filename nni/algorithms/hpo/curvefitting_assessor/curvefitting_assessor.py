@@ -22,9 +22,23 @@ class CurvefittingClassArgsValidator(ClassArgsValidator):
         }).validate(kwargs)
 
 class CurvefittingAssessor(Assessor):
-    """CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
+    """
+    CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
     It stops a pending trial X at step S if the trial's forecast result at target step is convergence and lower than the
     best performance in the history.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.assessor.name = 'Curvefitting'
+        config.tuner.class_args = {
+            'epoch_num': 20,
+            'start_step': 6,
+            'threshold': 9,
+            'gap': 1,
+        }
 
     Parameters
     ----------
@@ -34,6 +48,7 @@ class CurvefittingAssessor(Assessor):
         only after receiving start_step number of reported intermediate results
     threshold : float
         The threshold that we decide to early stop the worse performance curve.
+    gap : int
     """
 
     def __init__(self, epoch_num=20, start_step=6, threshold=0.95, gap=1):

@@ -89,7 +89,7 @@ class TpeTuner(Tuner):
     P(x|y) is modeled by transforming the generative process of hyperparameters,
     replacing the distributions of the configuration prior with non-parametric densities.
 
-    TPE is described in detail in *Algorithms for Hyper-Parameter Optimization*. (`paper`_)
+    TPE is described in detail in *Algorithms for Hyper-Parameter Optimization*. (`paper`__)
 
     .. _paper: https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf
 
@@ -102,7 +102,7 @@ class TpeTuner(Tuner):
 
         config.tuner.name = 'TPE'
         config.tuner.class_args = {
-            'optimize_mode': 'minimize'
+            'optimize_mode': 'maximize'
         }
 
     .. code-block::
