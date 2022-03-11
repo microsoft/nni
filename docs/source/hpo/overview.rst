@@ -89,17 +89,17 @@ Tutorials
 
 To start using NNI HPO, choose the tutorial of your favorite framework:
 
-  * PyTorch MNIST tutorial
-  * :doc:`TensorFlow MNIST tutorial </tutorials/hpo_quickstart_tensorflow/main>`
+* PyTorch MNIST tutorial
+* :doc:`TensorFlow MNIST tutorial </tutorials/hpo_quickstart_tensorflow/main>`
 
 Extra Features
 --------------
 
 After you are familiar with basic usage, you can explore more HPO features:
 
-  * :doc:`Assessor: Early stop non-optimal models <assessors>`
-  * :doc:`nnictl: Use command line tool to create and manage experiments </reference/nnictl>`
-  * :doc:`Custom tuner: Implement your own tuner <custom_algorithm>`
-  * :doc:`Tensorboard support <tensorboard>`
-  * :doc:`Tuner benchmark <hpo_benchmark>`
-  * :doc:`NNI Annotation (legacy) <nni_annotation>`
+* :doc:`Assessor: Early stop non-optimal models <assessors>`
+* :doc:`nnictl: Use command line tool to create and manage experiments </reference/nnictl>`
+* :doc:`Custom tuner: Implement your own tuner <custom_algorithm>`
+* :doc:`Tensorboard support <tensorboard>`
+* :doc:`Tuner benchmark <hpo_benchmark>`
+* :doc:`NNI Annotation (legacy) <nni_annotation>`

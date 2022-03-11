@@ -1,19 +1,49 @@
 Assessor: Early Stopping
 ========================
 
-In order to save on computing resources, NNI supports an early stopping policy and has an interface called **Assessor** to do this job.
+In HPO, some hyperparameter sets may have obviously poor performance and it will be unnecessary to finish the evaluation.
+This is called *early stopping*, and in NNI early stopping algorithms are called *assessors*.
 
-Assessor receives the intermediate result from a trial and decides whether the trial should be killed using a specific algorithm. Once the trial experiment meets the early stopping conditions (which means Assessor is pessimistic about the final results), the assessor will kill the trial and the status of the trial will be `EARLY_STOPPED`.
+An assessor monitors *intermediate results* of each *trial*.
+If a trial is predicted to produce suboptimal final result, the assessor will stop that trial immediately,
+to save computing resources for other hyperparameter sets.
 
-Here is an experimental result of MNIST after using the 'Curvefitting' Assessor in 'maximize' mode. You can see that Assessor successfully **early stopped** many trials with bad hyperparameters in advance. If you use Assessor, you may get better hyperparameters using the same computing resources.
+As introduced in quickstart tutorial, a trial is the evaluation process of a hyperparameter set,
+and intermediate results are reported with ``nni.report_intermediate_result()`` API in trial code.
+Typically, intermediate results are accuracy or loss metrics of each epoch.
+(FIXME: links)
 
-Implemented code directory: :githublink:`config_assessor.yml <examples/trials/mnist-pytorch/config_assessor.yml>`
+Using an assessor will increase the efficiency of computing resources,
+but may slightly reduce the predicition accuracy of tuners.
+It is recommended to use an assessor when computing resources are insufficient.
 
-..  image:: ../../img/Assessor.png
+Common Usage
+------------
 
-..  toctree::
-    :maxdepth: 1
+The usage of assessors are similar to tuners.
 
-    Overview<../Assessor/BuiltinAssessor>
-    Medianstop<../Assessor/MedianstopAssessor>
-    Curvefitting<../Assessor/CurvefittingAssessor>
+To use a built-in assessor you need to specify its name and arguments:
+
+.. code-block:: python
+
+    config.assessor.name = 'Medianstop'
+    config.tuner.class_args = {'optimize_mode': 'maximize'}
+
+Built-in Assessors
+------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Assessor
+     - Brief Introduction of Algorithm
+
+   * - `Median Stop <../autotune_ref.html#nni.algorithms.hpo.medianstop_assessor.MedianstopAssessor>`_
+     - It stops a pending trial X at step S if
+       the trial’s best objective value by step S is strictly worse than the median value of
+       the running averages of all completed trials’ objectives reported up to step S.
+
+   * - `Curve Fitting <../autotune_ref.html#nni.algorithms.hpo.curvefitting_assessor.CurvefittingAssessor>`_
+     - It stops a pending trial X at step S if
+       the trial’s forecast result at target step is convergence and lower than the best performance in the history.

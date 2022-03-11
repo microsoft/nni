@@ -5,12 +5,12 @@ The tuner decides which hyperparameter sets will be evaluated. It is a most impo
 
 A tuner works in following steps:
 
- 1. Initialize with a search space.
- 2. Generate hyperparameter sets from the search space.
- 3. Send hyperparameters to trials.
- 4. Receive evaluation results.
- 5. Update internal states according to the results.
- 6. Go to step 2, until experiment end.
+1. Initialize with a search space.
+2. Generate hyperparameter sets from the search space.
+3. Send hyperparameters to trials.
+4. Receive evaluation results.
+5. Update internal states according to the results.
+6. Go to step 2, until experiment end.
 
 NNI has out-of-the-box support for many popular tuning algorithms. 
 They should be sufficient to cover most typical machine learning scenarios.
@@ -39,8 +39,8 @@ For a general example, random tuner can be configured as follow:
     config.tuner.name = 'Random'
     config.tuner.class_args = {'seed': 0}
 
-Full List
----------
+Built-in Tuners
+---------------
 
 .. list-table::
    :header-rows: 1
