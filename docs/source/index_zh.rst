@@ -21,6 +21,7 @@ Neural Network Intelligence
     示例与解决方案<CommunitySharings/community_sharings>
     研究和出版物 <ResearchPublications>
     常见问题 <Tutorial/FAQ>
+    从源代码安装 <build_from_source>
     如何贡献 <contribution>
     更改日志 <Release>
 

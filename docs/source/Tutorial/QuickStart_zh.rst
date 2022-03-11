@@ -26,8 +26,6 @@ Windows
 
 .. Note:: 如果出现 ``Segmentation fault`` 这样的错误，参考 :doc:`常见问题 <FAQ>` 。
 
-.. Note:: NNI 的系统需求，参考 :doc:`Linux & Mac <InstallationLinux>` 或者 :doc:`Windows <InstallationWin>` 的安装教程。如果想要使用 docker, 参考 :doc:`如何使用 Docker <HowToUseDocker>` 。
-
 
 MNIST 上的 "Hello World"
 ------------------------
