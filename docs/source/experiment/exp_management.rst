@@ -11,4 +11,4 @@ The ability of ``nnictl`` on experiment management is almost equivalent to :doc:
 Management with web portal
 --------------------------
 
-Experiment management on web potral gives an quick overview of all the experiment on users' machine. Users can easily switch to one experiment from this page. Users can refer to the :ref:`web page of experiment management <exp-manage-webportal>` for details. The experiment management on web portal is still under intensive development to bring more user-friendly features.
+Experiment management on web potral gives an quick overview of all the experiment on users' machine. Users can easily switch to one experiment from this page. Users can refer to the :ref:`exp-manage-webportal` page for details. The experiment management on web portal is still under intensive development to bring more user-friendly features.
