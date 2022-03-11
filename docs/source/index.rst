@@ -43,7 +43,7 @@ Neural Network Intelligence
     Use Cases and Solutions <CommunitySharings/community_sharings>
     Research and Publications <ResearchPublications>
     FAQ <Tutorial/FAQ>
-    build_from_source
+    notes/build_from_source
     How to Contribute <contribution>
     Change Log <Release>
 
