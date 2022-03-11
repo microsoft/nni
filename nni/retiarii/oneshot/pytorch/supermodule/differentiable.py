@@ -1,7 +1,8 @@
+import functools
 import warnings
 
 from collections import OrderedDict
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 
 import torch
 import torch.nn as nn
@@ -13,7 +14,8 @@ from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from nni.retiarii.oneshot.pytorch.base_lightning import BaseOneShotLightningModule
 
 from .base import BaseSuperNetModule
-from .sampling import FineGrainedPathSamplingMixin
+from .operation import MixedOperation, MixedOperationSamplingStrategy
+from .valuechoice_utils import traverse_all_options
 
 
 class DifferentiableMixedLayer(BaseSuperNetModule):
@@ -41,7 +43,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
             self.op_names.append(name)
         assert self.op_names, 'There has to be at least one op to choose from.'
         self.label = label
-        self._alpha = alpha
+        self._arch_alpha = alpha
 
     def resample(self, memo):
         """Do nothing. Differentiable layer doesn't need resample."""
@@ -51,7 +53,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
         """Choose the operator with the maximum logit."""
         if self.label in memo:
             return {}  # nothing new to export
-        return self.op_names[torch.argmax(self._alpha).item()]
+        return self.op_names[torch.argmax(self._arch_alpha).item()]
 
     def search_space_spec(self):
         return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ),
@@ -72,7 +74,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
     def forward(self, *args, **kwargs):
         op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
         alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
-        return torch.sum(op_results * F.softmax(self._alpha, -1).view(*alpha_shape), 0)
+        return torch.sum(op_results * F.softmax(self._arch_alpha, -1).view(*alpha_shape), 0)
 
     def parameters(self, *args, **kwargs):
         for _, p in self.named_parameters(*args, **kwargs):
@@ -80,7 +82,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
 
     def named_parameters(self, *args, **kwargs):
         for name, p in super().named_parameters(*args, **kwargs):
-            if name == '_alpha':
+            if name == '_arch_alpha':
                 continue
             yield name, p
 
@@ -100,7 +102,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
         self.n_chosen = n_chosen
         self.label = label
 
-        self._alpha = alpha
+        self._arch_alpha = alpha
 
     def resample(self, memo):
         """Do nothing. Differentiable layer doesn't need resample."""
@@ -110,7 +112,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
         """Choose the operator with the top logits."""
         if self.label in memo:
             return {}  # nothing new to export
-        chosen = sorted(torch.argsort(-self._alpha).cpu().numpy().tolist()[:self.n_chosen])
+        chosen = sorted(torch.argsort(-self._arch_alpha).cpu().numpy().tolist()[:self.n_chosen])
         if len(chosen) == 1:
             chosen = chosen[0]
         return {self.label: chosen}
@@ -138,7 +140,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
     def forward(self, inputs):
         inputs = torch.stack(inputs)
         alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
-        return torch.sum(inputs * F.softmax(self._alpha, -1).view(*alpha_shape), 0)
+        return torch.sum(inputs * F.softmax(self._arch_alpha, -1).view(*alpha_shape), 0)
 
     def parameters(self, *args, **kwargs):
         for _, p in self.named_parameters(*args, **kwargs):
@@ -146,95 +148,56 @@ class DifferentiableMixedInput(BaseSuperNetModule):
 
     def named_parameters(self, *args, **kwargs):
         for name, p in super().named_parameters(*args, **kwargs):
-            if name == '_alpha':
+            if name == '_arch_alpha':
                 continue
             yield name, p
 
 
-class FineGrainedDifferentiableMixin(FineGrainedPathSamplingMixin):
-    """
-    TBD
-    Utility class for all operators with ValueChoice as its arguments.
-    """
+class PathSamplingOperation(MixedOperationSamplingStrategy):
+    """TBD"""
 
-    bound_type: Type[nn.Module]                         # defined in operator mixin
-    init_argument: Callable[[str, ValueChoiceX], Any]   # defined in operator mixin
-    forward_argument_list: List[str]                    # defined in eperator mixin
-
-    def __init__(self, module_kwargs):
-        # Concerned arguments
-        self._mutable_arguments: Dict[str, ValueChoiceX] = {}
-
-        # get init default
-        init_kwargs = {}
-
-        for key, value in module_kwargs.items():
-            if isinstance(value, ValueChoiceX):
-                if key not in self.forward_argument_list:
-                    raise TypeError(f'Unsupported value choice on argument of {self.bound_type}: {key}')
-                init_kwargs[key] = self.init_argument(key, value)
-                self._mutable_arguments[key] = value
+    def __init__(self, operation: MixedOperation, memo: Dict[str, Any]) -> None:
+        # Sampling arguments. This should have the same keys with `operation.mutable_arguments`
+        operation._arch_alpha = nn.ParameterDict()
+        for name, spec in operation.search_space_spec().items():
+            if name in memo:
+                alpha = memo[name]
+                if len(alpha) != spec.size:
+                    raise ValueError(f'Architecture parameter size of same label {name} conflict: {len(alpha)} vs. {spec.size}')
             else:
-                init_kwargs[key] = value
+                alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
+            operation._arch_alpha[name] = alpha
 
-        # Sampling arguments. This should have the same number of keys as `_mutable_arguments`
-        self._sampled: Optional[Dict[str, Any]] = None
+        operation.parameters = functools.partial(self.parameters, operation)                # bind self
+        operation.named_parameters = functools.partial(self.named_parameters, operation)
 
-        # get all inner leaf value choices
-        self._space_spec: Dict[str, ParameterSpec] = dedup_inner_choices(self._mutable_arguments.values())
+    @staticmethod
+    def parameters(self, *args, **kwargs):
+        for _, p in self.named_parameters(*args, **kwargs):
+            yield p
 
-        super().__init__(**init_kwargs)
+    @staticmethod
+    def named_parameters(self, *args, **kwargs):
+        for name, p in super().named_parameters(*args, **kwargs):
+            if name.startswith('_arch_alpha'):
+                continue
+            yield name, p
 
-    def resample(self, memo):
-        """Random sample for each leaf value choice."""
-        result = {}
-        for label in self._space_spec:
-            if label in memo:
-                result[label] = memo[label]
-            else:
-                result[label] = random.choice(self._space_spec[label])
+    def resample(self, operation: MixedOperation, memo: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Differentiable. Do nothing in resample."""
+        return {}
 
-        # composits to kwargs
-        # example: result = {"exp_ratio": 3}, self._sampled = {"in_channels": 48, "out_channels": 96}
-        self._sampled = {}
-        for key, value in self._mutable_arguments.items():
-            self._sampled[key] = evaluate_value_choice_with_dict(value, result)
-
-        return result
-
-    def export(self, memo):
+    def export(self, operation: MixedOperation, memo: Dict[str, Any] = None) -> Dict[str, Any]:
         """Export is also random for each leaf value choice."""
         result = {}
-        for label in self._space_spec:
-            if label not in memo:
-                result[label] = random.choice(self._space_spec[label])
+        for name, spec in operation.search_space_spec().items():
+            if name in result:
+                continue
+            chosen_index = torch.argmax(operation._arch_alpha[name]).item()
+            result[name] = spec.values[chosen_index]
         return result
 
-    def search_space_spec(self):
-        return self._space_spec
-
-    @classmethod
-    def mutate(cls, module, name, memo):
-        if isinstance(module, cls.bound_type) and is_traceable(module):
-            # has valuechoice or not
-            has_valuechoice = False
-            for arg in itertools.chain(module.trace_args, module.trace_kwargs.values()):
-                if isinstance(arg, ValueChoiceX):
-                    has_valuechoice = True
-
-            if has_valuechoice:
-                if module.trace_args:
-                    raise ValueError('ValueChoice on class arguments cannot appear together with ``trace_args``. '
-                                     'Please enable ``kw_only`` on nni.trace.')
-
-                # save type and kwargs
-                return cls(**module.trace_kwargs)
-
-    def get_argument(self, name: str) -> Any:
-        if name in self._mutable_arguments:
-            return self._sampled[name]
-        return getattr(self, name)
-
-    def forward(self, *args, **kwargs):
-        sampled_args = [self.get_argument(name) for name in self.forward_argument_list]
-        return super().forward(*sampled_args, *args, **kwargs)
+    def forward_argument(self, operation: MixedOperation, name: str) -> Any:
+        if name in operation.mutable_arguments:
+            return dict(traverse_all_options(operation.mutable_arguments[name], weights=operation._arch_alpha))
+        return getattr(operation, name)

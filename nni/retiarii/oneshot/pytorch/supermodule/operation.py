@@ -316,6 +316,9 @@ class SuperConv2d(MixedOperation, nn.Conv2d):
                           groups: int,
                           input: torch.Tensor) -> torch.Tensor:
 
+        if any(isinstance(arg, dict) for arg in [stride, dilation, groups]):
+            raise ValueError('stride, dilation, groups does not support weighted sampling.')
+
         if groups > 1:
             # We use groups to slice input weights
             if isinstance(in_channels, int):

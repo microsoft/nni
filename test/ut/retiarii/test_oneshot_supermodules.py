@@ -11,7 +11,7 @@ def test_pathsampling_valuechoice():
     assert conv(torch.zeros((1, 3, 5, 5))).size(1) == 5
     conv.resample(memo={'123': 7})
     assert conv(torch.zeros((1, 3, 5, 5))).size(1) == 7
-    print(conv.export({}))
+    assert conv.export({})['123'] in [3, 5, 7]
 
 
 test_pathsampling_valuechoice()
