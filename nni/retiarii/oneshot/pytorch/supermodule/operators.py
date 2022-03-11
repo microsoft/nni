@@ -1,5 +1,5 @@
 """
-Operators that support weight sharing at a fine-grained level,
+Operations that support weight sharing at a fine-grained level,
 which is commonly known as super-kernel, or weight entanglement.
 
 """
@@ -12,6 +12,7 @@ import torch.nn.functional as F
 
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
 
+from .base import BaseSuperNetModule
 from .valuechoice_utils import traverse_all_options
 
 
@@ -54,6 +55,116 @@ def _slice_weight(weight: torch.Tensor, slice_: Union[Tuple[slice], Dict[Tuple[s
             return weight
 
         return weight[slice_]
+
+
+class MixedOperationSamplingStrategy:
+    """
+    Algo-related part for mixed Operation.
+
+    :class:`MixedOperation` delegates its resample and export to this strategy (or its subclass),
+    so that one Operation can be easily combined with different kinds of sampling.
+    """
+
+    def resample(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    def export(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    def get_argument(self, name: str) -> Any:
+        raise NotImplementedError()
+
+
+class MixedOperation(BaseSuperNetModule):
+    """
+    Utility class for all Operations with ValueChoice as its arguments.
+
+    By design, the mixed op should inherit two super-classes.
+    One is this class, which is to control algo-related behavior, such as sampling.
+    The other is specific to each Operation, which is to control how the Operation
+    interprets the sampling result.
+
+    The class controlling Operation-specific behaviors should have a method called ``init_argument``,
+    to customize the behavior when calling ``super().__init__()``. For example::
+
+        def init_argument(self, name, value_choice):
+            return max(value_choice.candidates)
+
+    The class should also define a ``bound_type``, to control the matching type in mutate,
+    a ``forward_argument_list``, to control which arguments can be dynamically used in ``forward``.
+    This list will also be used in mutate for sanity check.
+    ``forward``, is to control fprop. The accepted arguments are ``forward_argument_list``,
+    appended by forward arguments in the ``bound_type``.
+    """
+
+    bound_type: Type[nn.Module]                         # defined in subclass
+    init_argument: Callable[[str, ValueChoiceX], Any]   # defined in subclass
+    forward_argument_list: List[str]                    # defined in subclass
+
+    def __init__(self, module_kwargs):
+        # Concerned arguments
+        self._mutable_arguments: Dict[str, ValueChoiceX] = {}
+
+        # get init default
+        init_kwargs = {}
+
+        for key, value in module_kwargs.items():
+            if isinstance(value, ValueChoiceX):
+                if key not in self.forward_argument_list:
+                    raise TypeError(f'Unsupported value choice on argument of {self.bound_type}: {key}')
+                init_kwargs[key] = self.init_argument(key, value)
+                self._mutable_arguments[key] = value
+            else:
+                init_kwargs[key] = value
+
+        # Sampling arguments. This should have the same number of keys as `_mutable_arguments`
+        self._sampled: Optional[Dict[str, Any]] = None
+
+        # get all inner leaf value choices
+        self._space_spec: Dict[str, ParameterSpec] = dedup_inner_choices(self._mutable_arguments.values())
+
+        super().__init__(**init_kwargs)
+
+    def resample(self, memo):
+        return self.sampling_strategy
+
+    def export(self, memo):
+        """Export is also random for each leaf value choice."""
+        result = {}
+        for label in self._space_spec:
+            if label not in memo:
+                result[label] = random.choice(self._space_spec[label])
+        return result
+
+    def search_space_spec(self):
+        return self._space_spec
+
+    @classmethod
+    def mutate(cls, module, name, memo, sampling_strategy=):
+        if isinstance(module, cls.bound_type) and is_traceable(module):
+            # has valuechoice or not
+            has_valuechoice = False
+            for arg in itertools.chain(module.trace_args, module.trace_kwargs.values()):
+                if isinstance(arg, ValueChoiceX):
+                    has_valuechoice = True
+
+            if has_valuechoice:
+                if module.trace_args:
+                    raise ValueError('ValueChoice on class arguments cannot appear together with ``trace_args``. '
+                                     'Please enable ``kw_only`` on nni.trace.')
+
+                # save type and kwargs
+                return cls(**module.trace_kwargs)
+
+    def get_argument(self, name: str) -> Any:
+        if name in self._mutable_arguments:
+            return self._sampled[name]
+        return getattr(self, name)
+
+    def forward(self, *args, **kwargs):
+        sampled_args = [self.get_argument(name) for name in self.forward_argument_list]
+        return super().forward(*sampled_args, *args, **kwargs)
+
 
 
 class SuperLinearMixin(nn.Linear):
