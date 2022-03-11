@@ -139,6 +139,7 @@ If you want to open the portal you have already launched, click the tensorboard 
    :alt: 
 
 
+.. _exp-manage-webportal:
 
 Experiments management
 ----------------------
