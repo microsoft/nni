@@ -191,7 +191,29 @@ class HyperoptClassArgsValidator(ClassArgsValidator):
 
 class HyperoptTuner(Tuner):
     """
-    HyperoptTuner is a tuner which using hyperopt algorithm.
+    NNI wraps `hyperopt`_ to provide anneal tuner.
+
+    This simple annealing algorithm begins by sampling from the prior
+    but tends over time to sample from points closer and closer to the best ones observed.
+    This algorithm is a simple variation of random search that leverages smoothness in the response surface.
+    The annealing rate is not adaptive.
+
+    .. _hyperopt: https://github.com/hyperopt/hyperopt
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.tuner.name = 'Anneal'
+        config.tuner.class_args = {
+            'optimize_mode': 'minimize'
+        }
+
+    Parameters
+    ----------
+    optimze_mode: 'minimize' or 'maximize'
+        Whether optimize to minimize or maximize trial result.
     """
 
     def __init__(self, algorithm_name, optimize_mode='minimize',

@@ -20,20 +20,57 @@ LOGGER = logging.getLogger('batch_tuner_AutoML')
 
 class BatchTuner(Tuner):
     """
-    BatchTuner is tuner will running all the configure that user want to run batchly.
+    Batch tuner is a special tuner that allows users to simply provide several hyperparameter sets,
+    and it will evaluate each set.
+
+    Batch tuner does **not** support standard search space.
+
+    Search space of batch tuner looks like a single ``choice`` in standard search space,
+    but it has different meaning.
+
+    Consider following search space:
+
+    .. code-block::
+
+        'combine_params': {
+            '_type': 'choice',
+            '_value': [
+                {'x': 0, 'y': 1},
+                {'x': 1, 'y': 2},
+                {'x': 1, 'y': 3},
+            ]
+        }
+
+    Batch tuner will generate following 4 hyperparameter sets:
+
+    1. {'x': 0, 'y': 1}
+    2. {'x': 1, 'y': 2}
+    3. {'x': 1, 'y': 3}
+
+    If this search space was used with grid search tuner, it would instead generate:
+
+    1. {'combine_params': {'x': 0, 'y': 1 }}
+    2. {'combine_params': {'x': 1, 'y': 2 }}
+    3. {'combine_params': {'x': 1, 'y': 3 }}
 
     Examples
     --------
-    The search space only be accepted like:
 
-        ::
+    .. code-block::
 
-            {'combine_params':
-                { '_type': 'choice',
-                            '_value': '[{...}, {...}, {...}]',
-                }
+        config.search_space = {
+            'combine_params': {
+                '_type': 'choice',
+                '_value': [
+                    {'optimizer': 'Adam', 'learning_rate': 0.001},
+                    {'optimizer': 'Adam', 'learning_rate': 0.0001},
+                    {'optimizer': 'Adam', 'learning_rate': 0.00001},
+                    {'optimizer': 'SGD', 'learning_rate': 0.01},
+                    {'optimizer': 'SGD', 'learning_rate': 0.005},
+                ]
             }
-
+        }
+        config.tuner.name = 'BatchTuner'
     """
 
     def __init__(self):
