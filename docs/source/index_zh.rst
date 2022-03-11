@@ -10,7 +10,6 @@ Neural Network Intelligence
     :titlesonly:
     :hidden:
 
-    安装 <installation>
     入门<Tutorial/QuickStart>
     教程<tutorials>
     自动（超参数）调优 <hpo/index>
