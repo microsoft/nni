@@ -90,6 +90,7 @@ Q&A
 
 `The discussion <https://github.com/microsoft/nni/discussions/4289>`_ 能帮助你。
 
+.. _exp-manage-webportal:
 
 实验管理
 --------
