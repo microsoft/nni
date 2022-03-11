@@ -19,7 +19,12 @@ from .base import BaseSuperNetModule
 from .valuechoice_utils import traverse_all_options, dedup_inner_choices
 
 
+T = TypeVar('T')
+
 _multidim_slice = Tuple[slice, ...]
+
+_scalar_or_scalar_dict = Union[T, Dict[T, float]]
+_int_or_int_dict = _scalar_or_scalar_dict[int]
 
 
 def _slice_weight(weight: torch.Tensor, slice_: Union[_multidim_slice, List[Tuple[_multidim_slice, float]]]) -> torch.Tensor:
@@ -69,10 +74,8 @@ def _slice_weight(weight: torch.Tensor, slice_: Union[_multidim_slice, List[Tupl
         return weight[slice_]
 
 
-T = TypeVar('T')
-
 def _to_slice(
-    value: Union[Dict[T, float], T], transform: Callable[[T], slice]
+    value: _scalar_or_scalar_dict[T], transform: Callable[[T], slice]
 ) -> Union[List[Tuple[_multidim_slice, float]], _multidim_slice]:
     # two types of sampled value: a fixed value or a distribution
     # Use transform to transfrom the value to slice respectively
@@ -235,8 +238,8 @@ class SuperLinear(MixedOperation, nn.Linear):
         return max(traverse_all_options(value_choice))
 
     def forward_with_args(self,
-                          in_features: Union[int, Dict[int, float]],
-                          out_features: Union[int, Dict[int, float]],
+                          in_features: _int_or_int_dict,
+                          out_features: _int_or_int_dict,
                           input: torch.Tensor) -> torch.Tensor:
 
         in_features = _to_slice(in_features, lambda v: (None, slice(v)))
@@ -323,11 +326,11 @@ class SuperConv2d(MixedOperation, nn.Conv2d):
             return max(traverse_all_options(value_choice))
 
     def forward_with_args(self,
-                          in_channels: Union[int, Dict[int, float]],
-                          out_channels: Union[int, Dict[int, float]],
-                          kernel_size: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
+                          in_channels: _int_or_int_dict,
+                          out_channels: _int_or_int_dict,
+                          kernel_size: _scalar_or_scalar_dict[_int_or_tuple],
                           stride: _int_or_tuple,
-                          padding: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
+                          padding: _scalar_or_scalar_dict[_int_or_tuple],
                           dilation: int,
                           groups: int,
                           input: torch.Tensor) -> torch.Tensor:
@@ -366,3 +369,162 @@ class SuperConv2d(MixedOperation, nn.Conv2d):
             return F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
                             weight, bias, stride, (0, 0), dilation, groups)
         return F.conv2d(input, weight, bias, stride, padding, dilation, groups)
+
+
+class PathSamplingBatchNorm2d(MixedOperation, nn.BatchNorm2d):
+    """
+    TBD
+    The BatchNorm2d layer to replace original bn2d with valuechoice in its parameter list. It construct the biggest mean and variation
+    tensor first, and slice it before every forward according to the sampled value. Supported parameters are listed below:
+        num_features : int
+        eps : float
+        momentum : float
+
+    Momentum is required to be float.
+    PyTorch batchnorm supports a case where momentum can be none, which is not supported here.
+
+    Parameters
+    ----------
+    module : nn.Module
+        the module to be replaced
+    name : str
+        the unique identifier of `module`
+    """
+
+    bound_type = nn.BatchNorm2d
+    argument_list = ['num_features', 'eps', 'momentum']
+
+    def init_argument(self, name: str, value_choice: ValueChoiceX):
+        return max(traverse_all_options(value_choice))
+
+    def forward_with_args(self,
+                          num_features: _int_or_int_dict,
+                          eps: float,
+                          momentum: float,
+                          input: torch.Tensor) -> torch.Tensor:
+
+        if any(isinstance(arg, dict) for arg in [num_features, eps, momentum]):
+            raise ValueError('eps, momentum do not support weighted sampling')
+
+        if isinstance(num_features, dict):
+            num_features = self.num_features
+
+        if num_features < self.num_features:
+            weight = self.weight[:num_features]
+            bias = self.bias[:num_features]
+            running_mean = self.running_mean[:num_features]
+            running_var = self.running_var[:num_features]
+
+        if self.training:
+            bn_training = True
+        else:
+            bn_training = (self.running_mean is None) and (self.running_var is None)
+
+        return F.batch_norm(
+            input,
+            # If buffers are not to be tracked, ensure that they won't be updated
+            running_mean if not self.training or self.track_running_stats else None,
+            running_var if not self.training or self.track_running_stats else None,
+            weight,
+            bias,
+            bn_training,
+            momentum,  # originally exponential_average_factor in pytorch code
+            eps,
+        )
+
+
+class PathSamplingMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
+    """
+    TBD
+    The MultiHeadAttention layer to replace original mhattn with valuechoice in its parameter list. It construct the biggest Q, K,
+    V and some other tensors first, and slice it before every forward according to the sampled value. Supported parameters are listed
+    below:
+        embed_dim : int
+        num_heads : float
+        kdim :int
+        vdim : int
+        dropout : float
+
+    Warnings
+    ----------
+    Users are supposed to make sure that in different valuechoices with the same label, candidates with the same index should match
+    each other. For example, the divisibility constraint between `embed_dim` and `num_heads` in a multi-head attention module should
+    be met. Users ought to design candidates carefully to prevent the module from breakdown.
+
+    Parameters
+    ----------
+    module : nn.Module
+        the module to be replaced
+    name : str
+        the unique identifier of `module`
+    """
+
+    bound_type = nn.MultiheadAttention
+    argument_list = ['embed_dim', 'num_heads', 'kdim', 'vdim', 'dropout']
+
+    @staticmethod
+    def _slice_qkv_weight(src_tensor: torch.Tensor, unit_dim: int, slice_dim: int) -> torch.Tensor:
+        if unit_dim == slice_dim:
+            return src_tensor
+        # slice the parts for q, k, v respectively
+        return torch.cat([src_tensor[i * unit_dim: i * unit_dim + slice_dim] for i in range(3)], 0)
+
+    def forward_with_args(
+        self,
+        embed_dim: _int_or_int_dict, num_heads: _int_or_int_dict,
+        kdim: _int_or_int_dict, vdim: _int_or_int_dict, dropout: bool,
+        query: torch.Tensor, key: torch.Tensor, value: torch.Tensor,
+        key_padding_mask: Optional[torch.Tensor] = None,
+        need_weights: bool = True, attn_mask: Optional[torch.Tensor] = None
+    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+        if self.batch_first:
+            query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
+
+        # in projection weights & biases has q, k, v weights concatenated together
+        if self.in_proj_bias is not None:
+            in_proj_bias = self._slice_qkv_weight(self.in_proj_bias, self.embed_dim, embed_dim)
+        else:
+            in_proj_bias = None
+
+        if self.in_proj_weight is not None:
+            in_proj_weight = self._slice_qkv_weight(self.in_proj_weight[:, :embed_dim], self.embed_dim, embed_dim)
+        else:
+            in_proj_weight = None
+
+        bias_k = self.bias_k[:, :, :embed_dim] if self.bias_k is not None else None
+        bias_v = self.bias_v[:, :, :embed_dim] if self.bias_v is not None else None
+        out_proj_weight = self.out_proj.weight[:embed_dim, :embed_dim]
+        out_proj_bias = self.out_proj.bias[:embed_dim]
+
+        # The rest part is basically same as pytorch
+        if not self._qkv_same_embed_dim:
+            kdim = self.get_argument('kdim')
+            vdim = self.get_argument('vdim')
+
+            q_proj = self.q_proj_weight[:embed_dim, :embed_dim]
+            k_proj = self.k_proj_weight[:embed_dim, :kdim]
+            v_proj = self.v_proj_weight[:embed_dim, :vdim]
+
+            attn_output, attn_output_weights = F.multi_head_attention_forward(
+                query, key, value, embed_dim, num_heads,
+                in_proj_weight, in_proj_bias,
+                bias_k, bias_v, self.add_zero_attn,
+                dropout, out_proj_weight, out_proj_bias,
+                training=self.training,
+                key_padding_mask=key_padding_mask, need_weights=need_weights,
+                attn_mask=attn_mask, use_separate_proj_weight=True,
+                q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
+        else:
+            attn_output, attn_output_weights = F.multi_head_attention_forward(
+                query, key, value, embed_dim, num_heads,
+                in_proj_weight, in_proj_bias,
+                bias_k, bias_v, self.add_zero_attn,
+                dropout, out_proj_weight, out_proj_bias,
+                training=self.training,
+                key_padding_mask=key_padding_mask, need_weights=need_weights,
+                attn_mask=attn_mask)
+
+        if self.batch_first:
+            return attn_output.transpose(1, 0), attn_output_weights
+        else:
+            return attn_output, attn_output_weights
