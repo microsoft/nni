@@ -7,6 +7,8 @@ Naive random tuner for hyper-parameter optimization.
 You can specify an integer seed to determine random result.
 """
 
+from __future__ import annotations
+
 __all__ = ['RandomTuner', 'suggest', 'suggest_parameter']
 
 import logging
@@ -21,7 +23,26 @@ from nni.tuner import Tuner
 _logger = logging.getLogger('nni.tuner.random')
 
 class RandomTuner(Tuner):
-    def __init__(self, seed=None):
+    """
+    A naive tuner that generates fully random hyperparameters.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.tuner.name = 'Random'
+        config.tuner.class_args = {
+            'seed': 100
+        }
+
+    Parameters
+    ----------
+    seed
+        The random seed.
+    """
+
+    def __init__(self, seed: int | None = None):
         self.space = None
         if seed is None:  # explicitly generate a seed to make the experiment reproducible
             seed = np.random.default_rng().integers(2 ** 31)

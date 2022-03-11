@@ -100,7 +100,9 @@ class Repeat(Mutable):
 
 class NasBench201Cell(nn.Module):
     """
-    Cell structure that is proposed in NAS-Bench-201 :footcite:p:`dong2019bench`.
+    Cell structure that is proposed in NAS-Bench-201.
+
+    Refer to :footcite:t:`dong2019bench` for details.
 
     This cell is a densely connected DAG with ``num_tensors`` nodes, where each node is tensor.
     For every i < j, there is an edge from i-th node to j-th node.

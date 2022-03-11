@@ -1,11 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from packaging.version import Version
 import torch
 import torch.nn as nn
 
 from ...serializer import basic_unit
-from ...utils import version_larger_equal
 
 # NOTE: support pytorch version >= 1.5.0
 
@@ -31,10 +31,10 @@ __all__ = [
     'Flatten', 'Hardsigmoid'
 ]
 
-if version_larger_equal(torch.__version__, '1.6.0'):
+if Version(torch.__version__) >= Version('1.6.0'):
     __all__.append('Hardswish')
 
-if version_larger_equal(torch.__version__, '1.7.0'):
+if Version(torch.__version__) >= Version('1.7.0'):
     __all__.extend(['Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss'])
 
 
@@ -149,10 +149,10 @@ Transformer = basic_unit(nn.Transformer)
 Flatten = basic_unit(nn.Flatten)
 Hardsigmoid = basic_unit(nn.Hardsigmoid)
 
-if version_larger_equal(torch.__version__, '1.6.0'):
+if Version(torch.__version__) >= Version('1.6.0'):
     Hardswish = basic_unit(nn.Hardswish)
 
-if version_larger_equal(torch.__version__, '1.7.0'):
+if Version(torch.__version__) >= Version('1.7.0'):
     SiLU = basic_unit(nn.SiLU)
     Unflatten = basic_unit(nn.Unflatten)
     TripletMarginWithDistanceLoss = basic_unit(nn.TripletMarginWithDistanceLoss)

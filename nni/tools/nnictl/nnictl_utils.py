@@ -105,7 +105,7 @@ def parse_ids(args):
     3.If there is an id specified, return the corresponding id
     4.If there is no id specified, and there is an experiment running, return the id, or return Error
     5.If the id matches an experiment, nnictl will return the id.
-    6.If the id ends with *, nnictl will match all ids matchs the regular
+    6.If the id ends with ``*``, nnictl will match all ids matchs the regular
     7.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
     8.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
     '''

@@ -42,6 +42,7 @@ ValueChoice
 
 .. autoclass:: nni.retiarii.nn.pytorch.ValueChoice
    :members:
+   :inherited-members: Module
 
 .. _nas-repeat:
 

@@ -20,10 +20,9 @@ Neural Network Intelligence
     :caption: Advanced Materials
     :hidden:
 
-    Overview
-    Auto (Hyper-parameter) Tuning <hyperparameter_tune>
+    Hyperparameter Optimization <hpo/index>
     Neural Architecture Search <nas/index>
-    Model Compression <compression>
+    Model Compression <compression/index>
     Feature Engineering <feature_engineering>
     Experiment <experiment/overview>
 
@@ -32,7 +31,10 @@ Neural Network Intelligence
     :caption: References
     :hidden:
 
-    References <reference>
+    nnictl Commands <reference/nnictl>
+    Experiment Configuration <reference/experiment_config>
+    Experiment Configuration (legacy) <Tutorial/ExperimentConfig>
+    Python API <reference/_modules/nni>
 
 ..  toctree::
     :maxdepth: 2
