@@ -15,11 +15,11 @@ from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule, ReplaceDictType
 from .enas import ReinforceController, ReinforceField
-from .superlayer.sampling import (ENASValueChoice,
-                                  PathSamplingMultiHeadAttention,
-                                  PathSamplingSuperBatchNorm2d,
-                                  PathSamplingSuperConv2d,
-                                  PathSamplingSuperLinear, RandomValueChoice)
+# from .superlayer.sampling import (ENASValueChoice,
+#                                   PathSamplingMultiHeadAttention,
+#                                   PathSamplingSuperBatchNorm2d,
+#                                   PathSamplingSuperConv2d,
+#                                   PathSamplingSuperLinear, RandomValueChoice)
 from .utils import (get_naive_match_and_replace,
                     get_sampling_valuechoice_match_and_replace)
 

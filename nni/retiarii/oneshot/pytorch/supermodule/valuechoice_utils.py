@@ -75,7 +75,7 @@ def traverse_all_options(value_choice: ValueChoiceX,
     """
     # get a dict of {label: list of tuple of choice and weight}
     leafs: Dict[str, List[Tuple[Choice, float]]] = {}
-    for label, param_spec in dedup_inner_choices(value_choice).items():
+    for label, param_spec in dedup_inner_choices([value_choice]).items():
         if weights is not None:
             if label not in weights:
                 raise KeyError(f'{value_choice} depends on a weight with key {label}, but not found in {weights}')
@@ -84,7 +84,7 @@ def traverse_all_options(value_choice: ValueChoiceX,
             leafs[label] = list(zip(param_spec.values, weights[label]))
         else:
             # create a dummy weight of zero, in case that weights are not provided.
-            leafs[label] = list(zip(param_spec.values, [0.] * len(param_spec.size)))
+            leafs[label] = list(zip(param_spec.values, itertools.repeat(0., param_spec.size)))
 
     # result is a dict from a option to its weight
     result: Dict[str, Optional[float]] = {}

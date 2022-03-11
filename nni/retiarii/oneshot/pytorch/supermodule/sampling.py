@@ -151,10 +151,28 @@ class PathSamplingInput(BaseSuperNetModule):
 class FineGrainedPathSamplingMixin(BaseSuperNetModule):
     """
     Utility class for all operators with ValueChoice as its arguments.
+
+    By design, the mixed op should inherit two super-classes.
+    One is this class, which is to control algo-related behavior, such as sampling.
+    The other is specific to each operator, which is to control how the operator
+    interprets the sampling result.
+
+    The class controlling operator-specific behaviors should have a method called ``init_argument``,
+    to customize the behavior when calling ``super().__init__()``. For example::
+
+        def init_argument(self, name, value_choice):
+            return max(value_choice.candidates)
+
+    The class should also define a ``bound_type``, to control the matching type in mutate,
+    a ``forward_argument_list``, to control which arguments can be dynamically used in ``forward``.
+    This list will also be used in mutate for sanity check.
+    ``forward``, is to control fprop. The accepted arguments are ``forward_argument_list``,
+    appended by forward arguments in the ``bound_type``.
     """
 
     bound_type: Type[nn.Module]                         # defined in operator mixin
     init_argument: Callable[[str, ValueChoiceX], Any]   # defined in operator mixin
+    forward_argument_list: List[str]                    # defined in eperator mixin
 
     def __init__(self, module_kwargs):
         # Concerned arguments
@@ -165,6 +183,8 @@ class FineGrainedPathSamplingMixin(BaseSuperNetModule):
 
         for key, value in module_kwargs.items():
             if isinstance(value, ValueChoiceX):
+                if key not in self.forward_argument_list:
+                    raise TypeError(f'Unsupported value choice on argument of {self.bound_type}: {key}')
                 init_kwargs[key] = self.init_argument(key, value)
                 self._mutable_arguments[key] = value
             else:
@@ -228,163 +248,17 @@ class FineGrainedPathSamplingMixin(BaseSuperNetModule):
             return self._sampled[name]
         return getattr(self, name)
 
-    def default_argument(self, name: str, value_choice: ValueChoiceX):
-        """Subclass override this method to customize init argument of super-op. For Example, ::
-
-            def default_argument(self, name, value_choice):
-                return max(value_choice.candidates)
-        """
-        raise NotImplementedError()
-
     def forward(self, *args, **kwargs):
-        return super().forward(...)
+        sampled_args = [self.get_argument(name) for name in self.forward_argument_list]
+        return super().forward(*sampled_args, *args, **kwargs)
 
 
-class PathSamplingLayer(FineGrainedPathSamplingMixin, SuperConv2dMixin):
+class PathSamplingConv2d(FineGrainedPathSamplingMixin, SuperConv2dMixin):
     pass
 
 
-class PathSamplingLinear(FineGrainedPathSamplingMixin, nn.Linear):
-    """
-    TBD
-    The Linear layer to replace original linear with valuechoices in its parameter list. It construct the biggest weight matrix first,
-    and slice it before every forward according to the sampled value. Supported parameters are listed below:
-        in_features : int
-        out_features : int
-
-    Parameters
-    ----------
-    module : nn.Module:
-        module to be replaced
-    name : str
-        the unique identifier of `module`
-    """
-
-    bound_type = nn.Linear
-
-    def default_argument(self, name: str, value_choice: ValueChoiceX):
-        if name not in ['in_features', 'out_features']:
-            raise NotImplementedError(f'Unsupported value choice on argument: {name}')
-        return max(value_choice.all_options())
-
-    def forward(self, input):
-        in_features = self.get_argument('in_features')
-        out_features = self.get_argument('out_features')
-
-        weight = self.weight[:out_features, :in_features]
-        if self.bias is None:
-            bias = self.bias
-        else:
-            bias = self.bias[:out_features]
-
-        return F.linear(input, weight, bias)
-
-
-class PathSamplingConv2d(FineGrainedPathSamplingMixin, nn.Conv2d):
-    """
-    TBD
-    The Conv2d layer to replace original conv2d with valuechoices in its parameter list. It construct the biggest weight matrix first,
-    and slice it before every forward according to the sampled value.
-    Supported valuechoice parameters are listed below:
-        in_channels : int
-        out_channels : int
-        kernel_size : int, tuple(int)
-        stride : int, tuple(int)
-        padding : int, tuple(int)
-        dilation : int, tuple(int)
-        group : int
-
-    Warnings
-    ----------
-    Users are supposed to make sure that in different valuechoices with the same label, candidates with the same index should match
-    each other. For example, the constraint among `kernel_size`, `padding`, `stride` and `dilation` in a convolutional layer should
-    be met. Users ought to design candidates carefully to produce a tensor with correct shape for downstream calculation.
-
-    Parameters
-    ----------
-    module : nn.Module
-        the module to be replaced
-    name : str
-        the unique identifier of `module`
-    """
-
-    bound_type = nn.BatchNorm2d
-
-    def default_argument(self, name: str, value_choice: ValueChoiceX):
-        if name not in ['in_channels', 'out_channels', 'groups', 'kernel_size', 'padding', 'dilation']:
-            raise NotImplementedError(f'Unsupported value choice on argument: {name}')
-
-        if name == 'kernel_size':
-            def int2tuple(ks):
-                if isinstance(ks, int):
-                    return (ks, ks)
-                return ks
-
-            all_kernel_sizes = set(value_choice.all_options())
-            if any(isinstance(ks, tuple) for ks in all_kernel_sizes):
-                # maximum kernel should be calculated on every dimension
-                return (
-                    max(int2tuple(ks)[0] for ks in all_kernel_sizes),
-                    max(int2tuple(ks)[1] for ks in all_kernel_sizes)
-                )
-            else:
-                return max(all_kernel_sizes)
-
-        elif name == 'groups':
-            # minimum groups, maximum kernel
-            return min(value_choice.all_options())
-
-        else:
-            return max(value_choice.all_options())
-
-    def forward(self, input):
-        # get sampled in/out channels and kernel size
-        in_chn = self.get_argument('in_channels')
-        out_chn = self.get_argument('out_channels')
-        kernel_size = self.get_argument('kernel_size')
-
-        if isinstance(kernel_size, tuple):
-            sampled_kernel_a, sampled_kernel_b = kernel_size
-        else:
-            sampled_kernel_a = sampled_kernel_b = kernel_size
-
-        # F.conv2d will handle `groups`, but we still need to slice weight tensor
-        groups = self.get_argument('groups')
-
-        # take the small kernel from the center and round it to floor(left top)
-        # Example:
-        #   max_kernel = 5*5, sampled_kernel = 3*3, then we take [1: 4]
-        #   max_kernel = 5*5, sampled_kernel = 2*2, then we take [1: 3]
-        #   □ □ □ □ □   □ □ □ □ □
-        #   □ ■ ■ ■ □   □ ■ ■ □ □
-        #   □ ■ ■ ■ □   □ ■ ■ □ □
-        #   □ ■ ■ ■ □   □ □ □ □ □
-        #   □ □ □ □ □   □ □ □ □ □
-        max_kernel_a, max_kernel_b = self.kernel_size
-        kernel_a_left, kernel_b_top = (max_kernel_a - sampled_kernel_a) // 2, (max_kernel_b - sampled_kernel_b) // 2
-
-        weight = self.weight[:out_chn,
-                             :in_chn // self.groups,
-                             kernel_a_left: kernel_a_left + sampled_kernel_a,
-                             kernel_b_top: kernel_b_top + sampled_kernel_b]
-        if self.bias is not None:
-            if out_chn < self.out_channels:
-                bias = self.bias[:out_chn]
-            else:
-                bias = self.bias
-        else:
-            bias = None
-
-        # Users are supposed to make sure that candidates with the same index match each other.
-        # The following three attributes must be tuples, since Conv2d will convert them in init if they are not.
-        stride = self.get_argument('stride')
-        padding = self.get_argument('padding')
-        dilation = self.get_argument('dilation')
-
-        if self.padding_mode != 'zeros':
-            return F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
-                            weight, bias, stride, (0, 0), dilation, groups)
-        return F.conv2d(input, weight, bias, stride, padding, dilation, groups)
+class PathSamplingLinear(FineGrainedPathSamplingMixin, SuperLinearMixin):
+    pass
 
 
 class PathSamplingBatchNorm2d(FineGrainedPathSamplingMixin, nn.BatchNorm2d):

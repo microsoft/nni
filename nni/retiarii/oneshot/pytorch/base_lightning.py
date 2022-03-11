@@ -18,6 +18,10 @@ __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', '
 
 MutationHook = Callable[[nn.Module, str, Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
 
+# TO BE REMOVED
+from typing import Type
+ReplaceDictType = Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
+
 
 def traverse_and_mutate_submodules(
     root_module: nn.Module, hooks: List[MutationHook], topdown: bool = True
@@ -157,6 +161,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
     Parameters
     ----------
     """ + _inner_module_note + _mutation_hooks_note
+
+    # TO BE REMOVED
+    _custom_replace_dict_note = ''
 
     automatic_optimization = False
 

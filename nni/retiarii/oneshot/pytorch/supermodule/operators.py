@@ -44,10 +44,10 @@ def _slice_weight(weight: torch.Tensor, slice_: Union[Tuple[slice], Dict[Tuple[s
         no_effect = True
         for i in range(len(slice_)):
             s = slice_[i]
-            if not (
-                (s.start is None or s.start == 0) and
-                (s.stop is None or s.stop >= weight.size(i)) and
-                s.step in (1, None)
+            if s is not None and not (
+                (s.start is None or s.start == 0) and               # start is useless
+                (s.stop is None or s.stop >= weight.size(i)) and    # stop is useless
+                s.step in (1, None)                                 # step is useless
             ):
                 no_effect = False
         if no_effect:
@@ -66,15 +66,15 @@ class SuperLinearMixin(nn.Linear):
     """
 
     bound_type = nn.Linear
+    forward_argument_list = ['in_features', 'out_features']
 
     def init_argument(self, name: str, value_choice: ValueChoiceX):
-        if name not in ['in_features', 'out_features']:
-            raise NotImplementedError(f'Unsupported value choice on argument: {name}')
         return max(traverse_all_options(value_choice))
 
-    def forward(self, input: torch.Tensor,
+    def forward(self,
                 in_features: Union[int, Dict[int, float]],
-                out_features: Union[int, Dict[int, float]]):
+                out_features: Union[int, Dict[int, float]],
+                input: torch.Tensor) -> torch.Tensor:
 
         if isinstance(in_features, dict):
             in_features = {slice(dim): weight for dim, weight in in_features.items()}
@@ -124,6 +124,9 @@ class SuperConv2dMixin(nn.Conv2d):
     """
 
     bound_type = nn.Conv2d
+    forward_argument_list = [
+        'in_channels', 'out_channels', 'kernel_size', 'stride', 'padding', 'dilation', 'groups'
+    ]
 
     @staticmethod
     def _to_tuple(value: _int_or_tuple) -> Tuple[int, int]:
@@ -162,14 +165,15 @@ class SuperConv2dMixin(nn.Conv2d):
         else:
             return max(traverse_all_options(value_choice))
 
-    def forward(self, input: torch.Tensor,
+    def forward(self,
                 in_channels: Union[int, Dict[int, float]],
                 out_channels: Union[int, Dict[int, float]],
                 kernel_size: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
                 stride: _int_or_tuple,
                 padding: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
                 dilation: int,
-                groups: int) -> torch.Tensor:
+                groups: int,
+                input: torch.Tensor) -> torch.Tensor:
 
         if groups > 1:
             # We use groups to slice input weights
@@ -180,14 +184,14 @@ class SuperConv2dMixin(nn.Conv2d):
 
         # slice prefix
         if isinstance(in_channels, dict):
-            in_channels = {(slice(dim),): wt for dim, wt in in_channels.items()}
+            in_channels = {(None, slice(dim)): wt for dim, wt in in_channels.items()}
         else:
-            in_channels = (slice(in_channels),)
+            in_channels = (None, slice(in_channels))
 
         if isinstance(out_channels, dict):
-            out_channels = {(None, slice(dim)): wt for dim, wt in out_channels.items()}
+            out_channels = {(slice(dim),): wt for dim, wt in out_channels.items()}
         else:
-            out_channels = (None, slice(out_channels))
+            out_channels = (slice(out_channels),)
 
         weight = _slice_weight(self.weight, out_channels)
         weight = _slice_weight(weight, in_channels)
