@@ -55,7 +55,8 @@ def evaluate_value_choice_with_dict(value_choice: ValueChoiceX, chosen: Dict[str
 
 def traverse_all_options(value_choice: ValueChoiceX,
                          weights: Optional[Dict[str, List[float]]] = None) -> List[Union[Tuple[Any, float], Any]]:
-    """_summary_
+    """Traverse all possible computation outcome of a value choice.
+    If ``weights`` is not None, it will also compute the probability of each possible outcome.
 
     Parameters
     ----------

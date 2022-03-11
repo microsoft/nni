@@ -13,6 +13,7 @@ from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from nni.retiarii.oneshot.pytorch.base_lightning import BaseOneShotLightningModule
 
 from .base import BaseSuperNetModule
+from .sampling import FineGrainedPathSamplingMixin
 
 
 class DifferentiableMixedLayer(BaseSuperNetModule):
@@ -150,15 +151,17 @@ class DifferentiableMixedInput(BaseSuperNetModule):
             yield name, p
 
 
-class FineGrainedDifferentiableMixin(BaseOneShotLightningModule):
+class FineGrainedDifferentiableMixin(FineGrainedPathSamplingMixin):
     """
     TBD
     Utility class for all operators with ValueChoice as its arguments.
     """
 
-    bound_type: Type[nn.Module]
+    bound_type: Type[nn.Module]                         # defined in operator mixin
+    init_argument: Callable[[str, ValueChoiceX], Any]   # defined in operator mixin
+    forward_argument_list: List[str]                    # defined in eperator mixin
 
-    def __init__(self, **module_kwargs):
+    def __init__(self, module_kwargs):
         # Concerned arguments
         self._mutable_arguments: Dict[str, ValueChoiceX] = {}
 
@@ -167,6 +170,8 @@ class FineGrainedDifferentiableMixin(BaseOneShotLightningModule):
 
         for key, value in module_kwargs.items():
             if isinstance(value, ValueChoiceX):
+                if key not in self.forward_argument_list:
+                    raise TypeError(f'Unsupported value choice on argument of {self.bound_type}: {key}')
                 init_kwargs[key] = self.init_argument(key, value)
                 self._mutable_arguments[key] = value
             else:
@@ -176,16 +181,7 @@ class FineGrainedDifferentiableMixin(BaseOneShotLightningModule):
         self._sampled: Optional[Dict[str, Any]] = None
 
         # get all inner leaf value choices
-        self._space_spec: Dict[str, ParameterSpec] = {}
-        for value_choice in self._mutable_arguments.values():
-            for choice in value_choice.inner_choices():
-                param_spec = ParameterSpec(choice.label, 'choice', choice.candidates, (choice.label, ), True, size=len(choice.candidates))
-                if choice.label in self._space_spec:
-                    if param_spec != self._space_spec[choice.label]:
-                        raise ValueError('Value choice conflict: same label with different candidates: '
-                                         f'{param_spec} vs. {self._space_spec[choice.label]}')
-                else:
-                    self._space_spec[choice.label] = param_spec
+        self._space_spec: Dict[str, ParameterSpec] = dedup_inner_choices(self._mutable_arguments.values())
 
         super().__init__(**init_kwargs)
 
@@ -202,11 +198,7 @@ class FineGrainedDifferentiableMixin(BaseOneShotLightningModule):
         # example: result = {"exp_ratio": 3}, self._sampled = {"in_channels": 48, "out_channels": 96}
         self._sampled = {}
         for key, value in self._mutable_arguments.items():
-            choice_inner_values = []
-            for choice in value.inner_choices():
-                choice_inner_values.append(result[choice.label])
-            self._sampled[key] = value.evaluate(choice_inner_values)
-        self._sampled = result
+            self._sampled[key] = evaluate_value_choice_with_dict(value, result)
 
         return result
 
@@ -243,10 +235,6 @@ class FineGrainedDifferentiableMixin(BaseOneShotLightningModule):
             return self._sampled[name]
         return getattr(self, name)
 
-    def default_argument(self, name: str, value_choice: ValueChoiceX):
-        """Subclass override this method to customize init argument of super-op. For Example, ::
-
-            def default_argument(self, name, value_choice):
-                return max(value_choice.candidates)
-        """
-        raise NotImplementedError()
+    def forward(self, *args, **kwargs):
+        sampled_args = [self.get_argument(name) for name in self.forward_argument_list]
+        return super().forward(*sampled_args, *args, **kwargs)
