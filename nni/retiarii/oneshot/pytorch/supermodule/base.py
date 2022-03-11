@@ -63,10 +63,28 @@ class BaseSuperNetModule(nn.Module):
         raise NotImplementedError()
 
     @classmethod
-    def mutate(cls, module: nn.Module, name: str, memo: Dict[str, Any]) -> \
+    def mutate(cls, module: nn.Module, name: str, memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> \
             Union['BaseSuperNetModule', bool, Tuple['BaseSuperNetModule', bool]]:
         """This is a mutation hook that creates a :class:`BaseSuperNetModule`.
         The method should be implemented in each specific super-net module,
         because they usually have specific rules about what kind of modules to operate on.
+
+        Parameters
+        ----------
+        module : nn.Module
+            The module to be mutated (replaced).
+        name : str
+            Name of this module. With full prefix. For example, ``module1.block1.conv``.
+        memo : dict
+            Memo to enable sharing parameters among mutated modules. It should be read and written by
+            mutate functions themselves.
+        mutate_kwargs : dict
+            Algo-related hyper-parameters, and some auxiliary information.
+
+        Returns
+        -------
+        Union[BaseSuperNetModule, bool, Tuple[BaseSuperNetModule, bool]]
+            The mutation result, along with an optional boolean flag indicating whether to suppress follow-up mutation hooks.
+            See :class:`nni.retiarii.oneshot.pytorch.base.BaseOneShotLightningModule` for details.
         """
         raise NotImplementedError()

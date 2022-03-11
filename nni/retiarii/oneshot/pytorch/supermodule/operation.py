@@ -4,16 +4,19 @@ which is commonly known as super-kernel, or weight entanglement.
 
 """
 
-from typing import Union, Tuple, Dict, List
+import itertools
+from typing import Union, Tuple, Dict, List, Any, Type, Callable, Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from nni.common.hpo_utils import ParameterSpec
+from nni.common.serializer import is_traceable
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
 
 from .base import BaseSuperNetModule
-from .valuechoice_utils import traverse_all_options
+from .valuechoice_utils import traverse_all_options, dedup_inner_choices
 
 
 def _slice_weight(weight: torch.Tensor, slice_: Union[Tuple[slice], Dict[Tuple[slice], int]]) -> torch.Tensor:
@@ -63,7 +66,19 @@ class MixedOperationSamplingStrategy:
 
     :class:`MixedOperation` delegates its resample and export to this strategy (or its subclass),
     so that one Operation can be easily combined with different kinds of sampling.
+
+    One SamplingStrategy corresponds to one mixed operation.
     """
+
+    def __init__(self, operation: 'MixedOperation', memo: Dict[str, Any]) -> None:
+        """At init, the sampling strategy can prepare basic parameters,
+        and store them in operation if they need back propagation.
+
+        This init is called in :meth:`BaseSuperNetModule.mutate`, after the mixed operation is created.
+        So similar to :meth:`BaseSuperNetModule.mutate`,
+        memo should also be read and written by the strategy itself.
+        """
+        pass
 
     def resample(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
         raise NotImplementedError()
@@ -71,12 +86,14 @@ class MixedOperationSamplingStrategy:
     def export(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
         raise NotImplementedError()
 
-    def get_argument(self, name: str) -> Any:
+    def forward_argument(self, operation: 'MixedOperation', name: str) -> Any:
         raise NotImplementedError()
 
 
 class MixedOperation(BaseSuperNetModule):
     """
+    TBD
+
     Utility class for all Operations with ValueChoice as its arguments.
 
     By design, the mixed op should inherit two super-classes.
@@ -91,56 +108,60 @@ class MixedOperation(BaseSuperNetModule):
             return max(value_choice.candidates)
 
     The class should also define a ``bound_type``, to control the matching type in mutate,
-    a ``forward_argument_list``, to control which arguments can be dynamically used in ``forward``.
+    a ``argument_list``, to control which arguments can be dynamically used in ``forward``.
     This list will also be used in mutate for sanity check.
-    ``forward``, is to control fprop. The accepted arguments are ``forward_argument_list``,
+    ``forward``, is to control fprop. The accepted arguments are ``argument_list``,
     appended by forward arguments in the ``bound_type``.
     """
 
     bound_type: Type[nn.Module]                         # defined in subclass
-    init_argument: Callable[[str, ValueChoiceX], Any]   # defined in subclass
-    forward_argument_list: List[str]                    # defined in subclass
+    argument_list: List[str]                    # defined in subclass
+
+    sampling_strategy: MixedOperationSamplingStrategy
+
+    def init_argument(self, name: str, value_choice: ValueChoiceX) -> Any:
+        """Get the initialization argument.
+        This is often related to specific operator, rather than algo.
+        """
+        raise NotImplementedError()
+
+    def forward_with_args(self, *args, **kwargs):
+        """To control real fprop. The accepted arguments are ``argument_list``,
+        appended by forward arguments in the ``bound_type``."""
+        raise NotImplementedError()
 
     def __init__(self, module_kwargs):
         # Concerned arguments
-        self._mutable_arguments: Dict[str, ValueChoiceX] = {}
+        self.mutable_arguments: Dict[str, ValueChoiceX] = {}
 
         # get init default
         init_kwargs = {}
 
         for key, value in module_kwargs.items():
             if isinstance(value, ValueChoiceX):
-                if key not in self.forward_argument_list:
+                if key not in self.argument_list:
                     raise TypeError(f'Unsupported value choice on argument of {self.bound_type}: {key}')
                 init_kwargs[key] = self.init_argument(key, value)
-                self._mutable_arguments[key] = value
+                self.mutable_arguments[key] = value
             else:
                 init_kwargs[key] = value
 
-        # Sampling arguments. This should have the same number of keys as `_mutable_arguments`
-        self._sampled: Optional[Dict[str, Any]] = None
-
         # get all inner leaf value choices
-        self._space_spec: Dict[str, ParameterSpec] = dedup_inner_choices(self._mutable_arguments.values())
+        self._space_spec: Dict[str, ParameterSpec] = dedup_inner_choices(self.mutable_arguments.values())
 
         super().__init__(**init_kwargs)
 
     def resample(self, memo):
-        return self.sampling_strategy
+        return self.sampling_strategy.resample(self, memo)
 
     def export(self, memo):
-        """Export is also random for each leaf value choice."""
-        result = {}
-        for label in self._space_spec:
-            if label not in memo:
-                result[label] = random.choice(self._space_spec[label])
-        return result
+        return self.sampling_strategy.export(self, memo)
 
     def search_space_spec(self):
         return self._space_spec
 
     @classmethod
-    def mutate(cls, module, name, memo, sampling_strategy=):
+    def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, cls.bound_type) and is_traceable(module):
             # has valuechoice or not
             has_valuechoice = False
@@ -154,20 +175,29 @@ class MixedOperation(BaseSuperNetModule):
                                      'Please enable ``kw_only`` on nni.trace.')
 
                 # save type and kwargs
-                return cls(**module.trace_kwargs)
+                mixed_op = cls(module.trace_kwargs)
 
-    def get_argument(self, name: str) -> Any:
-        if name in self._mutable_arguments:
-            return self._sampled[name]
-        return getattr(self, name)
+                if 'mixed_op_sampling_strategy' not in mutate_kwargs:
+                    raise ValueError('Need to sampling strategy of mixed op, but not found in `mutate_kwargs`.')
+                strategy_cls: Type[MixedOperationSamplingStrategy] = mutate_kwargs['mixed_op_sampling_strategy']
+                # initialize strategy class
+                # this is put in mutate because we need to access memo
+                mixed_op.sampling_strategy = strategy_cls(mixed_op, memo)
+
+                return mixed_op
+
+    def forward_argument(self, name: str) -> Any:
+        """Get the argument used in forward.
+        This if often related to algo. We redirect this to sampling strategy.
+        """
+        return self.sampling_strategy.forward_argument(self, name)
 
     def forward(self, *args, **kwargs):
-        sampled_args = [self.get_argument(name) for name in self.forward_argument_list]
-        return super().forward(*sampled_args, *args, **kwargs)
+        sampled_args = [self.forward_argument(name) for name in self.argument_list]
+        return self.forward_with_args(*sampled_args, *args, **kwargs)
 
 
-
-class SuperLinearMixin(nn.Linear):
+class SuperLinear(MixedOperation, nn.Linear):
     """Mixed linear op. Supported arguments are:
 
     - ``in_features``
@@ -177,15 +207,15 @@ class SuperLinearMixin(nn.Linear):
     """
 
     bound_type = nn.Linear
-    forward_argument_list = ['in_features', 'out_features']
+    argument_list = ['in_features', 'out_features']
 
     def init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def forward(self,
-                in_features: Union[int, Dict[int, float]],
-                out_features: Union[int, Dict[int, float]],
-                input: torch.Tensor) -> torch.Tensor:
+    def forward_with_args(self,
+                          in_features: Union[int, Dict[int, float]],
+                          out_features: Union[int, Dict[int, float]],
+                          input: torch.Tensor) -> torch.Tensor:
 
         if isinstance(in_features, dict):
             in_features = {slice(dim): weight for dim, weight in in_features.items()}
@@ -209,7 +239,7 @@ class SuperLinearMixin(nn.Linear):
 _int_or_tuple = Union[int, Tuple[int, int]]
 
 
-class SuperConv2dMixin(nn.Conv2d):
+class SuperConv2d(MixedOperation, nn.Conv2d):
     """Mixed conv2d op. Supported arguments are:
 
     - ``in_channels``
@@ -235,7 +265,7 @@ class SuperConv2dMixin(nn.Conv2d):
     """
 
     bound_type = nn.Conv2d
-    forward_argument_list = [
+    argument_list = [
         'in_channels', 'out_channels', 'kernel_size', 'stride', 'padding', 'dilation', 'groups'
     ]
 
@@ -276,15 +306,15 @@ class SuperConv2dMixin(nn.Conv2d):
         else:
             return max(traverse_all_options(value_choice))
 
-    def forward(self,
-                in_channels: Union[int, Dict[int, float]],
-                out_channels: Union[int, Dict[int, float]],
-                kernel_size: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
-                stride: _int_or_tuple,
-                padding: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
-                dilation: int,
-                groups: int,
-                input: torch.Tensor) -> torch.Tensor:
+    def forward_with_args(self,
+                          in_channels: Union[int, Dict[int, float]],
+                          out_channels: Union[int, Dict[int, float]],
+                          kernel_size: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
+                          stride: _int_or_tuple,
+                          padding: Union[_int_or_tuple, Dict[_int_or_tuple, float]],
+                          dilation: int,
+                          groups: int,
+                          input: torch.Tensor) -> torch.Tensor:
 
         if groups > 1:
             # We use groups to slice input weights
