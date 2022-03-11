@@ -153,7 +153,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
             yield name, p
 
 
-class PathSamplingOperation(MixedOperationSamplingStrategy):
+class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
     """TBD"""
 
     def __init__(self, operation: MixedOperation, memo: Dict[str, Any]) -> None:
@@ -168,8 +168,8 @@ class PathSamplingOperation(MixedOperationSamplingStrategy):
                 alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
             operation._arch_alpha[name] = alpha
 
-        operation.parameters = functools.partial(self.parameters, operation)                # bind self
-        operation.named_parameters = functools.partial(self.named_parameters, operation)
+        operation.parameters = functools.partial(self.parameters, self=operation)                # bind self
+        operation.named_parameters = functools.partial(self.named_parameters, self=operation)
 
     @staticmethod
     def parameters(self, *args, **kwargs):
@@ -199,5 +199,6 @@ class PathSamplingOperation(MixedOperationSamplingStrategy):
 
     def forward_argument(self, operation: MixedOperation, name: str) -> Any:
         if name in operation.mutable_arguments:
-            return dict(traverse_all_options(operation.mutable_arguments[name], weights=operation._arch_alpha))
+            weights = {label: F.softmax(alpha, dim=-1) for label, alpha in operation._arch_alpha.items()}
+            return dict(traverse_all_options(operation.mutable_arguments[name], weights=weights))
         return getattr(operation, name)

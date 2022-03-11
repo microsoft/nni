@@ -180,6 +180,8 @@ class PathSamplingOperation(MixedOperationSamplingStrategy):
         return result
 
     def forward_argument(self, operation: MixedOperation, name: str) -> Any:
+        if self._sampled is None:
+            raise ValueError('Need to call resample() before running forward')
         if name in operation.mutable_arguments:
             return self._sampled[name]
         return getattr(operation, name)

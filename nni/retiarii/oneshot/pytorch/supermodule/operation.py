@@ -5,7 +5,7 @@ which is commonly known as super-kernel, or weight entanglement.
 """
 
 import itertools
-from typing import Union, Tuple, Dict, List, Any, Type, Callable, Optional
+from typing import Union, Tuple, Dict, List, Any, Type, Callable, Optional, TypeVar
 
 import torch
 import torch.nn as nn
@@ -19,26 +19,35 @@ from .base import BaseSuperNetModule
 from .valuechoice_utils import traverse_all_options, dedup_inner_choices
 
 
-def _slice_weight(weight: torch.Tensor, slice_: Union[Tuple[slice], Dict[Tuple[slice], int]]) -> torch.Tensor:
+_multidim_slice = Tuple[slice, ...]
+
+
+def _slice_weight(weight: torch.Tensor, slice_: Union[_multidim_slice, List[Tuple[_multidim_slice, float]]]) -> torch.Tensor:
     # slice_ can be a tuple of slice, e.g., ([3:6], [2:4])
     # or tuple of slice -> float, e.g. {([3:6],): 0.6, ([2:4],): 0.3}
 
-    if isinstance(slice_, dict):
+    if isinstance(slice_, list):
         # for weighted case, we get the corresponding masks. e.g.,
         # {([3:6],): 0.6, ([2:4],): 0.3} => [0, 0, 0.3, 0.9, 0.6, 0.6] (if the whole length is 6)
         # this mask is broadcasted and multiplied onto the weight
 
-        new_weight = []
+        masks = []
 
-        for sl, wt in slice_.items():
+        # the accepted argument is list of tuple here
+        # because slice can't be key of dict
+        for sl, wt in slice_:
             # create a mask with weight w
             with torch.no_grad():
                 mask = torch.zeros_like(weight)
                 mask[sl] = 1
 
-            new_weight.append((mask * wt) * weight)
+            # track gradients here
+            masks.append((mask * wt))
 
-        weight = sum(new_weight)
+        masks = sum(masks)
+        print(masks)
+
+        return masks * weight
 
     else:
         # for unweighted case, we slice it directly.
@@ -58,6 +67,19 @@ def _slice_weight(weight: torch.Tensor, slice_: Union[Tuple[slice], Dict[Tuple[s
             return weight
 
         return weight[slice_]
+
+
+T = TypeVar('T')
+
+def _to_slice(
+    value: Union[Dict[T, float], T], transform: Callable[[T], slice]
+) -> Union[List[Tuple[_multidim_slice, float]], _multidim_slice]:
+    # two types of sampled value: a fixed value or a distribution
+    # Use transform to transfrom the value to slice respectively
+    if isinstance(value, dict):
+        return [(transform(v), weight) for v, weight in value.items()]
+    else:
+        return transform(value)
 
 
 class MixedOperationSamplingStrategy:
@@ -217,21 +239,15 @@ class SuperLinear(MixedOperation, nn.Linear):
                           out_features: Union[int, Dict[int, float]],
                           input: torch.Tensor) -> torch.Tensor:
 
-        if isinstance(in_features, dict):
-            in_features = {slice(dim): weight for dim, weight in in_features.items()}
-        else:
-            in_features = slice(in_features)
+        in_features = _to_slice(in_features, lambda v: (None, slice(v)))
+        out_features = _to_slice(out_features, lambda v: (slice(v),))
 
-        if isinstance(out_features, dict):
-            out_features = {slice(dim): weight for dim, weight in out_features.items()}
-        else:
-            out_features = slice(out_features)
-
-        weight = _slice_weight(self.weight, (out_features, in_features))
+        weight = _slice_weight(self.weight, out_features)
+        weight = _slice_weight(weight, in_features)
         if self.bias is None:
             bias = self.bias
         else:
-            bias = _slice_weight(self.bias, (out_features, ))
+            bias = _slice_weight(self.bias, out_features)
 
         return F.linear(input, weight, bias)
 
@@ -319,30 +335,17 @@ class SuperConv2d(MixedOperation, nn.Conv2d):
         if any(isinstance(arg, dict) for arg in [stride, dilation, groups]):
             raise ValueError('stride, dilation, groups does not support weighted sampling.')
 
-        if groups > 1:
-            # We use groups to slice input weights
-            if isinstance(in_channels, int):
-                in_channels = in_channels // groups
-            else:
-                in_channels = {ch // groups: wt for ch, wt in in_channels.items()}
-
         # slice prefix
-        if isinstance(in_channels, dict):
-            in_channels = {(None, slice(dim)): wt for dim, wt in in_channels.items()}
-        else:
-            in_channels = (None, slice(in_channels))
-
-        if isinstance(out_channels, dict):
-            out_channels = {(slice(dim),): wt for dim, wt in out_channels.items()}
-        else:
-            out_channels = (slice(out_channels),)
+        # For groups > 1, we use groups to slice input weights
+        in_channels = _to_slice(in_channels, lambda v: (None, slice(v // groups)))
+        out_channels = _to_slice(out_channels, lambda v: (slice(v),))
 
         weight = _slice_weight(self.weight, out_channels)
         weight = _slice_weight(weight, in_channels)
 
         # slice center
         if isinstance(kernel_size, dict):
-            kernel_slice = {self._to_kernel_slice(ks): wt for ks, wt in kernel_size.items()}
+            kernel_slice = [(self._to_kernel_slice(ks), wt) for ks, wt in kernel_size.items()]
             # ignore the weighted padding, use maximum padding here
             padding = self.padding  # must be a tuple
         else:
