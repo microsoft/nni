@@ -52,3 +52,13 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
 .citation dt {
     padding-right: 1em;
 }
+
+/* fixes reference overlapping issue */
+/* This is originally defined to be negative in application_fixes.css */
+/* They did that to ensure the header doesn't disappear in jump links */
+/* We did this by using scroll-margin-top instead */
+dt:target {
+    margin-top: 0.15rem !important;
+    padding-top: 0 !important;
+    scroll-margin-top: 3.5rem;
+}

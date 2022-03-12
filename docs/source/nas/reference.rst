@@ -32,6 +32,11 @@ nni.retiarii.evaluator
 ..  automodule:: nni.retiarii.evaluator.pytorch
     :imported-members:
     :members:
+    :exclude-members: Trainer, DataLoader
+
+..  autoclass:: nni.retiarii.evaluator.pytorch.Trainer
+
+..  autoclass:: nni.retiarii.evaluator.pytorch.DataLoader
 
 nni.retiarii.execution
 ----------------------
