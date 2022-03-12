@@ -89,144 +89,28 @@ class DropPath(nn.Module):
     def forward(self, x):
         return drop_path(x, self.drop_prob, self.training)
 
-def calc_dropout(dropout, sample_embed_dim, super_embed_dim):
-    return dropout * 1.0 * sample_embed_dim / super_embed_dim
-
-def gelu(x: torch.Tensor) -> torch.Tensor:
-    if hasattr(torch.nn.functional, 'gelu'):
-        return torch.nn.functional.gelu(x.float()).type_as(x)
-    else:
-        return x * 0.5 * (1.0 + torch.erf(x / math.sqrt(2.0)))
-
-
-
-class AttentionSuper(nn.Module):
-    def __init__(self, embed_dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0., normalization = False, relative_position = False,
-                 num_patches = None, max_relative_position=14, scale=False, change_qkv = False):
-        super().__init__()
-        self.num_heads = num_heads
-        self.embed_dim = embed_dim
-
-        self.fc_scale = scale
-        self.change_qkv = change_qkv
-        if change_qkv:
-            self.qkv = nn.Linear(embed_dim, num_heads * 64 * 3, bias=qkv_bias)
-            self.proj = nn.Linear(num_heads * 64, embed_dim)
-            self.sample_scale = 64 ** -0.5
-        else:
-            self.qkv = nn.Linear(embed_dim, embed_dim * 3, bias=qkv_bias)
-            self.proj = nn.Linear(embed_dim, embed_dim)
-            self.sample_scale = (embed_dim() // self.num_heads) ** -0.5
-
-        self.relative_position = relative_position
-        # if self.relative_position:
-        #     self.rel_pos_embed_k = RelativePosition2D_super(super_embed_dim //num_heads, max_relative_position)
-        #     self.rel_pos_embed_v = RelativePosition2D_super(super_embed_dim //num_heads, max_relative_position)
-        # self.max_relative_position = max_relative_position
-        # self.sample_qk_embed_dim = None
-        # self.sample_v_embed_dim = None
-        # self.sample_num_heads = None
-        # self.sample_scale = None
-        # self.sample_in_embed_dim = None
-
-
-        self.attn_drop = nn.Dropout(attn_drop)
-        self.proj_drop = nn.Dropout(proj_drop)
-
-    def forward(self, x):
-        B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.sample_num_heads, -1).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv[0], qkv[1], qkv[2]   # make torchscript happy (cannot use tensor as tuple)
-
-        attn = (q @ k.transpose(-2, -1)) * self.sample_scale
-        # if self.relative_position:
-        #     r_p_k = self.rel_pos_embed_k(N, N)
-        #     attn = attn + (q.permute(2, 0, 1, 3).reshape(N, self.sample_num_heads * B, -1) @ r_p_k.transpose(2, 1)) \
-        #         .transpose(1, 0).reshape(B, self.sample_num_heads, N, N) * self.sample_scale
-
-        attn = attn.softmax(dim=-1)
-        attn = self.attn_drop(attn)
-
-        x = (attn @ v).transpose(1,2).reshape(B, N, -1)
-        # if self.relative_position:
-        #     r_p_v = self.rel_pos_embed_v(N, N)
-        #     attn_1 = attn.permute(2, 0, 1, 3).reshape(N, B * self.sample_num_heads, -1)
-        #     # The size of attention is (B, num_heads, N, N), reshape it to (N, B*num_heads, N) and do batch matmul with
-        #     # the relative position embedding of V (N, N, head_dim) get shape like (N, B*num_heads, head_dim). We reshape it to the
-        #     # same size as x (B, num_heads, N, hidden_dim)
-        #     x = x + (attn_1 @ r_p_v).transpose(1, 0).reshape(B, self.sample_num_heads, N, -1).transpose(2,1).reshape(B, N, -1)
-
-        x = self.proj(x)
-        x = self.proj_drop(x)
-        return x
-
 
 class TransformerEncoderLayer(nn.Module):
-    def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, dropout=0., attn_drop=0.,
-                 drop_path=0., act_layer=nn.GELU, pre_norm=True, scale=False,
-                 relative_position=False, change_qkv=False, max_relative_position=14):
+    def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, dropout=0., attn_drop=0.,
+                 drop_path=0., act_layer=nn.GELU, pre_norm=True,):
         super().__init__()
 
-        # the configs of super arch of the encoder, three dimension [embed_dim, mlp_ratio, and num_heads]
-        self.super_embed_dim = dim
-        self.super_mlp_ratio = mlp_ratio
-        self.super_ffn_embed_dim_this_layer = int(mlp_ratio * dim)
-        self.super_num_heads = num_heads
         self.normalize_before = pre_norm
-        self.super_dropout = attn_drop
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
-        self.scale = scale
-        self.relative_position = relative_position
-
-        # the configs of current sampled arch
-        self.sample_embed_dim = None
-        self.sample_mlp_ratio = None
-        self.sample_ffn_embed_dim_this_layer = None
-        self.sample_num_heads_this_layer = None
-        self.sample_scale = None
-        self.sample_dropout = None
-        self.sample_attn_dropout = None
-
-        self.is_identity_layer = None
-        self.attn = AttentionSuper(
-            dim, num_heads=num_heads, qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop,
-            proj_drop=dropout, scale=self.scale, relative_position=self.relative_position, change_qkv=change_qkv,
-            max_relative_position=max_relative_position
+        self.attn = nn.MultiheadAttention(
+            embed_dim = dim, 
+            num_heads = num_heads,
+            dropout = attn_drop,
+            batch_first = True,
+            add_bias_kv  = qkv_bias,
         )
 
         self.attn_layer_norm = nn.LayerNorm(dim)
         self.ffn_layer_norm = nn.LayerNorm(dim)
-        self.activation_fn = gelu
+        self.activation_fn = act_layer
 
         self.fc1 = nn.Linear(dim, dim * mlp_ratio)
         self.fc2 = nn.Linear(dim * mlp_ratio, dim)
-
-
-    def set_sample_config(self, is_identity_layer, sample_embed_dim=None, sample_mlp_ratio=None, sample_num_heads=None, sample_dropout=None, sample_attn_dropout=None, sample_out_dim=None):
-
-        if is_identity_layer:
-            self.is_identity_layer = True
-            return
-
-        self.is_identity_layer = False
-
-        self.sample_embed_dim = sample_embed_dim
-        self.sample_out_dim = sample_out_dim
-        self.sample_mlp_ratio = sample_mlp_ratio
-        self.sample_ffn_embed_dim_this_layer = int(sample_embed_dim*sample_mlp_ratio)
-        self.sample_num_heads_this_layer = sample_num_heads
-
-        self.sample_dropout = sample_dropout
-        self.sample_attn_dropout = sample_attn_dropout
-        self.attn_layer_norm.set_sample_config(sample_embed_dim=self.sample_embed_dim)
-
-        self.attn.set_sample_config(sample_q_embed_dim=self.sample_num_heads_this_layer*64, sample_num_heads=self.sample_num_heads_this_layer, sample_in_embed_dim=self.sample_embed_dim)
-
-        self.fc1.set_sample_config(sample_in_dim=self.sample_embed_dim, sample_out_dim=self.sample_ffn_embed_dim_this_layer)
-        self.fc2.set_sample_config(sample_in_dim=self.sample_ffn_embed_dim_this_layer, sample_out_dim=self.sample_out_dim)
-
-        self.ffn_layer_norm.set_sample_config(sample_embed_dim=self.sample_embed_dim)
-
 
     def forward(self, x):
         """
@@ -236,16 +120,10 @@ class TransformerEncoderLayer(nn.Module):
         Returns:
             encoded output of shape `(batch, patch_num, sample_embed_dim)`
         """
-        if self.is_identity_layer:
-            return x
-
-        # compute attn
-        # start_time = time.time()
-
         residual = x
         x = self.maybe_layer_norm(self.attn_layer_norm, x, before=True)
         x = self.attn(x)
-        x = F.dropout(x, p=self.sample_attn_dropout, training=self.training)
+        x = F.dropout(x, p=self.sample_dropout, training=self.training)
         x = self.drop_path(x)
         x = residual + x
         x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
@@ -256,12 +134,9 @@ class TransformerEncoderLayer(nn.Module):
         x = F.dropout(x, p=self.sample_dropout, training=self.training)
         x = self.fc2(x)
         x = F.dropout(x, p=self.sample_dropout, training=self.training)
-        if self.scale:
-            x = x * (self.super_mlp_ratio / self.sample_mlp_ratio)
         x = self.drop_path(x)
         x = residual + x
         x = self.maybe_layer_norm(self.ffn_layer_norm, x, after=True)
-        # print("ffn :", time.time() - start_time)
         return x
 
     def maybe_layer_norm(self, layer_norm, x, before=False, after=False):
@@ -276,7 +151,7 @@ class TransformerEncoderLayer(nn.Module):
 class AutoformerSpace(nn.Module):
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=256, depth=14,
                  num_heads=4, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0.,
-                 drop_path_rate=0., pre_norm=True, scale=False, gp=False, relative_position=False, change_qkv=False, abs_pos = True, max_relative_position=14,
+                 drop_path_rate=0., pre_norm=True, scale=False, gp=False, relative_position=False, change_qkv=False, abs_pos = True, 
                  search_embed_dim = [192,216,240], search_mlp_ratio=[3.5, 4.0], search_heads=[3, 4], search_depth=[12,13,14],
                  ):
         super().__init__()
@@ -308,18 +183,16 @@ class AutoformerSpace(nn.Module):
             self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, sample_embed_dim))
             trunc_normal_(self.pos_embed, std=.02)
 
+        blocks = []
         for i in range(depth):
             choices = []
-            for x in itertools.product(search_mlp_ratio, search_heads):
-                sample_mlp_ratio, sample_heads = x[0], x[1]
+            for sample_mlp_ratio, sample_heads in itertools.product(search_mlp_ratio, search_heads):
                 choices.append(TransformerEncoderLayer(dim=sample_embed_dim, num_heads=sample_heads, mlp_ratio=sample_mlp_ratio,
-                                                       qkv_bias=qkv_bias, qk_scale=qk_scale, dropout=drop_rate,
+                                                       qkv_bias=qkv_bias, dropout=drop_rate,
                                                        attn_drop=attn_drop_rate, drop_path=dpr[i],
-                                                       pre_norm=pre_norm, scale=self.scale,
-                                                       change_qkv=change_qkv, relative_position=relative_position,
-                                                       max_relative_position=max_relative_position))
-            choices = nn.LayerChoice(choices)
-            self.blocks.append(choices)
+                                                       pre_norm=pre_norm,))
+            blocks.append(nn.LayerChoice(choices))
+        self.blocks = nn.Repeat(blocks, self.sample_depth)
 
         if self.pre_norm:
             self.norm = nn.LayerNorm(sample_embed_dim)
@@ -332,8 +205,7 @@ class AutoformerSpace(nn.Module):
         x = torch.cat((cls_tokens, x), dim=1)
         if self.abs_pos:
             x = x + self.pos_embed
-        for i in range(self.sample_depth):
-            x = self.blocks[i](x)
+        x = self.blocks(x)
         if self.pre_norm:
             x = self.norm(x)
         if self.gp:
