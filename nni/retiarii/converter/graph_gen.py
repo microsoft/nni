@@ -598,7 +598,6 @@ class GraphConverter:
         return {
             'candidates': module.candidates,
             'label': module.label,
-            'accessor': module._accessor
         }
 
     def _convert_module(self, script_module, module, module_name, module_python_name, ir_model):

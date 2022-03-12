@@ -9,6 +9,7 @@ from pytorch_lightning.utilities.seed import seed_everything
 from pathlib import Path
 
 import nni
+import nni.runtime.platform.test
 
 try:
     from nni.common.device import GPUDevice

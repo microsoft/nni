@@ -6,6 +6,7 @@ import logging
 import os
 import socket
 import time
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
@@ -18,9 +19,10 @@ import torch
 import torch.nn as nn
 import nni.runtime.log
 from nni.common.device import GPUDevice
-from nni.experiment import Experiment, TrainingServiceConfig, launcher, management, rest
-from nni.experiment.config import util
-from nni.experiment.config.base import ConfigBase, PathLike
+from nni.experiment import Experiment, launcher, management, rest
+from nni.experiment.config import utils
+from nni.experiment.config.base import ConfigBase
+from nni.experiment.config.training_service import TrainingServiceConfig
 from nni.experiment.pipe import Pipe
 from nni.tools.nnictl.command_utils import kill_command
 
@@ -28,13 +30,15 @@ from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
-from ..execution.python import get_mutation_dict
+from ..execution.utils import get_mutation_dict
 from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
-from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation
+from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation, process_evaluator_mutations
 from ..oneshot.interface import BaseOneShotTrainer
+from ..serializer import is_model_wrapped
 from ..strategy import BaseStrategy
+from ..strategy.utils import dry_run_for_formatted_search_space
 
 _logger = logging.getLogger(__name__)
 
@@ -44,7 +48,7 @@ class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None
     search_space: Any = ''  # TODO: remove
     trial_command: str = '_reserved'
-    trial_code_directory: PathLike = '.'
+    trial_code_directory: utils.PathLike = '.'
     trial_concurrency: int
     trial_gpu_number: int = 0
     devices: Optional[List[Union[str, GPUDevice]]] = None
@@ -55,7 +59,7 @@ class RetiariiExeConfig(ConfigBase):
     nni_manager_ip: Optional[str] = None
     debug: bool = False
     log_level: Optional[str] = None
-    experiment_working_directory: PathLike = '~/nni-experiments'
+    experiment_working_directory: utils.PathLike = '~/nni-experiments'
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
     execution_engine: str = 'py'
@@ -70,7 +74,7 @@ class RetiariiExeConfig(ConfigBase):
         super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
-            self.training_service = util.training_service_config_factory(platform=training_service_platform)
+            self.training_service = utils.training_service_config_factory(platform=training_service_platform)
         self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry py'
 
     def __setattr__(self, key, value):
@@ -79,7 +83,7 @@ class RetiariiExeConfig(ConfigBase):
         if key in fixed_attrs and fixed_attrs[key] != value:
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
-        if key == 'trial_code_directory' and not (value == Path('.') or os.path.isabs(value)):
+        if key == 'trial_code_directory' and not (str(value) == '.' or os.path.isabs(value)):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         if key == 'execution_engine':
             assert value in ['base', 'py', 'cgo', 'benchmark'], f'The specified execution engine "{value}" is not supported.'
@@ -99,16 +103,12 @@ class RetiariiExeConfig(ConfigBase):
 
 
 _canonical_rules = {
-    'trial_code_directory': util.canonical_path,
-    'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
-    'experiment_working_directory': util.canonical_path
 }
 
 _validation_rules = {
     'trial_code_directory': lambda value: (Path(value).is_dir(), f'"{value}" does not exist or is not directory'),
     'trial_concurrency': lambda value: value > 0,
     'trial_gpu_number': lambda value: value >= 0,
-    'max_experiment_duration': lambda value: util.parse_time(value) > 0,
     'max_trial_number': lambda value: value > 0,
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
@@ -185,14 +185,26 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
+        self.url_prefix = None
+
+        # check for sanity
+        if not is_model_wrapped(base_model):
+            warnings.warn(colorama.Style.BRIGHT + colorama.Fore.RED +
+                          '`@model_wrapper` is missing for the base model. The experiment might still be able to run, '
+                          'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
+                          RuntimeWarning)
+
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
             self.base_model, self.trainer, self.applied_mutators,
             full_ir=self.config.execution_engine not in ['py', 'benchmark'],
             dummy_input=self.config.dummy_input
         )
+        self.applied_mutators += process_evaluator_mutations(self.trainer, self.applied_mutators)
 
         _logger.info('Start strategy...')
+        search_space = dry_run_for_formatted_search_space(base_model_ir, self.applied_mutators)
+        self.update_search_space(search_space)
         self.strategy.run(base_model_ir, self.applied_mutators)
         _logger.info('Strategy exit')
         # TODO: find out a proper way to show no more trial message on WebUI
@@ -211,6 +223,8 @@ class RetiariiExperiment(Experiment):
             Whether to start in debug mode.
         """
         atexit.register(self.stop)
+
+        self.config = self.config.canonical_copy()
 
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':

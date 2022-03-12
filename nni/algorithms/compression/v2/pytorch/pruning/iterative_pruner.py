@@ -7,6 +7,8 @@ from typing import Dict, List, Callable, Optional
 from torch import Tensor
 from torch.nn import Module
 
+from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
+
 from .basic_pruner import (
     LevelPruner,
     L1NormPruner,
@@ -107,6 +109,8 @@ class LinearPruner(IterativePruner):
                                              origin_config_list=config_list,
                                              log_dir=log_dir,
                                              keep_intermediate_result=keep_intermediate_result)
+        if 'traced_optimizer' in pruning_params:
+            pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
@@ -152,6 +156,8 @@ class AGPPruner(IterativePruner):
                                           origin_config_list=config_list,
                                           log_dir=log_dir,
                                           keep_intermediate_result=keep_intermediate_result)
+        if 'traced_optimizer' in pruning_params:
+            pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
@@ -200,6 +206,8 @@ class LotteryTicketPruner(IterativePruner):
                                                     origin_config_list=config_list,
                                                     log_dir=log_dir,
                                                     keep_intermediate_result=keep_intermediate_result)
+        if 'traced_optimizer' in pruning_params:
+            pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=reset_weight)
@@ -252,6 +260,8 @@ class SimulatedAnnealingPruner(IterativePruner):
                                                          perturbation_magnitude=perturbation_magnitude,
                                                          log_dir=log_dir,
                                                          keep_intermediate_result=keep_intermediate_result)
+        if 'traced_optimizer' in pruning_params:
+            pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)

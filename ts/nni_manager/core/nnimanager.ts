@@ -13,7 +13,7 @@ import {
     ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
-import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
+import { ExperimentConfig, LocalConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
@@ -25,7 +25,7 @@ import {
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
-import { NNIRestServer } from '../rest_server/nniRestServer';
+import { RestServer } from '../rest_server';
 
 /**
  * NNIManager which implements Manager interface
@@ -355,7 +355,7 @@ class NNIManager implements Manager {
             await this.experimentManager.stop();
             await component.get<TensorboardManager>(TensorboardManager).stop();
             await this.dataStore.close();
-            await component.get<NNIRestServer>(NNIRestServer).stop();
+            await component.get<RestServer>(RestServer).shutdown();
         } catch (err) {
             hasError = true;
             this.log.error(`${err.stack}`);
@@ -454,7 +454,7 @@ class NNIManager implements Manager {
             return await module_.RouterTrainingService.construct(config);
         } else if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
-            return new module_.LocalTrainingService(config);
+            return new module_.LocalTrainingService(<LocalConfig>config.trainingService);
         } else if (platform === 'kubeflow') {
             const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
             return new module_.KubeflowTrainingService();
@@ -509,11 +509,12 @@ class NNIManager implements Manager {
         return;
     }
 
-    private updateSearchSpace(searchSpace: string): void {
+    private updateSearchSpace(searchSpace: object): void {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
-        this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, searchSpace);
+        this.log.info(`Updated search space ${searchSpace}`);
+        this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, JSON.stringify(searchSpace));
         this.experimentProfile.params.searchSpace = searchSpace;
 
         return;

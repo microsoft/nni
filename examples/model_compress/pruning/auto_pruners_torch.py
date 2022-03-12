@@ -8,6 +8,7 @@ In this example, we present the usage of automatic pruners (NetAdapt, AutoCompre
 
 import argparse
 import os
+import sys
 import json
 import torch
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
@@ -18,11 +19,12 @@ from nni.algorithms.compression.pytorch.pruning import SimulatedAnnealingPruner,
 from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 
-import sys
-sys.path.append('../models')
+from pathlib import Path
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from mnist.lenet import LeNet
 from cifar10.vgg import VGG
 from cifar10.resnet import ResNet18, ResNet50
+
 
 def get_data(dataset, data_dir, batch_size, test_batch_size):
     '''

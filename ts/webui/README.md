@@ -1,32 +1,19 @@
 # WebUI
 
-## View summary page
+WebUI is built by using [React](https://reactjs.org/docs/getting-started.html) and [fluentui](https://developer.microsoft.com/en-us/fluentui#/controls/web).
 
-Click the tab "Overview".
 
-* See the experiment parameters.
-* See good performance trial.
-* See search_space json.
+## Development
 
-## View job accuracy
+* Please refer the [installation doc](https://github.com/microsoft/nni#installation) to run an experiment.
 
-Click the tab "Default Metric" to see the point graph of all trials. Hover every point to see its specific accuracy.
+* Use this command in `webui/ts` directory when you change webui code. And then refresh website to see latest pages.
+    ```bash
+    yarn build
+    ```
 
-## View hyper parameter
+## PR
 
-Click the tab "Hyper Parameter" to see the parallel graph.
+* WebUI uses [eslint](https://eslint.org/docs/user-guide/getting-started) and [prettier](https://prettier.io/docs/en/index.html) to format code. You could use the command `yarn sanity-check` to check the code error status. And use `yarn sanity-check --fix` could modifiy the most code style error before you send PR.
 
-* You can select the percentage to see top trials.
-* Choose two axis to swap its positions
-
-## View trial status
-
-Click the tab "Trials Detail" to see the status of the all trials. Specifically:
-
-* Trial duration: trial's duration in the bar graph.
-* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
-* Kill: you can kill a job that status is running.
-
-## Feedback
-
-[Known Issues](https://github.com/Microsoft/nni/issues).
+* You could send the PR if `yarn release` gets successful build after formatting code.

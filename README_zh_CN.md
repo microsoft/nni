@@ -21,7 +21,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 
 ## **最新消息！** &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)
 
-* **最新版本**：[v2.5 已发布](https://github.com/microsoft/nni/releases/tag/v2.5) - *2021年11月04日*
+* **最新版本**：[v2.6 已发布](https://github.com/microsoft/nni/releases/tag/v2.6) - *2022年1月19日*
 * **最新视频 demo**：[Youtube 入口](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - *上次更新：2021年5月26日*
 * **最新网络研讨会**: [介绍Retiarii：NNI 上的深度学习探索性训练框架](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - *2021年6月24日*
 * **最新互动渠道**: [Discussions](https://github.com/microsoft/nni/discussions)
@@ -249,7 +249,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 * 通过克隆源代码下载示例。
     
     ```bash
-    git clone -b v2.5 https://github.com/Microsoft/nni.git
+    git clone -b v2.6 https://github.com/Microsoft/nni.git
     ```
 
 * 运行 MNIST 示例。
@@ -354,7 +354,7 @@ NNI 有一个月度发布周期（主要发布）。 如果您遇到问题可以
 
 * [OpenPAI](https://github.com/Microsoft/pai)：作为开源平台，提供了完整的 AI 模型训练和资源管理能力，能轻松扩展，并支持各种规模的私有部署、云和混合环境。
 * [FrameworkController](https://github.com/Microsoft/frameworkcontroller)：开源的通用 Kubernetes Pod 控制器，通过单个控制器来编排 Kubernetes 上所有类型的应用。
-* [MMdnn](https://github.com/Microsoft/MMdnn)：一个完整、跨框架的解决方案，能够转换、可视化、诊断深度神经网络模型。 MMdnn 中的 "MM" 表示 model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。 MMdnn 中的 "MM" 表示 model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。
+* [MMdnn](https://github.com/Microsoft/MMdnn)：一个完整、跨框架的解决方案，能够转换、可视化、诊断深度神经网络模型。 MMdnn 中的 "MM" 表示 model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。
 * [SPTAG](https://github.com/Microsoft/SPTAG) : Space Partition Tree And Graph (SPTAG) 是用于大规模向量的最近邻搜索场景的开源库。
 
 我们鼓励研究人员和学生利用这些项目来加速 AI 开发和研究。

@@ -13,7 +13,6 @@ import { TrialJobApplicationForm, TrialJobDetail} from '../../common/trainingSer
 import { cleanupUnitTest, delay, prepareUnitTest, getExperimentRootDir } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
 import { LocalTrainingService } from '../../training_service/local/localTrainingService';
-import { ExperimentConfig } from '../../common/experimentConfig';
 
 // TODO: copy mockedTrail.py to local folder
 const localCodeDir: string = tmp.dirSync().name.split('\\').join('\\\\');
@@ -21,22 +20,22 @@ const mockedTrialPath: string = './test/mock/mockedTrial.py'
 fs.copyFileSync(mockedTrialPath, localCodeDir + '/mockedTrial.py')
 
 describe('Unit Test for LocalTrainingService', () => {
-    const config = <ExperimentConfig>{
+    const config = <any>{
+        platform: 'local',
         trialCommand: 'sleep 1h && echo hello',
         trialCodeDirectory: `${localCodeDir}`,
         trialGpuNumber: 0,  // TODO: add test case for gpu?
-        trainingService: {
-            platform: 'local'
-        }
+        maxTrialNumberPerGpu: 1,
+        reuseMode: true,
     };
 
-    const config2 = <ExperimentConfig>{
+    const config2 = <any>{
+        platform: 'local',
         trialCommand: 'python3 mockedTrial.py',
         trialCodeDirectory: `${localCodeDir}`,
         trialGpuNumber: 0,
-        trainingService: {
-            platform: 'local'
-        }
+        maxTrialNumberPerGpu: 1,
+        reuseMode: true,
     };
 
     before(() => {

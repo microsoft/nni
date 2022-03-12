@@ -1,0 +1,221 @@
+/* The following are for index.html */
+
+.wy-table-responsive table td, .wy-table-responsive table th {
+    white-space: normal
+}
+
+.gap {
+    margin-top: 24px;
+}
+
+.gap2 {
+    margin-top: 12px;
+}
+
+.rowHeight {
+    line-height: 24px;
+}
+
+.title {
+    padding-bottom: 6px;
+    border-bottom: 1px solid #ccc;
+}
+
+.second-title {
+    margin-top: 24px;
+}
+
+/* command style */
+.command {
+    background-color: #f8f8f8;
+    border: 1px solid #e1e4e5;
+    height: 40px;
+    line-height: 40px;
+    font-size: 12px;
+    padding-left: 10px;
+}
+
+.main-code {
+    background-color: #f8f8f8;
+    padding: 15px 20px;
+}
+
+.command-intro {
+    line-height: 48px;
+}
+
+/* document body width */
+.wy-nav-content {
+    max-width: 100% !important;
+    background-color: #fff;
+}
+
+/* nni logo bgcolor */
+.wy-side-nav-search {
+    background-color: black;
+}
+
+/* document body font-family */
+
+.wy-nav-content ul li {
+    list-style: disc;
+    margin-bottom: 12px;
+    margin-left: 24px;
+}
+
+.main-table, .main-table tr, .main-table td {
+    border: 1px solid #ccc;
+}
+
+.column b {
+    padding-bottom: 4px;
+    border-bottom: 2px solid blue;
+}
+
+.column td {
+    width: 200px;
+    text-align: center;
+    line-height: 36px;
+}
+
+td.framework {
+    width: 300px;
+    -webkit-width: 220px;
+}
+
+.main-table .circle li {
+    list-style-type: circle;
+}
+
+.main-table .firstUl, .circle {
+    padding-left: 20px;
+}
+
+.main-table .verticalMiddle {
+    vertical-align: middle !important;
+    text-align: center;
+}
+
+.inline img, .inline h2 {
+    display: inline-block;
+    margin-bottom: 0px;
+}
+
+.inline hr {
+    margin-top: 0px;
+}
+
+.inline img {
+    margin-top: -20px;
+}
+
+.ui-img img {
+    height: 350px;
+}
+
+.wy-side-nav-search>div.version {
+    color: #fff !important;
+}
+
+.main-table {
+    width: 90%;
+    margin: 0 auto;
+}
+
+.chinese {
+    margin-bottom: 16px;
+}
+
+.QR {
+    width: 180px;
+}
+
+.or {
+    vertical-align: middle;
+}
+
+.wy-plain-list-disc li, .rst-content .section ul li, .rst-content .toctree-wrapper ul li, article ul li {
+    margin-bottom: 0px;
+}
+
+.wy-nav-content .emotion li {
+    width: 300px;
+    height: 300px;
+    float: left;
+    margin-left: 15px;
+    margin-bottom: 60px;
+    background: #f5f5f5;
+    box-sizing: border-box;
+    list-style: none;
+}
+
+.emotion li div {
+    transition: 0.2s;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.emotion li div:hover {
+    transform: translate(1.1);
+    box-shadow: 0 15px 30px rgb(0 0 0 / 10%);
+}
+
+.center {
+    line-height: 54px;
+    text-align: center;
+}
+
+.emotion img {
+    width: 250px;
+}
+
+.emotion .first img {
+    margin: 50px 24px;
+}
+
+.emotion .second .working {
+    margin: 67px 24px;
+}
+
+.emotion .second .sign {
+    margin: 77px 24px;
+}
+
+.emotion .second .crying {
+    margin: 80px 24px;
+}
+
+.emotion .three img {
+    margin: 66px 24px;
+}
+
+.emotion .three .weaving {
+    margin: 75px 24px;
+}
+
+.three .comfort img {
+    margin: 92px 24px;
+}
+
+.emotion .four img {
+    margin: 81px 24px;
+}
+
+.details-container {
+    text-align: center;
+}
+
+.clear {
+    clear: both;
+}
+
+.whatNew {
+    margin-top: 6px;
+}
+
+.pipeline tr, .pipeline td, .pipeline th {
+    width: 248px;
+    line-height: 26px;
+    text-align: center;
+    border: 1px solid #ccc;
+}

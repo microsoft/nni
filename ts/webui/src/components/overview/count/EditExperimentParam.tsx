@@ -130,7 +130,7 @@ export const EditExperimentParam = (): any => {
                 showMessageInfo(`Successfully updated experiment's ${field}`, 'success');
                 updateOverviewPage();
             }
-        } catch (error) {
+        } catch (error: any) {
             if (error.response && error.response.data.error) {
                 showMessageInfo(`Failed to update trial ${field}\n${error.response.data.error}`, 'error');
             } else if (error.response) {

@@ -2,14 +2,15 @@
 # Licensed under the MIT license.
 
 import os
+import sys
 import torch
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 import numpy as np
 from nni.compression.pytorch.utils.counter import count_flops_params
 
-import sys
-sys.path.append('../../models')
+from pathlib import Path
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from mobilenet import MobileNet
 from mobilenet_v2 import MobileNetV2
 

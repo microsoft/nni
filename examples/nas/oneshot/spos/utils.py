@@ -3,6 +3,8 @@
 
 import torch
 import torch.nn as nn
+import numpy as np
+import PIL
 
 
 class CrossEntropyLabelSmooth(nn.Module):
@@ -39,3 +41,24 @@ def accuracy(output, target, topk=(1, 5)):
         correct_k = correct[:k].reshape(-1).float().sum(0)
         res["acc{}".format(k)] = correct_k.mul_(1.0 / batch_size).item()
     return res
+
+
+class ToBGRTensor(object):
+    
+    def __call__(self, img):
+        assert isinstance(img, (np.ndarray, PIL.Image.Image))
+        if isinstance(img, PIL.Image.Image):
+            img = np.asarray(img)
+        img = img[:,:, ::-1] # 2 BGR
+        img = np.transpose(img, [2, 0, 1]) # 2 (3, H, W)
+        img = np.ascontiguousarray(img)
+        img = torch.from_numpy(img).float()
+        return img
+
+
+def get_archchoice_by_model(model):
+    result = {}
+    for k, v in model.items():
+        assert k in v
+        result[k] = model[k].split("_")[-1]
+    return result

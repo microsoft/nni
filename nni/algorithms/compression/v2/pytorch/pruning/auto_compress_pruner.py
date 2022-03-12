@@ -1,15 +1,20 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import logging
 from pathlib import Path
 from typing import Dict, List, Callable, Optional
 
 from torch import Tensor
 from torch.nn import Module
 
+from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
+
 from .basic_pruner import ADMMPruner
 from .iterative_pruner import IterativePruner, SimulatedAnnealingPruner
 from .tools import LotteryTicketTaskGenerator
+
+_logger = logging.getLogger(__name__)
 
 
 class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
@@ -26,6 +31,13 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
                          origin_masks=origin_masks,
                          log_dir=log_dir,
                          keep_intermediate_result=keep_intermediate_result)
+
+    def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
+        # TODO: replace with validation here
+        for config in config_list:
+            if 'sparsity' in config or 'sparsity_per_layer' in config:
+                _logger.warning('Only `total_sparsity` can be differentially allocated sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fixed sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
+        return super().reset(model, config_list, masks)
 
     def _iterative_pruner_reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
         self.iterative_pruner.task_generator._log_dir = Path(self._log_dir_root, 'SA')
@@ -56,9 +68,9 @@ class AutoCompressPruner(IterativePruner):
         - trainer : Callable[[Module, Optimizer, Callable].
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
-        - optimizer : torch.optim.Optimizer.
-            The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
-            so do not use this optimizer in other places.
+        - traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
+            The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+            E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
         - criterion : Callable[[Tensor, Tensor], Tensor].
             The criterion function used in trainer. Take model output and target value as input, and return the loss.
         - iterations : int.
@@ -107,6 +119,8 @@ class AutoCompressPruner(IterativePruner):
                                                    sa_params=sa_params,
                                                    log_dir=log_dir,
                                                    keep_intermediate_result=keep_intermediate_result)
+        if 'traced_optimizer' in admm_params:
+            admm_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, admm_params['traced_optimizer'])
         pruner = ADMMPruner(None, None, **admm_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
