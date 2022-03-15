@@ -72,13 +72,13 @@ class GPTuner(Tuner):
         config.tuner.name = 'GPTuner'
         config.tuner.class_args = {
             'optimize_mode': 'maximize',
-            'utility': 'ei'
-            'kappa': 5.0
-            'xi': 0.0
-            'nu': 2.5
-            'alpha': 1e-6
-            'cold_start_num': 10
-            'selection_num_warm_up': 100000
+            'utility': 'ei',
+            'kappa': 5.0,
+            'xi': 0.0,
+            'nu': 2.5,
+            'alpha': 1e-6,
+            'cold_start_num': 10,
+            'selection_num_warm_up': 100000,
             'selection_num_starting_points': 250
         }
 
