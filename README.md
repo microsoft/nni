@@ -62,7 +62,7 @@ TBD
 
 <img src="docs/static/img/webui.gif" alt="webui" width="100%"/>
 
-For more tutorials, please see [NNI tutorials](https://nni.readthedocs.io/en/stable/tutorials.html).
+For more usages, please see [NNI tutorials](https://nni.readthedocs.io/en/stable/tutorials.html).
 
 ## Contribution guidelines
 
