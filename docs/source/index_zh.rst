@@ -19,9 +19,9 @@ Neural Network Intelligence
     特征工程<feature_engineering>
     NNI实验 <experiment/overview>
     参考<reference>
-    示例与解决方案<CommunitySharings/community_sharings>
-    研究和出版物 <ResearchPublications>
-    常见问题 <Tutorial/FAQ>
+    示例与解决方案<misc/community_sharings>
+    研究和出版物 <misc/research_publications>
+    常见问题 <misc/faq>
     如何贡献 <contribution>
     更改日志 <Release>
 
