@@ -47,7 +47,7 @@ class TpeArguments(NamedTuple):
 
         How each liar works is explained in paper's section 6.1.
         In general "best" suit for small trial number and "worst" suit for large trial number.
-        (:doc:`experiment result </CommunitySharings/ParallelizingTpeSearch>`)
+        (:doc:`experiment result </misc/parallelizing_tpe_search>`)
 
     n_startup_jobs
         The first N hyper-parameters are generated fully randomly for warming up.
