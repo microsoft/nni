@@ -338,7 +338,7 @@ class BOHB(MsgDispatcherBase):
         Note that this path needs to be an absolute path. Relative path is currently not supported.
     
     Detailed description of BOHB
-    --------------------------
+    ----------------------------
 
     Below we divide the introduction of the BOHB process into two parts:
 
@@ -346,7 +346,7 @@ class BOHB(MsgDispatcherBase):
     ^^^^^^^^^^^^^^
 
     We follow Hyperband’s way of choosing the budgets and continue to use SuccessiveHalving.
-    For more details, you can refer to the `Hyperband in NNI <HyperbandAdvisor.rst>`__
+    For more details, you can refer to the :class:`nni.algorithms.hpo.hyperband_advisor.Hyperband`
     and the `reference paper for Hyperband <https://arxiv.org/abs/1603.06560>`__.
     This procedure is summarized by the pseudocode below.
 
@@ -401,7 +401,7 @@ class BOHB(MsgDispatcherBase):
     Experiment
     ^^^^^^^^^^
 
-    We tune MNIST with BOHB. Code implementation: :githublink:`examples/trials/mnist-advisor <examples/trials/>`
+    We tune MNIST with BOHB. Code implementation: :githublink:`examples/trials/mnist-advisor <examples/trials/mnist-advisor>`
     We chose BOHB to build a CNN on the MNIST dataset. The following is our experimental final results:
 
     .. image:: ../../img/bohb_5.png
