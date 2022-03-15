@@ -57,6 +57,7 @@ extensions = [
     'IPython.sphinxext.ipython_console_highlighting',
 
     # Custom extensions in extension/ folder.
+    'tutorial_links',  # this has to be after sphinx-gallery
     'inplace_translation',
     'cardlinkitem',
     'codesnippetcard',
@@ -79,6 +80,10 @@ autosummary_mock_imports = [
     'nni.nas.benchmarks.nasbench101.db_gen',
     'nni.tools.jupyter_extension.management',
 ] + autodoc_mock_imports
+
+autodoc_typehints = 'description'
+autodoc_typehints_description_target = 'documented'
+autodoc_inherit_docstrings = False
 
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']

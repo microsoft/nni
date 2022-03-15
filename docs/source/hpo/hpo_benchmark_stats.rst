@@ -28,8 +28,8 @@ classification tasks, the metric "auc" and "logloss" were used for evaluation, w
 After the script finishes, the final scores of each tuner are summarized in the file ``results[time]/reports/performances.txt``.
 Since the file is large, we only show the following screenshot and summarize other important statistics instead.
 
-.. image:: ../img/hpo_benchmark/performances.png
-   :target: ../img/hpo_benchmark/performances.png
+.. image:: ../../img/hpo_benchmark/performances.png
+   :target: ../../img/hpo_benchmark/performances.png
    :alt:
 
 When the results are parsed, the tuners are also ranked based on their final performance. The following three tables show
@@ -154,52 +154,52 @@ To view the same data in another way, for each tuner, we present the average ran
 
 Besides these reports, our script also generates two graphs for each fold of each task: one graph presents the best score received by each tuner until trial x, and another graph shows the score that each tuner receives in trial x. These two graphs can give some information regarding how the tuners are "converging" to their final solution. We found that for "nnismall", tuners on the random forest model with search space defined in ``/examples/trials/benchmarking/automlbenchmark/nni/extensions/NNI/architectures/run_random_forest.py`` generally converge to the final solution after 40 to 60 trials. As there are too much graphs to incldue in a single report (96 graphs in total), we only present 10 graphs here.
 
-.. image:: ../img/hpo_benchmark/car_fold1_1.jpg
-   :target: ../img/hpo_benchmark/car_fold1_1.jpg
+.. image:: ../../img/hpo_benchmark/car_fold1_1.jpg
+   :target: ../../img/hpo_benchmark/car_fold1_1.jpg
    :alt:
 
 
-.. image:: ../img/hpo_benchmark/car_fold1_2.jpg
-   :target: ../img/hpo_benchmark/car_fold1_2.jpg
+.. image:: ../../img/hpo_benchmark/car_fold1_2.jpg
+   :target: ../../img/hpo_benchmark/car_fold1_2.jpg
    :alt:
 
 The previous two graphs are generated for fold 1 of the task "car". In the first graph, we observe that most tuners find a relatively good solution within 40 trials. In this experiment, among all tuners, the DNGOTuner converges fastest to the best solution (within 10 trials). Its best score improved for three times in the entire experiment. In the second graph, we observe that most tuners have their score flucturate between 0.8 and 1 throughout the experiment. However, it seems that the Anneal tuner (green line) is more unstable (having more fluctuations) while the GPTuner has a more stable pattern. This may be interpreted as the Anneal tuner explores more aggressively than the GPTuner and thus its scores for different trials vary a lot. Regardless, although this pattern can to some extent hint a tuner's position on the explore-exploit tradeoff, it is not a comprehensive evaluation of a tuner's effectiveness.
 
-.. image:: ../img/hpo_benchmark/christine_fold0_1.jpg
-   :target: ../img/hpo_benchmark/christine_fold0_1.jpg
+.. image:: ../../img/hpo_benchmark/christine_fold0_1.jpg
+   :target: ../../img/hpo_benchmark/christine_fold0_1.jpg
    :alt:
 
 
-.. image:: ../img/hpo_benchmark/christine_fold0_2.jpg
-   :target: ../img/hpo_benchmark/christine_fold0_2.jpg
+.. image:: ../../img/hpo_benchmark/christine_fold0_2.jpg
+   :target: ../../img/hpo_benchmark/christine_fold0_2.jpg
    :alt:
 
 
-.. image:: ../img/hpo_benchmark/cnae-9_fold0_1.jpg
-   :target: ../img/hpo_benchmark/cnae-9_fold0_1.jpg
+.. image:: ../../img/hpo_benchmark/cnae-9_fold0_1.jpg
+   :target: ../../img/hpo_benchmark/cnae-9_fold0_1.jpg
    :alt:
 
 
-.. image:: ../img/hpo_benchmark/cnae-9_fold0_2.jpg
-   :target: ../img/hpo_benchmark/cnae-9_fold0_2.jpg
+.. image:: ../../img/hpo_benchmark/cnae-9_fold0_2.jpg
+   :target: ../../img/hpo_benchmark/cnae-9_fold0_2.jpg
    :alt:
 
 
-.. image:: ../img/hpo_benchmark/credit-g_fold1_1.jpg
-   :target: ../img/hpo_benchmark/credit-g_fold1_1.jpg
+.. image:: ../../img/hpo_benchmark/credit-g_fold1_1.jpg
+   :target: ../../img/hpo_benchmark/credit-g_fold1_1.jpg
    :alt:
 
 
-.. image:: ../img/hpo_benchmark/credit-g_fold1_2.jpg
-   :target: ../img/hpo_benchmark/credit-g_fold1_2.jpg
+.. image:: ../../img/hpo_benchmark/credit-g_fold1_2.jpg
+   :target: ../../img/hpo_benchmark/credit-g_fold1_2.jpg
    :alt:
 
 
-.. image:: ../img/hpo_benchmark/titanic_2_fold1_1.jpg
-   :target: ../img/hpo_benchmark/titanic_2_fold1_1.jpg
+.. image:: ../../img/hpo_benchmark/titanic_2_fold1_1.jpg
+   :target: ../../img/hpo_benchmark/titanic_2_fold1_1.jpg
    :alt:
 
 
-.. image:: ../img/hpo_benchmark/titanic_2_fold1_2.jpg
-   :target: ../img/hpo_benchmark/titanic_2_fold1_2.jpg
+.. image:: ../../img/hpo_benchmark/titanic_2_fold1_2.jpg
+   :target: ../../img/hpo_benchmark/titanic_2_fold1_2.jpg
    :alt:

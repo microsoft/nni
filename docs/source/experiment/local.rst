@@ -14,9 +14,12 @@ Usage
 
 ..  code-block:: yaml
 
+    # the experiment config yaml file
+    ...
     trainingService:
       platform: local
       useActiveGpu: false # optional
+    ...
 
 There are other supported fields for local training service, such as ``maxTrialNumberPerGpu``, ``gpuIndices``, for concurrently running multiple trials on one GPU, and running trials on a subset of GPUs on your machine. Please refer to :ref:`reference-local-config-label` in reference for detailed usage.
 
@@ -28,12 +31,9 @@ Then we explain how local training service works with different configurations o
 ..  code-block:: yaml
 
     ...
-
     trialGpuNumber: 1
     trialConcurrency: 4
-
     ...
-
     trainingService:
       platform: local
       useActiveGpu: false

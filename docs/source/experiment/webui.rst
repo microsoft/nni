@@ -89,6 +89,8 @@ How to use dict intermediate result
 `The discussion <https://github.com/microsoft/nni/discussions/4289>`_ could help you.
 
 
+.. _exp-manage-webportal:
+
 Experiments management
 ----------------------
 
