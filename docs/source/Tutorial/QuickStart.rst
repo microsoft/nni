@@ -22,7 +22,7 @@ Windows
 
 .. Note:: For Linux and macOS, ``--user`` can be added if you want to install NNI in your home directory, which does not require any special privileges.
 
-.. Note:: If there is an error like ``Segmentation fault``, please refer to the :doc:`FAQ <FAQ>`.
+.. Note:: If there is an error like ``Segmentation fault``, please refer to the :doc:`FAQ <misc/faq>`.
 
 .. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`. If you want to use docker, refer to :doc:`HowToUseDocker <HowToUseDocker>`.
 
@@ -237,7 +237,7 @@ After starting the experiment successfully, you can find a message in the comman
 
    The Web UI urls are: [Your IP]:8080
 
-Open the ``Web UI url`` (Here it's: ``[Your IP]:8080``\ ) in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the `FAQ <FAQ.rst#could-not-open-webui-link>`__.
+Open the ``Web UI url`` (Here it's: ``[Your IP]:8080``\ ) in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the `FAQ <misc/faq.rst#could-not-open-webui-link>`__.
 
 
 View Overview Page
