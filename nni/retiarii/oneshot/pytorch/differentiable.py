@@ -3,8 +3,9 @@
 
 """Experimental version of differentiable one-shot implementation."""
 
+import functools
 from collections import OrderedDict
-from typing import Optional
+from typing import Optional, List
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -13,59 +14,9 @@ import torch.nn.functional as F
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Conv2d, BatchNorm2d
 
 from .utils import get_differentiable_valuechoice_match_and_replace, get_naive_match_and_replace
-from .base_lightning import BaseOneShotLightningModule, ReplaceDictType
-
-
-class DartsLayerChoice(nn.Module):
-    def __init__(self, layer_choice):
-        super(DartsLayerChoice, self).__init__()
-        self.name = layer_choice.label
-        self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
-        self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
-
-    def forward(self, *args, **kwargs):
-        op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
-        alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
-        return torch.sum(op_results * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
-
-    def parameters(self):
-        for _, p in self.named_parameters():
-            yield p
-
-    def named_parameters(self, recurse=False):
-        for name, p in super(DartsLayerChoice, self).named_parameters():
-            if name == 'alpha':
-                continue
-            yield name, p
-
-    def export(self):
-        return list(self.op_choices.keys())[torch.argmax(self.alpha).item()]
-
-
-class DartsInputChoice(nn.Module):
-    def __init__(self, input_choice):
-        super(DartsInputChoice, self).__init__()
-        self.name = input_choice.label
-        self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
-        self.n_chosen = input_choice.n_chosen or 1
-
-    def forward(self, inputs):
-        inputs = torch.stack(inputs)
-        alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
-        return torch.sum(inputs * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
-
-    def parameters(self):
-        for _, p in self.named_parameters():
-            yield p
-
-    def named_parameters(self, recurse=False):
-        for name, p in super(DartsInputChoice, self).named_parameters():
-            if name == 'alpha':
-                continue
-            yield name, p
-
-    def export(self):
-        return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
+from .base_lightning import BaseOneShotLightningModule, MutationHook
+from .supermodule.differentiable import DifferentiableMixedLayer, DifferentiableMixedInput, DifferentiableMixedOperation
+from .supermodule.operation import NATIVE_MIXED_OPERATIONS
 
 
 class DartsModule(BaseOneShotLightningModule):
@@ -86,18 +37,29 @@ class DartsModule(BaseOneShotLightningModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
     __doc__ = _darts_note.format(
         module_notes='The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
+    def default_mutation_hooks(self) -> List[MutationHook]:
+        """Replace modules with differentiable versions"""
+        hooks = [
+            DifferentiableMixedLayer.mutate,
+            DifferentiableMixedInput.mutate,
+        ]
+        for operation in NATIVE_MIXED_OPERATIONS:
+            hooks.append(functools.partial(operation.mutate, mutate_kwargs={
+                ''
+            })
+
     def __init__(self, inner_module: pl.LightningModule,
-                 custom_replace_dict: Optional[ReplaceDictType] = None,
+                 mutation_hooks: List[MutationHook] = None,
                  arc_learning_rate: float = 3.0E-4):
-        super().__init__(inner_module, custom_replace_dict=custom_replace_dict)
         self.arc_learning_rate = arc_learning_rate
+        super().__init__(inner_module, custom_replace_dict=custom_replace_dict)
 
     def training_step(self, batch, batch_idx):
         # grad manually

@@ -18,10 +18,6 @@ __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', '
 
 MutationHook = Callable[[nn.Module, str, Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
 
-# TO BE REMOVED
-from typing import Type
-ReplaceDictType = Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
-
 
 def traverse_and_mutate_submodules(
     root_module: nn.Module, hooks: List[MutationHook], topdown: bool = True
@@ -162,9 +158,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
     ----------
     """ + _inner_module_note + _mutation_hooks_note
 
-    # TO BE REMOVED
-    _custom_replace_dict_note = ''
-
     automatic_optimization = False
 
     def default_mutation_hooks(self) -> List[MutationHook]:
@@ -226,6 +219,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return arc_optimizers + w_optimizers, lr_schedulers
 
     def on_train_start(self):
+        # redirect the access to trainer/log to this module
+        # but note that we might be missing other attributes,
+        # which could potentially be a problem
         self.model.trainer = self.trainer
         self.model.log = self.log
         return self.model.on_train_start()

@@ -21,7 +21,7 @@ from .valuechoice_utils import traverse_all_options, dedup_inner_choices
 
 T = TypeVar('T')
 
-_multidim_slice = Tuple[slice, ...]
+_multidim_slice = Tuple[Union[slice, List[slice]], ...]
 
 _scalar_or_scalar_dict = Union[T, Dict[T, float]]
 _int_or_int_dict = _scalar_or_scalar_dict[int]
@@ -44,7 +44,13 @@ def _slice_weight(weight: torch.Tensor, slice_: Union[_multidim_slice, List[Tupl
             # create a mask with weight w
             with torch.no_grad():
                 mask = torch.zeros_like(weight)
-                mask[sl] = 1
+
+                if isinstance(sl, list):
+                    # slice is a list, meaning that it's assembled from multiple parts
+                    for single in sl:
+                        mask[single] = 1
+                else:
+                    mask[sl] = 1
 
             # track gradients here
             masks.append((mask * wt))
@@ -222,7 +228,7 @@ class MixedOperation(BaseSuperNetModule):
         return self.forward_with_args(*sampled_args, *args, **kwargs)
 
 
-class SuperLinear(MixedOperation, nn.Linear):
+class MixedLinear(MixedOperation, nn.Linear):
     """Mixed linear op. Supported arguments are:
 
     - ``in_features``
@@ -258,7 +264,7 @@ class SuperLinear(MixedOperation, nn.Linear):
 _int_or_tuple = Union[int, Tuple[int, int]]
 
 
-class SuperConv2d(MixedOperation, nn.Conv2d):
+class MixedConv2d(MixedOperation, nn.Conv2d):
     """Mixed conv2d op. Supported arguments are:
 
     - ``in_channels``
@@ -371,7 +377,7 @@ class SuperConv2d(MixedOperation, nn.Conv2d):
         return F.conv2d(input, weight, bias, stride, padding, dilation, groups)
 
 
-class PathSamplingBatchNorm2d(MixedOperation, nn.BatchNorm2d):
+class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
     """
     TBD
     The BatchNorm2d layer to replace original bn2d with valuechoice in its parameter list. It construct the biggest mean and variation
@@ -433,7 +439,7 @@ class PathSamplingBatchNorm2d(MixedOperation, nn.BatchNorm2d):
         )
 
 
-class PathSamplingMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
+class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     """
     TBD
     The MultiHeadAttention layer to replace original mhattn with valuechoice in its parameter list. It construct the biggest Q, K,
@@ -528,3 +534,11 @@ class PathSamplingMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             return attn_output.transpose(1, 0), attn_output_weights
         else:
             return attn_output, attn_output_weights
+
+
+NATIVE_MIXED_OPERATIONS: List[Type[MixedOperation]] = [
+    MixedLinear,
+    MixedConv2d,
+    MixedBatchNorm2d,
+    MixedMultiHeadAttention,
+]
