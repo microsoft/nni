@@ -44,7 +44,7 @@ Neural Network Intelligence
     Research and Publications <misc/research_publications>
     FAQ <misc/faq>
     How to Contribute <contribution>
-    Change Log <release>
+    Change Log <Release>
 
 
 
