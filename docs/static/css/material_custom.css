@@ -80,6 +80,12 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
     padding-right: 1em;
 }
 
+/* for release icon, on home page */
+.release-icon {
+    margin-left: 8px;
+    width: 40px;
+}
+
 /* Similar to cardlink, but used in codesnippet in index page. see sphinx_gallery.css */
 .codesnippet-card-container {
     display: flex;
@@ -90,11 +96,16 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
     border-left: 0;
     padding: 0;
     margin: .5rem 1rem 1rem 0rem;
+    width: 100%;
+}
+
+/* Controlling the cards in containers only */
+.codesnippet-card-container .codesnippet-card.admonition {
     width: 47%;
 }
 
 @media only screen and (max-width:59.9375em) {
-    .codesnippet-card.admonition {
+    .codesnippet-card-container .codesnippet-card.admonition {
         width: 100%;
     }
 }
