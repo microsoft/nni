@@ -1,6 +1,8 @@
 <div align="center">
-<img src="docs/img/nni_logo.png" width="80%" style="margin-bottom: 12px;"/>
+<img src="docs/img/nni_logo.png" width="80%"/>
 </div>
+
+<br/>
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 [![Issues](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen)
