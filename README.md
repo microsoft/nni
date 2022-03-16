@@ -1,5 +1,5 @@
-<div align="center" style="margin-bottom: 12px;">
-<img src="docs/img/nni_logo.png" width="80%"/>
+<div align="center">
+<img src="docs/img/nni_logo.png" width="80%" style="margin-bottom: 12px;"/>
 </div>
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
