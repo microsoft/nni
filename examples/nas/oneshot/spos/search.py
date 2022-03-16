@@ -69,7 +69,7 @@ def test_acc(model, criterion, log_freq, loader):
 def evaluate_acc(class_cls, criterion, args, train_dataset, val_dataset):
     model = class_cls()
     with original_state_dict_hooks(model):
-        model.load_state_dict(load_and_parse_state_dict(), strict=False)
+        model.load_state_dict(load_and_parse_state_dict(args.checkpoint), strict=False)
     model.cuda()
     
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.train_batch_size, num_workers=args.workers)
@@ -88,7 +88,8 @@ def evaluate_acc(class_cls, criterion, args, train_dataset, val_dataset):
 class LatencyFilter:
     def __init__(self, threshold, predictor, predictor_version=None, reverse=False):
         """
-        Filter the models according to predicted latency.
+        Filter the models according to predicted latency. If the predicted latency of the ir model is larger than
+        the given threshold, the ir model will be filtered and will not be considered as a searched architecture.
 
         Parameters
         ----------
@@ -126,6 +127,9 @@ def _main():
     parser.add_argument("--evolution-sample-size", type=int, default=10)
     parser.add_argument("--evolution-population-size", type=int, default=50)
     parser.add_argument("--evolution-cycles", type=int, default=10)
+    parser.add_argument("--latency-filter", type=str, default=None,
+                        help="Apply latency filter by calling the name of the applied hardware.")
+    parser.add_argument("--latency-threshold", type=float, default=100)
 
     args = parser.parse_args()
 
@@ -139,9 +143,9 @@ def _main():
     assert torch.cuda.is_available()
 
     base_model = ShuffleNetV2OneShot()
-    base_latency_predictor = 'cortexA76cpu_tflite21'
     criterion = CrossEntropyLabelSmooth(1000, args.label_smoothing)
     if args.spos_preprocessing:
+        # ``nni.trace`` is used to make transforms serializable, so that the trials can run other processes or on remote servers.
         trans = nni.trace(transforms.Compose)([
             nni.trace(transforms.RandomResizedCrop)(224),
             nni.trace(transforms.ColorJitter)(brightness=0.4, contrast=0.4, saturation=0.4),
@@ -149,6 +153,7 @@ def _main():
             nni.trace(ToBGRTensor)(),
         ])
     else:
+        # ``nni.trace`` is used to make transforms serializable, so that the trials can run other processes or on remote servers.
         trans = nni.trace(transforms.Compose)([
             nni.trace(transforms.RandomResizedCrop)(224),
             nni.trace(transforms.ToTensor)()
@@ -156,9 +161,14 @@ def _main():
     train_dataset = nni.trace(datasets.ImageNet)(args.imagenet_dir, split='train', transform=trans)
     val_dataset = nni.trace(datasets.ImageNet)(args.imagenet_dir, split='val', transform=trans)
 
+    if args.latency_filter:
+        latency_filter = LatencyFilter(threshold=args.latency_threshold, predictor=args.latency_filter)
+    else:
+        latency_filter = None
+
     evaluator = FunctionalEvaluator(evaluate_acc, criterion=criterion, args=args, train_dataset=train_dataset, val_dataset=val_dataset)
     evolution_strategy = strategy.RegularizedEvolution(
-        model_filter=LatencyFilter(threshold=100, predictor=base_latency_predictor),
+        model_filter=latency_filter,
         sample_size=args.evolution_sample_size, population_size=args.evolution_population_size, cycles=args.evolution_cycles)
     exp = RetiariiExperiment(base_model, evaluator, strategy=evolution_strategy)
 

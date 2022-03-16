@@ -65,7 +65,16 @@ In this example, it will inherit the ``state_dict`` of supernet from `./data/che
 
    python search.py
 
+NNI support a latency filter to filter unsatisfied model from search phase. Latency is predicted by Microsoft nn-Meter (https://github.com/microsoft/nn-Meter). To apply the latency filter, users could run search.py with additional arguments ``--latency-filter``. Here is an example:
+
+.. code-block:: bash
+
+   python search.py --latency-filter cortexA76cpu_tflite21
+
+Note that the latency filter is only supported for base execution engine.
+
 The final architecture exported from every epoch of evolution can be found in ``trials`` under the working directory of your tuner, which, by default, is ``$HOME/nni-experiments/your_experiment_id/trials``.
+
 
 Step 3. Train for Evaluation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
