@@ -1,10 +1,5 @@
-.. modified from index.html
-.. replace \{\{ pathto\('(.*)'\) \}\} -> $1.html
-
-###########################
 Neural Network Intelligence
-###########################
-
+===========================
 
 ..  toctree::
     :maxdepth: 2
@@ -46,30 +41,18 @@ Neural Network Intelligence
     How to Contribute <contribution>
     Change Log <Release>
 
-.. img:: ../img/nni_logo.png
-   :width: 100%
-   :align: center
-
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
 
-* `Hyperparameter Tuning </hpo/overview>`_,
-* `Neural Architecture Search </nas/index>`_,
-* `Model Compression </compression/index>`_,
-* `Feature Engineering </FeatureEngineering/Overview>`_.
-
-.. Please keep this part sync with readme
-
-.. admonition:: Latest updates
-   :class: attention
-
-   * **New demo available**: `Youtube entry <https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw>`_ | `Bilibili 入口 <https://space.bilibili.com/1649051673>`_ - *last updated on May-26-2021*
-   * **New webinar**: `Introducing Retiarii, A deep learning exploratory-training framework on NNI <https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html>`_ - *scheduled on June-24-2021*
-   * **New community channel**: `Discussions <https://github.com/microsoft/nni/discussions>`_
-   * **New emoticons release**: `nnSpider <./docs/source/Tutorial/NNSpider.md>`_
+* :doc:`Hyperparameter Tuning </hpo/overview>`,
+* :doc:`Neural Architecture Search </nas/index>`,
+* :doc:`Model Compression </compression/index>`,
+* :doc:`Feature Engineering </FeatureEngineering/Overview>`.
 
 .. Can't use section title here due to the limitation of toc
 
-.. rubric:: Install
+.. raw:: html
+   
+   <h2>Get Started Now</h2>
 
 To install the current release:
 
@@ -77,13 +60,33 @@ To install the current release:
 
    $ pip install nni
 
-To update NNI to the latest version, add `--upgrade` flag to the above commands.
+See the :doc:`installation guide </installation>` if you need additional help on installation.
 
-For instructions on building from source, or seeking for help if problems arise when installing from pip, please read the `NNI installation guide </installation>`_.
+Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <tutorials>` to start your journey with NNI!
 
-.. rubric:: NNI makes AutoML techniques plug-and-play.
+.. Please keep this part sync with readme
 
 .. raw:: html
+
+   <h2>Latest Updates
+
+.. image:: ../img/release_icon.png
+   :class: release-icon
+
+.. raw:: html
+
+   </h2>
+
+* **New demo available**: `Youtube entry <https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw>`_ | `Bilibili 入口 <https://space.bilibili.com/1649051673>`_ - *last updated on May-26-2021*
+* **New webinar**: `Introducing Retiarii, A deep learning exploratory-training framework on NNI <https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html>`_ - *scheduled on June-24-2021*
+* **New community channel**: `Discussions <https://github.com/microsoft/nni/discussions>`_
+* **New emoticons release**: :doc:`nnSpider <nnSpider>`
+
+.. raw:: html
+
+   <h2>Why choose NNI?</h2>
+
+   <h3>NNI makes AutoML techniques plug-and-play.</h3>
 
    <div class="codesnippet-card-container">
 
@@ -223,3 +226,59 @@ For instructions on building from source, or seeking for help if problems arise 
 
    </div>
 
+   <h3>NNI eases the effort to scale and manage AutoML experiments.</h3>
+
+.. codesnippetcard::
+   :icon: ../img/thumbnails/feature-engineering-icon-small.png
+   :title: Training Service
+   :link: experiment/training_service
+   :seemore: See more here.
+
+   An AutoML experiment requires many trials to explore feasible and potentially good-performing models.
+   **Training service** aims to make the tuning process easily scalable in a distributed platforms.
+   It provides a unified user experience for diverse computation resources (e.g., local machine, remote servers, AKS).
+   Currently, NNI supports **more than 9** kinds of training services.
+
+.. codesnippetcard::
+   :icon: ../img/thumbnails/feature-engineering-icon-small.png
+   :title: Web Portal
+   :link: experiment/web_portal
+   :seemore: See more here.
+
+   Web portal visualizes the tuning process, exposing the ability to inspect, monitor and control the experiment.
+
+   .. image:: ../static/img/webui.gif
+      :width: 100%
+
+.. codesnippetcard::
+   :icon: ../img/thumbnails/feature-engineering-icon-small.png
+   :title: Experiment Management
+   :link: experiment/exp_management
+   :seemore: See more here.
+
+   The DNN model tuning often requires more than one experiment.
+   Users might try different tuning algorithms, fine-tune their search space, or switch to another training service.
+   **Experiment management** provides the power to aggregate and compare tuning results from multiple experiments,
+   so that the tuning workflow becomes clean and organized.
+
+.. raw:: html
+
+   <h2>Get Support and Contribute Back</h2>
+
+NNI is maintained on the `NNI GitHub repository <https://github.com/microsoft/nni>`_. We collect feedbacks and new proposals/ideas on GitHub. You can:
+
+* Open a `GitHub issue <https://github.com/microsoft/nni/issues>`_ for bugs and feature requests.
+* Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to contribute code (make sure to read the `contribution guide </contribution>` before doing this).
+* Participate in `NNI Discussion <https://github.com/microsoft/nni/discussions>`_ for general questions and new ideas.
+* Join the following IM groups.
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Gitter
+     - WeChat
+   * -
+       .. image:: https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png
+     -
+       .. image:: https://github.com/scarlett2018/nniutil/raw/master/wechat.png

@@ -47,7 +47,7 @@ CARD_TEMPLATE_LINK = """
 .. raw:: html
 
     <div class="codesnippet-card-link">
-    For a full tutorial, please go here.
+    {seemore}
     <span class="material-icons right">arrow_forward</span>
     </div>
 """
@@ -58,6 +58,7 @@ class CodeSnippetCardDirective(Directive):
         'icon': directives.unchanged,
         'title': directives.unchanged,
         'link': directives.unchanged,
+        'seemore': directives.unchanged,
     }
 
     has_content = True
@@ -69,6 +70,7 @@ class CodeSnippetCardDirective(Directive):
             title = self.options['title']
             link = directives.uri(self.options['link'])
             icon = directives.uri(self.options['icon'])
+            seemore = self.options.get('seemore', 'For a full tutorial, please go here.')
         except ValueError as e:
             print(e)
             raise
@@ -96,7 +98,7 @@ class CodeSnippetCardDirective(Directive):
                                  refwarn=True,
                                  refkeepformat=True)
         # refkeepformat is handled in `patch_autodoc.py`
-        self.state.nested_parse(StringList(CARD_TEMPLATE_LINK.split('\n')), self.content_offset, link_node)
+        self.state.nested_parse(StringList(CARD_TEMPLATE_LINK.format(seemore=seemore).split('\n')), self.content_offset, link_node)
         anchor_node += link_node
 
         # close footer
