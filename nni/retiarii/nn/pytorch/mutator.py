@@ -150,6 +150,8 @@ class RepeatMutator(Mutator):
             chain = self._retrieve_chain_from_graph(target)
             # and we get the chosen depth (by value choice)
             node_in_model = model.get_node_by_name(node.name)
+            # depth is a value choice in base model
+            # but it's already mutated by a ParameterChoiceMutator here
             chosen_depth = node_in_model.operation.parameters['depth']
             for edge in chain[chosen_depth - 1].outgoing_edges:
                 edge.remove()
