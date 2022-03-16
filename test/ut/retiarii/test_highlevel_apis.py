@@ -66,6 +66,8 @@ def _apply_all_mutators(model, mutators, samplers):
 class GraphIR(unittest.TestCase):
     # graph engine will have an extra mutator for parameter choices
     value_choice_incr = 1
+    # graph engine has an extra mutator to apply the depth choice to nodes
+    repeat_incr = 1
 
     def _convert_to_ir(self, model):
         script_module = torch.jit.script(model)
@@ -521,7 +523,7 @@ class GraphIR(unittest.TestCase):
                 return self.block(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 2 + self.value_choice_incr)
+        self.assertEqual(len(mutators), 1 + self.repeat_incr + self.value_choice_incr)
         samplers = [EnumerateSampler() for _ in range(len(mutators))]
         for target in [3, 4, 5]:
             new_model = _apply_all_mutators(model, mutators, samplers)
@@ -570,7 +572,7 @@ class GraphIR(unittest.TestCase):
                 return self.block(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 3 + self.value_choice_incr)
+        self.assertEqual(len(mutators), 2 + self.repeat_incr + self.value_choice_incr)
         self.assertEqual(set([mutator.label for mutator in mutators if mutator.label is not None]), {'lc', 'rep'})
 
         sampler = RandomSampler()
@@ -592,7 +594,7 @@ class GraphIR(unittest.TestCase):
                 return self.block(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 5 + self.value_choice_incr)
+        self.assertEqual(len(mutators), 4 + self.repeat_incr + self.value_choice_incr)
 
         result = []
         for _ in range(20):
@@ -602,6 +604,27 @@ class GraphIR(unittest.TestCase):
             result.append(self._get_converted_pytorch_model(new_model)(torch.zeros(1, 1)).item())
 
         self.assertIn(1., result)
+
+    def test_repeat_valuechoice(self):
+        class AddOne(nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(AddOne(), nn.ValueChoice([1, 3, 5]))
+
+            def forward(self, x):
+                return self.block(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 1 + self.repeat_incr + self.value_choice_incr)
+        samplers = [EnumerateSampler() for _ in range(len(mutators))]
+        for target in [1, 3, 5]:
+            new_model = _apply_all_mutators(model, mutators, samplers)
+            self.assertTrue((self._get_converted_pytorch_model(new_model)(torch.zeros(1, 16)) == target).all())
 
     def test_cell(self):
         @model_wrapper
@@ -722,6 +745,7 @@ class GraphIR(unittest.TestCase):
 class Python(GraphIR):
     # Python engine doesn't have the extra mutator
     value_choice_incr = 0
+    repeat_incr = 0
 
     def _get_converted_pytorch_model(self, model_ir):
         mutation = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model_ir.history}
