@@ -1,5 +1,5 @@
-<div align="center">
-<img src="docs/img/nni_logo.png" width="100%"/>
+<div align="center" style="margin-bottom: 12px;">
+<img src="docs/img/nni_logo.png" width="80%"/>
 </div>
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
@@ -9,7 +9,7 @@
 [![Version](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases)
 [![Documentation Status](https://readthedocs.org/projects/nni/badge/?version=stable)](https://nni.readthedocs.io/en/stable/?badge=stable)
 
-NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/)** ([简体中文](https://nni.readthedocs.io/zh/)). Quick links:
+NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/) ([简体中文版点这里](https://nni.readthedocs.io/zh/))**. Quick links:
 
 * [Documentation homepage](https://nni.readthedocs.io/)
 * [Installation guide](https://nni.readthedocs.io/en/stable/installation.html)
@@ -79,7 +79,7 @@ Participating discussions via the following IM groups is also welcomed.
 |![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png)|
 
 Over the past few years, NNI has received thousands of feedbacks on GitHub issues, and pull requests from hundreds of contributors.
-We appreciate all contributions from community to make this tool thrive.
+We appreciate all contributions from community to make NNI thrive.
 
 <a href="https://github.com/microsoft/nni/graphs/contributors"><img src="https://contrib.rocks/image?repo=microsoft/nni&max=240" width="60%" /></a>
 
@@ -118,6 +118,6 @@ Targeting at openness and advancing state-of-art technology, [Microsoft Research
 
 We encourage researchers and students leverage these projects to accelerate the AI development and research.
 
-## **License**
+## License
 
-The entire codebase is under [MIT license](LICENSE)
+The entire codebase is under [MIT license](LICENSE).
