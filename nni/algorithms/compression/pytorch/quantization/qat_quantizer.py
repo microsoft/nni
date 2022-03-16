@@ -109,8 +109,8 @@ def update_ema(biased_ema, value, decay):
 class QAT_Quantizer(Quantizer):
     r"""
     Quantizer defined in:
-    Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
-    http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
+    `Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
+    <http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf>`__
 
     Authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
 
@@ -123,10 +123,11 @@ class QAT_Quantizer(Quantizer):
         by implementing in floating-point arithmetic the rounding behavior of the quantization scheme:
 
         * Weights are quantized before they are convolved with the input. If batch normalization (see [17]) is used for the layer,
-            the batch normalization parameters are “folded into” the weights before quantization.
+          the batch normalization parameters are “folded into” the weights before quantization.
+
         * Activations are quantized at points where they would be during inference,
-            e.g. after the activation function is applied to a convolutional or fully connected layer’s output,
-            or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
+          e.g. after the activation function is applied to a convolutional or fully connected layer’s output,
+          or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
 
     Parameters
     ----------
@@ -184,7 +185,7 @@ class QAT_Quantizer(Quantizer):
         dummy_input = torch.randn(1, 1, 28, 28)
 
         # pass the dummy_input to the quantizer
-        quantizer = QAT_Quantizer(model, config_list, dummy_input=dummy_input)
+        quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input=dummy_input)
 
 
     The quantizer will automatically detect Conv-BN patterns and simulate batch normalization folding process in the training
