@@ -77,6 +77,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
 
    </h2>
 
+* **New release**: `v2.6 is available <https://github.com/microsoft/nni/releases/tag/v2.6>`_ - *released on Jan-19-2022*
 * **New demo available**: `Youtube entry <https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw>`_ | `Bilibili 入口 <https://space.bilibili.com/1649051673>`_ - *last updated on May-26-2021*
 * **New webinar**: `Introducing Retiarii, A deep learning exploratory-training framework on NNI <https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html>`_ - *scheduled on June-24-2021*
 * **New community channel**: `Discussions <https://github.com/microsoft/nni/discussions>`_
