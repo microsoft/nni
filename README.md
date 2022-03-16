@@ -1,5 +1,5 @@
 <div align="center">
-<img src="docs/img/nni_logo.png" width="800"/>
+<img src="docs/img/nni_logo.png" width="600"/>
 </div>
 
 <br/>
