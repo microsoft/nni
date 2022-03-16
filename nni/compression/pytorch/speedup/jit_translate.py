@@ -125,6 +125,27 @@ def add_python(node, speedup):
         return new_add
 
 
+def sub_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    constant = None
+    for i in range(2):
+        input_i = inputs[i]
+        debug_name = input_i.debugName()
+        if debug_name not in speedup.internal_result:
+            # this input is a constant value
+            # TODO: what if this input is a constant tensor
+
+            if input_i.toIValue() is not None:
+                constant = parse_constant(input_i, speedup)
+                break
+    if constant is None:
+        return torch.sub
+    else:
+        new_sub = partial(torch.sub, constant)
+        return new_sub
+
+
 def floor_div_python(node, speedup):
     c_node = node.key_node
     inputs = list(c_node.inputs())
@@ -488,6 +509,8 @@ def cat_python(node, speedup):
 trans_from_jit_to_python = {
     'aten::add': add_python,
     'aten::add_': add_python,
+    'aten::sub': sub_python,
+    'aten::sub_': sub_python,
     'aten::mul': mul_python,
     'aten::mul_': mul_python,
     'aten::relu': relu_python,
