@@ -52,14 +52,15 @@ class DartsModule(BaseOneShotLightningModule):
         ]
         for operation in NATIVE_MIXED_OPERATIONS:
             hooks.append(functools.partial(operation.mutate, mutate_kwargs={
-                ''
-            })
+                'mixed_op_sampling_strategy': DifferentiableMixedOperation
+            }))
+        return hooks
 
     def __init__(self, inner_module: pl.LightningModule,
                  mutation_hooks: List[MutationHook] = None,
                  arc_learning_rate: float = 3.0E-4):
         self.arc_learning_rate = arc_learning_rate
-        super().__init__(inner_module, custom_replace_dict=custom_replace_dict)
+        super().__init__(inner_module, mutation_hooks=mutation_hooks)
 
     def training_step(self, batch, batch_idx):
         # grad manually

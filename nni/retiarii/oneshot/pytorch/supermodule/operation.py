@@ -7,6 +7,7 @@ which is commonly known as super-kernel, or weight entanglement.
 import itertools
 from typing import Union, Tuple, Dict, List, Any, Type, Callable, Optional, TypeVar
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -63,21 +64,33 @@ def _slice_weight(weight: torch.Tensor, slice_: Union[_multidim_slice, List[Tupl
     else:
         # for unweighted case, we slice it directly.
 
+        def _do_slice(arr, slice_):
+            if all(isinstance(s, slice) or s is None for s in slice_):
+                # no concat. numpy/torch built-in slice operation is enough.
+                return arr[slice_]
+
+            for i in range(len(slice_)):
+                if isinstance(slice_[i], list):
+                    # if a list, concatenation of multiple parts
+                    parts = [arr[tuple([None] * i + [s])] for s in slice_[i]]
+                    arr = np.concatenate(parts, i)
+                else:
+                    # manually slice the i-th dim
+                    arr = arr[tuple([None] * i + [slice_[i]])]
+
+            return arr
+
         # sometimes, we don't need slice.
         # this saves an op on computational graph, which will hopefully make training faster
-        no_effect = True
-        for i in range(len(slice_)):
-            s = slice_[i]
-            if s is not None and not (
-                (s.start is None or s.start == 0) and               # start is useless
-                (s.stop is None or s.stop >= weight.size(i)) and    # stop is useless
-                s.step in (1, None)                                 # step is useless
-            ):
-                no_effect = False
+
+        # Use a dummy array to check this. Otherwise it would be too complex.
+        dummy_arr = np.zeros(weight.shape, dtype=np.bool)
+        no_effect = _do_slice(dummy_arr, slice_).shape == dummy_arr.shape
+
         if no_effect:
             return weight
 
-        return weight[slice_]
+        return _do_slice(weight, slice_)
 
 
 def _to_slice(
