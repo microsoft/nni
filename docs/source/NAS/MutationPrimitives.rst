@@ -152,6 +152,9 @@ Repeat a block by a variable number of times.
   # With deep copy, the 3 layers will have the same label, thus share the choice
   self.blocks = nn.Repeat(nn.LayerChoice([...]), (1, 3))
 
+  # Depth can be a ValueChoice to support arbitrary depth candidate list
+  self.blocks = nn.Repeat(Block(), nn.ValueChoice([1, 3, 5]))
+
   # To make the three layer choices independently
   # Need a factory function that accepts index (0, 1, 2, ...) and returns the module of the `index`-th layer.
   self.blocks = nn.Repeat(lambda index: nn.LayerChoice([...], label=f'layer{index}'), (1, 3))
