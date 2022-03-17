@@ -96,7 +96,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
 .. codesnippetcard::
    :icon: ../img/thumbnails/hpo-icon-small.png
    :title: Hyper-parameter Tuning
-   :link: tutorials/hpo_quickstart_tensorflow
+   :link: tutorials/hpo_quickstart_pytorch/main
 
    .. code-block::
 
