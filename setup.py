@@ -112,6 +112,7 @@ def _setup():
         packages = _find_python_packages(),
         package_data = {
             'nni': _find_requirements_txt() + _find_default_config(),  # setuptools issue #1806
+            'nni_assets': _find_asset_files(),
             'nni_node': _find_node_files()  # note: this does not work before building
         },
 
@@ -164,6 +165,14 @@ def _find_requirements_txt():
 
 def _find_default_config():
     return ['runtime/default_config/' + name for name in os.listdir('nni/runtime/default_config')]
+
+def _find_assets_files():
+    files = []
+    for dirpath, dirnames, filenames in os.walk('nni_assets'):
+        for filename in filenames:
+            if os.path.splitext(filename)[1] == '.py':
+                files.append(os.path.join(dirpath[len('nni_assets/'):], filename))
+    return sorted(files)
 
 def _find_node_files():
     if not os.path.exists('nni_node'):
@@ -279,7 +288,10 @@ _temp_files = [
     'test/model_path/',
     'test/temp.json',
     'test/ut/sdk/*.pth',
-    'test/ut/tools/annotation/_generated/'
+    'test/ut/tools/annotation/_generated/',
+
+    # example
+    'nni_assets/**/data/',
 ]
 
 
