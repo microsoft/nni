@@ -7,6 +7,7 @@ from nni.retiarii.oneshot.pytorch.supermodule.differentiable import Differentiab
 from nni.retiarii.oneshot.pytorch.supermodule.sampling import PathSamplingOperation
 from nni.retiarii.oneshot.pytorch.supermodule.operation import MixedConv2d
 from nni.retiarii.oneshot.pytorch.supermodule._operation_utils import Slicable as S, MaybeWeighted as W
+from nni.retiarii.oneshot.pytorch.supermodule._valuechoice_utils import *
 
 
 def test_slice():
@@ -42,6 +43,24 @@ def test_slice():
         weight = S(weight)[:W({1: 0.5}), : W({1: 0.5})]
 
 
+def test_valuechoice_utils():
+    chosen = {"exp": 3, "add": 1}
+    vc0 = ValueChoice([3, 4, 6], label='exp') * 2 + ValueChoice([0, 1], label='add')
+
+    assert evaluate_value_choice_with_dict(vc0, chosen) == 7
+    vc = vc0 + ValueChoice([3, 4, 6], label='exp')
+    assert evaluate_value_choice_with_dict(vc, chosen) == 10
+
+    assert list(dedup_inner_choices([vc0, vc]).keys()) == ['exp', 'add']
+
+    assert traverse_all_options(vc) == [9, 10, 12, 13, 18, 19]
+    weights = dict(traverse_all_options(vc, weights={'exp': [0.5, 0.3, 0.2], 'add': [0.4, 0.6]}))
+    ans = dict([(9, 0.2), (10, 0.3), (12, 0.12), (13, 0.18), (18, 0.08), (19, 0.12)])
+    assert len(weights) == len(ans)
+    for value, weight in ans.items():
+        assert abs(weight - weights[value]) < 1e-6
+
+
 def test_pathsampling_valuechoice():
     orig_conv = Conv2d(3, ValueChoice([3, 5, 7], label='123'), kernel_size=3)
     conv = MixedConv2d.mutate(orig_conv, 'dummy', {}, {'mixed_op_sampling_strategy': PathSamplingOperation})
@@ -62,3 +81,4 @@ def test_differentiable_valuechoice():
 test_pathsampling_valuechoice()
 test_differentiable_valuechoice()
 test_slice()
+test_valuechoice_utils()

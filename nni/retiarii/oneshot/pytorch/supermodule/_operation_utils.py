@@ -114,12 +114,14 @@ def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_s
 
 
 class Slicable(Generic[T]):
-    """Wraps the weight so that in can be sliced with a "weighted" slice.
+    """Wraps the weight so that in can be sliced with a ``multidim_slice``.
+    The value within the slice can be instances of :class:`MaybeWeighted`.
 
-    For example::
-
-        weight = conv2d.weight
-        Slicable(weight)[P,  {32: 0.4, 64: 0.6}]
+    Examples
+    --------
+    >>> weight = conv2d.weight
+    >>> Slicable(weight)[:MaybeWeighted({32: 0.4, 64: 0.6})]
+    Tensor of shape (64, 64, 3, 3)
     """
 
     def __init__(self, weight: T):
@@ -133,7 +135,7 @@ class Slicable(Generic[T]):
         # There can be at most one dict
         leaf_dict: Optional[Dict[int, float]] = None
         for maybe_weighted in _iterate_over_multidim_slice(index):
-            for d in maybe_weighted.leaf_dicts():
+            for d in maybe_weighted.leaf_values():
                 if isinstance(d, dict):
                     if leaf_dict is None:
                         leaf_dict = d
@@ -154,13 +156,11 @@ class Slicable(Generic[T]):
 
 
 class MaybeWeighted:
-    """Wrap a value (int or dict), so that the computation on it can be replayed.
+    """Wrap a value (int or dict with int keys), so that the computation on it can be replayed.
+    It builds a binary tree. If ``value`` is not None, it's a leaf node.
+    Otherwise, it has left sub-tree and right sub-tree and an operation.
 
-    For example::
-
-    >>> a = MaybeWeighted({1: 1., 2: 2.}) + 2
-    >>> a.apply(1)
-    3
+    Only support basic arithmetic operations: ``+``, ``-``, ``*``, ``//``.
     """
 
     def __init__(self,
@@ -173,16 +173,20 @@ class MaybeWeighted:
         self.rhs = rhs
         self.operation = operation
 
-    def leaf_dicts(self) -> Iterator[Dict[int, float]]:
+    def leaf_values(self) -> Iterator[Dict[int, float]]:
+        """Iterate over values on leaf nodes."""
         if self.value is not None:
             yield self.value
         else:
             if isinstance(self.lhs, MaybeWeighted):
-                yield from self.lhs.leaf_dicts()
+                yield from self.lhs.leaf_values()
             if isinstance(self.rhs, MaybeWeighted):
-                yield from self.rhs.leaf_dicts()
+                yield from self.rhs.leaf_values()
 
     def evaluate(self, value_fn: _value_fn_type = None) -> int:
+        """Evaluate the value on root node, after replacing every value on leaf node with ``value_fn``.
+        If ``value_fn`` is none, no replacement will happen and the raw value will be used.
+        """
         if self.value is not None:
             if value_fn is not None:
                 return value_fn(self.value)
@@ -238,7 +242,7 @@ def _iterate_over_slice_type(s: slice_type):
 
 
 def _iterate_over_multidim_slice(ms: multidim_slice):
-    """Get ``MaybeWeighted`` instances in ``ms``."""
+    """Get :class:`MaybeWeighted` instances in ``ms``."""
     for s in ms:
         if s is not None:
             yield from _iterate_over_slice_type(s)
@@ -256,6 +260,7 @@ def _evaluate_slice_type(s: slice_type, value_fn: _value_fn_type = None):
 
 
 def _evaluate_multidim_slice(ms: multidim_slice, value_fn: _value_fn_type = None):
+    """Wraps :meth:`MaybeWeighted.evaluate` to evaluate the whole ``multidim_slice``."""
     res = []
     for s in ms:
         if s is not None:

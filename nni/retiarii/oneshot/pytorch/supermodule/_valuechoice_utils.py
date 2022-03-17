@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""Utilities to process the value choice compositions,
+in the way that is most convenient to one-shot algorithms."""
+
 import itertools
 from typing import List, Any, Dict, Tuple, Optional, Union
 
