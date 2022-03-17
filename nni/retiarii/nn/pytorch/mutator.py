@@ -14,7 +14,7 @@ from nni.retiarii.serializer import is_basic_unit, is_model_wrapped
 from nni.retiarii.utils import uid
 
 from .api import LayerChoice, InputChoice, ValueChoice, ValueChoiceX, Placeholder
-from .component import Repeat, NasBench101Cell, NasBench101Mutator
+from .component import NasBench101Cell, NasBench101Mutator
 
 
 class LayerChoiceMutator(Mutator):
