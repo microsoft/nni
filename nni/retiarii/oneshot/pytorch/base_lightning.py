@@ -173,7 +173,37 @@ class BaseOneShotLightningModule(pl.LightningModule):
         mutation_hooks = (mutation_hooks or []) + self.default_mutation_hooks()
 
         # traverse the model, calling hooks on every submodule
-        self.nas_modules = traverse_and_mutate_submodules(self.model, mutation_hooks, topdown=True)
+        self.nas_modules: List[BaseSuperNetModule] = traverse_and_mutate_submodules(self.model, mutation_hooks, topdown=True)
+
+    def resample(self) -> Dict[str, Any]:
+        """Trigger the resample for each ``nas_module``.
+        Sometimes (e.g., in differentiable cases), it does nothing.
+
+        Returns
+        -------
+        dict
+            Sampled architecture.
+        """
+        result = {}
+        for module in self.nas_modules:
+            result.update(module.resample(memo=result))
+        return result
+
+    def export(self) -> Dict[str, Any]:
+        """
+        Export the NAS result, ideally the best choice of each ``nas_module``.
+        You may implement an ``export`` method for your customized ``nas_module``.
+
+        Returns
+        --------
+        dict
+            Keys are names of ``nas_modules``, and values are the choice indices of them.
+        """
+        result = {}
+        for module in self.nas_modules:
+            result.update(module.export(memo=result))
+        return result
+
 
     def forward(self, x):
         return self.model(x)
@@ -385,19 +415,3 @@ class BaseOneShotLightningModule(pl.LightningModule):
         if self.arc_optim_count == 0:
             return opts
         return None
-
-    def export(self):
-        """
-        Export the NAS result, ideally the best choice of each nas_modules.
-        You may implement an ``export`` method for your customized nas_module.
-
-        Returns
-        --------
-        result : Dict[str, int]
-            Keys are names of nas_modules, and values are the choice indices of them.
-        """
-        result = {}
-        for name, module in self.nas_modules:
-            if name not in result:
-                result[name] = module.export()
-        return result

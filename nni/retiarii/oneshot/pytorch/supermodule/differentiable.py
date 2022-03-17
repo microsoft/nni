@@ -10,12 +10,22 @@ import torch.nn.functional as F
 
 from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
-from nni.retiarii.nn.pytorch.api import ValueChoiceX
-from nni.retiarii.oneshot.pytorch.base_lightning import BaseOneShotLightningModule
 
 from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingStrategy
 from ._valuechoice_utils import traverse_all_options
+
+
+class GumbelSoftmax(nn.Softmax):
+    """Wrapper of ``F.gumbel_softmax``."""
+
+    def __init__(self, dim: Optional[int] = None) -> None:
+        super().__init__(dim)
+        self.tau = 1
+        self.hard = False
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return F.gumbel_softmax(input, tau=self.tau, hard=self.hard, dim=self.dim)
 
 
 class DifferentiableMixedLayer(BaseSuperNetModule):
@@ -35,7 +45,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
         Name of the choice.
     """
 
-    def __init__(self, paths: List[Tuple[str, nn.Module]], alpha: torch.Tensor, label: str):
+    def __init__(self, paths: List[Tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__()
         self.op_names = []
         for name, module in paths:
@@ -60,7 +70,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
                                           True, size=len(self.op_names))}
 
     @classmethod
-    def mutate(cls, module, name, memo):
+    def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, LayerChoice):
             size = len(module)
             if module.label in memo:
@@ -69,7 +79,9 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
                     raise ValueError(f'Architecture parameter size of same label {module.label} conflict: {len(alpha)} vs. {size}')
             else:
                 alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
-            return cls(list(module.named_children()), alpha, module.label)
+
+            softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
+            return cls(list(module.named_children()), alpha, softmax, module.label)
 
     def forward(self, *args, **kwargs):
         op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
@@ -92,7 +104,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
     TBD
     """
 
-    def __init__(self, n_candidates: int, n_chosen: Optional[int], alpha: torch.Tensor, label: str):
+    def __init__(self, n_candidates: int, n_chosen: Optional[int], alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__()
         self.n_candidates = n_candidates
         if n_chosen is None:
@@ -101,6 +113,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
             self.n_chosen = 1
         self.n_chosen = n_chosen
         self.label = label
+        self.softmax = softmax
 
         self._arch_alpha = alpha
 
@@ -124,7 +137,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
         }
 
     @classmethod
-    def mutate(cls, module, name, memo):
+    def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, InputChoice):
             if module.reduction != 'sum':
                 raise ValueError('Only input choice of sum reduction is supported.')
@@ -135,12 +148,14 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                     raise ValueError(f'Architecture parameter size of same label {module.label} conflict: {len(alpha)} vs. {size}')
             else:
                 alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
-            return cls(module.n_candidates, module.n_chosen, alpha, module.label)
+
+            softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
+            return cls(module.n_candidates, module.n_chosen, alpha, softmax, module.label)
 
     def forward(self, inputs):
         inputs = torch.stack(inputs)
         alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
-        return torch.sum(inputs * F.softmax(self._arch_alpha, -1).view(*alpha_shape), 0)
+        return torch.sum(inputs * self.softmax(self._arch_alpha).view(*alpha_shape), 0)
 
     def parameters(self, *args, **kwargs):
         for _, p in self.named_parameters(*args, **kwargs):
@@ -156,7 +171,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
 class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
     """TBD"""
 
-    def __init__(self, operation: MixedOperation, memo: Dict[str, Any]) -> None:
+    def __init__(self, operation: MixedOperation, memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> None:
         # Sampling arguments. This should have the same keys with `operation.mutable_arguments`
         operation._arch_alpha = nn.ParameterDict()
         for name, spec in operation.search_space_spec().items():
@@ -170,6 +185,8 @@ class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
 
         operation.parameters = functools.partial(self.parameters, self=operation)                # bind self
         operation.named_parameters = functools.partial(self.named_parameters, self=operation)
+
+        operation.softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
 
     @staticmethod
     def parameters(self, *args, **kwargs):
@@ -199,6 +216,6 @@ class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
 
     def forward_argument(self, operation: MixedOperation, name: str) -> Any:
         if name in operation.mutable_arguments:
-            weights = {label: F.softmax(alpha, dim=-1) for label, alpha in operation._arch_alpha.items()}
+            weights = {label: operation.softmax(alpha, dim=-1) for label, alpha in operation._arch_alpha.items()}
             return dict(traverse_all_options(operation.mutable_arguments[name], weights=weights))
         return getattr(operation, name)

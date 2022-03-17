@@ -3,19 +3,19 @@
 
 """Experimental version of differentiable one-shot implementation."""
 
-import functools
-from collections import OrderedDict
-from typing import Optional, List
+from functools import partial
+from typing import List
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Conv2d, BatchNorm2d
-
-from .utils import get_differentiable_valuechoice_match_and_replace, get_naive_match_and_replace
 from .base_lightning import BaseOneShotLightningModule, MutationHook
-from .supermodule.differentiable import DifferentiableMixedLayer, DifferentiableMixedInput, DifferentiableMixedOperation
+from .supermodule.differentiable import (
+    DifferentiableMixedLayer, DifferentiableMixedInput,
+    DifferentiableMixedOperation, GumbelSoftmax
+)
+from .supermodule.proxyless import ProxylessMixedInput, ProxylessMixedLayer
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS
 
 
@@ -51,7 +51,7 @@ class DartsModule(BaseOneShotLightningModule):
             DifferentiableMixedInput.mutate,
         ]
         for operation in NATIVE_MIXED_OPERATIONS:
-            hooks.append(functools.partial(operation.mutate, mutate_kwargs={
+            hooks.append(partial(operation.mutate, mutate_kwargs={
                 'mixed_op_sampling_strategy': DifferentiableMixedOperation
             }))
         return hooks
@@ -106,16 +106,6 @@ class DartsModule(BaseOneShotLightningModule):
         # Note: This hook is currently kept for Proxyless NAS.
         pass
 
-    @staticmethod
-    def match_and_replace():
-        inputchoice_replace = get_naive_match_and_replace(InputChoice, DartsInputChoice)
-        layerchoice_replace = get_naive_match_and_replace(LayerChoice, DartsLayerChoice)
-
-        conv2d_valuechoice_replace = get_differentiable_valuechoice_match_and_replace(Conv2d, DifferentiableSuperConv2d)
-        batch_norm2d_valuechoice_replace = get_differentiable_valuechoice_match_and_replace(BatchNorm2d, DifferentiableBatchNorm2d)
-
-        return [inputchoice_replace, layerchoice_replace, conv2d_valuechoice_replace, batch_norm2d_valuechoice_replace]
-
     def configure_architecture_optimizers(self):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
         ctrl_params = {}
@@ -133,148 +123,6 @@ class DartsModule(BaseOneShotLightningModule):
         ctrl_optim = torch.optim.Adam(list(ctrl_params.values()), 3.e-4, betas=(0.5, 0.999),
                                       weight_decay=1.0E-3)
         return ctrl_optim
-
-
-class _ArchGradientFunction(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, x, binary_gates, run_func, backward_func):
-        ctx.run_func = run_func
-        ctx.backward_func = backward_func
-
-        detached_x = x.detach()
-        detached_x.requires_grad = x.requires_grad
-        with torch.enable_grad():
-            output = run_func(detached_x)
-        ctx.save_for_backward(detached_x, output)
-        return output.data
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        detached_x, output = ctx.saved_tensors
-
-        grad_x = torch.autograd.grad(output, detached_x, grad_output, only_inputs=True)
-        # compute gradients w.r.t. binary_gates
-        binary_grads = ctx.backward_func(detached_x.data, output.data, grad_output.data)
-
-        return grad_x[0], binary_grads, None, None
-
-
-class ProxylessLayerChoice(nn.Module):
-    def __init__(self, ops):
-        super(ProxylessLayerChoice, self).__init__()
-        self.ops = nn.ModuleList(ops)
-        self.alpha = nn.Parameter(torch.randn(len(self.ops)) * 1E-3)
-        self._binary_gates = nn.Parameter(torch.randn(len(self.ops)) * 1E-3)
-        self.sampled = None
-
-    def forward(self, *args, **kwargs):
-        if self.training:
-            def run_function(ops, active_id, **kwargs):
-                def forward(_x):
-                    return ops[active_id](_x, **kwargs)
-                return forward
-
-            def backward_function(ops, active_id, binary_gates, **kwargs):
-                def backward(_x, _output, grad_output):
-                    binary_grads = torch.zeros_like(binary_gates.data)
-                    with torch.no_grad():
-                        for k in range(len(ops)):
-                            if k != active_id:
-                                out_k = ops[k](_x.data, **kwargs)
-                            else:
-                                out_k = _output.data
-                            grad_k = torch.sum(out_k * grad_output)
-                            binary_grads[k] = grad_k
-                    return binary_grads
-                return backward
-
-            assert len(args) == 1
-            x = args[0]
-            return _ArchGradientFunction.apply(
-                x, self._binary_gates, run_function(self.ops, self.sampled, **kwargs),
-                backward_function(self.ops, self.sampled, self._binary_gates, **kwargs)
-            )
-
-        return super().forward(*args, **kwargs)
-
-    def resample(self):
-        probs = F.softmax(self.alpha, dim=-1)
-        sample = torch.multinomial(probs, 1)[0].item()
-        self.sampled = sample
-        with torch.no_grad():
-            self._binary_gates.zero_()
-            self._binary_gates.grad = torch.zeros_like(self._binary_gates.data)
-            self._binary_gates.data[sample] = 1.0
-
-    def finalize_grad(self):
-        binary_grads = self._binary_gates.grad
-        with torch.no_grad():
-            if self.alpha.grad is None:
-                self.alpha.grad = torch.zeros_like(self.alpha.data)
-            probs = F.softmax(self.alpha, dim=-1)
-            for i in range(len(self.ops)):
-                for j in range(len(self.ops)):
-                    self.alpha.grad[i] += binary_grads[j] * probs[j] * (int(i == j) - probs[i])
-
-    def export(self):
-        return torch.argmax(self.alpha).item()
-
-    def export_prob(self):
-        return F.softmax(self.alpha, dim=-1)
-
-
-class ProxylessInputChoice(nn.Module):
-    def __init__(self, input_choice):
-        super().__init__()
-        self.num_input_candidates = input_choice.n_candidates
-        self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1E-3)
-        self._binary_gates = nn.Parameter(torch.randn(input_choice.n_candidates) * 1E-3)
-        self.sampled = None
-
-    def forward(self, inputs):
-        if self.training:
-            def run_function(active_sample):
-                return lambda x: x[active_sample]
-
-            def backward_function(binary_gates):
-                def backward(_x, _output, grad_output):
-                    binary_grads = torch.zeros_like(binary_gates.data)
-                    with torch.no_grad():
-                        for k in range(self.num_input_candidates):
-                            out_k = _x[k].data
-                            grad_k = torch.sum(out_k * grad_output)
-                            binary_grads[k] = grad_k
-                    return binary_grads
-                return backward
-
-            inputs = torch.stack(inputs, 0)
-            return _ArchGradientFunction.apply(
-                inputs, self._binary_gates, run_function(self.sampled),
-                backward_function(self._binary_gates)
-            )
-
-        return super().forward(inputs)
-
-    def resample(self, sample=None):
-        if sample is None:
-            probs = F.softmax(self.alpha, dim=-1)
-            sample = torch.multinomial(probs, 1)[0].item()
-        self.sampled = sample
-        with torch.no_grad():
-            self._binary_gates.zero_()
-            self._binary_gates.grad = torch.zeros_like(self._binary_gates.data)
-            self._binary_gates.data[sample] = 1.0
-        return self.sampled
-
-    def finalize_grad(self):
-        binary_grads = self._binary_gates.grad
-        with torch.no_grad():
-            if self.alpha.grad is None:
-                self.alpha.grad = torch.zeros_like(self.alpha.data)
-            probs = F.softmax(self.alpha, dim=-1)
-            for i in range(self.num_input_candidates):
-                for j in range(self.num_input_candidates):
-                    self.alpha.grad[i] += binary_grads[j] * probs[j] * (int(i == j) - probs[i])
 
 
 class ProxylessModule(DartsModule):
@@ -299,12 +147,14 @@ class ProxylessModule(DartsModule):
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
-    @staticmethod
-    def match_and_replace():
-        inputchoice_replace = get_naive_match_and_replace(InputChoice, ProxylessInputChoice)
-        layerchoice_replace = get_naive_match_and_replace(LayerChoice, ProxylessLayerChoice)
-
-        return [inputchoice_replace, layerchoice_replace]
+    def default_mutation_hooks(self) -> List[MutationHook]:
+        """Replace modules with gumbel-differentiable versions"""
+        hooks = [
+            ProxylessMixedLayer.mutate,
+            ProxylessMixedInput.mutate,
+        ]
+        # FIXME: no support for mixed operation currently
+        return hooks
 
     def configure_architecture_optimizers(self):
         ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], 3.e-4,
@@ -320,25 +170,7 @@ class ProxylessModule(DartsModule):
             m.finalize_grad()
 
 
-class SNASLayerChoice(DartsLayerChoice):
-    def forward(self, *args, **kwargs):
-        one_hot = F.gumbel_softmax(self.alpha, self.temp)
-        op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
-        alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
-        yhat = torch.sum(op_results * one_hot.view(*alpha_shape), 0)
-        return yhat
-
-
-class SNASInputChoice(DartsInputChoice):
-    def forward(self, inputs):
-        one_hot = F.gumbel_softmax(self.alpha, self.temp)
-        inputs = torch.stack(inputs)
-        alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
-        yhat = torch.sum(inputs * one_hot.view(*alpha_shape), 0)
-        return yhat
-
-
-class SnasModule(DartsModule):
+class GumbelDartsModule(DartsModule):
     _snas_note = """
     Implementation of SNAS :cite:p:`xie2018snas`.
     It's a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
@@ -360,20 +192,28 @@ class SnasModule(DartsModule):
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
-    __doc__ = _snas_note.format(
-        module_notes='This module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.',
-        module_params=BaseOneShotLightningModule._inner_module_note,
-    )
+    def default_mutation_hooks(self) -> List[MutationHook]:
+        """Replace modules with gumbel-differentiable versions"""
+        hooks = [
+            partial(DifferentiableMixedLayer.mutate, mutate_kwargs={'softmax': GumbelSoftmax(-1)}),
+            partial(DifferentiableMixedInput.mutate, mutate_kwargs={'softmax': GumbelSoftmax(-1)}),
+        ]
+        for operation in NATIVE_MIXED_OPERATIONS:
+            hooks.append(partial(operation.mutate, mutate_kwargs={
+                'mixed_op_sampling_strategy': DifferentiableMixedOperation,
+                'softmax': GumbelSoftmax(-1),
+            }))
+        return hooks
 
     def __init__(self, inner_module,
-                 custom_replace_dict: Optional[ReplaceDictType] = None,
+                 mutation_hooks: List[MutationHook] = None,
                  arc_learning_rate: float = 3.0e-4,
                  gumbel_temperature: float = 1.,
                  use_temp_anneal: bool = False,
                  min_temp: float = .33):
-        super().__init__(inner_module, custom_replace_dict, arc_learning_rate=arc_learning_rate)
+        super().__init__(inner_module, mutation_hooks, arc_learning_rate=arc_learning_rate)
         self.temp = gumbel_temperature
         self.init_temp = gumbel_temperature
         self.use_temp_anneal = use_temp_anneal
@@ -388,10 +228,3 @@ class SnasModule(DartsModule):
             nas_module.temp = self.temp
 
         return self.model.on_epoch_start()
-
-    @staticmethod
-    def match_and_replace():
-        inputchoice_replace = get_naive_match_and_replace(InputChoice, SNASInputChoice)
-        layerchoice_replace = get_naive_match_and_replace(LayerChoice, SNASLayerChoice)
-
-        return [inputchoice_replace, layerchoice_replace]

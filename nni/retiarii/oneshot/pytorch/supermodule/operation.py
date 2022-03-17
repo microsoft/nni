@@ -36,7 +36,7 @@ class MixedOperationSamplingStrategy:
     One SamplingStrategy corresponds to one mixed operation.
     """
 
-    def __init__(self, operation: 'MixedOperation', memo: Dict[str, Any]) -> None:
+    def __init__(self, operation: 'MixedOperation', memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> None:
         """At init, the sampling strategy can prepare basic parameters,
         and store them in operation if they need back propagation.
 
@@ -148,7 +148,7 @@ class MixedOperation(BaseSuperNetModule):
                 strategy_cls: Type[MixedOperationSamplingStrategy] = mutate_kwargs['mixed_op_sampling_strategy']
                 # initialize strategy class
                 # this is put in mutate because we need to access memo
-                mixed_op.sampling_strategy = strategy_cls(mixed_op, memo)
+                mixed_op.sampling_strategy = strategy_cls(mixed_op, memo, mutate_kwargs)
 
                 return mixed_op
 

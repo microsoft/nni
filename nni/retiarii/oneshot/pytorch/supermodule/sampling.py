@@ -1,23 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import itertools
 import random
 from typing import Optional, List, Tuple, Union, Type, Dict, Any, Callable
 
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from nni.common.serializer import is_traceable
 from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
-from nni.retiarii.nn.pytorch.api import ValueChoiceX
-from nni.retiarii.oneshot.pytorch.base_lightning import BaseOneShotLightningModule
 
 from .base import BaseSuperNetModule
 from ._valuechoice_utils import *
 from .operation import MixedOperationSamplingStrategy, MixedOperation
+
 
 class PathSamplingLayer(BaseSuperNetModule):
     """
@@ -61,7 +57,7 @@ class PathSamplingLayer(BaseSuperNetModule):
                                           True, size=len(self.op_names))}
 
     @classmethod
-    def mutate(cls, module, name, memo):
+    def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, LayerChoice):
             return cls(list(module.named_children()), module.label)
 
@@ -127,7 +123,7 @@ class PathSamplingInput(BaseSuperNetModule):
         }
 
     @classmethod
-    def mutate(cls, module, name, memo):
+    def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, InputChoice):
             if module.reduction != 'sum':
                 raise ValueError('Only input choice of sum reduction is supported.')
@@ -147,7 +143,7 @@ class PathSamplingInput(BaseSuperNetModule):
 
 
 class PathSamplingOperation(MixedOperationSamplingStrategy):
-    def __init__(self, operation: MixedOperation, memo: Dict[str, Any]) -> None:
+    def __init__(self, operation: MixedOperation, memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> None:
         # Sampling arguments. This should have the same keys with `operation.mutable_arguments`
         self._sampled: Optional[Dict[str, Any]] = None
 

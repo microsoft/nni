@@ -15,84 +15,6 @@ from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule, ReplaceDictType
 from .enas import ReinforceController, ReinforceField
-# from .superlayer.sampling import (ENASValueChoice,
-#                                   PathSamplingMultiHeadAttention,
-#                                   PathSamplingSuperBatchNorm2d,
-#                                   PathSamplingSuperConv2d,
-#                                   PathSamplingSuperLinear, RandomValueChoice)
-from .utils import (get_naive_match_and_replace,
-                    get_sampling_valuechoice_match_and_replace)
-
-
-class PathSamplingLayer(nn.Module):
-    """
-    Mixed module, in which fprop is decided by exactly one or multiple (sampled) module.
-    If multiple module is selected, the result will be sumed and returned.
-
-    Attributes
-    ----------
-    sampled : int or list of int
-        Sampled module indices.
-    mask : tensor
-        A multi-hot bool 1D-tensor representing the sampled mask.
-    """
-
-    def __init__(self, paths: Dict[str, nn.Module]):
-        super().__init__()
-        self.op_names = []
-        for name, module in layer_choice.named_children():
-            self.add_module(name, module)
-            self.op_names.append(name)
-        assert self.op_names, 'There has to be at least one op to choose from.'
-        self.sampled = None  # sampled can be either a list of indices or an index
-        self.label = layer_choice.label
-
-    def forward(self, *args, **kwargs):
-        assert self.sampled is not None, 'At least one path needs to be sampled before fprop.'
-        if isinstance(self.sampled, list):
-            return sum([getattr(self, self.op_names[i])(*args, **kwargs) for i in self.sampled])  # pylint: disable=not-an-iterable
-        else:
-            return getattr(self, self.op_names[self.sampled])(*args, **kwargs)  # pylint: disable=invalid-sequence-index
-
-    def __len__(self):
-        return len(self.op_names)
-
-    @property
-    def mask(self):
-        return _get_mask(self.sampled, len(self))
-
-
-class PathSamplingInputChoice(nn.Module):
-    """
-    Mixed input. Take a list of tensor as input, select some of them and return the sum.
-
-    Attributes
-    ----------
-    sampled : int or list of int
-        Sampled module indices.
-    mask : tensor
-        A multi-hot bool 1D-tensor representing the sampled mask.
-    """
-
-    def __init__(self, input_choice):
-        super(PathSamplingInputChoice, self).__init__()
-        self.n_candidates = input_choice.n_candidates
-        self.n_chosen = input_choice.n_chosen
-        self.sampled = None
-        self.label = input_choice.label
-
-    def forward(self, input_tensors):
-        if isinstance(self.sampled, list):
-            return sum([input_tensors[t] for t in self.sampled])  # pylint: disable=not-an-iterable
-        else:
-            return input_tensors[self.sampled]
-
-    def __len__(self):
-        return self.n_candidates
-
-    @property
-    def mask(self):
-        return _get_mask(self.sampled, len(self))
 
 
 class EnasModule(BaseOneShotLightningModule):
@@ -151,24 +73,6 @@ class EnasModule(BaseOneShotLightningModule):
 
     def configure_architecture_optimizers(self):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
-
-    @staticmethod
-    def match_and_replace():
-        # 返回 to_samples, to_replace
-        # to_samples : List[nn.Module]
-        #   因为可能一个 Module 里有若干 Valuechoice，所以返回的是list
-        # to_replace : nn.Module
-        #   替换只能是一个，所以返回 nn.Module
-
-        input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
-        layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
-
-        linear_replace = get_sampling_valuechoice_match_and_replace(nn.Linear, ENASValueChoice, PathSamplingSuperLinear)
-        conv2d_replace = get_sampling_valuechoice_match_and_replace(nn.Conv2d, ENASValueChoice, PathSamplingSuperConv2d)
-        batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(nn.BatchNorm2d, ENASValueChoice, PathSamplingSuperBatchNorm2d)
-        mhatt_replace = get_sampling_valuechoice_match_and_replace(nn.MultiheadAttention, ENASValueChoice, PathSamplingMultiHeadAttention)
-
-        return [input_replace, layer_replace, linear_replace, conv2d_replace, batchnorm2d_replace, mhatt_replace]
 
     def training_step(self, batch, batch_idx):
         # The ConcatenateTrainValDataloader yields both data and which dataloader it comes from.
@@ -254,24 +158,6 @@ class RandomSamplingModule(BaseOneShotLightningModule):
     def training_step(self, batch, batch_idx):
         self._resample()
         return self.model.training_step(batch, batch_idx)
-
-    @staticmethod
-    def default_mutation_hooks():
-        # 返回 to_samples, to_replace
-        # to_samples : List[nn.Module]
-        #   因为可能一个 Module 里有若干 Valuechoice，所以返回的是list
-        # to_replace : nn.Module
-        #   替换只能是一个，所以返回 nn.Module
-
-        input_replace = get_naive_match_and_replace(InputChoice, PathSamplingInputChoice)
-        layer_replace = get_naive_match_and_replace(LayerChoice, PathSamplingLayerChoice)
-
-        linear_replace = get_sampling_valuechoice_match_and_replace(nn.Linear, RandomValueChoice, PathSamplingSuperLinear)
-        conv2d_replace = get_sampling_valuechoice_match_and_replace(nn.Conv2d, RandomValueChoice, PathSamplingSuperConv2d)
-        batchnorm2d_replace = get_sampling_valuechoice_match_and_replace(nn.BatchNorm2d, RandomValueChoice, PathSamplingSuperBatchNorm2d)
-        mhatt_replace = get_sampling_valuechoice_match_and_replace(nn.MultiheadAttention, RandomValueChoice, PathSamplingMultiHeadAttention)
-
-        return [input_replace, layer_replace, linear_replace, conv2d_replace, batchnorm2d_replace, mhatt_replace]
 
     def _resample(self):
         """
