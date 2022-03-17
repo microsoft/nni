@@ -2,10 +2,10 @@ import pytest
 
 import numpy as np
 import torch
-from nni.retiarii.nn.pytorch import ValueChoice, Conv2d
+from nni.retiarii.nn.pytorch import ValueChoice, Conv2d, BatchNorm2d, Linear, MultiheadAttention
 from nni.retiarii.oneshot.pytorch.supermodule.differentiable import DifferentiableMixedOperation
 from nni.retiarii.oneshot.pytorch.supermodule.sampling import PathSamplingOperation
-from nni.retiarii.oneshot.pytorch.supermodule.operation import MixedConv2d
+from nni.retiarii.oneshot.pytorch.supermodule.operation import MixedConv2d, NATIVE_MIXED_OPERATIONS
 from nni.retiarii.oneshot.pytorch.supermodule._operation_utils import Slicable as S, MaybeWeighted as W
 from nni.retiarii.oneshot.pytorch.supermodule._valuechoice_utils import *
 
@@ -78,7 +78,89 @@ def test_differentiable_valuechoice():
     assert conv(torch.zeros((1, 3, 7, 7))).size(2) == 7
 
 
+def _mixed_operation_sampling_sanity_check(operation, memo, *input):
+    for native_op in NATIVE_MIXED_OPERATIONS:
+        if native_op.bound_type == type(operation):
+            mutate_op = native_op.mutate(operation, 'dummy', {}, {'mixed_op_sampling_strategy': PathSamplingOperation})
+            break
+
+    mutate_op.resample(memo=memo)
+    return mutate_op(*input)
+
+
+def _mixed_operation_differentiable_sanity_check(operation, *input):
+    for native_op in NATIVE_MIXED_OPERATIONS:
+        if native_op.bound_type == type(operation):
+            mutate_op = native_op.mutate(operation, 'dummy', {}, {'mixed_op_sampling_strategy': DifferentiableMixedOperation})
+            break
+
+    return mutate_op(*input)
+
+
+def test_mixed_linear():
+    linear = Linear(ValueChoice([3, 6, 9], label='shared'), ValueChoice([2, 4, 8]))
+    _mixed_operation_sampling_sanity_check(linear, {'shared': 3}, torch.randn(2, 3))
+    _mixed_operation_sampling_sanity_check(linear, {'shared': 9}, torch.randn(2, 9))
+    _mixed_operation_differentiable_sanity_check(linear, torch.randn(2, 9))
+
+    linear = Linear(ValueChoice([3, 6, 9], label='shared'), ValueChoice([2, 4, 8]), bias=False)
+    _mixed_operation_sampling_sanity_check(linear, {'shared': 3}, torch.randn(2, 3))
+
+    with pytest.raises(TypeError):
+        linear = Linear(ValueChoice([3, 6, 9], label='shared'), ValueChoice([2, 4, 8]), bias=ValueChoice([False, True]))
+        _mixed_operation_sampling_sanity_check(linear, {'shared': 3}, torch.randn(2, 3))
+
+
+def test_mixed_conv2d():
+    conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([2, 4, 8], label='out') * 2, 1)
+    assert _mixed_operation_sampling_sanity_check(conv, {'in': 3, 'out': 4}, torch.randn(2, 3, 9, 9)).size(1) == 8
+    _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 9, 3, 3))
+
+    # stride
+    conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([2, 4, 8], label='out'), 1, stride=ValueChoice([1, 2], label='stride'))
+    assert _mixed_operation_sampling_sanity_check(conv, {'in': 3, 'stride': 2}, torch.randn(2, 3, 10, 10)).size(2) == 5
+    assert _mixed_operation_sampling_sanity_check(conv, {'in': 3, 'stride': 1}, torch.randn(2, 3, 10, 10)).size(2) == 10
+
+    # groups, dw conv
+    conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 6, 9], label='in'))
+    assert _mixed_operation_sampling_sanity_check(conv, {'in': 6}, torch.randn(2, 6, 10, 10)).size() == torch.Size([2, 6, 10, 10])
+
+    # make sure kernel is sliced correctly
+    conv = Conv2d(1, 1, ValueChoice([1, 3], label='k'), bias=False)
+    conv = MixedConv2d.mutate(conv, 'dummy', {}, {'mixed_op_sampling_strategy': PathSamplingOperation})
+    with torch.no_grad():
+        conv.weight.zero_()
+        # only center is 1, must pick center to pass this test
+        conv.weight[0, 0, 1, 1] = 1
+    conv.resample({'k': 1})
+    assert conv(torch.ones((1, 1, 3, 3))).sum().item() == 9
+
+
+def test_mixed_batchnorm2d():
+    bn = BatchNorm2d(ValueChoice([32, 64], label='dim'))
+
+    assert _mixed_operation_sampling_sanity_check(bn, {'dim': 32}, torch.randn(2, 32, 3, 3)).size(1) == 32
+    assert _mixed_operation_sampling_sanity_check(bn, {'dim': 64}, torch.randn(2, 64, 3, 3)).size(1) == 64
+
+    _mixed_operation_differentiable_sanity_check(bn, torch.randn(2, 64, 3, 3))
+
+
+def test_mixed_mhattn():
+    mhattn = MultiheadAttention(ValueChoice([4, 8], label='emb'), 4)
+
+    assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 4},
+        torch.randn(7, 2, 4), torch.randn(7, 2, 4), torch.randn(7, 2, 4))[0].size(-1) == 4
+    assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 8},
+        torch.randn(7, 2, 8), torch.randn(7, 2, 8), torch.randn(7, 2, 8))[0].size(-1) == 8
+
+    _mixed_operation_differentiable_sanity_check(mhattn, torch.randn(7, 2, 8), torch.randn(7, 2, 8), torch.randn(7, 2, 8))
+
+
 test_pathsampling_valuechoice()
 test_differentiable_valuechoice()
 test_slice()
 test_valuechoice_utils()
+test_mixed_linear()
+test_mixed_conv2d()
+test_mixed_batchnorm2d()
+test_mixed_mhattn()

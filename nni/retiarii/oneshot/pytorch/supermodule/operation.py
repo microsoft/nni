@@ -5,16 +5,13 @@ which is commonly known as super-kernel, or weight entanglement.
 """
 
 import itertools
-from typing import Union, Tuple, Dict, List, Any, Type, Callable, Optional, TypeVar
-try:
-    from typing import Literal
-except:
-    from typing_extensions import Literal
+from typing import Union, Tuple, Dict, List, Any, Type, Optional, TypeVar
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import nni.retiarii.nn.pytorch as retiarii_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
@@ -172,7 +169,7 @@ class MixedLinear(MixedOperation, nn.Linear):
     Prefix of weight and bias will be sliced.
     """
 
-    bound_type = nn.Linear
+    bound_type = retiarii_nn.Linear
     argument_list = ['in_features', 'out_features']
 
     def init_argument(self, name: str, value_choice: ValueChoiceX):
@@ -224,7 +221,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         □ □ □ □ □   □ □ □ □ □
     """
 
-    bound_type = nn.Conv2d
+    bound_type = retiarii_nn.Conv2d
     argument_list = [
         'in_channels', 'out_channels', 'kernel_size', 'stride', 'padding', 'dilation', 'groups'
     ]
@@ -319,7 +316,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
         the unique identifier of `module`
     """
 
-    bound_type = nn.BatchNorm2d
+    bound_type = retiarii_nn.BatchNorm2d
     argument_list = ['num_features', 'eps', 'momentum']
 
     def init_argument(self, name: str, value_choice: ValueChoiceX):
@@ -331,17 +328,20 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
                           momentum: float,
                           input: torch.Tensor) -> torch.Tensor:
 
-        if any(isinstance(arg, dict) for arg in [num_features, eps, momentum]):
+        if any(isinstance(arg, dict) for arg in [eps, momentum]):
             raise ValueError('eps, momentum do not support weighted sampling')
 
         if isinstance(num_features, dict):
             num_features = self.num_features
 
+        weight, bias = self.weight, self.bias
+        running_mean, running_var = self.running_mean, self.running_var
+
         if num_features < self.num_features:
-            weight = self.weight[:num_features]
-            bias = self.bias[:num_features]
-            running_mean = self.running_mean[:num_features]
-            running_var = self.running_var[:num_features]
+            weight = weight[:num_features]
+            bias = bias[:num_features]
+            running_mean = running_mean[:num_features]
+            running_var = running_var[:num_features]
 
         if self.training:
             bn_training = True
@@ -387,8 +387,11 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
         the unique identifier of `module`
     """
 
-    bound_type = nn.MultiheadAttention
+    bound_type = retiarii_nn.MultiheadAttention
     argument_list = ['embed_dim', 'num_heads', 'kdim', 'vdim', 'dropout']
+
+    def init_argument(self, name: str, value_choice: ValueChoiceX):
+        return max(traverse_all_options(value_choice))
 
     def _to_proj_slice(self, embed_dim: _W) -> List[slice]:
         # slice three parts, corresponding to q, k, v respectively
@@ -416,7 +419,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
         if isinstance(embed_dim, dict):
             used_embed_dim = self.embed_dim
         else:
-            used_embed_dim = self.embed_dim
+            used_embed_dim = embed_dim
 
         embed_dim = _W(embed_dim)
 

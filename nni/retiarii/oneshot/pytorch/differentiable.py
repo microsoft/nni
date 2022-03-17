@@ -212,7 +212,7 @@ class GumbelDartsModule(DartsModule):
             self.temp = (1 - self.trainer.current_epoch / self.trainer.max_epochs) * (self.init_temp - self.min_temp) + self.min_temp
             self.temp = max(self.temp, self.min_temp)
 
-        for _, nas_module in self.nas_modules:
-            nas_module.temp = self.temp
+        for module in self.nas_modules:
+            module.softmax.temp = self.temp
 
         return self.model.on_epoch_start()

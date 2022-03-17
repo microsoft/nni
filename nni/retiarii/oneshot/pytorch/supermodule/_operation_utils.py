@@ -48,6 +48,14 @@ def zeros_like(arr: T) -> T:
     else:
         raise TypeError(f'Unsupported type for {arr}: {type(arr)}')
 
+def concat(arr: List[T], dim: int) -> T:
+    if isinstance(arr[0], np.ndarray):
+        return np.concatenate(arr, dim)
+    elif isinstance(arr[0], torch.Tensor):
+        return torch.cat(arr, dim)
+    else:
+        raise TypeError(f'Unsupported type for {arr}: {type(arr)}')
+
 
 def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_slice, float]]]) -> T:
     # slice_ can be a tuple of slice, e.g., ([3:6], [2:4])
@@ -93,7 +101,7 @@ def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_s
                 if isinstance(slice_[i], list):
                     # if a list, concatenation of multiple parts
                     parts = [arr[tuple([slice(None)] * i + [s])] for s in slice_[i]]
-                    arr = np.concatenate(parts, i)
+                    arr = concat(parts, i)
                 else:
                     # manually slice the i-th dim
                     arr = arr[tuple([slice(None)] * i + [slice_[i]])]
@@ -202,6 +210,11 @@ class MaybeWeighted:
                 eval_rhs = self.rhs
             return self.operation(eval_lhs, eval_rhs)
 
+    def __repr__(self):
+        if self.value is not None:
+            return f'{self.__class__.__name__}({self.value})'
+        return f'{self.__class__.__name__}(lhs={self.lhs}, rhs={self.rhs}, op={self.operation})'
+
     def __add__(self, other: Any) -> 'MaybeWeighted':
         return MaybeWeighted(lhs=self, rhs=other, operation=operator.add)
 
@@ -250,7 +263,7 @@ def _iterate_over_multidim_slice(ms: multidim_slice):
 
 def _evaluate_slice_type(s: slice_type, value_fn: _value_fn_type = None):
     if isinstance(s, list):
-        return [_evaluate_slice_type(se) for se in s]
+        return [_evaluate_slice_type(se, value_fn) for se in s]
     else:
         return slice(
             s.start.evaluate(value_fn) if isinstance(s.start, MaybeWeighted) else s.start,
