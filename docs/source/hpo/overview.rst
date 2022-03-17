@@ -76,8 +76,8 @@ Kubernetes-based clusters, AzureML service, and much more.
 
 Main article: (FIXME: link to training_services)
 
-Web UI
-^^^^^^
+Web Portal
+^^^^^^^^^^
 
 NNI provides a web portal to monitor training progress, to visualize hyperparameter performance,
 to manually customize hyperparameters, and to manage multiple HPO experiments.
