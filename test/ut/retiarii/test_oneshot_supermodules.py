@@ -38,6 +38,12 @@ def test_slice():
             else:
                 assert weight[1, i, j] == 0.5
 
+    # weighted + list
+    value = W({1: 0.5, 3: 0.5})
+    weight = np.ones((8, 4))
+    weight = S(weight)[[slice(value), slice(4, value + 4)]]
+    assert weight.sum(1).tolist() == [4, 2, 2, 0, 4, 2, 2, 0]
+
     with pytest.raises(ValueError, match='one distinct'):
         # has to be exactly the same instance, equal is not enough
         weight = S(weight)[:W({1: 0.5}), : W({1: 0.5})]

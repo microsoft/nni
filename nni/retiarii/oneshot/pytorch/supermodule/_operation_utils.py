@@ -48,14 +48,19 @@ def zeros_like(arr: T) -> T:
     else:
         raise TypeError(f'Unsupported type for {arr}: {type(arr)}')
 
-def concat(arr: List[T], dim: int) -> T:
-    if isinstance(arr[0], np.ndarray):
-        return np.concatenate(arr, dim)
-    elif isinstance(arr[0], torch.Tensor):
-        return torch.cat(arr, dim)
-    else:
-        raise TypeError(f'Unsupported type for {arr}: {type(arr)}')
-
+def _eliminate_list_slice(shape: tuple, slice_: multidim_slice) -> multidim_slice:
+    # get rid of list of slice
+    result = []
+    for i in range(len(slice_)):
+        if isinstance(slice_[i], list):
+            # convert list of slices to mask
+            mask = np.zeros(shape[i], dtype=np.bool)
+            for sl in slice_[i]:
+                mask[sl] = 1
+            result.append(mask)
+        else:
+            result.append(slice_[i])
+    return tuple(result)
 
 def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_slice, float]]]) -> T:
     # slice_ can be a tuple of slice, e.g., ([3:6], [2:4])
@@ -74,13 +79,7 @@ def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_s
             # create a mask with weight w
             with torch.no_grad():
                 mask = zeros_like(weight)
-
-                if isinstance(sl, list):
-                    # slice is a list, meaning that it's assembled from multiple parts
-                    for single in sl:
-                        mask[single] = 1
-                else:
-                    mask[sl] = 1
+                mask[_eliminate_list_slice(weight.shape, sl)] = 1
 
             # track gradients here
             masks.append((mask * wt))
@@ -93,20 +92,7 @@ def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_s
         # for unweighted case, we slice it directly.
 
         def _do_slice(arr, slice_):
-            if all(isinstance(s, slice) for s in slice_):
-                # no concat. numpy/torch built-in slice operation is enough.
-                return arr[slice_]
-
-            for i in range(len(slice_)):
-                if isinstance(slice_[i], list):
-                    # if a list, concatenation of multiple parts
-                    parts = [arr[tuple([slice(None)] * i + [s])] for s in slice_[i]]
-                    arr = concat(parts, i)
-                else:
-                    # manually slice the i-th dim
-                    arr = arr[tuple([slice(None)] * i + [slice_[i]])]
-
-            return arr
+            return arr[_eliminate_list_slice(arr.shape, slice_)]
 
         # sometimes, we don't need slice.
         # this saves an op on computational graph, which will hopefully make training faster
