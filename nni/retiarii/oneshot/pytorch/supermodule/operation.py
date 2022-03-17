@@ -235,15 +235,6 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
             return (value, value)
         return value
 
-    def _to_kernel_slice(self, kernel_size: _int_or_tuple) -> Tuple[slice, slice, slice, slice]:
-        # slice the kernel size in the center
-        kernel_a, kernel_b = self._to_tuple(kernel_size)
-
-        max_kernel_a, max_kernel_b = self.kernel_size  # self.kernel_size must be a tuple
-        kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a) // 2, (max_kernel_b - kernel_b) // 2
-
-        return None, None, slice(kernel_a_left, kernel_a_left + kernel_a), slice(kernel_b_top, kernel_b_top + kernel_b)
-
     def init_argument(self, name: str, value_choice: ValueChoiceX):
         if name not in ['in_channels', 'out_channels', 'groups', 'stride', 'kernel_size', 'padding', 'dilation']:
             raise NotImplementedError(f'Unsupported value choice on argument: {name}')
@@ -285,16 +276,16 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         # slice prefix
         # For groups > 1, we use groups to slice input weights
         weight = _S(self.weight)[:out_channels]
-        weight = _S(weight)[None, :in_channels // groups]
+        weight = _S(weight)[:, :in_channels // groups]
 
         # slice center
         if isinstance(kernel_size, dict):
             padding = self.padding  # must be a tuple
         kernel_a, kernel_b = self._to_tuple(kernel_size)
-        kernel_size = _W(kernel_size)
+        kernel_a, kernel_b = _W(kernel_a), _W(kernel_b)
         max_kernel_a, max_kernel_b = self.kernel_size  # self.kernel_size must be a tuple
         kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a) // 2, (max_kernel_b - kernel_b) // 2
-        weight = _S(weight)[None, None, kernel_a_left:kernel_a_left + kernel_a, kernel_b_top:kernel_b_top + kernel_b]
+        weight = _S(weight)[:, :, kernel_a_left:kernel_a_left + kernel_a, kernel_b_top:kernel_b_top + kernel_b]
 
         bias = _S(self.bias)[:out_channels] if self.bias is not None else None
 
@@ -399,18 +390,13 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     bound_type = nn.MultiheadAttention
     argument_list = ['embed_dim', 'num_heads', 'kdim', 'vdim', 'dropout']
 
-    def _to_proj_slice(self, embed_dim: int,
-                       weight_or_bias: Literal['weight', 'bias'] = 'weight') -> _multidim_slice:
+    def _to_proj_slice(self, embed_dim: _W) -> List[slice]:
         # slice three parts, corresponding to q, k, v respectively
-        first_dim = [
+        return [
             slice(embed_dim),
             slice(self.embed_dim, self.embed_dim + embed_dim),
             slice(self.embed_dim * 2, self.embed_dim * 2 + embed_dim)
         ]
-        if weight_or_bias == 'weight':
-            return (first_dim, slice(embed_dim))
-        else:
-            return (first_dim, )
 
     def forward_with_args(
         self,
@@ -453,9 +439,9 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
 
             q_proj = _S(self.q_proj_weight)[:embed_dim, :embed_dim]
             k_proj = _S(self.k_proj_weight)[:embed_dim]
-            k_proj = _S(k_proj)[None, :kdim]
+            k_proj = _S(k_proj)[:, :kdim]
             v_proj = _S(self.v_proj_weight)[:embed_dim]
-            v_proj = _S(v_proj)[None, :vdim]
+            v_proj = _S(v_proj)[:, :vdim]
 
             attn_output, attn_output_weights = F.multi_head_attention_forward(
                 query, key, value, used_embed_dim, num_heads,

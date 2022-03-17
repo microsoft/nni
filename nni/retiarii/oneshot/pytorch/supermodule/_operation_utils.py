@@ -40,6 +40,14 @@ int_or_int_dict = scalar_or_scalar_dict[int]
 
 _value_fn_type = Optional[Callable[[int_or_int_dict], int]]
 
+def zeros_like(arr: T) -> T:
+    if isinstance(arr, np.ndarray):
+        return np.zeros_like(arr)
+    elif isinstance(arr, torch.Tensor):
+        return torch.zeros_like(arr)
+    else:
+        raise TypeError(f'Unsupported type for {arr}: {type(arr)}')
+
 
 def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_slice, float]]]) -> T:
     # slice_ can be a tuple of slice, e.g., ([3:6], [2:4])
@@ -57,7 +65,7 @@ def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_s
         for sl, wt in slice_:
             # create a mask with weight w
             with torch.no_grad():
-                mask = torch.zeros_like(weight)
+                mask = zeros_like(weight)
 
                 if isinstance(sl, list):
                     # slice is a list, meaning that it's assembled from multiple parts
@@ -77,18 +85,18 @@ def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_s
         # for unweighted case, we slice it directly.
 
         def _do_slice(arr, slice_):
-            if all(isinstance(s, slice) or s is None for s in slice_):
+            if all(isinstance(s, slice) for s in slice_):
                 # no concat. numpy/torch built-in slice operation is enough.
                 return arr[slice_]
 
             for i in range(len(slice_)):
                 if isinstance(slice_[i], list):
                     # if a list, concatenation of multiple parts
-                    parts = [arr[tuple([None] * i + [s])] for s in slice_[i]]
+                    parts = [arr[tuple([slice(None)] * i + [s])] for s in slice_[i]]
                     arr = np.concatenate(parts, i)
                 else:
                     # manually slice the i-th dim
-                    arr = arr[tuple([None] * i + [slice_[i]])]
+                    arr = arr[tuple([slice(None)] * i + [slice_[i]])]
 
             return arr
 
@@ -124,12 +132,13 @@ class Slicable(Generic[T]):
         # Get the dict value in index's leafs
         # There can be at most one dict
         leaf_dict: Optional[Dict[int, float]] = None
-        for d in itertools.chain(i.leaf_dicts() for i in _iterate_over_multidim_slice(index)):
-            if isinstance(d, dict):
-                if leaf_dict is None:
-                    leaf_dict = d
-                elif leaf_dict is not d:
-                    raise ValueError('There can be at most one distinct dict in leaf values.')
+        for maybe_weighted in _iterate_over_multidim_slice(index):
+            for d in maybe_weighted.leaf_dicts():
+                if isinstance(d, dict):
+                    if leaf_dict is None:
+                        leaf_dict = d
+                    elif leaf_dict is not d:
+                        raise ValueError('There can be at most one distinct dict in leaf values.')
 
         if leaf_dict is None:
             # in case of simple types with no dict
@@ -156,22 +165,22 @@ class MaybeWeighted:
 
     def __init__(self,
                  value: Optional[int_or_int_dict] = None, *,
-                 lhs: Optional['MaybeWeighted'] = None,
-                 rhs: Optional['MaybeWeighted'] = None,
+                 lhs: Optional[Union['MaybeWeighted', int]] = None,
+                 rhs: Optional[Union['MaybeWeighted', int]] = None,
                  operation: Optional[Callable[[int, int], int]] = None):
-        if value is not None:
-            self.value = value
-        elif lhs is not None and rhs is not None:
-            self.lhs = lhs
-            self.rhs = rhs
-            self.operation = operation
+        self.value = value
+        self.lhs = lhs
+        self.rhs = rhs
+        self.operation = operation
 
     def leaf_dicts(self) -> Iterator[Dict[int, float]]:
         if self.value is not None:
             yield self.value
         else:
-            yield from self.lhs.leaf_dicts()
-            yield from self.rhs.leaf_dicts()
+            if isinstance(self.lhs, MaybeWeighted):
+                yield from self.lhs.leaf_dicts()
+            if isinstance(self.rhs, MaybeWeighted):
+                yield from self.rhs.leaf_dicts()
 
     def evaluate(self, value_fn: _value_fn_type = None) -> int:
         if self.value is not None:
@@ -179,10 +188,15 @@ class MaybeWeighted:
                 return value_fn(self.value)
             return self.value
         else:
-            return self.operation(
-                self.lhs.evaluate(value_fn),
-                self.rhs.evaluate(value_fn)
-            )
+            if isinstance(self.lhs, MaybeWeighted):
+                eval_lhs = self.lhs.evaluate(value_fn)
+            else:
+                eval_lhs = self.lhs
+            if isinstance(self.rhs, MaybeWeighted):
+                eval_rhs = self.rhs.evaluate(value_fn)
+            else:
+                eval_rhs = self.rhs
+            return self.operation(eval_lhs, eval_rhs)
 
     def __add__(self, other: Any) -> 'MaybeWeighted':
         return MaybeWeighted(lhs=self, rhs=other, operation=operator.add)
@@ -215,15 +229,16 @@ def _iterate_over_slice_type(s: slice_type):
             yield from _iterate_over_slice_type(se)
     else:
         # s must be a "slice" now
-        if s.start is not None:
+        if isinstance(s.start, MaybeWeighted):
             yield s.start
-        if s.stop is not None:
+        if isinstance(s.stop, MaybeWeighted):
             yield s.stop
-        if s.step is not None:
+        if isinstance(s.step, MaybeWeighted):
             yield s.step
 
 
 def _iterate_over_multidim_slice(ms: multidim_slice):
+    """Get ``MaybeWeighted`` instances in ``ms``."""
     for s in ms:
         if s is not None:
             yield from _iterate_over_slice_type(s)
@@ -244,7 +259,7 @@ def _evaluate_multidim_slice(ms: multidim_slice, value_fn: _value_fn_type = None
     res = []
     for s in ms:
         if s is not None:
-            res.append(_evaluate_slice_type(ms, value_fn))
+            res.append(_evaluate_slice_type(s, value_fn))
         else:
             res.append(None)
     return tuple(res)

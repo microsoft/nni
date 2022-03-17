@@ -132,7 +132,7 @@ class ProxylessModule(DartsModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
     __doc__ = _proxyless_note.format(
         module_notes='This module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.',

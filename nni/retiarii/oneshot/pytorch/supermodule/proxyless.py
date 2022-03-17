@@ -115,7 +115,7 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
                     self._arch_alpha.grad[i] += binary_grads[j] * probs[j] * (int(i == j) - probs[i])
 
 
-class ProxylessInputChoice(DifferentiableMixedInput):
+class ProxylessMixedInput(DifferentiableMixedInput):
     """Proxyless version of differentiable input choice.
     See :class:`ProxylessLayerChoice` for implementation details.
     """
