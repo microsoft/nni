@@ -26,9 +26,8 @@ class MedianstopAssessor(Assessor):
     if the trial’s best objective value by step S is strictly worse than the median value
     of the running averages of all completed trials’ objectives reported up to step S
 
-    The algorithm is mentioned in Google Vizer: A Service for Black-Box Optimization. (`paper`__)
-
-    .. _paper: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
+    The algorithm is mentioned in *Google Vizer: A Service for Black-Box Optimization*.
+    (`paper <https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf>`__)
 
     Examples
     --------
@@ -75,15 +74,6 @@ class MedianstopAssessor(Assessor):
         self._running_history[trial_job_id].extend(trial_history[len(self._running_history[trial_job_id]):])
 
     def trial_end(self, trial_job_id, success):
-        """trial_end
-
-        Parameters
-        ----------
-        trial_job_id : int
-            trial job id
-        success : bool
-            True if succssfully finish the experiment, False otherwise
-        """
         if trial_job_id in self._running_history:
             if success:
                 cnt = 0
@@ -98,25 +88,6 @@ class MedianstopAssessor(Assessor):
             logger.warning('trial_end: trial_job_id does not exist in running_history')
 
     def assess_trial(self, trial_job_id, trial_history):
-        """assess_trial
-
-        Parameters
-        ----------
-        trial_job_id : int
-            trial job id
-        trial_history : list
-            The history performance matrix of each trial
-
-        Returns
-        -------
-        bool
-            AssessResult.Good or AssessResult.Bad
-
-        Raises
-        ------
-        Exception
-            unrecognize exception in medianstop_assessor
-        """
         curr_step = len(trial_history)
         if curr_step < self._start_step:
             return AssessResult.Good

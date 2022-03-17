@@ -2,9 +2,10 @@
 # Licensed under the MIT license.
 
 """
-Tree-structured Parzen Estimator (TPE) tuner for hyper-parameter optimization.
+Tree-structured Parzen Estimator (TPE) tuner.
 
 Paper: https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf
+
 Official code: https://github.com/hyperopt/hyperopt/blob/master/hyperopt/tpe.py
 
 This is a slightly modified re-implementation of the algorithm.
@@ -34,8 +35,9 @@ _logger = logging.getLogger('nni.tuner.tpe')
 
 class TpeArguments(NamedTuple):
     """
-    These are the hyper-parameters of TPE algorithm itself.
-    To avoid confusing with trials' hyper-parameters, they are called "arguments" in TPE source code.
+    Hyperparameters of TPE algorithm itself.
+
+    To avoid confusing with trials' hyperparameters to be tuned, these are called "arguments" here.
 
     Parameters
     ----------
@@ -83,15 +85,15 @@ class TpeArguments(NamedTuple):
 
 class TpeTuner(Tuner):
     """
-    Tree-structured Parzen Estimator (TPE) is an SMBO tuner.
+    Tree-structured Parzen Estimator (TPE) tuner.
 
-    TPE models P(x|y) and P(y) where x represents hyperparameters and y the associated evaluation metric.
+    TPE is an SMBO algorithm.
+    It models P(x|y) and P(y) where x represents hyperparameters and y the evaluation result.
     P(x|y) is modeled by transforming the generative process of hyperparameters,
     replacing the distributions of the configuration prior with non-parametric densities.
 
-    TPE is described in detail in *Algorithms for Hyper-Parameter Optimization*. (`paper`__)
-
-    .. _paper: https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf
+    Paper: :footcite:`bergstra2011algorithms`.
+    (`PDF <https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__)
 
     Examples
     --------

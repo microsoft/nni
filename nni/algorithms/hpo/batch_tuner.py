@@ -77,7 +77,7 @@ class BatchTuner(Tuner):
         self._count = -1
         self._values = []
 
-    def is_valid(self, search_space):
+    def _is_valid(self, search_space):
         """
         Check the search space is valid: only contains 'choice' type
 
@@ -107,27 +107,10 @@ class BatchTuner(Tuner):
         return None
 
     def update_search_space(self, search_space):
-        """Update the search space
-
-        Parameters
-        ----------
-        search_space : dict
-        """
         validate_search_space(search_space, ['choice'])
-        self._values = self.is_valid(search_space)
+        self._values = self._is_valid(search_space)
 
     def generate_parameters(self, parameter_id, **kwargs):
-        """Returns a dict of trial (hyper-)parameters, as a serializable object.
-
-        Parameters
-        ----------
-        parameter_id : int
-
-        Returns
-        -------
-        dict
-            A candidate parameter group.
-        """
         self._count += 1
         if self._count > len(self._values) - 1:
             raise nni.NoMoreTrialError('no more parameters now.')
@@ -137,13 +120,6 @@ class BatchTuner(Tuner):
         pass
 
     def import_data(self, data):
-        """Import additional data for tuning
-
-        Parameters
-        ----------
-        data:
-            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
-        """
         if not self._values:
             LOGGER.info("Search space has not been initialized, skip this data import")
             return

@@ -198,16 +198,16 @@ Search Space Types Supported by Each Tuner
      - 
    * - Grid Search Tuner
      - :raw-html:`&#10003;`
-     - 
      - :raw-html:`&#10003;`
-     - 
      - :raw-html:`&#10003;`
-     - 
-     - 
-     - 
-     - 
-     - 
-     - 
+     - :raw-html:`&#10003;`
+     - :raw-html:`&#10003;`
+     - :raw-html:`&#10003;`
+     - :raw-html:`&#10003;`
+     - :raw-html:`&#10003;`
+     - :raw-html:`&#10003;`
+     - :raw-html:`&#10003;`
+     - :raw-html:`&#10003;`
    * - Hyperband Advisor
      - :raw-html:`&#10003;`
      - 

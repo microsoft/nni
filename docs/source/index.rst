@@ -34,6 +34,7 @@ Neural Network Intelligence
     nnictl Commands <reference/nnictl>
     Experiment Configuration <reference/experiment_config>
     Experiment Configuration (legacy) <Tutorial/ExperimentConfig>
+    HPO API Reference <reference/hpo>
     Python API <reference/_modules/nni>
 
 ..  toctree::
