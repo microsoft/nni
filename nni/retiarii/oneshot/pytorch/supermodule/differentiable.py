@@ -15,7 +15,7 @@ from nni.retiarii.oneshot.pytorch.base_lightning import BaseOneShotLightningModu
 
 from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingStrategy
-from .valuechoice_utils import traverse_all_options
+from ._valuechoice_utils import traverse_all_options
 
 
 class DifferentiableMixedLayer(BaseSuperNetModule):

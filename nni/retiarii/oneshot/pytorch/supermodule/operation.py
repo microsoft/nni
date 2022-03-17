@@ -6,8 +6,11 @@ which is commonly known as super-kernel, or weight entanglement.
 
 import itertools
 from typing import Union, Tuple, Dict, List, Any, Type, Callable, Optional, TypeVar
+try:
+    from typing import Literal
+except:
+    from typing_extensions import Literal
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -17,91 +20,10 @@ from nni.common.serializer import is_traceable
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
 
 from .base import BaseSuperNetModule
-from .valuechoice_utils import traverse_all_options, dedup_inner_choices
-
+from ._valuechoice_utils import traverse_all_options, dedup_inner_choices
+from ._operation_utils import Slicable as _S, MaybeWeighted as _W, int_or_int_dict, scalar_or_scalar_dict
 
 T = TypeVar('T')
-
-_multidim_slice = Tuple[Union[slice, List[slice]], ...]
-
-_scalar_or_scalar_dict = Union[T, Dict[T, float]]
-_int_or_int_dict = _scalar_or_scalar_dict[int]
-
-
-def _slice_weight(weight: torch.Tensor, slice_: Union[_multidim_slice, List[Tuple[_multidim_slice, float]]]) -> torch.Tensor:
-    # slice_ can be a tuple of slice, e.g., ([3:6], [2:4])
-    # or tuple of slice -> float, e.g. {([3:6],): 0.6, ([2:4],): 0.3}
-
-    if isinstance(slice_, list):
-        # for weighted case, we get the corresponding masks. e.g.,
-        # {([3:6],): 0.6, ([2:4],): 0.3} => [0, 0, 0.3, 0.9, 0.6, 0.6] (if the whole length is 6)
-        # this mask is broadcasted and multiplied onto the weight
-
-        masks = []
-
-        # the accepted argument is list of tuple here
-        # because slice can't be key of dict
-        for sl, wt in slice_:
-            # create a mask with weight w
-            with torch.no_grad():
-                mask = torch.zeros_like(weight)
-
-                if isinstance(sl, list):
-                    # slice is a list, meaning that it's assembled from multiple parts
-                    for single in sl:
-                        mask[single] = 1
-                else:
-                    mask[sl] = 1
-
-            # track gradients here
-            masks.append((mask * wt))
-
-        masks = sum(masks)
-        print(masks)
-
-        return masks * weight
-
-    else:
-        # for unweighted case, we slice it directly.
-
-        def _do_slice(arr, slice_):
-            if all(isinstance(s, slice) or s is None for s in slice_):
-                # no concat. numpy/torch built-in slice operation is enough.
-                return arr[slice_]
-
-            for i in range(len(slice_)):
-                if isinstance(slice_[i], list):
-                    # if a list, concatenation of multiple parts
-                    parts = [arr[tuple([None] * i + [s])] for s in slice_[i]]
-                    arr = np.concatenate(parts, i)
-                else:
-                    # manually slice the i-th dim
-                    arr = arr[tuple([None] * i + [slice_[i]])]
-
-            return arr
-
-        # sometimes, we don't need slice.
-        # this saves an op on computational graph, which will hopefully make training faster
-
-        # Use a dummy array to check this. Otherwise it would be too complex.
-        dummy_arr = np.zeros(weight.shape, dtype=np.bool)
-        no_effect = _do_slice(dummy_arr, slice_).shape == dummy_arr.shape
-
-        if no_effect:
-            return weight
-
-        return _do_slice(weight, slice_)
-
-
-def _to_slice(
-    value: _scalar_or_scalar_dict[T], transform: Callable[[T], slice]
-) -> Union[List[Tuple[_multidim_slice, float]], _multidim_slice]:
-    # two types of sampled value: a fixed value or a distribution
-    # Use transform to transfrom the value to slice respectively
-    if isinstance(value, dict):
-        return [(transform(v), weight) for v, weight in value.items()]
-    else:
-        return transform(value)
 
 
 class MixedOperationSamplingStrategy:
@@ -257,19 +179,19 @@ class MixedLinear(MixedOperation, nn.Linear):
         return max(traverse_all_options(value_choice))
 
     def forward_with_args(self,
-                          in_features: _int_or_int_dict,
-                          out_features: _int_or_int_dict,
+                          in_features: int_or_int_dict,
+                          out_features: int_or_int_dict,
                           input: torch.Tensor) -> torch.Tensor:
 
-        in_features = _to_slice(in_features, lambda v: (None, slice(v)))
-        out_features = _to_slice(out_features, lambda v: (slice(v),))
+        in_features = _W(in_features)
+        out_features = _W(out_features)
 
-        weight = _slice_weight(self.weight, out_features)
-        weight = _slice_weight(weight, in_features)
+        weight = _S(self.weight)[:out_features]
+        weight = _S(weight)[:, :in_features]
         if self.bias is None:
             bias = self.bias
         else:
-            bias = _slice_weight(self.bias, out_features)
+            bias = _S(self.bias)[:out_features]
 
         return F.linear(input, weight, bias)
 
@@ -308,8 +230,8 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
     ]
 
     @staticmethod
-    def _to_tuple(value: _int_or_tuple) -> Tuple[int, int]:
-        if isinstance(value, int):
+    def _to_tuple(value: scalar_or_scalar_dict[T]) -> Tuple[T, T]:
+        if not isinstance(value, tuple):
             return (value, value)
         return value
 
@@ -345,11 +267,11 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
             return max(traverse_all_options(value_choice))
 
     def forward_with_args(self,
-                          in_channels: _int_or_int_dict,
-                          out_channels: _int_or_int_dict,
-                          kernel_size: _scalar_or_scalar_dict[_int_or_tuple],
+                          in_channels: int_or_int_dict,
+                          out_channels: int_or_int_dict,
+                          kernel_size: scalar_or_scalar_dict[_int_or_tuple],
                           stride: _int_or_tuple,
-                          padding: _scalar_or_scalar_dict[_int_or_tuple],
+                          padding: scalar_or_scalar_dict[_int_or_tuple],
                           dilation: int,
                           groups: int,
                           input: torch.Tensor) -> torch.Tensor:
@@ -357,28 +279,24 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         if any(isinstance(arg, dict) for arg in [stride, dilation, groups]):
             raise ValueError('stride, dilation, groups does not support weighted sampling.')
 
+        in_channels = _W(in_channels)
+        out_channels = _W(out_channels)
+
         # slice prefix
         # For groups > 1, we use groups to slice input weights
-        in_channels = _to_slice(in_channels, lambda v: (None, slice(v // groups)))
-        out_channels = _to_slice(out_channels, lambda v: (slice(v),))
-
-        weight = _slice_weight(self.weight, out_channels)
-        weight = _slice_weight(weight, in_channels)
+        weight = _S(self.weight)[:out_channels]
+        weight = _S(weight)[None, :in_channels // groups]
 
         # slice center
         if isinstance(kernel_size, dict):
-            kernel_slice = [(self._to_kernel_slice(ks), wt) for ks, wt in kernel_size.items()]
-            # ignore the weighted padding, use maximum padding here
             padding = self.padding  # must be a tuple
-        else:
-            kernel_slice = self._to_kernel_slice(kernel_size)
+        kernel_a, kernel_b = self._to_tuple(kernel_size)
+        kernel_size = _W(kernel_size)
+        max_kernel_a, max_kernel_b = self.kernel_size  # self.kernel_size must be a tuple
+        kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a) // 2, (max_kernel_b - kernel_b) // 2
+        weight = _S(weight)[None, None, kernel_a_left:kernel_a_left + kernel_a, kernel_b_top:kernel_b_top + kernel_b]
 
-        weight = _slice_weight(weight, kernel_slice)
-
-        if self.bias is None:
-            bias = self.bias
-        else:
-            bias = _slice_weight(self.bias, out_channels)
+        bias = _S(self.bias)[:out_channels] if self.bias is not None else None
 
         # The rest parameters only need to be converted to tuple
         stride = self._to_tuple(stride)
@@ -417,7 +335,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
         return max(traverse_all_options(value_choice))
 
     def forward_with_args(self,
-                          num_features: _int_or_int_dict,
+                          num_features: int_or_int_dict,
                           eps: float,
                           momentum: float,
                           input: torch.Tensor) -> torch.Tensor:
@@ -481,51 +399,66 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     bound_type = nn.MultiheadAttention
     argument_list = ['embed_dim', 'num_heads', 'kdim', 'vdim', 'dropout']
 
-    @staticmethod
-    def _slice_qkv_weight(src_tensor: torch.Tensor, unit_dim: int, slice_dim: int) -> torch.Tensor:
-        if unit_dim == slice_dim:
-            return src_tensor
-        # slice the parts for q, k, v respectively
-        return torch.cat([src_tensor[i * unit_dim: i * unit_dim + slice_dim] for i in range(3)], 0)
+    def _to_proj_slice(self, embed_dim: int,
+                       weight_or_bias: Literal['weight', 'bias'] = 'weight') -> _multidim_slice:
+        # slice three parts, corresponding to q, k, v respectively
+        first_dim = [
+            slice(embed_dim),
+            slice(self.embed_dim, self.embed_dim + embed_dim),
+            slice(self.embed_dim * 2, self.embed_dim * 2 + embed_dim)
+        ]
+        if weight_or_bias == 'weight':
+            return (first_dim, slice(embed_dim))
+        else:
+            return (first_dim, )
 
     def forward_with_args(
         self,
-        embed_dim: _int_or_int_dict, num_heads: _int_or_int_dict,
-        kdim: _int_or_int_dict, vdim: _int_or_int_dict, dropout: bool,
+        embed_dim: int_or_int_dict, num_heads: int,
+        kdim: int_or_int_dict, vdim: int_or_int_dict, dropout: float,
         query: torch.Tensor, key: torch.Tensor, value: torch.Tensor,
         key_padding_mask: Optional[torch.Tensor] = None,
         need_weights: bool = True, attn_mask: Optional[torch.Tensor] = None
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+
+        if any(isinstance(arg, dict) for arg in [num_heads, dropout]):
+            raise ValueError('num_heads, dropout do not support weighted sampling.')
+
         if self.batch_first:
             query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
 
+        if isinstance(embed_dim, dict):
+            used_embed_dim = self.embed_dim
+        else:
+            used_embed_dim = self.embed_dim
+
+        embed_dim = _W(embed_dim)
+
         # in projection weights & biases has q, k, v weights concatenated together
+        in_proj_bias = in_proj_weight = None
         if self.in_proj_bias is not None:
-            in_proj_bias = self._slice_qkv_weight(self.in_proj_bias, self.embed_dim, embed_dim)
-        else:
-            in_proj_bias = None
-
+            in_proj_bias = _S(self.in_proj_bias)[self._to_proj_slice(embed_dim)]
         if self.in_proj_weight is not None:
-            in_proj_weight = self._slice_qkv_weight(self.in_proj_weight[:, :embed_dim], self.embed_dim, embed_dim)
-        else:
-            in_proj_weight = None
+            in_proj_weight = _S(self.in_proj_weight)[self._to_proj_slice(embed_dim), :embed_dim]
 
-        bias_k = self.bias_k[:, :, :embed_dim] if self.bias_k is not None else None
-        bias_v = self.bias_v[:, :, :embed_dim] if self.bias_v is not None else None
-        out_proj_weight = self.out_proj.weight[:embed_dim, :embed_dim]
-        out_proj_bias = self.out_proj.bias[:embed_dim]
+        bias_k = _S(self.bias_k)[:, :, :embed_dim] if self.bias_k is not None else None
+        bias_v = _S(self.bias_v)[:, :, :embed_dim] if self.bias_v is not None else None
+        out_proj_weight = _S(self.out_proj.weight)[:embed_dim, :embed_dim]
+        out_proj_bias = _S(self.out_proj.bias)[:embed_dim]
 
         # The rest part is basically same as pytorch
         if not self._qkv_same_embed_dim:
-            kdim = self.get_argument('kdim')
-            vdim = self.get_argument('vdim')
+            kdim = _W(kdim)
+            vdim = _W(vdim)
 
-            q_proj = self.q_proj_weight[:embed_dim, :embed_dim]
-            k_proj = self.k_proj_weight[:embed_dim, :kdim]
-            v_proj = self.v_proj_weight[:embed_dim, :vdim]
+            q_proj = _S(self.q_proj_weight)[:embed_dim, :embed_dim]
+            k_proj = _S(self.k_proj_weight)[:embed_dim]
+            k_proj = _S(k_proj)[None, :kdim]
+            v_proj = _S(self.v_proj_weight)[:embed_dim]
+            v_proj = _S(v_proj)[None, :vdim]
 
             attn_output, attn_output_weights = F.multi_head_attention_forward(
-                query, key, value, embed_dim, num_heads,
+                query, key, value, used_embed_dim, num_heads,
                 in_proj_weight, in_proj_bias,
                 bias_k, bias_v, self.add_zero_attn,
                 dropout, out_proj_weight, out_proj_bias,
@@ -535,7 +468,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
                 q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
         else:
             attn_output, attn_output_weights = F.multi_head_attention_forward(
-                query, key, value, embed_dim, num_heads,
+                query, key, value, used_embed_dim, num_heads,
                 in_proj_weight, in_proj_bias,
                 bias_k, bias_v, self.add_zero_attn,
                 dropout, out_proj_weight, out_proj_bias,

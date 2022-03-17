@@ -14,10 +14,9 @@ from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from nni.retiarii.oneshot.pytorch.base_lightning import BaseOneShotLightningModule
-from nni.retiarii.oneshot.pytorch.supermodule.valuechoice_utils import dedup_inner_choices, evaluate_value_choice_with_dict
 
 from .base import BaseSuperNetModule
-from .valuechoice_utils import *
+from ._valuechoice_utils import *
 from .operation import MixedOperationSamplingStrategy, MixedOperation
 
 class PathSamplingLayer(BaseSuperNetModule):
