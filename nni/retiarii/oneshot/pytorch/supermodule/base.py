@@ -58,7 +58,7 @@ class BaseSuperNetModule(nn.Module):
 
         For example: ::
 
-            {"layer1": ["conv", "pool"]}
+            {"layer1": ParameterSpec(values=["conv", "pool"])}
         """
         raise NotImplementedError()
 

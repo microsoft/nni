@@ -9,8 +9,8 @@ import torch.optim as optim
 import torch.nn as nn
 
 from torch.optim.lr_scheduler import _LRScheduler
-from typeguard import TypeWarning
 
+from nni.common.hpo_utils import ParameterSpec
 from .supermodule.base import BaseSuperNetModule
 
 __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
@@ -74,7 +74,7 @@ def traverse_and_mutate_submodules(
                 if hook_suggest is not None:
                     if not isinstance(hook_suggest, BaseSuperNetModule):
                         warnings.warn("Mutation hook didn't return a BaseSuperNetModule. It will be ignored in hooked module list.",
-                                      TypeWarning)
+                                      RuntimeWarning)
                     setattr(m, name, hook_suggest)
 
                     mutate_result = hook_suggest
@@ -174,6 +174,19 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         # traverse the model, calling hooks on every submodule
         self.nas_modules: List[BaseSuperNetModule] = traverse_and_mutate_submodules(self.model, mutation_hooks, topdown=True)
+
+    def search_space_spec(self) -> Dict[str, ParameterSpec]:
+        """Get the search space specification from ``nas_module``.
+
+        Returns
+        -------
+        dict
+            Key is the name of the choice, value is the corresponding :class:`ParameterSpec`.
+        """
+        result = {}
+        for module in self.nas_modules:
+            result.updaste(module.search_space_spec())
+        return result
 
     def resample(self) -> Dict[str, Any]:
         """Trigger the resample for each ``nas_module``.

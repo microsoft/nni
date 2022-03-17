@@ -72,7 +72,7 @@ class DartsModule(BaseOneShotLightningModule):
         # phase 1: architecture step
         # The _resample hook is kept for some darts-based NAS methods like proxyless.
         # See code of those methods for details.
-        self._resample()
+        self.resample()
         arc_optim.zero_grad()
         arc_step_loss = self.model.training_step(val_batch, 2 * batch_idx)
         if isinstance(arc_step_loss, dict):
@@ -82,7 +82,7 @@ class DartsModule(BaseOneShotLightningModule):
         arc_optim.step()
 
         # phase 2: model step
-        self._resample()
+        self.resample()
         self.call_user_optimizers('zero_grad')
         loss_and_metrics = self.model.training_step(trn_batch, 2 * batch_idx + 1)
         w_step_loss = loss_and_metrics['loss'] \
@@ -93,14 +93,6 @@ class DartsModule(BaseOneShotLightningModule):
         self.call_lr_schedulers(batch_idx)
 
         return loss_and_metrics
-
-    def _resample(self):
-        """
-        Hook kept for darts-based methods. Some following works resample the architecture to
-        reduce the memory consumption during training to fit the method to bigger models. Details
-        are provided in code of those algorithms.
-        """
-        pass
 
     def finalize_grad(self):
         # Note: This hook is currently kept for Proxyless NAS.
@@ -161,12 +153,8 @@ class ProxylessModule(DartsModule):
                                       weight_decay=0, betas=(0, 0.999), eps=1e-8)
         return ctrl_optim
 
-    def _resample(self):
-        for _, m in self.nas_modules:
-            m.resample()
-
     def finalize_grad(self):
-        for _, m in self.nas_modules:
+        for m in self.nas_modules:
             m.finalize_grad()
 
 

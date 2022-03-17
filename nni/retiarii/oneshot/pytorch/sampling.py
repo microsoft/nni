@@ -3,21 +3,57 @@
 
 """Experimental version of sampling-based one-shot implementation."""
 
-from typing import Dict, Any, Optional
+from functools import partial
+from typing import Dict, Any, List
 
-import random
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice
-from .random import PathSamplingLayerChoice, PathSamplingInputChoice
-from .base_lightning import BaseOneShotLightningModule, ReplaceDictType
+from .base_lightning import BaseOneShotLightningModule, MutationHook
+from .supermodule.sampling import PathSamplingInput, PathSamplingLayer, PathSamplingOperation
+from .supermodule.operation import NATIVE_MIXED_OPERATIONS
 from .enas import ReinforceController, ReinforceField
 
 
-class EnasModule(BaseOneShotLightningModule):
+class RandomSamplingModule(BaseOneShotLightningModule):
+    _random_note = """
+    Random Sampling NAS Algorithm.
+    In each epoch, model parameters are trained after a uniformly random sampling of each choice.
+    Notably, the exporting result is **also a random sample** of the search space.
+
+    Parameters
+    ----------
+    {{module_params}}
+    {base_params}
+    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+
+    __doc__ = _random_note.format(
+        module_params=BaseOneShotLightningModule._inner_module_note,
+    )
+
+    # turn on automatic optimization because nothing interesting is going on here.
+    automatic_optimization = True
+
+    def default_mutation_hooks(self) -> List[MutationHook]:
+        """Replace modules with random sampling module"""
+        hooks = [
+            PathSamplingLayer.mutate,
+            PathSamplingInput.mutate,
+        ]
+        for operation in NATIVE_MIXED_OPERATIONS:
+            hooks.append(partial(operation.mutate, mutate_kwargs={
+                'mixed_op_sampling_strategy': PathSamplingOperation
+            }))
+        return hooks
+
+    def training_step(self, batch, batch_idx):
+        self.resample()
+        return self.model.training_step(batch, batch_idx)
+
+
+class EnasModule(RandomSamplingModule):
     _enas_note = """
     The implementation of ENAS :cite:p:`pham2018efficient`. There are 2 steps in an epoch.
     Firstly, training model parameters.
@@ -41,27 +77,33 @@ class EnasModule(BaseOneShotLightningModule):
         Number of steps that will be aggregated into one mini-batch for RL controller.
     ctrl_grad_clip : float
         Gradient clipping value of controller.
-    """.format(base_params=BaseOneShotLightningModule._custom_replace_dict_note)
+    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
     __doc__ = _enas_note.format(
         module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
+    automatic_optimization = False
+
     def __init__(self,
                  inner_module: pl.LightningModule,
+                 *,
                  ctrl_kwargs: Dict[str, Any] = None,
                  entropy_weight: float = 1e-4,
                  skip_weight: float = .8,
                  baseline_decay: float = .999,
                  ctrl_steps_aggregate: float = 20,
                  ctrl_grad_clip: float = 0,
-                 custom_replace_dict: Optional[ReplaceDictType] = None):
-        super().__init__(inner_module, custom_replace_dict)
+                 mutation_hooks: List[MutationHook] = None):
+        super().__init__(inner_module, mutation_hooks)
 
-        self.nas_fields = [ReinforceField(name, len(module),
-                                          isinstance(module, PathSamplingLayerChoice) or module.n_chosen == 1)
-                           for name, module in self.nas_modules]
+        # convert parameter spec to legacy ReinforceField
+        # this part will be refactored
+        for name, param_spec in self.search_space_spec():
+            if param_spec.chosen_size not in (1, None):
+                raise ValueError('ENAS does not support n_chosen to be values other than 1 or None.')
+            self.nas_fields.append(ReinforceField(name, param_spec.size, param_spec.chosen_size == 1))
         self.controller = ReinforceController(self.nas_fields, **(ctrl_kwargs or {}))
 
         self.entropy_weight = entropy_weight
@@ -80,7 +122,7 @@ class EnasModule(BaseOneShotLightningModule):
 
         if source == 'train':
             # step 1: train model params
-            self._resample()
+            self.resample()
             self.call_user_optimizers('zero_grad')
             loss_and_metrics = self.model.training_step(batch, batch_idx)
             w_step_loss = loss_and_metrics['loss'] \
@@ -94,7 +136,7 @@ class EnasModule(BaseOneShotLightningModule):
             x, y = batch
             arc_opt = self.architecture_optimizers
             arc_opt.zero_grad()
-            self._resample()
+            self.resample()
             with torch.no_grad():
                 logits = self.model(x)
             # use the default metric of self.model as reward function
@@ -102,8 +144,8 @@ class EnasModule(BaseOneShotLightningModule):
                 _, metric = next(iter(self.model.metrics.items()))
             else:
                 if 'default' not in self.model.metrics.keys():
-                    raise KeyError('model.metrics should contain a ``default`` key when' \
-                        'there are multiple metrics')
+                    raise KeyError('model.metrics should contain a ``default`` key when'
+                                   'there are multiple metrics')
                 metric = self.model.metrics['default']
 
             reward = metric(logits, y)
@@ -123,53 +165,16 @@ class EnasModule(BaseOneShotLightningModule):
                 arc_opt.step()
                 arc_opt.zero_grad()
 
-    def _resample(self):
+    def resample(self):
         """
         Resample the architecture as ENAS result. This doesn't require an ``export`` method in nas_modules to work.
         """
         result = self.controller.resample()
-        for name, module in self.nas_modules:
-            module.sampled = result[name]
+        for module in self.nas_modules:
+            result.update(module.resample(memo=result))
+        return result
 
     def export(self):
         self.controller.eval()
         with torch.no_grad():
             return self.controller.resample()
-
-
-class RandomSamplingModule(BaseOneShotLightningModule):
-    _random_note = """
-    Random Sampling NAS Algorithm.
-    In each epoch, model parameters are trained after a uniformly random sampling of each choice.
-    Notably, the exporting result is **also a random sample** of the search space.
-
-    Parameters
-    ----------
-    {{module_params}}
-    {base_params}
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
-
-    __doc__ = _random_note.format(
-        module_params=BaseOneShotLightningModule._inner_module_note,
-    )
-
-    automatic_optimization = True
-
-    def training_step(self, batch, batch_idx):
-        self._resample()
-        return self.model.training_step(batch, batch_idx)
-
-    def _resample(self):
-        """
-        Resample the architecture as RandomSample result. This is simply a uniformly sampling that doesn't require an ``export``
-        method in nas_modules to work.
-        """
-        result = {}
-        for name, module in self.nas_modules:
-            if name not in result:
-                result[name] = random.randint(0, len(module) - 1)
-            module.sampled = result[name]
-        return result
-
-    def export(self):
-        return self._resample()
