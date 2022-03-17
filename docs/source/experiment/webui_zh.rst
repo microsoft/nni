@@ -1,4 +1,4 @@
-.. 1f92c8fa8fbaa1300343c01b53541b92
+.. ebf0627529ecdbf758f9db38701b4225
 
 Web 界面
 ========
@@ -90,6 +90,7 @@ Q&A
 
 `The discussion <https://github.com/microsoft/nni/discussions/4289>`_ 能帮助你。
 
+.. _exp-manage-webportal:
 
 实验管理
 --------

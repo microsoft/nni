@@ -5,7 +5,11 @@ import re
 
 
 cp_list = {
-    'tutorials/hello_nas.rst': 'tutorials/cp_hello_nas_quickstart.rst'
+    'tutorials/hello_nas.rst': 'tutorials/cp_hello_nas_quickstart.rst',
+    'tutorials/pruning_quick_start_mnist.rst': 'tutorials/cp_pruning_quick_start_mnist.rst',
+    'tutorials/pruning_speed_up.rst': 'tutorials/cp_pruning_speed_up.rst',
+    'tutorials/quantization_quick_start_mnist.rst': 'tutorials/cp_quantization_quick_start_mnist.rst',
+    'tutorials/quantization_speed_up.rst': 'tutorials/cp_quantization_speed_up.rst',
 }
 
 HEADER = """.. THIS FILE IS A COPY OF {} WITH MODIFICATIONS.

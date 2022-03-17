@@ -53,27 +53,6 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Model pruning is a technique to reduce the model size and computation by reducing model weight ...">
-
-.. only:: html
-
- .. figure:: /tutorials/images/thumb/sphx_glr_pruning_quick_start_mnist_thumb.png
-     :alt: Pruning Quickstart
-
-     :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /tutorials/pruning_quick_start_mnist
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Quantization reduces model size and speeds up inference time by reducing the number of bits req...">
 
 .. only:: html
@@ -116,6 +95,48 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Model pruning is a technique to reduce the model size and computation by reducing model weight ...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_quick_start_mnist_thumb.png
+     :alt: Pruning Quickstart
+
+     :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/pruning_quick_start_mnist
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="To write a new quantization algorithm, you can write a class that inherits nni.compression.pyto...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_quantization_customize_thumb.png
+     :alt: Customize a new quantization algorithm
+
+     :ref:`sphx_glr_tutorials_quantization_customize.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/quantization_customize
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="In this tutorial, we show how to use NAS Benchmarks as datasets. For research purposes we somet...">
 
 .. only:: html
@@ -134,6 +155,27 @@ Tutorials
    :hidden:
 
    /tutorials/nasbench_as_dataset
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Users can easily customize a basic pruner in NNI. A large number of basic modules have been pro...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_customize_thumb.png
+     :alt: Customize Basic Pruner
+
+     :ref:`sphx_glr_tutorials_pruning_customize.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/pruning_customize
 
 .. raw:: html
 

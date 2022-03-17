@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class DoReFaQuantizer(Quantizer):
     r"""
     Quantizer using the DoReFa scheme, as defined in:
-    `DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients <https://arxiv.org/abs/1606.06160>`__\ ,
+    `DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients <https://arxiv.org/abs/1606.06160>`__,
     authors Shuchang Zhou and Yuxin Wu provide an algorithm named DoReFa to quantize the weight, activation and gradients with training.
 
     Parameters

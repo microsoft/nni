@@ -148,18 +148,18 @@ class LevelPruner(BasicPruner):
         operation an example, weight tensor will be split into sub block whose shape is aligned to
         balance_gran. Then finegrained pruning will be applied internal of sub block. This sparsity
         pattern have more chance to achieve better trade-off between model performance and hardware
-        acceleration. Please refer to releated paper for further information 'Balanced Sparsity for 
-        Efficient DNN Inference on GPU'(https://arxiv.org/pdf/1811.00206.pdf).
+        acceleration. Please refer to releated paper for further information `Balanced Sparsity for
+        Efficient DNN Inference on GPU <https://arxiv.org/pdf/1811.00206.pdf>`__.
     balance_gran : list
-        Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning 
+        Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning
         without awaring balance, namely normal finegrained pruning.
         If passing list of int, LevelPruner will prune the model in the granularity of multi-dimension block.
         Attention that the length of balance_gran should be smaller than tensor dimension.
         For instance, in Linear operation, length of balance_gran should be equal or smaller than two since
-        dimension of pruning weight is two. If setting balbance_gran = [5, 5], sparsity = 0.6, pruner will 
-        divide pruning parameters into multiple block with tile size (5,5) and each bank has 5 * 5 values 
-        and 10 values would be kept after pruning. Finegrained pruning is applied in the granularity of block 
-        so that each block will kept same number of non-zero values after pruning. Such pruning method "balance" 
+        dimension of pruning weight is two. If setting balbance_gran = [5, 5], sparsity = 0.6, pruner will
+        divide pruning parameters into multiple block with tile size (5,5) and each bank has 5 * 5 values
+        and 10 values would be kept after pruning. Finegrained pruning is applied in the granularity of block
+        so that each block will kept same number of non-zero values after pruning. Such pruning method "balance"
         the non-zero value in tensor which create chance for better hardware acceleration.
 
         Note: If length of given balance_gran smaller than length of pruning tensor shape, it will be made up
@@ -290,7 +290,7 @@ class L1NormPruner(NormPruner):
     i.e., compute the l1 norm of the filters in convolution layer as metric values,
     compute the l1 norm of the weight by rows in linear layer as metric values.
 
-    For more details, please refer to `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__\.
+    For more details, please refer to `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__.
 
     In addition, L1 norm pruner also supports dependency-aware mode.
 
