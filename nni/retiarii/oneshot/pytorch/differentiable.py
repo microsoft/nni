@@ -141,11 +141,6 @@ class ProxylessModule(DartsModule):
         # FIXME: no support for mixed operation currently
         return hooks
 
-    def configure_architecture_optimizers(self):
-        ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], 3.e-4,
-                                      weight_decay=0, betas=(0, 0.999), eps=1e-8)
-        return ctrl_optim
-
     def finalize_grad(self):
         for m in self.nas_modules:
             m.finalize_grad()

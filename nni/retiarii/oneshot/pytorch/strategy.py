@@ -95,7 +95,7 @@ class Proxyless(OneShotStrategy):
     __doc__ = ProxylessModule._proxyless_note.format(module_notes='', module_params='')
 
     def __init__(self, **kwargs):
-        super().__init__(EnasModule, **kwargs)
+        super().__init__(ProxylessModule, **kwargs)
 
     def _get_dataloader(self, train_dataloader, val_dataloaders):
         return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
