@@ -1,7 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import functools
 import warnings
 
-from collections import OrderedDict
 from typing import List, Tuple, Optional, Dict, Any
 
 import torch
@@ -175,10 +177,14 @@ class DifferentiableMixedInput(BaseSuperNetModule):
             yield p
 
     def named_parameters(self, *args, **kwargs):
+        arch = kwargs.pop('arch', False)
         for name, p in super().named_parameters(*args, **kwargs):
             if any(name == par_name for par_name in self._arch_parameter_names):
-                continue
-            yield name, p
+                if arch:
+                    yield name, p
+            else:
+                if not arch:
+                    yield name, p
 
 
 class DifferentiableMixedOperation(MixedOperationSamplingStrategy):

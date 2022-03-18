@@ -2,11 +2,10 @@
 # Licensed under the MIT license.
 
 import random
-from typing import Optional, List, Tuple, Union, Type, Dict, Any
+from typing import Optional, List, Tuple, Union, Dict, Any
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice

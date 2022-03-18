@@ -3,7 +3,6 @@
 
 """Experimental version of sampling-based one-shot implementation."""
 
-from functools import partial
 from typing import Dict, Any, List
 
 import pytorch_lightning as pl

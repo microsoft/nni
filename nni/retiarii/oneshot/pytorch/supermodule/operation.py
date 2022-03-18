@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 Operations that support weight sharing at a fine-grained level,
 which is commonly known as super-kernel, or weight entanglement.

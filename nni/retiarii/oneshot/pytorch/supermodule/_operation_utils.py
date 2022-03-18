@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """Thie file handles "slice" commonly used in mixed-operation.
 
 The ``slice_type`` we support here, is "slice" or "list of slice".

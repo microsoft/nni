@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """Implementation of ProxylessNAS: a hyrbid approach between differentiable and sampling.
 The support remains limited. Known limitations include:
 

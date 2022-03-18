@@ -3,7 +3,6 @@
 
 """Experimental version of differentiable one-shot implementation."""
 
-from functools import partial
 from typing import List
 import pytorch_lightning as pl
 import torch
