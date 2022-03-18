@@ -51,7 +51,7 @@ class SMACTuner(Tuner):
     ``choice``, ``randint``, ``uniform``, ``loguniform``, and ``quniform``.
 
     Note that SMAC needs additional installation using the following command:
-    
+
     .. code-block:: bash
 
         pip install nni[SMAC]

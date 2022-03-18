@@ -61,7 +61,7 @@ class MetisTuner(Tuner):
     Metis belongs to the class of sequential model-based optimization (SMBO) algorithms
     and it is based on the Bayesian Optimization framework. To model the parameter-vs-performance space,
     Metis uses both a Gaussian Process and GMM. Since each trial can impose a high time cost,
-    Metis heavily trades inference computations with naive trials. 
+    Metis heavily trades inference computations with naive trials.
     At each iteration, Metis does two tasks (refer to :footcite:t:`li2018metis` for details):
 
 

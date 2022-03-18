@@ -321,7 +321,7 @@ class BOHB(MsgDispatcherBase):
     random_fraction: float
         Fraction of purely random configurations that are sampled from the prior without the model.
     bandwidth_factor: float
-        To encourage diversity, the points proposed to optimize EI are sampled 
+        To encourage diversity, the points proposed to optimize EI are sampled
         from a 'widened' KDE where the bandwidth is multiplied by this factor (default: 3).
         It is suggested to use the default value if you are not familiar with KDE.
     min_bandwidth: float
@@ -332,7 +332,7 @@ class BOHB(MsgDispatcherBase):
         Directly use a .pcs file serialized by `ConfigSpace <https://automl.github.io/ConfigSpace/>` in "pcs new" format.
         In this case, search space file (if provided in config) will be ignored.
         Note that this path needs to be an absolute path. Relative path is currently not supported.
-    
+
     Notes
     -----
 
