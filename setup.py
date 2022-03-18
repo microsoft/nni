@@ -166,7 +166,7 @@ def _find_requirements_txt():
 def _find_default_config():
     return ['runtime/default_config/' + name for name in os.listdir('nni/runtime/default_config')]
 
-def _find_assets_files():
+def _find_asset_files():
     files = []
     for dirpath, dirnames, filenames in os.walk('nni_assets'):
         for filename in filenames:
