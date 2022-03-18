@@ -46,7 +46,8 @@ class MetisClassArgsValidator(ClassArgsValidator):
 
 class MetisTuner(Tuner):
     """
-    Metis tuner offers several benefits over other tuning algorithms.
+    `Metis tuner <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__ offers
+    several benefits over other tuning algorithms.
     While most tools only predict the optimal configuration, Metis gives you two outputs,
     a prediction for the optimal configuration and a suggestion for the next trial.
     No more guess work!
@@ -61,7 +62,7 @@ class MetisTuner(Tuner):
     and it is based on the Bayesian Optimization framework. To model the parameter-vs-performance space,
     Metis uses both a Gaussian Process and GMM. Since each trial can impose a high time cost,
     Metis heavily trades inference computations with naive trials. 
-    At each iteration, Metis does two tasks:
+    At each iteration, Metis does two tasks (refer to :footcite:t:`li2018metis` for details):
 
 
     1. It finds the global optimal point in the Gaussian Process space.
@@ -74,7 +75,6 @@ class MetisTuner(Tuner):
     Note that the only acceptable types in the :doc:`search space <hpo/search_space>` are
     ``quniform``, ``uniform``, ``randint``, and numerical ``choice``.
 
-    .. _paper: https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
 
     Examples
     --------

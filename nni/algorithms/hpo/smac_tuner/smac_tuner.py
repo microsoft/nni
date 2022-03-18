@@ -38,28 +38,25 @@ class SMACClassArgsValidator(ClassArgsValidator):
 
 class SMACTuner(Tuner):
     """
-    SMAC is based on Sequential Model-Based Optimization (SMBO).
+    `SMAC <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ is based on Sequential Model-Based Optimization (SMBO).
     It adapts the most prominent previously used model class (Gaussian stochastic process models)
     and introduces the model class of random forests to SMBO in order to handle categorical parameters.
+
     The SMAC supported by nni is a wrapper on `the SMAC3 github repo <https://github.com/automl/SMAC3>`__,
-    following NNI tuner interface :class:`nni.tuner.Tuner`.
+    following NNI tuner interface :class:`nni.tuner.Tuner`. For algorithm details of SMAC, please refer to the paper
+    :footcite:t:`hutter2011sequential`.
 
     Note that SMAC on nni only supports a subset of the types in
     :doc:`search space <hpo/search_space>`:
     ``choice``, ``randint``, ``uniform``, ``loguniform``, and ``quniform``.
 
-    .. _paper: https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf
-
-    Prerequisite
-    ------------
-
-    For using SMAC tuner, user should install it with the following command:
+    Note that SMAC needs additional installation using the following command:
     
     .. code-block:: bash
 
         pip install nni[SMAC]
 
-    Note that ``swig`` is required for SMAC. for Ubuntu ``swig`` can be installed with ``apt``.
+    ``swig`` is required for SMAC. for Ubuntu ``swig`` can be installed with ``apt``.
 
     Examples
     --------

@@ -249,23 +249,19 @@ class BOHBClassArgsValidator(ClassArgsValidator):
 
 class BOHB(MsgDispatcherBase):
     """
-    BOHB is a robust and efficient hyperparameter tuning algorithm at scale.
+    `BOHB <https://arxiv.org/abs/1807.01774>`__ is a robust and efficient hyperparameter tuning algorithm at scale.
     BO is an abbreviation for "Bayesian Optimization" and HB is an abbreviation for "Hyperband".
 
     BOHB relies on HB (Hyperband) to determine how many configurations to evaluate with which budget,
-    but it **replaces the random selection of configurations at the beginning of each HB iteration
-    by a model-based search (Bayesian Optimization)**.
+    but it replaces the random selection of configurations at the beginning of each HB iteration
+    by a model-based search (Bayesian Optimization).
     Once the desired number of configurations for the iteration is reached,
     the standard successive halving procedure is carried out using these configurations.
-    We keep track of the performance of all function evaluations g(x, b) of configurations x
+    It keeps track of the performance of all function evaluations g(x, b) of configurations x
     on all budgets b to use as a basis for our models in later iterations.
+    Please refer to the paper :footcite:t:`falkner2018bohb` for detailed algorithm.
 
-    .. _paper: https://arxiv.org/abs/1807.01774
-
-    Prerequisite
-    ------------
-
-    The prerequiste can be installed using the following command:
+    Note that BOHB needs additional installation using the following command:
 
     .. code-block:: bash
 
@@ -319,50 +315,46 @@ class BOHB(MsgDispatcherBase):
         The remaining 85% of points will be used for building the bad point models "g(x)".
     num_samples: int
         Number of samples to optimize EI (default 64).
-        In this case, we will sample "num_samples" points and compare the result of l(x)/g(x).
-        Then we will return the one with the maximum l(x)/g(x) value as the next configuration
-        if the optimize_mode is ``maximize``. Otherwise, we return the smallest one.
+        In this case, it will sample "num_samples" points and compare the result of l(x)/g(x).
+        Then it will return the one with the maximum l(x)/g(x) value as the next configuration
+        if the optimize_mode is ``maximize``. Otherwise, it returns the smallest one.
     random_fraction: float
         Fraction of purely random configurations that are sampled from the prior without the model.
     bandwidth_factor: float
         To encourage diversity, the points proposed to optimize EI are sampled 
         from a 'widened' KDE where the bandwidth is multiplied by this factor (default: 3).
-        We suggest using the default value if you are not familiar with KDE.
+        It is suggested to use the default value if you are not familiar with KDE.
     min_bandwidth: float
         To keep diversity, even when all (good) samples have the same value for one of the parameters,
         a minimum bandwidth (default: 1e-3) is used instead of zero.
-        We suggest using the default value if you are not familiar with KDE.
+        It is suggested to use the default value if you are not familiar with KDE.
     config_space: str
         Directly use a .pcs file serialized by `ConfigSpace <https://automl.github.io/ConfigSpace/>` in "pcs new" format.
         In this case, search space file (if provided in config) will be ignored.
         Note that this path needs to be an absolute path. Relative path is currently not supported.
     
-    Detailed description of BOHB
-    ----------------------------
+    Notes
+    -----
 
-    Below we divide the introduction of the BOHB process into two parts:
+    Below is the introduction of the BOHB process separated in two parts:
 
-    HB (Hyperband)
-    ^^^^^^^^^^^^^^
-
-    We follow Hyperband’s way of choosing the budgets and continue to use SuccessiveHalving.
+    **The first part HB (Hyperband).**
+    BOHB follows Hyperband’s way of choosing the budgets and continue to use SuccessiveHalving.
     For more details, you can refer to the :class:`nni.algorithms.hpo.hyperband_advisor.Hyperband`
     and the `reference paper for Hyperband <https://arxiv.org/abs/1603.06560>`__.
     This procedure is summarized by the pseudocode below.
 
-    .. image:: ../../img/bohb_1.png
+    .. image:: ../img/bohb_1.png
         :scale: 80 %
         :align: center
 
-    BO (Bayesian Optimization)
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+    **The second part BO (Bayesian Optimization)**
     The BO part of BOHB closely resembles TPE with one major difference:
-    we opted for a single multidimensional KDE compared to the hierarchy of one-dimensional KDEs used in TPE
+    It opted for a single multidimensional KDE compared to the hierarchy of one-dimensional KDEs used in TPE
     in order to better handle interaction effects in the input space.
     Tree Parzen Estimator(TPE): uses a KDE (kernel density estimator) to model the densities.
 
-    .. image:: ../../img/bohb_2.png
+    .. image:: ../img/bohb_2.png
         :scale: 80 %
         :align: center
 
@@ -372,44 +364,41 @@ class BOHB(MsgDispatcherBase):
     where the number of observations for budget b is large enough to satisfy q · Nb ≥ Nmin.
     Instead, after initializing with Nmin + 2 random configurations, we choose the
     best and worst configurations, respectively, to model the two densities.
-    Note that we also sample a constant fraction named **random fraction** of the configurations uniformly at random.
+    Note that it also samples a constant fraction named **random fraction** of the configurations uniformly at random.
 
-    .. image:: ../../img/bohb_3.png
-        :scale: 80 %
-        :align: center
-    
-    Workflow
-    ^^^^^^^^
-
-    .. image:: ../../img/bohb_6.jpg
+    .. image:: ../img/bohb_3.png
         :scale: 80 %
         :align: center
 
-    This image shows the workflow of BOHB. Here we set max_budget = 9, min_budget = 1, eta = 3, others as default.
+
+    .. image:: ../img/bohb_6.jpg
+        :scale: 65 %
+        :align: center
+
+    **The above image shows the workflow of BOHB.**
+    Here set max_budget = 9, min_budget = 1, eta = 3, others as default.
     In this case, s_max = 2, so we will continuously run the {s=2, s=1, s=0, s=2, s=1, s=0, ...} cycle.
-    In each stage of SuccessiveHalving (the orange box), we will pick the top 1/eta configurations and run them again with more budget,
+    In each stage of SuccessiveHalving (the orange box), it will pick the top 1/eta configurations and run them again with more budget,
     repeating the SuccessiveHalving stage until the end of this iteration.
-    At the same time, we collect the configurations, budgets and final metrics of each trial
+    At the same time, it collects the configurations, budgets and final metrics of each trial
     and use these to build a multidimensional KDEmodel with the key "budget".
     Multidimensional KDE is used to guide the selection of configurations for the next iteration.
     The sampling procedure (using Multidimensional KDE to guide selection) is summarized by the pseudocode below.
 
-    .. image:: ../../img/bohb_4.png
+    .. image:: ../img/bohb_4.png
         :scale: 80 %
         :align: center
 
-    Experiment
-    ^^^^^^^^^^
+    **Here is a simple experiment which tunes MNIST with BOHB.**
+    Code implementation: :githublink:`examples/trials/mnist-advisor <examples/trials/mnist-advisor>`
+    The following is the experimental final results:
 
-    We tune MNIST with BOHB. Code implementation: :githublink:`examples/trials/mnist-advisor <examples/trials/mnist-advisor>`
-    We chose BOHB to build a CNN on the MNIST dataset. The following is our experimental final results:
-
-    .. image:: ../../img/bohb_5.png
+    .. image:: ../img/bohb_5.png
         :scale: 80 %
         :align: center
 
     More experimental results can be found in the `reference paper <https://arxiv.org/abs/1807.01774>`__.
-    We can see that BOHB makes good use of previous results and has a balanced trade-off in exploration and exploitation.
+    It shows that BOHB makes good use of previous results and has a balanced trade-off in exploration and exploitation.
     """
 
     def __init__(self,

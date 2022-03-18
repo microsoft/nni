@@ -61,8 +61,9 @@ class GPTuner(Tuner):
     Note that the only acceptable types in the :doc:`search space <hpo/search_space>` are
     ``randint``, ``uniform``, ``quniform``, ``loguniform``, ``qloguniform``, and numerical ``choice``.
 
-    This optimization approach is described in Section 3 of the paper "Algorithms for Hyper-Parameter Optimization"
-    .. _paper: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
+    This optimization approach is described in Section 3 of the paper
+    `Algorithms for Hyper-Parameter Optimization <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__
+    ( :footcite:t:`bergstra2011algorithms` ).
 
     Examples
     --------
