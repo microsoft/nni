@@ -20,7 +20,7 @@ MutationHook = Callable[[nn.Module, str, Dict[str, Any]], Union[nn.Module, bool,
 
 
 def traverse_and_mutate_submodules(
-    root_module: nn.Module, hooks: List[MutationHook], topdown: bool = True
+    root_module: nn.Module, hooks: List[MutationHook], mutate_kwargs: Dict[str, Any], topdown: bool = True
 ) -> List[BaseSuperNetModule]:
     """
     Traverse the module-tree of ``root_module``, and call ``hooks`` on every tree node.
@@ -35,6 +35,8 @@ def traverse_and_mutate_submodules(
     hooks : List[MutationHook]
         List of mutation hooks. See :class:`BaseOneShotLightningModule` for how to write hooks.
         When a hook returns an module, the module will be replaced (mutated) to the new module.
+    mutate_kwargs : dict
+        Extra keyword arguments passed to hooks.
     topdown : bool, default = False
         If topdown is true, hooks are first called, before traversing its sub-module (i.e., pre-order DFS).
         Otherwise, sub-modules are first traversed, before calling hooks on this node (i.e., post-order DFS).
@@ -57,7 +59,7 @@ def traverse_and_mutate_submodules(
             mutate_result = None
 
             for hook in hooks:
-                hook_suggest = hook(child, name, memo)
+                hook_suggest = hook(child, name, memo, mutate_kwargs)
 
                 # parse the mutate result
                 if isinstance(hook_suggest, tuple):
@@ -164,6 +166,10 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """Override this to define class-default mutation hooks."""
         return []
 
+    def mutate_kwargs(self) -> Dict[str, Any]:
+        """Extra keyword arguments passed to mutation hooks. Usually algo-specific."""
+        return {}
+
     def __init__(self, base_model: pl.LightningModule, mutation_hooks: List[MutationHook] = None):
         super().__init__()
         assert isinstance(base_model, pl.LightningModule)
@@ -173,7 +179,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         mutation_hooks = (mutation_hooks or []) + self.default_mutation_hooks()
 
         # traverse the model, calling hooks on every submodule
-        self.nas_modules: List[BaseSuperNetModule] = traverse_and_mutate_submodules(self.model, mutation_hooks, topdown=True)
+        self.nas_modules: List[BaseSuperNetModule] = traverse_and_mutate_submodules(
+            self.model, mutation_hooks, self.mutate_kwargs(), topdown=True)
 
     def search_space_spec(self) -> Dict[str, ParameterSpec]:
         """Get the search space specification from ``nas_module``.
@@ -185,7 +192,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         result = {}
         for module in self.nas_modules:
-            result.updaste(module.search_space_spec())
+            result.update(module.search_space_spec())
         return result
 
     def resample(self) -> Dict[str, Any]:

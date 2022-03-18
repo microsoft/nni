@@ -37,16 +37,19 @@ class RandomSamplingModule(BaseOneShotLightningModule):
     automatic_optimization = True
 
     def default_mutation_hooks(self) -> List[MutationHook]:
-        """Replace modules with random sampling module"""
+        """Replace modules with differentiable versions"""
         hooks = [
             PathSamplingLayer.mutate,
             PathSamplingInput.mutate,
         ]
-        for operation in NATIVE_MIXED_OPERATIONS:
-            hooks.append(partial(operation.mutate, mutate_kwargs={
-                'mixed_op_sampling_strategy': PathSamplingOperation
-            }))
+        hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
         return hooks
+
+    def mutate_kwargs(self):
+        """Use path sampling strategy for mixed-operations."""
+        return {
+            'mixed_op_sampling_strategy': PathSamplingOperation
+        }
 
     def training_step(self, batch, batch_idx):
         self.resample()
@@ -100,7 +103,8 @@ class EnasModule(RandomSamplingModule):
 
         # convert parameter spec to legacy ReinforceField
         # this part will be refactored
-        for name, param_spec in self.search_space_spec():
+        self.nas_fields: List[ReinforceField] = []
+        for name, param_spec in self.search_space_spec().items():
             if param_spec.chosen_size not in (1, None):
                 raise ValueError('ENAS does not support n_chosen to be values other than 1 or None.')
             self.nas_fields.append(ReinforceField(name, param_spec.size, param_spec.chosen_size == 1))

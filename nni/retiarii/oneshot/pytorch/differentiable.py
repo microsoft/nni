@@ -48,11 +48,14 @@ class DartsModule(BaseOneShotLightningModule):
             DifferentiableMixedLayer.mutate,
             DifferentiableMixedInput.mutate,
         ]
-        for operation in NATIVE_MIXED_OPERATIONS:
-            hooks.append(partial(operation.mutate, mutate_kwargs={
-                'mixed_op_sampling_strategy': DifferentiableMixedOperation
-            }))
+        hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
         return hooks
+
+    def mutate_kwargs(self):
+        """Use differentiable strategy for mixed operations."""
+        return {
+            'mixed_op_sampling_strategy': DifferentiableMixedOperation
+        }
 
     def __init__(self, inner_module: pl.LightningModule,
                  mutation_hooks: List[MutationHook] = None,
@@ -102,7 +105,7 @@ class DartsModule(BaseOneShotLightningModule):
         for m in self.nas_modules:
             if hasattr(m, '_arch_alpha'):
                 ctrl_params.append(m._arch_alpha)
-        ctrl_optim = torch.optim.Adam(list(set(ctrl_params.values())), 3.e-4, betas=(0.5, 0.999),
+        ctrl_optim = torch.optim.Adam(list(set(ctrl_params)), 3.e-4, betas=(0.5, 0.999),
                                       weight_decay=1.0E-3)
         return ctrl_optim
 
@@ -149,7 +152,7 @@ class ProxylessModule(DartsModule):
 
 
 class GumbelDartsModule(DartsModule):
-    _snas_note = """
+    _gumbel_darts_note = """
     Implementation of SNAS :cite:p:`xie2018snas`.
     It's a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
     Essentially, it samples one path on forward,
@@ -175,15 +178,18 @@ class GumbelDartsModule(DartsModule):
     def default_mutation_hooks(self) -> List[MutationHook]:
         """Replace modules with gumbel-differentiable versions"""
         hooks = [
-            partial(DifferentiableMixedLayer.mutate, mutate_kwargs={'softmax': GumbelSoftmax()}),
-            partial(DifferentiableMixedInput.mutate, mutate_kwargs={'softmax': GumbelSoftmax()}),
+            DifferentiableMixedLayer.mutate,
+            DifferentiableMixedInput.mutate,
         ]
-        for operation in NATIVE_MIXED_OPERATIONS:
-            hooks.append(partial(operation.mutate, mutate_kwargs={
-                'mixed_op_sampling_strategy': DifferentiableMixedOperation,
-                'softmax': GumbelSoftmax(),
-            }))
+        hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
         return hooks
+
+    def mutate_kwargs(self):
+        """Use gumbel softmax."""
+        return {
+            'mixed_op_sampling_strategy': DifferentiableMixedOperation,
+            'softmax': GumbelSoftmax(),
+        }
 
     def __init__(self, inner_module,
                  mutation_hooks: List[MutationHook] = None,
@@ -203,6 +209,6 @@ class GumbelDartsModule(DartsModule):
             self.temp = max(self.temp, self.min_temp)
 
         for module in self.nas_modules:
-            module.softmax.temp = self.temp
+            module._softmax.temp = self.temp
 
         return self.model.on_epoch_start()

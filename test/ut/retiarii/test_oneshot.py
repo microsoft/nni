@@ -1,6 +1,5 @@
 import argparse
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 import pytest
@@ -8,6 +7,7 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 from torch.utils.data.sampler import RandomSampler
 
+import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import strategy, model_wrapper
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.evaluator.pytorch.lightning import Classification, DataLoader
@@ -39,8 +39,8 @@ class Net(nn.Module):
             nn.Dropout(.75)
         ])
         self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(9216, ValueChoice(candidates=[64, 128, 256], label='shanghai'))
-        self.fc2 = nn.Linear(ValueChoice(candidates=[64, 128, 256], label='shanghai'), 10)
+        self.fc1 = nn.Linear(9216, 128)
+        self.fc2 = nn.Linear(128, 10)
         self.rpfc = nn.Linear(10, 10)
 
     def forward(self, x):
@@ -107,8 +107,8 @@ def test_random():
 
 
 @pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
-def test_snas():
-    _test_strategy(strategy.SNAS())
+def test_gumbel_darts():
+    _test_strategy(strategy.GumbelDARTS())
 
 
 if __name__ == '__main__':
@@ -122,6 +122,6 @@ if __name__ == '__main__':
         test_proxyless()
         test_enas()
         test_random()
-        test_snas()
+        test_gumbel_darts()
     else:
         globals()[f'test_{args.exp}']()

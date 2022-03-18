@@ -63,11 +63,12 @@ class PathSamplingLayer(BaseSuperNetModule):
             return cls(list(module.named_children()), module.label)
 
     def forward(self, *args, **kwargs):
-        if not self._sampled:
+        if self._sampled is None:
             raise RuntimeError('At least one path needs to be sampled before fprop.')
         sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
 
-        res = [getattr(self, samp)(*args, **kwargs) for samp in sampled]
+        # str(samp) is needed here because samp can sometimes be integers, but attr are always str
+        res = [getattr(self, str(samp))(*args, **kwargs) for samp in sampled]
         if len(res) == 1:
             return res[0]
         else:
@@ -132,7 +133,7 @@ class PathSamplingInput(BaseSuperNetModule):
             return cls(module.n_candidates, module.n_chosen, module.reduction, module.label)
 
     def forward(self, input_tensors):
-        if not self._sampled:
+        if self._sampled is None:
             raise RuntimeError('At least one path needs to be sampled before fprop.')
         if len(input_tensors) != self.n_candidates:
             raise ValueError(f'Expect {self.n_candidates} input tensors, found {len(input_tensors)}.')

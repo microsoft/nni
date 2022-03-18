@@ -40,7 +40,6 @@ class PathSamplingLayerChoice(nn.Module):
             self.op_names.append(name)
         assert self.op_names, 'There has to be at least one op to choose from.'
         self.sampled = None  # sampled can be either a list of indices or an index
-        self.label = layer_choice.label
 
     def forward(self, *args, **kwargs):
         assert self.sampled is not None, 'At least one path needs to be sampled before fprop.'
@@ -74,7 +73,6 @@ class PathSamplingInputChoice(nn.Module):
         self.n_candidates = input_choice.n_candidates
         self.n_chosen = input_choice.n_chosen
         self.sampled = None
-        self.label = input_choice.label
 
     def forward(self, input_tensors):
         if isinstance(self.sampled, list):

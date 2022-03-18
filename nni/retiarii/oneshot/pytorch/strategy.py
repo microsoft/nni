@@ -6,6 +6,8 @@
 This file is put here simply because it relies on "pytorch".
 For consistency, please consider importing strategies from ``nni.retiarii.strategy``.
 For example, ``nni.retiarii.strategy.DartsStrategy`` (this requires pytorch to be installed of course).
+
+When adding/modifying a new strategy in this file, don't forget to link it in strategy/oneshot.py.
 """
 
 import warnings
@@ -19,7 +21,7 @@ from nni.retiarii.strategy.base import BaseStrategy
 from nni.retiarii.evaluator.pytorch.lightning import Lightning, LightningModule
 
 from .base_lightning import BaseOneShotLightningModule
-from .differentiable import DartsModule, ProxylessModule, SnasModule
+from .differentiable import DartsModule, ProxylessModule, GumbelDartsModule
 from .sampling import EnasModule, RandomSamplingModule
 from .utils import InterleavedTrainValDataLoader, ConcatenateTrainValDataLoader
 
@@ -99,11 +101,11 @@ class Proxyless(OneShotStrategy):
         return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
 
 
-class SNAS(OneShotStrategy):
-    __doc__ = SnasModule._snas_note.format(module_notes='', module_params='')
+class GumbelDARTS(OneShotStrategy):
+    __doc__ = GumbelDartsModule._gumbel_darts_note.format(module_notes='', module_params='')
 
     def __init__(self, **kwargs):
-        super().__init__(SnasModule, **kwargs)
+        super().__init__(GumbelDartsModule, **kwargs)
 
     def _get_dataloader(self, train_dataloader, val_dataloaders):
         return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
