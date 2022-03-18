@@ -88,6 +88,16 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "squirrelsc",
+      "name": "Chi Song",
+      "avatar_url": "https://avatars.githubusercontent.com/u/27178119?v=4",
+      "profile": "https://github.com/squirrelsc",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7
