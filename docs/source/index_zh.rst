@@ -1,4 +1,4 @@
-.. fed79e0ecef07f9d28e06ad261fd8f7b
+.. 737612334d31e3c0ee8db7f53dc2944f
 
 ###########################
 Neural Network Intelligence
@@ -18,6 +18,7 @@ Neural Network Intelligence
     模型压缩<compression/index>
     特征工程<feature_engineering>
     NNI实验 <experiment/overview>
+    HPO API Reference <reference/hpo>
     参考<reference>
     示例与解决方案<CommunitySharings/community_sharings>
     研究和出版物 <ResearchPublications>
