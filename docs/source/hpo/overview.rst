@@ -87,10 +87,10 @@ to manually customize hyperparameters, and to manage multiple HPO experiments.
 Tutorials
 ---------
 
-To start using NNI HPO, choose the tutorial of your favorite framework:
+To start using NNI HPO, choose the quickstart tutorial of your favorite framework:
 
-* PyTorch MNIST tutorial
-* :doc:`TensorFlow MNIST tutorial </tutorials/hpo_quickstart_tensorflow/main>`
+* :doc:`PyTorch tutorial </tutorials/hpo_quickstart_pytorch/main>`
+* :doc:`TensorFlow tutorial </tutorials/hpo_quickstart_tensorflow/main>`
 
 Extra Features
 --------------
