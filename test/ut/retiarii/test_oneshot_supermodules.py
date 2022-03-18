@@ -189,7 +189,7 @@ def test_mixed_mhattn():
     _mixed_operation_differentiable_sanity_check(mhattn, torch.randn(5, 3, 8), torch.randn(5, 3, 8), torch.randn(5, 3, 8))
 
 
-@pytest.mark.skipIf(not torch.__version__.startswith('1.7'))
+@pytest.mark.skipIf(torch.__version__.startswith('1.7'))
 def test_mixed_mhattn_batch_first():
     mhattn = MultiheadAttention(ValueChoice([4, 8], label='emb'), 2, kdim=(ValueChoice([3, 7], label='kdim')), vdim=ValueChoice([5, 8], label='vdim'),
                                 bias=False, add_bias_kv=True, batch_first=True)
