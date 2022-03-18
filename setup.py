@@ -125,6 +125,7 @@ def _setup():
             'BOHB': _read_requirements_txt('dependencies/required_extra.txt', 'BOHB'),
             'PPOTuner': _read_requirements_txt('dependencies/required_extra.txt', 'PPOTuner'),
             'DNGO': _read_requirements_txt('dependencies/required_extra.txt', 'DNGO'),
+            'all': _read_requirements_txt('dependencies/required_extra.txt'),
         },
         setup_requires = ['requests'],
 

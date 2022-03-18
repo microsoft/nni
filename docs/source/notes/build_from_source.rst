@@ -80,15 +80,6 @@ You can build a Docker image with Dockerfile:
 
 To build image for other platforms, please edit Dockerfile yourself.
 
-Mac with M1 Chip
-----------------
-
-NNI is supposed to support Apple M1 chips, but has never been tested.
-
-The build process is the same as for x86 systems.
-
-Feel free to open an issue is you encounter any problem.
-
 Other Commands and Options
 --------------------------
 

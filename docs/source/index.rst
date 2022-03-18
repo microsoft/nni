@@ -6,6 +6,7 @@ Neural Network Intelligence
     :caption: Get Started
     :hidden:
 
+    Installation <installation>
     QuickStart <Tutorial/QuickStart>
     Tutorials <tutorials>
 
