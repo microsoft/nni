@@ -380,7 +380,7 @@ The entire codebase is under [MIT license](LICENSE)
 ## Contributors ✨
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
@@ -397,6 +397,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/QuanluZhang"><img src="https://avatars.githubusercontent.com/u/16907603?v=4?s=80" width="80px;" alt=""/><br /><sub><b>QuanluZhang</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=QuanluZhang" title="Code">💻</a> <a href="https://github.com/microsoft/nni/commits?author=QuanluZhang" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/J-shang"><img src="https://avatars.githubusercontent.com/u/33053116?v=4?s=80" width="80px;" alt=""/><br /><sub><b>J-shang</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=J-shang" title="Code">💻</a> <a href="https://github.com/microsoft/nni/commits?author=J-shang" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/Lijiaoa"><img src="https://avatars.githubusercontent.com/u/61399850?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Lijiaoa</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=Lijiaoa" title="Code">💻</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/lvybriage"><img src="https://avatars.githubusercontent.com/u/35484733?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Lijiao</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=lvybriage" title="Code">💻</a> <a href="https://github.com/microsoft/nni/commits?author=lvybriage" title="Documentation">📖</a></td>
   </tr>
 </table>
 

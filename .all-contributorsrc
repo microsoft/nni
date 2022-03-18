@@ -78,6 +78,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "lvybriage",
+      "name": "Lijiao",
+      "avatar_url": "https://avatars.githubusercontent.com/u/35484733?v=4",
+      "profile": "https://github.com/lvybriage",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7
