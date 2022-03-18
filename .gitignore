@@ -13,6 +13,9 @@
 /test/ut/retiarii/_debug_graph_data.json
 /test/ut/retiarii/out.tmp
 
+# example generated files
+/nni_assets/**/data/
+
 # Logs
 logs
 *.log
