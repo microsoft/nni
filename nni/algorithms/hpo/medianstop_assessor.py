@@ -26,8 +26,8 @@ class MedianstopAssessor(Assessor):
     if the trial’s best objective value by step S is strictly worse than the median value
     of the running averages of all completed trials’ objectives reported up to step S
 
-    The algorithm is mentioned in *Google Vizer: A Service for Black-Box Optimization*.
-    (`paper <https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf>`__)
+    Paper: *Google Vizer: A Service for Black-Box Optimization*
+    (`PDF <https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf>`__)
 
     Examples
     --------
@@ -36,7 +36,8 @@ class MedianstopAssessor(Assessor):
 
         config.assessor.name = 'Medianstop'
         config.tuner.class_args = {
-            'optimize_mode': 'maximize'
+            'optimize_mode': 'maximize',
+            'start_step': 5
         }
 
     Parameters
@@ -44,7 +45,8 @@ class MedianstopAssessor(Assessor):
     optimize_mode
         Whether optimize to minimize or maximize trial result.
     start_step
-        Only after receiving start_step number of reported intermediate results.
+        A trial is determined to be stopped or not
+        only after receiving start_step number of reported intermediate results.
     """
 
     def __init__(self, optimize_mode: Literal['minimize', 'maximize'] = 'maximize', start_step: int = 0):

@@ -13,7 +13,7 @@ This is a slightly modified re-implementation of the algorithm.
 
 from __future__ import annotations
 
-__all__ = ['TpeTuner', 'TpeArguments', 'suggest', 'suggest_parameter']
+__all__ = ['TpeTuner', 'TpeArguments']
 
 from collections import defaultdict
 import logging
@@ -92,7 +92,7 @@ class TpeTuner(Tuner):
     P(x|y) is modeled by transforming the generative process of hyperparameters,
     replacing the distributions of the configuration prior with non-parametric densities.
 
-    Paper: :footcite:`bergstra2011algorithms`.
+    Paper: *Algorithms for Hyper-Parameter Optimization*
     (`PDF <https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__)
 
     Examples
