@@ -1,0 +1,25 @@
+{
+  "projectName": "nni",
+  "projectOwner": "microsoft",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 80,
+  "commit": true,
+  "commitConvention": "none",
+  "contributors": [
+    {
+      "login": "scarlett2018",
+      "name": "Scarlett Li",
+      "avatar_url": "https://avatars.githubusercontent.com/u/39592018?v=4",
+      "profile": "https://github.com/scarlett2018",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}
