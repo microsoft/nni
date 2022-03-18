@@ -453,7 +453,12 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             self._qkv_same_embed_dim = _qkv_same_embed_dim
 
             # adding back missing parameters
-            factory_kwargs = {'device': self.init_arguments['device'], 'dtype': self.init_arguments['dtype']}
+            # factory_kwargs could be empty for legacy pytorch versions
+            factory_kwargs = {}
+            if 'device' in self.init_arguments:
+                factory_kwargs['device'] = self.init_arguments['device']
+            if 'dtype' in self.init_arguments:
+                factory_kwargs['dtype'] = self.init_arguments['dtype']
             self.q_proj_weight = nn.Parameter(torch.empty((self.embed_dim, self.embed_dim), **factory_kwargs))
             self.k_proj_weight = nn.Parameter(torch.empty((self.embed_dim, self.kdim), **factory_kwargs))
             self.v_proj_weight = nn.Parameter(torch.empty((self.embed_dim, self.vdim), **factory_kwargs))
