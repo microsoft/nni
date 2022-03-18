@@ -179,6 +179,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "colorjam",
+      "name": "colorjam",
+      "avatar_url": "https://avatars.githubusercontent.com/u/23700012?v=4",
+      "profile": "https://github.com/colorjam",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7

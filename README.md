@@ -373,14 +373,11 @@ Targeting at openness and advancing state-of-art technology, [Microsoft Research
 
 We encourage researchers and students leverage these projects to accelerate the AI development and research.
 
-## **License**
-
-The entire codebase is under [MIT license](LICENSE)
 
 ## Contributors ✨
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-18-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-19-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
@@ -412,6 +409,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/PurityFan"><img src="https://avatars.githubusercontent.com/u/26495978?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Shufan Huang</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=PurityFan" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/demianzhang"><img src="https://avatars.githubusercontent.com/u/13177646?v=4?s=80" width="80px;" alt=""/><br /><sub><b>demianzhang</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=demianzhang" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/acured"><img src="https://avatars.githubusercontent.com/u/10276763?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Ni Hao</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=acured" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/colorjam"><img src="https://avatars.githubusercontent.com/u/23700012?v=4?s=80" width="80px;" alt=""/><br /><sub><b>colorjam</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=colorjam" title="Code">💻</a></td>
   </tr>
 </table>
 
@@ -421,3 +419,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+
+
+## **License**
+
+The entire codebase is under [MIT license](LICENSE)
