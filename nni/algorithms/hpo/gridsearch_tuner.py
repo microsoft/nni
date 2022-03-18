@@ -63,6 +63,29 @@ _logger = logging.getLogger('nni.tuner.gridsearch')
 ##
 
 class GridSearchTuner(Tuner):
+    """
+    The original grid search approach performs an exhaustive search through a space consists of ``choice`` and ``randint``.
+
+    This implementation extends grid search to support all NNI search spaces.
+
+    When the search space contains continuous parameters like ``normal`` and ``loguniform``,
+    grid search tuner works in following steps:
+
+    1. Divide the search space into a grid.
+    2. Perform an exhaustive searth throught the grid.
+    3. Subdivide the grid into a finer-grained one.
+    4. Goto step 2, until experiment end.
+
+    As a deterministic algorithm, grid search has no argument.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.tuner.name = 'GridSearch'
+    """
+
     def __init__(self):
         self.space = None
 
