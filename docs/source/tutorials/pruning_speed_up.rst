@@ -136,7 +136,7 @@ Roughly test the original model inference speed.
 
  .. code-block:: none
 
-    Original Model - Elapsed Time :  0.035959720611572266
+    Original Model - Elapsed Time :  0.10696005821228027
 
 
 
@@ -163,60 +163,10 @@ Speed up the model and show the model structure after speed up.
 
  .. code-block:: none
 
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) start to speed up the model
-    [2022-02-28 13:29:56] INFO (FixMaskConflict/MainThread) {'conv1': 1, 'conv2': 1}
-    [2022-02-28 13:29:56] INFO (FixMaskConflict/MainThread) dim0 sparsity: 0.500000
-    [2022-02-28 13:29:56] INFO (FixMaskConflict/MainThread) dim1 sparsity: 0.000000
-    [2022-02-28 13:29:56] INFO (FixMaskConflict/MainThread) Dectected conv prune dim" 0
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) infer module masks...
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for conv1
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::relu.5
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::max_pool2d.6
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for conv2
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::relu.7
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::max_pool2d.8
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::flatten.9
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for fc1
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::relu.10
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for fc2
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::relu.11
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for fc3
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::log_softmax.12
-    [2022-02-28 13:29:56] ERROR (nni.compression.pytorch.speedup.jit_translate/MainThread) aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
-    [2022-02-28 13:29:56] WARNING (nni.compression.pytorch.speedup.compressor/MainThread) Note: .aten::log_softmax.12 does not have corresponding mask inference object
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the fc3
+    aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
+    Note: .aten::log_softmax.12 does not have corresponding mask inference object
     /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
       return self._grad
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::relu.11
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the fc2
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::relu.10
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the fc1
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::flatten.9
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::max_pool2d.8
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::relu.7
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the conv2
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::max_pool2d.6
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::relu.5
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the conv1
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) resolve the mask conflict
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace compressed modules...
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: conv1, op_type: Conv2d)
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::relu.5, op_type: aten::relu) which is func type
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::max_pool2d.6, op_type: aten::max_pool2d) which is func type
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: conv2, op_type: Conv2d)
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::relu.7, op_type: aten::relu) which is func type
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::max_pool2d.8, op_type: aten::max_pool2d) which is func type
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::flatten.9, op_type: aten::flatten) which is func type
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: fc1, op_type: Linear)
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace linear with new in_features: 256, out_features: 120
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::relu.10, op_type: aten::relu) which is func type
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: fc2, op_type: Linear)
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace linear with new in_features: 120, out_features: 84
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::relu.11, op_type: aten::relu) which is func type
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: fc3, op_type: Linear)
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace linear with new in_features: 84, out_features: 10
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Warning: cannot replace (name: .aten::log_softmax.12, op_type: aten::log_softmax) which is func type
-    [2022-02-28 13:29:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) speedup done
     TorchModel(
       (conv1): Conv2d(1, 3, kernel_size=(5, 5), stride=(1, 1))
       (conv2): Conv2d(3, 16, kernel_size=(5, 5), stride=(1, 1))
@@ -250,12 +200,12 @@ Roughly test the model after speed-up inference speed.
 
  .. code-block:: none
 
-    Speedup Model - Elapsed Time :  0.003432035446166992
+    Speedup Model - Elapsed Time :  0.002137899398803711
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 79-247
+.. GENERATED FROM PYTHON SOURCE LINES 79-240
 
 For combining usage of ``Pruner`` masks generation with ``ModelSpeedup``,
 please refer to `Pruning Quick Start <./pruning_quick_start_mnist.html>`__.
@@ -419,17 +369,10 @@ The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(1
 
 .. image:: ../../img/SA_latency_accuracy.png
 
-User configuration for ModelSpeedup
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**PyTorch**
-
-..  autoclass:: nni.compression.pytorch.ModelSpeedup
-
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  8.409 seconds)
+   **Total running time of the script:** ( 0 minutes  9.859 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_speed_up.py:

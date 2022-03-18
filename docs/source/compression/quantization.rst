@@ -14,6 +14,6 @@ create your own quantizer using NNI model compression interface.
     :hidden:
     :maxdepth: 2
 
-    Quickstart <../tutorials/quantization_quick_start_mnist>
-    Quantizer Reference <quantizer>
-    Speed Up <../tutorials/quantization_speed_up>
+    Quickstart <../tutorials/cp_quantization_quick_start_mnist>
+    Quantizer <quantizer>
+    Speed Up <../tutorials/cp_quantization_speed_up>

@@ -60,6 +60,7 @@ extensions = [
     'tutorial_links',  # this has to be after sphinx-gallery
     'inplace_translation',
     'cardlinkitem',
+    'codesnippetcard',
     'patch_docutils',
     'patch_autodoc',
 ]
