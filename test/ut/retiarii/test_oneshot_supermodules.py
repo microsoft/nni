@@ -2,10 +2,14 @@ import pytest
 
 import numpy as np
 import torch
+import torch.nn as nn
 from nni.retiarii.nn.pytorch import ValueChoice, Conv2d, BatchNorm2d, Linear, MultiheadAttention
-from nni.retiarii.oneshot.pytorch.supermodule.differentiable import DifferentiableMixedOperation
-from nni.retiarii.oneshot.pytorch.supermodule.sampling import PathSamplingOperation
+from nni.retiarii.oneshot.pytorch.supermodule.differentiable import (
+    DifferentiableMixedOperation, DifferentiableMixedLayer, DifferentiableMixedInput, GumbelSoftmax
+)
+from nni.retiarii.oneshot.pytorch.supermodule.sampling import PathSamplingOperation, PathSamplingLayer, PathSamplingInput
 from nni.retiarii.oneshot.pytorch.supermodule.operation import MixedConv2d, NATIVE_MIXED_OPERATIONS
+from nni.retiarii.oneshot.pytorch.supermodule.proxyless import ProxylessMixedLayer, ProxylessMixedInput
 from nni.retiarii.oneshot.pytorch.supermodule._operation_utils import Slicable as S, MaybeWeighted as W
 from nni.retiarii.oneshot.pytorch.supermodule._valuechoice_utils import *
 
@@ -82,6 +86,8 @@ def test_differentiable_valuechoice():
         [3, 5, 7], label='123'), padding=ValueChoice([3, 5, 7], label='123') // 2)
     conv = MixedConv2d.mutate(orig_conv, 'dummy', {}, {'mixed_op_sampling_strategy': DifferentiableMixedOperation})
     assert conv(torch.zeros((1, 3, 7, 7))).size(2) == 7
+
+    assert set(conv.export({}).keys()) == {'123', '456'}
 
 
 def _mixed_operation_sampling_sanity_check(operation, memo, *input):
@@ -192,11 +198,43 @@ def test_mixed_mhattn():
     _mixed_operation_differentiable_sanity_check(mhattn, torch.randn(1, 7, 8), torch.randn(1, 7, 7), torch.randn(1, 7, 8))
 
 
-test_pathsampling_valuechoice()
-test_differentiable_valuechoice()
-test_slice()
-test_valuechoice_utils()
-test_mixed_linear()
-test_mixed_conv2d()
-test_mixed_batchnorm2d()
-test_mixed_mhattn()
+def test_pathsampling_layer_input():
+    op = PathSamplingLayer([('a', Linear(2, 3, bias=False)), ('b', Linear(2, 3, bias=True))], label='ccc')
+    with pytest.raises(RuntimeError, match='sample'):
+        op(torch.randn(4, 2))
+
+    op.resample({})
+    assert op(torch.randn(4, 2)).size(-1) == 3
+    assert op.search_space_spec()['ccc'].values == ['a', 'b']
+    assert op.export({})['ccc'] in ['a', 'b']
+
+    input = PathSamplingInput(5, 2, 'concat', 'ddd')
+    sample = input.resample({})
+    assert 'ddd' in sample
+    assert len(sample['ddd']) == 2
+    assert input([torch.randn(4, 2) for _ in range(5)]).size(-1) == 4
+    assert len(input.export({})['ddd']) == 2
+
+
+def test_differentiable_layer_input():
+    op = DifferentiableMixedLayer([('a', Linear(2, 3, bias=False)), ('b', Linear(2, 3, bias=True))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), 'eee')
+    assert op(torch.randn(4, 2)).size(-1) == 3
+    assert op.export({})['eee'] in ['a', 'b']
+    assert len(list(op.parameters())) == 3
+
+    input = DifferentiableMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
+    assert input([torch.randn(4, 2) for _ in range(5)]).size(-1) == 2
+    assert len(input.export({})['ddd']) == 2
+
+
+def test_proxyless_layer_input():
+    op = ProxylessMixedLayer([('a', Linear(2, 3, bias=False)), ('b', Linear(2, 3, bias=True))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), 'eee')
+    assert op.resample({})['eee'] in ['a', 'b']
+    assert op(torch.randn(4, 2)).size(-1) == 3
+    assert op.export({})['eee'] in ['a', 'b']
+    assert len(list(op.parameters())) == 3
+
+    input = ProxylessMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
+    assert input.resample({})['ddd'] in list(range(5))
+    assert input([torch.randn(4, 2) for _ in range(5)]).size() == torch.Size([4, 2])
+    assert input.export({})['ddd'] in list(range(5))

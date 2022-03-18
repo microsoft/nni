@@ -118,6 +118,8 @@ class Slicable(Generic[T]):
     """
 
     def __init__(self, weight: T):
+        if not isinstance(weight, np.ndarray) and not torch.is_tensor(weight):
+            raise TypeError(f'Unsuppoted weight type: {type(weight)}')
         self.weight = weight
 
     def __getitem__(self, index: multidim_slice) -> T:
@@ -161,6 +163,9 @@ class MaybeWeighted:
                  lhs: Optional[Union['MaybeWeighted', int]] = None,
                  rhs: Optional[Union['MaybeWeighted', int]] = None,
                  operation: Optional[Callable[[int, int], int]] = None):
+        if operation is None:
+            if not isinstance(value, (int, dict)):
+                raise TypeError(f'Unsupported value type: {type(value)}')
         self.value = value
         self.lhs = lhs
         self.rhs = rhs

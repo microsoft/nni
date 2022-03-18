@@ -7,8 +7,6 @@ from functools import partial
 from typing import List
 import pytorch_lightning as pl
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
 from .base_lightning import BaseOneShotLightningModule, MutationHook
 from .supermodule.differentiable import (
@@ -100,19 +98,11 @@ class DartsModule(BaseOneShotLightningModule):
 
     def configure_architecture_optimizers(self):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
-        ctrl_params = {}
-        for _, m in self.nas_modules:
-            # TODO: unify layerchoice/inputchoice and valuechoice alpha
-            if m.label in ctrl_params:
-                assert m.alpha.size() == ctrl_params[m.label].size(), 'Size of parameters with the same label should be same.'
-                m.alpha = ctrl_params[m.label]
-            else:
-                if isinstance(m.alpha, dict):
-                    for k, v in m.alpha.items():
-                        ctrl_params[f'{m.label}_{k}'] = v
-                else:
-                    ctrl_params[m.label] = m.alpha
-        ctrl_optim = torch.optim.Adam(list(ctrl_params.values()), 3.e-4, betas=(0.5, 0.999),
+        ctrl_params = []
+        for m in self.nas_modules:
+            if hasattr(m, '_arch_alpha'):
+                ctrl_params.append(m._arch_alpha)
+        ctrl_optim = torch.optim.Adam(list(set(ctrl_params.values())), 3.e-4, betas=(0.5, 0.999),
                                       weight_decay=1.0E-3)
         return ctrl_optim
 
@@ -185,13 +175,13 @@ class GumbelDartsModule(DartsModule):
     def default_mutation_hooks(self) -> List[MutationHook]:
         """Replace modules with gumbel-differentiable versions"""
         hooks = [
-            partial(DifferentiableMixedLayer.mutate, mutate_kwargs={'softmax': GumbelSoftmax(-1)}),
-            partial(DifferentiableMixedInput.mutate, mutate_kwargs={'softmax': GumbelSoftmax(-1)}),
+            partial(DifferentiableMixedLayer.mutate, mutate_kwargs={'softmax': GumbelSoftmax()}),
+            partial(DifferentiableMixedInput.mutate, mutate_kwargs={'softmax': GumbelSoftmax()}),
         ]
         for operation in NATIVE_MIXED_OPERATIONS:
             hooks.append(partial(operation.mutate, mutate_kwargs={
                 'mixed_op_sampling_strategy': DifferentiableMixedOperation,
-                'softmax': GumbelSoftmax(-1),
+                'softmax': GumbelSoftmax(),
             }))
         return hooks
 

@@ -2,8 +2,9 @@
 # Licensed under the MIT license.
 
 import random
-from typing import Optional, List, Tuple, Union, Type, Dict, Any, Callable
+from typing import Optional, List, Tuple, Union, Type, Dict, Any
 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -63,7 +64,7 @@ class PathSamplingLayer(BaseSuperNetModule):
 
     def forward(self, *args, **kwargs):
         if not self._sampled:
-            raise ValueError('At least one path needs to be sampled before fprop.')
+            raise RuntimeError('At least one path needs to be sampled before fprop.')
         sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
 
         res = [getattr(self, samp)(*args, **kwargs) for samp in sampled]
@@ -83,10 +84,11 @@ class PathSamplingInput(BaseSuperNetModule):
         Sampled input indices.
     """
 
-    def __init__(self, n_candidates: int, n_chosen: int, label: str):
+    def __init__(self, n_candidates: int, n_chosen: int, reduction: str, label: str):
         super().__init__()
         self.n_candidates = n_candidates
         self.n_chosen = n_chosen
+        self.reduction = reduction
         self._sampled: Optional[Union[List[int], int]] = None
         self.label = label
 
@@ -125,13 +127,13 @@ class PathSamplingInput(BaseSuperNetModule):
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, InputChoice):
-            if module.reduction != 'sum':
-                raise ValueError('Only input choice of sum reduction is supported.')
-            return cls(module.n_candidates, module.n_chosen, module.label)
+            if module.reduction not in ['sum', 'mean', 'concat']:
+                raise ValueError('Only input choice of sum/mean/concat reduction is supported.')
+            return cls(module.n_candidates, module.n_chosen, module.reduction, module.label)
 
     def forward(self, input_tensors):
         if not self._sampled:
-            raise ValueError('At least one path needs to be sampled before fprop.')
+            raise RuntimeError('At least one path needs to be sampled before fprop.')
         if len(input_tensors) != self.n_candidates:
             raise ValueError(f'Expect {self.n_candidates} input tensors, found {len(input_tensors)}.')
         sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
@@ -139,7 +141,12 @@ class PathSamplingInput(BaseSuperNetModule):
         if len(res) == 1:
             return res[0]
         else:
-            return sum(res)
+            if self.reduction == 'sum':
+                return sum(res)
+            elif self.reduction == 'mean':
+                return sum(res) / len(res)
+            elif self.reduction == 'concat':
+                return torch.cat(res, 1)
 
 
 class PathSamplingOperation(MixedOperationSamplingStrategy):
