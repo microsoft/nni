@@ -4,7 +4,7 @@
 import functools
 import warnings
 
-from typing import List, Tuple, Optional, Dict, Any
+from typing import List, Tuple, Optional, Dict, Any, Union
 
 import torch
 import torch.nn as nn
@@ -225,7 +225,20 @@ class DifferentiableMixedInput(BaseSuperNetModule):
 
 
 class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
-    """TBD"""
+    """Implementes the differentiable sampling in mixed operation.
+
+    One mixed operation can have multiple value choices in its arguments.
+    Thus the ``_arch_alpha`` here is a parameter dict, and ``named_parameters``
+    filters out multiple parameters with ``_arch_alpha`` as its prefix.
+
+    When the strategy is asked for ``forward_argument``, it returns a distribution,
+    i.e., a dict from int to float based on its weights.
+
+    All the parameters (``_arch_alpha``, ``parameters()``, ``_softmax``) are
+    saved as attributes of ``operation``, rather than ``self``,
+    because the strategy itself is not a ``nn.Module``, and saved parameters here
+    won't be optimized.
+    """
 
     _arch_parameter_names: List[str] = ['_arch_alpha']
 
@@ -276,7 +289,7 @@ class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
             result[name] = spec.values[chosen_index]
         return result
 
-    def forward_argument(self, operation: MixedOperation, name: str) -> Any:
+    def forward_argument(self, operation: MixedOperation, name: str) -> Union[Dict[Any, float], Any]:
         if name in operation.mutable_arguments:
             weights = {label: operation._softmax(alpha) for label, alpha in operation._arch_alpha.items()}
             return dict(traverse_all_options(operation.mutable_arguments[name], weights=weights))

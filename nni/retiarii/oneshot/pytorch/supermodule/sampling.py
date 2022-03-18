@@ -150,6 +150,13 @@ class PathSamplingInput(BaseSuperNetModule):
 
 
 class PathSamplingOperation(MixedOperationSamplingStrategy):
+    """Implementes the path sampling in mixed operation.
+
+    One mixed operation can have multiple value choices in its arguments.
+    Each value choice can be further decomposed into "leaf value choices".
+    We sample the leaf nodes, and composits them into the values on arguments.
+    """
+
     def __init__(self, operation: MixedOperation, memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> None:
         # Sampling arguments. This should have the same keys with `operation.mutable_arguments`
         self._sampled: Optional[Dict[str, Any]] = None

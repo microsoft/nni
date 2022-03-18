@@ -3,8 +3,7 @@
 
 """
 Operations that support weight sharing at a fine-grained level,
-which is commonly known as super-kernel, or weight entanglement.
-
+which is commonly known as super-kernel (as in channel search), or weight entanglement.
 """
 
 import inspect
@@ -43,42 +42,50 @@ class MixedOperationSamplingStrategy:
 
         This init is called in :meth:`BaseSuperNetModule.mutate`, after the mixed operation is created.
         So similar to :meth:`BaseSuperNetModule.mutate`,
-        memo should also be read and written by the strategy itself.
+        memo should also be managed (read and written) by the strategy itself.
         """
         pass
 
     def resample(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
+        """The handler of :meth:`MixedOperation.resample`."""
         raise NotImplementedError()
 
     def export(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
+        """The handler of :meth:`MixedOperation.export`."""
         raise NotImplementedError()
 
     def forward_argument(self, operation: 'MixedOperation', name: str) -> Any:
+        """Computing the argument with ``name`` used in operation's forward.
+        Usually a value, or a distribution of value.
+        """
         raise NotImplementedError()
 
 
 class MixedOperation(BaseSuperNetModule):
-    """
-    TBD
+    """This is the base class for all mixed operations.
 
-    Utility class for all Operations with ValueChoice as its arguments.
+    It contains commonly used utilities that will ease the effort to write customized mixed oeprations,
+    i.e., operations with ValueChoice in its arguments.
 
-    By design, the mixed op should inherit two super-classes.
-    One is this class, which is to control algo-related behavior, such as sampling.
-    The other is specific to each Operation, which is to control how the Operation
-    interprets the sampling result.
+    By design, for a mixed operation to work in a specific algorithm,
+    at least two classes are needed.
 
-    The class controlling Operation-specific behaviors should have a method called ``super_init_argument``,
-    to customize the behavior when calling ``super().__init__()``. For example::
+    1. One class needs to inherit this class, to control operation-related behavior,
+       such as how to initialize the operation such that the sampled operation can be its sub-operation.
+    2. The other one needs to inherit :class:`MixedOperationSamplingStrategy`,
+       which controls algo-related behavior, such as sampling.
 
-        def super_init_argument(self, name, value_choice):
-            return max(value_choice.candidates)
+    The two classes are linked with ``sampling_strategy`` attribute in :class:`MixedOperation`,
+    whose type is set via ``mixed_op_sampling_strategy`` in ``mutate_kwargs`` when
+    :meth:`MixedOperation.mutate` is called.
 
-    The class should also define a ``bound_type``, to control the matching type in mutate,
-    a ``argument_list``, to control which arguments can be dynamically used in ``forward``.
+    With this design, one mixed-operation (e.g., MixedConv2d) can work in multiple algorithms
+    (e.g., both DARTS and ENAS), saving the engineering effort to rewrite all operations for
+    each specific algo.
+
+    This class should also define a ``bound_type``, to control the matching type in mutate,
+    an ``argument_list``, to control which arguments can be dynamically used in ``forward``.
     This list will also be used in mutate for sanity check.
-    ``forward``, is to control fprop. The accepted arguments are ``argument_list``,
-    appended by forward arguments in the ``bound_type``.
     """
 
     bound_type: Type[nn.Module]                 # defined in subclass
@@ -87,13 +94,18 @@ class MixedOperation(BaseSuperNetModule):
     sampling_strategy: MixedOperationSamplingStrategy
 
     def super_init_argument(self, name: str, value_choice: ValueChoiceX) -> Any:
-        """Get the initialization argument when constructing super-kernel.
+        """Get the initialization argument when constructing super-kernel, i.e., calling ``super().__init__()``.
         This is often related to specific operator, rather than algo.
+
+        For example::
+
+            def super_init_argument(self, name, value_choice):
+                return max(value_choice.candidates)
         """
         raise NotImplementedError()
 
     def __post_init__(self) -> None:
-        """Can be used to validate, or to do extra processing."""
+        """Can be used to validate, or to do extra processing after calling ``__init__``."""
         pass
 
     def forward_with_args(self, *args, **kwargs):
@@ -128,9 +140,11 @@ class MixedOperation(BaseSuperNetModule):
         self.__post_init__()
 
     def resample(self, memo):
+        """Delegates to :meth:`MixedOperationSamplingStrategy.resample`."""
         return self.sampling_strategy.resample(self, memo)
 
     def export(self, memo):
+        """Delegates to :meth:`MixedOperationSamplingStrategy.export`."""
         return self.sampling_strategy.export(self, memo)
 
     def search_space_spec(self):
@@ -169,6 +183,7 @@ class MixedOperation(BaseSuperNetModule):
         return self.sampling_strategy.forward_argument(self, name)
 
     def forward(self, *args, **kwargs):
+        """First get sampled arguments, then forward with the sampled arguments (by calling ``forward_with_args``)."""
         sampled_args = [self.forward_argument(name) for name in self.argument_list]
         return self.forward_with_args(*sampled_args, *args, **kwargs)
 
@@ -192,7 +207,9 @@ class MixedOperation(BaseSuperNetModule):
 
 
 class MixedLinear(MixedOperation, nn.Linear):
-    """Mixed linear op. Supported arguments are:
+    """Mixed linear operation.
+
+    Supported arguments are:
 
     - ``in_features``
     - ``out_features``
@@ -228,7 +245,9 @@ _int_or_tuple = Union[int, Tuple[int, int]]
 
 
 class MixedConv2d(MixedOperation, nn.Conv2d):
-    """Mixed conv2d op. Supported arguments are:
+    """Mixed conv2d op.
+
+    Supported arguments are:
 
     - ``in_channels``
     - ``out_channels``
@@ -329,22 +348,19 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
 
 class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
     """
-    TBD
-    The BatchNorm2d layer to replace original bn2d with valuechoice in its parameter list. It construct the biggest mean and variation
-    tensor first, and slice it before every forward according to the sampled value. Supported parameters are listed below:
-        num_features : int
-        eps : float
-        momentum : float
+    Mixed BatchNorm2d operation.
+
+    Supported arguments are:
+
+    - ``num_features``
+    - ``eps`` (only supported in path sampling)
+    - ``momentum`` (only supported in path sampling)
+
+    For path-sampling, prefix of ``weight``, ``bias``, ``running_mean`` and ``running_var``
+    are sliced. For weighted cases, the maximum ``num_features`` is used directly.
 
     Momentum is required to be float.
-    PyTorch batchnorm supports a case where momentum can be none, which is not supported here.
-
-    Parameters
-    ----------
-    module : nn.Module
-        the module to be replaced
-    name : str
-        the unique identifier of `module`
+    PyTorch BatchNorm supports a case where momentum can be none, which is not supported here.
     """
 
     bound_type = retiarii_nn.BatchNorm2d
@@ -394,28 +410,25 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
 
 class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     """
-    TBD
-    The MultiHeadAttention layer to replace original mhattn with valuechoice in its parameter list. It construct the biggest Q, K,
-    V and some other tensors first, and slice it before every forward according to the sampled value. Supported parameters are listed
-    below:
-        embed_dim : int
-        num_heads : float
-        kdim :int
-        vdim : int
-        dropout : float
+    Mixed multi-head attention.
+
+    Supported arguments are:
+
+    - ``embed_dim``
+    - ``num_heads`` (only supported in path sampling)
+    - ``kdim``
+    - ``vdim``
+    - ``dropout`` (only supported in path sampling)
+
+    At init, it constructs the largest possible Q, K, V dimension.
+    At forward, it slices the prefix to weight matrices according to the sampled value.
+    For ``in_proj_bias`` and ``in_proj_weight``, three parts will be sliced and concatenated together:
+    ``[0, embed_dim)``, ``[max_embed_dim, max_embed_dim + embed_dim)``,
+    ``[max_embed_dim * 2, max_embed_dim * 2 + embed_dim)``.
 
     Warnings
     ----------
-    Users are supposed to make sure that in different valuechoices with the same label, candidates with the same index should match
-    each other. For example, the divisibility constraint between `embed_dim` and `num_heads` in a multi-head attention module should
-    be met. Users ought to design candidates carefully to prevent the module from breakdown.
-
-    Parameters
-    ----------
-    module : nn.Module
-        the module to be replaced
-    name : str
-        the unique identifier of `module`
+    All candidates of ``embed_dim`` should be divisible by all candidates of ``num_heads``.
     """
 
     bound_type = retiarii_nn.MultiheadAttention
