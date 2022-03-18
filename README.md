@@ -394,26 +394,24 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/QuanluZhang"><img src="https://avatars.githubusercontent.com/u/16907603?v=4?s=80" width="80px;" alt=""/><br /><sub><b>QuanluZhang</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=QuanluZhang" title="Code">💻</a> <a href="https://github.com/microsoft/nni/commits?author=QuanluZhang" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/J-shang"><img src="https://avatars.githubusercontent.com/u/33053116?v=4?s=80" width="80px;" alt=""/><br /><sub><b>J-shang</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=J-shang" title="Code">💻</a> <a href="https://github.com/microsoft/nni/commits?author=J-shang" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/Lijiaoa"><img src="https://avatars.githubusercontent.com/u/61399850?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Lijiaoa</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=Lijiaoa" title="Code">💻</a></td>
-  </tr>
-  <tr>
     <td align="center"><a href="https://github.com/lvybriage"><img src="https://avatars.githubusercontent.com/u/35484733?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Lijiao</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=lvybriage" title="Code">💻</a> <a href="https://github.com/microsoft/nni/commits?author=lvybriage" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/squirrelsc"><img src="https://avatars.githubusercontent.com/u/27178119?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Chi Song</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=squirrelsc" title="Code">💻</a> <a href="https://github.com/microsoft/nni/commits?author=squirrelsc" title="Documentation">📖</a></td>
+  </tr>
+  <tr>
     <td align="center"><a href="https://github.com/suiguoxin"><img src="https://avatars.githubusercontent.com/u/12380769?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Guoxin</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=suiguoxin" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/xuehui1991"><img src="https://avatars.githubusercontent.com/u/6280746?v=4?s=80" width="80px;" alt=""/><br /><sub><b>xuehui</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=xuehui1991" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/Crysple"><img src="https://avatars.githubusercontent.com/u/20517842?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Zejun Lin</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=Crysple" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/yds05"><img src="https://avatars.githubusercontent.com/u/1079650?v=4?s=80" width="80px;" alt=""/><br /><sub><b>fishyds</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=yds05" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/leckie-chn"><img src="https://avatars.githubusercontent.com/u/3284327?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Yan Ni</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=leckie-chn" title="Code">💻</a></td>
-  </tr>
-  <tr>
     <td align="center"><a href="https://github.com/linbinskn"><img src="https://avatars.githubusercontent.com/u/50486294?v=4?s=80" width="80px;" alt=""/><br /><sub><b>lin bin</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=linbinskn" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/PurityFan"><img src="https://avatars.githubusercontent.com/u/26495978?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Shufan Huang</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=PurityFan" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/demianzhang"><img src="https://avatars.githubusercontent.com/u/13177646?v=4?s=80" width="80px;" alt=""/><br /><sub><b>demianzhang</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=demianzhang" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/acured"><img src="https://avatars.githubusercontent.com/u/10276763?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Ni Hao</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=acured" title="Code">💻</a></td>
+  </tr>
+  <tr>
     <td align="center"><a href="https://github.com/colorjam"><img src="https://avatars.githubusercontent.com/u/23700012?v=4?s=80" width="80px;" alt=""/><br /><sub><b>colorjam</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=colorjam" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/goooxu"><img src="https://avatars.githubusercontent.com/u/22703054?v=4?s=80" width="80px;" alt=""/><br /><sub><b>goooxu</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=goooxu" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/kvartet"><img src="https://avatars.githubusercontent.com/u/48014605?v=4?s=80" width="80px;" alt=""/><br /><sub><b>kvartet</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=kvartet" title="Code">💻</a></td>
-  </tr>
-  <tr>
     <td align="center"><a href="https://github.com/JunweiSUN"><img src="https://avatars.githubusercontent.com/u/30487595?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Junwei Sun</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=JunweiSUN" title="Code">💻</a></td>
   </tr>
 </table>
