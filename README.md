@@ -380,7 +380,7 @@ The entire codebase is under [MIT license](LICENSE)
 ## Contributors ✨
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
@@ -402,6 +402,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/lvybriage"><img src="https://avatars.githubusercontent.com/u/35484733?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Lijiao</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=lvybriage" title="Code">💻</a> <a href="https://github.com/microsoft/nni/commits?author=lvybriage" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/squirrelsc"><img src="https://avatars.githubusercontent.com/u/27178119?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Chi Song</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=squirrelsc" title="Code">💻</a> <a href="https://github.com/microsoft/nni/commits?author=squirrelsc" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/suiguoxin"><img src="https://avatars.githubusercontent.com/u/12380769?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Guoxin</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=suiguoxin" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/xuehui1991"><img src="https://avatars.githubusercontent.com/u/6280746?v=4?s=80" width="80px;" alt=""/><br /><sub><b>xuehui</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=xuehui1991" title="Code">💻</a></td>
   </tr>
 </table>
 
