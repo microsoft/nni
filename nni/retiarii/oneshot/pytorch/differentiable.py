@@ -103,8 +103,7 @@ class DartsModule(BaseOneShotLightningModule):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
         ctrl_params = []
         for m in self.nas_modules:
-            if hasattr(m, '_arch_alpha'):
-                ctrl_params.append(m._arch_alpha)
+            ctrl_params += list(m.parameters(arch=True))
         ctrl_optim = torch.optim.Adam(list(set(ctrl_params)), 3.e-4, betas=(0.5, 0.999),
                                       weight_decay=1.0E-3)
         return ctrl_optim

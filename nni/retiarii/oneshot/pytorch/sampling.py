@@ -170,15 +170,22 @@ class EnasModule(RandomSamplingModule):
                 arc_opt.zero_grad()
 
     def resample(self):
-        """
-        Resample the architecture as ENAS result. This doesn't require an ``export`` method in nas_modules to work.
-        """
-        result = self.controller.resample()
+        """Resample the architecture with ENAS controller."""
+        sample = self.controller.resample()
+        result = self._interpret_controller_sampling_result(sample)
         for module in self.nas_modules:
-            result.update(module.resample(memo=result))
+            module.resample(memo=result)
         return result
 
     def export(self):
+        """Run one more inference of ENAS controller."""
         self.controller.eval()
         with torch.no_grad():
-            return self.controller.resample()
+            return self._interpret_controller_sampling_result(self.controller.resample())
+
+    def _interpret_controller_sampling_result(self, sample: Dict[str, int]) -> Dict[str, Any]:
+        """Convert ``{label: index}`` to ``{label: name}``"""
+        space_spec = self.search_space_spec()
+        for key in list(sample.keys()):
+            sample[key] = space_spec[key].values[sample[key]]
+        return sample

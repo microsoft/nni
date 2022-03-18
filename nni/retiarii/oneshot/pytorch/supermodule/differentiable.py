@@ -98,10 +98,14 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
             yield p
 
     def named_parameters(self, *args, **kwargs):
+        arch = kwargs.pop('arch', False)
         for name, p in super().named_parameters(*args, **kwargs):
             if any(name == par_name for par_name in self._arch_parameter_names):
-                continue
-            yield name, p
+                if arch:
+                    yield name, p
+            else:
+                if not arch:
+                    yield name, p
 
 
 class DifferentiableMixedInput(BaseSuperNetModule):
@@ -206,10 +210,14 @@ class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
 
     @staticmethod
     def named_parameters(self, *args, **kwargs):
-        for name, p in super().named_parameters(*args, **kwargs):
-            if any(name.startswith(par_name) for par_name in self._arch_parameter_names):
-                continue
-            yield name, p
+        arch = kwargs.pop('arch', False)
+        for name, p in super(self.__class__, self).named_parameters(*args, **kwargs):
+            if any(name.startswith(par_name) for par_name in DifferentiableMixedOperation._arch_parameter_names):
+                if arch:
+                    yield name, p
+            else:
+                if not arch:
+                    yield name, p
 
     def resample(self, operation: MixedOperation, memo: Dict[str, Any] = None) -> Dict[str, Any]:
         """Differentiable. Do nothing in resample."""

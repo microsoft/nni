@@ -26,7 +26,7 @@ class DepthwiseSeparableConv(nn.Module):
 
 @model_wrapper
 class Net(nn.Module):
-    def __init__(self):
+    def __init__(self, value_choice=True):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, 1)
         self.conv2 = LayerChoice([
@@ -39,8 +39,12 @@ class Net(nn.Module):
             nn.Dropout(.75)
         ])
         self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(9216, 128)
-        self.fc2 = nn.Linear(128, 10)
+        if value_choice:
+            hidden = nn.ValueChoice([64, 128, 196])
+        else:
+            hidden = 128
+        self.fc1 = nn.Linear(9216, hidden)
+        self.fc2 = nn.Linear(hidden, 10)
         self.rpfc = nn.Linear(10, 10)
 
     def forward(self, x):
@@ -56,8 +60,8 @@ class Net(nn.Module):
         return output
 
 
-def prepare_model_data():
-    base_model = Net()
+def _test_strategy(strategy_, support_value_choice=True):
+    base_model = Net(support_value_choice)
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = MNIST('data/mnist', train=True, download=True, transform=transform)
     train_random_sampler = RandomSampler(train_dataset, True, int(len(train_dataset) / 10))
@@ -70,11 +74,6 @@ def prepare_model_data():
         'max_epochs': 1
     }
 
-    return base_model, train_loader, valid_loader, trainer_kwargs
-
-
-def _test_strategy(strategy_):
-    base_model, train_loader, valid_loader, trainer_kwargs = prepare_model_data()
     cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **trainer_kwargs)
     experiment = RetiariiExperiment(base_model, cls, strategy=strategy_)
 
@@ -93,7 +92,7 @@ def test_darts():
 
 @pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_proxyless():
-    _test_strategy(strategy.Proxyless())
+    _test_strategy(strategy.Proxyless(), False)
 
 
 @pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
