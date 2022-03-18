@@ -19,6 +19,16 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "SparkSnail",
+      "name": "SparkSnail",
+      "avatar_url": "https://avatars.githubusercontent.com/u/22682999?v=4",
+      "profile": "https://github.com/SparkSnail",
+      "contributions": [
+        "code",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7
