@@ -4,6 +4,7 @@ which is commonly known as super-kernel, or weight entanglement.
 
 """
 
+import inspect
 import itertools
 from typing import Union, Tuple, Dict, List, Any, Type, Optional, TypeVar
 
@@ -64,10 +65,10 @@ class MixedOperation(BaseSuperNetModule):
     The other is specific to each Operation, which is to control how the Operation
     interprets the sampling result.
 
-    The class controlling Operation-specific behaviors should have a method called ``init_argument``,
+    The class controlling Operation-specific behaviors should have a method called ``super_init_argument``,
     to customize the behavior when calling ``super().__init__()``. For example::
 
-        def init_argument(self, name, value_choice):
+        def super_init_argument(self, name, value_choice):
             return max(value_choice.candidates)
 
     The class should also define a ``bound_type``, to control the matching type in mutate,
@@ -77,42 +78,51 @@ class MixedOperation(BaseSuperNetModule):
     appended by forward arguments in the ``bound_type``.
     """
 
-    bound_type: Type[nn.Module]                         # defined in subclass
+    bound_type: Type[nn.Module]                 # defined in subclass
     argument_list: List[str]                    # defined in subclass
 
     sampling_strategy: MixedOperationSamplingStrategy
 
-    def init_argument(self, name: str, value_choice: ValueChoiceX) -> Any:
-        """Get the initialization argument.
+    def super_init_argument(self, name: str, value_choice: ValueChoiceX) -> Any:
+        """Get the initialization argument when constructing super-kernel.
         This is often related to specific operator, rather than algo.
         """
         raise NotImplementedError()
+
+    def __post_init__(self) -> None:
+        """Can be used to validate, or to do extra processing."""
+        pass
 
     def forward_with_args(self, *args, **kwargs):
         """To control real fprop. The accepted arguments are ``argument_list``,
         appended by forward arguments in the ``bound_type``."""
         raise NotImplementedError()
 
-    def __init__(self, module_kwargs):
+    def __init__(self, module_kwargs: Dict[str, Any]) -> None:
         # Concerned arguments
         self.mutable_arguments: Dict[str, ValueChoiceX] = {}
+        # Useful when retrieving arguments without ValueChoice
+        self.init_arguments: Dict[str, Any] = {**module_kwargs}
+        self._fill_missing_init_arguments()
 
         # get init default
-        init_kwargs = {}
+        super_init_kwargs = {}
 
         for key, value in module_kwargs.items():
             if isinstance(value, ValueChoiceX):
                 if key not in self.argument_list:
                     raise TypeError(f'Unsupported value choice on argument of {self.bound_type}: {key}')
-                init_kwargs[key] = self.init_argument(key, value)
+                super_init_kwargs[key] = self.super_init_argument(key, value)
                 self.mutable_arguments[key] = value
             else:
-                init_kwargs[key] = value
+                super_init_kwargs[key] = value
 
         # get all inner leaf value choices
         self._space_spec: Dict[str, ParameterSpec] = dedup_inner_choices(self.mutable_arguments.values())
 
-        super().__init__(**init_kwargs)
+        super().__init__(**super_init_kwargs)
+
+        self.__post_init__()
 
     def resample(self, memo):
         return self.sampling_strategy.resample(self, memo)
@@ -159,6 +169,24 @@ class MixedOperation(BaseSuperNetModule):
         sampled_args = [self.forward_argument(name) for name in self.argument_list]
         return self.forward_with_args(*sampled_args, *args, **kwargs)
 
+    def _fill_missing_init_arguments(self) -> None:
+        """Set the unspecified init arguments in ``self.init_arguments``.
+        For example, in the case of Conv2d, when user didn't specify argument ``stride``,
+        this method adds ``stride = 1`` in ``self.init_arguments``.
+
+        This is implemented by inspecting the init signature of ``bound_type``.
+        Arguments in complex cases like ``__new__`` or in super-class is not supported.
+        """
+
+        def unwrap(cls):
+            if not hasattr(cls, '__wrapped__'):
+                return cls
+            return unwrap(cls.__wrapped__)
+        
+        for param in inspect.signature(unwrap(self.bound_type).__init__).parameters.values():
+            if param.default is not param.empty and param.name not in self.init_arguments:
+                self.init_arguments[param.name] = param.default
+
 
 class MixedLinear(MixedOperation, nn.Linear):
     """Mixed linear op. Supported arguments are:
@@ -172,7 +200,7 @@ class MixedLinear(MixedOperation, nn.Linear):
     bound_type = retiarii_nn.Linear
     argument_list = ['in_features', 'out_features']
 
-    def init_argument(self, name: str, value_choice: ValueChoiceX):
+    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
     def forward_with_args(self,
@@ -232,7 +260,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
             return (value, value)
         return value
 
-    def init_argument(self, name: str, value_choice: ValueChoiceX):
+    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         if name not in ['in_channels', 'out_channels', 'groups', 'stride', 'kernel_size', 'padding', 'dilation']:
             raise NotImplementedError(f'Unsupported value choice on argument: {name}')
 
@@ -277,7 +305,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
 
         # slice center
         if isinstance(kernel_size, dict):
-            padding = self.padding  # must be a tuple
+            padding = self.padding  # max padding, must be a tuple
         kernel_a, kernel_b = self._to_tuple(kernel_size)
         kernel_a, kernel_b = _W(kernel_a), _W(kernel_b)
         max_kernel_a, max_kernel_b = self.kernel_size  # self.kernel_size must be a tuple
@@ -319,7 +347,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
     bound_type = retiarii_nn.BatchNorm2d
     argument_list = ['num_features', 'eps', 'momentum']
 
-    def init_argument(self, name: str, value_choice: ValueChoiceX):
+    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
     def forward_with_args(self,
@@ -390,7 +418,37 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     bound_type = retiarii_nn.MultiheadAttention
     argument_list = ['embed_dim', 'num_heads', 'kdim', 'vdim', 'dropout']
 
-    def init_argument(self, name: str, value_choice: ValueChoiceX):
+    def __post_init__(self):
+        # sometimes super-class believes qkv have the same embed_dim.
+        # but actually they do not, because we can have dynamic (mutable) kdim/vdim.
+
+        _qkv_same_embed_dim = True
+
+        for dimension in ['kdim', 'vdim']:
+            if self.init_arguments[dimension] is None:
+                # must follow embed_dim is this case
+                continue
+
+            if getattr(self, dimension) == self.embed_dim and \
+                    (dimension in self.mutable_arguments or 'embed_dim' in self.mutable_arguments):
+                _qkv_same_embed_dim = False
+
+        if self._qkv_same_embed_dim and not _qkv_same_embed_dim:
+            self._qkv_same_embed_dim = _qkv_same_embed_dim
+
+            # adding back missing parameters
+            factory_kwargs = {'device': self.init_arguments['device'], 'dtype': self.init_arguments['dtype']}
+            self.q_proj_weight = nn.Parameter(torch.empty((self.embed_dim, self.embed_dim), **factory_kwargs))
+            self.k_proj_weight = nn.Parameter(torch.empty((self.embed_dim, self.kdim), **factory_kwargs))
+            self.v_proj_weight = nn.Parameter(torch.empty((self.embed_dim, self.vdim), **factory_kwargs))
+            self.register_parameter('in_proj_weight', None)
+
+            # reset parameters
+            nn.init.xavier_uniform_(self.q_proj_weight)
+            nn.init.xavier_uniform_(self.k_proj_weight)
+            nn.init.xavier_uniform_(self.v_proj_weight)
+
+    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
     def _to_proj_slice(self, embed_dim: _W) -> List[slice]:
@@ -404,7 +462,8 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     def forward_with_args(
         self,
         embed_dim: int_or_int_dict, num_heads: int,
-        kdim: int_or_int_dict, vdim: int_or_int_dict, dropout: float,
+        kdim: Optional[int_or_int_dict], vdim: Optional[int_or_int_dict],
+        dropout: float,
         query: torch.Tensor, key: torch.Tensor, value: torch.Tensor,
         key_padding_mask: Optional[torch.Tensor] = None,
         need_weights: bool = True, attn_mask: Optional[torch.Tensor] = None
@@ -412,6 +471,14 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
 
         if any(isinstance(arg, dict) for arg in [num_heads, dropout]):
             raise ValueError('num_heads, dropout do not support weighted sampling.')
+
+        # by default, kdim, vdim can be none
+        if kdim is None:
+            kdim = embed_dim
+        if vdim is None:
+            vdim = embed_dim
+
+        qkv_same_embed_dim = kdim == embed_dim and vdim == embed_dim
 
         if self.batch_first:
             query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
@@ -433,10 +500,9 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
         bias_k = _S(self.bias_k)[:, :, :embed_dim] if self.bias_k is not None else None
         bias_v = _S(self.bias_v)[:, :, :embed_dim] if self.bias_v is not None else None
         out_proj_weight = _S(self.out_proj.weight)[:embed_dim, :embed_dim]
-        out_proj_bias = _S(self.out_proj.bias)[:embed_dim]
+        out_proj_bias = _S(self.out_proj.bias)[:embed_dim] if self.out_proj.bias is not None else None
 
-        # The rest part is basically same as pytorch
-        if not self._qkv_same_embed_dim:
+        if not qkv_same_embed_dim:            
             kdim = _W(kdim)
             vdim = _W(vdim)
 
@@ -446,6 +512,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             v_proj = _S(self.v_proj_weight)[:embed_dim]
             v_proj = _S(v_proj)[:, :vdim]
 
+            # The rest part is basically same as pytorch
             attn_output, attn_output_weights = F.multi_head_attention_forward(
                 query, key, value, used_embed_dim, num_heads,
                 in_proj_weight, in_proj_bias,

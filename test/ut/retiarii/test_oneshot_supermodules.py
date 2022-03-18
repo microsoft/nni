@@ -161,6 +161,36 @@ def test_mixed_mhattn():
 
     _mixed_operation_differentiable_sanity_check(mhattn, torch.randn(7, 2, 8), torch.randn(7, 2, 8), torch.randn(7, 2, 8))
 
+    mhattn = MultiheadAttention(ValueChoice([4, 8], label='emb'), ValueChoice([2, 3, 4], label='heads'))
+    assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 4, 'heads': 2},
+        torch.randn(7, 2, 4), torch.randn(7, 2, 4), torch.randn(7, 2, 4))[0].size(-1) == 4
+    with pytest.raises(AssertionError, match='divisible'):
+        assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 4, 'heads': 3},
+            torch.randn(7, 2, 4), torch.randn(7, 2, 4), torch.randn(7, 2, 4))[0].size(-1) == 4
+
+    mhattn = MultiheadAttention(ValueChoice([4, 8], label='emb'), 4, kdim=ValueChoice([5, 7], label='kdim'))
+    assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 4, 'kdim': 7},
+        torch.randn(7, 2, 4), torch.randn(7, 2, 7), torch.randn(7, 2, 4))[0].size(-1) == 4
+    assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 8, 'kdim': 5},
+        torch.randn(7, 2, 8), torch.randn(7, 2, 5), torch.randn(7, 2, 8))[0].size(-1) == 8
+
+    mhattn = MultiheadAttention(ValueChoice([4, 8], label='emb'), 4, vdim=ValueChoice([5, 8], label='vdim'))
+    assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 4, 'vdim': 8},
+        torch.randn(7, 2, 4), torch.randn(7, 2, 4), torch.randn(7, 2, 8))[0].size(-1) == 4
+    assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 8, 'vdim': 5},
+        torch.randn(7, 2, 8), torch.randn(7, 2, 8), torch.randn(7, 2, 5))[0].size(-1) == 8
+
+    _mixed_operation_differentiable_sanity_check(mhattn, torch.randn(5, 3, 8), torch.randn(5, 3, 8), torch.randn(5, 3, 8))
+
+    mhattn = MultiheadAttention(ValueChoice([4, 8], label='emb'), 2, kdim=(ValueChoice([3, 7], label='kdim')), vdim=ValueChoice([5, 8], label='vdim'),
+                                bias=False, add_bias_kv=True, batch_first=True)
+    assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 4, 'kdim': 7, 'vdim': 8},
+        torch.randn(2, 7, 4), torch.randn(2, 7, 7), torch.randn(2, 7, 8))[0].size(-1) == 4
+    assert _mixed_operation_sampling_sanity_check(mhattn, {'emb': 8, 'kdim': 3, 'vdim': 5},
+        torch.randn(2, 7, 8), torch.randn(2, 7, 3), torch.randn(2, 7, 5))[0].size(-1) == 8
+
+    _mixed_operation_differentiable_sanity_check(mhattn, torch.randn(1, 7, 8), torch.randn(1, 7, 7), torch.randn(1, 7, 8))
+
 
 test_pathsampling_valuechoice()
 test_differentiable_valuechoice()

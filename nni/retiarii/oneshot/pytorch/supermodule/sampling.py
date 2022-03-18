@@ -179,4 +179,4 @@ class PathSamplingOperation(MixedOperationSamplingStrategy):
             raise ValueError('Need to call resample() before running forward')
         if name in operation.mutable_arguments:
             return self._sampled[name]
-        return getattr(operation, name)
+        return operation.init_arguments[name]

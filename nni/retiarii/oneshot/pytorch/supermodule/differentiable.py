@@ -218,4 +218,4 @@ class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
         if name in operation.mutable_arguments:
             weights = {label: operation.softmax(alpha) for label, alpha in operation._arch_alpha.items()}
             return dict(traverse_all_options(operation.mutable_arguments[name], weights=weights))
-        return getattr(operation, name)
+        return operation.init_arguments[name]

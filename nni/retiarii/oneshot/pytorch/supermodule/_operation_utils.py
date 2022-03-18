@@ -23,7 +23,6 @@ The fixed/weighted slice is fed into ``_slice_weight``,
 which interprets the slice and apply it on a tensor.
 """
 
-import itertools
 import operator
 from typing import Tuple, Union, List, Dict, Callable, Optional, Iterator, TypeVar, Any, Generic
 
@@ -145,7 +144,7 @@ class Slicable(Generic[T]):
             for val, wt in leaf_dict.items():
                 res_index_item = _evaluate_multidim_slice(index, lambda _: val)
                 res_index.append((res_index_item, wt))
-
+        
         return _slice_weight(self.weight, res_index)
 
 
