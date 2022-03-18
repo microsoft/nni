@@ -98,6 +98,15 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "suiguoxin",
+      "name": "Guoxin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/12380769?v=4",
+      "profile": "https://github.com/suiguoxin",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7
