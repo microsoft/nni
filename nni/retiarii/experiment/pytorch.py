@@ -43,6 +43,9 @@ from ..strategy.utils import dry_run_for_formatted_search_space
 _logger = logging.getLogger(__name__)
 
 
+__all__ = ['RetiariiExeConfig', 'RetiariiExperiment']
+
+
 @dataclass(init=False)
 class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None
@@ -376,6 +379,8 @@ class RetiariiExperiment(Experiment):
         For one-shot algorithms, only top-1 is supported. For others, ``optimize_mode`` and ``formatter`` are
         available for customization.
 
+        Parameters
+        ----------
         top_k : int
             How many models are intended to be exported.
         optimize_mode : str

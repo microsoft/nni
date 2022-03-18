@@ -13,6 +13,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import re
 import subprocess
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
@@ -44,23 +45,54 @@ release = 'v2.6'
 extensions = [
     'sphinx_gallery.gen_gallery',
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinxarg4nni.ext',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib.bibtex',
     # 'nbsphinx',  # nbsphinx has conflicts with sphinx-gallery.
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
 
     # Custom extensions in extension/ folder.
+    'tutorial_links',  # this has to be after sphinx-gallery
     'inplace_translation',
     'cardlinkitem',
+    'codesnippetcard',
     'patch_docutils',
+    'patch_autodoc',
 ]
 
+# Autosummary related settings
+autosummary_imported_members = True
+autosummary_ignore_module_all = False
+
+# Auto-generate stub files before building docs
+autosummary_generate = True
+
 # Add mock modules
-autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter']
+autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter', 'azureml']
+
+autosummary_mock_imports = [
+    'nni.retiarii.codegen.tensorflow',
+    'nni.nas.benchmarks.nasbench101.db_gen',
+    'nni.tools.jupyter_extension.management',
+] + autodoc_mock_imports
+
+autodoc_typehints = 'description'
+autodoc_typehints_description_target = 'documented'
+autodoc_inherit_docstrings = False
+
+# Bibliography files
+bibtex_bibfiles = ['refs.bib']
+
+# Add a heading to bibliography
+bibtex_footbibliography_header = '.. rubric:: Bibliography'
+
+# Set bibliography style
+bibtex_default_style = 'plain'
 
 # Sphinx gallery examples
 sphinx_gallery_conf = {
