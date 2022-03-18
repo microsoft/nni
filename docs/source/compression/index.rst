@@ -10,12 +10,6 @@ Model Compression with NNI
     Config Specification <compression_config_list>
     Advanced Usage <advanced_usage>
 
-.. attention::
-
-  NNI's model pruning framework has been upgraded to a more powerful version (named pruning v2 before nni v2.6).
-  The old version (`named pruning before nni v2.6 <https://nni.readthedocs.io/en/v2.6/Compression/pruning.html>`_) will be out of maintenance. If for some reason you have to use the old pruning,
-  v2.6 is the last nni version to support old pruning version.
-
 .. Using rubric to prevent the section heading to be include into toc
 
 .. rubric:: Overview
@@ -148,3 +142,9 @@ The following figure shows how NNI prunes and speeds up your models.
 
 The detailed tutorial of Speed Up Model with Mask can be found :doc:`here <../tutorials/pruning_speed_up>`.
 The detailed tutorial of Speed Up Model with Calibration Config can be found :doc:`here <../tutorials/quantization_speed_up>`.
+
+.. attention::
+
+  NNI's model pruning framework has been upgraded to a more powerful version (named pruning v2 before nni v2.6).
+  The old version (`named pruning before nni v2.6 <https://nni.readthedocs.io/en/v2.6/Compression/pruning.html>`_) will be out of maintenance. If for some reason you have to use the old pruning,
+  v2.6 is the last nni version to support old pruning version.
