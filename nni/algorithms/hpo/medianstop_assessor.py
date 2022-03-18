@@ -26,8 +26,8 @@ class MedianstopAssessor(Assessor):
     if the trial’s best objective value by step S is strictly worse than the median value
     of the running averages of all completed trials’ objectives reported up to step S
 
-    Paper: *Google Vizer: A Service for Black-Box Optimization*
-    (`PDF <https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf>`__)
+    Paper: `Google Vizer: A Service for Black-Box Optimization
+    <https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf>`__
 
     Examples
     --------
