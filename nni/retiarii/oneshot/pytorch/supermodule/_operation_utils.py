@@ -42,6 +42,7 @@ int_or_int_dict = scalar_or_scalar_dict[int]
 
 _value_fn_type = Optional[Callable[[int_or_int_dict], int]]
 
+
 def zeros_like(arr: T) -> T:
     if isinstance(arr, np.ndarray):
         return np.zeros_like(arr)
@@ -49,6 +50,7 @@ def zeros_like(arr: T) -> T:
         return torch.zeros_like(arr)
     else:
         raise TypeError(f'Unsupported type for {arr}: {type(arr)}')
+
 
 def _eliminate_list_slice(shape: tuple, slice_: multidim_slice) -> multidim_slice:
     # get rid of list of slice
@@ -63,6 +65,7 @@ def _eliminate_list_slice(shape: tuple, slice_: multidim_slice) -> multidim_slic
         else:
             result.append(slice_[i])
     return tuple(result)
+
 
 def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_slice, float]]]) -> T:
     # slice_ can be a tuple of slice, e.g., ([3:6], [2:4])
@@ -149,7 +152,7 @@ class Slicable(Generic[T]):
             for val, wt in leaf_dict.items():
                 res_index_item = _evaluate_multidim_slice(index, lambda _: val)
                 res_index.append((res_index_item, wt))
-        
+
         return _slice_weight(self.weight, res_index)
 
 

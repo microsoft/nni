@@ -185,7 +185,7 @@ class MixedOperation(BaseSuperNetModule):
             if not hasattr(cls, '__wrapped__'):
                 return cls
             return unwrap(cls.__wrapped__)
-        
+
         for param in inspect.signature(unwrap(self.bound_type).__init__).parameters.values():
             if param.default is not param.empty and param.name not in self.init_arguments:
                 self.init_arguments[param.name] = param.default
@@ -209,7 +209,7 @@ class MixedLinear(MixedOperation, nn.Linear):
     def forward_with_args(self,
                           in_features: int_or_int_dict,
                           out_features: int_or_int_dict,
-                          input: torch.Tensor) -> torch.Tensor:
+                          inputs: torch.Tensor) -> torch.Tensor:
 
         in_features = _W(in_features)
         out_features = _W(out_features)
@@ -221,7 +221,7 @@ class MixedLinear(MixedOperation, nn.Linear):
         else:
             bias = _S(self.bias)[:out_features]
 
-        return F.linear(input, weight, bias)
+        return F.linear(inputs, weight, bias)
 
 
 _int_or_tuple = Union[int, Tuple[int, int]]
@@ -293,7 +293,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                           padding: scalar_or_scalar_dict[_int_or_tuple],
                           dilation: int,
                           groups: int,
-                          input: torch.Tensor) -> torch.Tensor:
+                          inputs: torch.Tensor) -> torch.Tensor:
 
         if any(isinstance(arg, dict) for arg in [stride, dilation, groups]):
             raise ValueError('stride, dilation, groups does not support weighted sampling.')
@@ -322,9 +322,9 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         dilation = self._to_tuple(dilation)
 
         if self.padding_mode != 'zeros':
-            return F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
+            return F.conv2d(F.pad(inputs, self._reversed_padding_repeated_twice, mode=self.padding_mode),
                             weight, bias, stride, (0, 0), dilation, groups)
-        return F.conv2d(input, weight, bias, stride, padding, dilation, groups)
+        return F.conv2d(inputs, weight, bias, stride, padding, dilation, groups)
 
 
 class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
@@ -357,7 +357,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
                           num_features: int_or_int_dict,
                           eps: float,
                           momentum: float,
-                          input: torch.Tensor) -> torch.Tensor:
+                          inputs: torch.Tensor) -> torch.Tensor:
 
         if any(isinstance(arg, dict) for arg in [eps, momentum]):
             raise ValueError('eps, momentum do not support weighted sampling')
@@ -380,7 +380,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
             bn_training = (self.running_mean is None) and (self.running_var is None)
 
         return F.batch_norm(
-            input,
+            inputs,
             # If buffers are not to be tracked, ensure that they won't be updated
             running_mean if not self.training or self.track_running_stats else None,
             running_var if not self.training or self.track_running_stats else None,
@@ -505,7 +505,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
         out_proj_weight = _S(self.out_proj.weight)[:embed_dim, :embed_dim]
         out_proj_bias = _S(self.out_proj.bias)[:embed_dim] if self.out_proj.bias is not None else None
 
-        if not qkv_same_embed_dim:            
+        if not qkv_same_embed_dim:
             kdim = _W(kdim)
             vdim = _W(vdim)
 

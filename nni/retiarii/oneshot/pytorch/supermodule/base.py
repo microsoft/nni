@@ -13,6 +13,7 @@ class BaseSuperNetModule(nn.Module):
     Mutated module in super-net.
     Usually, the feed-forward of the module itself is undefined.
     It has to be resampled with ``resample()`` so that a specific path is selected.
+    (Sometimes, this is not required. For example, differentiable super-net.)
 
     A super-net module usually corresponds to one sample. But two exceptions:
 

@@ -11,7 +11,7 @@ from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 
 from .base import BaseSuperNetModule
-from ._valuechoice_utils import *
+from ._valuechoice_utils import evaluate_value_choice_with_dict
 from .operation import MixedOperationSamplingStrategy, MixedOperation
 
 

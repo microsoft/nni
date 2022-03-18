@@ -26,23 +26,35 @@ class GumbelSoftmax(nn.Softmax):
         self.tau = 1
         self.hard = False
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return F.gumbel_softmax(input, tau=self.tau, hard=self.hard, dim=self.dim)
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        return F.gumbel_softmax(inputs, tau=self.tau, hard=self.hard, dim=self.dim)
 
 
 class DifferentiableMixedLayer(BaseSuperNetModule):
     """
-    TBD
-    Mixed layer, in which fprop is decided by exactly one inner layer or sum of multiple (sampled) layers.
-    If multiple modules are selected, the result will be summed and returned.
+    Mixed layer, in which fprop is decided by a weighted sum of several layers.
+    Proposed in `DARTS: Differentiable Architecture Search <https://arxiv.org/abs/1806.09055>`__.
+
+    The weight ``alpha`` is usually learnable, and optimized on validation dataset.
 
     Differentiable sampling layer requires all operators returning the same shape for one input,
     as all outputs will be weighted summed to get the final output.
 
+    Parameters
+    ----------
+    paths : List[Tuple[str, nn.Module]]
+        Layers to choose from. Each is a tuple of name, and its module.
+    alpha : Tensor
+        Tensor that stores the "learnable" weights.
+    softmax : nn.Module
+        Customizable softmax function. Usually ``nn.Softmax(-1)``.
+    label : str
+        Name of the choice.
+
     Attributes
     ----------
-    _sampled : int or list of str
-        Sampled module indices.
+    op_names : str
+        Operator names.
     label : str
         Name of the choice.
     """
@@ -91,15 +103,18 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
             return cls(list(module.named_children()), alpha, softmax, module.label)
 
     def forward(self, *args, **kwargs):
+        """The forward of mixed layer accepts same arguments as its sub-layer."""
         op_results = torch.stack([getattr(self, op)(*args, **kwargs) for op in self.op_names])
         alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
         return torch.sum(op_results * self._softmax(self._arch_alpha).view(*alpha_shape), 0)
 
     def parameters(self, *args, **kwargs):
+        """Parameters excluding architecture parameters."""
         for _, p in self.named_parameters(*args, **kwargs):
             yield p
 
     def named_parameters(self, *args, **kwargs):
+        """Named parameters excluding architecture parameters."""
         arch = kwargs.pop('arch', False)
         for name, p in super().named_parameters(*args, **kwargs):
             if any(name == par_name for par_name in self._arch_parameter_names):
@@ -112,7 +127,26 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
 
 class DifferentiableMixedInput(BaseSuperNetModule):
     """
-    TBD
+    Mixed input. Forward returns a weighted sum of candidates.
+    Implementation is very similar to :class:`DifferentiableMixedLayer`.
+
+    Parameters
+    ----------
+    n_candidates : int
+        Expect number of input candidates.
+    n_chosen : int
+        Expect numebr of inputs finally chosen.
+    alpha : Tensor
+        Tensor that stores the "learnable" weights.
+    softmax : nn.Module
+        Customizable softmax function. Usually ``nn.Softmax(-1)``.
+    label : str
+        Name of the choice.
+
+    Attributes
+    ----------
+    label : str
+        Name of the choice.
     """
 
     _arch_parameter_names: List[str] = ['_arch_alpha']
@@ -137,7 +171,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
         return {}
 
     def export(self, memo):
-        """Choose the operator with the top logits."""
+        """Choose the operator with the top ``n_chosen`` logits."""
         if self.label in memo:
             return {}  # nothing new to export
         chosen = sorted(torch.argsort(-self._arch_alpha).cpu().numpy().tolist()[:self.n_chosen])
@@ -168,15 +202,18 @@ class DifferentiableMixedInput(BaseSuperNetModule):
             return cls(module.n_candidates, module.n_chosen, alpha, softmax, module.label)
 
     def forward(self, inputs):
+        """Forward takes a list of input candidates."""
         inputs = torch.stack(inputs)
         alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
         return torch.sum(inputs * self._softmax(self._arch_alpha).view(*alpha_shape), 0)
 
     def parameters(self, *args, **kwargs):
+        """Parameters excluding architecture parameters."""
         for _, p in self.named_parameters(*args, **kwargs):
             yield p
 
     def named_parameters(self, *args, **kwargs):
+        """Named parameters excluding architecture parameters."""
         arch = kwargs.pop('arch', False)
         for name, p in super().named_parameters(*args, **kwargs):
             if any(name == par_name for par_name in self._arch_parameter_names):
@@ -217,7 +254,7 @@ class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
     @staticmethod
     def named_parameters(self, *args, **kwargs):
         arch = kwargs.pop('arch', False)
-        for name, p in super(self.__class__, self).named_parameters(*args, **kwargs):
+        for name, p in super(self.__class__, self).named_parameters(*args, **kwargs):  # pylint: disable=bad-super-call
             if any(name.startswith(par_name) for par_name in DifferentiableMixedOperation._arch_parameter_names):
                 if arch:
                     yield name, p
