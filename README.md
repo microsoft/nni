@@ -121,7 +121,6 @@ Targeting at openness and advancing state-of-art technology, [Microsoft Research
 We encourage researchers and students leverage these projects to accelerate the AI development and research.
 
 
-
 ## Contributors ✨
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
