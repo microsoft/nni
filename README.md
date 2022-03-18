@@ -377,7 +377,7 @@ We encourage researchers and students leverage these projects to accelerate the 
 ## Contributors ✨
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-21-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
@@ -411,6 +411,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/acured"><img src="https://avatars.githubusercontent.com/u/10276763?v=4?s=80" width="80px;" alt=""/><br /><sub><b>Ni Hao</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=acured" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/colorjam"><img src="https://avatars.githubusercontent.com/u/23700012?v=4?s=80" width="80px;" alt=""/><br /><sub><b>colorjam</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=colorjam" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/goooxu"><img src="https://avatars.githubusercontent.com/u/22703054?v=4?s=80" width="80px;" alt=""/><br /><sub><b>goooxu</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=goooxu" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/kvartet"><img src="https://avatars.githubusercontent.com/u/48014605?v=4?s=80" width="80px;" alt=""/><br /><sub><b>kvartet</b></sub></a><br /><a href="https://github.com/microsoft/nni/commits?author=kvartet" title="Code">💻</a></td>
   </tr>
 </table>
 
