@@ -11,6 +11,7 @@ Keep this file here so that it can be "blamed".
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from nni.retiarii.nn.pytorch import ValueChoice
 
