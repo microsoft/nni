@@ -29,6 +29,11 @@ from scripts.compression_mnist_model import TorchModel, trainer, evaluator, devi
 # define the model
 model = TorchModel().to(device)
 
+# show the model structure, note that pruner will wrap the model layer.
+print(model)
+
+# %%
+
 # define the optimizer and criterion for pre-training
 
 optimizer = SGD(model.parameters(), 1e-2)
@@ -63,15 +68,18 @@ config_list = [{
 # Pruners usually require `model` and `config_list` as input arguments.
 
 from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
-
 pruner = L1NormPruner(model, config_list)
-# show the wrapped model structure
+
+# show the wrapped model structure, `PrunerModuleWrapper` have wrapped the layers that configured in the config_list.
 print(model)
+
+# %%
+
 # compress the model and generate the masks
 _, masks = pruner.compress()
 # show the masks sparsity
 for name, mask in masks.items():
-    print(name, ' sparsity: ', '{:.2}'.format(mask['weight'].sum() / mask['weight'].numel()))
+    print(name, ' sparsity : ', '{:.2}'.format(mask['weight'].sum() / mask['weight'].numel()))
 
 # %%
 # Speed up the original model with masks, note that `ModelSpeedup` requires an unwrapped model.

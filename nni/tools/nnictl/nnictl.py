@@ -16,7 +16,8 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
     save_experiment, load_experiment
 from .algo_management import algo_reg, algo_unreg, algo_show, algo_list
 from .constants import DEFAULT_REST_PORT
-from .import ts_management
+from . import hello
+from . import ts_management
 
 init(autoreset=True)
 
@@ -482,6 +483,10 @@ def get_parser():
     jupyter_install_parser.set_defaults(func=_jupyter_install)
     jupyter_uninstall_parser = jupyter_subparsers.add_parser('uninstall', description='Uninstall JupyterLab extension.')
     jupyter_uninstall_parser.set_defaults(func=_jupyter_uninstall)
+
+    # hello command
+    parser_hello = subparsers.add_parser('hello', description='Create "hello nni" example in current directory.')
+    parser_hello.set_defaults(func=hello.create_example)
 
     return parser
 

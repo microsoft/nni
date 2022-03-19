@@ -22,9 +22,26 @@ class CurvefittingClassArgsValidator(ClassArgsValidator):
         }).validate(kwargs)
 
 class CurvefittingAssessor(Assessor):
-    """CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
+    """
+    CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
+
+    The intermediate result **must** be accuracy.
+
     It stops a pending trial X at step S if the trial's forecast result at target step is convergence and lower than the
     best performance in the history.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.assessor.name = 'Curvefitting'
+        config.tuner.class_args = {
+            'epoch_num': 20,
+            'start_step': 6,
+            'threshold': 9,
+            'gap': 1,
+        }
 
     Parameters
     ----------
@@ -34,6 +51,7 @@ class CurvefittingAssessor(Assessor):
         only after receiving start_step number of reported intermediate results
     threshold : float
         The threshold that we decide to early stop the worse performance curve.
+    gap : int
     """
 
     def __init__(self, epoch_num=20, start_step=6, threshold=0.95, gap=1):
@@ -56,15 +74,6 @@ class CurvefittingAssessor(Assessor):
         logger.info('Successfully initials the curvefitting assessor')
 
     def trial_end(self, trial_job_id, success):
-        """update the best performance of completed trial job
-
-        Parameters
-        ----------
-        trial_job_id : int
-            trial job id
-        success : bool
-            True if succssfully finish the experiment, False otherwise
-        """
         if success:
             if self.set_best_performance:
                 self.completed_best_performance = max(self.completed_best_performance, self.trial_history[-1])
@@ -76,25 +85,6 @@ class CurvefittingAssessor(Assessor):
             logger.info('No need to update, trial job id: %s', trial_job_id)
 
     def assess_trial(self, trial_job_id, trial_history):
-        """assess whether a trial should be early stop by curve fitting algorithm
-
-        Parameters
-        ----------
-        trial_job_id : int
-            trial job id
-        trial_history : list
-            The history performance matrix of each trial
-
-        Returns
-        -------
-        bool
-            AssessResult.Good or AssessResult.Bad
-
-        Raises
-        ------
-        Exception
-            unrecognize exception in curvefitting_assessor
-        """
         scalar_trial_history = extract_scalar_history(trial_history)
         self.trial_history = scalar_trial_history
         if not self.set_best_performance:

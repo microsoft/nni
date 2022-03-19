@@ -28,7 +28,9 @@ Neural Network Intelligence
 
     nnictl Commands <reference/nnictl>
     Experiment Configuration <reference/experiment_config>
+    HPO API Reference <reference/hpo>
     Python API <reference/_modules/nni>
+    API Reference <reference/python_api_ref>
 
 ..  toctree::
     :maxdepth: 2
@@ -94,7 +96,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
 .. codesnippetcard::
    :icon: ../img/thumbnails/hpo-icon-small.png
    :title: Hyper-parameter Tuning
-   :link: autotune_ref
+   :link: tutorials/hpo_quickstart_pytorch/main
 
    .. code-block::
 
