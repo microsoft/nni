@@ -50,17 +50,19 @@ To update NNI to the latest version, add `--upgrade` flag to the above commands.
   
 ## Run your first experiment
 
-To run this experiment, you need to have [XXX](link) installed.
+To run this experiment, you need to have [PyTorch](https://pytorch.org/) (as well as [torchvision](https://pytorch.org/vision/stable/index.html)) installed.
 
 ```shell
-$ nnictl hello-world
+$ nnictl hello
 ```
 
-Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url` shown in the console.
+It will generate `nni_hello_hpo` folder in your current working directory, which contains a minimum hyper-parameter tuning example. It will also prompt you to run
 
-```text
-TBD
+```shell
+python nni_hello_hpo/main.py
 ```
+
+to launch your first NNI experiment. Use the web portal URL shown in the console to monitor the running status of your experiment.
 
 <img src="docs/static/img/webui.gif" alt="webui" width="100%"/>
 
