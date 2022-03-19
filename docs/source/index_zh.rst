@@ -1,4 +1,4 @@
-.. 667579cc0df56e2a258a2222f0f6cd36
+.. 4d670c5b2f7eebe5b65f593d7d350b85
 
 ###########################
 Neural Network Intelligence
@@ -10,7 +10,7 @@ Neural Network Intelligence
     :titlesonly:
     :hidden:
 
-    入门<Tutorial/QuickStart>
+    入门 <quickstart>
     安装 <installation>
     教程<tutorials>
     自动（超参数）调优 <hpo/index>
