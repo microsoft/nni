@@ -26,6 +26,10 @@ class DartsModule(BaseOneShotLightningModule):
 
     The current implementation is for DARTS in first order. Second order (unrolled) is not supported yet.
 
+    *New in v2.8*: Supports searching for ValueChoices on operations, with the technique described in
+    `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
+    One difference is that, in DARTS, we are using Softmax instead of GumbelSoftmax.
+
     {{module_notes}}
 
     Parameters
@@ -152,6 +156,9 @@ class GumbelDartsModule(DartsModule):
     It's a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
     Essentially, it samples one path on forward,
     and implements its own backward to update the architecture parameters based on only one path.
+
+    *New in v2.8*: Supports searching for ValueChoices on operations, with the technique described in
+    `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
 
     {{module_notes}}
 
