@@ -27,7 +27,7 @@ Uninstall:
 
   $ pip uninstall nni
 
-Remove generated files: (use "--all" to remove toolchain and built wheel)
+Remove generated files: (use "--all" to remove built wheel)
 
   $ python setup.py clean [--all]
 
@@ -125,6 +125,7 @@ def _setup():
             'BOHB': _read_requirements_txt('dependencies/required_extra.txt', 'BOHB'),
             'PPOTuner': _read_requirements_txt('dependencies/required_extra.txt', 'PPOTuner'),
             'DNGO': _read_requirements_txt('dependencies/required_extra.txt', 'DNGO'),
+            'all': _read_requirements_txt('dependencies/required_extra.txt'),
         },
         setup_requires = ['requests'],
 
@@ -230,7 +231,7 @@ class Build(build):
         check_jupyter_lab_version()
 
         if os.path.islink('nni_node/main.js'):
-            sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean --all".')
+            sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean".')
         open('nni/version.py', 'w').write(f"__version__ = '{release}'")
         super().run()
 
@@ -268,7 +269,7 @@ class Clean(clean):
 
     def run(self):
         super().run()
-        setup_ts.clean(self._all)
+        setup_ts.clean()
         _clean_temp_files()
         shutil.rmtree('nni.egg-info', ignore_errors=True)
         if self._all:
