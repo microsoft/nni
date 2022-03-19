@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from .base_lightning import BaseOneShotLightningModule, MutationHook
+from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
 from .supermodule.sampling import PathSamplingInput, PathSamplingLayer, PathSamplingOperation
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS
 from .enas import ReinforceController, ReinforceField
@@ -42,6 +42,7 @@ class RandomSamplingModule(BaseOneShotLightningModule):
             PathSamplingInput.mutate,
         ]
         hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
+        hooks.append(no_default_hook)
         return hooks
 
     def mutate_kwargs(self):

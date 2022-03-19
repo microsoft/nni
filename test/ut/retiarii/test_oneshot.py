@@ -8,7 +8,7 @@ from torchvision.datasets import MNIST
 from torch.utils.data import Dataset, RandomSampler
 
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import strategy, model_wrapper
+from nni.retiarii import strategy, model_wrapper, basic_unit
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.evaluator.pytorch.lightning import Classification, Regression, DataLoader
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, ValueChoice
@@ -94,8 +94,6 @@ class ValueChoiceConvNet(nn.Module):
             nn.Dropout(.75)
         ])
         self.fc = nn.Linear(64, 10)
-        self.fc2 = nn.Linear(256, 10)
-        self.rpfc = nn.Linear(10, 10)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -107,28 +105,91 @@ class ValueChoiceConvNet(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-def _simple_net(value_choice):
-    base_model = SimpleNet(value_choice)
+@model_wrapper
+class RepeatNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        ch1 = ValueChoice([16, 32])
+        kernel = ValueChoice([3, 5])
+        self.conv1 = nn.Conv2d(1, ch1, kernel, padding=kernel // 2)
+        self.batch_norm = nn.BatchNorm2d(ch1)
+        self.conv2 = nn.Conv2d(ch1, 64, 3, padding=1)
+        self.dropout1 = LayerChoice([
+            nn.Dropout(.25),
+            nn.Dropout(.5),
+            nn.Dropout(.75)
+        ])
+        self.fc = nn.Linear(64, 10)
+        self.rpfc = nn.Repeat(nn.Linear(10, 10), (1, 4))
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.batch_norm(x)
+        x = F.relu(x)
+        x = F.max_pool2d(self.conv2(x), 2)
+        x = torch.mean(x, (2, 3))
+        x = self.fc(x)
+        x = self.rpfc(x)
+        return F.log_softmax(x, dim=1)
+
+
+@basic_unit
+class MyOp(nn.Module):
+    def __init__(self, some_ch):
+        super().__init__()
+        self.some_ch = some_ch
+        self.batch_norm = nn.BatchNorm2d(some_ch)
+
+    def forward(self, x):
+        return self.batch_norm(x)
+
+
+@model_wrapper
+class CustomOpValueChoiceNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        ch1 = ValueChoice([16, 32])
+        kernel = ValueChoice([3, 5])
+        self.conv1 = nn.Conv2d(1, ch1, kernel, padding=kernel // 2)
+        self.batch_norm = MyOp(ch1)
+        self.conv2 = nn.Conv2d(ch1, 64, 3, padding=1)
+        self.dropout1 = LayerChoice([
+            nn.Dropout(.25),
+            nn.Dropout(.5),
+            nn.Dropout(.75)
+        ])
+        self.fc = nn.Linear(64, 10)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.batch_norm(x)
+        x = F.relu(x)
+        x = F.max_pool2d(self.conv2(x), 2)
+        x = torch.mean(x, (2, 3))
+        x = self.fc(x)
+        return F.log_softmax(x, dim=1)
+
+
+def _mnist_net(type_):
+    if type_ == 'simple':
+        base_model = SimpleNet(False)
+    elif type_ == 'simple_value_choice':
+        base_model = SimpleNet()
+    elif type_ == 'value_choice':
+        base_model = ValueChoiceConvNet()
+    elif type_ == 'repeat':
+        base_model = RepeatNet()
+    elif type_ == 'custom_op':
+        base_model = CustomOpValueChoiceNet()
+    else:
+        raise ValueError(f'Unsupported type: {type_}')
+    
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = MNIST('data/mnist', train=True, download=True, transform=transform)
-    train_random_sampler = RandomSampler(train_dataset, True, int(len(train_dataset) / 10))
+    train_random_sampler = RandomSampler(train_dataset, True, int(len(train_dataset) / 20))
     train_loader = DataLoader(train_dataset, 64, sampler=train_random_sampler)
     valid_dataset = MNIST('data/mnist', train=False, download=True, transform=transform)
-    valid_random_sampler = RandomSampler(valid_dataset, True, int(len(valid_dataset) / 10))
-    valid_loader = DataLoader(valid_dataset, 64, sampler=valid_random_sampler)
-    evaluator = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, max_epochs=1)
-
-    return base_model, evaluator
-
-
-def _valuechoice_conv_net():
-    base_model = ValueChoiceConvNet()
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = MNIST('data/mnist', train=True, download=True, transform=transform)
-    train_random_sampler = RandomSampler(train_dataset, True, int(len(train_dataset) / 10))
-    train_loader = DataLoader(train_dataset, 64, sampler=train_random_sampler)
-    valid_dataset = MNIST('data/mnist', train=False, download=True, transform=transform)
-    valid_random_sampler = RandomSampler(valid_dataset, True, int(len(valid_dataset) / 10))
+    valid_random_sampler = RandomSampler(valid_dataset, True, int(len(valid_dataset) / 20))
     valid_loader = DataLoader(valid_dataset, 64, sampler=valid_random_sampler)
     evaluator = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, max_epochs=1)
 
@@ -165,23 +226,29 @@ def _multihead_attention_net():
 
 
 def _test_strategy(strategy_, support_value_choice=True):
-    to_test = [_simple_net(support_value_choice)]
-    if support_value_choice:
-        to_test += [
-            _multihead_attention_net(),
-            _valuechoice_conv_net()
-        ]
+    to_test = [
+        # (model, evaluator), support_or_net
+        (_mnist_net('simple'), True),
+        (_mnist_net('simple_value_choice'), support_value_choice),
+        (_mnist_net('value_choice'), support_value_choice),
+        (_mnist_net('repeat'), False),      # no strategy supports repeat currently
+        (_mnist_net('custom_op'), False),   # this is definitely a NO
+        (_multihead_attention_net(), support_value_choice),
+    ]
 
-    for base_model, evaluator in to_test:
-        print('Testing:', type(strategy_).__name__, type(base_model).__name__, type(evaluator).__name__)
+    for (base_model, evaluator), support_or_not in to_test:
+        print('Testing:', type(strategy_).__name__, type(base_model).__name__, type(evaluator).__name__, support_or_not)
         experiment = RetiariiExperiment(base_model, evaluator, strategy=strategy_)
 
         config = RetiariiExeConfig()
         config.execution_engine = 'oneshot'
 
-        experiment.run(config)
-
-        assert isinstance(experiment.export_top_models()[0], dict)
+        if support_or_not:
+            experiment.run(config)
+            assert isinstance(experiment.export_top_models()[0], dict)
+        else:
+            with pytest.raises(TypeError, match='not supported'):
+                experiment.run(config)
 
 
 @pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')

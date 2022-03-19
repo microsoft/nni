@@ -152,29 +152,29 @@ class MixedOperation(BaseSuperNetModule):
 
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
+        """Find value choice in module's arguments and replace the whole module"""
+        has_valuechoice = False
         if isinstance(module, cls.bound_type) and is_traceable(module):
-            # has valuechoice or not
-            has_valuechoice = False
             for arg in itertools.chain(module.trace_args, module.trace_kwargs.values()):
                 if isinstance(arg, ValueChoiceX):
                     has_valuechoice = True
 
-            if has_valuechoice:
-                if module.trace_args:
-                    raise ValueError('ValueChoice on class arguments cannot appear together with ``trace_args``. '
-                                     'Please enable ``kw_only`` on nni.trace.')
+        if has_valuechoice:
+            if module.trace_args:
+                raise ValueError('ValueChoice on class arguments cannot appear together with ``trace_args``. '
+                                    'Please enable ``kw_only`` on nni.trace.')
 
-                # save type and kwargs
-                mixed_op = cls(module.trace_kwargs)
+            # save type and kwargs
+            mixed_op = cls(module.trace_kwargs)
 
-                if 'mixed_op_sampling_strategy' not in mutate_kwargs:
-                    raise ValueError('Need to sampling strategy of mixed op, but not found in `mutate_kwargs`.')
-                strategy_cls: Type[MixedOperationSamplingStrategy] = mutate_kwargs['mixed_op_sampling_strategy']
-                # initialize strategy class
-                # this is put in mutate because we need to access memo
-                mixed_op.sampling_strategy = strategy_cls(mixed_op, memo, mutate_kwargs)
+            if 'mixed_op_sampling_strategy' not in mutate_kwargs:
+                raise ValueError('Need to sampling strategy of mixed op, but not found in `mutate_kwargs`.')
+            strategy_cls: Type[MixedOperationSamplingStrategy] = mutate_kwargs['mixed_op_sampling_strategy']
+            # initialize strategy class
+            # this is put in mutate because we need to access memo
+            mixed_op.sampling_strategy = strategy_cls(mixed_op, memo, mutate_kwargs)
 
-                return mixed_op
+            return mixed_op
 
     def forward_argument(self, name: str) -> Any:
         """Get the argument used in forward.

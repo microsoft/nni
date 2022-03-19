@@ -7,7 +7,7 @@ from typing import List
 import pytorch_lightning as pl
 import torch
 
-from .base_lightning import BaseOneShotLightningModule, MutationHook
+from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
 from .supermodule.differentiable import (
     DifferentiableMixedLayer, DifferentiableMixedInput,
     DifferentiableMixedOperation, GumbelSoftmax
@@ -48,6 +48,7 @@ class DartsModule(BaseOneShotLightningModule):
             DifferentiableMixedInput.mutate,
         ]
         hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
+        hooks.append(no_default_hook)
         return hooks
 
     def mutate_kwargs(self):
@@ -135,6 +136,7 @@ class ProxylessModule(DartsModule):
         hooks = [
             ProxylessMixedLayer.mutate,
             ProxylessMixedInput.mutate,
+            no_default_hook,
         ]
         # FIXME: no support for mixed operation currently
         return hooks
@@ -175,6 +177,7 @@ class GumbelDartsModule(DartsModule):
             DifferentiableMixedInput.mutate,
         ]
         hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
+        hooks.append(no_default_hook)
         return hooks
 
     def mutate_kwargs(self):

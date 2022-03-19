@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import warnings
+from itertools import chain
 from typing import Dict, Callable, List, Union, Any, Tuple
 
 import pytorch_lightning as pl
@@ -10,7 +11,10 @@ import torch.nn as nn
 
 from torch.optim.lr_scheduler import _LRScheduler
 
+import nni.retiarii.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
+from nni.common.serializer import is_traceable
+from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from .supermodule.base import BaseSuperNetModule
 
 __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
@@ -66,7 +70,7 @@ def traverse_and_mutate_submodules(
                     hook_suggest, suppress = hook_suggest
                 elif hook_suggest is True:
                     hook_suggest, suppress = None, True
-                elif not hook_suggest:
+                elif not hook_suggest:  # none / false
                     hook_suggest, suppress = None, False
                 elif isinstance(hook_suggest, nn.Module):
                     suppress = True
@@ -97,6 +101,42 @@ def traverse_and_mutate_submodules(
     return module_list
 
 
+def no_default_hook(module: nn.Module, name: str, memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> bool:
+    """Add this hook at the end of your hook list to raise error for unsupported mutation primitives."""
+
+    # Forward IS NOT supernet
+    primitive_list = (
+        nas_nn.LayerChoice,
+        nas_nn.InputChoice,
+        nas_nn.ValueChoice,
+        nas_nn.Repeat,
+        nas_nn.NasBench101Cell,
+        # nas_nn.Cell,              # later
+        # nas_nn.NasBench201Cell,   # forward = supernet
+    )
+
+    if isinstance(module, primitive_list):
+        raise TypeError(f'{type(module).__name__} is not supported')
+
+    if isinstance(module, nas_nn.Cell) and module.merge_op != 'all':
+        # need output_node_indices, which depends on super-net
+        raise TypeError(f'Cell with merge_op `{module.merge_op}` is not supported')
+
+    if is_traceable(module):
+        # check whether there is a value-choice in its arguments
+        has_valuechoice = False
+        for arg in chain(module.trace_args, module.trace_kwargs.values()):
+            if isinstance(arg, ValueChoiceX):
+                has_valuechoice = True
+                break
+
+        if has_valuechoice:
+            raise TypeError(f'`basic_unit` {type(module).__name__} with value choice in its arguments is not supported. '
+                            'Please try to remove `basic_unit` to see if that works, or support this type with value choice manually.')
+
+    return True  # suppress all other hooks
+
+
 class BaseOneShotLightningModule(pl.LightningModule):
 
     _mutation_hooks_note = """mutation_hooks : List[MutationHook]
@@ -112,15 +152,15 @@ class BaseOneShotLightningModule(pl.LightningModule):
         To be more specific, the input arguments are three arguments:
 
         #. a module that might be processed,
-        #. name of the module in its parent module, and
+        #. name of the module in its parent module,
         #. a memo dict whose usage depends on the particular algorithm.
 
         Note that the memo should be read/written by hooks.
         There won't be any hooks called on root module.
         The returned arguments can be also one of the three kinds:
 
-        #. :class:`BaseSuperNetModule` or None, and boolean,
-        #. boolean, and
+        #. tuple of: :class:`BaseSuperNetModule` or None, and boolean,
+        #. boolean,
         #. :class:`BaseSuperNetModule` or None.
 
         The boolean value is ``suppress`` indicates whether the folliwng hooks should be called.
@@ -164,7 +204,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def default_mutation_hooks(self) -> List[MutationHook]:
         """Override this to define class-default mutation hooks."""
-        return []
+        return [no_default_hook]
 
     def mutate_kwargs(self) -> Dict[str, Any]:
         """Extra keyword arguments passed to mutation hooks. Usually algo-specific."""
@@ -223,7 +263,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
         for module in self.nas_modules:
             result.update(module.export(memo=result))
         return result
-
 
     def forward(self, x):
         return self.model(x)
