@@ -6,9 +6,9 @@ Neural Network Intelligence
     :caption: Get Started
     :hidden:
 
-    Installation <installation>
-    QuickStart <Tutorial/QuickStart>
-    Tutorials <tutorials>
+    installation
+    quickstart
+    Learning NNI <tutorials>
 
 ..  toctree::
     :maxdepth: 2
@@ -64,7 +64,7 @@ To install the current release:
 
 See the :doc:`installation guide </installation>` if you need additional help on installation.
 
-Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <tutorials>` to start your journey with NNI!
+Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey with NNI!
 
 .. Please keep this part sync with readme
 
