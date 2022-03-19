@@ -283,3 +283,22 @@ NNI is maintained on the `NNI GitHub repository <https://github.com/microsoft/nn
        .. image:: https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png
      -
        .. image:: https://github.com/scarlett2018/nniutil/raw/master/wechat.png
+
+.. raw:: html
+
+   <h2>Citing NNI</h2>
+
+If you use NNI in a scientific publication, please consider citing NNI in your references.
+
+   Microsoft. Neural Network Intelligence (version |version|). https://github.com/microsoft/nni
+
+Bibtex entry (please replace the version with the particular version you are using): ::
+
+   @software{nni2021,
+      author = {{Microsoft}},
+      month = {1},
+      title = {{Neural Network Intelligence}},
+      url = {https://github.com/microsoft/nni},
+      version = {2.0},
+      year = {2021}
+   }
