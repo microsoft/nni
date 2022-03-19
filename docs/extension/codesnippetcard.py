@@ -26,7 +26,7 @@ CARD_TEMPLATE_HEADER = """
 
     </div>
 
-    <h3>{title}</h3>
+    <h4>{title}</h4>
     </div>
 
 """

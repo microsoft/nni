@@ -73,8 +73,12 @@ autosummary_ignore_module_all = False
 autosummary_generate = True
 
 # Add mock modules
-autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter', 'azureml']
+autodoc_mock_imports = [
+    'apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter', 'azureml',
+    'ConfigSpace', 'ConfigSpaceNNI', 'smac', 'statsmodels', 'pybnn',
+]
 
+# Some of our modules cannot generate summary
 autosummary_mock_imports = [
     'nni.retiarii.codegen.tensorflow',
     'nni.nas.benchmarks.nasbench101.db_gen',
