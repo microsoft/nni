@@ -7,6 +7,8 @@ from collections import defaultdict
 from typing import Any, List, Dict
 from pathlib import Path
 
+__all__ = ['NoContextError', 'ContextStack', 'ModelNamespace']
+
 
 def import_(target: str, allow_none: bool = False) -> Any:
     if target is None:
@@ -14,13 +16,6 @@ def import_(target: str, allow_none: bool = False) -> Any:
     path, identifier = target.rsplit('.', 1)
     module = __import__(path, globals(), locals(), [identifier])
     return getattr(module, identifier)
-
-
-def version_larger_equal(a: str, b: str) -> bool:
-    # TODO: refactor later
-    a = a.split('+')[0]
-    b = b.split('+')[0]
-    return tuple(map(int, a.split('.'))) >= tuple(map(int, b.split('.')))
 
 
 _last_uid = defaultdict(int)
@@ -70,12 +65,13 @@ def get_importable_name(cls, relocate_module=False):
 
 
 class NoContextError(Exception):
+    """Exception raised when context is missing."""
     pass
 
 
 class ContextStack:
     """
-    This is to maintain a globally-accessible context envinronment that is visible to everywhere.
+    This is to maintain a globally-accessible context environment that is visible to everywhere.
 
     Use ``with ContextStack(namespace, value):`` to initiate, and use ``get_current_context(namespace)`` to
     get the corresponding value in the namespace.

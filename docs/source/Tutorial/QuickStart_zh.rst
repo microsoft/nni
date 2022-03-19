@@ -1,4 +1,4 @@
-.. 90b7c298df11d68ba419a1feaf453cfc
+.. 3b483d31655ac74e05b4c43b70452e08
 
 快速入门
 ==========
@@ -25,8 +25,6 @@ Windows
 .. Note:: 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 ``--user`` ；这不需要特殊权限。
 
 .. Note:: 如果出现 ``Segmentation fault`` 这样的错误，参考 :doc:`常见问题 <FAQ>` 。
-
-.. Note:: NNI 的系统需求，参考 :doc:`Linux & Mac <InstallationLinux>` 或者 :doc:`Windows <InstallationWin>` 的安装教程。如果想要使用 docker, 参考 :doc:`如何使用 Docker <HowToUseDocker>` 。
 
 
 MNIST 上的 "Hello World"
@@ -170,7 +168,7 @@ Experiment 的配置文件可以参考 `文档 <../reference/experiment_config.r
 
 .. _nniignore:
 
-.. Note:: 如果要使用远程服务器或集群作为 :doc:`训练平台 <../TrainingService/Overview>`，为了避免产生过大的网络压力，NNI 限制了文件的最大数量为 2000，大小为 300 MB。 如果代码目录中包含了过多的文件，可添加 ``.nniignore`` 文件来排除部分，与 ``.gitignore`` 文件用法类似。 参考 `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__ ，了解更多如何编写此文件的详细信息。
+.. Note:: 如果要使用远程服务器或集群作为训练平台，为了避免产生过大的网络压力，NNI 限制了文件的最大数量为 2000，大小为 300 MB。 如果代码目录中包含了过多的文件，可添加 ``.nniignore`` 文件来排除部分，与 ``.gitignore`` 文件用法类似。 参考 `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__ ，了解更多如何编写此文件的详细信息。
 
 *示例：* :githublink:`config.yml <examples/trials/mnist-pytorch/config.yml>` 和 :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
 

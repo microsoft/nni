@@ -24,8 +24,6 @@ Windows
 
 .. Note:: If there is an error like ``Segmentation fault``, please refer to the :doc:`FAQ <FAQ>`.
 
-.. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`. If you want to use docker, refer to :doc:`HowToUseDocker <HowToUseDocker>`.
-
 
 "Hello World" example on MNIST
 ------------------------------
@@ -168,7 +166,7 @@ Experiment config reference could be found `here <../reference/experiment_config
 
 .. _nniignore:
 
-.. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, NNI limits the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
+.. Note:: If you are planning to use remote machines or clusters as your training service, to avoid too much pressure on network, NNI limits the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
 
 *Example:* :githublink:`config_detailed.yml <examples/trials/mnist-pytorch/config_detailed.yml>` and :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
 

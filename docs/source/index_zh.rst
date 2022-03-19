@@ -1,4 +1,4 @@
-.. 1c1500ed177d6b4badecd72037a24a30
+.. 667579cc0df56e2a258a2222f0f6cd36
 
 ###########################
 Neural Network Intelligence
@@ -10,18 +10,20 @@ Neural Network Intelligence
     :titlesonly:
     :hidden:
 
-    概述<Overview>
-    安装 <installation>
     入门<Tutorial/QuickStart>
+    安装 <installation>
     教程<tutorials>
-    自动（超参数）调优 <hyperparameter_tune>
-    神经网络架构搜索<nas>
-    模型压缩<model_compression>
+    自动（超参数）调优 <hpo/index>
+    神经网络架构搜索<nas/index>
+    模型压缩<compression/index>
     特征工程<feature_engineering>
+    NNI实验 <experiment/overview>
+    HPO API Reference <reference/hpo>
     参考<reference>
     示例与解决方案<CommunitySharings/community_sharings>
     研究和出版物 <ResearchPublications>
     常见问题 <Tutorial/FAQ>
+    从源代码安装 <notes/build_from_source>
     如何贡献 <contribution>
     更改日志 <Release>
 
