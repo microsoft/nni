@@ -123,7 +123,7 @@ sphinx_gallery_conf = {
 # Each "source" tutorial rst will be copied to "target" tutorials.
 # The anchors will be replaced to avoid dupilcate labels.
 # Target should start with ``cp_`` to be properly ignored in git.
-tutorials_copy_list = {
+tutorials_copy_list = [
     # The global quickstart
     ('tutorials/hpo_quickstart_pytorch/main.rst', 'tutorials/hpo_quickstart_pytorch/cp_global_quickstart_hpo.rst'),
     ('tutorials/hello_nas.rst', 'tutorials/cp_global_quickstart_nas.rst'),
@@ -135,7 +135,7 @@ tutorials_copy_list = {
     ('tutorials/pruning_speed_up.rst', 'tutorials/cp_pruning_speed_up.rst'),
     ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
     ('tutorials/quantization_speed_up.rst', 'tutorials/cp_quantization_speed_up.rst'),
-}
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['../templates']

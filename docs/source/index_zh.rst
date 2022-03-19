@@ -11,7 +11,7 @@ Neural Network Intelligence
     :hidden:
 
     安装 <installation>
-    入门<Tutorial/QuickStart>
+    入门<quickstart>
     教程<tutorials>
     自动（超参数）调优 <hpo/index>
     神经网络架构搜索<nas/index>
