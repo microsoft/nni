@@ -14,7 +14,7 @@ Before starting to use NNI AdaptDL training service, you should have a Kubernete
 #. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use ``$(HOME)/.kube/config`` as kubeconfig file's path. You can also specify other kubeconfig files by setting the **KUBECONFIG** environment variable. Refer this `guideline <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig.
 #. If your NNI trial job needs GPU resource, you should follow this `guideline <https://github.com/NVIDIA/k8s-device-plugin>`__ to configure **Nvidia device plugin for Kubernetes**.
 #. (Optional) Prepare a **NFS server** and export a general purpose mount as external storage.
-#. Install **NNI**\ , follow the install guide :doc:`../installation`.
+#. Install **NNI**.
 
 Verify the Prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^

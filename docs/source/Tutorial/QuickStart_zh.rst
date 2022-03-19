@@ -1,4 +1,4 @@
-.. 8eaeffaa088fa022c601eb18bebd0736
+.. 3b483d31655ac74e05b4c43b70452e08
 
 快速入门
 ==========
@@ -25,8 +25,6 @@ Windows
 .. Note:: 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 ``--user`` ；这不需要特殊权限。
 
 .. Note:: 如果出现 ``Segmentation fault`` 这样的错误，参考 :doc:`常见问题 <FAQ>` 。
-
-.. Note:: NNI 的系统需求，参考 :doc:`Linux & Mac <InstallationLinux>` 或者 :doc:`Windows <InstallationWin>` 的安装教程。如果想要使用 docker, 参考 :doc:`如何使用 Docker <HowToUseDocker>` 。
 
 
 MNIST 上的 "Hello World"
