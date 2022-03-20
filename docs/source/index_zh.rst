@@ -1,4 +1,4 @@
-.. 4d670c5b2f7eebe5b65f593d7d350b85
+.. 126f8bcb44483c892ebfa987563a5463
 
 ###########################
 Neural Network Intelligence
@@ -20,9 +20,9 @@ Neural Network Intelligence
     NNI实验 <experiment/overview>
     HPO API Reference <reference/hpo>
     参考<reference>
-    示例与解决方案<CommunitySharings/community_sharings>
-    研究和出版物 <ResearchPublications>
-    常见问题 <Tutorial/FAQ>
+    示例与解决方案<misc/community_sharings>
+    研究和出版物 <misc/research_publications>
+    常见问题 <misc/faq>
     从源代码安装 <notes/build_from_source>
     如何贡献 <contribution>
     更改日志 <Release>
