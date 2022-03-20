@@ -1,5 +1,5 @@
 <div align="center">
-<img src="docs/img/nni_logo.png" width="80%"/>
+<img src="docs/img/nni_logo.png" width="600"/>
 </div>
 
 <br/>
@@ -11,7 +11,7 @@
 [![Version](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases)
 [![Documentation Status](https://readthedocs.org/projects/nni/badge/?version=stable)](https://nni.readthedocs.io/en/stable/?badge=stable)
 
-NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/) ([简体中文版点这里](https://nni.readthedocs.io/zh/))**. Quick links:
+NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/) ([简体中文版点这里](https://nni.readthedocs.io/zh/stable))**. Quick links:
 
 * [Documentation homepage](https://nni.readthedocs.io/)
 * [Installation guide](https://nni.readthedocs.io/en/stable/installation.html)
@@ -50,17 +50,19 @@ To update NNI to the latest version, add `--upgrade` flag to the above commands.
   
 ## Run your first experiment
 
-To run this experiment, you need to have [XXX](link) installed.
+To run this experiment, you need to have [PyTorch](https://pytorch.org/) (as well as [torchvision](https://pytorch.org/vision/stable/index.html)) installed.
 
 ```shell
-$ nnictl hello-world
+$ nnictl hello
 ```
 
-Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url` shown in the console.
+It will generate `nni_hello_hpo` folder in your current working directory, which contains a minimum hyper-parameter tuning example. It will also prompt you to run
 
-```text
-TBD
+```shell
+python nni_hello_hpo/main.py
 ```
+
+to launch your first NNI experiment. Use the web portal URL shown in the console to monitor the running status of your experiment.
 
 <img src="docs/static/img/webui.gif" alt="webui" width="100%"/>
 
@@ -83,7 +85,7 @@ Participating discussions via the following IM groups is also welcomed.
 Over the past few years, NNI has received thousands of feedbacks on GitHub issues, and pull requests from hundreds of contributors.
 We appreciate all contributions from community to make NNI thrive.
 
-<a href="https://github.com/microsoft/nni/graphs/contributors"><img src="https://contrib.rocks/image?repo=microsoft/nni&max=240" width="60%" /></a>
+<a href="https://github.com/microsoft/nni/graphs/contributors"><img src="https://contrib.rocks/image?repo=microsoft/nni&max=240" width="600" /></a>
 
 ## Test status
 

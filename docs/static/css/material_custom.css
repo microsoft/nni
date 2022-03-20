@@ -39,6 +39,37 @@ dt.sig-object {
     word-wrap: break-word;
 }
 
+.class > dt.sig-object {
+    border-left: none;                    /* remove left border */
+    border-top: 0.18rem solid #ec407a;  /* this should be matched with theme color. */
+}
+
+.function > dt.sig-object {
+    border-left: none;                    /* remove left border */
+    border-top: 0.18rem solid #ec407a;  /* this should be matched with theme color. */
+}
+
+.exception > dt.sig-object {
+    border-left: none;                    /* remove left border */
+    border-top: 0.18rem solid #ec407a;  /* this should be matched with theme color. */
+}
+
+/* Padding on parameter list is not needed */
+dl.field-list > dt {
+    padding-left: 0 !important;
+}
+
+dl.field-list > dd {
+    margin-left: 1.5em;
+}
+
+/* show headerlink when hover/focus */
+.headerlink:focus, .headerlink:hover {
+    -webkit-transform: translate(0);
+    transform: translate(0);
+    opacity: 1;
+}
+
 /* logo is too large */
 a.md-logo img {
     padding: 3px;
@@ -134,10 +165,10 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
     position: relative;
 }
 
-.codesnippet-card-title-container h3 {
-    padding-left: 2.5rem;
-    line-height: 1.8rem;
-    height: 1.8rem;
+.codesnippet-card-title-container h4 {
+    padding-left: 2.3rem;
+    line-height: 1.6rem;
+    height: 1.6rem;
     margin-top: 0;
 }
 
@@ -163,8 +194,8 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
 }
 
 .codesnippet-card-icon {
-    width: 1.8rem;
-    height: 1.8rem;
+    width: 1.6rem;
+    height: 1.6rem;
     padding: 0;
 }
 
@@ -183,6 +214,6 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
 /* We did this by using scroll-margin-top instead */
 dt:target {
     margin-top: 0.15rem !important;
-    padding-top: 0 !important;
+    padding-top: 0.5rem !important;
     scroll-margin-top: 3.5rem;
 }

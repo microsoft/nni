@@ -74,8 +74,12 @@ autosummary_ignore_module_all = False
 autosummary_generate = True
 
 # Add mock modules
-autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter', 'azureml']
+autodoc_mock_imports = [
+    'apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter', 'azureml',
+    'ConfigSpace', 'ConfigSpaceNNI', 'smac', 'statsmodels', 'pybnn',
+]
 
+# Some of our modules cannot generate summary
 autosummary_mock_imports = [
     'nni.retiarii.codegen.tensorflow',
     'nni.nas.benchmarks.nasbench101.db_gen',
@@ -114,6 +118,25 @@ sphinx_gallery_conf = {
     # Working directory is strange, needs full path.
     'default_thumb_file': os.path.join(os.path.dirname(__file__), '../img/thumbnails/nni_icon_blue.png'),
 }
+
+# Some tutorials might need to appear more than once in toc.
+# In this list, we make source/target tutorial pairs.
+# Each "source" tutorial rst will be copied to "target" tutorials.
+# The anchors will be replaced to avoid dupilcate labels.
+# Target should start with ``cp_`` to be properly ignored in git.
+tutorials_copy_list = [
+    # The global quickstart
+    ('tutorials/hpo_quickstart_pytorch/main.rst', 'tutorials/hpo_quickstart_pytorch/cp_global_quickstart_hpo.rst'),
+    ('tutorials/hello_nas.rst', 'tutorials/cp_global_quickstart_nas.rst'),
+    ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_global_quickstart_compression.rst'),
+
+    # Others in full-scale materials
+    ('tutorials/hello_nas.rst', 'tutorials/cp_hello_nas_quickstart.rst'),
+    ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
+    ('tutorials/pruning_speed_up.rst', 'tutorials/cp_pruning_speed_up.rst'),
+    ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
+    ('tutorials/quantization_speed_up.rst', 'tutorials/cp_quantization_speed_up.rst'),
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['../templates']
