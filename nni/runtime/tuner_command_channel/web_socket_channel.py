@@ -19,22 +19,20 @@ from __future__ import annotations
 import logging
 import os
 
-from nni.typehint import TypeAlias
 from .command_type import CommandType
 from . import web_socket_sync
 
 _logger = logging.getLogger(__name__)
 
-# in future `Command` will be a base class and this module will deal with encoding/decoding
-Command: TypeAlias = str
+# in future commands will be of `Command` class and this module will deal with encoding/decoding
 
-def send_command(command: Command) -> None:
+def send_command(command: str) -> None:
     """
     Send a command to NNI manager.
     """
     web_socket_sync.send(command)
 
-def receive_command() -> Command | None:
+def receive_command() -> str | None:
     """
     Receive a command from NNI manager.
 
@@ -56,4 +54,4 @@ def shutdown():
 if 'NNI_TUNER_COMMAND_CHANNEL' not in os.environ:
     _logger.debug('No NNI_TUNER_COMMAND_CHANNEL environ. This is not tuner process.')
 else:
-    web_socket_sync.connect(os.environ['NNI_TUNER_COMMAND_CHANNEL']
+    web_socket_sync.connect(os.environ['NNI_TUNER_COMMAND_CHANNEL'])

@@ -19,6 +19,6 @@ def receive() -> tuple[CommandType, str]:
     if command is None:
         raise RuntimeError('NNI manager closed connection')
     command_type = CommandType(command[:2].encode())
-    if command_type is CommandType.terminate:
+    if command_type is CommandType.Terminate:
         web_socket_channel.shutdown()
     return command_type, command[2:]

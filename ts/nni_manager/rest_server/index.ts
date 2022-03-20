@@ -28,6 +28,7 @@ import type { AddressInfo } from 'net';
 import path from 'path';
 
 import express, { Request, Response, Router } from 'express';
+import expressWs from 'express-ws';
 import httpProxy from 'http-proxy';
 import { Deferred } from 'ts-deferred';
 
@@ -35,6 +36,7 @@ import { Singleton } from 'common/component';
 import { getBasePort, getPrefixUrl } from 'common/experimentStartupInfo';
 import { Logger, getLogger } from 'common/log';
 import { getLogDir } from 'common/utils';
+import * as tunerCommandChannel from 'core/tuner_command_channel';
 import { createRestHandler } from './restHandler';
 
 /**
@@ -65,6 +67,8 @@ export class RestServer {
         this.logger.info(`Starting REST server at port ${this.port}, URL prefix: "${this.urlPrefix}"`);
 
         const app = express();
+        expressWs(app);
+
         // FIXME: We should have a global handler for critical errors.
         // `shutdown()` is not a callback and should not be passed to NNIRestHandler.
         app.use(this.urlPrefix, rootRouter(this.shutdown.bind(this)));
@@ -116,11 +120,14 @@ export class RestServer {
  *  In fact experiments management should have a separate prefix and module.
  **/
 function rootRouter(stopCallback: () => Promise<void>): Router {
-    const router = Router();
+    const router = Router() as expressWs.Router;
     router.use(express.json({ limit: '50mb' }));
 
     /* NNI manager APIs */
     router.use('/api/v1/nni', createRestHandler(stopCallback));
+
+    /* WebSocket APIs */
+    router.ws('/tuner', tunerCommandChannel.serveWebSocket);
 
     /* Download log files */
     // The REST API path "/logs" does not match file system path "/log".
