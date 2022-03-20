@@ -4,7 +4,7 @@ build/
 _build/
 
 # ignored copied rst in tutorials
-**/tutorials/cp_*.rst
+**/tutorials/**/cp_*.rst
 
 # auto-generated reference table
 _modules/

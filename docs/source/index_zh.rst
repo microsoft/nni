@@ -1,4 +1,4 @@
-.. 737612334d31e3c0ee8db7f53dc2944f
+.. 4d670c5b2f7eebe5b65f593d7d350b85
 
 ###########################
 Neural Network Intelligence
@@ -10,8 +10,8 @@ Neural Network Intelligence
     :titlesonly:
     :hidden:
 
+    入门 <quickstart>
     安装 <installation>
-    入门<Tutorial/QuickStart>
     教程<tutorials>
     自动（超参数）调优 <hpo/index>
     神经网络架构搜索<nas/index>
@@ -23,6 +23,7 @@ Neural Network Intelligence
     示例与解决方案<CommunitySharings/community_sharings>
     研究和出版物 <ResearchPublications>
     常见问题 <Tutorial/FAQ>
+    从源代码安装 <notes/build_from_source>
     如何贡献 <contribution>
     更改日志 <Release>
 

@@ -14,6 +14,8 @@ Retiarii for Neural Architecture Search
 
 .. attention:: NNI's latest NAS supports are all based on Retiarii Framework, users who are still on `early version using NNI NAS v1.0 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ shall migrate your work to Retiarii as soon as possible.
 
+.. note:: PyTorch is the **only supported framework on Retiarii**. Inquiries of NAS support on Tensorflow is in `this discussion <https://github.com/microsoft/nni/discussions/4605>`__. If you intend to run NAS with DL frameworks other than PyTorch and Tensorflow, please `open new issues <https://github.com/microsoft/nni/issues>`__ to let us know.
+
 .. Using rubric to prevent the section heading to be include into toc
 
 .. rubric:: Motivation
@@ -24,7 +26,7 @@ However, it is pretty hard to use existing NAS work to help develop common DNN m
 
 In summary, we highlight the following features for Retiarii:
 
-* Simple APIs are provided for defining model search space within PyTorch/TensorFlow model.
+* Simple APIs are provided for defining model search space within a deep learning model.
 * SOTA NAS algorithms are built-in to be used for exploring model search space.
 * System-level optimizations are implemented for speeding up the exploration.
 
