@@ -6,9 +6,9 @@ Neural Network Intelligence
     :caption: Get Started
     :hidden:
 
-    Installation <installation>
-    QuickStart <Tutorial/QuickStart>
-    Tutorials <tutorials>
+    installation
+    quickstart
+    Learning NNI <tutorials>
 
 ..  toctree::
     :maxdepth: 2
@@ -37,9 +37,10 @@ Neural Network Intelligence
     :caption: Misc
     :hidden:
 
-    Use Cases and Solutions <misc/community_sharings>
-    Research and Publications <misc/research_publications>
-    FAQ <misc/faq>
+    Use Cases and Solutions <CommunitySharings/community_sharings>
+    Research and Publications <ResearchPublications>
+    FAQ <Tutorial/FAQ>
+    notes/build_from_source
     How to Contribute <contribution>
     Change Log <Release>
 
@@ -64,7 +65,7 @@ To install the current release:
 
 See the :doc:`installation guide </installation>` if you need additional help on installation.
 
-Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <tutorials>` to start your journey with NNI!
+Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey with NNI!
 
 .. Please keep this part sync with readme
 
@@ -94,7 +95,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
    <div class="codesnippet-card-container">
 
 .. codesnippetcard::
-   :icon: ../img/thumbnails/hpo-icon-small.png
+   :icon: ../img/thumbnails/hpo-small.svg
    :title: Hyper-parameter Tuning
    :link: tutorials/hpo_quickstart_pytorch/main
 
@@ -117,7 +118,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
       nni.report_final_result(accuracy)
 
 .. codesnippetcard::
-   :icon: ../img/thumbnails/pruning-icon-small.png
+   :icon: ../img/thumbnails/pruning-small.svg
    :title: Model Pruning
    :link: tutorials/pruning_quick_start_mnist
 
@@ -139,7 +140,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
           speedup_model()
 
 .. codesnippetcard::
-   :icon: ../img/thumbnails/quantization-icon-small.png
+   :icon: ../img/thumbnails/quantization-small.svg
    :title: Quantization
    :link: tutorials/quantization_speed_up
 
@@ -166,7 +167,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
       engine.compress()
 
 .. codesnippetcard::
-   :icon: ../img/thumbnails/multi-trial-nas-icon-small.png
+   :icon: ../img/thumbnails/multi-trial-nas-small.svg
    :title: Neural Architecture Search
    :link: tutorials/hello_nas
 
@@ -188,7 +189,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
           evaluator, strategy).run()
 
 .. codesnippetcard::
-   :icon: ../img/thumbnails/one-shot-nas-icon-small.png
+   :icon: ../img/thumbnails/one-shot-nas-small.svg
    :title: One-shot NAS
    :link: nas/index
 
@@ -205,7 +206,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
       arch = trainer.export()
 
 .. codesnippetcard::
-   :icon: ../img/thumbnails/feature-engineering-icon-small.png
+   :icon: ../img/thumbnails/feature-engineering-small.svg
    :title: Feature Engineering
    :link: FeatureEngineering/Overview
 
@@ -232,7 +233,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
    <h3>NNI eases the effort to scale and manage AutoML experiments.</h3>
 
 .. codesnippetcard::
-   :icon: ../img/thumbnails/feature-engineering-icon-small.png
+   :icon: ../img/thumbnails/training-service-small.svg
    :title: Training Service
    :link: experiment/training_service
    :seemore: See more here.
@@ -243,7 +244,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
    Currently, NNI supports **more than 9** kinds of training services.
 
 .. codesnippetcard::
-   :icon: ../img/thumbnails/feature-engineering-icon-small.png
+   :icon: ../img/thumbnails/web-portal-small.svg
    :title: Web Portal
    :link: experiment/web_portal
    :seemore: See more here.
@@ -254,7 +255,7 @@ Then, please read :doc:`Quick start <Tutorial/QuickStart>` and :doc:`Tutorials <
       :width: 100%
 
 .. codesnippetcard::
-   :icon: ../img/thumbnails/feature-engineering-icon-small.png
+   :icon: ../img/thumbnails/experiment-management-small.svg
    :title: Experiment Management
    :link: experiment/exp_management
    :seemore: See more here.
@@ -285,3 +286,22 @@ NNI is maintained on the `NNI GitHub repository <https://github.com/microsoft/nn
        .. image:: https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png
      -
        .. image:: https://github.com/scarlett2018/nniutil/raw/master/wechat.png
+
+.. raw:: html
+
+   <h2>Citing NNI</h2>
+
+If you use NNI in a scientific publication, please consider citing NNI in your references.
+
+   Microsoft. Neural Network Intelligence (version |release|). https://github.com/microsoft/nni
+
+Bibtex entry (please replace the version with the particular version you are using): ::
+
+   @software{nni2021,
+      author = {{Microsoft}},
+      month = {1},
+      title = {{Neural Network Intelligence}},
+      url = {https://github.com/microsoft/nni},
+      version = {2.0},
+      year = {2021}
+   }
