@@ -163,7 +163,13 @@ class ChannelDependency(Dependency):
             parent_layers = []
             # find the node that contains aten::add
             # or aten::cat operations
-            if node.op_type in ADD_TYPES:
+            if node.op_type in ADD_TYPES or node.op_type in MUL_TYPES:
+                # refer issue 4540 for more details. Multiplication actually
+                # will not introduce the channel dependency, cause the misaligned
+                # channels can propagate to each other. However, when one of the input
+                # tensor is from skip connection(residual), the channel propagation
+                # may be failed(the input is also used by another layer and cannot be
+                # pruned), in this case, we need to fix the conflict maunally.
                 parent_layers = self._get_parent_layers(node)
             elif node.op_type == CAT_TYPE:
                 # To determine if this cat operation will introduce channel

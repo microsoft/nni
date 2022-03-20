@@ -304,6 +304,8 @@ class NasBench101Cell(Mutable):
             [op_candidates[selected[f'{label}/op{i}']] for i in range(1, num_nodes - 1)],
             adjacency_list, in_features, out_features, num_nodes, projection)
 
+        # FIXME: weight inheritance on nasbench101 is not supported yet
+
     def __init__(self, op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]]],
                  in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
                  max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[str] = None):

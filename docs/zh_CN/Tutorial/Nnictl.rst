@@ -1,1 +1,0 @@
-../../en_US/Tutorial/Nnictl.rst

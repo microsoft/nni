@@ -101,6 +101,7 @@ class _MultiModelSupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
+@nni.trace
 class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
     """
     Lightning Module of SupervisedLearning for Cross-Graph Optimization.

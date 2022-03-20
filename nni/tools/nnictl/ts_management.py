@@ -9,7 +9,7 @@ _builtin_training_services = [
     'remote',
     'openpai', 'pai',
     'aml',
-    'dlc'
+    'dlc',
     'kubeflow',
     'frameworkcontroller',
     'adl',
