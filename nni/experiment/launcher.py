@@ -28,14 +28,16 @@ _logger = logging.getLogger('nni.experiment')
 
 @dataclass(init=False)
 class NniManagerArgs:
+    # argv sent to "ts/nni_manager/main.js"
+
     port: int
     experiment_id: int
-    action: str  # new or resume
-    mode: str  # training service platform
-    experiments_directory: str
+    action: str  # 'new', 'resume', 'view'
+    mode: str  # training service platform, to be removed
+    experiments_directory: str  # renamed "config.nni_experiments_directory", must be absolute
     log_level: str
     foreground: bool = False
-    url_prefix: Optional[str] = None
+    url_prefix: Optional[str] = None  # leading and trailing "/" must be stripped
     dispatcher_pipe: Optional[str] = None
 
     def __init__(self, action, exp_id, config, port, debug, foreground, url_prefix):
@@ -44,6 +46,8 @@ class NniManagerArgs:
         self.action = action
         self.foreground = foreground
         self.url_prefix = url_prefix
+        # config field name "experiment_working_directory" is a mistake
+        # see "ts/nni_manager/common/globals/arguments.ts" for details
         self.experiments_directory = config.experiment_working_directory
 
         if isinstance(config.training_service, list):
@@ -56,6 +60,8 @@ class NniManagerArgs:
             self.log_level = 'debug'
 
     def to_command_line_args(self):
+        # reformat fields to meet yargs library's format
+        # see "ts/nni_manager/common/globals/arguments.ts" for details
         ret = []
         for field in fields(self):
             value = getattr(self, field.name)

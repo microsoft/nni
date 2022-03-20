@@ -14,15 +14,20 @@ import yargs from 'yargs/yargs';
  *
  *  Hyphen-separated words are automatically converted to camelCases by yargs lib, but snake_cases are not.
  *  So it supports "--log-level" but does not support "--log_level".
+ *
+ *  Unfortunately I misunderstood "experiment_working_directory" config field when deciding the name.
+ *  It defaults to "~/nni-experiments" rather than "~/nni-experiments/<experiment-id>",
+ *  and further more the working directory is "site-packages/nni_node", not either.
+ *  For compatibility concern we cannot change the public API, so there is an inconsistency here.
  **/
 export interface NniManagerArgs {
     readonly port: number;
     readonly experimentId: string;
     readonly action: 'create' | 'resume' | 'view';
-    readonly experimentsDirectory: string;  // must be absolute
+    readonly experimentsDirectory: string;  // renamed "config.experiment_working_directory", must be absolute
     readonly logLevel: 'critical' | 'error' | 'warning' | 'info' | 'debug';
     readonly foreground: boolean;
-    readonly urlPrefix: string;  // leading and trailing slashes must be stripped
+    readonly urlPrefix: string;  // leading and trailing "/" must be stripped
 
     // these are planned to be removed
     readonly mode: string;
