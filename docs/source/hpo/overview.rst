@@ -6,11 +6,10 @@ Auto hyperparameter optimization (HPO), or auto tuning, is one of the key featur
 Introduction to HPO
 -------------------
 
-In machine learning, a hyperparameter is a parameter whose value is used to control learning process [1]_,
-and HPO is the problem of choosing a set of optimal hyperparameters for a learning algorithm [2]_.
-
-.. [1] https://en.wikipedia.org/wiki/Hyperparameter_(machine_learning)
-.. [2] https://en.wikipedia.org/wiki/Hyperparameter_optimization
+In machine learning, a hyperparameter is a parameter whose value is used to control learning process,
+and HPO is the problem of choosing a set of optimal hyperparameters for a learning algorithm.
+(`From <https://en.wikipedia.org/wiki/Hyperparameter_(machine_learning)>`__
+`Wikipedia <https://en.wikipedia.org/wiki/Hyperparameter_optimization>`__)
 
 Following code snippet demonstrates a naive HPO process:
 
@@ -35,9 +34,9 @@ Following code snippet demonstrates a naive HPO process:
 You may have noticed, the example will train 4×10×3=120 models in total.
 Since it consumes so much computing resources, you may want to:
 
- 1. Find the best set of hyperparameters with less iterations.
- 2. Train the models on distributed platforms.
- 3. Have a portal to monitor and control the process.
+1. Find the best set of hyperparameters with less iterations.
+2. Train the models on distributed platforms.
+3. Have a portal to monitor and control the process.
 
 And NNI will do them for you.
 
@@ -74,7 +73,7 @@ from simple on-premise servers to scalable commercial clouds.
 With NNI you can write one piece of model code, and concurrently evaluate hyperparameter sets on local machine, SSH servers,
 Kubernetes-based clusters, AzureML service, and much more.
 
-Main article: (FIXME: link to training_services)
+Main article: :doc:`/experiment/training_service`
 
 Web Portal
 ^^^^^^^^^^
@@ -82,7 +81,10 @@ Web Portal
 NNI provides a web portal to monitor training progress, to visualize hyperparameter performance,
 to manually customize hyperparameters, and to manage multiple HPO experiments.
 
-(FIXME: image and link)
+Main article: :doc:`/experiment/web_portal`
+
+.. image:: ../../static/img/webui.gif
+    :width: 100%
 
 Tutorials
 ---------
@@ -97,12 +99,11 @@ Extra Features
 
 After you are familiar with basic usage, you can explore more HPO features:
 
-* :doc:`Assessor: Early stop non-optimal models <assessors>`
-* :doc:`nnictl: Use command line tool to create and manage experiments </reference/nnictl>`
-* :doc:`Custom tuner: Implement your own tuner <custom_algorithm>`
-* :doc:`Tensorboard support <tensorboard>`
-* :doc:`Tuner benchmark <hpo_benchmark>`
-* :doc:`NNI Annotation (legacy) <nni_annotation>`
+* :doc:`Use command line tool to create and manage experiments (nnictl) </reference/nnictl>`
+* :doc:`Early stop non-optimal models (assessor) <assessors>`
+* :doc:`TensorBoard integration <tensorboard>`
+* :doc:`Implement your own algorithm <custom_algorithm>`
+* :doc:`Benchmark tuners <hpo_benchmark>`
 
 Built-in Algorithms
 -------------------
@@ -166,7 +167,7 @@ Main article: :doc:`tuners`
 
     * - :class:`DNGOTuner <nni.algorithms.hpo.dngo_tuner.DNGOTuner>`
       - Bayesian
-      - (FIXME: full name?)
+      - Deep Networks for Global Optimization.
 
     * - :class:`PPOTuner <nni.algorithms.hpo.ppo_tuner.PPOTuner>`
       - RL

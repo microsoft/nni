@@ -210,7 +210,7 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="The tutorial consists of 4 steps: ">
+    <div class="sphx-glr-thumbcontainer" tooltip="There is also a TensorFlow version&lt;../hpo_quickstart_tensorflow/main&gt; if you prefer it.">
 
 .. only:: html
 
