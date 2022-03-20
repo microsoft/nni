@@ -91,7 +91,7 @@ class Experiment:
         self.id: str = management.generate_experiment_id()
         self.port: Optional[int] = None
         self._proc: Optional[Popen] = None
-        self.mode = 'new'
+        self.action = 'create'
         self.url_prefix: Optional[str] = None
 
         args = [config, training_service]  # deal with overloading
@@ -127,7 +127,7 @@ class Experiment:
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        self._proc = launcher.start_experiment(self.mode, self.id, config, port, debug, run_mode, self.url_prefix)
+        self._proc = launcher.start_experiment(self.action, self.id, config, port, debug, run_mode, self.url_prefix)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed
@@ -261,7 +261,7 @@ class Experiment:
     def _resume(exp_id, exp_dir=None):
         exp = Experiment()
         exp.id = exp_id
-        exp.mode = 'resume'
+        exp.action = 'resume'
         exp.config = launcher.get_stopped_experiment_config(exp_id, exp_dir)
         return exp
 
@@ -269,7 +269,7 @@ class Experiment:
     def _view(exp_id, exp_dir=None):
         exp = Experiment()
         exp.id = exp_id
-        exp.mode = 'view'
+        exp.action = 'view'
         exp.config = launcher.get_stopped_experiment_config(exp_id, exp_dir)
         return exp
 
