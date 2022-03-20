@@ -72,7 +72,7 @@ class MetisTuner(Tuner):
        This is achieved by inferring the potential information gain of
        exploration, exploitation, and resampling.
 
-    Note that the only acceptable types in the :doc:`search space <hpo/search_space>` are
+    Note that the only acceptable types in the :doc:`search space </hpo/search_space>` are
     ``quniform``, ``uniform``, ``randint``, and numerical ``choice``.
 
 

@@ -344,7 +344,7 @@ class BOHB(MsgDispatcherBase):
     and the `reference paper for Hyperband <https://arxiv.org/abs/1603.06560>`__.
     This procedure is summarized by the pseudocode below.
 
-    .. image:: ../img/bohb_1.png
+    .. image:: ../../img/bohb_1.png
         :scale: 80 %
         :align: center
 
@@ -354,7 +354,7 @@ class BOHB(MsgDispatcherBase):
     in order to better handle interaction effects in the input space.
     Tree Parzen Estimator(TPE): uses a KDE (kernel density estimator) to model the densities.
 
-    .. image:: ../img/bohb_2.png
+    .. image:: ../../img/bohb_2.png
         :scale: 80 %
         :align: center
 
@@ -366,12 +366,12 @@ class BOHB(MsgDispatcherBase):
     best and worst configurations, respectively, to model the two densities.
     Note that it also samples a constant fraction named **random fraction** of the configurations uniformly at random.
 
-    .. image:: ../img/bohb_3.png
+    .. image:: ../../img/bohb_3.png
         :scale: 80 %
         :align: center
 
 
-    .. image:: ../img/bohb_6.jpg
+    .. image:: ../../img/bohb_6.jpg
         :scale: 65 %
         :align: center
 
@@ -385,7 +385,7 @@ class BOHB(MsgDispatcherBase):
     Multidimensional KDE is used to guide the selection of configurations for the next iteration.
     The sampling procedure (using Multidimensional KDE to guide selection) is summarized by the pseudocode below.
 
-    .. image:: ../img/bohb_4.png
+    .. image:: ../../img/bohb_4.png
         :scale: 80 %
         :align: center
 
@@ -393,7 +393,7 @@ class BOHB(MsgDispatcherBase):
     Code implementation: :githublink:`examples/trials/mnist-advisor <examples/trials/mnist-advisor>`
     The following is the experimental final results:
 
-    .. image:: ../img/bohb_5.png
+    .. image:: ../../img/bohb_5.png
         :scale: 80 %
         :align: center
 

@@ -47,7 +47,7 @@ class SMACTuner(Tuner):
     :footcite:t:`hutter2011sequential`.
 
     Note that SMAC on nni only supports a subset of the types in
-    :doc:`search space <hpo/search_space>`:
+    :doc:`search space </hpo/search_space>`:
     ``choice``, ``randint``, ``uniform``, ``loguniform``, and ``quniform``.
 
     Note that SMAC needs additional installation using the following command:

@@ -58,7 +58,7 @@ class GPTuner(Tuner):
     Therefore, Bayesian Optimization is suggested for situations where sampling the function
     to be optimized is very expensive.
 
-    Note that the only acceptable types in the :doc:`search space <hpo/search_space>` are
+    Note that the only acceptable types in the :doc:`search space </hpo/search_space>` are
     ``randint``, ``uniform``, ``quniform``, ``loguniform``, ``qloguniform``, and numerical ``choice``.
 
     This optimization approach is described in Section 3 of the paper
