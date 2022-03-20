@@ -1,4 +1,4 @@
-.. c20f29083a3327d6ecad5f73901e7f99
+.. c2f91d665d82df1b084c9ed09a930999
 
 ###########################
 Neural Network Intelligence
@@ -19,6 +19,7 @@ Neural Network Intelligence
     特征工程<feature_engineering>
     NNI实验 <experiment/overview>
     HPO API Reference <reference/hpo>
+    Experiment API Reference <reference/experiment>
     参考<reference>
     示例与解决方案<CommunitySharings/community_sharings>
     研究和出版物 <ResearchPublications>
