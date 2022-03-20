@@ -129,7 +129,7 @@ If you use Azure storage, you should set ``storage`` in your config as follows:
 Run an experiment
 -----------------
 
-Use :doc:`PyTorch quickstart </tutorial/hpo_quickstart_pytorch/main>` as an example.
+Use :doc:`PyTorch quickstart </tutorials/hpo_quickstart_pytorch/main>` as an example.
 This is a PyTorch job, and use pytorch-operator of Kubeflow.
 The experiment config is like:
 
