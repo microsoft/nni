@@ -248,7 +248,7 @@ class Classification(Lightning):
         L2 weight decay. default: 0
     optimizer : Optimizer
         Class for optimizer (not an instance). default: ``Adam``
-    train_dataloders : DataLoader
+    train_dataloaders : DataLoader
         Used in ``trainer.fit()``. A PyTorch DataLoader with training samples.
         If the ``lightning_module`` has a predefined train_dataloader method this will be skipped.
     val_dataloaders : DataLoader or List of DataLoader
@@ -301,7 +301,7 @@ class Regression(Lightning):
         L2 weight decay. default: 0
     optimizer : Optimizer
         Class for optimizer (not an instance). default: ``Adam``
-    train_dataloders : DataLoader
+    train_dataloaders : DataLoader
         Used in ``trainer.fit()``. A PyTorch DataLoader with training samples.
         If the ``lightning_module`` has a predefined train_dataloader method this will be skipped.
     val_dataloaders : DataLoader or List of DataLoader

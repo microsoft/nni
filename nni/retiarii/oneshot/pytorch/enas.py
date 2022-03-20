@@ -145,7 +145,7 @@ class ReinforceController(nn.Module):
             else:
                 self._inputs = torch.zeros(1, self.lstm_size, device=self.embedding[field.name].weight.device)
 
-        sampled = sampled.detach().numpy().tolist()
+        sampled = sampled.detach().cpu().numpy().tolist()
         self.sample_log_prob += self.entropy_reduction(log_prob)
         entropy = (log_prob * torch.exp(-log_prob)).detach()  # pylint: disable=invalid-unary-operand-type
         self.sample_entropy += self.entropy_reduction(entropy)

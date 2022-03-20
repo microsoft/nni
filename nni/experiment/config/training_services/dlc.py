@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
+from typing import Optional
 
 from ..training_service import TrainingServiceConfig
 
@@ -17,6 +18,7 @@ class DlcConfig(TrainingServiceConfig):
     ecs_spec: str # e.g.,'ecs.c6.large'
     region: str
     nas_data_source_id: str
+    oss_data_source_id: Optional[str] = None
     access_key_id: str
     access_key_secret: str
     local_storage_mount_point: str
