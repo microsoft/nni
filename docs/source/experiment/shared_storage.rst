@@ -1,5 +1,5 @@
-**How to Use Shared Storage**
-=============================
+How to Use Shared Storage
+=========================
 
 If you want to use your own storage during using NNI, shared storage can satisfy you.
 Instead of using training service native storage, shared storage can bring you more convenience.
