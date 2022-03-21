@@ -55,7 +55,7 @@ class EvolutionTuner(Tuner):
     """
     Naive Evolution comes from `Large-Scale Evolution of Image Classifiers <https://arxiv.org/pdf/1703.01041.pdf>`__
     It randomly initializes a population based on the search space.
-    For each generation, it chooses better ones and does some mutation 
+    For each generation, it chooses better ones and does some mutation.
     (e.g., changes a hyperparameter, adds/removes one layer, etc.) on them to get the next generation.
     Naive Evolution requires many trials to works but it’s very simple and it’s easily expanded with new features.
 
@@ -76,7 +76,7 @@ class EvolutionTuner(Tuner):
         Optimize mode, 'maximize' or 'minimize'.
         If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
     population_size: int
-        The initial size of the population (trial num) in the evolution tuner(default=32). 
+        The initial size of the population (trial num) in the evolution tuner(default=32).
         The larger population size, the better evolution performance.
         It's suggested that ``population_size`` be much larger than ``concurrency`` so users can get the most out of the algorithm.
         And at least ``concurrency``, or the tuner will fail on its first generation of parameters.
@@ -197,7 +197,7 @@ class EvolutionTuner(Tuner):
 
         Parameters
         ----------
-        
+
         parameter_id : int
 
         Returns
@@ -276,7 +276,7 @@ class EvolutionTuner(Tuner):
 
         Parameters
         ----------
-        
+
         parameter_id : int
         parameters : dict
         value : dict/float
