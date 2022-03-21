@@ -4,6 +4,7 @@
 import random
 import unittest
 
+import numpy
 import torch
 import torch.nn.functional as F
 
@@ -105,6 +106,17 @@ class IterativePrunerTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
 
+    def test_amc_pruner(self):
+        model = TorchModel()
+        config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
+        dummy_input = torch.rand(10, 1, 28, 28)
+        ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 5, 'discount': 1.,
+                       'bsize': 64, 'rmsize': 100, 'window_length': 1, 'tau': 0.01, 'init_delta': 0.5, 'delta_decay': 0.99,
+                       'max_episode_length': 1e9, 'epsilon': 50000}
+        pruner = AMCPruner(10, model, config_list, dummy_input, evaluator, finetuner=finetuner, ddpg_params=ddpg_params, target='flops', log_dir='../../../logs')
+        pruner.compress()
+
+class FixSeedPrunerTestCase(unittest.TestCase):
     def test_auto_compress_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
@@ -126,15 +138,21 @@ class IterativePrunerTestCase(unittest.TestCase):
         print(sparsity_list)
         assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
 
-    def test_amc_pruner(self):
-        model = TorchModel()
-        config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
-        dummy_input = torch.rand(10, 1, 28, 28)
-        ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 5, 'discount': 1.,
-                       'bsize': 64, 'rmsize': 100, 'window_length': 1, 'tau': 0.01, 'init_delta': 0.5, 'delta_decay': 0.99,
-                       'max_episode_length': 1e9, 'epsilon': 50000}
-        pruner = AMCPruner(10, model, config_list, dummy_input, evaluator, finetuner=finetuner, ddpg_params=ddpg_params, target='flops', log_dir='../../../logs')
-        pruner.compress()
+    def setUp(self) -> None:
+        # fix seed in order to solve the random failure of ut
+        random.seed(1024)
+        numpy.random.seed(1024)
+        torch.manual_seed(1024)
+
+    def tearDown(self) -> None:
+        # reset seed
+        import time
+        now = int(time.time() * 100)
+        random.seed(now)
+        seed = random.randint(0, 2 ** 32 - 1)
+        random.seed(seed)
+        numpy.random.seed(seed)
+        torch.manual_seed(seed)
 
 if __name__ == '__main__':
     unittest.main()

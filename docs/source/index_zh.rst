@@ -1,4 +1,4 @@
-.. 4a8dacf5afeed980409b777b3fb60fe2
+.. 4d622b7ee5031e9cccec635bf6c7427d
 
 ###########################
 Neural Network Intelligence
@@ -25,7 +25,7 @@ Neural Network Intelligence
     研究和出版物 <misc/research_publications>
     常见问题 <misc/faq>
     从源代码安装 <notes/build_from_source>
-    如何贡献 <contribution>
+    如何贡献 <notes/contributing>
     更改日志 <Release>
 
 

@@ -43,6 +43,17 @@ class MultiThreadEnvWorker(EnvWorker):
     def reset(self):
         return self.env.reset()
 
+    def send(self, action):
+        # for tianshou >= 0.4.6
+        if action is None:
+            self.result = self.pool.apply_async(self.env.reset)
+        else:
+            self.send_action(action)
+
+    def recv(self):
+        # for tianshou >= 0.4.6
+        return self.result.get()
+
     @staticmethod
     def wait(*args, **kwargs):
         raise NotImplementedError('Async collect is not supported yet.')

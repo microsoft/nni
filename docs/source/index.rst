@@ -40,7 +40,7 @@ Neural Network Intelligence
     Research and Publications <misc/research_publications>
     FAQ <misc/faq>
     notes/build_from_source
-    How to Contribute <contribution>
+    Contribution Guide <notes/contributing>
     Change Log <Release>
 
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
