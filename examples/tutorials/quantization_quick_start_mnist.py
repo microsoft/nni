@@ -39,6 +39,7 @@ for epoch in range(3):
 # ----------------
 #
 # Initialize a `config_list`.
+# Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
 
 config_list = [{
     'quant_types': ['input', 'weight'],

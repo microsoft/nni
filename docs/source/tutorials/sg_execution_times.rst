@@ -5,12 +5,12 @@
 
 Computation times
 =================
-**01:48.564** total execution time for **tutorials** files:
+**03:24.740** total execution time for **tutorials** files:
 
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py` (``pruning_quick_start_mnist.py``)           | 01:38.705 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_quantization_quick_start_mnist.py` (``quantization_quick_start_mnist.py``) | 01:51.644 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_pruning_speed_up.py` (``pruning_speed_up.py``)                             | 00:09.859 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py` (``pruning_quick_start_mnist.py``)           | 01:33.096 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_hello_nas.py` (``hello_nas.py``)                                           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
@@ -20,9 +20,9 @@ Computation times
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_pruning_customize.py` (``pruning_customize.py``)                           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_quantization_customize.py` (``quantization_customize.py``)                 | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_pruning_speed_up.py` (``pruning_speed_up.py``)                             | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_quantization_quick_start_mnist.py` (``quantization_quick_start_mnist.py``) | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_quantization_customize.py` (``quantization_customize.py``)                 | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_quantization_speed_up.py` (``quantization_speed_up.py``)                   | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+

@@ -200,6 +200,17 @@ def compute_sparsity(origin_model: Module, compact_model: Module, compact_model_
     The compact model is the origin model after pruning,
     and it may have different structure with origin_model cause of speed up.
 
+    Parameters
+    ----------
+    origin_model : torch.nn.Module
+        The original un-pruned model.
+    compact_model : torch.nn.Module
+        The model after speed up or original model.
+    compact_model_masks: Dict[str, Dict[str, Tensor]]
+        The masks applied on the compact model, if the original model have been speed up, this should be {}.
+    config_list : List[Dict]
+        The config_list used by pruning the original model.
+
     Returns
     -------
     Tuple[List[Dict], List[Dict], List[Dict]]
