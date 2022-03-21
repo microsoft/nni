@@ -9,8 +9,10 @@ __all__ = [
 import sys
 import typing
 
-if typing.TYPE_CHECKING or sys.version_info >= (3, 10):
-    from typing import Any, Literal, TypeAlias, TypedDict
+if typing.TYPE_CHECKING or sys.version_info >= (3, 9):
+    from typing import Any, Literal, TypedDict
+
+    TypeAlias = Any  # FIXME
 
     Parameters: TypeAlias = dict[str, Any]
     SearchSpace: TypeAlias = dict[str, Any]
