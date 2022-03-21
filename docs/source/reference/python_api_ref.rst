@@ -6,7 +6,7 @@ API Reference
 
     Hyperparameter Optimization <hpo>
     Neural Architecture Search <./python_api/nas>
-    Model Compression <./python_api/compression>
+    Model Compression <compression>
     Feature Engineering <./python_api/feature_engineering>
     Experiment <experiment>
     Others <./python_api/others>
