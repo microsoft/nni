@@ -11,11 +11,11 @@ import typing
 
 if typing.TYPE_CHECKING or sys.version_info >= (3, 10):
     from typing import Any, Literal, TypeAlias, TypedDict
-    
+
     Parameters: TypeAlias = dict[str, Any]
     SearchSpace: TypeAlias = dict[str, Any]
     TrialMetric: TypeAlias = float
-    
+
     class TrialRecord(TypedDict):
         parameter: Parameters
         value: TrialMetric

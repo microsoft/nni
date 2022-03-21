@@ -22,11 +22,11 @@ __all__ = [
 
 import math
 from types import SimpleNamespace
-from typing import Any, NamedTuple, NewType, Optional, TypeAlias, cast
+from typing import Any, NamedTuple, cast
 
 import numpy as np
 
-from nni.typehint import Parameters, SearchSpace
+from nni.typehint import TypeAlias, Parameters, SearchSpace
 
 InternalKey: TypeAlias = tuple[str | int, ...]
 InternalParameters: TypeAlias = dict[InternalKey, float | int]

@@ -10,7 +10,7 @@ from pathlib import Path
 import socket
 from subprocess import Popen
 import time
-from typing import Optional, Union, List, overload, Any
+from typing import Any
 
 import colorama
 import psutil
@@ -186,7 +186,7 @@ class Experiment:
         port
             The port of web UI.
         """
-        experiment = Experiment()  # type: ignore
+        experiment = Experiment(None)
         experiment.port = port
         experiment.id = experiment.get_experiment_profile().get('id')
         status = experiment.get_status()
