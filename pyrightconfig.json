@@ -9,5 +9,6 @@
         "nni/retiarii",
         "nni/smartparam.py",
         "nni/tools"
-    ]
+    ],
+    "reportMissingImports": false
 }

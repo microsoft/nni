@@ -28,8 +28,8 @@ import numpy as np
 
 from nni.typehint import TypeAlias, Parameters, SearchSpace
 
-InternalKey: TypeAlias = tuple[str | int, ...]
-InternalParameters: TypeAlias = dict[InternalKey, float | int]
+InternalKey: TypeAlias = tuple['str | int', ...]
+InternalParameters: TypeAlias = dict[InternalKey, 'float | int']
 InternalSearchSpace: TypeAlias = dict[InternalKey, 'ParameterSpec']
 
 class ParameterSpec(NamedTuple):
