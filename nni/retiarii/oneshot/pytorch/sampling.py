@@ -11,12 +11,12 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
-from .supermodule.sampling import PathSamplingInput, PathSamplingLayer, PathSamplingOperation
+from .supermodule.sampling import PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS
 from .enas import ReinforceController, ReinforceField
 
 
-class RandomSamplingModule(BaseOneShotLightningModule):
+class RandomSamplingLightningModule(BaseOneShotLightningModule):
     _random_note = """
     Random Sampling NAS Algorithm.
     In each epoch, model parameters are trained after a uniformly random sampling of each choice.
@@ -48,7 +48,7 @@ class RandomSamplingModule(BaseOneShotLightningModule):
     def mutate_kwargs(self):
         """Use path sampling strategy for mixed-operations."""
         return {
-            'mixed_op_sampling_strategy': PathSamplingOperation
+            'mixed_op_sampling': MixedOpPathSamplingPolicy
         }
 
     def training_step(self, batch, batch_idx):
@@ -56,7 +56,7 @@ class RandomSamplingModule(BaseOneShotLightningModule):
         return self.model.training_step(batch, batch_idx)
 
 
-class EnasModule(RandomSamplingModule):
+class EnasLightningModule(RandomSamplingLightningModule):
     _enas_note = """
     The implementation of ENAS :cite:p:`pham2018efficient`. There are 2 steps in an epoch.
     Firstly, training model parameters.

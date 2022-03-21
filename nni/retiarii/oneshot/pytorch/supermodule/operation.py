@@ -26,23 +26,23 @@ from ._operation_utils import Slicable as _S, MaybeWeighted as _W, int_or_int_di
 T = TypeVar('T')
 
 
-class MixedOperationSamplingStrategy:
+class MixedOperationSamplingPolicy:
     """
     Algo-related part for mixed Operation.
 
-    :class:`MixedOperation` delegates its resample and export to this strategy (or its subclass),
+    :class:`MixedOperation` delegates its resample and export to this policy (or its subclass),
     so that one Operation can be easily combined with different kinds of sampling.
 
     One SamplingStrategy corresponds to one mixed operation.
     """
 
     def __init__(self, operation: 'MixedOperation', memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> None:
-        """At init, the sampling strategy can prepare basic parameters,
+        """At init, the sampling policy can prepare basic parameters,
         and store them in operation if they need back propagation.
 
         This init is called in :meth:`BaseSuperNetModule.mutate`, after the mixed operation is created.
         So similar to :meth:`BaseSuperNetModule.mutate`,
-        memo should also be managed (read and written) by the strategy itself.
+        memo should also be managed (read and written) by the policy itself.
         """
         pass
 
@@ -72,11 +72,11 @@ class MixedOperation(BaseSuperNetModule):
 
     1. One class needs to inherit this class, to control operation-related behavior,
        such as how to initialize the operation such that the sampled operation can be its sub-operation.
-    2. The other one needs to inherit :class:`MixedOperationSamplingStrategy`,
+    2. The other one needs to inherit :class:`MixedOperationSamplingPolicy`,
        which controls algo-related behavior, such as sampling.
 
-    The two classes are linked with ``sampling_strategy`` attribute in :class:`MixedOperation`,
-    whose type is set via ``mixed_op_sampling_strategy`` in ``mutate_kwargs`` when
+    The two classes are linked with ``sampling_policy`` attribute in :class:`MixedOperation`,
+    whose type is set via ``mixed_op_sampling`` in ``mutate_kwargs`` when
     :meth:`MixedOperation.mutate` is called.
 
     With this design, one mixed-operation (e.g., MixedConv2d) can work in multiple algorithms
@@ -91,7 +91,7 @@ class MixedOperation(BaseSuperNetModule):
     bound_type: Type[nn.Module]                 # defined in subclass
     argument_list: List[str]                    # defined in subclass
 
-    sampling_strategy: MixedOperationSamplingStrategy
+    sampling_policy: MixedOperationSamplingPolicy
 
     def super_init_argument(self, name: str, value_choice: ValueChoiceX) -> Any:
         """Get the initialization argument when constructing super-kernel, i.e., calling ``super().__init__()``.
@@ -140,12 +140,12 @@ class MixedOperation(BaseSuperNetModule):
         self.__post_init__()
 
     def resample(self, memo):
-        """Delegates to :meth:`MixedOperationSamplingStrategy.resample`."""
-        return self.sampling_strategy.resample(self, memo)
+        """Delegates to :meth:`MixedOperationSamplingPolicy.resample`."""
+        return self.sampling_policy.resample(self, memo)
 
     def export(self, memo):
-        """Delegates to :meth:`MixedOperationSamplingStrategy.export`."""
-        return self.sampling_strategy.export(self, memo)
+        """Delegates to :meth:`MixedOperationSamplingPolicy.export`."""
+        return self.sampling_policy.export(self, memo)
 
     def search_space_spec(self):
         return self._space_spec
@@ -167,20 +167,20 @@ class MixedOperation(BaseSuperNetModule):
             # save type and kwargs
             mixed_op = cls(module.trace_kwargs)
 
-            if 'mixed_op_sampling_strategy' not in mutate_kwargs:
-                raise ValueError('Need to sampling strategy of mixed op, but not found in `mutate_kwargs`.')
-            strategy_cls: Type[MixedOperationSamplingStrategy] = mutate_kwargs['mixed_op_sampling_strategy']
-            # initialize strategy class
+            if 'mixed_op_sampling' not in mutate_kwargs:
+                raise ValueError('Need to sampling policy of mixed op, but not found in `mutate_kwargs`.')
+            policy_cls: Type[MixedOperationSamplingPolicy] = mutate_kwargs['mixed_op_sampling']
+            # initialize policy class
             # this is put in mutate because we need to access memo
-            mixed_op.sampling_strategy = strategy_cls(mixed_op, memo, mutate_kwargs)
+            mixed_op.sampling_policy = policy_cls(mixed_op, memo, mutate_kwargs)
 
             return mixed_op
 
     def forward_argument(self, name: str) -> Any:
         """Get the argument used in forward.
-        This if often related to algo. We redirect this to sampling strategy.
+        This if often related to algo. We redirect this to sampling policy.
         """
-        return self.sampling_strategy.forward_argument(self, name)
+        return self.sampling_policy.forward_argument(self, name)
 
     def forward(self, *args, **kwargs):
         """First get sampled arguments, then forward with the sampled arguments (by calling ``forward_with_args``)."""

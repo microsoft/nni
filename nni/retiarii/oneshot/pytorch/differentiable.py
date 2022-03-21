@@ -10,13 +10,13 @@ import torch
 from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
 from .supermodule.differentiable import (
     DifferentiableMixedLayer, DifferentiableMixedInput,
-    DifferentiableMixedOperation, GumbelSoftmax
+    MixedOpDifferentiablePolicy, GumbelSoftmax
 )
 from .supermodule.proxyless import ProxylessMixedInput, ProxylessMixedLayer
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS
 
 
-class DartsModule(BaseOneShotLightningModule):
+class DartsLightningModule(BaseOneShotLightningModule):
     _darts_note = """
     DARTS :cite:p:`liu2018darts` algorithm is one of the most fundamental one-shot algorithm.
 
@@ -58,7 +58,7 @@ class DartsModule(BaseOneShotLightningModule):
     def mutate_kwargs(self):
         """Use differentiable strategy for mixed operations."""
         return {
-            'mixed_op_sampling_strategy': DifferentiableMixedOperation
+            'mixed_op_sampling': MixedOpDifferentiablePolicy
         }
 
     def __init__(self, inner_module: pl.LightningModule,
@@ -113,7 +113,7 @@ class DartsModule(BaseOneShotLightningModule):
         return ctrl_optim
 
 
-class ProxylessModule(DartsModule):
+class ProxylessLightningModule(DartsLightningModule):
     _proxyless_note = """
     Implementation of ProxylessNAS :cite:p:`cai2018proxylessnas`.
     It's a DARTS-based method that resamples the architecture to reduce memory consumption.
@@ -150,7 +150,7 @@ class ProxylessModule(DartsModule):
             m.finalize_grad()
 
 
-class GumbelDartsModule(DartsModule):
+class GumbelDartsLightningModule(DartsLightningModule):
     _gumbel_darts_note = """
     Implementation of SNAS :cite:p:`xie2018snas`.
     It's a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
@@ -190,7 +190,7 @@ class GumbelDartsModule(DartsModule):
     def mutate_kwargs(self):
         """Use gumbel softmax."""
         return {
-            'mixed_op_sampling_strategy': DifferentiableMixedOperation,
+            'mixed_op_sampling': MixedOpDifferentiablePolicy,
             'softmax': GumbelSoftmax(),
         }
 

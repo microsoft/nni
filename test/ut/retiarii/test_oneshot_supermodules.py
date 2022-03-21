@@ -5,9 +5,11 @@ import torch
 import torch.nn as nn
 from nni.retiarii.nn.pytorch import ValueChoice, Conv2d, BatchNorm2d, Linear, MultiheadAttention
 from nni.retiarii.oneshot.pytorch.supermodule.differentiable import (
-    DifferentiableMixedOperation, DifferentiableMixedLayer, DifferentiableMixedInput, GumbelSoftmax
+    MixedOpDifferentiablePolicy, DifferentiableMixedLayer, DifferentiableMixedInput, GumbelSoftmax
 )
-from nni.retiarii.oneshot.pytorch.supermodule.sampling import PathSamplingOperation, PathSamplingLayer, PathSamplingInput
+from nni.retiarii.oneshot.pytorch.supermodule.sampling import (
+    MixedOpPathSamplingPolicy, PathSamplingLayer, PathSamplingInput
+)
 from nni.retiarii.oneshot.pytorch.supermodule.operation import MixedConv2d, NATIVE_MIXED_OPERATIONS
 from nni.retiarii.oneshot.pytorch.supermodule.proxyless import ProxylessMixedLayer, ProxylessMixedInput
 from nni.retiarii.oneshot.pytorch.supermodule._operation_utils import Slicable as S, MaybeWeighted as W
@@ -73,7 +75,7 @@ def test_valuechoice_utils():
 
 def test_pathsampling_valuechoice():
     orig_conv = Conv2d(3, ValueChoice([3, 5, 7], label='123'), kernel_size=3)
-    conv = MixedConv2d.mutate(orig_conv, 'dummy', {}, {'mixed_op_sampling_strategy': PathSamplingOperation})
+    conv = MixedConv2d.mutate(orig_conv, 'dummy', {}, {'mixed_op_sampling': MixedOpPathSamplingPolicy})
     conv.resample(memo={'123': 5})
     assert conv(torch.zeros((1, 3, 5, 5))).size(1) == 5
     conv.resample(memo={'123': 7})
@@ -84,7 +86,7 @@ def test_pathsampling_valuechoice():
 def test_differentiable_valuechoice():
     orig_conv = Conv2d(3, ValueChoice([3, 5, 7], label='456'), kernel_size=ValueChoice(
         [3, 5, 7], label='123'), padding=ValueChoice([3, 5, 7], label='123') // 2)
-    conv = MixedConv2d.mutate(orig_conv, 'dummy', {}, {'mixed_op_sampling_strategy': DifferentiableMixedOperation})
+    conv = MixedConv2d.mutate(orig_conv, 'dummy', {}, {'mixed_op_sampling': MixedOpDifferentiablePolicy})
     assert conv(torch.zeros((1, 3, 7, 7))).size(2) == 7
 
     assert set(conv.export({}).keys()) == {'123', '456'}
@@ -93,7 +95,7 @@ def test_differentiable_valuechoice():
 def _mixed_operation_sampling_sanity_check(operation, memo, *input):
     for native_op in NATIVE_MIXED_OPERATIONS:
         if native_op.bound_type == type(operation):
-            mutate_op = native_op.mutate(operation, 'dummy', {}, {'mixed_op_sampling_strategy': PathSamplingOperation})
+            mutate_op = native_op.mutate(operation, 'dummy', {}, {'mixed_op_sampling': MixedOpPathSamplingPolicy})
             break
 
     mutate_op.resample(memo=memo)
@@ -103,7 +105,7 @@ def _mixed_operation_sampling_sanity_check(operation, memo, *input):
 def _mixed_operation_differentiable_sanity_check(operation, *input):
     for native_op in NATIVE_MIXED_OPERATIONS:
         if native_op.bound_type == type(operation):
-            mutate_op = native_op.mutate(operation, 'dummy', {}, {'mixed_op_sampling_strategy': DifferentiableMixedOperation})
+            mutate_op = native_op.mutate(operation, 'dummy', {}, {'mixed_op_sampling': MixedOpDifferentiablePolicy})
             break
 
     return mutate_op(*input)
@@ -139,7 +141,7 @@ def test_mixed_conv2d():
 
     # make sure kernel is sliced correctly
     conv = Conv2d(1, 1, ValueChoice([1, 3], label='k'), bias=False)
-    conv = MixedConv2d.mutate(conv, 'dummy', {}, {'mixed_op_sampling_strategy': PathSamplingOperation})
+    conv = MixedConv2d.mutate(conv, 'dummy', {}, {'mixed_op_sampling': MixedOpPathSamplingPolicy})
     with torch.no_grad():
         conv.weight.zero_()
         # only center is 1, must pick center to pass this test

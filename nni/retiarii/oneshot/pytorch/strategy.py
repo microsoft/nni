@@ -21,8 +21,8 @@ from nni.retiarii.strategy.base import BaseStrategy
 from nni.retiarii.evaluator.pytorch.lightning import Lightning, LightningModule
 
 from .base_lightning import BaseOneShotLightningModule
-from .differentiable import DartsModule, ProxylessModule, GumbelDartsModule
-from .sampling import EnasModule, RandomSamplingModule
+from .differentiable import DartsLightningModule, ProxylessLightningModule, GumbelDartsLightningModule
+from .sampling import EnasLightningModule, RandomSamplingLightningModule
 from .utils import InterleavedTrainValDataLoader, ConcatenateTrainValDataLoader
 
 
@@ -82,50 +82,50 @@ class OneShotStrategy(BaseStrategy):
 
 
 class DARTS(OneShotStrategy):
-    __doc__ = DartsModule._darts_note.format(module_notes='', module_params='')
+    __doc__ = DartsLightningModule._darts_note.format(module_notes='', module_params='')
 
     def __init__(self, **kwargs):
-        super().__init__(DartsModule, **kwargs)
+        super().__init__(DartsLightningModule, **kwargs)
 
     def _get_dataloader(self, train_dataloader, val_dataloaders):
         return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
 
 
 class Proxyless(OneShotStrategy):
-    __doc__ = ProxylessModule._proxyless_note.format(module_notes='', module_params='')
+    __doc__ = ProxylessLightningModule._proxyless_note.format(module_notes='', module_params='')
 
     def __init__(self, **kwargs):
-        super().__init__(ProxylessModule, **kwargs)
+        super().__init__(ProxylessLightningModule, **kwargs)
 
     def _get_dataloader(self, train_dataloader, val_dataloaders):
         return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
 
 
 class GumbelDARTS(OneShotStrategy):
-    __doc__ = GumbelDartsModule._gumbel_darts_note.format(module_notes='', module_params='')
+    __doc__ = GumbelDartsLightningModule._gumbel_darts_note.format(module_notes='', module_params='')
 
     def __init__(self, **kwargs):
-        super().__init__(GumbelDartsModule, **kwargs)
+        super().__init__(GumbelDartsLightningModule, **kwargs)
 
     def _get_dataloader(self, train_dataloader, val_dataloaders):
         return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
 
 
 class ENAS(OneShotStrategy):
-    __doc__ = EnasModule._enas_note.format(module_notes='', module_params='')
+    __doc__ = EnasLightningModule._enas_note.format(module_notes='', module_params='')
 
     def __init__(self, **kwargs):
-        super().__init__(EnasModule, **kwargs)
+        super().__init__(EnasLightningModule, **kwargs)
 
     def _get_dataloader(self, train_dataloader, val_dataloaders):
         return ConcatenateTrainValDataLoader(train_dataloader, val_dataloaders)
 
 
 class RandomOneShot(OneShotStrategy):
-    __doc__ = RandomSamplingModule._random_note.format(module_notes='', module_params='')
+    __doc__ = RandomSamplingLightningModule._random_note.format(module_notes='', module_params='')
 
     def __init__(self, **kwargs):
-        super().__init__(RandomSamplingModule, **kwargs)
+        super().__init__(RandomSamplingLightningModule, **kwargs)
 
     def _get_dataloader(self, train_dataloader, val_dataloaders):
         return train_dataloader, val_dataloaders

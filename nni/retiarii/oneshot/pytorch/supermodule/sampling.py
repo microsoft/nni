@@ -12,7 +12,7 @@ from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 
 from .base import BaseSuperNetModule
 from ._valuechoice_utils import evaluate_value_choice_with_dict
-from .operation import MixedOperationSamplingStrategy, MixedOperation
+from .operation import MixedOperationSamplingPolicy, MixedOperation
 
 
 class PathSamplingLayer(BaseSuperNetModule):
@@ -149,7 +149,7 @@ class PathSamplingInput(BaseSuperNetModule):
                 return torch.cat(res, 1)
 
 
-class PathSamplingOperation(MixedOperationSamplingStrategy):
+class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
     """Implementes the path sampling in mixed operation.
 
     One mixed operation can have multiple value choices in its arguments.

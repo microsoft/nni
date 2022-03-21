@@ -14,7 +14,7 @@ from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 
 from .base import BaseSuperNetModule
-from .operation import MixedOperation, MixedOperationSamplingStrategy
+from .operation import MixedOperation, MixedOperationSamplingPolicy
 from ._valuechoice_utils import traverse_all_options
 
 
@@ -224,19 +224,19 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                     yield name, p
 
 
-class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
+class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
     """Implementes the differentiable sampling in mixed operation.
 
     One mixed operation can have multiple value choices in its arguments.
     Thus the ``_arch_alpha`` here is a parameter dict, and ``named_parameters``
     filters out multiple parameters with ``_arch_alpha`` as its prefix.
 
-    When the strategy is asked for ``forward_argument``, it returns a distribution,
+    When this class is asked for ``forward_argument``, it returns a distribution,
     i.e., a dict from int to float based on its weights.
 
     All the parameters (``_arch_alpha``, ``parameters()``, ``_softmax``) are
     saved as attributes of ``operation``, rather than ``self``,
-    because the strategy itself is not a ``nn.Module``, and saved parameters here
+    because this class itself is not a ``nn.Module``, and saved parameters here
     won't be optimized.
     """
 
@@ -268,7 +268,7 @@ class DifferentiableMixedOperation(MixedOperationSamplingStrategy):
     def named_parameters(self, *args, **kwargs):
         arch = kwargs.pop('arch', False)
         for name, p in super(self.__class__, self).named_parameters(*args, **kwargs):  # pylint: disable=bad-super-call
-            if any(name.startswith(par_name) for par_name in DifferentiableMixedOperation._arch_parameter_names):
+            if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
                 if arch:
                     yield name, p
             else:
