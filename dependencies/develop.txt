@@ -5,6 +5,7 @@ ipython
 jupyterlab
 nbsphinx
 pylint
+pyright
 pytest
 pytest-azurepipelines
 pytest-cov
