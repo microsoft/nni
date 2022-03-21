@@ -37,6 +37,8 @@ def to_v2(v1):
         _move_field(v1_trial, v2, 'command', 'trialCommand')
         _move_field(v1_trial, v2, 'codeDir', 'trialCodeDirectory')
         _move_field(v1_trial, v2, 'gpuNum', 'trialGpuNumber')
+    else:
+        v1_trial = {}
 
     for algo_type in ['tuner', 'assessor', 'advisor']:
         v1_algo = v1.pop(algo_type, None)

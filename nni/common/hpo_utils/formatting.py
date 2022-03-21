@@ -11,6 +11,8 @@ The random tuner is an intuitive example for this utility.
 You should check its code before reading docstrings in this file.
 """
 
+from __future__ import annotations
+
 __all__ = [
     'ParameterSpec',
     'deformat_parameters',
@@ -20,9 +22,15 @@ __all__ = [
 
 import math
 from types import SimpleNamespace
-from typing import Any, List, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple, NewType, Optional, TypeAlias, cast
 
 import numpy as np
+
+from nni.typehint import Parameters, SearchSpace
+
+InternalKey: TypeAlias = tuple[str | int, ...]
+InternalParameters: TypeAlias = dict[InternalKey, float | int]
+InternalSearchSpace: TypeAlias = dict[InternalKey, 'ParameterSpec']
 
 class ParameterSpec(NamedTuple):
     """
@@ -33,29 +41,31 @@ class ParameterSpec(NamedTuple):
 
     name: str                       # The object key in JSON
     type: str                       # "_type" in JSON
-    values: List[Any]               # "_value" in JSON
+    values: list[Any]               # "_value" in JSON
 
-    key: Tuple[str]                 # The "path" of this parameter
+    key: InternalKey                # The "path" of this parameter
 
     categorical: bool               # Whether this paramter is categorical (unordered) or numerical (ordered)
-    size: int = None                # If it's categorical, how many candidates it has
+    size: int = cast(int, None)     # If it's categorical, how many candidates it has
 
     # uniform distributed
-    low: float = None               # Lower bound of uniform parameter
-    high: float = None              # Upper bound of uniform parameter
+    low: float = cast(float, None)  # Lower bound of uniform parameter
+    high: float = cast(float, None) # Upper bound of uniform parameter
 
-    normal_distributed: bool = None # Whether this parameter is uniform or normal distrubuted
-    mu: float = None                # µ of normal parameter
-    sigma: float = None             # σ of normal parameter
+    normal_distributed: bool = cast(bool, None)
+                                    # Whether this parameter is uniform or normal distrubuted
+    mu: float = cast(float, None)   # µ of normal parameter
+    sigma: float = cast(float, None)# σ of normal parameter
 
-    q: Optional[float] = None       # If not `None`, the parameter value should be an integer multiple of this
-    clip: Optional[Tuple[float, float]] = None
+    q: float | None = None          # If not `None`, the parameter value should be an integer multiple of this
+    clip: tuple[float, float] | None = None
                                     # For q(log)uniform, this equals to "values[:2]"; for others this is None
 
-    log_distributed: bool = None    # Whether this parameter is log distributed
+    log_distributed: bool = cast(bool, None)
+                                    # Whether this parameter is log distributed
                                     # When true, low/high/mu/sigma describes log of parameter value (like np.lognormal)
 
-    def is_activated_in(self, partial_parameters):
+    def is_activated_in(self, partial_parameters: InternalParameters) -> bool:
         """
         For nested search space, check whether this parameter should be skipped for current set of paremters.
         This function must be used in a pattern similar to random tuner. Otherwise it will misbehave.
@@ -64,7 +74,7 @@ class ParameterSpec(NamedTuple):
             return True
         return partial_parameters[self.key[:-2]] == self.key[-2]
 
-def format_search_space(search_space):
+def format_search_space(search_space: SearchSpace) -> InternalSearchSpace:
     """
     Convert user provided search space into a dict of ParameterSpec.
     The dict key is dict value's `ParameterSpec.key`.
@@ -76,7 +86,7 @@ def format_search_space(search_space):
     # Remove these comments when we drop 3.6 support.
     return {spec.key: spec for spec in formatted}
 
-def deformat_parameters(formatted_parameters, formatted_search_space):
+def deformat_parameters(formatted_parameters: InternalParameters, formatted_search_space: InternalSearchSpace) -> Parameters:
     """
     Convert internal format parameters to users' expected format.
 
@@ -88,10 +98,11 @@ def deformat_parameters(formatted_parameters, formatted_search_space):
      3. For "q*", convert x to `round(x / q) * q`, then clip into range.
      4. For nested choices, convert flatten key-value pairs into nested structure.
     """
-    ret = {}
+    ret: Parameters = {}
     for key, x in formatted_parameters.items():
         spec = formatted_search_space[key]
         if spec.categorical:
+            x = cast(int, x)
             if spec.type == 'randint':
                 lower = min(math.ceil(float(x)) for x in spec.values)
                 _assign(ret, key, int(lower + x))
@@ -112,7 +123,7 @@ def deformat_parameters(formatted_parameters, formatted_search_space):
             _assign(ret, key, x)
     return ret
 
-def format_parameters(parameters, formatted_search_space):
+def format_parameters(parameters: Parameters, formatted_search_space: InternalSearchSpace) -> InternalParameters:
     """
     Convert end users' parameter format back to internal format, mainly for resuming experiments.
 
@@ -123,7 +134,7 @@ def format_parameters(parameters, formatted_search_space):
     for key, spec in formatted_search_space.items():
         if not spec.is_activated_in(ret):
             continue
-        value = parameters
+        value: Any = parameters
         for name in key:
             if isinstance(name, str):
                 value = value[name]
@@ -142,8 +153,8 @@ def format_parameters(parameters, formatted_search_space):
             ret[key] = value
     return ret
 
-def _format_search_space(parent_key, space):
-    formatted = []
+def _format_search_space(parent_key: InternalKey, space: SearchSpace) -> list[ParameterSpec]:
+    formatted: list[ParameterSpec] = []
     for name, spec in space.items():
         if name == '_name':
             continue
@@ -155,7 +166,7 @@ def _format_search_space(parent_key, space):
                 formatted += _format_search_space(key, sub_space)
     return formatted
 
-def _format_parameter(key, type_, values):
+def _format_parameter(key: InternalKey, type_: str, values: list[Any]):
     spec = SimpleNamespace(
         name = key[-1],
         type = type_,
@@ -197,7 +208,7 @@ def _format_parameter(key, type_, values):
 
     return ParameterSpec(**spec.__dict__)
 
-def _is_nested_choices(values):
+def _is_nested_choices(values: list[Any]) -> bool:
     assert values  # choices should not be empty
     for value in values:
         if not isinstance(value, dict):
@@ -206,9 +217,9 @@ def _is_nested_choices(values):
             return False
     return True
 
-def _assign(params, key, x):
+def _assign(params: Parameters, key: InternalKey, x: Any) -> None:
     if len(key) == 1:
-        params[key[0]] = x
+        params[cast(str, key[0])] = x
     elif isinstance(key[0], int):
         _assign(params, key[1:], x)
     else:
