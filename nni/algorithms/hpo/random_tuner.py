@@ -2,14 +2,14 @@
 # Licensed under the MIT license.
 
 """
-Naive random tuner for hyper-parameter optimization.
+Naive random tuner.
 
 You can specify an integer seed to determine random result.
 """
 
 from __future__ import annotations
 
-__all__ = ['RandomTuner', 'suggest', 'suggest_parameter']
+__all__ = ['RandomTuner']
 
 import logging
 

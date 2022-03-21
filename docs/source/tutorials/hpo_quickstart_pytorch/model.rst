@@ -25,14 +25,14 @@ This is a modified version of `PyTorch quickstart`_.
 
 It can be run directly and will have the exact same result as original version.
 
-Furthermore, it enables the ability of auto-tuning with an NNI *experiment*, which will be discussed later.
+Furthermore, it enables the ability of auto tuning with an NNI *experiment*, which will be detailed later.
 
-For now, we recommend to run this script directly to verify the environment.
+It is recommended to run this script directly first to verify the environment.
 
-There are only 2 key differences from the original version:
+There are 2 key differences from the original version:
 
-1. In `Get optimized hyperparameters`_ part, it receives auto-generated hyperparameters.
-2. In `Train the model and report accuracy`_ part, it reports accuracy metrics for tuner to generate next hyperparameter set.
+1. In `Get optimized hyperparameters`_ part, it receives generated hyperparameters.
+2. In `Train model and report accuracy`_ part, it reports accuracy metrics to NNI.
 
 .. _PyTorch quickstart: https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
 
@@ -54,12 +54,13 @@ There are only 2 key differences from the original version:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 29-31
+.. GENERATED FROM PYTHON SOURCE LINES 29-32
 
 Hyperparameters to be tuned
 ---------------------------
+These are the hyperparameters that will be tuned.
 
-.. GENERATED FROM PYTHON SOURCE LINES 31-37
+.. GENERATED FROM PYTHON SOURCE LINES 32-38
 
 .. code-block:: default
 
@@ -76,14 +77,14 @@ Hyperparameters to be tuned
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 38-42
+.. GENERATED FROM PYTHON SOURCE LINES 39-43
 
 Get optimized hyperparameters
 -----------------------------
-If run directly, ``nni.get_next_parameters()`` is a no-op and returns an empty dict.
+If run directly, :func:`nni.get_next_parameter` is a no-op and returns an empty dict.
 But with an NNI *experiment*, it will receive optimized hyperparameters from tuning algorithm.
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-46
+.. GENERATED FROM PYTHON SOURCE LINES 43-47
 
 .. code-block:: default
 
@@ -101,19 +102,17 @@ But with an NNI *experiment*, it will receive optimized hyperparameters from tun
 
  .. code-block:: none
 
-    /home/lz/nnisrc/nni/runtime/platform/standalone.py:32: RuntimeWarning: Running NNI code without runtime. Check the following tutorial if you are new to NNI: https://nni.readthedocs.io/en/stable/Tutorial/QuickStart.html#id1
-      warnings.warn(warning_message, RuntimeWarning)
     {'features': 512, 'lr': 0.001, 'momentum': 0}
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-49
+.. GENERATED FROM PYTHON SOURCE LINES 48-50
 
 Load dataset
 ------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-57
+.. GENERATED FROM PYTHON SOURCE LINES 50-58
 
 .. code-block:: default
 
@@ -132,12 +131,12 @@ Load dataset
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 58-60
+.. GENERATED FROM PYTHON SOURCE LINES 59-61
 
 Build model with hyperparameters
 --------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 60-85
+.. GENERATED FROM PYTHON SOURCE LINES 61-86
 
 .. code-block:: default
 
@@ -181,12 +180,12 @@ Build model with hyperparameters
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 86-88
+.. GENERATED FROM PYTHON SOURCE LINES 87-89
 
-Define train() and test()
--------------------------
+Define train and test
+---------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-114
+.. GENERATED FROM PYTHON SOURCE LINES 89-115
 
 .. code-block:: default
 
@@ -223,13 +222,13 @@ Define train() and test()
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 115-118
+.. GENERATED FROM PYTHON SOURCE LINES 116-119
 
-Train the model and report accuracy
------------------------------------
-Report accuracy to NNI so the tuning algorithm can predict best hyperparameters.
+Train model and report accuracy
+-------------------------------
+Report accuracy metrics to NNI so the tuning algorithm can suggest better hyperparameters.
 
-.. GENERATED FROM PYTHON SOURCE LINES 118-125
+.. GENERATED FROM PYTHON SOURCE LINES 119-126
 
 .. code-block:: default
 
@@ -252,20 +251,20 @@ Report accuracy to NNI so the tuning algorithm can predict best hyperparameters.
 
     Epoch 1
     -------------------------------
-    [2022-03-18 14:02:46] INFO (nni/MainThread) Intermediate result: 0.5418  (Index 0)
+    [2022-03-21 01:09:37] INFO (nni/MainThread) Intermediate result: 0.461  (Index 0)
     Epoch 2
     -------------------------------
-    [2022-03-18 14:02:52] INFO (nni/MainThread) Intermediate result: 0.5945  (Index 1)
+    [2022-03-21 01:09:42] INFO (nni/MainThread) Intermediate result: 0.5529  (Index 1)
     Epoch 3
     -------------------------------
-    [2022-03-18 14:02:58] INFO (nni/MainThread) Intermediate result: 0.6202  (Index 2)
+    [2022-03-21 01:09:47] INFO (nni/MainThread) Intermediate result: 0.6155  (Index 2)
     Epoch 4
     -------------------------------
-    [2022-03-18 14:03:04] INFO (nni/MainThread) Intermediate result: 0.6376  (Index 3)
+    [2022-03-21 01:09:52] INFO (nni/MainThread) Intermediate result: 0.6345  (Index 3)
     Epoch 5
     -------------------------------
-    [2022-03-18 14:03:09] INFO (nni/MainThread) Intermediate result: 0.652  (Index 4)
-    [2022-03-18 14:03:09] INFO (nni/MainThread) Final result: 0.652
+    [2022-03-21 01:09:56] INFO (nni/MainThread) Intermediate result: 0.6505  (Index 4)
+    [2022-03-21 01:09:56] INFO (nni/MainThread) Final result: 0.6505
 
 
 
@@ -273,7 +272,7 @@ Report accuracy to NNI so the tuning algorithm can predict best hyperparameters.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  29.026 seconds)
+   **Total running time of the script:** ( 0 minutes  24.441 seconds)
 
 
 .. _sphx_glr_download_tutorials_hpo_quickstart_pytorch_model.py:

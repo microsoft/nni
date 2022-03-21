@@ -9,9 +9,8 @@ If a trial is predicted to produce suboptimal final result, the assessor will st
 to save computing resources for other hyperparameter sets.
 
 As introduced in quickstart tutorial, a trial is the evaluation process of a hyperparameter set,
-and intermediate results are reported with ``nni.report_intermediate_result()`` API in trial code.
+and intermediate results are reported with :func:`nni.report_intermediate_result` API in trial code.
 Typically, intermediate results are accuracy or loss metrics of each epoch.
-(FIXME: links)
 
 Using an assessor will increase the efficiency of computing resources,
 but may slightly reduce the predicition accuracy of tuners.

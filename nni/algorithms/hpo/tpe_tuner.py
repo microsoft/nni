@@ -13,7 +13,7 @@ This is a slightly modified re-implementation of the algorithm.
 
 from __future__ import annotations
 
-__all__ = ['TpeTuner', 'TpeArguments', 'suggest', 'suggest_parameter']
+__all__ = ['TpeTuner', 'TpeArguments']
 
 from collections import defaultdict
 import logging
@@ -52,7 +52,7 @@ class TpeArguments(NamedTuple):
         (:doc:`experiment result </misc/parallelizing_tpe_search>`)
 
     n_startup_jobs
-        The first N hyper-parameters are generated fully randomly for warming up.
+        The first N hyperparameters are generated fully randomly for warming up.
         If the search space is large, you can increase this value.
         Or if max_trial_number is small, you may want to decrease it.
 
@@ -87,13 +87,20 @@ class TpeTuner(Tuner):
     """
     Tree-structured Parzen Estimator (TPE) tuner.
 
+    TPE is a lightweight tuner that has no extra dependency and supports all search space types,
+    designed to be the default tuner.
+
+    It has the drawback that TPE cannot discover relationship between different hyperparameters.
+
+    **Implementation**
+
     TPE is an SMBO algorithm.
     It models P(x|y) and P(y) where x represents hyperparameters and y the evaluation result.
     P(x|y) is modeled by transforming the generative process of hyperparameters,
     replacing the distributions of the configuration prior with non-parametric densities.
 
-    Paper: :footcite:`bergstra2011algorithms`.
-    (`PDF <https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__)
+    Paper: `Algorithms for Hyper-Parameter Optimization
+    <https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__
 
     Examples
     --------
@@ -127,13 +134,13 @@ class TpeTuner(Tuner):
 
     Parameters
     ----------
-    optimze_mode
+    optimze_mode: Literal['minimize', 'maximize']
         Whether optimize to minimize or maximize trial result.
     seed
         The random seed.
     tpe_args
         Advanced users can use this to customize TPE tuner.
-        See `TpeArguments` for details.
+        See :class:`TpeArguments` for details.
     """
 
     def __init__(self,

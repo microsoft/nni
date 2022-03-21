@@ -5,15 +5,15 @@ This is a modified version of `TensorFlow quickstart`_.
 
 It can be run directly and will have the exact same result as original version.
 
-Furthermore, it enables the ability of auto-tuning with an NNI *experiment*, which will be discussed later.
+Furthermore, it enables the ability of auto tuning with an NNI *experiment*, which will be detailed later.
 
-For now, we recommend to run this script directly to verify the environment.
+It is recommended to run this script directly first to verify the environment.
 
-There are only 3 key differences from the original version:
+There are 3 key differences from the original version:
 
- 1. In `Get optimized hyperparameters`_ part, it receives auto-generated hyperparameters.
- 2. In `(Optional) Report intermediate results`_ part, it reports per-epoch accuracy for visualization.
- 3. In `Report final result`_ part, it reports final accuracy for tuner to generate next hyperparameter set.
+1. In `Get optimized hyperparameters`_ part, it receives generated hyperparameters.
+2. In `(Optional) Report intermediate results`_ part, it reports per-epoch accuracy metrics.
+3. In `Report final result`_ part, it reports final accuracy.
 
 .. _TensorFlow quickstart: https://www.tensorflow.org/tutorials/quickstart/beginner
 """
@@ -25,6 +25,7 @@ import tensorflow as tf
 # %%
 # Hyperparameters to be tuned
 # ---------------------------
+# These are the hyperparameters that will be tuned later.
 params = {
     'dense_units': 128,
     'activation_type': 'relu',
@@ -35,10 +36,11 @@ params = {
 # %%
 # Get optimized hyperparameters
 # -----------------------------
-# If run directly, ``nni.get_next_parameters()`` is a no-op and returns an empty dict.
+# If run directly, :func:`nni.get_next_parameter` is a no-op and returns an empty dict.
 # But with an NNI *experiment*, it will receive optimized hyperparameters from tuning algorithm.
 optimized_params = nni.get_next_parameter()
 params.update(optimized_params)
+print(params)
 
 # %%
 # Load dataset
@@ -59,18 +61,16 @@ model = tf.keras.models.Sequential([
 ])
 
 adam = tf.keras.optimizers.Adam(learning_rate=params['learning_rate'])
-
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-
 model.compile(optimizer=adam, loss=loss_fn, metrics=['accuracy'])
 
 # %%
 # (Optional) Report intermediate results
 # --------------------------------------
-# The callback reports per-epoch accuracy to show learning curve in NNI web portal.
-# And in :doc:`/hpo/assessors`, you will see how to leverage the metrics for early stopping.
+# The callback reports per-epoch accuracy to show learning curve in the web portal.
+# You can also leverage the metrics for early stopping with :doc:`NNI assessors </hpo/assessors>`.
 #
-# You can safely skip this and the experiment will work fine.
+# This part can be safely skipped and the experiment will work fine.
 callback = tf.keras.callbacks.LambdaCallback(
     on_epoch_end = lambda epoch, logs: nni.report_intermediate_result(logs['accuracy'])
 )
@@ -84,5 +84,5 @@ loss, accuracy = model.evaluate(x_test, y_test, verbose=2)
 # %%
 # Report final result
 # -------------------
-# Report final accuracy to NNI so the tuning algorithm can predict best hyperparameters.
+# Report final accuracy to NNI so the tuning algorithm can suggest better hyperparameters.
 nni.report_final_result(accuracy)

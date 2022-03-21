@@ -138,7 +138,7 @@ class Experiment:
                 if interface.family == socket.AF_INET:
                     ips.append(interface.address)
         ips = [f'http://{ip}:{port}' for ip in ips if ip]
-        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
+        msg = 'Web portal URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
 
     def stop(self) -> None:
@@ -184,7 +184,6 @@ class Experiment:
                         return False
             except KeyboardInterrupt:
                 _logger.warning('KeyboardInterrupt detected')
-            finally:
                 self.stop()
 
     @classmethod
