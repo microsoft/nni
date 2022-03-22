@@ -60,9 +60,16 @@ class ParameterSpec(NamedTuple):
         For nested search space, check whether this parameter should be skipped for current set of paremters.
         This function must be used in a pattern similar to random tuner. Otherwise it will misbehave.
         """
-        if len(self.key) < 2 or isinstance(self.key[-2], str):
+        if self.is_nested():
+            return partial_parameters[self.key[:-2]] == self.key[-2]
+        else:
             return True
-        return partial_parameters[self.key[:-2]] == self.key[-2]
+
+    def is_nested(self):
+        """
+        Check whether this parameter is inside a nested choice.
+        """
+        return len(self.key) >= 2 and isinstance(self.key[-2], int)
 
 def format_search_space(search_space):
     """
@@ -70,10 +77,6 @@ def format_search_space(search_space):
     The dict key is dict value's `ParameterSpec.key`.
     """
     formatted = _format_search_space(tuple(), search_space)
-    # In CPython 3.6, dicts preserve order by internal implementation.
-    # In Python 3.7+, dicts preserve order by language spec.
-    # Python 3.6 is crappy enough. Don't bother to do extra work for it.
-    # Remove these comments when we drop 3.6 support.
     return {spec.key: spec for spec in formatted}
 
 def deformat_parameters(formatted_parameters, formatted_search_space):

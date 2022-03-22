@@ -23,7 +23,7 @@ from typing import Any, NamedTuple
 import numpy as np
 from scipy.special import erf  # pylint: disable=no-name-in-module
 
-from nni.common.hpo_utils import OptimizeMode, format_search_space, deformat_parameters, format_parameters
+from nni.common.hpo_utils import Deduplicator, OptimizeMode, format_search_space, deformat_parameters, format_parameters
 from nni.tuner import Tuner
 from nni.typehint import Literal
 from nni.utils import extract_scalar_reward
@@ -153,6 +153,7 @@ class TpeTuner(Tuner):
         # concurrent generate_parameters() calls are likely to yield similar result, because they use same history
         # the liar solves this problem by adding fake results to history
         self.liar = create_liar(self.args.constant_liar_type)
+        self.dedup = None
 
         if seed is None:  # explicitly generate a seed to make the experiment reproducible
             seed = np.random.default_rng().integers(2 ** 31)
@@ -165,6 +166,7 @@ class TpeTuner(Tuner):
 
     def update_search_space(self, space):
         self.space = format_search_space(space)
+        self.dedup = Deduplicator(self.space)
 
     def generate_parameters(self, parameter_id, **kwargs):
         if self.liar and self._running_params:
@@ -178,6 +180,7 @@ class TpeTuner(Tuner):
             history = self._history
 
         params = suggest(self.args, self.rng, self.space, history)
+        params = self.dedup(params)
 
         self._params[parameter_id] = params
         self._running_params[parameter_id] = params
