@@ -12,7 +12,7 @@ import torch.nn as nn
 from nni.common.serializer import Translatable
 from nni.retiarii.serializer import basic_unit
 from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
-from .utils import Mutable, generate_new_label, get_fixed_value
+from .mutation_utils import Mutable, generate_new_label, get_fixed_value
 
 
 __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
