@@ -66,6 +66,8 @@ def init_logger_for_command_line() -> None:
         _cli_log_initialized = True
         colorful_formatter = Formatter(log_format, time_format)
         colorful_formatter.format = _colorful_format
+        if '_default_' not in handlers:  # this happens when building sphinx gallery
+            _register_handler(StreamHandler(sys.stdout), logging.INFO)
         handlers['_default_'].setFormatter(colorful_formatter)
 
 def start_experiment_log(experiment_id: str, log_directory: Path, debug: bool) -> None:

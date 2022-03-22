@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 
 """
+Helper class and functions for tuners to deal with search space.
+
 This script provides a more program-friendly representation of HPO search space.
 The format is considered internal helper and is not visible to end users.
 
@@ -9,6 +11,12 @@ You will find this useful when you want to support nested search space.
 
 The random tuner is an intuitive example for this utility.
 You should check its code before reading docstrings in this file.
+
+.. attention::
+
+    This module does not guarantee forward-compatibility.
+
+    If you want to use it outside official NNI repo, it is recommended to copy the script.
 """
 
 from __future__ import annotations
@@ -26,11 +34,11 @@ from typing import Any, Dict, NamedTuple, Tuple, cast
 
 import numpy as np
 
-from nni.typehint import TypeAlias, Parameters, SearchSpace
+from nni.typehint import Parameters, SearchSpace
 
-InternalKey: TypeAlias = Tuple['str | int', ...]
-InternalParameters: TypeAlias = Dict[InternalKey, 'float | int']
-InternalSearchSpace: TypeAlias = Dict[InternalKey, 'ParameterSpec']
+ParameterKey = Tuple['str | int', ...]
+FormattedParameters = Dict[ParameterKey, 'float | int']
+FormattedSearchSpace = Dict[ParameterKey, 'ParameterSpec']
 
 class ParameterSpec(NamedTuple):
     """
@@ -43,7 +51,7 @@ class ParameterSpec(NamedTuple):
     type: str                       # "_type" in JSON
     values: list[Any]               # "_value" in JSON
 
-    key: InternalKey                # The "path" of this parameter
+    key: ParameterKey               # The "path" of this parameter
 
     categorical: bool               # Whether this paramter is categorical (unordered) or numerical (ordered)
     size: int = cast(int, None)     # If it's categorical, how many candidates it has
@@ -65,7 +73,7 @@ class ParameterSpec(NamedTuple):
                                     # Whether this parameter is log distributed
                                     # When true, low/high/mu/sigma describes log of parameter value (like np.lognormal)
 
-    def is_activated_in(self, partial_parameters: InternalParameters) -> bool:
+    def is_activated_in(self, partial_parameters: FormattedParameters) -> bool:
         """
         For nested search space, check whether this parameter should be skipped for current set of paremters.
         This function must be used in a pattern similar to random tuner. Otherwise it will misbehave.
@@ -74,7 +82,7 @@ class ParameterSpec(NamedTuple):
             return True
         return partial_parameters[self.key[:-2]] == self.key[-2]
 
-def format_search_space(search_space: SearchSpace) -> InternalSearchSpace:
+def format_search_space(search_space: SearchSpace) -> FormattedSearchSpace:
     """
     Convert user provided search space into a dict of ParameterSpec.
     The dict key is dict value's `ParameterSpec.key`.
@@ -86,7 +94,9 @@ def format_search_space(search_space: SearchSpace) -> InternalSearchSpace:
     # Remove these comments when we drop 3.6 support.
     return {spec.key: spec for spec in formatted}
 
-def deformat_parameters(formatted_parameters: InternalParameters, formatted_search_space: InternalSearchSpace) -> Parameters:
+def deformat_parameters(
+        formatted_parameters: FormattedParameters,
+        formatted_search_space: FormattedSearchSpace) -> Parameters:
     """
     Convert internal format parameters to users' expected format.
 
@@ -123,7 +133,7 @@ def deformat_parameters(formatted_parameters: InternalParameters, formatted_sear
             _assign(ret, key, x)
     return ret
 
-def format_parameters(parameters: Parameters, formatted_search_space: InternalSearchSpace) -> InternalParameters:
+def format_parameters(parameters: Parameters, formatted_search_space: FormattedSearchSpace) -> FormattedParameters:
     """
     Convert end users' parameter format back to internal format, mainly for resuming experiments.
 
@@ -153,7 +163,7 @@ def format_parameters(parameters: Parameters, formatted_search_space: InternalSe
             ret[key] = value
     return ret
 
-def _format_search_space(parent_key: InternalKey, space: SearchSpace) -> list[ParameterSpec]:
+def _format_search_space(parent_key: ParameterKey, space: SearchSpace) -> list[ParameterSpec]:
     formatted: list[ParameterSpec] = []
     for name, spec in space.items():
         if name == '_name':
@@ -166,7 +176,7 @@ def _format_search_space(parent_key: InternalKey, space: SearchSpace) -> list[Pa
                 formatted += _format_search_space(key, sub_space)
     return formatted
 
-def _format_parameter(key: InternalKey, type_: str, values: list[Any]):
+def _format_parameter(key: ParameterKey, type_: str, values: list[Any]):
     spec = SimpleNamespace(
         name = key[-1],
         type = type_,
@@ -217,7 +227,7 @@ def _is_nested_choices(values: list[Any]) -> bool:
             return False
     return True
 
-def _assign(params: Parameters, key: InternalKey, x: Any) -> None:
+def _assign(params: Parameters, key: ParameterKey, x: Any) -> None:
     if len(key) == 1:
         params[cast(str, key[0])] = x
     elif isinstance(key[0], int):

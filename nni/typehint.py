@@ -2,33 +2,53 @@
 # Licensed under the MIT license.
 
 __all__ = [
-    'Literal', 'TypeAlias',
+    'Literal',
     'Parameters', 'SearchSpace', 'TrialMetric', 'TrialRecord',
 ]
 
 import sys
-import typing
+from typing import Any, Dict, List, TYPE_CHECKING
 
-if typing.TYPE_CHECKING or sys.version_info >= (3, 9):
-    from typing import Any, Literal, TypedDict
-
-    TypeAlias = Any  # FIXME
-
-    Parameters: TypeAlias = dict[str, Any]
-    SearchSpace: TypeAlias = dict[str, Any]
-    TrialMetric: TypeAlias = float
-
-    class TrialRecord(TypedDict):
-        parameter: Parameters
-        value: TrialMetric
-
+if TYPE_CHECKING or sys.version_info >= (3, 8):
+    from typing import Literal, TypedDict
 else:
-    from typing import Any
+    from typing_extensions import Literal, TypedDict
 
-    Literal = Any
-    TypeAlias = Any
+"""
+Return type of :func:`nni.get_next_parameter`.
 
-    Parameters = Any
-    SearchSpace = Any
-    TrialMetric = Any
-    TrialRecord = Any
+For built-in tuners, this is a ``dict`` whose content is defined by :doc:`search space </hpo/search_space>`.
+
+Customized tuners do not need to follow the constraint and can use anything serializable.
+"""
+Parameters = Dict[str, Any]
+
+class _ParameterSearchSpace(TypedDict):
+    _type: Literal[
+        'choice', 'randint',
+        'uniform', 'loguniform', 'quniform', 'qloguniform',
+        'normal', 'lognormal', 'qnormal', 'qlognormal',
+    ]
+    _value: List[Any]
+
+"""
+Type of ``experiment.config.search_space``.
+
+For built-in tuners, the format is detailed in :doc:`/hpo/search_space`.
+
+Customized tuners do not need to follow the constraint and can use anything serializable, except ``None``.
+"""
+SearchSpace = Dict[str, _ParameterSearchSpace]
+
+"""
+Type of the metrics returned by of :func:`nni.report_final_result` and :func:`nni.report_intermediate_result`.
+
+For built-in tuners it must be a number (``float``, ``int``, ``numpy.float32``, etc).
+
+Customized tuners do not need to follow this constraint and can use anything serializable.
+"""
+TrialMetric = float
+
+class TrialRecord(TypedDict):
+    parameter: Parameters
+    value: TrialMetric

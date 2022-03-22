@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import inspect
+import os
 import warnings
 from typing import Any, TypeVar, Union
 
@@ -64,6 +65,12 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
         class PrimitiveOp(nn.Module):
             ...
     """
+
+    # Internal flag. See nni.trace
+    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
+    if nni_trace_flag.lower() == 'disable':
+        return cls
+
     if _check_wrapped(cls, 'basic_unit'):
         return cls
 
@@ -90,12 +97,18 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
 
     The wrapper serves two purposes:
 
-        1. Capture the init parameters of python class so that it can be re-instantiated in another process.
-        2. Reset uid in namespace so that the auto label counting in each model stably starts from zero.
+    1. Capture the init parameters of python class so that it can be re-instantiated in another process.
+    2. Reset uid in namespace so that the auto label counting in each model stably starts from zero.
 
     Currently, NNI might not complain in simple cases where ``@model_wrapper`` is actually not needed.
     But in future, we might enforce ``@model_wrapper`` to be required for base model.
     """
+
+    # Internal flag. See nni.trace
+    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
+    if nni_trace_flag.lower() == 'disable':
+        return cls
+
     if _check_wrapped(cls, 'model_wrapper'):
         return cls
 

@@ -36,7 +36,8 @@ class RunMode(Enum):
 
     NOTE: This API is non-stable and is likely to get refactored in upcoming release.
     """
-    # TODO: NNI manager should treat log level more seriously so we can default to "foreground" without being too verbose.
+    # TODO:
+    # NNI manager should treat log level more seriously so we can default to "foreground" without being too verbose.
     Background = 'background'
     Foreground = 'foreground'
     Detach = 'detach'
@@ -44,6 +45,11 @@ class RunMode(Enum):
 class Experiment:
     """
     Manage NNI experiment.
+
+    You can either specify an :class:`ExperimentConfig` object, or a training service name.
+    If a platform name is used, a blank config template for that training service will be generated.
+
+    When configuration is completed, use :meth:`Experiment.run` to launch the experiment.
 
     Example
     -------
@@ -66,14 +72,6 @@ class Experiment:
     """
 
     def __init__(self, config_or_platform: ExperimentConfig | str | list[str] | None):
-        """
-        Prepare an experiment.
-
-        You can either specify an ExperimentConfig object, or a training service name.
-        If a platform name is used, it will generate a blank config template for that training service.
-
-        When configuration is completed, use :meth:`Experiment.run` to launch the experiment.
-        """
         nni.runtime.log.init_logger_for_command_line()
 
         self.config: ExperimentConfig | None = None
@@ -127,7 +125,7 @@ class Experiment:
                 if interface.family == socket.AF_INET:
                     ips.append(interface.address)
         ips = [f'http://{ip}:{port}' for ip in ips if ip]
-        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
+        msg = 'Web portal URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
 
     def stop(self) -> None:
@@ -173,7 +171,6 @@ class Experiment:
                         return False
             except KeyboardInterrupt:
                 _logger.warning('KeyboardInterrupt detected')
-            finally:
                 self.stop()
 
     @classmethod

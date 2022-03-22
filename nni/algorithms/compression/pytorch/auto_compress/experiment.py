@@ -14,19 +14,7 @@ class AutoCompressionExperiment(Experiment):
 
     def __init__(self, auto_compress_module: AbstractAutoCompressionModule, config_or_platform: ExperimentConfig | str | list[str]) -> None:
         """
-        Prepare an experiment.
-
-        Use `Experiment.run()` to launch it.
-
-        Example
-        -------
-        .. code-block::
-
-            experiment = AutoCompressionExperiment(auto_compress_module, 'remote')
-            experiment.config.trial_command = 'python3 trial.py'
-            experiment.config.machines.append(RemoteMachineConfig(ip=..., user_name=...))
-            ...
-            experiment.run(8080)
+        Prepare an auto compression experiment.
 
         Parameters
         ----------
