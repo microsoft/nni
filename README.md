@@ -32,7 +32,9 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 
 ## NNI capabilities in a glance
 
-(TBD: figures and tables)
+<img src="docs/img/overview.svg" width="100%"/>
+
+(TBD: table)
 
 ## Installation
 
@@ -45,10 +47,12 @@ $ pip install nni
 ```
 
 To update NNI to the latest version, add `--upgrade` flag to the above commands.
-
-(TBD: build from soure link)
   
 ## Run your first experiment
+
+[comment]: <> delete this before next release
+
+**NOTE:** To run an experiment following instructions below, you need to build NNI from source. Installing from pip won't work until next release.
 
 To run this experiment, you need to have [PyTorch](https://pytorch.org/) (as well as [torchvision](https://pytorch.org/vision/stable/index.html)) installed.
 
