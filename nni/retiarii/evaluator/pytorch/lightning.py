@@ -4,7 +4,7 @@
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, Union, Optional, List, Type
+from typing import Dict, Union, Optional, List, Callable
 
 import pytorch_lightning as pl
 import torch.nn as nn
@@ -29,11 +29,20 @@ __all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classificat
 class LightningModule(pl.LightningModule):
     """
     Basic wrapper of generated model.
-
     Lightning modules used in NNI should inherit this class.
+
+    It's a subclass of ``pytorch_lightning.LightningModule``.
+    See https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html
     """
 
-    def set_model(self, model: Union[Type[nn.Module], nn.Module]) -> None:
+    def set_model(self, model: Union[Callable[[], nn.Module], nn.Module]) -> None:
+        """Set the inner model (architecture) to train / evaluate.
+
+        Parameters
+        ----------
+        model : callable or nn.Module
+            Can be a callable returning nn.Module or nn.Module.
+        """
         if isinstance(model, nn.Module):
             self.model = model
         else:
@@ -41,7 +50,13 @@ class LightningModule(pl.LightningModule):
 
 
 Trainer = nni.trace(pl.Trainer)
+Trainer.__doc__ = """
+Traced version of ``pytorch_lightning.Trainer``. See https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html
+"""
 DataLoader = nni.trace(torch_data.DataLoader)
+DataLoader.__doc__ = """
+Traced version of ``torch.utils.data.DataLoader``. See https://pytorch.org/docs/stable/data.html
+"""
 
 @nni.trace
 class Lightning(Evaluator):
@@ -236,7 +251,7 @@ class _ClassificationModule(_SupervisedLearningModule):
 
 class Classification(Lightning):
     """
-    Trainer that is used for classification.
+    Evaluator that is used for classification.
 
     Parameters
     ----------
@@ -289,7 +304,7 @@ class _RegressionModule(_SupervisedLearningModule):
 
 class Regression(Lightning):
     """
-    Trainer that is used for regression.
+    Evaluator that is used for regression.
 
     Parameters
     ----------

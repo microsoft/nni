@@ -388,6 +388,9 @@ class ModelSpeedup:
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """
         Replace the submodule according to the inferred sparsity.
+
+        Parameters
+        ----------
         unique_name: str
             The unique_name of the submodule to replace.
         reindex_dim: int

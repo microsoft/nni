@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from packaging.version import Version
 import torch
 import torch.nn as nn
 
@@ -98,20 +99,22 @@ class UnaryTanh(nn.Module):
     def forward(self, x):
         return torch.tanh(x)
 
-@basic_unit
-class UnaryAsinh(nn.Module):
-    def forward(self, x):
-        return torch.asinh(x)
+if not Version(torch.__version__) >= Version(TorchVersion):
+    @basic_unit
+    class UnaryAsinh(nn.Module):
+        def forward(self, x):
+            return torch.asinh(x)
 
 @basic_unit
 class UnaryAtan(nn.Module):
     def forward(self, x):
         return torch.atan(x)
 
-@basic_unit
-class UnarySinc(nn.Module):
-    def forward(self, x):
-        return torch.sinc(x)
+if not Version(torch.__version__) >= Version(TorchVersion):
+    @basic_unit
+    class UnarySinc(nn.Module):
+        def forward(self, x):
+            return torch.sinc(x)
 
 @basic_unit
 class UnaryMax(nn.Module):
@@ -146,8 +149,11 @@ class UnaryErf(nn.Module):
 unary_modules = ['UnaryIdentity', 'UnaryNegative', 'UnaryAbs', 'UnarySquare', 'UnaryPow',
     'UnarySqrt', 'UnaryMul', 'UnaryAdd', 'UnaryLogAbs', 'UnaryExp', 'UnarySin', 'UnaryCos',
     'UnarySinh', 'UnaryCosh', 'UnaryTanh', 'UnaryAtan', 'UnaryMax',
-    'UnaryMin', 'UnarySigmoid', 'UnaryLogExp', 'UnaryExpSquare', 'UnaryErf',
-    'UnaryAsinh', 'UnarySinc']
+    'UnaryMin', 'UnarySigmoid', 'UnaryLogExp', 'UnaryExpSquare', 'UnaryErf']
+
+if not Version(torch.__version__) >= Version(TorchVersion):
+    unary_modules.append('UnaryAsinh')
+    unary_modules.append('UnarySinc')
 
 # ============== binary function modules ==============
 
