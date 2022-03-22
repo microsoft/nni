@@ -26,11 +26,11 @@ from typing import Any, NamedTuple, cast
 
 import numpy as np
 
-from nni.typehint import TypeAlias, Parameters, SearchSpace
+from nni.typehint import Dict, Tuple, TypeAlias, Parameters, SearchSpace
 
-InternalKey: TypeAlias = tuple['str | int', ...]
-InternalParameters: TypeAlias = dict[InternalKey, 'float | int']
-InternalSearchSpace: TypeAlias = dict[InternalKey, 'ParameterSpec']
+InternalKey: TypeAlias = Tuple['str | int', ...]
+InternalParameters: TypeAlias = Dict[InternalKey, 'float | int']
+InternalSearchSpace: TypeAlias = Dict[InternalKey, 'ParameterSpec']
 
 class ParameterSpec(NamedTuple):
     """
