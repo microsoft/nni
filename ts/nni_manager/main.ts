@@ -20,15 +20,11 @@ import { SqlDB } from './core/sqlDatabase';
 import { NNIExperimentsManager } from './core/nniExperimentsManager';
 import { NNITensorboardManager } from './core/nniTensorboardManager';
 import { RestServer } from './rest_server';
+import { parseArgs } from 'common/globals/arguments';
 
-function initStartupInfo(
-    startExpMode: string, experimentId: string, basePort: number, platform: string,
-    logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string, urlprefix: string): void {
-    const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
-    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe, urlprefix);
-}
+const args = parseArgs(process.argv.slice(2));
 
-async function initContainer(foreground: boolean, _platformMode: string, logFileName?: string): Promise<void> {
+async function initContainer(): Promise<void> {
     Container.bind(Manager)
         .to(NNIManager)
         .scope(Scope.Singleton);
@@ -45,84 +41,32 @@ async function initContainer(foreground: boolean, _platformMode: string, logFile
         .to(NNITensorboardManager)
         .scope(Scope.Singleton);
     const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
-    if (!foreground) {
-        if (logFileName === undefined) {
-            startLogging(DEFAULT_LOGFILE);
-        } else {
-            startLogging(logFileName);
-        }
+    if (!args.foreground) {
+        startLogging(DEFAULT_LOGFILE);
     }
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    setLogLevel(logLevel);
+    setLogLevel(args.logLevel);
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
 }
 
-function usage(): void {
-    console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/aml/adl/hybrid/dlc> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
-}
-
-const strPort: string = parseArg(['--port', '-p']);
-if (!strPort || strPort.length === 0) {
-    usage();
-    process.exit(1);
-}
-
-const foregroundArg: string = parseArg(['--foreground', '-f']);
-if (foregroundArg && !['true', 'false'].includes(foregroundArg.toLowerCase())) {
-    console.log(`FATAL: foreground property should only be true or false`);
-    usage();
-    process.exit(1);
-}
-const foreground: boolean = (foregroundArg && foregroundArg.toLowerCase() === 'true') ? true : false;
-
-const port: number = parseInt(strPort, 10);
-
-const mode: string = parseArg(['--mode', '-m']);
-
-const startMode: string = parseArg(['--start_mode', '-s']);
-if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME].includes(startMode)) {
-    console.log(`FATAL: unknown start_mode: ${startMode}`);
-    usage();
-    process.exit(1);
-}
-
-const experimentId: string = parseArg(['--experiment_id', '-id']);
-if (experimentId.trim().length < 1) {
-    console.log(`FATAL: cannot resume the experiment, invalid experiment_id: ${experimentId}`);
-    usage();
-    process.exit(1);
-}
-
-const logDir: string = parseArg(['--log_dir', '-ld']);
-if (logDir.length > 0) {
-    if (!fs.existsSync(logDir)) {
-        console.log(`FATAL: log_dir ${logDir} does not exist`);
-    }
-}
-
-const logLevel: string = parseArg(['--log_level', '-ll']);
-
-const readonlyArg: string = parseArg(['--readonly', '-r']);
-if (readonlyArg && !['true', 'false'].includes(readonlyArg.toLowerCase())) {
-    console.log(`FATAL: readonly property should only be true or false`);
-    usage();
-    process.exit(1);
-}
-const readonly = (readonlyArg && readonlyArg.toLowerCase() == 'true') ? true : false;
-
-const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
-
-const urlPrefix: string = parseArg(['--url_prefix']);
-
-initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe, urlPrefix);
+setExperimentStartupInfo(
+    args.action === 'create',
+    args.experimentId,
+    args.port,
+    args.mode,
+    args.experimentsDirectory,
+    args.logLevel,
+    args.action === 'view',
+    args.dispatcherPipe ?? '',
+    args.urlPrefix
+);
 
 mkDirP(getLogDir())
     .then(async () => {
         try {
-            await initContainer(foreground, mode);
+            await initContainer();
             const restServer: RestServer = component.get(RestServer);
             await restServer.start();
         } catch (err) {

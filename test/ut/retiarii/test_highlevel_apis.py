@@ -17,7 +17,7 @@ from nni.retiarii.graph import Model
 from nni.retiarii.nn.pytorch.api import ValueChoice
 from nni.retiarii.nn.pytorch.mutator import process_evaluator_mutations, process_inline_mutation, extract_mutation_from_pt_module
 from nni.retiarii.serializer import model_wrapper
-from nni.retiarii.utils import ContextStack
+from nni.retiarii.utils import ContextStack, original_state_dict_hooks
 
 
 class EnumerateSampler(Sampler):
@@ -123,6 +123,29 @@ class GraphIR(unittest.TestCase):
             self.assertEqual(self._get_converted_pytorch_model(model_new)(torch.randn(1, 3, 3, 3)).size(),
                              torch.Size([1, i, 3, 3]))
 
+    def test_layer_choice_weight_inheritance(self):
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.module = nn.LayerChoice([nn.Conv2d(3, i, kernel_size=1) for i in range(1, 11)])
+
+            def forward(self, x):
+                return self.module(x)
+
+        orig_model = Net()
+        model, mutators = self._get_model_with_mutators(orig_model)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        for i in range(1, 11):
+            model_new = mutator.apply(model)
+            model_new = self._get_converted_pytorch_model(model_new)
+            with original_state_dict_hooks(model_new):
+                model_new.load_state_dict(orig_model.state_dict(), strict=False)
+            inp = torch.randn(1, 3, 3, 3)
+            a = getattr(orig_model.module, str(i - 1))(inp)
+            b = model_new(inp)
+            self.assertLess((a - b).abs().max().item(), 1E-4)
+
     def test_nested_layer_choice(self):
         @model_wrapper
         class Net(nn.Module):
@@ -149,6 +172,40 @@ class GraphIR(unittest.TestCase):
                          torch.Size([1, 1, 5, 5]))
         self.assertEqual(self._get_converted_pytorch_model(mutators[1].apply(mutators[0].apply(model)))(input).size(),
                          torch.Size([1, 5, 5, 5]))
+
+    def test_nested_layer_choice_weight_inheritance(self):
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.module = nn.LayerChoice([
+                    nn.LayerChoice([nn.Conv2d(3, 3, kernel_size=1),
+                                    nn.Conv2d(3, 4, kernel_size=1),
+                                    nn.Conv2d(3, 5, kernel_size=1)]),
+                    nn.Conv2d(3, 1, kernel_size=1)
+                ])
+
+            def forward(self, x):
+                return self.module(x)
+
+        orig_model = Net()
+        model, mutators = self._get_model_with_mutators(orig_model)
+        mutators[0].bind_sampler(EnumerateSampler())
+        mutators[1].bind_sampler(EnumerateSampler())
+        input = torch.randn(1, 3, 5, 5)
+
+        for i in range(3):
+            model_new = self._get_converted_pytorch_model(mutators[1].apply(mutators[0].apply(model)))
+            with original_state_dict_hooks(model_new):
+                model_new.load_state_dict(orig_model.state_dict(), strict=False)
+            if i == 0:
+                a = getattr(getattr(orig_model.module, '0'), '0')(input)
+            elif i == 1:
+                a = getattr(orig_model.module, '1')(input)
+            elif i == 2:
+                a = getattr(getattr(orig_model.module, '0'), '2')(input)
+            b = model_new(input)
+            self.assertLess((a - b).abs().max().item(), 1E-4)
 
     def test_input_choice(self):
         @model_wrapper
@@ -577,6 +634,30 @@ class GraphIR(unittest.TestCase):
             result.append(self._get_converted_pytorch_model(new_model)(torch.zeros(1, 1)).item())
 
         self.assertIn(1., result)
+
+    def test_repeat_weight_inheritance(self):
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.module = nn.Repeat(lambda index: nn.Conv2d(3, 3, 1), (2, 5))
+
+            def forward(self, x):
+                return self.module(x)
+
+        orig_model = Net()
+        model, mutators = self._get_model_with_mutators(orig_model)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        inp = torch.randn(1, 3, 5, 5)
+
+        for i in range(4):
+            model_new = self._get_converted_pytorch_model(mutator.apply(model))
+            with original_state_dict_hooks(model_new):
+                model_new.load_state_dict(orig_model.state_dict(), strict=False)
+
+            a = nn.Sequential(*orig_model.module.blocks[:i + 2])(inp)
+            b = model_new(inp)
+            self.assertLess((a - b).abs().max().item(), 1E-4)
 
     def test_cell(self):
         @model_wrapper

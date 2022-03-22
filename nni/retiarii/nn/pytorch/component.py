@@ -5,6 +5,8 @@ from typing import Callable, List, Union, Tuple, Optional
 import torch
 import torch.nn as nn
 
+from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
+
 from .api import LayerChoice
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
@@ -59,7 +61,15 @@ class Repeat(Mutable):
                                           List[nn.Module]],
                             depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
         repeat = get_fixed_value(label)
-        return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
+        result = nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
+
+        if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
+            # already has a mapping, will merge with it
+            prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
+            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'blocks.{v}' for k, v in prev_mapping.items()})
+        else:
+            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': 'blocks'})
+        return result
 
     def __init__(self,
                  blocks: Union[Callable[[int], nn.Module],
@@ -100,7 +110,9 @@ class Repeat(Mutable):
 
 class NasBench201Cell(nn.Module):
     """
-    Cell structure that is proposed in NAS-Bench-201 :footcite:p:`dong2019bench`.
+    Cell structure that is proposed in NAS-Bench-201.
+
+    Refer to :footcite:t:`dong2019bench` for details.
 
     This cell is a densely connected DAG with ``num_tensors`` nodes, where each node is tensor.
     For every i < j, there is an edge from i-th node to j-th node.

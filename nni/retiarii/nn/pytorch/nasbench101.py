@@ -219,7 +219,9 @@ class _NasBench101CellFixed(nn.Module):
 
 class NasBench101Cell(Mutable):
     """
-    Cell structure that is proposed in NAS-Bench-101 :footcite:p:`ying2019bench`.
+    Cell structure that is proposed in NAS-Bench-101.
+
+    Refer to :footcite:t:`ying2019bench` for details.
 
     This cell is usually used in evaluation of NAS algorithms because there is a "comprehensive analysis" of this search space
     available, which includes a full architecture-dataset that "maps 423k unique architectures to metrics
@@ -298,6 +300,8 @@ class NasBench101Cell(Mutable):
         return _NasBench101CellFixed(
             [op_candidates[selected[f'{label}/op{i}']] for i in range(1, num_nodes - 1)],
             adjacency_list, in_features, out_features, num_nodes, projection)
+
+        # FIXME: weight inheritance on nasbench101 is not supported yet
 
     def __init__(self, op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]]],
                  in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],

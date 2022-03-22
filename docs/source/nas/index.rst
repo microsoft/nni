@@ -5,7 +5,7 @@ Retiarii for Neural Architecture Search
    :hidden:
    :titlesonly:
 
-   Quick Start <../tutorials/hello_nas>
+   Quick Start <../tutorials/cp_hello_nas_quickstart>
    construct_space
    exploration_strategy
    evaluator
@@ -13,6 +13,8 @@ Retiarii for Neural Architecture Search
    reference
 
 .. attention:: NNI's latest NAS supports are all based on Retiarii Framework, users who are still on `early version using NNI NAS v1.0 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ shall migrate your work to Retiarii as soon as possible.
+
+.. note:: PyTorch is the **only supported framework on Retiarii**. Inquiries of NAS support on Tensorflow is in `this discussion <https://github.com/microsoft/nni/discussions/4605>`__. If you intend to run NAS with DL frameworks other than PyTorch and Tensorflow, please `open new issues <https://github.com/microsoft/nni/issues>`__ to let us know.
 
 .. Using rubric to prevent the section heading to be include into toc
 
@@ -24,7 +26,7 @@ However, it is pretty hard to use existing NAS work to help develop common DNN m
 
 In summary, we highlight the following features for Retiarii:
 
-* Simple APIs are provided for defining model search space within PyTorch/TensorFlow model.
+* Simple APIs are provided for defining model search space within a deep learning model.
 * SOTA NAS algorithms are built-in to be used for exploring model search space.
 * System-level optimizations are implemented for speeding up the exploration.
 
@@ -60,25 +62,25 @@ The following APIs are provided to ease the engineering effort of writing a new 
      - Category
      - Brief Description
    * - :ref:`nas-layer-choice`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Select from some PyTorch modules
    * - :ref:`nas-input-choice`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Select from some inputs (tensors)
    * - :ref:`nas-value-choice`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Select from some candidate values
    * - :ref:`nas-repeat`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Repeat a block by a variable number of times
    * - :ref:`nas-cell`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Cell structure popularly used in literature
    * - :ref:`nas-cell-101`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Cell structure (variant) proposed by NAS-Bench-101
    * - :ref:`nas-cell-201`
-     - :ref:`Multi-trial <multi-trial-nas>`
+     - :ref:`Mutation Primitives <mutation-primitives>`
      - Cell structure (variant) proposed by NAS-Bench-201
    * - :ref:`nas-autoactivation`
      - :ref:`Hyper-modules <hyper-modules>`

@@ -39,7 +39,7 @@ Preparation
 In this tutorial, we use a simple model and pre-train on MNIST dataset.
 If you are familiar with defining a model and training in pytorch, you can skip directly to `Pruning Model`_.
 
-.. GENERATED FROM PYTHON SOURCE LINES 22-42
+.. GENERATED FROM PYTHON SOURCE LINES 22-35
 
 .. code-block:: default
 
@@ -52,6 +52,35 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
     # define the model
     model = TorchModel().to(device)
+
+    # show the model structure, note that pruner will wrap the model layer.
+    print(model)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    TorchModel(
+      (conv1): Conv2d(1, 6, kernel_size=(5, 5), stride=(1, 1))
+      (conv2): Conv2d(6, 16, kernel_size=(5, 5), stride=(1, 1))
+      (fc1): Linear(in_features=256, out_features=120, bias=True)
+      (fc2): Linear(in_features=120, out_features=84, bias=True)
+      (fc3): Linear(in_features=84, out_features=10, bias=True)
+    )
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 36-47
+
+.. code-block:: default
+
 
     # define the optimizer and criterion for pre-training
 
@@ -73,27 +102,27 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 1.8381, Accuracy: 5939/10000 (59%)
-    Average test loss: 0.3143, Accuracy: 9045/10000 (90%)
-    Average test loss: 0.1928, Accuracy: 9387/10000 (94%)
+    Average test loss: 0.5876, Accuracy: 8158/10000 (82%)
+    Average test loss: 0.2501, Accuracy: 9217/10000 (92%)
+    Average test loss: 0.1786, Accuracy: 9486/10000 (95%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-53
+.. GENERATED FROM PYTHON SOURCE LINES 48-58
 
 Pruning Model
 -------------
 
 Using L1NormPruner pruning the model and generating the masks.
 Usually, pruners require original model and ``config_list`` as parameters.
-Detailed about how to write ``config_list`` please refer ...
+Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
 
 This `config_list` means all layers whose type is `Linear` or `Conv2d` will be pruned,
 except the layer named `fc3`, because `fc3` is `exclude`.
 The final sparsity ratio for each layer is 50%. The layer named `fc3` will not be pruned.
 
-.. GENERATED FROM PYTHON SOURCE LINES 53-62
+.. GENERATED FROM PYTHON SOURCE LINES 58-67
 
 .. code-block:: default
 
@@ -113,25 +142,20 @@ The final sparsity ratio for each layer is 50%. The layer named `fc3` will not b
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 63-64
+.. GENERATED FROM PYTHON SOURCE LINES 68-69
 
 Pruners usually require `model` and `config_list` as input arguments.
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-76
+.. GENERATED FROM PYTHON SOURCE LINES 69-76
 
 .. code-block:: default
 
 
     from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
-
     pruner = L1NormPruner(model, config_list)
-    # show the wrapped model structure
+
+    # show the wrapped model structure, `PrunerModuleWrapper` have wrapped the layers that configured in the config_list.
     print(model)
-    # compress the model and generate the masks
-    _, masks = pruner.compress()
-    # show the masks sparsity
-    for name, mask in masks.items():
-        print(name, ' sparsity: ', '{:.2}'.format(mask['weight'].sum() / mask['weight'].numel()))
 
 
 
@@ -158,21 +182,46 @@ Pruners usually require `model` and `config_list` as input arguments.
       )
       (fc3): Linear(in_features=84, out_features=10, bias=True)
     )
-    conv1  sparsity:  0.5
-    conv2  sparsity:  0.5
-    fc1  sparsity:  0.5
-    fc2  sparsity:  0.5
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-80
+.. GENERATED FROM PYTHON SOURCE LINES 77-84
+
+.. code-block:: default
+
+
+    # compress the model and generate the masks
+    _, masks = pruner.compress()
+    # show the masks sparsity
+    for name, mask in masks.items():
+        print(name, ' sparsity : ', '{:.2}'.format(mask['weight'].sum() / mask['weight'].numel()))
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    conv1  sparsity :  0.5
+    conv2  sparsity :  0.5
+    fc1  sparsity :  0.5
+    fc2  sparsity :  0.5
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 85-88
 
 Speed up the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
 The model becomes smaller after speed-up,
 and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the masks across layers.
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-89
+.. GENERATED FROM PYTHON SOURCE LINES 88-97
 
 .. code-block:: default
 
@@ -195,24 +244,19 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 
  .. code-block:: none
 
-    /home/ningshang/nni/nni/compression/pytorch/utils/mask_conflict.py:124: UserWarning: This overload of nonzero is deprecated:
-            nonzero()
-    Consider using one of the following signatures instead:
-            nonzero(*, bool as_tuple) (Triggered internally at  /pytorch/torch/csrc/utils/python_arg_parser.cpp:766.)
-      all_ones = (w_mask.flatten(1).sum(-1) == count).nonzero().squeeze(1).tolist()
-    /home/ningshang/nni/nni/compression/pytorch/speedup/infer_mask.py:262: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the gradient for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations.
-      if isinstance(self.output, torch.Tensor) and self.output.grad is not None:
-    /home/ningshang/nni/nni/compression/pytorch/speedup/compressor.py:282: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the gradient for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations.
-      if last_output.grad is not None and tin.grad is not None:
+    aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
+    Note: .aten::log_softmax.12 does not have corresponding mask inference object
+    /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
+      return self._grad
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 90-91
+.. GENERATED FROM PYTHON SOURCE LINES 98-99
 
 the model will become real smaller after speed up
 
-.. GENERATED FROM PYTHON SOURCE LINES 91-93
+.. GENERATED FROM PYTHON SOURCE LINES 99-101
 
 .. code-block:: default
 
@@ -239,14 +283,14 @@ the model will become real smaller after speed up
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 94-98
+.. GENERATED FROM PYTHON SOURCE LINES 102-106
 
 Fine-tuning Compacted Model
 ---------------------------
 Note that if the model has been sped up, you need to re-initialize a new optimizer for fine-tuning.
 Because speed up will replace the masked big layers with dense small ones.
 
-.. GENERATED FROM PYTHON SOURCE LINES 98-102
+.. GENERATED FROM PYTHON SOURCE LINES 106-110
 
 .. code-block:: default
 
@@ -264,7 +308,7 @@ Because speed up will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  15.845 seconds)
+   **Total running time of the script:** ( 1 minutes  33.096 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:
