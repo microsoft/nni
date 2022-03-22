@@ -102,9 +102,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.5603, Accuracy: 8270/10000 (83%)
-    Average test loss: 0.2395, Accuracy: 9289/10000 (93%)
-    Average test loss: 0.1660, Accuracy: 9527/10000 (95%)
+    Average test loss: 0.5876, Accuracy: 8158/10000 (82%)
+    Average test loss: 0.2501, Accuracy: 9217/10000 (92%)
+    Average test loss: 0.1786, Accuracy: 9486/10000 (95%)
 
 
 
@@ -116,7 +116,7 @@ Pruning Model
 
 Using L1NormPruner pruning the model and generating the masks.
 Usually, pruners require original model and ``config_list`` as parameters.
-Detailed about how to write ``config_list`` please refer ...
+Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
 
 This `config_list` means all layers whose type is `Linear` or `Conv2d` will be pruned,
 except the layer named `fc3`, because `fc3` is `exclude`.
@@ -308,7 +308,7 @@ Because speed up will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  38.705 seconds)
+   **Total running time of the script:** ( 1 minutes  33.096 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:

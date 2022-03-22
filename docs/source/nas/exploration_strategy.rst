@@ -346,11 +346,20 @@ Then follow the 3 steps:
 
    .. note:: The data loading used in the official repo is `slightly different from usual <https://github.com/megvii-model/SinglePathOneShot/issues/5>`__, as they use BGR tensor and keep the values between 0 and 255 intentionally to align with their own DL framework. The option ``--spos-preprocessing`` will simulate the behavior used originally and enable you to use the checkpoints pretrained.
 
-2. **Evolution Search**: Single Path One-Shot leverages evolution algorithm to search for the best architecture. In the paper, the search module, which is responsible for testing the sampled architecture, recalculates all the batch norm for a subset of training images, and evaluates the architecture on the full validation set. In this example, we have an incomplete implementation of the evolution search. The example only support training from scratch. Inheriting weights from pretrained supernet is not supported yet. To search with the regularized evolution strategy, run
+2. **Evolution Search**: Single Path One-Shot leverages evolution algorithm to search for the best architecture. In the paper, the search module, which is responsible for testing the sampled architecture, recalculates all the batch norm for a subset of training images, and evaluates the architecture on the full validation set.
+   In this example, it will inherit the ``state_dict`` of supernet from `./data/checkpoint-150000.pth.tar`, and search the best architecture with the regularized evolution strategy. Search in the supernet with the following command
 
    .. code-block:: bash
 
       python search.py
+
+   NNI support a latency filter to filter unsatisfied model from search phase. Latency is predicted by Microsoft nn-Meter (https://github.com/microsoft/nn-Meter). To apply the latency filter, users could run search.py with additional arguments ``--latency-filter``. Here is an example:
+
+   .. code-block:: bash
+
+      python search.py --latency-filter cortexA76cpu_tflite21
+
+   Note that the latency filter is only supported for base execution engine.
 
    The final architecture exported from every epoch of evolution can be found in ``trials`` under the working directory of your tuner, which, by default, is ``$HOME/nni-experiments/your_experiment_id/trials``.
 
@@ -366,7 +375,6 @@ Known Limitations
 """""""""""""""""
 
 * Block search only. Channel search is not supported yet.
-* In the search phase, training from the scratch is required. Inheriting weights from supernet is not supported yet.
 
 Current Reproduction Results
 """"""""""""""""""""""""""""

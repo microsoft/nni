@@ -25,15 +25,15 @@ This is a modified version of `TensorFlow quickstart`_.
 
 It can be run directly and will have the exact same result as original version.
 
-Furthermore, it enables the ability of auto-tuning with an NNI *experiment*, which will be discussed later.
+Furthermore, it enables the ability of auto tuning with an NNI *experiment*, which will be detailed later.
 
-For now, we recommend to run this script directly to verify the environment.
+It is recommended to run this script directly first to verify the environment.
 
-There are only 3 key differences from the original version:
+There are 3 key differences from the original version:
 
- 1. In `Get optimized hyperparameters`_ part, it receives auto-generated hyperparameters.
- 2. In `(Optional) Report intermediate results`_ part, it reports per-epoch accuracy for visualization.
- 3. In `Report final result`_ part, it reports final accuracy for tuner to generate next hyperparameter set.
+1. In `Get optimized hyperparameters`_ part, it receives generated hyperparameters.
+2. In `(Optional) Report intermediate results`_ part, it reports per-epoch accuracy metrics.
+3. In `Report final result`_ part, it reports final accuracy.
 
 .. _TensorFlow quickstart: https://www.tensorflow.org/tutorials/quickstart/beginner
 
@@ -51,12 +51,13 @@ There are only 3 key differences from the original version:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 26-28
+.. GENERATED FROM PYTHON SOURCE LINES 26-29
 
 Hyperparameters to be tuned
 ---------------------------
+These are the hyperparameters that will be tuned later.
 
-.. GENERATED FROM PYTHON SOURCE LINES 28-35
+.. GENERATED FROM PYTHON SOURCE LINES 29-36
 
 .. code-block:: default
 
@@ -74,19 +75,20 @@ Hyperparameters to be tuned
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-40
+.. GENERATED FROM PYTHON SOURCE LINES 37-41
 
 Get optimized hyperparameters
 -----------------------------
-If run directly, ``nni.get_next_parameters()`` is a no-op and returns an empty dict.
+If run directly, :func:`nni.get_next_parameter` is a no-op and returns an empty dict.
 But with an NNI *experiment*, it will receive optimized hyperparameters from tuning algorithm.
 
-.. GENERATED FROM PYTHON SOURCE LINES 40-43
+.. GENERATED FROM PYTHON SOURCE LINES 41-45
 
 .. code-block:: default
 
     optimized_params = nni.get_next_parameter()
     params.update(optimized_params)
+    print(params)
 
 
 
@@ -98,18 +100,17 @@ But with an NNI *experiment*, it will receive optimized hyperparameters from tun
 
  .. code-block:: none
 
-    /home/lz/code/nnisrc/nni/runtime/platform/standalone.py:32: RuntimeWarning: Running NNI code without runtime. Check the following tutorial if you are new to NNI: https://nni.readthedocs.io/en/stable/Tutorial/QuickStart.html#id1
-      warnings.warn(warning_message, RuntimeWarning)
+    {'dense_units': 128, 'activation_type': 'relu', 'dropout_rate': 0.2, 'learning_rate': 0.001}
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 44-46
+.. GENERATED FROM PYTHON SOURCE LINES 46-48
 
 Load dataset
 ------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 46-51
+.. GENERATED FROM PYTHON SOURCE LINES 48-53
 
 .. code-block:: default
 
@@ -125,12 +126,12 @@ Load dataset
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 52-54
+.. GENERATED FROM PYTHON SOURCE LINES 54-56
 
 Build model with hyperparameters
 --------------------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 54-67
+.. GENERATED FROM PYTHON SOURCE LINES 56-67
 
 .. code-block:: default
 
@@ -142,9 +143,7 @@ Build model with hyperparameters
     ])
 
     adam = tf.keras.optimizers.Adam(learning_rate=params['learning_rate'])
-
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-
     model.compile(optimizer=adam, loss=loss_fn, metrics=['accuracy'])
 
 
@@ -158,10 +157,10 @@ Build model with hyperparameters
 
 (Optional) Report intermediate results
 --------------------------------------
-The callback reports per-epoch accuracy to show learning curve in NNI web portal.
-And in :doc:`/hpo/assessors`, you will see how to leverage the metrics for early stopping.
+The callback reports per-epoch accuracy to show learning curve in the web portal.
+You can also leverage the metrics for early stopping with :doc:`NNI assessors </hpo/assessors>`.
 
-You can safely skip this and the experiment will work fine.
+This part can be safely skipped and the experiment will work fine.
 
 .. GENERATED FROM PYTHON SOURCE LINES 74-78
 
@@ -201,21 +200,21 @@ Train and evluate the model
  .. code-block:: none
 
     Epoch 1/5
-    [2022-03-07 02:37:35] INFO (nni/MainThread) Intermediate result: 0.9145833253860474  (Index 0)
-    1875/1875 - 12s - loss: 0.2940 - accuracy: 0.9146 - 12s/epoch - 6ms/step
+    [2022-03-21 01:25:00] INFO (nni/MainThread) Intermediate result: 0.9153500199317932  (Index 0)
+    1875/1875 - 17s - loss: 0.2914 - accuracy: 0.9154 - 17s/epoch - 9ms/step
     Epoch 2/5
-    [2022-03-07 02:37:41] INFO (nni/MainThread) Intermediate result: 0.9573833346366882  (Index 1)
-    1875/1875 - 5s - loss: 0.1422 - accuracy: 0.9574 - 5s/epoch - 3ms/step
+    [2022-03-21 01:25:18] INFO (nni/MainThread) Intermediate result: 0.9588666558265686  (Index 1)
+    1875/1875 - 18s - loss: 0.1387 - accuracy: 0.9589 - 18s/epoch - 10ms/step
     Epoch 3/5
-    [2022-03-07 02:37:49] INFO (nni/MainThread) Intermediate result: 0.967283308506012  (Index 2)
-    1875/1875 - 8s - loss: 0.1075 - accuracy: 0.9673 - 8s/epoch - 4ms/step
+    [2022-03-21 01:25:38] INFO (nni/MainThread) Intermediate result: 0.9677000045776367  (Index 2)
+    1875/1875 - 20s - loss: 0.1073 - accuracy: 0.9677 - 20s/epoch - 11ms/step
     Epoch 4/5
-    [2022-03-07 02:37:57] INFO (nni/MainThread) Intermediate result: 0.9723333120346069  (Index 3)
-    1875/1875 - 8s - loss: 0.0885 - accuracy: 0.9723 - 8s/epoch - 4ms/step
+    [2022-03-21 01:25:56] INFO (nni/MainThread) Intermediate result: 0.9738666415214539  (Index 3)
+    1875/1875 - 18s - loss: 0.0866 - accuracy: 0.9739 - 18s/epoch - 10ms/step
     Epoch 5/5
-    [2022-03-07 02:38:06] INFO (nni/MainThread) Intermediate result: 0.9762333035469055  (Index 4)
-    1875/1875 - 9s - loss: 0.0747 - accuracy: 0.9762 - 9s/epoch - 5ms/step
-    313/313 - 1s - loss: 0.0766 - accuracy: 0.9772 - 647ms/epoch - 2ms/step
+    [2022-03-21 01:26:16] INFO (nni/MainThread) Intermediate result: 0.977483332157135  (Index 4)
+    1875/1875 - 21s - loss: 0.0728 - accuracy: 0.9775 - 21s/epoch - 11ms/step
+    313/313 - 2s - loss: 0.0702 - accuracy: 0.9776 - 2s/epoch - 6ms/step
 
 
 
@@ -224,7 +223,7 @@ Train and evluate the model
 
 Report final result
 -------------------
-Report final accuracy to NNI so the tuning algorithm can predict best hyperparameters.
+Report final accuracy to NNI so the tuning algorithm can suggest better hyperparameters.
 
 .. GENERATED FROM PYTHON SOURCE LINES 88-89
 
@@ -241,7 +240,7 @@ Report final accuracy to NNI so the tuning algorithm can predict best hyperparam
 
  .. code-block:: none
 
-    [2022-03-07 02:38:06] INFO (nni/MainThread) Final result: 0.9771999716758728
+    [2022-03-21 01:27:08] INFO (nni/MainThread) Final result: 0.9775999784469604
 
 
 
@@ -249,7 +248,7 @@ Report final accuracy to NNI so the tuning algorithm can predict best hyperparam
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  44.370 seconds)
+   **Total running time of the script:** ( 2 minutes  27.156 seconds)
 
 
 .. _sphx_glr_download_tutorials_hpo_quickstart_tensorflow_model.py:

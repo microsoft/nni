@@ -3,14 +3,16 @@ Tuner: Tuning Algorithms
 
 The tuner decides which hyperparameter sets will be evaluated. It is a most important part of NNI HPO.
 
-A tuner works in following steps:
+A tuner works like following pseudocode:
 
-1. Initialize with a search space.
-2. Generate hyperparameter sets from the search space.
-3. Send hyperparameters to trials.
-4. Receive evaluation results.
-5. Update internal states according to the results.
-6. Go to step 2, until experiment end.
+.. code-block:: python
+
+    space = get_search_space()
+    history = []
+    while not experiment_end:
+        hp = suggest_hyperparameter_set(space, history)
+        result = run_trial(hp)
+        history.append((hp, result))
 
 NNI has out-of-the-box support for many popular tuning algorithms. 
 They should be sufficient to cover most typical machine learning scenarios.
@@ -26,15 +28,15 @@ All built-in tuners have similar usage.
 To use a built-in tuner, you need to specify its name and arguments in experiment config,
 and provides a standard :doc:`search_space`.
 Some tuners, like SMAC and DNGO, have extra dependencies that need to be installed separately.
-
 Please check each tuner's reference page for what arguments it supports and whether it needs extra dependencies.
 
-For a general example, random tuner can be configured as follow:
+As a general example, random tuner can be configured as follow:
 
 .. code-block:: python
 
     config.search_space = {
-        'x': {'_type': 'uniform', '_value': [0, 1]}
+        'x': {'_type': 'uniform', '_value': [0, 1]},
+        'y': {'_type': 'choice', '_value': ['a', 'b', 'c']}
     }
     config.tuner.name = 'Random'
     config.tuner.class_args = {'seed': 0}
@@ -47,13 +49,25 @@ Built-in Tuners
     :widths: auto
 
     * - Tuner
-      - Brief Introduction of Algorithm
+      - Brief Introduction
 
     * - :class:`TPE <nni.algorithms.hpo.tpe_tuner.TpeTuner>`
-      - The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model. `Reference Paper <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__
+      - Tree-structured Parzen Estimator, a classic Bayesian optimization algorithm.
+        (`paper <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__)
 
-    * - :class:`Random Search <nni.algorithms.hpo.random_tuner.RandomTuner>`
-      - In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggest that we could use Random Search as the baseline when we have no knowledge about the prior distribution of hyper-parameters. `Reference Paper <http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf>`__
+        TPE is a lightweight tuner that has no extra dependency and supports all search space types.
+        Good to start with.
+
+        The drawback is that TPE cannot discover relationship between different hyperparameters.
+
+    * - :class:`Random <nni.algorithms.hpo.random_tuner.RandomTuner>`
+      - Naive random search, the baseline. It supports all search space types.
+
+    * - :class:`Grid Search <nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner>`
+      - Divides search space into evenly spaced grid, and performs brute-force traverse. Another baseline.
+
+        It supports all search space types.
+        Recommended when the search space is small, and when you want to find the strictly optimal hyperparameters.
 
     * - :class:`Anneal <nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner>`
       - This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on the random search that leverages smoothness in the response surface. The annealing rate is not adaptive.
@@ -68,9 +82,6 @@ Built-in Tuners
 
     * - :class:`Batch <nni.algorithms.hpo.batch_tuner.BatchTuner>`
       - Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.
-
-    * - :class:`Grid Search <nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner>`
-      - Grid Search performs an exhaustive searching through the search space.
 
     * - :class:`Hyperband <nni.algorithms.hpo.hyperband_advisor.Hyperband>`
       - Hyperband tries to use limited resources to explore as many configurations as possible and returns the most promising ones as a final result. The basic idea is to generate many configurations and run them for a small number of trials. The half least-promising configurations are thrown out, the remaining are further trained along with a selection of new configurations. The size of these populations is sensitive to resource constraints (e.g. allotted search time). `Reference Paper <https://arxiv.org/pdf/1603.06560.pdf>`__
@@ -97,4 +108,4 @@ These articles have compared built-in tuners' performance on some different task
 
 :doc:`hpo_benchmark_stats`
 
-:doc:`/CommunitySharings/HpoComparison`
+:doc:`/misc/hpo_comparison`

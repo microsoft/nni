@@ -28,7 +28,6 @@ Neural Network Intelligence
 
     nnictl Commands <reference/nnictl>
     Experiment Configuration <reference/experiment_config>
-    HPO API Reference <reference/hpo>
     Python API <reference/_modules/nni>
     API Reference <reference/python_api_ref>
 
@@ -37,11 +36,11 @@ Neural Network Intelligence
     :caption: Misc
     :hidden:
 
-    Use Cases and Solutions <CommunitySharings/community_sharings>
-    Research and Publications <ResearchPublications>
-    FAQ <Tutorial/FAQ>
+    Use Cases and Solutions <misc/community_sharings>
+    Research and Publications <misc/research_publications>
+    FAQ <misc/faq>
     notes/build_from_source
-    How to Contribute <contribution>
+    Contribution Guide <notes/contributing>
     Change Log <Release>
 
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:

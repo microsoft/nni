@@ -35,17 +35,16 @@ def _setattr(model: Module, name: str, module: Module):
 class Compressor:
     """
     The abstract base pytorch compressor.
+
+    Parameters
+    ----------
+    model
+        The model under compressed.
+    config_list
+        The config list used by compressor, usually specifies the 'op_types' or 'op_names' that want to compress.
     """
 
     def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]]):
-        """
-        Parameters
-        ----------
-        model
-            The model under compressed.
-        config_list
-            The config list used by compressor, usually specifies the 'op_types' or 'op_names' that want to compress.
-        """
         self.is_wrapped = False
         if model is not None:
             self.reset(model=model, config_list=config_list)

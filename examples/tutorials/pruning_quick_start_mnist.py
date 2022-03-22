@@ -50,7 +50,7 @@ for epoch in range(3):
 #
 # Using L1NormPruner pruning the model and generating the masks.
 # Usually, pruners require original model and ``config_list`` as parameters.
-# Detailed about how to write ``config_list`` please refer ...
+# Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
 #
 # This `config_list` means all layers whose type is `Linear` or `Conv2d` will be pruned,
 # except the layer named `fc3`, because `fc3` is `exclude`.

@@ -1,4 +1,5 @@
 import math
+import pickle
 import sys
 from pathlib import Path
 
@@ -25,6 +26,11 @@ class SimpleClass:
     def __init__(self, a, b=1):
         self._a = a
         self._b = b
+
+
+@nni.trace
+class EmptyClass:
+    pass
 
 
 class UnserializableSimpleClass:
@@ -124,7 +130,8 @@ def test_custom_class():
 
     module = nni.trace(Foo)(Foo(1), 5)
     dumped_module = nni.dump(module)
-    assert len(dumped_module) > 200  # should not be too longer if the serialization is correct
+    module = nni.load(dumped_module)
+    assert module.bb[0] == module.bb[999] == 6
 
     module = nni.trace(Foo)(nni.trace(Foo)(1), 5)
     dumped_module = nni.dump(module)
@@ -193,6 +200,20 @@ def test_dataset():
     assert y.size() == torch.Size([10])
 
 
+def test_pickle():
+    pickle.dumps(EmptyClass())
+    obj = SimpleClass(1)
+    obj = pickle.loads(pickle.dumps(obj))
+
+    assert obj._a == 1
+    assert obj._b == 1
+
+    obj = SimpleClass(1)
+    obj.xxx = 3
+    obj = pickle.loads(pickle.dumps(obj))
+    assert obj.xxx == 3
+
+
 @pytest.mark.skipif(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
 def test_multiprocessing_dataloader():
     # check whether multi-processing works
@@ -208,6 +229,28 @@ def test_multiprocessing_dataloader():
     assert y.size() == torch.Size([10])
 
 
+def _test_multiprocessing_dataset_worker(dataset):
+    if sys.platform == 'linux':
+        # on non-linux, the loaded object will become non-traceable
+        # due to an implementation limitation
+        assert is_traceable(dataset)
+    else:
+        from torch.utils.data import Dataset
+        assert isinstance(dataset, Dataset)
+
+
+def test_multiprocessing_dataset():
+    from torch.utils.data import Dataset
+
+    dataset = nni.trace(Dataset)()
+
+    import multiprocessing
+    process = multiprocessing.Process(target=_test_multiprocessing_dataset_worker, args=(dataset, ))
+    process.start()
+    process.join()
+    assert process.exitcode == 0
+
+
 def test_type():
     assert nni.dump(torch.optim.Adam) == '{"__nni_type__": "path:torch.optim.adam.Adam"}'
     assert nni.load('{"__nni_type__": "path:torch.optim.adam.Adam"}') == torch.optim.Adam
@@ -220,8 +263,18 @@ def test_lightning_earlystop():
     import nni.retiarii.evaluator.pytorch.lightning as pl
     from pytorch_lightning.callbacks.early_stopping import EarlyStopping
     trainer = pl.Trainer(callbacks=[nni.trace(EarlyStopping)(monitor="val_loss")])
-    trainer = nni.load(nni.dump(trainer))
+    pickle_size_limit = 4096 if sys.platform == 'linux' else 32768
+    trainer = nni.load(nni.dump(trainer, pickle_size_limit=pickle_size_limit))
     assert any(isinstance(callback, EarlyStopping) for callback in trainer.callbacks)
+
+
+def test_pickle_trainer():
+    import nni.retiarii.evaluator.pytorch.lightning as pl
+    from pytorch_lightning import Trainer
+    trainer = pl.Trainer(max_epochs=1)
+    data = pickle.dumps(trainer)
+    trainer = pickle.loads(data)
+    assert isinstance(trainer, Trainer)
 
 
 def test_generator():
@@ -272,11 +325,31 @@ def test_arguments_kind():
     assert lstm.trace_kwargs == {'input_size': 2, 'hidden_size': 2}
 
 
-if __name__ == '__main__':
-    # test_simple_class()
-    # test_external_class()
-    # test_nested_class()
-    # test_unserializable()
-    # test_basic_unit()
-    # test_generator()
-    test_arguments_kind()
+def test_subclass():
+    @nni.trace
+    class Super:
+        def __init__(self, a, b):
+            self._a = a
+            self._b = b
+
+    class Sub1(Super):
+        def __init__(self, c, d):
+            super().__init__(3, 4)
+            self._c = c
+            self._d = d
+
+    @nni.trace
+    class Sub2(Super):
+        def __init__(self, c, d):
+            super().__init__(3, 4)
+            self._c = c
+            self._d = d
+
+    obj = Sub1(1, 2)
+    # There could be trace_kwargs for obj. Behavior is undefined.
+    assert obj._a == 3 and obj._c == 1
+    assert isinstance(obj, Super)
+    obj = Sub2(1, 2)
+    assert obj.trace_kwargs == {'c': 1, 'd': 2}
+    assert issubclass(type(obj), Super)
+    assert isinstance(obj, Super)

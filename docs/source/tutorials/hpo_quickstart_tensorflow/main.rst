@@ -25,18 +25,18 @@ This tutorial optimizes the model in `official TensorFlow quickstart`_ with auto
 
 The tutorial consists of 4 steps: 
 
- 1. Modify the model for auto-tuning.
- 2. Define hyperparameters' search space.
- 3. Configure the experiment.
- 4. Run the experiment.
+1. Modify the model for auto-tuning.
+2. Define hyperparameters' search space.
+3. Configure the experiment.
+4. Run the experiment.
 
 .. _official TensorFlow quickstart: https://www.tensorflow.org/tutorials/quickstart/beginner
 
-.. GENERATED FROM PYTHON SOURCE LINES 17-28
+.. GENERATED FROM PYTHON SOURCE LINES 17-34
 
 Step 1: Prepare the model
 -------------------------
-In first step, you need to prepare the model to be tuned.
+In first step, we need to prepare the model to be tuned.
 
 The model should be put in a separate script.
 It will be evaluated many times concurrently,
@@ -44,9 +44,15 @@ and possibly will be trained on distributed platforms.
 
 In this tutorial, the model is defined in :doc:`model.py <model>`.
 
+In short, it is a TensorFlow model with 3 additional API calls:
+
+1. Use :func:`nni.get_next_parameter` to fetch the hyperparameters to be evalutated.
+2. Use :func:`nni.report_intermediate_result` to report per-epoch accuracy metrics.
+3. Use :func:`nni.report_final_result` to report final accuracy.
+
 Please understand the model code before continue to next step.
 
-.. GENERATED FROM PYTHON SOURCE LINES 30-52
+.. GENERATED FROM PYTHON SOURCE LINES 36-58
 
 Step 2: Define search space
 ---------------------------
@@ -57,10 +63,10 @@ Here we need to define their *search space* so the tuning algorithm can sample t
 
 Assuming we have following prior knowledge for these hyperparameters:
 
- 1. *dense_units* should be one of 64, 128, 256.
- 2. *activation_type* should be one of 'relu', 'tanh', 'swish', or None.
- 3. *dropout_rate* should be a float between 0.5 and 0.9.
- 4. *learning_rate* should be a float between 0.0001 and 0.1, and it follows exponential distribution.
+1. *dense_units* should be one of 64, 128, 256.
+2. *activation_type* should be one of 'relu', 'tanh', 'swish', or None.
+3. *dropout_rate* should be a float between 0.5 and 0.9.
+4. *learning_rate* should be a float between 0.0001 and 0.1, and it follows exponential distribution.
 
 In NNI, the space of *dense_units* and *activation_type* is called ``choice``;
 the space of *dropout_rate* is called ``uniform``;
@@ -71,7 +77,7 @@ For full specification of search space, check :doc:`the reference </hpo/search_s
 
 Now we can define the search space as follow:
 
-.. GENERATED FROM PYTHON SOURCE LINES 52-60
+.. GENERATED FROM PYTHON SOURCE LINES 58-66
 
 .. code-block:: default
 
@@ -90,7 +96,7 @@ Now we can define the search space as follow:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 61-68
+.. GENERATED FROM PYTHON SOURCE LINES 67-74
 
 Step 3: Configure the experiment
 --------------------------------
@@ -100,7 +106,7 @@ The *experiment config* defines how to train the models and how to explore the s
 In this tutorial we use a *local* mode experiment,
 which means models will be trained on local machine, without using any special training platform.
 
-.. GENERATED FROM PYTHON SOURCE LINES 68-71
+.. GENERATED FROM PYTHON SOURCE LINES 74-77
 
 .. code-block:: default
 
@@ -114,20 +120,16 @@ which means models will be trained on local machine, without using any special t
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-82
+.. GENERATED FROM PYTHON SOURCE LINES 78-84
 
 Now we start to configure the experiment.
 
-Firstly, specify the model code.
+Configure trial code
+^^^^^^^^^^^^^^^^^^^^
 In NNI evaluation of each hyperparameter set is called a *trial*.
 So the model script is called *trial code*.
 
-If you are using Linux system without Conda, you many need to change ``python`` to ``python3``.
-
-When ``trial_code_directory`` is a relative path, it relates to current working directory.
-To run ``main.py`` from a different path, you can set trial code directory to ``Path(__file__).parent``.
-
-.. GENERATED FROM PYTHON SOURCE LINES 82-85
+.. GENERATED FROM PYTHON SOURCE LINES 84-86
 
 .. code-block:: default
 
@@ -140,12 +142,24 @@ To run ``main.py`` from a different path, you can set trial code directory to ``
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 87-96
 
-.. GENERATED FROM PYTHON SOURCE LINES 86-87
+When ``trial_code_directory`` is a relative path, it relates to current working directory.
+To run ``main.py`` in a different path, you can set trial code directory to ``Path(__file__).parent``.
+(`__file__ <https://docs.python.org/3.10/reference/datamodel.html#index-43>`__
+is only available in standard Python, not in Jupyter Notebook.)
 
-Then specify the search space we defined above:
+.. attention::
 
-.. GENERATED FROM PYTHON SOURCE LINES 87-89
+    If you are using Linux system without Conda,
+    you may need to change ``"python model.py"`` to ``"python3 model.py"``.
+
+.. GENERATED FROM PYTHON SOURCE LINES 98-100
+
+Configure search space
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. GENERATED FROM PYTHON SOURCE LINES 100-102
 
 .. code-block:: default
 
@@ -158,12 +172,13 @@ Then specify the search space we defined above:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 90-92
+.. GENERATED FROM PYTHON SOURCE LINES 103-106
 
-Choose a tuning algorithm.
+Configure tuning algorithm
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here we use :doc:`TPE tuner </hpo/tuners>`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 92-95
+.. GENERATED FROM PYTHON SOURCE LINES 106-109
 
 .. code-block:: default
 
@@ -177,26 +192,18 @@ Here we use :doc:`TPE tuner </hpo/tuners>`.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 96-107
+.. GENERATED FROM PYTHON SOURCE LINES 110-113
 
-Specify how many trials to run.
-Here we evaluate 10 sets of hyperparameters in total, and concurrently evaluate 4 sets at a time.
+Configure how many trials to run
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here we evaluate 10 sets of hyperparameters in total, and concurrently evaluate 2 sets at a time.
 
-Please note that ``max_trial_number`` here is merely for a quick example.
-With default config TPE tuner requires 20 trials to warm up.
-In real world max trial number is commonly set to 100+.
-
-You can also set ``max_experiment_duration = '1h'`` to limit running time.
-
-And alternatively, you can skip this part and set no limit at all.
-The experiment will run forever until you press Ctrl-C.
-
-.. GENERATED FROM PYTHON SOURCE LINES 107-110
+.. GENERATED FROM PYTHON SOURCE LINES 113-115
 
 .. code-block:: default
 
     experiment.config.max_trial_number = 10
-    experiment.config.trial_concurrency = 4
+    experiment.config.trial_concurrency = 2
 
 
 
@@ -204,20 +211,33 @@ The experiment will run forever until you press Ctrl-C.
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 116-126
 
-.. GENERATED FROM PYTHON SOURCE LINES 111-116
+.. note::
+
+    ``max_trial_number`` is set to 10 here for a fast example.
+    In real world it should be set to a larger number.
+    With default config TPE tuner requires 20 trials to warm up.
+
+You may also set ``max_experiment_duration = '1h'`` to limit running time.
+
+If neither ``max_trial_number`` nor ``max_experiment_duration`` are set,
+the experiment will run forever until you press Ctrl-C.
+
+.. GENERATED FROM PYTHON SOURCE LINES 128-133
 
 Step 4: Run the experiment
 --------------------------
-Now the experiment is ready. Choose a port and launch it.
+Now the experiment is ready. Choose a port and launch it. (Here we use port 8080.)
 
 You can use the web portal to view experiment status: http://localhost:8080.
 
-.. GENERATED FROM PYTHON SOURCE LINES 116-117
+.. GENERATED FROM PYTHON SOURCE LINES 133-135
 
 .. code-block:: default
 
     experiment.run(8080)
+
 
 
 
@@ -228,21 +248,66 @@ You can use the web portal to view experiment status: http://localhost:8080.
 
  .. code-block:: none
 
-    [2022-03-07 03:24:07] Creating experiment, Experiment ID: f4q1xjki
-    [2022-03-07 03:24:07] Starting web server...
-    [2022-03-07 03:24:08] Setting up...
-    [2022-03-07 03:24:08] Web UI URLs: http://127.0.0.1:8080 http://192.168.100.103:8080
-    [2022-03-07 03:36:50] Stopping experiment, please wait...
-    [2022-03-07 03:36:53] Experiment stopped
+    [2022-03-20 21:12:19] Creating experiment, Experiment ID: 8raiuoyb
+    [2022-03-20 21:12:19] Starting web server...
+    [2022-03-20 21:12:20] Setting up...
+    [2022-03-20 21:12:20] Web portal URLs: http://127.0.0.1:8080 http://192.168.100.103:8080
 
     True
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 136-143
+
+After the experiment is done
+----------------------------
+Everything is done and it is safe to exit now. The following are optional.
+
+If you are using standard Python instead of Jupyter Notebook,
+you can add ``input()`` or ``signal.pause()`` to prevent Python from exiting,
+allowing you to view the web portal after the experiment is done.
+
+.. GENERATED FROM PYTHON SOURCE LINES 143-147
+
+.. code-block:: default
+
+
+    # input('Press enter to quit')
+    experiment.stop()
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    [2022-03-20 21:13:41] Stopping experiment, please wait...
+    [2022-03-20 21:13:44] Experiment stopped
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 148-158
+
+:meth:`nni.experiment.Experiment.stop` is automatically invoked when Python exits,
+so it can be omitted in your code.
+
+After the experiment is stopped, you can run :meth:`nni.experiment.Experiment.view` to restart web portal.
+
+.. tip::
+
+    This example uses :doc:`Python API </reference/experiment>` to create experiment.
+
+    You can also create and manage experiments with :doc:`command line tool </reference/nnictl>`.
+
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 12 minutes  45.612 seconds)
+   **Total running time of the script:** ( 1 minutes  24.257 seconds)
 
 
 .. _sphx_glr_download_tutorials_hpo_quickstart_tensorflow_main.py:

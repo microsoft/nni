@@ -2,14 +2,10 @@
 # Licensed under the MIT license.
 
 """
-Grid search tuner for hyper-parameter optimization.
+Grid search tuner.
 
 For categorical parameters this tuner fully explore all combinations.
 For numerical parameters it samples them at progressively decreased intervals.
-
-Use this tuner if you have abundant resource and want to find strictly optimal parameters.
-
-Grid search tuner has no argument.
 """
 
 __all__ = ['GridSearchTuner']
@@ -64,16 +60,22 @@ _logger = logging.getLogger('nni.tuner.gridsearch')
 
 class GridSearchTuner(Tuner):
     """
+    Grid search tuner divides search space into evenly spaced grid, and performs brute-force traverse.
+
+    Recommended when the search space is small, or if you want to find strictly optimal hyperparameters.
+
+    **Implementation**
+
     The original grid search approach performs an exhaustive search through a space consists of ``choice`` and ``randint``.
 
-    This implementation extends grid search to support all NNI search spaces.
+    NNI's implementation extends grid search to support all search spaces types.
 
     When the search space contains continuous parameters like ``normal`` and ``loguniform``,
     grid search tuner works in following steps:
 
     1. Divide the search space into a grid.
-    2. Perform an exhaustive searth throught the grid.
-    3. Subdivide the grid into a finer-grained one.
+    2. Perform an exhaustive searth through the grid.
+    3. Subdivide the grid into a finer-grained new grid.
     4. Goto step 2, until experiment end.
 
     As a deterministic algorithm, grid search has no argument.

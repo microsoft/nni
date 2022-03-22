@@ -68,21 +68,22 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.4891, Accuracy: 8504/10000 (85%)
-    Average test loss: 0.2644, Accuracy: 9179/10000 (92%)
-    Average test loss: 0.1953, Accuracy: 9414/10000 (94%)
+    Average test loss: 0.4877, Accuracy: 8541/10000 (85%)
+    Average test loss: 0.2618, Accuracy: 9191/10000 (92%)
+    Average test loss: 0.1626, Accuracy: 9543/10000 (95%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 38-42
+.. GENERATED FROM PYTHON SOURCE LINES 38-43
 
 Quantizing Model
 ----------------
 
 Initialize a `config_list`.
+Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 42-61
+.. GENERATED FROM PYTHON SOURCE LINES 43-62
 
 .. code-block:: default
 
@@ -112,11 +113,11 @@ Initialize a `config_list`.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 62-63
+.. GENERATED FROM PYTHON SOURCE LINES 63-64
 
 finetuning the model by using QAT
 
-.. GENERATED FROM PYTHON SOURCE LINES 63-71
+.. GENERATED FROM PYTHON SOURCE LINES 64-72
 
 .. code-block:: default
 
@@ -138,18 +139,20 @@ finetuning the model by using QAT
 
  .. code-block:: none
 
-    Average test loss: 0.1421, Accuracy: 9567/10000 (96%)
-    Average test loss: 0.1180, Accuracy: 9621/10000 (96%)
-    Average test loss: 0.1119, Accuracy: 9649/10000 (96%)
+    op_names ['relu1'] not found in model
+    op_names ['relu2'] not found in model
+    Average test loss: 0.1739, Accuracy: 9441/10000 (94%)
+    Average test loss: 0.1078, Accuracy: 9671/10000 (97%)
+    Average test loss: 0.0991, Accuracy: 9696/10000 (97%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-73
+.. GENERATED FROM PYTHON SOURCE LINES 73-74
 
 export model and get calibration_config
 
-.. GENERATED FROM PYTHON SOURCE LINES 73-78
+.. GENERATED FROM PYTHON SOURCE LINES 74-79
 
 .. code-block:: default
 
@@ -168,7 +171,7 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0034], device='cuda:0'), 'weight_zero_point': tensor([71.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0020], device='cuda:0'), 'weight_zero_point': tensor([112.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 13.904684066772461}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0034], device='cuda:0'), 'weight_zero_point': tensor([75.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0018], device='cuda:0'), 'weight_zero_point': tensor([110.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 13.838628768920898}}
 
 
 
@@ -176,7 +179,7 @@ export model and get calibration_config
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  25.558 seconds)
+   **Total running time of the script:** ( 1 minutes  51.644 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start_mnist.py:
