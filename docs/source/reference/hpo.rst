@@ -4,7 +4,6 @@ HPO API Reference
 Trial APIs
 ----------
 
-.. autofunction:: nni.get_current_parameter
 .. autofunction:: nni.get_experiment_id
 .. autofunction:: nni.get_next_parameter
 .. autofunction:: nni.get_sequence_id
