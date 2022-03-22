@@ -3,6 +3,8 @@
 
 """
 Deduplicate repeated parameters.
+
+No guarantee for forward-compatibility.
 """
 
 import logging
@@ -14,9 +16,26 @@ _logger = logging.getLogger(__name__)
 
 # TODO:
 # Move main logic of basic tuners (random and grid search) into SDK,
-# so we can get rid of private methods and strange dependent path.
+# so we can get rid of private methods and circular dependency.
 
 class Deduplicator:
+    """
+    A helper for tuners to deduplicate generated parameters.
+
+    When the tuner generates an already existing parameter,
+    calling this will return a new parameter generated with grid search.
+    Otherwise it returns the orignial parameter object.
+
+    If all parameters have been generated, raise ``NoMoreTrialError``.
+
+    All search space types, including nested choice, are supported.
+
+    Resuming and updating search space are not supported for now.
+    It will not raise error, but may return duplicate parameters.
+
+    See random tuner's source code for example usage.
+    """
+
     def __init__(self, formatted_search_space):
         self._space = formatted_search_space
         self._never_dup = any(_spec_never_dup(spec) for spec in self._space.values())
