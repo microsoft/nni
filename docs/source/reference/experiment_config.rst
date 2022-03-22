@@ -332,10 +332,12 @@ Introduction of the corresponding local training service can be found :doc:`../e
         If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
         This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
+.. _reference-remote-config-label:
+
 RemoteConfig
 ------------
 
-Detailed usage can be found `here <../TrainingService/RemoteMachineMode.rst>`__.
+Detailed usage can be found :doc:`../experiment/remote`.
 
 .. list-table::
     :widths: 10 10 80
