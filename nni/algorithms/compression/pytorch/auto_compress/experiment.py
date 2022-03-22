@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import inspect
 from pathlib import Path, PurePath
-from typing import Union, List
 
 from nni.experiment import Experiment, ExperimentConfig
 from nni.algorithms.compression.pytorch.auto_compress.interface import AbstractAutoCompressionModule
@@ -25,7 +24,7 @@ class AutoCompressionExperiment(Experiment):
         config_or_platform
             Experiment configuration or training service name.
         """
-        super().__init__(config, config_or_platform)
+        super().__init__(config_or_platform)
 
         self.module_file_path = str(PurePath(inspect.getfile(auto_compress_module)))
         self.module_name = auto_compress_module.__name__

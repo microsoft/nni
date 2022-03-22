@@ -10,7 +10,7 @@ from pathlib import Path
 import socket
 from subprocess import Popen
 import time
-from typing import Optional, Union, List, Any
+from typing import Optional, Any
 
 import colorama
 import psutil
