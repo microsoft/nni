@@ -68,7 +68,7 @@ class Experiment:
     id
         Experiment ID.
     port
-        Web portal port. ``None`` if the experiment is not running.
+        Web portal port. Or ``None`` if the experiment is not running.
     """
 
     def __init__(self, config_or_platform: ExperimentConfig | str | list[str] | None):

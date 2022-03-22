@@ -37,7 +37,7 @@ def get_next_parameter() -> Parameters:
 
     Examples
     --------
-    Assuming the :doc:`search space </hpo/search_space> is:
+    Assuming the :doc:`search space </hpo/search_space>` is:
 
     .. code-block::
 
@@ -57,7 +57,8 @@ def get_next_parameter() -> Parameters:
 
     Returns
     -------
-    A hyperparameter set sampled from search space.
+    :class:`~nni.typehint.Parameters`
+        A hyperparameter set sampled from search space.
     """
     global _params
     _params = platform.get_next_parameter()
@@ -120,6 +121,11 @@ def report_intermediate_result(metric: TrialMetric | dict[str, Any]) -> None:
     and other items can be visualized with web portal.
 
     Typically ``metric`` is per-epoch accuracy or loss.
+
+    Parameters
+    ----------
+    metric : :class:`~nni.typehint.TrialMetric`
+        The intermeidate result.
     """
     global _intermediate_seq
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
@@ -144,6 +150,11 @@ def report_final_result(metric: TrialMetric | dict[str, Any]) -> None:
     and other items can be visualized with web portal.
 
     Typically ``metric`` is the final accuracy or loss.
+
+    Parameters
+    ----------
+    metric : :class:`~nni.typehint.TrialMetric`
+        The final result.
     """
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_final_result'
