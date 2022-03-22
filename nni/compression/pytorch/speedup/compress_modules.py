@@ -41,7 +41,8 @@ replace_module = {
     'Dropout3d': lambda module, masks: no_replace(module, masks),
     'Upsample': lambda module, masks: no_replace(module, masks),
     'LayerNorm': lambda module, masks: replace_layernorm(module, masks),
-    'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks)
+    'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
+    'Flatten': lambda module, masks: no_replace(module, masks)
 }
 
 
