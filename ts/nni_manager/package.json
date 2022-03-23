@@ -14,7 +14,7 @@
     "app-module-path": "^2.2.0",
     "azure-storage": "^2.10.6",
     "child-process-promise": "^2.2.1",
-    "express": "^4.17.1",
+    "express": "^4.17.2",
     "express-joi-validator": "^2.0.1",
     "http-proxy": "^1.18.1",
     "ignore": "^5.1.8",
@@ -33,7 +33,8 @@
     "ts-deferred": "^1.0.4",
     "typescript-ioc": "^1.2.6",
     "typescript-string-operations": "^1.4.1",
-    "ws": "^7.4.6"
+    "ws": "^7.4.6",
+    "yargs": "^17.3.1"
   },
   "devDependencies": {
     "@types/chai": "^4.2.18",
@@ -46,6 +47,7 @@
     "@types/lockfile": "^1.0.0",
     "@types/mocha": "^8.2.2",
     "@types/node": "^15.12.1",
+    "@types/node-fetch": "<3.0.0",
     "@types/request": "^2.48.5",
     "@types/rx": "^4.1.2",
     "@types/sqlite3": "^3.1.7",
@@ -54,6 +56,7 @@
     "@types/tar": "^4.0.4",
     "@types/tmp": "^0.2.0",
     "@types/ws": "^7.4.4",
+    "@types/yargs": "^17.0.8",
     "@typescript-eslint/eslint-plugin": "^2.10.0",
     "@typescript-eslint/parser": "^4.26.0",
     "chai": "^4.3.4",
@@ -61,6 +64,7 @@
     "eslint": "^7.28.0",
     "glob": "^7.1.7",
     "mocha": "^9.0.2",
+    "node-fetch": "<3.0.0",
     "nyc": "^15.1.0",
     "request": "^2.88.2",
     "rmdir": "^1.2.0",
@@ -82,7 +86,7 @@
     "http-signature": ">=1.3.6"
   },
   "engines": {
-    "node": "^16.3.0"
+    "node": "^16.13.2"
   },
   "nyc": {
     "include": [

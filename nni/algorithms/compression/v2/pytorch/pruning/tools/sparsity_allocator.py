@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import math
+import itertools
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
@@ -40,6 +41,60 @@ class NormalSparsityAllocator(SparsityAllocator):
                 masks[name]['weight'] *= wrapper.weight_mask
         return masks
 
+class BankSparsityAllocator(SparsityAllocator):
+    """
+    In bank pruner, all values in weight are divided into different sub blocks each shape
+    aligned with balance_gran. Each sub block has the same sparsity which equal to the overall sparsity.
+    This allocator pruned the weight in the granularity of block. 
+    """
+    def __init__(self, pruner: Pruner, balance_gran: list):
+        super().__init__(pruner)
+        self.balance_gran = balance_gran
+        for gran in self.balance_gran:
+            assert isinstance(gran, int) and gran > 0, 'All values in list balance_gran \
+                should be type int and bigger than zero'
+
+    def generate_sparsity(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
+        masks = {}
+        for name, wrapper in self.pruner.get_modules_wrapper().items():
+            sparsity_rate = wrapper.config['total_sparsity']
+
+            assert name in metrics, 'Metric of {} is not calculated.'.format(name)
+
+            # We assume the metric value are all positive right now.
+            metric = metrics[name]
+            if self.continuous_mask:
+                metric *= self._compress_mask(wrapper.weight_mask)
+            n_dim = len(metric.shape)
+            assert n_dim >= len(self.balance_gran), 'Dimension of balance_gran should be smaller than metric'
+            # make up for balance_gran
+            balance_gran = [1] * (n_dim - len(self.balance_gran)) + self.balance_gran
+            for i, j in zip(metric.shape, balance_gran):
+                assert i % j == 0, 'Length of {} weight is not \
+                    aligned with balance granularity'.format(name)
+
+            mask = torch.zeros(metric.shape).type_as(metric)
+            loop_iters = [range(int(i / j)) for i, j in zip(metric.shape, balance_gran)]
+            for iter_params in itertools.product(*loop_iters):
+                index_str_list = [f"{iter_param * gran}:{(iter_param+1) * gran}"\
+                     for iter_param, gran in zip(iter_params, balance_gran)]
+                index_str = ",".join(index_str_list)
+                sub_metric_str = "metric[{}]".format(index_str)
+                sub_mask_str =  "mask[{}] = mask_bank".format(index_str)
+                metric_bank = eval(sub_metric_str)
+                prune_num = int(sparsity_rate * metric_bank.numel())
+                if prune_num == 0:
+                    threshold = metric_bank.min() -1
+                else:
+                    threshold = torch.topk(metric_bank.reshape(-1), prune_num, largest=False)[0].max()
+                # mask_bank will be used in exec(sub_mask_str)
+                mask_bank = torch.gt(metric_bank, threshold).type_as(metric_bank)
+                exec(sub_mask_str)
+
+            masks[name] = self._expand_mask(name, mask)
+            if self.continuous_mask:
+                masks[name]['weight'] *= wrapper.weight_mask
+        return masks
 
 class GlobalSparsityAllocator(SparsityAllocator):
     """

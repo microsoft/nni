@@ -13,7 +13,6 @@ import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manage
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager, TensorboardTaskInfo } from '../common/tensorboardManager';
 import { ValidationSchemas } from './restValidationSchemas';
-import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
 import { MetricType } from '../common/datastore';
 import { ProfileUpdateType } from '../common/manager';
@@ -23,17 +22,17 @@ import { TrialJobStatus } from '../common/trainingService';
 //const expressJoi = require('express-joi-validator');
 
 class NNIRestHandler {
-    private restServer: NNIRestServer;
+    private stopCallback: () => Promise<void>;
     private nniManager: Manager;
     private experimentsManager: ExperimentManager;
     private tensorboardManager: TensorboardManager;
     private log: Logger;
 
-    constructor(rs: NNIRestServer) {
+    constructor(stopCallback: () => Promise<void>) {
         this.nniManager = component.get(Manager);
         this.experimentsManager = component.get(ExperimentManager);
         this.tensorboardManager = component.get(TensorboardManager);
-        this.restServer = rs;
+        this.stopCallback = stopCallback;
         this.log = getLogger('NNIRestHandler');
     }
 
@@ -125,7 +124,7 @@ class NNIRestHandler {
                 this.handleError(err, res);
                 this.log.error(err.message);
                 this.log.error(`Datastore initialize failed, stopping rest server...`);
-                await this.restServer.stop();
+                await this.stopCallback();
             });
         });
     }
@@ -434,8 +433,8 @@ class NNIRestHandler {
     }
 }
 
-export function createRestHandler(rs: NNIRestServer): Router {
-    const handler: NNIRestHandler = new NNIRestHandler(rs);
+export function createRestHandler(stopCallback: () => Promise<void>): Router {
+    const handler: NNIRestHandler = new NNIRestHandler(stopCallback);
 
     return handler.createRestHandler();
 }

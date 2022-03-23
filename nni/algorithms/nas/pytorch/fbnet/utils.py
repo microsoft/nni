@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import ast
 import os
 import timeit
 import torch
@@ -13,14 +14,17 @@ import torch.nn as nn
 from nni.compression.pytorch.utils.counter import count_flops_params
 
 LUT_FILE = "lut.npy"
+LUT_JSON_FILE = "lut.txt"
 LUT_PATH = "lut"
 
+DATA_TYPE = "float"
 
 class NASConfig:
     def __init__(
         self,
         perf_metric="flops",
         lut_load=False,
+        lut_load_format="json",
         model_dir=None,
         nas_lr=0.01,
         nas_weight_decay=5e-4,
@@ -41,6 +45,13 @@ class NASConfig:
         ], "perf_metric should be ['flops', 'latency']"
         # wether load or create lut file
         self.lut_load = lut_load
+
+        assert lut_load_format in [
+            "json",
+            "numpy",
+        ], "lut_load_format should be ['json', 'numpy']"
+        self.lut_load_format = lut_load_format
+
         # necessary dirs
         self.lut_en = model_dir is not None
         if self.lut_en:
@@ -252,8 +263,14 @@ class LookUpTable:
         if config.lut_en:
             self.lut_perf = None
             self.lut_file = os.path.join(config.lut_path, LUT_FILE)
+            self.lut_json_file = LUT_JSON_FILE
             if config.lut_load:
-                self._load_from_file()
+                if config.lut_load_format == "numpy":
+                    # Load data from numpy file
+                    self._load_from_file()
+                else:
+                    # Load data from json file
+                    self._load_from_json_file()
             else:
                 self._create_perfs()
 
@@ -349,3 +366,68 @@ class LookUpTable:
     def _load_from_file(self):
         """Load numpy file."""
         self.lut_perf = np.load(self.lut_file, allow_pickle=True)
+
+    def _load_from_json_file(self):
+        """Load json file."""
+
+        """
+        lut_json_file ('lut.txt') format:
+            {'op_name': operator_name,
+             'op_data_shape': (input_w, input_h, C_in, C_out, stride),
+             'op_dtype': data_type,
+             'op_latency': latency}
+            {...}
+            {...}
+        """
+        latency_file = open(self.lut_json_file, "r")
+        ops_latency = latency_file.readlines()
+
+        """ops_lut: {'op_name': {'op_data_shape': {'op_dtype': latency}}}"""
+        ops_lut = {}
+
+        for op_latency in ops_latency:
+            assert isinstance(op_latency, str) or isinstance(op_latency, dict)
+
+            if isinstance(op_latency, str):
+                record = ast.literal_eval(op_latency)
+            elif isinstance(op_latency, dict):
+                record = op_latency
+
+            op_name = record["op_name"]
+            """op_data_shape: (input_w, input_h, C_in, C_out, stride)"""
+            op_data_shape = record["op_data_shape"]
+            op_dtype = record["op_dtype"]
+            op_latency = record["op_latency"]
+
+            if op_name not in ops_lut:
+                ops_lut[op_name] = {}
+
+            if op_data_shape not in ops_lut[op_name]:
+                ops_lut[op_name][op_data_shape] = {}
+
+            ops_lut[op_name][op_data_shape][op_dtype] = op_latency
+
+        self.lut_perf = [{} for i in range(self.cnt_layers)]
+        layer_id = 0
+
+        for stage_name in self.lut_ops:
+            stage_ops = self.lut_ops[stage_name]
+            ops_num = self.layer_num[stage_name]
+
+            for _ in range(ops_num):
+                for op_name in stage_ops:
+                    layer_config = self.layer_configs[layer_id]
+                    layer_in_shape = self.layer_in_shapes[layer_id]
+
+                    input_w = layer_in_shape[1]
+                    input_h = layer_in_shape[2]
+                    c_in = layer_config[0]
+                    c_out = layer_config[1]
+                    stride = layer_config[2]
+                    op_data_shape = (input_w, input_h, c_in, c_out, stride)
+
+                    if op_name in ops_lut and op_data_shape in ops_lut[op_name]:
+                        self.lut_perf[layer_id][op_name] = \
+                            ops_lut[op_name][op_data_shape][DATA_TYPE]
+
+                layer_id += 1

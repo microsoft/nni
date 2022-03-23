@@ -80,7 +80,21 @@ class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
 
 
 class MovementPruner(BasicPruner):
-    """
+    r"""
+    Movement pruner is an implementation of movement pruning.
+    This is a "fine-pruning" algorithm, which means the masks may change during each fine-tuning step.
+    Each weight element will be scored by the opposite of the sum of the product of weight and its gradient during each step.
+    This means the weight elements moving towards zero will accumulate negative scores, the weight elements moving away from zero will accumulate positive scores.
+    The weight elements with low scores will be masked during inference.
+
+    The following figure from the paper shows the weight pruning by movement pruning.
+
+    .. image:: ../../img/movement_pruning.png
+        :target: ../../img/movement_pruning.png
+        :alt:
+
+    For more details, please refer to `Movement Pruning: Adaptive Sparsity by Fine-Tuning <https://arxiv.org/abs/2005.07683>`__.
+
     Parameters
     ----------
     model : torch.nn.Module
@@ -114,7 +128,7 @@ class MovementPruner(BasicPruner):
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
         The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
+        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_epochs : int
@@ -127,6 +141,21 @@ class MovementPruner(BasicPruner):
         The number of steps at which sparsity stops growing, note that the sparsity stop growing doesn't mean masks not changed.
         The sparsity after each `optimizer.step()` is:
         total_sparsity * (1 - (1 - (current_step - warm_up_step) / (cool_down_beginning_step - warm_up_step)) ** 3).
+
+    Examples
+    --------
+        >>> import nni
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import MovementPruner
+        >>> model = ...
+        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
+        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
+        >>> trainer = ...
+        >>> criterion = ...
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+        >>> pruner = MovementPruner(model, config_list, trainer, traced_optimizer, criterion, 10, 3000, 27000)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/movement_pruning_glue.py <examples/model_compress/pruning/v2/movement_pruning_glue.py>`
     """
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,

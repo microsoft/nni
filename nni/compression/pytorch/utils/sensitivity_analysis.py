@@ -18,51 +18,52 @@ logger.setLevel(logging.INFO)
 
 
 class SensitivityAnalysis:
+    """
+    Perform sensitivity analysis for this model.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        the model to perform sensitivity analysis
+    val_func : function
+        validation function for the model. Due to
+        different models may need different dataset/criterion
+        , therefore the user need to cover this part by themselves.
+        In the val_func, the model should be tested on the validation dateset,
+        and the validation accuracy/loss should be returned as the output of val_func.
+        There are no restrictions on the input parameters of the val_function.
+        User can use the val_args, val_kwargs parameters in analysis
+        to pass all the parameters that val_func needed.
+    sparsities : list
+        The sparsity list provided by users. This parameter is set when the user
+        only wants to test some specific sparsities. In the sparsity list, each element
+        is a sparsity value which means how much weight the pruner should prune. Take
+        [0.25, 0.5, 0.75] for an example, the SensitivityAnalysis will prune 25% 50% 75%
+        weights gradually for each layer.
+    prune_type : str
+        The pruner type used to prune the conv layers, default is 'l1',
+        and 'l2', 'fine-grained' is also supported.
+    early_stop_mode : str
+        If this flag is set, the sensitivity analysis
+        for a conv layer will early stop when the validation metric(
+        for example, accurracy/loss) has alreay meet the threshold. We
+        support four different early stop modes: minimize, maximize, dropped,
+        raised. The default value is None, which means the analysis won't stop
+        until all given sparsities are tested. This option should be used with
+        early_stop_value together.
+
+        minimize: The analysis stops when the validation metric return by the val_func
+        lower than early_stop_value.
+        maximize: The analysis stops when the validation metric return by the val_func
+        larger than early_stop_value.
+        dropped: The analysis stops when the validation metric has dropped by early_stop_value.
+        raised: The analysis stops when the validation metric has raised by early_stop_value.
+    early_stop_value : float
+        This value is used as the threshold for different earlystop modes.
+        This value is effective only when the early_stop_mode is set.
+    """
+
     def __init__(self, model, val_func, sparsities=None, prune_type='l1', early_stop_mode=None, early_stop_value=None):
-        """
-        Perform sensitivity analysis for this model.
-        Parameters
-        ----------
-        model : torch.nn.Module
-            the model to perform sensitivity analysis
-        val_func : function
-            validation function for the model. Due to
-            different models may need different dataset/criterion
-            , therefore the user need to cover this part by themselves.
-            In the val_func, the model should be tested on the validation dateset,
-            and the validation accuracy/loss should be returned as the output of val_func.
-            There are no restrictions on the input parameters of the val_function.
-            User can use the val_args, val_kwargs parameters in analysis
-            to pass all the parameters that val_func needed.
-        sparsities : list
-            The sparsity list provided by users. This parameter is set when the user
-            only wants to test some specific sparsities. In the sparsity list, each element
-            is a sparsity value which means how much weight the pruner should prune. Take
-            [0.25, 0.5, 0.75] for an example, the SensitivityAnalysis will prune 25% 50% 75%
-            weights gradually for each layer.
-        prune_type : str
-            The pruner type used to prune the conv layers, default is 'l1',
-            and 'l2', 'fine-grained' is also supported.
-        early_stop_mode : str
-            If this flag is set, the sensitivity analysis
-            for a conv layer will early stop when the validation metric(
-            for example, accurracy/loss) has alreay meet the threshold. We
-            support four different early stop modes: minimize, maximize, dropped,
-            raised. The default value is None, which means the analysis won't stop
-            until all given sparsities are tested. This option should be used with
-            early_stop_value together.
-
-            minimize: The analysis stops when the validation metric return by the val_func
-            lower than early_stop_value.
-            maximize: The analysis stops when the validation metric return by the val_func
-            larger than early_stop_value.
-            dropped: The analysis stops when the validation metric has dropped by early_stop_value.
-            raised: The analysis stops when the validation metric has raised by early_stop_value.
-        early_stop_value : float
-            This value is used as the threshold for different earlystop modes.
-            This value is effective only when the early_stop_mode is set.
-
-        """
         from nni.algorithms.compression.pytorch.pruning.constants_pruner import PRUNER_DICT
 
         self.model = model

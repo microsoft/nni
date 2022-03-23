@@ -16,24 +16,25 @@ __all__ = ['Pruner']
 
 
 class PrunerModuleWrapper(Module):
-    def __init__(self, module: Module, module_name: str, config: Dict):
-        """
-        Wrap a module to enable data parallel, forward method customization and buffer registeration.
+    """
+    Wrap a module to enable data parallel, forward method customization and buffer registeration.
 
-        Parameters
-        ----------
-        module
-            The module user wants to compress.
-        config
-            The configurations that users specify for compression.
-        module_name
-            The name of the module to compress, wrapper module shares same name.
-        """
+    Parameters
+    ----------
+    module
+        The module user wants to compress.
+    config
+        The configurations that users specify for compression.
+    module_name
+        The name of the module to compress, wrapper module shares same name.
+    """
+
+    def __init__(self, module: Module, module_name: str, config: Dict):
         super().__init__()
         # origin layer information
         self.module = module
         self.name = module_name
-        # config and pruner
+        # config information
         self.config = config
 
         self.weight = Parameter(torch.empty(self.module.weight.size()))

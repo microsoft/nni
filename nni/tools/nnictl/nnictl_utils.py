@@ -105,7 +105,7 @@ def parse_ids(args):
     3.If there is an id specified, return the corresponding id
     4.If there is no id specified, and there is an experiment running, return the id, or return Error
     5.If the id matches an experiment, nnictl will return the id.
-    6.If the id ends with *, nnictl will match all ids matchs the regular
+    6.If the id ends with ``*``, nnictl will match all ids matchs the regular
     7.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
     8.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
     '''
@@ -222,9 +222,22 @@ def stop_experiment(args):
     if experiment_id_list:
         for experiment_id in experiment_id_list:
             print_normal('Stopping experiment %s' % experiment_id)
-            experiments_config = Experiments()
-            experiments_dict = experiments_config.get_all_experiments()
-            rest_pid = experiments_dict.get(experiment_id).get('pid')
+            # FIXME: Retry should be placed to `Experiments`, need review both python and ts code.
+            # retry up to 10 times to get the experiment metadata
+            for i in range(1, 11):
+                experiments_dict = Experiments().get_all_experiments()
+                experiment_info = experiments_dict.get(experiment_id)
+                if experiment_info is None:
+                    print_warning('Get experiment {} metadata failed, {} time retry...'.format(experiment_id, i))
+                    time.sleep(0.5)
+                else:
+                    break
+            if experiment_info is None:
+                print_error('Experiment {} metadata getting failed.'.format(experiment_id))
+                print_error('The experiments metadata in `.experiment` is:')
+                print_error(json.dumps(Experiments().get_all_experiments(), indent=4))
+                exit(1)
+            rest_pid = experiment_info.get('pid')
             if rest_pid:
                 kill_command(rest_pid)
             print_normal('Stop experiment success.')
