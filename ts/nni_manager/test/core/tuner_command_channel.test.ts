@@ -50,9 +50,9 @@ async function testError(): Promise<void> {
     const channel = getWebSocketChannel();
     channel.onError(error => { catchedError = error; });
 
-    // we have set heartbeat interval to 10ms, so pause for 30ms should make it timeout
+    // we have set heartbeat interval to 10ms, so pause for 50ms should make it timeout
     client.pause();
-    await setTimeout(30);
+    await setTimeout(50);
 
     assert.notEqual(catchedError, undefined);
     client.resume();
