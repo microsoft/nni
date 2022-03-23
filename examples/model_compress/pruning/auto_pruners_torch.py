@@ -292,7 +292,7 @@ def main(args):
             os.path.join(args.experiment_data_dir, 'model_masked.pth'), os.path.join(args.experiment_data_dir, 'mask.pth'))
         print('Masked model saved to %s' % args.experiment_data_dir)
 
-    # model speed up
+    # model speedup
     if args.speed_up:
         if args.pruner != 'AutoCompressPruner':
             if args.model == 'LeNet':
@@ -310,11 +310,11 @@ def main(args):
             m_speedup = ModelSpeedup(model, dummy_input, masks_file, device)
             m_speedup.speedup_model()
             evaluation_result = evaluator(model)
-            print('Evaluation result (speed up model): %s' % evaluation_result)
+            print('Evaluation result (speedup model): %s' % evaluation_result)
             result['performance']['speedup'] = evaluation_result
 
             torch.save(model.state_dict(), os.path.join(args.experiment_data_dir, 'model_speed_up.pth'))
-            print('Speed up model saved to %s' % args.experiment_data_dir)
+            print('Speedup model saved to %s' % args.experiment_data_dir)
         flops, params, _ = count_flops_params(model, get_input_size(args.dataset))
         result['flops']['speedup'] = flops
         result['params']['speedup'] = params

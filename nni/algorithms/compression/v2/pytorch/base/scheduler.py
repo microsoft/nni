@@ -33,7 +33,7 @@ class Task:
         config_list_path
             The path of the config list that used in this task.
         speed_up
-            Control if this task needs speed up, True means use scheduler default value, False means no speed up.
+            Control if this task needs speedup, True means use scheduler default value, False means no speedup.
         finetune
             Control if this task needs finetune, True means use scheduler default value, False means no finetune.
         evaluate

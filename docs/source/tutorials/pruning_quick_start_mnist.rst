@@ -102,9 +102,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.5876, Accuracy: 8158/10000 (82%)
-    Average test loss: 0.2501, Accuracy: 9217/10000 (92%)
-    Average test loss: 0.1786, Accuracy: 9486/10000 (95%)
+    Average test loss: 0.8610, Accuracy: 7451/10000 (75%)
+    Average test loss: 0.3346, Accuracy: 8996/10000 (90%)
+    Average test loss: 0.2431, Accuracy: 9235/10000 (92%)
 
 
 
@@ -217,7 +217,7 @@ Pruners usually require `model` and `config_list` as input arguments.
 
 .. GENERATED FROM PYTHON SOURCE LINES 85-88
 
-Speed up the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
+Speedup the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
 The model becomes smaller after speed-up,
 and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the masks across layers.
 
@@ -226,10 +226,10 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 .. code-block:: default
 
 
-    # need to unwrap the model, if the model is wrapped before speed up
+    # need to unwrap the model, if the model is wrapped before speedup
     pruner._unwrap_model()
 
-    # speed up the model
+    # speedup the model
     from nni.compression.pytorch.speedup import ModelSpeedup
 
     ModelSpeedup(model, torch.rand(3, 1, 28, 28).to(device), masks).speedup_model()
@@ -254,7 +254,7 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 
 .. GENERATED FROM PYTHON SOURCE LINES 98-99
 
-the model will become real smaller after speed up
+the model will become real smaller after speedup
 
 .. GENERATED FROM PYTHON SOURCE LINES 99-101
 
@@ -288,7 +288,7 @@ the model will become real smaller after speed up
 Fine-tuning Compacted Model
 ---------------------------
 Note that if the model has been sped up, you need to re-initialize a new optimizer for fine-tuning.
-Because speed up will replace the masked big layers with dense small ones.
+Because speedup will replace the masked big layers with dense small ones.
 
 .. GENERATED FROM PYTHON SOURCE LINES 106-110
 
@@ -308,7 +308,7 @@ Because speed up will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  33.096 seconds)
+   **Total running time of the script:** ( 1 minutes  26.209 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:

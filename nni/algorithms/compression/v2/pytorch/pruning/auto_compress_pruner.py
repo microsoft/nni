@@ -113,9 +113,9 @@ class AutoCompressPruner(IterativePruner):
         The finetuner handles all finetune logic, takes a pytorch module as input.
         It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
     speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speedup.
 
     Examples
     --------

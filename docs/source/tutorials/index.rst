@@ -16,7 +16,7 @@ Tutorials
 .. only:: html
 
  .. figure:: /tutorials/images/thumb/sphx_glr_pruning_speed_up_thumb.png
-     :alt: Speed Up Model with Mask
+     :alt: Speedup Model with Mask
 
      :ref:`sphx_glr_tutorials_pruning_speed_up.py`
 
@@ -79,7 +79,7 @@ Tutorials
 .. only:: html
 
  .. figure:: /tutorials/images/thumb/sphx_glr_quantization_speed_up_thumb.png
-     :alt: Speed Up Model with Calibration Config
+     :alt: SpeedUp Model with Calibration Config
 
      :ref:`sphx_glr_tutorials_quantization_speed_up.py`
 

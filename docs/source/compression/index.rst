@@ -38,7 +38,7 @@ There are several core features supported by NNI model compression:
 
 * Support many popular pruning and quantization algorithms.
 * Automate model pruning and quantization process with state-of-the-art strategies and NNI's auto tuning power.
-* Speed up a compressed model to make it have lower inference latency and also make it smaller.
+* Speedup a compressed model to make it have lower inference latency and also make it smaller.
 * Provide friendly and easy-to-use compression utilities for users to dive into the compression process and results.
 * Concise interface for users to customize their own compression algorithms.
 
@@ -131,7 +131,7 @@ Quantization algorithms compress the original network by reducing the number of 
 The final goal of model compression is to reduce inference latency and model size.
 However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model.
 For example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms.
-Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model.
+Given the output masks and quantization bits produced by those algorithms, NNI can really speedup the model.
 
 The following figure shows how NNI prunes and speeds up your models. 
 
@@ -140,8 +140,8 @@ The following figure shows how NNI prunes and speeds up your models.
    :scale: 40%
    :alt:
 
-The detailed tutorial of Speed Up Model with Mask can be found :doc:`here <../tutorials/pruning_speed_up>`.
-The detailed tutorial of Speed Up Model with Calibration Config can be found :doc:`here <../tutorials/quantization_speed_up>`.
+The detailed tutorial of Speedup Model with Mask can be found :doc:`here <../tutorials/pruning_speed_up>`.
+The detailed tutorial of Speedup Model with Calibration Config can be found :doc:`here <../tutorials/quantization_speed_up>`.
 
 .. attention::
 

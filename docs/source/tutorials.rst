@@ -71,7 +71,7 @@ Tutorials
    :tags: Compression
 
 .. cardlinkitem::
-   :header: Speed Up Model with Mask
+   :header: Speedup Model with Mask
    :description: Make your model real smaller and faster with speed-up after pruned by pruner
    :link: tutorials/pruning_speed_up.html
    :image: ../img/thumbnails/overview-29.png
@@ -79,7 +79,7 @@ Tutorials
    :tags: Compression
 
 .. cardlinkitem::
-   :header: Speed Up Model with Calibration Config
+   :header: Speedup Model with Calibration Config
    :description: Make your model real smaller and faster with speed-up after quantized by quantizer
    :link: tutorials/quantization_speed_up.html
    :image: ../img/thumbnails/overview-29.png

@@ -94,9 +94,9 @@ class LinearPruner(IterativePruner):
         The finetuner handled all finetune logic, use a pytorch module as input.
         It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
     speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speedup.
     evaluator : Optional[Callable[[Module], float]]
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
@@ -159,9 +159,9 @@ class AGPPruner(IterativePruner):
         The finetuner handled all finetune logic, use a pytorch module as input.
         It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
     speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speedup.
     evaluator : Optional[Callable[[Module], float]]
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
@@ -235,9 +235,9 @@ class LotteryTicketPruner(IterativePruner):
         The finetuner handled all finetune logic, use a pytorch module as input.
         It will be called at the end of each iteration if reset_weight is False, will be called at the beginning of each iteration otherwise.
     speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speedup.
     evaluator : Optional[Callable[[Module], float]]
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
@@ -319,9 +319,9 @@ class SimulatedAnnealingPruner(IterativePruner):
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
     speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speedup.
 
     Examples
     --------

@@ -18,7 +18,7 @@
 .. _sphx_glr_tutorials_quantization_speed_up.py:
 
 
-Speed Up Model with Calibration Config
+SpeedUp Model with Calibration Config
 ======================================
 
 
@@ -27,10 +27,10 @@ Introduction
 
 Deep learning network has been computational intensive and memory intensive 
 which increases the difficulty of deploying deep neural network model. Quantization is a 
-fundamental technology which is widely used to reduce memory footprint and speed up inference 
+fundamental technology which is widely used to reduce memory footprint and speedup inference 
 process. Many frameworks begin to support quantization, but few of them support mixed precision 
 quantization and get real speedup. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
-not speed up the inference process. To get real speedup of mixed precision quantization and 
+not speedup the inference process. To get real speedup of mixed precision quantization and 
 help people get the real feedback from hardware, we design a general framework with simple interface to allow NNI quantization algorithms to connect different 
 DL model optimization backends (e.g., TensorRT, NNFusion), which gives users an end-to-end experience that after quantizing their model 
 with quantization algorithms, the quantized model can be directly speeded up with the connected optimization backend. NNI connects 
@@ -123,8 +123,8 @@ Usage
 
  .. code-block:: none
 
-    [2022-02-21 18:53:07] WARNING (nni.algorithms.compression.pytorch.quantization.qat_quantizer/MainThread) op_names ['relu1'] not found in model
-    [2022-02-21 18:53:07] WARNING (nni.algorithms.compression.pytorch.quantization.qat_quantizer/MainThread) op_names ['relu2'] not found in model
+    op_names ['relu1'] not found in model
+    op_names ['relu2'] not found in model
 
     TorchModel(
       (conv1): QuantizerModuleWrapper(
@@ -162,9 +162,9 @@ finetuning the model by using QAT
 
  .. code-block:: none
 
-    Average test loss: 0.2524, Accuracy: 9209/10000 (92%)
-    Average test loss: 0.1711, Accuracy: 9461/10000 (95%)
-    Average test loss: 0.1037, Accuracy: 9690/10000 (97%)
+    Average test loss: 0.2267, Accuracy: 9332/10000 (93%)
+    Average test loss: 0.1368, Accuracy: 9589/10000 (96%)
+    Average test loss: 0.1056, Accuracy: 9677/10000 (97%)
 
 
 
@@ -193,16 +193,14 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    [2022-02-21 18:53:54] INFO (nni.compression.pytorch.compressor/MainThread) Model state_dict saved to ./log/mnist_model.pth
-    [2022-02-21 18:53:54] INFO (nni.compression.pytorch.compressor/MainThread) Mask dict saved to ./log/mnist_calibration.pth
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0026], device='cuda:0'), 'weight_zero_point': tensor([103.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0019], device='cuda:0'), 'weight_zero_point': tensor([116.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.175512313842773}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0030], device='cuda:0'), 'weight_zero_point': tensor([82.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0015], device='cuda:0'), 'weight_zero_point': tensor([107.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.313278198242188}}
 
 
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 111-112
 
-build tensorRT engine to make a real speed up
+build tensorRT engine to make a real speedup
 
 .. GENERATED FROM PYTHON SOURCE LINES 112-119
 
@@ -279,7 +277,7 @@ input tensor: ``torch.randn(128, 3, 32, 32)``
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  52.798 seconds)
+   **Total running time of the script:** ( 0 minutes  57.111 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_speed_up.py:

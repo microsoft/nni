@@ -92,7 +92,7 @@ Implementation Details
   The experiment results are all collected with the default configuration of the pruners in nni, which means that when we call a pruner class in nni, we don't change any default class arguments.
 
 * 
-  Both FLOPs and the number of parameters are counted with :githublink:`Model FLOPs/Parameters Counter <docs/en_US/Compression/CompressionUtils.md#model-flopsparameters-counter>` after :githublink:`model speed up <docs/en_US/Compression/ModelSpeedup.rst>`.
+  Both FLOPs and the number of parameters are counted with :githublink:`Model FLOPs/Parameters Counter <docs/en_US/Compression/CompressionUtils.md#model-flopsparameters-counter>` after :githublink:`model speedup <docs/en_US/Compression/ModelSpeedup.rst>`.
   This avoids potential issues of counting them of masked models.
 
 * 

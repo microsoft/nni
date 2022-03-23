@@ -134,7 +134,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
           L1NormPruner(model, config). \
           compress()
 
-      # apply the masks for real speed up
+      # apply the masks for real speedup
       ModelSpeedup(unwrapped_model, input, masks). \
           speedup_model()
 
@@ -158,7 +158,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
       # Training...
 
       # export calibration config and
-      # generate TensorRT engine for real speed up
+      # generate TensorRT engine for real speedup
       calibration_config = quantizer.export_model(
           model_path, calibration_path)
       engine = ModelSpeedupTensorRT(

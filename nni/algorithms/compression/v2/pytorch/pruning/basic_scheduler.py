@@ -27,9 +27,9 @@ class PruningScheduler(BasePruningScheduler):
         The finetuner handled all finetune logic, use a pytorch module as input.
         It will be called at the end of each iteration if reset_weight is False, will be called at the beginning of each iteration otherwise.
     speed_up
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speedup.
     evaluator
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
@@ -58,7 +58,7 @@ class PruningScheduler(BasePruningScheduler):
 
     def pruning_one_step_normal(self, task: Task) -> TaskResult:
         """
-        generate masks -> speed up -> finetune -> evaluate
+        generate masks -> speedup -> finetune -> evaluate
         """
         model, masks, config_list = task.load_data()
         self.pruner.reset(model, config_list)
@@ -72,7 +72,7 @@ class PruningScheduler(BasePruningScheduler):
         self.pruner.show_pruned_weights()
         self.pruner._unwrap_model()
 
-        # speed up
+        # speedup
         if self.speed_up and task.speed_up:
             ModelSpeedup(compact_model, self.dummy_input, pruner_generated_masks).speedup_model()
             compact_model_masks = {}
@@ -104,7 +104,7 @@ class PruningScheduler(BasePruningScheduler):
 
     def pruning_one_step_reset_weight(self, task: Task) -> TaskResult:
         """
-        finetune -> generate masks -> reset weight -> speed up -> evaluate
+        finetune -> generate masks -> reset weight -> speedup -> evaluate
         """
         model, masks, config_list = task.load_data()
         checkpoint = deepcopy(model.state_dict())
@@ -126,7 +126,7 @@ class PruningScheduler(BasePruningScheduler):
         # reset model weight
         compact_model.load_state_dict(checkpoint)
 
-        # speed up
+        # speedup
         if self.speed_up and task.speed_up:
             ModelSpeedup(compact_model, self.dummy_input, pruner_generated_masks).speedup_model()
             compact_model_masks = {}

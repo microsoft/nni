@@ -18,7 +18,7 @@
 .. _sphx_glr_tutorials_pruning_speed_up.py:
 
 
-Speed Up Model with Mask
+Speedup Model with Mask
 ========================
 
 Introduction
@@ -31,16 +31,16 @@ to convert a model to a smaller one based on user provided masks (the masks come
 pruning algorithms).
 
 There are two types of pruning. One is fine-grained pruning, it does not change the shape of weights,
-and input/output tensors. Sparse kernel is required to speed up a fine-grained pruned layer.
+and input/output tensors. Sparse kernel is required to speedup a fine-grained pruned layer.
 The other is coarse-grained pruning (e.g., channels), shape of weights and input/output tensors usually change due to such pruning.
-To speed up this kind of pruning, there is no need to use sparse kernel, just replace the pruned layer with smaller one.
+To speedup this kind of pruning, there is no need to use sparse kernel, just replace the pruned layer with smaller one.
 Since the support of sparse kernels in community is limited,
 we only support the speedup of coarse-grained pruning and leave the support of fine-grained pruning in future.
 
 Design and Implementation
 -------------------------
 
-To speed up a model, the pruned layers should be replaced, either replaced with smaller layer for coarse-grained mask,
+To speedup a model, the pruned layers should be replaced, either replaced with smaller layer for coarse-grained mask,
 or replaced with sparse kernel for fine-grained mask. Coarse-grained mask usually changes the shape of weights or input/output tensors,
 thus, we should do shape inference to check are there other unpruned layers should be replaced as well due to shape change.
 Therefore, in our design, there are two main steps: first, do shape inference to find out all the modules that should be replaced;
@@ -77,6 +77,33 @@ But in fact ``ModelSpeedup`` is a relatively independent tool, so you can use it
 
 
 
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Downloading http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
+    Downloading http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz to /home/ningshang/nni/examples/tutorials/data/MNIST/raw/train-images-idx3-ubyte.gz
+      0%|          | 0/9912422 [00:00<?, ?it/s]      1%|1         | 128000/9912422 [00:00<00:09, 993776.60it/s]      4%|4         | 434176/9912422 [00:00<00:04, 2081184.33it/s]      9%|8         | 889856/9912422 [00:00<00:02, 3098471.24it/s]     24%|##4       | 2407424/9912422 [00:00<00:00, 7646147.81it/s]     58%|#####8    | 5785600/9912422 [00:00<00:00, 16787241.15it/s]    9913344it [00:00, 15854818.42it/s]                             
+    Extracting /home/ningshang/nni/examples/tutorials/data/MNIST/raw/train-images-idx3-ubyte.gz to /home/ningshang/nni/examples/tutorials/data/MNIST/raw
+
+    Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
+    Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz to /home/ningshang/nni/examples/tutorials/data/MNIST/raw/train-labels-idx1-ubyte.gz
+      0%|          | 0/28881 [00:00<?, ?it/s]    29696it [00:00, 88086316.54it/s]         
+    Extracting /home/ningshang/nni/examples/tutorials/data/MNIST/raw/train-labels-idx1-ubyte.gz to /home/ningshang/nni/examples/tutorials/data/MNIST/raw
+
+    Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
+    Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz to /home/ningshang/nni/examples/tutorials/data/MNIST/raw/t10k-images-idx3-ubyte.gz
+      0%|          | 0/1648877 [00:00<?, ?it/s]      7%|7         | 119808/1648877 [00:00<00:01, 930900.34it/s]     35%|###5      | 581632/1648877 [00:00<00:00, 2461154.01it/s]     98%|#########8| 1624064/1648877 [00:00<00:00, 4949206.31it/s]    1649664it [00:00, 4189007.00it/s]                             
+    Extracting /home/ningshang/nni/examples/tutorials/data/MNIST/raw/t10k-images-idx3-ubyte.gz to /home/ningshang/nni/examples/tutorials/data/MNIST/raw
+
+    Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
+    Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz to /home/ningshang/nni/examples/tutorials/data/MNIST/raw/t10k-labels-idx1-ubyte.gz
+      0%|          | 0/4542 [00:00<?, ?it/s]    5120it [00:00, 18937245.57it/s]         
+    Extracting /home/ningshang/nni/examples/tutorials/data/MNIST/raw/t10k-labels-idx1-ubyte.gz to /home/ningshang/nni/examples/tutorials/data/MNIST/raw
 
 
 
@@ -136,14 +163,14 @@ Roughly test the original model inference speed.
 
  .. code-block:: none
 
-    Original Model - Elapsed Time :  0.10696005821228027
+    Original Model - Elapsed Time :  0.0455622673034668
 
 
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 67-68
 
-Speed up the model and show the model structure after speed up.
+Speedup the model and show the model structure after speedup.
 
 .. GENERATED FROM PYTHON SOURCE LINES 68-72
 
@@ -200,7 +227,7 @@ Roughly test the model after speed-up inference speed.
 
  .. code-block:: none
 
-    Speedup Model - Elapsed Time :  0.002137899398803711
+    Speedup Model - Elapsed Time :  0.0035338401794433594
 
 
 
@@ -218,7 +245,7 @@ Limitations
 For PyTorch we can only replace modules, if functions in ``forward`` should be replaced,
 our current implementation does not work. One workaround is make the function a PyTorch module.
 
-If you want to speed up your own model which cannot supported by the current implementation,
+If you want to speedup your own model which cannot supported by the current implementation,
 you need implement the replace function for module replacement, welcome to contribute.
 
 Speedup Results of Examples
@@ -372,7 +399,7 @@ The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(1
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  9.859 seconds)
+   **Total running time of the script:** ( 0 minutes  13.074 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_speed_up.py:

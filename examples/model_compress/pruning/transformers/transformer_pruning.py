@@ -338,7 +338,7 @@ def main():
     # Currently, speeding up Transformers through NNI ModelSpeedup is not supported because of shape inference issues.
     # However, if you are using the transformers library, you can use the following workaround:
     # The following code gets the head pruning decisions from the pruner and calls the _prune_heads() function
-    # implemented in models from the transformers library to speed up the model.
+    # implemented in models from the transformers library to speedup the model.
     if args.speed_up:
         speedup_rules = {}
         for group_idx, group in enumerate(pruner.attention_name_groups):

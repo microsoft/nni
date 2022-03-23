@@ -16,4 +16,4 @@ create your own quantizer using NNI model compression interface.
 
     Quickstart <../tutorials/cp_quantization_quick_start_mnist>
     Quantizer <quantizer>
-    Speed Up <../tutorials/cp_quantization_speed_up>
+    SpeedUp <../tutorials/cp_quantization_speed_up>
