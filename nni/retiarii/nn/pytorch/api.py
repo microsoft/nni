@@ -5,18 +5,19 @@ import math
 import itertools
 import operator
 import warnings
-from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar
+from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar, Sequence
 
 import torch
 import torch.nn as nn
 
+from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import Translatable
 from nni.retiarii.serializer import basic_unit
-from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
+from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace, NoContextError
 from .mutation_utils import Mutable, generate_new_label, get_fixed_value
 
 
-__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
+__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'ModelParameterChoice', 'Placeholder', 'ChosenInputs']
 
 
 class LayerChoice(Mutable):
@@ -870,7 +871,6 @@ class ValueChoice(ValueChoiceX, Mutable):
         self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
         assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
         self._label = generate_new_label(label)
-        self._accessor = []
 
     @property
     def label(self):
@@ -904,6 +904,149 @@ class ValueChoice(ValueChoiceX, Mutable):
 
     def __repr__(self):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
+
+
+ValueType = TypeVar('ValueType')
+
+
+class ModelParameterChoice:
+    """ModelParameterChoice chooses one hyper-parameter from ``candidates``.
+
+    .. attention::
+
+       This API is internal, and does not guarantee forward-compatibility.
+
+    It's quite similar to :class:`ValueChoice`, but unlike :class:`ValueChoice`,
+    it always returns a fixed value, even at the construction of base model.
+
+    This makes it highly flexible (e.g., can be used in for-loop, if-condition, as argument of any function). For example: ::
+
+        self.has_auxiliary_head = ModelParameterChoice([False, True])
+        # this will raise error if you use `ValueChoice`
+        if self.has_auxiliary_head is True:  # or self.has_auxiliary_head
+            self.auxiliary_head = Head()
+        else:
+            self.auxiliary_head = None
+        print(type(self.has_auxiliary_head))  # <class 'bool'>
+
+    The working mechanism of :class:`ModelParameterChoice` is that, it registers itself
+    in the ``model_wrapper``, as a hyper-parameter of the model, and then returns the value specified with ``default``.
+    At base model construction, the default value will be used (as a mocked hyper-parameter).
+    In trial, the hyper-parameter selected by strategy will be used.
+
+    Although flexible, we still recommend using :class:`ValueChoice` in favor of :class:`ModelParameterChoice`,
+    because information are lost when using :class:`ModelParameterChoice` in exchange of its flexibility,
+    making it incompatible with one-shot strategies and non-python execution engines.
+
+    .. warning::
+
+        :class:`ModelParameterChoice` can NOT be nested.
+
+    .. tip::
+
+        Although called :class:`ModelParameterChoice`, it's meant to tune hyper-parameter of architecture.
+        It's NOT used to tune model-training hyper-parameters like ``learning_rate``.
+        If you need to tune ``learning_rate``, please use :class:`ValueChoice` on arguments of :class:`nni.retiarii.Evaluator`.
+
+    Parameters
+    ----------
+    candidates : list of any
+        List of values to choose from.
+    prior : list of float
+        Prior distribution to sample from. Currently has no effect.
+    default : Callable[[List[Any]], Any] or Any
+        Function that selects one from ``candidates``, or a candidate.
+        Use :meth:`ModelParameterChoice.FIRST` or :meth:`ModelParameterChoice.LAST` to take the first or last item.
+        Default: :meth:`ModelParameterChoice.FIRST`
+    label : str
+        Identifier of the value choice.
+
+    Warnings
+    --------
+    :class:`ModelParameterChoice` is incompatible with one-shot strategies and non-python execution engines.
+
+    Sometimes, the same search space implemented **without** :class:`ModelParameterChoice` can be simpler, and explored
+    with more types of search strategies. For example, the following usages are equivalent: ::
+
+        # with ModelParameterChoice
+        depth = nn.ModelParameterChoice(list(range(3, 10)))
+        blocks = []
+        for i in range(depth):
+            blocks.append(Block())
+
+        # w/o HyperParmaeterChoice
+        blocks = Repeat(Block(), (3, 9))
+
+    Examples
+    --------
+    Get a dynamic-shaped parameter. Because ``torch.zeros`` is not a basic unit, we can't use :class:`ValueChoice` on it.
+    >>> parameter_dim = nn.ModelParameterChoice([64, 128, 256])
+    >>> self.token = nn.Parameter(torch.zeros(1, parameter_dim, 32, 32))
+    """
+
+    # FIXME: fix signature in docs
+
+    # FIXME: prior is designed but not supported yet
+
+    def __new__(cls, candidates: List[ValueType], *,
+                prior: Optional[List[float]] = None,
+                default: Union[Callable[[List[ValueType]], ValueType], ValueType] = None,
+                label: Optional[str] = None) -> ValueType:
+        # Actually, creating a `ModelParameterChoice` never creates one.
+        # It always return a fixed value, and register a ParameterSpec
+
+        if default is None:
+            default = cls.FIRST
+
+        try:
+            return cls.create_fixed_module(candidates, label=label)
+        except NoContextError:
+            return cls.create_default(candidates, default, label)
+
+    @staticmethod
+    def create_default(candidates: List[ValueType],
+                       default: Union[Callable[[List[ValueType]], ValueType], ValueType],
+                       label: Optional[str]) -> ValueType:
+        if default not in candidates:
+            # could be callable
+            try:
+                default = default(candidates)
+            except TypeError as e:
+                if 'not callable' in str(e):
+                    raise TypeError("`default` is not in `candidates`, and it's also not callable.")
+                raise
+
+        label = generate_new_label(label)
+        parameter_spec = ParameterSpec(
+            label,          # name
+            'choice',       # TODO: support more types
+            candidates,     # value
+            (label,),       # we don't have nested now
+            True,           # yes, categorical
+        )
+
+        # there could be duplicates. Dedup is done in mutator
+        ModelNamespace.current_context().parameter_specs.append(parameter_spec)
+
+        return default
+
+    @classmethod
+    def create_fixed_module(cls, candidates: List[ValueType], *, label: Optional[str] = None, **kwargs) -> ValueType:
+        # same as ValueChoice
+        value = get_fixed_value(label)
+        if value not in candidates:
+            raise ValueError(f'Value {value} does not belong to the candidates: {candidates}.')
+        return value
+
+    @staticmethod
+    def FIRST(sequence: Sequence[ValueType]) -> ValueType:
+        """Get the first item of sequence. Useful in ``default`` argument."""
+        return sequence[0]
+
+    @staticmethod
+    def LAST(sequence: Sequence[ValueType]) -> ValueType:
+        """Get the last item of sequence. Useful in ``default`` argument."""
+        return sequence[-1]
 
 
 @basic_unit
