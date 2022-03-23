@@ -1,4 +1,5 @@
 import functools
+import time
 from tqdm import tqdm
 
 import torch
@@ -31,7 +32,7 @@ task_to_keys = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-gradient_accumulation_steps = 16
+gradient_accumulation_steps = 8
 
 # a fake criterion because huggingface output already has loss
 def criterion(input, target):
@@ -40,7 +41,7 @@ def criterion(input, target):
 def trainer(model, optimizer, criterion, train_dataloader):
     model.train()
     counter = 0
-    for batch in tqdm(train_dataloader):
+    for batch in (train_dataloader):
         counter += 1
         batch.to(device)
         optimizer.zero_grad()
@@ -51,12 +52,14 @@ def trainer(model, optimizer, criterion, train_dataloader):
         loss.backward()
         if counter % gradient_accumulation_steps == 0 or counter == len(train_dataloader):
             optimizer.step()
-        if counter % 16000 == 0:
+        if counter % 800 == 0:
+            print('[{}]: {}'.format(time.asctime(time.localtime(time.time())), counter))
+        if counter % 8000 == 0:
             print('Step {}: {}'.format(counter // gradient_accumulation_steps, evaluator(model, metric, is_regression, validate_dataloader)))
 
 def evaluator(model, metric, is_regression, eval_dataloader):
     model.eval()
-    for batch in tqdm(eval_dataloader):
+    for batch in (eval_dataloader):
         batch.to(device)
         outputs = model(**batch)
         predictions = outputs.logits.argmax(dim=-1) if not is_regression else outputs.logits.squeeze()
@@ -70,8 +73,8 @@ if __name__ == '__main__':
     task_name = 'mnli'
     is_regression = False
     num_labels = 1 if is_regression else (3 if task_name == 'mnli' else 2)
-    train_batch_size = 8
-    eval_batch_size = 8
+    train_batch_size = 4
+    eval_batch_size = 4
 
     set_seed(1024)
 
@@ -113,7 +116,7 @@ if __name__ == '__main__':
     # make sure you have used nni.trace to wrap the optimizer class before initialize
     traced_optimizer = nni.trace(Adam)(model.parameters(), lr=2e-5)
     pruner = MovementPruner(model, config_list, p_trainer, traced_optimizer, criterion, training_epochs=10,
-                            warm_up_step=3000, cool_down_beginning_step=27000)
+                            warm_up_step=12272, cool_down_beginning_step=110448)
 
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
