@@ -177,7 +177,7 @@ stages:
   - job: windows
     pool:
       vmImage: windows-latest
-    timeoutInMinutes: 70
+    timeoutInMinutes: 75
 
     steps:
     - template: templates/install-dependencies.yml

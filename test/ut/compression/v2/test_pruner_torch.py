@@ -1,8 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import random
 import unittest
 
+import numpy
 import torch
 import torch.nn.functional as F
 
@@ -122,18 +124,6 @@ class PrunerTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
 
-    def test_activation_apoz_rank_pruner(self):
-        model = TorchModel()
-        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-        pruner = ActivationAPoZRankPruner(model=model, config_list=config_list, trainer=trainer,
-                                          traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=5,
-                                          activation='relu', mode='dependency_aware',
-                                          dummy_input=torch.rand(10, 1, 28, 28))
-        pruned_model, masks = pruner.compress()
-        pruner._unwrap_model()
-        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
-        assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
-
     def test_activation_mean_rank_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
@@ -177,6 +167,34 @@ class PrunerTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
 
+class FixSeedPrunerTestCase(unittest.TestCase):
+    def test_activation_apoz_rank_pruner(self):
+        model = TorchModel()
+        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+        pruner = ActivationAPoZRankPruner(model=model, config_list=config_list, trainer=trainer,
+                                            traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=5,
+                                            activation='relu', mode='dependency_aware',
+                                            dummy_input=torch.rand(10, 1, 28, 28))
+        pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
+
+    def setUp(self) -> None:
+        # fix seed in order to solve the random failure of ut
+        random.seed(1024)
+        numpy.random.seed(1024)
+        torch.manual_seed(1024)
+
+    def tearDown(self) -> None:
+        # reset seed
+        import time
+        now = int(time.time() * 100)
+        random.seed(now)
+        seed = random.randint(0, 2 ** 32 - 1)
+        random.seed(seed)
+        numpy.random.seed(seed)
+        torch.manual_seed(seed)
 
 if __name__ == '__main__':
     unittest.main()

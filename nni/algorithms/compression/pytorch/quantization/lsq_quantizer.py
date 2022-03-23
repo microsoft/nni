@@ -11,35 +11,56 @@ logger = logging.getLogger(__name__)
 
 
 class LsqQuantizer(Quantizer):
-    """Quantizer defined in:
-       Learned Step Size Quantization (ICLR 2020)
-       https://arxiv.org/pdf/1902.08153.pdf
+    r"""
+    Quantizer defined in: `LEARNED STEP SIZE QUANTIZATION <https://arxiv.org/pdf/1902.08153.pdf>`__,
+    authors Steven K. Esser and Jeffrey L. McKinstry provide an algorithm to train the scales with gradients.
+
+    ..
+
+        The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation
+        layer's quantizer step size, such that it can be learned in conjunction with other network parameters.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        The model to be quantized.
+    config_list : List[Dict]
+        List of configurations for quantization. Supported keys for dict:
+            - quant_types : List[str]
+                Type of quantization you want to apply, currently support 'weight', 'input', 'output'.
+            - quant_bits : Union[int, Dict[str, int]]
+                Bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
+                When the type is int, all quantization types share same bits length.
+            - op_types : List[str]
+                Types of nn.module you want to apply quantization, eg. 'Conv2d'.
+            - op_names : List[str]
+                Names of nn.module you want to apply quantization, eg. 'conv1'.
+            - exclude : bool
+                Set True then the layers setting by op_types and op_names will be excluded from quantization.
+    optimizer : torch.optim.Optimizer
+        Optimizer is required in `LsqQuantizer`, NNI will patch the optimizer and count the optimize step number.
+    dummy_input : Tuple[torch.Tensor]
+        Inputs to the model, which are used to get the graph of the module. The graph is used to find Conv-Bn patterns.
+        And then the batch normalization folding would be enabled. If dummy_input is not given,
+        the batch normalization folding would be disabled.
+
+    Examples
+    --------
+        >>> from nni.algorithms.compression.pytorch.quantization import LsqQuantizer
+        >>> model = ...
+        >>> config_list = [{'quant_types': ['weight', 'input'], 'quant_bits': {'weight': 8, 'input': 8}, 'op_types': ['Conv2d']}]
+        >>> optimizer = ...
+        >>> dummy_input = torch.rand(...)
+        >>> quantizer = LsqQuantizer(model, config_list, optimizer, dummy_input=dummy_input)
+        >>> quantizer.compress()
+        >>> # Training Process...
+
+    For detailed example please refer to
+    :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`.
+
     """
 
     def __init__(self, model, config_list, optimizer, dummy_input=None):
-        """
-        Parameters
-        ----------
-        model : torch.nn.Module
-            the model to be quantized
-        config_list : list of dict
-            list of configurations for quantization
-            supported keys for dict:
-                - quant_types : list of string
-                    type of quantization you want to apply, currently support 'weight', 'input', 'output'
-                - quant_bits : int or dict of {str : int}
-                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
-                    when the type is int, all quantization types share same bits length
-                - quant_start_step : int
-                    disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
-                    state where output quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
-                - op_types : list of string
-                    types of nn.module you want to apply quantization, eg. 'Conv2d'
-                - dummy_input : tuple of tensor
-                    inputs to the model, which are used to get the graph of the module. The graph is used to find
-                    Conv-Bn patterns. And then the batch normalization folding would be enabled. If dummy_input is not
-                    given, the batch normalization folding would be disabled.
-        """
         assert isinstance(optimizer, torch.optim.Optimizer), "unrecognized optimizer type"
         super().__init__(model, config_list, optimizer, dummy_input)
         device = next(model.parameters()).device

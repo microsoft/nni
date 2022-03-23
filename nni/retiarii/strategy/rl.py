@@ -23,7 +23,7 @@ class PolicyBasedRL(BaseStrategy):
     """
     Algorithm for policy-based reinforcement learning.
     This is a wrapper of algorithms provided in tianshou (PPO by default),
-    and can be easily customized with other algorithms that inherit ``BasePolicy`` (e.g., REINFORCE [1]_).
+    and can be easily customized with other algorithms that inherit ``BasePolicy`` (e.g., REINFORCE :footcite:p:`zoph2017neural`).
 
     Parameters
     ----------
@@ -34,12 +34,6 @@ class PolicyBasedRL(BaseStrategy):
         After each collect, trainer will sample batch from replay buffer and do the update. Default: 20.
     policy_fn : function
         Takes ``ModelEvaluationEnv`` as input and return a policy. See ``_default_policy_fn`` for an example.
-
-    References
-    ----------
-
-    .. [1] Barret Zoph and Quoc V. Le, "Neural Architecture Search with Reinforcement Learning".
-        https://arxiv.org/abs/1611.01578
     """
 
     def __init__(self, max_collect: int = 100, trial_per_collect = 20,
