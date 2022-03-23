@@ -53,7 +53,7 @@ class SELayer(nn.Module):
 
 
 @model_wrapper
-class MobileNetV3(nn.Module):
+class MobileNetV3Space(nn.Module):
     """
     We use the following snipppet as reference.
     https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728
@@ -91,9 +91,9 @@ class MobileNetV3(nn.Module):
             # Body
             self._make_stage(1, self.widths[0], self.widths[1], False, 2, nn.ReLU),
             self._make_stage(2, self.widths[1], self.widths[2], True, 2, nn.ReLU),
-            self._make_stage(1, self.widths[0], self.widths[1], False, 2, h_swish),
-            self._make_stage(1, self.widths[0], self.widths[1], True, 1, h_swish),
-            self._make_stage(1, self.widths[0], self.widths[1], True, 2, h_swish),
+            self._make_stage(1, self.widths[2], self.widths[3], False, 2, h_swish),
+            self._make_stage(1, self.widths[3], self.widths[4], True, 1, h_swish),
+            self._make_stage(1, self.widths[4], self.widths[5], True, 2, h_swish),
         ]
 
         # Head
@@ -124,7 +124,7 @@ class MobileNetV3(nn.Module):
         exp, ks, se_blocks = [], [], []
         for _ in range(4):
             exp.append(nn.ValueChoice(list(self.expand_ratios), label=f'exp_{self.layer_count}'))
-            ks.append(nn.ValueChoice([3, 5, 7]), label=f'ks_{self.layer_count}')
+            ks.append(nn.ValueChoice([3, 5, 7], label=f'ks_{self.layer_count}'))
             if se:
                 # if SE is true, assign a layer choice to SE
                 se_blocks.append(
@@ -137,11 +137,11 @@ class MobileNetV3(nn.Module):
         blocks = [
             # stride = 2
             InvertedResidual(inp, oup, exp[0], ks[0],
-                             stride, squeeze_and_excite=se[0], activation_layer=act),
+                             stride, squeeze_and_excite=se_blocks[0], activation_layer=act),
             # stride = 1, residual connection should be automatically enabled
-            InvertedResidual(oup, oup, exp[1], ks[1], squeeze_and_excite=se[1], activation_layer=act),
-            InvertedResidual(oup, oup, exp[2], ks[2], squeeze_and_excite=se[2], activation_layer=act),
-            InvertedResidual(oup, oup, exp[3], ks[3], squeeze_and_excite=se[3], activation_layer=act)
+            InvertedResidual(oup, oup, exp[1], ks[1], squeeze_and_excite=se_blocks[1], activation_layer=act),
+            InvertedResidual(oup, oup, exp[2], ks[2], squeeze_and_excite=se_blocks[2], activation_layer=act),
+            InvertedResidual(oup, oup, exp[3], ks[3], squeeze_and_excite=se_blocks[3], activation_layer=act)
         ]
 
         # mutable depth

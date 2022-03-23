@@ -69,7 +69,6 @@ class SeparableConv(nn.Sequential):
         norm_layer: Optional[Callable[..., nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
-        self.residual_connection = stride == 1 and in_channels == out_channels
         super().__init__(
             # dw
             ConvBNReLU(in_channels, in_channels, stride=stride, kernel_size=kernel_size, groups=in_channels,
@@ -77,6 +76,7 @@ class SeparableConv(nn.Sequential):
             # pw-linear
             ConvBNReLU(in_channels, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
         )
+        self.residual_connection = stride == 1 and in_channels == out_channels
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.residual_connection:
@@ -120,7 +120,7 @@ class InvertedResidual(nn.Sequential):
         self.out_channels = out_channels
         assert stride in [1, 2]
 
-        hidden_ch = int(round(in_channels * expand_ratio))
+        hidden_ch = nn.ValueChoice.to_int(round(in_channels * expand_ratio))
 
         # FIXME: check whether this equal works
         # Residual connection is added here stride = 1 and input channels and output channels are the same.
@@ -164,13 +164,16 @@ def inverted_residual_choice_builder(
     label: str
 ):
     def builder(index):
-        if index == 0 and downsample:
+        stride = 1
+        inp = stage_output_width
+
+        if index == 0:
             # first layer in stage
             # do downsample and width reshape
-            stride, inp = 2, stage_input_width
-        else:
-            # otherwise keep shape
-            stride, inp = 1, stage_input_width
+            inp = stage_input_width
+            if downsample:
+                stride = 2
+
         oup = stage_output_width
 
         op_choices = {}
@@ -203,6 +206,8 @@ class ProxylessNAS(nn.Module):
                  bn_eps: float = 1e-3,
                  bn_momentum: float = 0.1):
 
+        super().__init__()
+
         assert len(base_widths) == 9
         # include the last stage info widths here
         widths = [make_divisible(width * width_mult, 8) for width in base_widths]
@@ -227,11 +232,11 @@ class ProxylessNAS(nn.Module):
             builder = inverted_residual_choice_builder(
                 [3, 6], [3, 5, 7], downsamples[stage], widths[stage - 1], widths[stage], f's{stage}')
             if stage < 6:
-                blocks.append(nn.Repeat(builder, (1, 4), label='s{stage}_depth'))
+                blocks.append(nn.Repeat(builder, (1, 4), label=f's{stage}_depth'))
             else:
                 # No mutation for depth in the last stage.
                 # Directly call builder to initiate one block
-                blocks.append(builder())
+                blocks.append(builder(0))
 
         self.blocks = nn.Sequential(*blocks)
 

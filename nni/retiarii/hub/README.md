@@ -18,12 +18,12 @@ For further motivations and plans, please see https://github.com/microsoft/nni/i
 |------------------------|--------|--------|--------|--------|--------|
 | NasBench101            | Y      |        |        |        |        |
 | NasBench201            | Y      |        |        |        |        |
-| NASNet                 |        |        |        |        |        |
-| ENAS                   |        |        |        |        |        |
-| AmoebaNet              |        |        |        |        |        |
-| PNAS                   |        |        |        |        |        |
-| DARTS                  |        |        |        |        |        |
-| ProxylessNAS           |        |        |        |        |        |
-| MobileNetV3            |        |        |        |        |        |
+| NASNet                 | Y      |        |        |        |        |
+| ENAS                   | Y      |        |        |        |        |
+| AmoebaNet              | Y      |        |        |        |        |
+| PNAS                   | Y      |        |        |        |        |
+| DARTS                  | Y      |        |        |        |        |
+| ProxylessNAS           | Y      |        |        |        |        |
+| MobileNetV3Space       | Y      |        |        |        |        |
 | ShuffleNetSpace        | Y      |        |        |        |        |
 | ShuffleNetSpace (ch)   | Y      |        |        |        |        |

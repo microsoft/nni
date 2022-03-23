@@ -168,7 +168,10 @@ class FactorizedReduce(nn.Module):
 
     def __init__(self, C_in, C_out, affine=True):
         super().__init__()
-        assert C_out % 2 == 0  # FIXME: this should not work
+        if isinstance(C_out, int):
+            assert C_out % 2 == 0
+        else:   # is a value choice
+            assert all(c % 2 == 0 for c in C_out.all_options())
         self.relu = nn.ReLU(inplace=False)
         self.conv_1 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
         self.conv_2 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
