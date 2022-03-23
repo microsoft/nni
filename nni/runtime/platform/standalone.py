@@ -23,10 +23,10 @@ def get_next_parameter():
     warning_message = ''.join([
         colorama.Style.BRIGHT,
         colorama.Fore.RED,
-        'Running NNI code without runtime. ',
-        'Check the following tutorial if you are new to NNI: ',
+        'Running trial code without runtime. ',
+        'Please check the tutorial if you are new to NNI: ',
         colorama.Fore.YELLOW,
-        'https://nni.readthedocs.io/en/stable/Tutorial/QuickStart.html#id1',
+        'https://nni.readthedocs.io/en/stable/tutorials/hpo_quickstart_pytorch/main.html',
         colorama.Style.RESET_ALL
     ])
     warnings.warn(warning_message, RuntimeWarning)

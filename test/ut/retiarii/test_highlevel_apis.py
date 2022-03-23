@@ -1055,3 +1055,10 @@ class Shared(unittest.TestCase):
         for _ in range(10):
             model = _apply_all_mutators(init_model, mutators, sampler)
             assert (model.evaluator.trace_kwargs['x'], model.evaluator.trace_kwargs['y']) in [(1, 2), (3, 4)]
+
+    def test_retiarii_nn_import(self):
+        dummy = torch.zeros(1, 16, 32, 24)
+        nn.init.uniform_(dummy)
+
+        conv = nn.Conv2d(1, 3, 1)
+        param = nn.Parameter(torch.zeros(1, 3, 24, 24))
