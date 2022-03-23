@@ -660,8 +660,9 @@ class GraphConverter:
             attrs = {
                 'mutation': 'repeat',
                 'label': module.label,
+                'depth': module.depth_choice,
+                'max_depth': module.max_depth,
                 'min_depth': module.min_depth,
-                'max_depth': module.max_depth
             }
             return ir_graph, attrs
 
