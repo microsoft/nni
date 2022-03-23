@@ -10,7 +10,7 @@ from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
 from .api import LayerChoice
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
-from .utils import Mutable, generate_new_label, get_fixed_value
+from .mutation_utils import Mutable, generate_new_label, get_fixed_value
 
 
 __all__ = ['Repeat', 'Cell', 'NasBench101Cell', 'NasBench101Mutator', 'NasBench201Cell']
