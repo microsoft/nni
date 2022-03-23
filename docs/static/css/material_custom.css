@@ -116,6 +116,12 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
     padding-right: 1em;
 }
 
+/* inline code style */
+.md-typeset code {
+    padding-left: 0.07em;
+    padding-right: 0.07em;
+}
+
 /* for release icon, on home page */
 .release-icon {
     margin-left: 8px;
