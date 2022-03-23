@@ -67,7 +67,7 @@ export class RestServer {
         this.logger.info(`Starting REST server at port ${this.port}, URL prefix: "${this.urlPrefix}"`);
 
         const app = express();
-        expressWs(app);
+        expressWs(app, undefined, { wsOptions: { maxPayload: 4 * 1024 * 1024 * 1024 }});
 
         // FIXME: We should have a global handler for critical errors.
         // `shutdown()` is not a callback and should not be passed to NNIRestHandler.

@@ -102,4 +102,4 @@ async def _connect_async(url):
     # Theoretically this function is meaningless and one can directly use `websockets.connect(url)`,
     # but it will not work, raising "TypeError: A coroutine object is required".
     # Seems a design flaw in websockets.
-    return await websockets.connect(url)
+    return await websockets.connect(url, max_size=None)
