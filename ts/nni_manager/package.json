@@ -57,7 +57,7 @@
     "@types/stream-buffers": "^3.0.3",
     "@types/tar": "^4.0.4",
     "@types/tmp": "^0.2.0",
-    "@types/ws": "^7.4.4",
+    "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.8",
     "@typescript-eslint/eslint-plugin": "^2.10.0",
     "@typescript-eslint/parser": "^4.26.0",

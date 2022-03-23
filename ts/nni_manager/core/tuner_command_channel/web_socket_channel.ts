@@ -111,4 +111,10 @@ export class WebSocketChannel {
 
 const channelSingleton: WebSocketChannel = new WebSocketChannel();
 
-const heartbeatInterval: number = 5000;
+let heartbeatInterval: number = 5000;
+
+export namespace UnitTestHelpers {
+    export function setHeartbeatInterval(ms: number) {
+        heartbeatInterval = ms;
+    }
+}
