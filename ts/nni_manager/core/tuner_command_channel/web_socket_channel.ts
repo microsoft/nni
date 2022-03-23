@@ -9,10 +9,6 @@ import type WebSocket from 'ws';
 
 import { Logger, getLogger } from 'common/log';
 
-// FIXME:
-// 1. Increase message length limit for resuming experiments.
-// 2. Stop heartbeat for graceful shutdown.
-
 export function getWebSocketChannel(): WebSocketChannel {
     return channelSingleton;
 }
@@ -24,13 +20,13 @@ export function serveWebSocket(ws: any, _req: any, _next: any): void {
 
 // TODO: this class should not be fully exported (export an interface instead)
 export class WebSocketChannel {
-    private ws!: WebSocket;
+    private deferredInit: Deferred<void> = new Deferred<void>();
     private emitter: EventEmitter = new EventEmitter();
     private heartbeatTimer!: NodeJS.Timer;
-    private waitingPong: boolean = false;
-    private errorReported: boolean = false;
-    private deferredInit: Deferred<void> = new Deferred<void>();
     private logger: Logger = getLogger('tuner_command_channel.WebSocketChannel');
+    private serving: boolean = false;
+    private waitingPong: boolean = false;
+    private ws!: WebSocket;
 
     public setWebSocket(ws: WebSocket): void {
         if (this.ws !== undefined) {
@@ -38,7 +34,9 @@ export class WebSocketChannel {
             ws.close(4030, 'Already serving a tuner.');
             return;
         }
+
         this.logger.debug('Connected.');
+        this.serving = true;
 
         this.ws = ws;
         ws.on('close', () => { this.handleError(new Error('tuner_command_channel: Tuner closed connection')); });
@@ -47,7 +45,6 @@ export class WebSocketChannel {
         ws.on('pong', () => { this.waitingPong = false; });
 
         this.heartbeatTimer = setInterval(this.heartbeat.bind(this), heartbeatInterval);
-
         this.deferredInit.resolve();
     }
 
@@ -56,7 +53,14 @@ export class WebSocketChannel {
         return this.deferredInit.promise;
     }
 
-    // TODO: shutdown
+    public async shutdown(): Promise<void> {
+        if (this.ws === undefined) {
+            return;
+        }
+        clearInterval(this.heartbeatTimer);
+        this.serving = false;
+        this.emitter.removeAllListeners();
+    }
 
     public sendCommand(command: string): void {
         assert.ok(this.ws !== undefined);
@@ -93,7 +97,7 @@ export class WebSocketChannel {
     }
 
     private handleError(error: Error): void {
-        if (this.errorReported) {
+        if (!this.serving) {
             this.logger.debug('Silent error:', error);
             return;
         }
@@ -101,7 +105,7 @@ export class WebSocketChannel {
 
         clearInterval(this.heartbeatTimer);
         this.emitter.emit('error', error);
-        this.errorReported = true;
+        this.serving = false;
     }
 }
 

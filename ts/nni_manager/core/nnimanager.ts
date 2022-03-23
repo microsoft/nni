@@ -25,7 +25,7 @@ import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
-import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
+import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface, DummyDispatcherInterface } from './ipcInterface';
 import { RestServer } from '../rest_server';
 
 /**
@@ -74,7 +74,7 @@ class NNIManager implements Manager {
 
         // TODO: temporary hack
         const pipe = getDispatcherPipe();
-        if (pipe !== null && pipe !== '_ws_') {
+        if (pipe !== null && pipe !== '_ws_' && pipe !== '_unittest_') {
             this.dispatcher = createDispatcherPipeInterface(pipe);
         }
     }
@@ -479,6 +479,11 @@ class NNIManager implements Manager {
 
         if (getDispatcherPipe() === '_ws_') {
             this.dispatcher = await createDispatcherInterface();
+            return;
+        }
+
+        if (getDispatcherPipe() === '_unittest_') {  // FIXME
+            this.dispatcher = new DummyDispatcherInterface();
             return;
         }
 

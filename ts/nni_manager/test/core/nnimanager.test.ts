@@ -10,6 +10,7 @@ import { Container, Scope } from 'typescript-ioc';
 
 import * as component from '../../common/component';
 import { Database, DataStore } from '../../common/datastore';
+import { getExperimentStartupInfo } from '../../common/experimentStartupInfo';
 import { Manager, ExperimentProfile} from '../../common/manager';
 import { ExperimentManager } from '../../common/experimentManager';
 import { TrainingService } from '../../common/trainingService';
@@ -25,6 +26,7 @@ import * as path from 'path';
 
 async function initContainer(): Promise<void> {
     prepareUnitTest();
+    getExperimentStartupInfo().dispatcherPipe = '_unittest_';
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(MockedDataStore).scope(Scope.Singleton);
@@ -236,7 +238,7 @@ describe('Unit test for nnimanager', function () {
     })
 
     it('test getStatus', () => {
-        assert.strictEqual(nniManager.getStatus().status,'RUNNING');
+        assert.strictEqual(nniManager.getStatus().status, 'RUNNING');
     })
 
     it('test getMetricData with trialJobId', () => {

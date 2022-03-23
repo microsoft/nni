@@ -25,6 +25,9 @@ class WsIpcInterface implements IpcInterface {
     public sendCommand(commandType: string, content: string = ''): void {
         if (commandType !== 'PI') {  // ping is handled with WebSocket protocol
             this.channel.sendCommand(commandType + content);
+            if (commandType === 'TE') {
+                this.channel.shutdown();
+            }
         }
     }
 
