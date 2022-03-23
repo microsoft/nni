@@ -121,6 +121,21 @@ class AutoCompressPruner(IterativePruner):
                                                    keep_intermediate_result=keep_intermediate_result)
         if 'traced_optimizer' in admm_params:
             admm_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, admm_params['traced_optimizer'])
+        # granularity in ADMM stage will align with SA stage, if 'granularity' is not specify
+        if 'granularity' not in admm_params:
+            # only if level pruning and fine-grained admm pruning used in SA, fine-grained admm pruning will used in auto-compress
+            if 'pruning_algorithm' in sa_params:
+                sa_algo = sa_params['pruning_algorithm']
+                sa_algo_params = sa_params.get('pruning_params')
+                if sa_algo in ['level']:
+                    admm_params['granularity'] = 'fine-grained'
+                elif sa_algo in ['admm'] and (sa_algo_params is not None) and not (sa_algo_params.get('granularity') is 'coarse-grained'):
+                    admm_params['granularity'] = 'fine-grained'
+                else:
+                    admm_params['granularity'] = 'coarse-grained'
+            else:
+                admm_params['granularity'] = 'fine-grained'
+
         pruner = ADMMPruner(None, None, **admm_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
