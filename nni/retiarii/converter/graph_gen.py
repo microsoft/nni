@@ -660,8 +660,9 @@ class GraphConverter:
             attrs = {
                 'mutation': 'repeat',
                 'label': module.label,
+                'depth': module.depth_choice,
+                'max_depth': module.max_depth,
                 'min_depth': module.min_depth,
-                'max_depth': module.max_depth
             }
             return ir_graph, attrs
 
@@ -695,15 +696,17 @@ class GraphConverter:
 class GraphConverterWithShape(GraphConverter):
     """
     Convert a pytorch model to nni ir along with input/output shape info.
-    Based ir acquired through `torch.jit.script`
-    and shape info acquired through `torch.jit.trace`.
+    Based ir acquired through ``torch.jit.script``
+    and shape info acquired through ``torch.jit.trace``.
 
-    Known issues
-    ------------
-    1. `InputChoice` and `ValueChoice` not supported yet.
-    2. Currently random inputs are fed while tracing layerchoice.
-       If forward path of candidates depends on input data, then wrong path will be traced.
-       This will result in incomplete shape info.
+    .. warning::
+
+        Known issues:
+
+        1. ``InputChoice`` and ``ValueChoice`` not supported yet.
+        2. Currently random inputs are fed while tracing layerchoice.
+           If forward path of candidates depends on input data, then wrong path will be traced.
+           This will result in incomplete shape info.
     """
     def convert_module(self, script_module, module, module_name, ir_model, dummy_input):
         module.eval()

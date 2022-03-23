@@ -10,8 +10,8 @@ import torch
 import torch.nn as nn
 
 from .api import ChosenInputs, LayerChoice, InputChoice
-from .nn import ModuleList
-from .utils import generate_new_label
+from .nn import ModuleList  # pylint: disable=no-name-in-module
+from .mutation_utils import generate_new_label
 
 
 class _ListIdentity(nn.Identity):
@@ -32,12 +32,40 @@ _cell_op_factory_type = Callable[[int, int, Optional[int]], nn.Module]
 
 class Cell(nn.Module):
     """
-    Cell structure [zophnas]_ [zophnasnet]_ that is popularly used in NAS literature.
-    [nds]_ is a good summary of how this structure works in practice.
+    Cell structure that is popularly used in NAS literature.
+
+    Refer to :footcite:t:`zoph2017neural,zoph2018learning,liu2018darts` for details.
+    :footcite:t:`radosavovic2019network` is a good summary of how this structure works in practice.
 
     A cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from
     ``op_candidates``, and takes one input from previous nodes and predecessors. Predecessor means the input of cell.
     The output of cell is the concatenation of some of the nodes in the cell (currently all the nodes).
+
+    Here is a glossary table, which could help better understand the terms used above:
+
+    .. list-table::
+        :widths: 25 75
+
+        * - Cell
+          - A cell consists of several nodes.
+        * - Node
+          - A node is the **sum** of several operators.
+        * - Operator
+          - Each operator is independently chosen from a list of user-specified candidate operators.
+        * - Operator's input
+          - Each operator has one input, chosen from previous nodes as well as predecessors.
+        * - Predecessors
+          - Input of cell. A cell can have multiple predecessors. Predecessors are sent to *preprocessor* for preprocessing.
+        * - Cell's output
+          - Output of cell. Usually concatenation of several nodes (possibly all nodes) in the cell. Cell's output,
+            along with predecessors, are sent to *postprocessor* for postprocessing.
+        * - Preprocessor
+          - Extra preprocessing to predecessors. Usually used in shape alignment (e.g., predecessors have different shapes).
+            By default, do nothing.
+        * - Postprocessor
+          - Extra postprocessing for cell's output. Usually used to chain cells with multiple Predecessors
+            (e.g., the next cell wants to have the outputs of both this cell and previous cell as its input).
+            By default, directly use this cell's output.
 
     Parameters
     ----------
@@ -81,16 +109,33 @@ class Cell(nn.Module):
 
     Examples
     --------
+    Choose between conv2d and maxpool2d.
+    The cell have 4 nodes, 1 op per node, and 2 predecessors.
     >>> cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2)
-    >>> output = cell([input1, input2])
+    In forward:
+    >>> cell([input1, input2])
 
-    References
-    ----------
-    .. [zophnas] Barret Zoph, Quoc V. Le, "Neural Architecture Search with Reinforcement Learning". https://arxiv.org/abs/1611.01578
-    .. [zophnasnet] Barret Zoph, Vijay Vasudevan, Jonathon Shlens, Quoc V. Le,
-        "Learning Transferable Architectures for Scalable Image Recognition". https://arxiv.org/abs/1707.07012
-    .. [nds] Radosavovic, Ilija and Johnson, Justin and Xie, Saining and Lo, Wan-Yen and Dollar, Piotr,
-        "On Network Design Spaces for Visual Recognition". https://arxiv.org/abs/1905.13214
+    Use ``merge_op`` to specify how to construct the output.
+    The output will then have dynamic shape, depending on which input has been used in the cell.
+    >>> cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, merge_op='loose_end')
+
+    The op candidates can be callable that accepts node index in cell, op index in node, and input index.
+    >>> cell = nn.Cell([
+    ...     lambda node_index, op_index, input_index: nn.Conv2d(32, 32, 3, stride=2 if input_index < 1 else 1),
+    ... ], 4, 1, 2)
+
+    Predecessor example: ::
+
+        class Preprocessor:
+            def __init__(self):
+            self.conv1 = nn.Conv2d(16, 32, 1)
+            self.conv2 = nn.Conv2d(64, 32, 1)
+
+            def forward(self, x):
+            return [self.conv1(x[0]), self.conv2(x[1])]
+
+        cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, preprocessor=Preprocessor())
+        cell([torch.randn(1, 16, 48, 48), torch.randn(1, 64, 48, 48)])  # the two inputs will be sent to conv1 and conv2 respectively
     """
 
     def __init__(self,

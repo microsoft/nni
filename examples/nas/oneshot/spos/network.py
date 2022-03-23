@@ -8,10 +8,12 @@ import re
 import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii.nn.pytorch import LayerChoice
+from nni.retiarii.serializer import model_wrapper
 
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
 
 
+@model_wrapper
 class ShuffleNetV2OneShot(nn.Module):
     block_keys = [
         'shufflenet_3x3',

@@ -10,7 +10,8 @@
     },
     "plugins": [
         "@typescript-eslint",
-        "eslint-plugin-prettier"
+        "eslint-plugin-prettier",
+        "import"
     ],
     "extends": [
         "eslint:recommended",
@@ -49,6 +50,15 @@
     "settings": {
         "react": {
             "version": "detect"
+        },
+        "import/resolver": {
+            "alias": {
+                "@": "src",
+                "@components": "src/components",
+                "@static": "src/static",
+                "@style": "src/static/style",
+                "@model": "src/static/model"
+            }
         },
         "ignorePatterns": [
             "node_modules/",
