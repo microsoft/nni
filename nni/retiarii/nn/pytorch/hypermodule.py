@@ -8,7 +8,7 @@ import torch.nn as nn
 from nni.retiarii.serializer import basic_unit
 
 from .api import LayerChoice
-from .utils import generate_new_label
+from .mutation_utils import generate_new_label
 
 __all__ = ['AutoActivation']
 

@@ -10,8 +10,8 @@ import torch
 import torch.nn as nn
 
 from .api import ChosenInputs, LayerChoice, InputChoice
-from .nn import ModuleList
-from .utils import generate_new_label
+from .nn import ModuleList  # pylint: disable=no-name-in-module
+from .mutation_utils import generate_new_label
 
 
 class _ListIdentity(nn.Identity):

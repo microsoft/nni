@@ -9,7 +9,7 @@ import torch.nn as nn
 from nni.retiarii.mutator import InvalidMutation, Mutator
 from nni.retiarii.graph import Model
 from .api import InputChoice, ValueChoice, LayerChoice
-from .utils import Mutable, generate_new_label, get_fixed_dict
+from .mutation_utils import Mutable, generate_new_label, get_fixed_dict
 
 _logger = logging.getLogger(__name__)
 
