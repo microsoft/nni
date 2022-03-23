@@ -19,7 +19,6 @@ from __future__ import annotations
 import logging
 import os
 
-from .command_type import CommandType
 from . import web_socket_sync
 
 _logger = logging.getLogger(__name__)
