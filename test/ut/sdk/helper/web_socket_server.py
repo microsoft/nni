@@ -29,7 +29,10 @@ async def read_stdin():
         await _ws.send(line.decode().strip())
 
 async def ws_server():
-    async with websockets.serve(on_connect, 'localhost', 8080):
+    async with websockets.serve(on_connect, 'localhost', 0) as server:
+        port = server.sockets[0].getsockname()[1]
+        print(port, flush=True)
+        _debug(f'port: {port}')
         await asyncio.Future()
 
 async def on_connect(ws):

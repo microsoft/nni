@@ -129,19 +129,9 @@ class LegacyIpcInterface implements IpcInterface {
     }
 }
 
-/**
- * Create IPC proxy for tuner process
- * @param process_ the tuner process
- */
-function legacyCreateDispatcherInterface(process: ChildProcess): IpcInterface {
-    const outStream = <Writable>process.stdio[ipcOutgoingFd];
-    const inStream = <Readable>process.stdio[ipcIncomingFd];
-    return new LegacyIpcInterface(outStream, inStream, new Set([...CommandType.TUNER_COMMANDS, ...CommandType.ASSESSOR_COMMANDS]));
-}
-
 function createDispatcherPipeInterface(pipePath: string): IpcInterface {
     const client = net.createConnection(pipePath);
     return new LegacyIpcInterface(client, client, new Set([...CommandType.TUNER_COMMANDS, ...CommandType.ASSESSOR_COMMANDS]));
 }
 
-export { legacyCreateDispatcherInterface, createDispatcherPipeInterface, encodeCommand, decodeCommand };
+export { createDispatcherPipeInterface, encodeCommand };

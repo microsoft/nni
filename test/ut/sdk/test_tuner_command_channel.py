@@ -68,7 +68,8 @@ def _init():
     atexit.register(lambda: _server is None or _server.terminate())
 
     # this is not public API, but we have no better choice util refactoring __main__.py
-    tuner_command_channel.connect('ws://localhost:8080')
+    port = int(_server.stdout.readline().strip())
+    tuner_command_channel.connect(f'ws://localhost:{port}')
 
 _init()
 
