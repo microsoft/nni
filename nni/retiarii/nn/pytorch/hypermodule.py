@@ -1,14 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from packaging.version import Version
 import torch
 import torch.nn as nn
 
 from nni.retiarii.serializer import basic_unit
 
 from .api import LayerChoice
-from .utils import generate_new_label
-from ...utils import version_larger_equal
+from .mutation_utils import generate_new_label
 
 __all__ = ['AutoActivation']
 
@@ -99,7 +99,7 @@ class UnaryTanh(nn.Module):
     def forward(self, x):
         return torch.tanh(x)
 
-if not version_larger_equal(torch.__version__, TorchVersion):
+if not Version(torch.__version__) >= Version(TorchVersion):
     @basic_unit
     class UnaryAsinh(nn.Module):
         def forward(self, x):
@@ -110,7 +110,7 @@ class UnaryAtan(nn.Module):
     def forward(self, x):
         return torch.atan(x)
 
-if not version_larger_equal(torch.__version__, TorchVersion):
+if not Version(torch.__version__) >= Version(TorchVersion):
     @basic_unit
     class UnarySinc(nn.Module):
         def forward(self, x):
@@ -151,7 +151,7 @@ unary_modules = ['UnaryIdentity', 'UnaryNegative', 'UnaryAbs', 'UnarySquare', 'U
     'UnarySinh', 'UnaryCosh', 'UnaryTanh', 'UnaryAtan', 'UnaryMax',
     'UnaryMin', 'UnarySigmoid', 'UnaryLogExp', 'UnaryExpSquare', 'UnaryErf']
 
-if not version_larger_equal(torch.__version__, TorchVersion):
+if not Version(torch.__version__) >= Version(TorchVersion):
     unary_modules.append('UnaryAsinh')
     unary_modules.append('UnarySinc')
 

@@ -14,7 +14,6 @@ from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni.experiment.config import ExperimentConfig, convert
 from nni.tools.annotation import expand_annotations, generate_search_space
 from nni.tools.package_utils.tuner_factory import get_builtin_module_class_name
-import nni_node  # pylint: disable=import-error, wrong-import-order
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, set_prefix_url
@@ -58,6 +57,7 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
 
     print_normal('Starting restful server...')
 
+    import nni_node
     entry_dir = nni_node.__path__[0]
     if (not entry_dir) or (not os.path.exists(entry_dir)):
         print_error('Fail to find nni under python library')
@@ -70,21 +70,17 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         node_command = os.path.join(entry_dir, 'node')
     cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform, \
             '--experiment_id', experiment_id]
-    if mode == 'view':
-        cmds += ['--start_mode', 'resume']
-        cmds += ['--readonly', 'true']
-    else:
-        cmds += ['--start_mode', mode]
+    cmds += ['--action', mode]
     if log_dir is not None:
-        cmds += ['--log_dir', log_dir]
+        cmds += ['--experiments-directory', log_dir]
     if log_level is not None:
-        cmds += ['--log_level', log_level]
+        cmds += ['--log-level', log_level]
     if foreground:
         cmds += ['--foreground', 'true']
     if url_prefix:
         _validate_prefix_path(url_prefix)
         set_prefix_url(url_prefix)
-        cmds += ['--url_prefix', url_prefix]
+        cmds += ['--url-prefix', url_prefix.strip('/')]
 
     stdout_full_path, stderr_full_path = get_log_path(experiment_id)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
@@ -520,9 +516,9 @@ def create_experiment(args):
 
     try:
         if schema == 1:
-            launch_experiment(args, config_v1, 'new', experiment_id, 1)
+            launch_experiment(args, config_v1, 'create', experiment_id, 1)
         else:
-            launch_experiment(args, config_v2, 'new', experiment_id, 2)
+            launch_experiment(args, config_v2, 'create', experiment_id, 2)
     except Exception as exception:
         restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:

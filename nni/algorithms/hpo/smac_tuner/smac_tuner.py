@@ -38,20 +38,46 @@ class SMACClassArgsValidator(ClassArgsValidator):
 
 class SMACTuner(Tuner):
     """
-    This is a wrapper of [SMAC](https://github.com/automl/SMAC3) following NNI tuner interface.
-    It only supports ``SMAC`` mode, and does not support the multiple instances of SMAC3 (i.e.,
-    the same configuration is run multiple times).
+    `SMAC <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ is based on Sequential Model-Based Optimization (SMBO).
+    It adapts the most prominent previously used model class (Gaussian stochastic process models)
+    and introduces the model class of random forests to SMBO in order to handle categorical parameters.
+
+    The SMAC supported by nni is a wrapper on `the SMAC3 github repo <https://github.com/automl/SMAC3>`__,
+    following NNI tuner interface :class:`nni.tuner.Tuner`. For algorithm details of SMAC, please refer to the paper
+    :footcite:t:`hutter2011sequential`.
+
+    Note that SMAC on nni only supports a subset of the types in
+    :doc:`search space </hpo/search_space>`:
+    ``choice``, ``randint``, ``uniform``, ``loguniform``, and ``quniform``.
+
+    Note that SMAC needs additional installation using the following command:
+
+    .. code-block:: bash
+
+        pip install nni[SMAC]
+
+    ``swig`` is required for SMAC. for Ubuntu ``swig`` can be installed with ``apt``.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.tuner.name = 'SMAC'
+        config.tuner.class_args = {
+            'optimize_mode': 'maximize'
+        }
+
+    Parameters
+    ----------
+    optimize_mode : str
+        Optimize mode, 'maximize' or 'minimize', by default 'maximize'
+    config_dedup : bool
+        If True, the tuner will not generate a configuration that has been already generated.
+        If False, a configuration may be generated twice, but it is rare for relatively large search space.
     """
+
     def __init__(self, optimize_mode="maximize", config_dedup=False):
-        """
-        Parameters
-        ----------
-        optimize_mode : str
-            Optimize mode, 'maximize' or 'minimize', by default 'maximize'
-        config_dedup : bool
-            If True, the tuner will not generate a configuration that has been already generated.
-            If False, a configuration may be generated twice, but it is rare for relatively large search space.
-        """
         self.logger = logger
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.total_data = {}

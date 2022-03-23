@@ -16,21 +16,22 @@ __all__ = ['Pruner']
 
 
 class PrunerModuleWrapper(Module):
-    def __init__(self, module: Module, module_name: str, config: Dict, pruner: Compressor):
-        """
-        Wrap a module to enable data parallel, forward method customization and buffer registeration.
+    """
+    Wrap a module to enable data parallel, forward method customization and buffer registeration.
 
-        Parameters
-        ----------
-        module
-            The module user wants to compress.
-        config
-            The configurations that users specify for compression.
-        module_name
-            The name of the module to compress, wrapper module shares same name.
-        pruner
-            The pruner used to calculate mask.
-        """
+    Parameters
+    ----------
+    module
+        The module user wants to compress.
+    config
+        The configurations that users specify for compression.
+    module_name
+        The name of the module to compress, wrapper module shares same name.
+    pruner
+        The pruner used to calculate mask.
+    """
+
+    def __init__(self, module: Module, module_name: str, config: Dict, pruner: Compressor):
         super().__init__()
         # origin layer information
         self.module = module

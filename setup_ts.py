@@ -15,6 +15,7 @@ from io import BytesIO
 import json
 import os
 from pathlib import Path
+import platform
 import shutil
 import subprocess
 import sys
@@ -56,12 +57,13 @@ def build(release):
         symlink_nni_node()
     restore_package()
 
-def clean(clean_all=False):
+def clean():
     """
     Remove TypeScript-related intermediate files.
     Python intermediate files are not touched here.
     """
     shutil.rmtree('nni_node', ignore_errors=True)
+    shutil.rmtree('toolchain', ignore_errors=True)
 
     for file_or_dir in generated_files:
         path = Path(file_or_dir)
@@ -70,13 +72,11 @@ def clean(clean_all=False):
         elif path.is_dir():
             shutil.rmtree(path)
 
-    if clean_all:
-        shutil.rmtree('toolchain', ignore_errors=True)
-
 
 if sys.platform == 'linux' or sys.platform == 'darwin':
     node_executable = 'node'
-    node_spec = f'node-{node_version}-{sys.platform}-x64'
+    _arch = 'x64' if platform.machine() == 'x86_64' else platform.machine()
+    node_spec = f'node-{node_version}-{sys.platform}-' + _arch
     node_download_url = f'https://nodejs.org/dist/{node_version}/{node_spec}.tar.xz'
     node_extractor = lambda data: tarfile.open(fileobj=BytesIO(data), mode='r:xz')
     node_executable_in_tarball = 'bin/node'
@@ -183,16 +183,14 @@ def compile_ts(release):
         _yarn('ts/webui', 'build')
 
     _print('Building JupyterLab extension')
-    if release:
+    try:
         _yarn('ts/jupyter_extension')
         _yarn('ts/jupyter_extension', 'build')
-    else:
-        try:
-            _yarn('ts/jupyter_extension')
-            _yarn('ts/jupyter_extension', 'build')
-        except Exception:
-            _print('Failed to build JupyterLab extension, skip for develop mode', color='yellow')
-            _print(traceback.format_exc(), color='yellow')
+    except Exception:
+        if release:
+            raise
+        _print('Failed to build JupyterLab extension, skip for develop mode', color='yellow')
+        _print(traceback.format_exc(), color='yellow')
 
 
 def symlink_nni_node():
@@ -225,12 +223,9 @@ def copy_nni_node(version):
     """
     _print('Copying files')
 
-    # copytree(..., dirs_exist_ok=True) is not supported by Python 3.6
-    for path in Path('ts/nni_manager/dist').iterdir():
-        if path.is_dir():
-            shutil.copytree(path, Path('nni_node', path.name))
-        elif path.name != 'nni_manager.tsbuildinfo':
-            shutil.copyfile(path, Path('nni_node', path.name))
+    shutil.copytree('ts/nni_manager/dist', 'nni_node', dirs_exist_ok=True)
+    shutil.copyfile('ts/nni_manager/yarn.lock', 'nni_node/yarn.lock')
+    Path('nni_node/nni_manager.tsbuildinfo').unlink()
 
     package_json = json.load(open('ts/nni_manager/package.json'))
     if version:
