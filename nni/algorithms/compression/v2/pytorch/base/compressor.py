@@ -257,14 +257,7 @@ class Compressor:
         Dict[str, str]
             Return a dict `{original_model_parameter_name: wrapped_model_parameter_name}`
         """
-        if self.is_wrapped:
-            wrapped_param_names = {id(param): name for name, param in self.bound_model.named_parameters()}
-            self._unwrap_model()
-            parameter_name_map = {name: wrapped_param_names[id(param)] for name, param in self.bound_model.named_parameters()}
-            self._wrap_model()
-            return parameter_name_map
-        else:
-            raise Exception('When only the model is wrapped can get the parameter_name_map.')
+        raise NotImplementedError()
 
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
         """
