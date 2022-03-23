@@ -32,7 +32,165 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 
 ## NNI capabilities in a glance
 
-(TBD: figures and tables)
+<table>
+<tbody>
+<tr align="center" valign="bottom">
+<td></td>
+<td>
+<b>Hyperparamter Tuning</b>
+<img src="docs/img/bar.png" />
+</td>
+<td>
+<b>Neural Architecture Search</b>
+<img src="docs/img/bar.png" />
+</td>
+<td>
+<b>Model Compression</b>
+<img src="docs/img/bar.png" />
+</td>
+</tr>
+<tr valign="top">
+<td align="center" valign="middle">
+<b>Algorithms</b>
+</td>
+<td>
+<ul>
+<li><b>Exhaustive search</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner">Grid Search</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.random_tuner.RandomTuner">Random</a></li>
+</ul>
+<li><b>Heuristic search</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner">Anneal</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.evolution_tuner.EvolutionTuner">Evolution</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.hyperband_advisor.Hyperband">Hyperband</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.pbt_tuner.PBTTuner">PBT</a></li>
+</ul>
+<li><b>Bayesian optimization</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.bohb_advisor.BOHB">BOHB</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.dngo_tuner.DNGOTuner">DNGO</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.gp_tuner.GPTuner">GP</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.metis_tuner.MetisTuner">Metis</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.smac_tuner.SMACTuner">SMAC</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/reference/hpo.html#nni.algorithms.hpo.tpe_tuner.TpeTuner">TPE</a></li>
+</ul>
+</ul>
+</td>
+<td>
+<ul>
+<li><b>Multi-trial</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#grid-search-strategy">Grid Search</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#policy-based-rl-strategy">Policy Based RL</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#random-strategy">Random</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#regularized-evolution-strategy">Regularized Evolution</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#tpe-strategy">TPE</a></li>
+</ul>
+<li><b>One-shot</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#darts-strategy">DARTS</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#enas-strategy">ENAS</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#fbnet-strategy">FBNet</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#proxylessnas-strategy">ProxylessNAS</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/nas/exploration_strategy.html#spos-strategy">SPOS</a></li>
+</ul>
+</ul>
+</td>
+<td>
+<ul>
+<li><b>Pruning</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/pruner.html#level-pruner">Level</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/pruner.html#l1-norm-pruner">L1 Norm</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/pruner.html#taylor-fo-weight-pruner">Taylor FO Weight</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/pruner.html#movement-pruner">Movement</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/pruner.html#agp-pruner">AGP</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/pruner.html#auto-compress-pruner">Auto Compress</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/index.html">More...</a></li>
+</ul>
+<li><b>Quantization</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/quantizer.html#naive-quantizer">Naive</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/quantizer.html#qat-quantizer">QAT</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/quantizer.html#lsq-quantizer">LSQ</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/quantizer.html#observer-quantizer">Observer</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/quantizer.html#dorefa-quantizer">DoReFa</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/compression/quantizer.html#bnn-quantizer">BNN</a></li>
+</ul>
+</ul>
+</td>
+<tr align="center" valign="bottom">
+<td></td>
+<td>
+<b>Supported Frameworks</b>
+<img src="docs/img/bar.png" />
+</td>
+<td>
+<b>Training Services</b>
+<img src="docs/img/bar.png" />
+</td>
+<td>
+<b>Tutorials</b>
+<img src="docs/img/bar.png" />
+</td>
+</tr>
+<tr valign="top">
+<td align="center" valign="middle">
+<b>Supports</b>
+</td>
+<td>
+<ul>
+<li>PyTorch</li>
+<li>TensorFlow</li>
+<li>Scikit-learn</li>
+<li>XGBoost</li>
+<li>LightGBM</li>
+<li>MXNet</li>
+<li>Caffe2</li>
+<li>More...</li>
+</ul>
+</td>
+<td>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/experiment/local.html">Local machine</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/experiment/remote.html">Remote SSH servers</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/experiment/aml.html">Azure Machine Learning (AML)</a></li>
+<li><b>Kubernetes Based</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/experiment/openpai.html">OpenAPI</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/experiment/kubeflow.html">Kubeflow</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/experiment/frameworkcontroller.html">FrameworkController</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/experiment/adaptdl.html">AdaptDL</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/experiment/paidlc.html">PAI DLC</a></li>
+</ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/experiment/hybrid.html">Hybrid training services</a></li>
+</ul>
+</td>
+<td>
+<ul>
+<li><b>HPO</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/tutorials/hpo_quickstart_pytorch/main.html">PyTorch</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/tutorials/hpo_quickstart_tensorflow/main.html">TensorFlow</a></li>
+</ul>
+<li><b>NAS</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/tutorials/hello_nas.html">Hello NAS</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/tutorials/nasbench_as_dataset.html">NAS Benchmarks</a></li>
+</ul>
+<li><b>Compression</b></li>
+<ul>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/tutorials/pruning_quick_start_mnist.html">Pruning</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/tutorials/pruning_speed_up.html">Pruning Speedup</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/tutorials/quantization_quick_start_mnist.html">Quantization</a></li>
+<li><a href="https://nni.readthedocs.io/en/doc-refactor/tutorials/quantization_speed_up.html">Quantization Speedup</a></li>
+</ul>
+</ul>
+</td>
+</tbody>
+</table>
 
 ## Installation
 
