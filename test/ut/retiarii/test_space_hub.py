@@ -3,9 +3,8 @@ import random
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
-import searchspace
-
 import nni.retiarii.evaluator.pytorch.lightning as pl
+import nni.retiarii.hub.pytorch as searchspace
 from nni.retiarii.utils import ContextStack
 from nni.retiarii.execution.utils import _unpack_if_only_one
 from nni.retiarii.mutator import InvalidMutation, Sampler

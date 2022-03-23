@@ -1,6 +1,8 @@
-We hereby provides a series of state-of-the-art search space, which is PyTorch model + mutations + training recipe.
+This README will be deleted once this hub got stabilized, after which we will promote it in the documentation.
 
-The examples are still under intense development.
+## Why
+
+We hereby provides a series of state-of-the-art search space, which is PyTorch model + mutations + training recipe.
 
 For further motivations and plans, please see https://github.com/microsoft/nni/issues/4249.
 
