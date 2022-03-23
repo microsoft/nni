@@ -97,6 +97,7 @@ class TransformerEncoderLayer(nn.Module):
 
         self.normalize_before = pre_norm
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.dropout = dropout
         self.attn = nn.MultiheadAttention(
             embed_dim = dim, 
             num_heads = num_heads,
@@ -123,7 +124,7 @@ class TransformerEncoderLayer(nn.Module):
         residual = x
         x = self.maybe_layer_norm(self.attn_layer_norm, x, before=True)
         x = self.attn(x)
-        x = F.dropout(x, p=self.sample_dropout, training=self.training)
+        x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.drop_path(x)
         x = residual + x
         x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
@@ -131,9 +132,9 @@ class TransformerEncoderLayer(nn.Module):
         residual = x
         x = self.maybe_layer_norm(self.ffn_layer_norm, x, before=True)
         x = self.activation_fn(self.fc1(x))
-        x = F.dropout(x, p=self.sample_dropout, training=self.training)
+        x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.fc2(x)
-        x = F.dropout(x, p=self.sample_dropout, training=self.training)
+        x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.drop_path(x)
         x = residual + x
         x = self.maybe_layer_norm(self.ffn_layer_norm, x, after=True)
@@ -149,29 +150,63 @@ class TransformerEncoderLayer(nn.Module):
 
 @model_wrapper
 class AutoformerSpace(nn.Module):
-    def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=256, depth=14,
-                 num_heads=4, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0.,
-                 drop_path_rate=0., pre_norm=True, scale=False, gp=False, relative_position=False, change_qkv=False, abs_pos = True, 
-                 search_embed_dim = [192,216,240], search_mlp_ratio=[3.5, 4.0], search_heads=[3, 4], search_depth=[12,13,14],
+    """
+    The search space that is proposed in Autoformer.
+    There are four searchable variables: depth, embedding dimension, heads number and MLP ratio.
+
+    Parameters
+    ----------
+    img_size : int
+        Size of input image.
+    patch_size : int
+        Size of image patch.
+    in_chans : int
+        Number of channels of the input image.
+    num_classes : int
+        Number of classes for classifier.
+    qkv_bias : bool
+        Whether to use bias item in the qkv embedding.
+    drop_rate : float
+        Drop rate of the MLP projection in MSA and FFN.
+    attn_drop_rate : float
+        Drop rate of attention.
+    drop_path_rate : float
+        Drop path rate.
+    pre_norm : bool
+        Whether to use pre_norm. Otherwise post_norm is used.
+    global_pool : bool
+        Whether to use global pooling to generate the image representation. Otherwise the cls_token is used.
+    abs_pos : bool
+        Whether to use absolute positional embeddings.
+    search_embed_dim : list of int
+        The search space of embedding dimension.
+    search_mlp_ratio : list of float
+        The search space of MLP ratio.
+    search_num_heads : list of int
+        The search space of number of heads.
+    search_depth: list of int
+        The search space of depth.
+
+    References
+    ----------
+    .. Chen M, Peng H, Fu J, et al. Autoformer: Searching transformers for visual recognition. CVPR 2021: 12270-12280.
+    """
+    def __init__(self, img_size: int = 224, patch_size: int = 16, in_chans: int = 3, num_classes: int = 1000, 
+                 qkv_bias: bool = False, drop_rate: float = 0., attn_drop_rate: float = 0., drop_path_rate: float = 0., 
+                 pre_norm: bool = True, global_pool: bool = False, abs_pos: bool = True, 
+                 search_embed_dim: list = [192,216,240], 
+                 search_mlp_ratio: list = [3.5, 4.0], 
+                 search_num_heads: list = [3, 4], 
+                 search_depth: list = [12,13,14],
                  ):
         super().__init__()
-        # the configs of super arch
-        self.super_embed_dim = embed_dim
-        self.super_mlp_ratio = mlp_ratio
-        self.super_layer_num = depth
-        self.super_num_heads = num_heads
-        self.super_dropout = drop_rate
-        self.super_attn_dropout = attn_drop_rate
-        self.num_classes = num_classes
-        self.pre_norm=pre_norm
-        self.scale=scale
 
-        sample_embed_dim = nn.ValueChoice(search_embed_dim)
-        self.sample_depth = nn.ValueChoice(search_depth)
+        embed_dim = nn.ValueChoice(search_embed_dim)
+        depth = nn.ValueChoice(search_depth)
 
-        self.patch_embed_super = nn.Conv2d(in_chans, sample_embed_dim, kernel_size=patch_size, stride=patch_size)                 
-        self.gp = gp
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, sample_embed_dim))
+        self.patch_embed = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)                 
+        self.global_pool = global_pool
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         trunc_normal_(self.cls_token, std=.02)
 
         self.blocks = []
@@ -180,27 +215,27 @@ class AutoformerSpace(nn.Module):
         self.abs_pos = abs_pos
         if self.abs_pos:
             num_patches = (img_size // patch_size) ** 2
-            self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, sample_embed_dim))
+            self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))
             trunc_normal_(self.pos_embed, std=.02)
 
         blocks = []
         for i in range(depth):
             choices = []
-            for sample_mlp_ratio, sample_heads in itertools.product(search_mlp_ratio, search_heads):
-                choices.append(TransformerEncoderLayer(dim=sample_embed_dim, num_heads=sample_heads, mlp_ratio=sample_mlp_ratio,
+            for mlp_ratio, num_heads in itertools.product(search_mlp_ratio, search_num_heads):
+                choices.append(TransformerEncoderLayer(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio,
                                                        qkv_bias=qkv_bias, dropout=drop_rate,
                                                        attn_drop=attn_drop_rate, drop_path=dpr[i],
                                                        pre_norm=pre_norm,))
             blocks.append(nn.LayerChoice(choices))
-        self.blocks = nn.Repeat(blocks, self.sample_depth)
+        self.blocks = nn.Repeat(blocks, depth)
 
         if self.pre_norm:
-            self.norm = nn.LayerNorm(sample_embed_dim)
-        self.head = nn.Linear(sample_embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+            self.norm = nn.LayerNorm(embed_dim)
+        self.head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
     def forward(self, x):
         B = x.shape[0]
-        x = self.patch_embed_super(x)
+        x = self.patch_embed(x)
         cls_tokens = self.cls_token.expand(B, -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
         if self.abs_pos:
@@ -208,7 +243,7 @@ class AutoformerSpace(nn.Module):
         x = self.blocks(x)
         if self.pre_norm:
             x = self.norm(x)
-        if self.gp:
+        if self.global_pool:
             x = torch.mean(x[:, 1:] , dim=1)
         else:
             x = x[:, 0]
