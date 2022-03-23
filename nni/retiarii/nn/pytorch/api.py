@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import math
+import itertools
 import operator
 import warnings
 from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar
@@ -438,6 +439,30 @@ class ValueChoiceX(Translatable):
         """
         # values are not used
         return self._evaluate(iter([]), True)
+
+    def all_options(self) -> Iterable[Any]:
+        """Explore all possibilities of a value choice.
+        """
+        # Record all inner choices: label -> candidates, no duplicates.
+        dedup_inner_choices: Dict[str, List[Any]] = {}
+        # All labels of leaf nodes on tree, possibly duplicates.
+        all_labels: List[str] = []
+
+        for choice in self.inner_choices():
+            all_labels.append(choice.label)
+            if choice.label in dedup_inner_choices:
+                if choice.candidates != dedup_inner_choices[choice.label]:
+                    # check for choice with the same label
+                    raise ValueError(f'"{choice.candidates}" is not equal to "{dedup_inner_choices[choice.label]}", '
+                                     f'but they share the same label: {choice.label}')
+            else:
+                dedup_inner_choices[choice.label] = choice.candidates
+
+        dedup_labels, dedup_candidates = list(dedup_inner_choices.keys()), list(dedup_inner_choices.values())
+
+        for chosen in itertools.product(*dedup_candidates):
+            chosen = dict(zip(dedup_labels, chosen))
+            yield self.evaluate([chosen[label] for label in all_labels])
 
     def evaluate(self, values: Iterable[Any]) -> Any:
         """
