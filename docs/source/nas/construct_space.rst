@@ -44,6 +44,15 @@ ValueChoice
    :members:
    :inherited-members: Module
 
+.. _nas-model-parameter-choice:
+
+ModelParameterChoice
+^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: nni.retiarii.nn.pytorch.ModelParameterChoice
+   :members:
+   :inherited-members: Module
+
 .. _nas-repeat:
 
 Repeat
