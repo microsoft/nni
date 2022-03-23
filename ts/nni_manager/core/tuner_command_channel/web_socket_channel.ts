@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  The IPC channel between NNI manager and tuner.
+ **/
+
 import assert from 'assert/strict';
 import { EventEmitter } from 'events';
 
@@ -9,12 +13,21 @@ import type WebSocket from 'ws';
 
 import { Logger, getLogger } from 'common/log';
 
+/**
+ *  Get the singleton tuner command channel.
+ *  Remember to invoke ``await channel.init()`` before doing anything else.
+ **/
 export function getWebSocketChannel(): WebSocketChannel {
     return channelSingleton;
 }
 
+/**
+ *  The callback to serve WebSocket connection request. Used by REST server module.
+ *  It should only be invoked once, or an error will be raised.
+ *
+ *  Typed of express-ws is somewhat problematic. Don't want to waste time on it so use `any`.
+ **/
 export function serveWebSocket(ws: any, _req: any, _next: any): void {
-    // typed of express-ws is somewhat problematic, don't want to waste time on it
     channelSingleton.setWebSocket(ws);
 }
 
@@ -114,7 +127,7 @@ const channelSingleton: WebSocketChannel = new WebSocketChannel();
 let heartbeatInterval: number = 5000;
 
 export namespace UnitTestHelpers {
-    export function setHeartbeatInterval(ms: number) {
+    export function setHeartbeatInterval(ms: number): void {
         heartbeatInterval = ms;
     }
 }

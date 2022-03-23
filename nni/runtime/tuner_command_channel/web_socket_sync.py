@@ -9,8 +9,6 @@ This module handles _one_ singleton connection, used by NNI manager <-> tuner/as
 According to WebSocket standard, messages are guaranteed not to be fragmented at API level,
 so this module does not have buffer like anonymous pipe channel.
 
-FIXME: Need configure websockets library to increase max message length.
-
 TODO: It's better to make "async thread" global.
 """
 
