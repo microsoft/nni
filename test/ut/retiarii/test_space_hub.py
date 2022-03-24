@@ -1,3 +1,5 @@
+"""Currently, this is only a sanity-check (runnable) of spaces provided in hub."""
+
 import random
 
 from torchvision import transforms
