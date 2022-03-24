@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 INPUT = 'input'
 OUTPUT = 'output'
 CONV3X3_BN_RELU = 'conv3x3-bn-relu'

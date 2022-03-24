@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 NONE = 'none'
 SKIP_CONNECT = 'skip_connect'
 CONV_1X1 = 'conv_1x1'

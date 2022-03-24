@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model, Proxy
 from playhouse.sqlite_ext import JSONField
 

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 from collections import OrderedDict
 from typing import Callable, List, Optional, Union, Dict

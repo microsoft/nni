@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Dict, Any, Type
 
 import torch.nn as nn

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 # This file might cause import error for those who didn't install RL-related dependencies
 
 import logging

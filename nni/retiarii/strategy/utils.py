@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-
 import collections
 import logging
 from typing import Dict, Any, List
