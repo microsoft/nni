@@ -1,0 +1,14 @@
+{
+    "ignore": [
+        "nni/algorithms",
+        "nni/common/device.py",
+        "nni/common/graph_utils.py",
+        "nni/common/serializer.py",
+        "nni/compression",
+        "nni/nas",
+        "nni/retiarii",
+        "nni/smartparam.py",
+        "nni/tools"
+    ],
+    "reportMissingImports": false
+}
