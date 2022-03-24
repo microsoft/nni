@@ -78,6 +78,9 @@ def _test_searchspace_on_dataset(searchspace, dataset='cifar10', arch=None):
     )
     evaluator.fit(model)
 
+    # cleanup to avoid affecting later test cases
+    _reset()
+
 
 def test_nasbench101():
     ss = searchspace.NasBench101()
