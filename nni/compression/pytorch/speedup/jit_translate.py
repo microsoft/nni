@@ -281,6 +281,14 @@ def unsqueeze_python(node, speedup):
     new_unsqueeze = partial(torch.unsqueeze, dim=dim)
     return new_unsqueeze
 
+def constant_pad_nd_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    pad = translate_list(inputs[1], speedup)
+    value = parse_constant(inputs[1], speedup)
+    new_constant_pad_nd = partial(torch.nn.functional.pad, pad=pad, value=value)
+    return new_constant_pad_nd
+
 ##########################################################
 # Split Line
 # Following module/functions cannot be translated into a
@@ -548,6 +556,7 @@ trans_from_jit_to_python = {
     'aten::exp': exp_python,
     'aten::squeeze': squeeze_python,
     'aten::unsqueeze': unsqueeze_python,
+    'aten::constant_pad_nd': constant_pad_nd_python,
     'prim::TupleUnpack': tupleunpack_python,
     'prim::ListUnpack': tupleunpack_python,
     'prim::NumToTensor': num2tensor_python,
