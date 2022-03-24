@@ -53,7 +53,7 @@ class RemoteMachineConfig(ConfigBase):
 
         if self.password is not None:
             warnings.warn('SSH password will be exposed in web UI as plain text. We recommend to use SSH key file.')
-        elif not Path(self.ssh_key_file).is_file():
+        elif not Path(self.ssh_key_file).is_file():  # type: ignore
             raise ValueError(
                 f'RemoteMachineConfig: You must either provide password or a valid SSH key file "{self.ssh_key_file}"'
             )

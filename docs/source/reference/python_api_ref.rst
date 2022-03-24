@@ -9,4 +9,4 @@ API Reference
     Model Compression <compression>
     Feature Engineering <./python_api/feature_engineering>
     Experiment <experiment>
-    Others <./python_api/others>
+    Others <others>
