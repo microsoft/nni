@@ -3,7 +3,7 @@
 
 import json
 from io import BytesIO
-from unittest import TestCase, main
+from unittest import TestCase, main, skip
 
 from nni.runtime import protocol
 from nni.runtime import msg_dispatcher_base
@@ -56,6 +56,7 @@ def _restore_io():
     protocol._out_file = _out_buf
 
 
+@skip('Need mock IPC')
 class MsgDispatcherTestCase(TestCase):
     def test_msg_dispatcher(self):
         _reverse_io()  # now we are sending to Tuner's incoming stream

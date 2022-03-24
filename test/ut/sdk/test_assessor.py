@@ -3,7 +3,7 @@
 
 from io import BytesIO
 import json
-from unittest import TestCase, main
+from unittest import TestCase, main, skip
 
 from nni.assessor import Assessor, AssessResult
 from nni.runtime import msg_dispatcher_base as msg_dispatcher_base
@@ -45,6 +45,7 @@ def _restore_io():
     protocol._out_file = _out_buf
 
 
+@skip('Need mock IPC')
 class AssessorTestCase(TestCase):
     def test_assessor(self):
         pass

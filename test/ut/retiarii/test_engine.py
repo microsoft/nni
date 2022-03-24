@@ -12,6 +12,7 @@ from nni.retiarii.execution.python import PurePythonExecutionEngine
 from nni.retiarii.integration import RetiariiAdvisor
 
 
+@unittest.skip('Need mock IPC')
 class EngineTest(unittest.TestCase):
     def test_codegen(self):
         with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
