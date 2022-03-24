@@ -391,7 +391,7 @@ def reshape_python(node, speedup):
             logger.info('Reshape Module output size: %s', str(self.shape))
 
         def forward(self, *args):
-            return args[0].view(self.shape)
+            return args[0].reshape(self.shape)
     c_node = node.key_node
     inputs = list(c_node.inputs())
     shape = translate_list(inputs[1], speedup)
