@@ -166,7 +166,7 @@ class AutoCompressPruner(IterativePruner):
                 sa_algo_params = sa_params.get('pruning_params')
                 if sa_algo in ['level']:
                     admm_params['granularity'] = 'fine-grained'
-                elif sa_algo in ['admm'] and (sa_algo_params is not None) and not (sa_algo_params.get('granularity') is 'coarse-grained'):
+                elif sa_algo in ['admm'] and (sa_algo_params is not None) and not (sa_algo_params.get('granularity') == 'coarse-grained'):
                     admm_params['granularity'] = 'fine-grained'
                 else:
                     admm_params['granularity'] = 'coarse-grained'
