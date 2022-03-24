@@ -91,24 +91,26 @@ def reshape_break_channel_dependency(op_node):
 
 
 class ChannelDependency(Dependency):
+    """
+    This model analyze the channel dependencies between the conv
+    layers in a model.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        The model to be analyzed.
+    data : torch.Tensor
+        The example input data to trace the network architecture.
+    traced_model : torch._C.Graph
+        if we alreay has the traced graph of the target model, we donnot
+        need to trace the model again.
+    prune_type: str
+        This parameter indicates the channel pruning type: 1) `Filter`
+        prune the filter of the convolution layer to prune the corresponding
+        channels 2) `Batchnorm`: prune the channel in the batchnorm layer
+    """
+
     def __init__(self, model, dummy_input, traced_model=None, prune_type='Filter'):
-        """
-        This model analyze the channel dependencies between the conv
-        layers in a model.
-        Parameters
-        ----------
-        model : torch.nn.Module
-            The model to be analyzed.
-        data : torch.Tensor
-            The example input data to trace the network architecture.
-        traced_model : torch._C.Graph
-            if we alreay has the traced graph of the target model, we donnot
-            need to trace the model again.
-        prune_type: str
-            This parameter indicates the channel pruning type: 1) `Filter`
-            prune the filter of the convolution layer to prune the corresponding
-            channels 2) `Batchnorm`: prune the channel in the batchnorm layer
-        """
         self.prune_type = prune_type
         self.target_types = []
         if self.prune_type == 'Filter':
@@ -277,6 +279,7 @@ class InputChannelDependency(ChannelDependency):
         """
         This model analyze the input channel dependencies between the conv
         layers in a model.
+
         Parameters
         ----------
         model : torch.nn.Module
@@ -335,20 +338,22 @@ class InputChannelDependency(ChannelDependency):
 
 
 class GroupDependency(Dependency):
+    """
+    This model analyze the group dependencis between the conv
+    layers in a model.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        The model to be analyzed.
+    data : torch.Tensor
+        The example input data to trace the network architecture.
+    traced_model : torch._C.Graph
+        if we alreay has the traced graph of the target model, we donnot
+        need to trace the model again.
+    """
+
     def __init__(self, model, dummy_input, traced_model=None):
-        """
-        This model analyze the group dependencis between the conv
-        layers in a model.
-        Parameters
-        ----------
-        model : torch.nn.Module
-            The model to be analyzed.
-        data : torch.Tensor
-            The example input data to trace the network architecture.
-        traced_model : torch._C.Graph
-            if we alreay has the traced graph of the target model, we donnot
-            need to trace the model again.
-        """
         self.min_groups = {}
         super(GroupDependency, self).__init__(model, dummy_input, traced_model)
 

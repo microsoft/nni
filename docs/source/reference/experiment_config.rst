@@ -289,10 +289,12 @@ One of the following:
 
 For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platforms, it is suggested to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
 
+.. _reference-local-config-label:
+
 LocalConfig
 -----------
 
-Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
+Introduction of the corresponding local training service can be found :doc:`../experiment/local`.
 
 .. list-table::
     :widths: 10 10 80
@@ -330,10 +332,12 @@ Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
         If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
         This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
+.. _reference-remote-config-label:
+
 RemoteConfig
 ------------
 
-Detailed usage can be found `here <../TrainingService/RemoteMachineMode.rst>`__.
+Detailed usage can be found :doc:`../experiment/remote`.
 
 .. list-table::
     :widths: 10 10 80

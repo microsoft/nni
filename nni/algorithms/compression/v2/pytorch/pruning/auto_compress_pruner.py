@@ -51,7 +51,16 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
 
 
 class AutoCompressPruner(IterativePruner):
-    """
+    r"""
+    For total iteration number :math:`N`, AutoCompressPruner prune the model that survive the previous iteration for a fixed sparsity ratio (e.g., :math:`1-{(1-0.8)}^{(1/N)}`) to achieve the overall sparsity (e.g., :math:`0.8`):
+
+    .. code-block:: bash
+
+        1. Generate sparsities distribution using SimulatedAnnealingPruner
+        2. Perform ADMM-based pruning to generate pruning result for the next iteration.
+
+    For more details, please refer to `AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates <https://arxiv.org/abs/1907.03141>`__.
+
     Parameters
     ----------
     model : Module
@@ -70,7 +79,7 @@ class AutoCompressPruner(IterativePruner):
             The model will be trained or inferenced `training_epochs` epochs.
         - traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
             The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-            E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
+            E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
         - criterion : Callable[[Tensor, Tensor], Tensor].
             The criterion function used in trainer. Take model output and target value as input, and return the loss.
         - iterations : int.
@@ -107,6 +116,34 @@ class AutoCompressPruner(IterativePruner):
         If set True, speed up the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
         If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+
+    Examples
+    --------
+        >>> import nni
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
+        >>> model = ...
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
+        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
+        >>> trainer = ...
+        >>> criterion = ...
+        >>> evaluator = ...
+        >>> finetuner = ...
+        >>> admm_params = {
+        >>>     'trainer': trainer,
+        >>>     'traced_optimizer': traced_optimizer,
+        >>>     'criterion': criterion,
+        >>>     'iterations': 10,
+        >>>     'training_epochs': 1
+        >>> }
+        >>> sa_params = {
+        >>>     'evaluator': evaluator
+        >>> }
+        >>> pruner = AutoCompressPruner(model, config_list, 10, admm_params, sa_params, finetuner=finetuner)
+        >>> pruner.compress()
+        >>> _, model, masks, _, _ = pruner.get_best_result()
+
+    The full script can be found :githublink:`here <examples/model_compress/pruning/v2/auto_compress_pruner.py>`.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,

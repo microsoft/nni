@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import inspect
+import os
 import warnings
 from typing import Any, TypeVar, Union
 
@@ -64,6 +65,12 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
         class PrimitiveOp(nn.Module):
             ...
     """
+
+    # Internal flag. See nni.trace
+    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
+    if nni_trace_flag.lower() == 'disable':
+        return cls
+
     if _check_wrapped(cls, 'basic_unit'):
         return cls
 
@@ -90,12 +97,18 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
 
     The wrapper serves two purposes:
 
-        1. Capture the init parameters of python class so that it can be re-instantiated in another process.
-        2. Reset uid in namespace so that the auto label counting in each model stably starts from zero.
+    1. Capture the init parameters of python class so that it can be re-instantiated in another process.
+    2. Reset uid in namespace so that the auto label counting in each model stably starts from zero.
 
     Currently, NNI might not complain in simple cases where ``@model_wrapper`` is actually not needed.
     But in future, we might enforce ``@model_wrapper`` to be required for base model.
     """
+
+    # Internal flag. See nni.trace
+    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
+    if nni_trace_flag.lower() == 'disable':
+        return cls
+
     if _check_wrapped(cls, 'model_wrapper'):
         return cls
 
@@ -107,7 +120,8 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
 
     class reset_wrapper(wrapper):
         def __init__(self, *args, **kwargs):
-            with ModelNamespace():
+            self._model_namespace = ModelNamespace()
+            with self._model_namespace:
                 super().__init__(*args, **kwargs)
 
     _copy_class_wrapper_attributes(wrapper, reset_wrapper)
@@ -157,7 +171,13 @@ def _torchscript_patch(cls) -> None:
         cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
     if hasattr(cls, 'trace_symbol'):
         # these must all exist or all non-exist
-        cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
-        cls.trace_args = torch.jit.unused(cls.trace_args)
-        cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
-        cls.trace_copy = torch.jit.ignore(cls.trace_copy)
+        try:
+            cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
+            cls.trace_args = torch.jit.unused(cls.trace_args)
+            cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
+            cls.trace_copy = torch.jit.ignore(cls.trace_copy)
+        except AttributeError as e:
+            if 'property' in str(e):
+                raise RuntimeError('Trace on PyTorch module failed. Your PyTorch version might be outdated. '
+                                   'Please try to upgrade PyTorch.')
+            raise
