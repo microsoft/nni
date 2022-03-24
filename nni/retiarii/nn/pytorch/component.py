@@ -150,6 +150,9 @@ class Repeat(Mutable):
         # shortcut for blocks[index]
         return self.blocks[index]
 
+    def __len__(self):
+        return self.max_depth
+
 
 class NasBench201Cell(nn.Module):
     """

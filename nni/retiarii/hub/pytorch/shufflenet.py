@@ -112,9 +112,10 @@ class ShuffleXceptionBlock(ShuffleNetBlock):
 @model_wrapper
 class ShuffleNetSpace(nn.Module):
     """
-    The search space proposed in [spos]_ .
+    The search space proposed in `Single Path One-shot <https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123610528.pdf>`__.
 
-    The basic building block design is inspired by a state-of-the-art manually-designed network -- ShuffleNetV2 [shufflenetv2]_ .
+    The basic building block design is inspired by a state-of-the-art manually-designed network --
+    `ShuffleNetV2 <https://openaccess.thecvf.com/content_ECCV_2018/html/Ningning_Light-weight_CNN_Architecture_ECCV_2018_paper.html>`__.
     There are 20 choice blocks in total. Each choice block has 4 candidates, namely ``choice 3``, ``choice 5``,
     ``choice_7`` and ``choice_x`` respectively. They differ in kernel sizes and the number of depthwise convolutions.
     The size of the search space is :math:`4^{20}`.
@@ -130,13 +131,6 @@ class ShuffleNetSpace(nn.Module):
         Otherwise, 1.0x is used by default. Default: false.
     affine : bool
         Apply affine to all batch norm. Default: false.
-
-    References
-    ----------
-    .. [shufflenetv2] Ma, Ningning, et al. "Shufflenet v2: Practical guidelines for efficient cnn architecture design."
-        Proceedings of the European conference on computer vision (ECCV). 2018.
-    .. [spos] Guo, Zichao, et al. "Single Path One-Shot Neural Architecture Search with Uniform Sampling".
-        Proceedings of the European conference on computer vision (ECCV). 2020.
     """
 
     def __init__(self,

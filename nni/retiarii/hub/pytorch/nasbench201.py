@@ -149,10 +149,14 @@ class ResNetBasicblock(nn.Module):
 
 @model_wrapper
 class NasBench201(nn.Module):
+    """The full search space proposed by `NAS-Bench-201 <https://arxiv.org/abs/2001.00326>`__.
+
+    It's a stack of :class:`NasBench201Cell`.
+    """
     def __init__(self,
                  stem_out_channels: int = 16,
                  num_modules_per_stack: int = 5,
-                 num_labels: int = 100):
+                 num_labels: int = 10):
         super().__init__()
         self.channels = C = stem_out_channels
         self.num_modules = N = num_modules_per_stack

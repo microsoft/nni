@@ -89,7 +89,7 @@ class InvertedResidual(nn.Sequential):
     """
     An Inverted Residual Block, sometimes called an MBConv Block, is a type of residual block used for image models
     that uses an inverted structure for efficiency reasons.
-    It was originally proposed for the MobileNetV2 CNN architecture [mobilenetv2]_ .
+    It was originally proposed for the `MobileNetV2 <https://arxiv.org/abs/1801.04381>`__ CNN architecture.
     It has since been reused for several mobile-optimized CNNs.
     It follows a narrow -> wide -> narrow approach, hence the inversion.
     It first widens with a 1x1 convolution, then uses a 3x3 depthwise convolution (which greatly reduces the number of parameters),
@@ -97,11 +97,6 @@ class InvertedResidual(nn.Sequential):
 
     Follow implementation of:
     https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/rematlib/mobile_model_v3.py#L453
-
-    References
-    ----------
-    .. [mobilenetv2] Sandler, Mark, et al. "Mobilenetv2: Inverted residuals and linear bottlenecks."
-        Proceedings of the IEEE conference on computer vision and pattern recognition. 2018.
     """
 
     def __init__(
@@ -191,12 +186,12 @@ def inverted_residual_choice_builder(
 @model_wrapper
 class ProxylessNAS(nn.Module):
     """
-    The search space proposed by ProxylessNAS [proxylessnas]_ .
+    The search space proposed by `ProxylessNAS <https://arxiv.org/abs/1812.00332>`__.
 
-    References
-    ----------
-    .. [proxylessnas] Cai, Han, Ligeng Zhu, and Song Han. "ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware."
-        International Conference on Learning Representations. 2018.
+    Following the official implementation, the inverted residual with kernel size / expand ratio variations in each layer
+    is implemented with a :class:`nn.LayerChoice` with all-combination candidates. That means,
+    when used in weight sharing, these candidates will be treated as separate layers, and won't be fine-grained shared.
+    We note that ``MobileNetV3Space`` is different in this perspective.
     """
 
     def __init__(self, num_labels: int = 1000,
