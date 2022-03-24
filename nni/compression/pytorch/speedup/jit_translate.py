@@ -285,7 +285,7 @@ def constant_pad_nd_python(node, speedup):
     c_node = node.key_node
     inputs = list(c_node.inputs())
     pad = translate_list(inputs[1], speedup)
-    value = parse_constant(inputs[1], speedup)
+    value = parse_constant(inputs[2], speedup)
     new_constant_pad_nd = partial(torch.nn.functional.pad, pad=pad, value=value)
     return new_constant_pad_nd
 
