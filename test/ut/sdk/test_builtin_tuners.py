@@ -324,11 +324,13 @@ class BuiltinTunersTestCase(TestCase):
         self.import_data_test(tuner_fn, support_middle=False)
 
     def test_tpe(self):
+        self.exhaustive = True
         tuner_fn = TpeTuner
         self.search_space_test_all(TpeTuner)
         self.import_data_test(tuner_fn)
 
     def test_random_search(self):
+        self.exhaustive = True
         tuner_fn = RandomTuner
         self.search_space_test_all(tuner_fn)
         self.import_data_test(tuner_fn)
