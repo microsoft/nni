@@ -8,14 +8,10 @@ from nni.retiarii import model_wrapper
 
 class ShuffleNetBlock(nn.Module):
     """
-    Describe the basic building block of shuffle net, as described in [shufflenet]_ .
+    Describe the basic building block of shuffle net, as described in
+    `ShuffleNet: An Extremely Efficient Convolutional Neural Network for Mobile Devices <https://arxiv.org/pdf/1707.01083.pdf>`__.
 
     When stride = 1, the block expects an input with ``2 * input channels``. Otherwise input channels.
-
-    References
-    ----------
-    .. [shufflenet] Zhang, Xiangyu, et al. "ShuffleNet: An Extremely Efficient Convolutional Neural Network for Mobile Devices".
-        CVPR 2018.
     """
 
     def __init__(self, in_channels: int, out_channels: int, mid_channels: int, *,
@@ -101,7 +97,8 @@ class ShuffleNetBlock(nn.Module):
 
 class ShuffleXceptionBlock(ShuffleNetBlock):
     """
-    The ``choice_x`` version of shuffle net block, described in [spos]_ .
+    The ``choice_x`` version of shuffle net block, described in
+    `Single Path One-shot <https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123610528.pdf>`__.
     """
 
     def __init__(self, in_channels: int, out_channels: int, mid_channels: int, *, stride: int, affine: bool = True):
