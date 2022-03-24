@@ -3,10 +3,9 @@
         "nni/algorithms",
         "nni/common/device.py",
         "nni/common/graph_utils.py",
-        "nni/common/serializer.py",
         "nni/compression",
-        "nni/nas",
-        "nni/retiarii",
+        "nni/nas/tensorflow",
+        "nni/nas/pytorch",
         "nni/smartparam.py",
         "nni/tools"
     ],
