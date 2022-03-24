@@ -1,4 +1,4 @@
-.. 4d622b7ee5031e9cccec635bf6c7427d
+.. 12db77dcabdcb9d9ede083bc68e6f87a
 
 ###########################
 Neural Network Intelligence
