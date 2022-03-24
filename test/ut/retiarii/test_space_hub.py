@@ -3,7 +3,11 @@
 import random
 
 from torchvision import transforms
-from torchvision.datasets import CIFAR10, FakeData
+from torchvision.datasets import FakeData
+
+import pytest
+
+import pytorch_lightning
 
 import nni
 import nni.runtime.platform.test
@@ -13,6 +17,9 @@ from nni.retiarii.utils import ContextStack
 from nni.retiarii.execution.utils import _unpack_if_only_one
 from nni.retiarii.mutator import InvalidMutation, Sampler
 from nni.retiarii.nn.pytorch.mutator import extract_mutation_from_pt_module
+
+
+pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 
 
 def _reset():
