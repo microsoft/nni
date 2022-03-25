@@ -25,7 +25,7 @@ import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
-import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface, DummyDispatcherInterface } from './ipcInterface';
+import { createDispatcherInterface, IpcInterface, DummyDispatcherInterface } from './ipcInterface';
 import { RestServer } from '../rest_server';
 
 /**
@@ -71,12 +71,6 @@ class NNIManager implements Manager {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
         };
-
-        // TODO: temporary hack
-        const pipe = getDispatcherPipe();
-        if (pipe !== null && pipe !== '_ws_' && pipe !== '_unittest_') {
-            this.dispatcher = createDispatcherPipeInterface(pipe);
-        }
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
@@ -485,11 +479,6 @@ class NNIManager implements Manager {
 
     private async setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): Promise<void> {
         if (this.dispatcher !== undefined) {
-            return;
-        }
-
-        if (getDispatcherPipe() === '_ws_') {
-            this.dispatcher = await createDispatcherInterface();
             return;
         }
 
