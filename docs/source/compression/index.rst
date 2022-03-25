@@ -54,7 +54,7 @@ If users want to apply both, a sequential mode is recommended as common practise
 
 .. note::
   Note that NNI pruners or quantizers are not meant to physically compact the model but for simulating the compression effect. Whereas NNI speedup tool can truly compress model by changing the network architecture and therefore reduce latency.
-  To obtain a truly compact model, users should conduct :doc:`pruning speedup <../tutorials/pruning_speed_up>` or :doc:`quantizaiton speedup <../tutorials/quantization_speed_up>`. 
+  To obtain a truly compact model, users should conduct :doc:`pruning speedup <../tutorials/pruning_speedup>` or :doc:`quantizaiton speedup <../tutorials/quantization_speedup>`. 
   The interface and APIs are unified for both PyTorch and TensorFlow. Currently only PyTorch version has been supported, and TensorFlow version will be supported in future.
 
 
@@ -140,8 +140,8 @@ The following figure shows how NNI prunes and speeds up your models.
    :scale: 40%
    :alt:
 
-The detailed tutorial of Speedup Model with Mask can be found :doc:`here <../tutorials/pruning_speed_up>`.
-The detailed tutorial of Speedup Model with Calibration Config can be found :doc:`here <../tutorials/quantization_speed_up>`.
+The detailed tutorial of Speedup Model with Mask can be found :doc:`here <../tutorials/pruning_speedup>`.
+The detailed tutorial of Speedup Model with Calibration Config can be found :doc:`here <../tutorials/quantization_speedup>`.
 
 .. attention::
 

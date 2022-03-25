@@ -26,10 +26,10 @@ class PruningScheduler(BasePruningScheduler):
     finetuner
         The finetuner handled all finetune logic, use a pytorch module as input.
         It will be called at the end of each iteration if reset_weight is False, will be called at the beginning of each iteration otherwise.
-    speed_up
+    speedup
         If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speedup.
+        If `speedup` is True, `dummy_input` is required for tracing the model in speedup.
     evaluator
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
@@ -37,12 +37,12 @@ class PruningScheduler(BasePruningScheduler):
         If set True, the model weight will reset to the origin model weight at the end of each iteration step.
     """
     def __init__(self, pruner: Pruner, task_generator: TaskGenerator, finetuner: Callable[[Module], None] = None,
-                 speed_up: bool = False, dummy_input: Tensor = None, evaluator: Optional[Callable[[Module], float]] = None,
+                 speedup: bool = False, dummy_input: Tensor = None, evaluator: Optional[Callable[[Module], float]] = None,
                  reset_weight: bool = False):
         self.pruner = pruner
         self.task_generator = task_generator
         self.finetuner = finetuner
-        self.speed_up = speed_up
+        self.speedup = speedup
         self.dummy_input = dummy_input
         self.evaluator = evaluator
         self.reset_weight = reset_weight
@@ -73,13 +73,13 @@ class PruningScheduler(BasePruningScheduler):
         self.pruner._unwrap_model()
 
         # speedup
-        if self.speed_up and task.speed_up:
+        if self.speedup and task.speedup:
             ModelSpeedup(compact_model, self.dummy_input, pruner_generated_masks).speedup_model()
             compact_model_masks = {}
 
         # finetune
         if self.finetuner is not None and task.finetune:
-            if self.speed_up:
+            if self.speedup:
                 self.finetuner(compact_model)
             else:
                 self.pruner._wrap_model()
@@ -88,7 +88,7 @@ class PruningScheduler(BasePruningScheduler):
 
         # evaluate
         if self.evaluator is not None and task.evaluate:
-            if self.speed_up:
+            if self.speedup:
                 score = self.evaluator(compact_model)
             else:
                 self.pruner._wrap_model()
@@ -127,13 +127,13 @@ class PruningScheduler(BasePruningScheduler):
         compact_model.load_state_dict(checkpoint)
 
         # speedup
-        if self.speed_up and task.speed_up:
+        if self.speedup and task.speedup:
             ModelSpeedup(compact_model, self.dummy_input, pruner_generated_masks).speedup_model()
             compact_model_masks = {}
 
         # evaluate
         if self.evaluator is not None and task.evaluate:
-            if self.speed_up:
+            if self.speedup:
                 score = self.evaluator(compact_model)
             else:
                 self.pruner._wrap_model()

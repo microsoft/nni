@@ -35,7 +35,7 @@ Using AGP Pruning as an example to explain how to implement an iterative pruning
 
     pruner = L1NormPruner(model=None, config_list=None, mode='dependency_aware', dummy_input=torch.rand(10, 3, 224, 224).to(device))
     task_generator = AGPTaskGenerator(total_iteration=10, origin_model=model, origin_config_list=config_list, log_dir='.', keep_intermediate_result=True)
-    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None, reset_weight=False)
+    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input, evaluator=None, reset_weight=False)
 
     scheduler.compress()
     _, model, masks, _, _ = scheduler.get_best_result()

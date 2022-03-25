@@ -70,7 +70,7 @@ ModelSpeedup(model, torch.rand(10, 1, 28, 28).to(device), masks).speedup_model()
 print(model)
 
 # %%
-# Roughly test the model after speed-up inference speed.
+# Roughly test the model after speedup inference speed.
 start = time.time()
 model(torch.rand(128, 1, 28, 28).to(device))
 print('Speedup Model - Elapsed Time : ', time.time() - start)

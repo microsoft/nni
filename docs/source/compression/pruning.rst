@@ -105,4 +105,4 @@ In the dependency-aware mode, the pruner will provide a better speed gain from t
 
     Quickstart <../tutorials/cp_pruning_quick_start_mnist>
     Pruner <pruner>
-    Speedup <../tutorials/cp_pruning_speed_up>
+    Speedup <../tutorials/cp_pruning_speedup>

@@ -15,10 +15,10 @@ Tutorials
 
 .. only:: html
 
- .. figure:: /tutorials/images/thumb/sphx_glr_pruning_speed_up_thumb.png
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_speedup_thumb.png
      :alt: Speedup Model with Mask
 
-     :ref:`sphx_glr_tutorials_pruning_speed_up.py`
+     :ref:`sphx_glr_tutorials_pruning_speedup.py`
 
 .. raw:: html
 
@@ -28,7 +28,7 @@ Tutorials
 .. toctree::
    :hidden:
 
-   /tutorials/pruning_speed_up
+   /tutorials/pruning_speedup
 
 .. raw:: html
 
@@ -78,10 +78,10 @@ Tutorials
 
 .. only:: html
 
- .. figure:: /tutorials/images/thumb/sphx_glr_quantization_speed_up_thumb.png
+ .. figure:: /tutorials/images/thumb/sphx_glr_quantization_speedup_thumb.png
      :alt: SpeedUp Model with Calibration Config
 
-     :ref:`sphx_glr_tutorials_quantization_speed_up.py`
+     :ref:`sphx_glr_tutorials_quantization_speedup.py`
 
 .. raw:: html
 
@@ -91,7 +91,7 @@ Tutorials
 .. toctree::
    :hidden:
 
-   /tutorials/quantization_speed_up
+   /tutorials/quantization_speedup
 
 .. raw:: html
 

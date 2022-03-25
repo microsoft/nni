@@ -112,10 +112,10 @@ class AutoCompressPruner(IterativePruner):
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handles all finetune logic, takes a pytorch module as input.
         It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
-    speed_up : bool
+    speedup : bool
         If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speedup.
+        If `speedup` is True, `dummy_input` is required for tracing the model in speedup.
 
     Examples
     --------
@@ -148,7 +148,7 @@ class AutoCompressPruner(IterativePruner):
 
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False,
+                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False,
                  dummy_input: Optional[Tensor] = None, evaluator: Callable[[Module], float] = None):
         task_generator = AutoCompressTaskGenerator(total_iteration=total_iteration,
                                                    origin_model=model,
@@ -159,5 +159,5 @@ class AutoCompressPruner(IterativePruner):
         if 'traced_optimizer' in admm_params:
             admm_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, admm_params['traced_optimizer'])
         pruner = ADMMPruner(None, None, **admm_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
+        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)

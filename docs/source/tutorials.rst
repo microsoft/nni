@@ -11,9 +11,9 @@ Tutorials
    tutorials/hello_nas
    tutorials/nasbench_as_dataset
    tutorials/pruning_quick_start_mnist
-   tutorials/pruning_speed_up
+   tutorials/pruning_speedup
    tutorials/quantization_quick_start_mnist
-   tutorials/quantization_speed_up
+   tutorials/quantization_speedup
 
 .. ----------------------
 
@@ -73,7 +73,7 @@ Tutorials
 .. cardlinkitem::
    :header: Speedup Model with Mask
    :description: Make your model real smaller and faster with speed-up after pruned by pruner
-   :link: tutorials/pruning_speed_up.html
+   :link: tutorials/pruning_speedup.html
    :image: ../img/thumbnails/overview-29.png
    :background: cyan
    :tags: Compression
@@ -81,7 +81,7 @@ Tutorials
 .. cardlinkitem::
    :header: Speedup Model with Calibration Config
    :description: Make your model real smaller and faster with speed-up after quantized by quantizer
-   :link: tutorials/quantization_speed_up.html
+   :link: tutorials/quantization_speedup.html
    :image: ../img/thumbnails/overview-29.png
    :background: cyan
    :tags: Compression

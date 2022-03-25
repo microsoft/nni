@@ -141,7 +141,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 .. codesnippetcard::
    :icon: ../img/thumbnails/quantization-small.svg
    :title: Quantization
-   :link: tutorials/quantization_speed_up
+   :link: tutorials/quantization_speedup
 
    .. code-block::
 

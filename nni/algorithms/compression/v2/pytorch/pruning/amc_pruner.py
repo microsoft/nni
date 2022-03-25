@@ -185,7 +185,7 @@ class AMCPruner(IterativePruner):
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude  : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     dummy_input : torch.Tensor
-        `dummy_input` is required for speed-up and tracing the model in RL environment.
+        `dummy_input` is required for speedup and tracing the model in RL environment.
     evaluator : Callable[[Module], float]
         Evaluate the pruned model and give a score.
     pruning_algorithm : str
@@ -249,5 +249,5 @@ class AMCPruner(IterativePruner):
                                           ddpg_params=ddpg_params,
                                           target=target)
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input,
+        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)

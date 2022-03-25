@@ -29,7 +29,7 @@ if [[ ${TASK_LIST[*]} =~ (^|[[:space:]])$TASK_NAME($|[[:space:]]) ]]; then
 	   --ranking_criterion $RANKING_CRITERION \
 	   --num_iterations $NUM_ITERATIONS \
 	   --epochs_per_iteration $EPOCHS_PER_ITERATION \
-	   --speed_up \
+	   --speedup \
 	   --model_name $PRETRAINED_MODEL \
 	   --task_name $TASK_NAME \
 	   --max_length $MAX_LENGTH \

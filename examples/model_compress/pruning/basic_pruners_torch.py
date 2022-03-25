@@ -292,7 +292,7 @@ def main(args):
     if args.test_only:
         test(args, model, device, criterion, test_loader)
 
-    if args.speed_up:
+    if args.speedup:
         # Unwrap all modules to normal state
         pruner._unwrap_model()
         m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
@@ -364,9 +364,9 @@ if __name__ == '__main__':
                                  'fpgm', 'mean_activation', 'apoz', 'taylorfo'],
                         help='pruner to use')
 
-    # speed-up
-    parser.add_argument('--speed-up', action='store_true', default=False,
-                        help='Whether to speed-up the pruned model')
+    # speedup
+    parser.add_argument('--speedup', action='store_true', default=False,
+                        help='Whether to speedup the pruned model')
 
     # fine-tuning
     parser.add_argument('--fine-tune-epochs', type=int, default=160,
