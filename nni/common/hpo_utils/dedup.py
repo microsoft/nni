@@ -7,16 +7,21 @@ Deduplicate repeated parameters.
 No guarantee for forward-compatibility.
 """
 
+from __future__ import annotations
+
 import logging
+import typing
 
 import nni
 from .formatting import FormattedParameters, FormattedSearchSpace, ParameterSpec, deformat_parameters
 
-_logger = logging.getLogger(__name__)
-
 # TODO:
 # Move main logic of basic tuners (random and grid search) into SDK,
 # so we can get rid of private methods and circular dependency.
+if typing.TYPE_CHECKING:
+    from nni.algorithms.hpo.gridsearch_tuner import GridSearchTuner
+
+_logger = logging.getLogger(__name__)
 
 class Deduplicator:
     """
@@ -37,10 +42,10 @@ class Deduplicator:
     """
 
     def __init__(self, formatted_search_space: FormattedSearchSpace):
-        self._space = formatted_search_space
-        self._never_dup = any(_spec_never_dup(spec) for spec in self._space.values())
-        self._history = set()
-        self._grid_search = None
+        self._space: FormattedSearchSpace = formatted_search_space
+        self._never_dup: bool = any(_spec_never_dup(spec) for spec in self._space.values())
+        self._history: set[str] = set()
+        self._grid_search: GridSearchTuner | None = None
 
     def __call__(self, formatted_parameters: FormattedParameters) -> FormattedParameters:
         if self._never_dup or self._not_dup(formatted_parameters):
@@ -67,7 +72,7 @@ class Deduplicator:
 
     def _not_dup(self, formatted_parameters: FormattedParameters) -> bool:
         params = deformat_parameters(formatted_parameters, self._space)
-        params_str = nni.dump(params, sort_keys=True)
+        params_str = typing.cast(str, nni.dump(params, sort_keys=True))
         if params_str in self._history:
             return False
         else:
