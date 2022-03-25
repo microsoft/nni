@@ -162,9 +162,9 @@ finetuning the model by using QAT
 
  .. code-block:: none
 
-    Average test loss: 0.2267, Accuracy: 9332/10000 (93%)
-    Average test loss: 0.1368, Accuracy: 9589/10000 (96%)
-    Average test loss: 0.1056, Accuracy: 9677/10000 (97%)
+    Average test loss: 0.3100, Accuracy: 9056/10000 (91%)
+    Average test loss: 0.1559, Accuracy: 9558/10000 (96%)
+    Average test loss: 0.1031, Accuracy: 9690/10000 (97%)
 
 
 
@@ -193,7 +193,7 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0030], device='cuda:0'), 'weight_zero_point': tensor([82.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0015], device='cuda:0'), 'weight_zero_point': tensor([107.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.313278198242188}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0031], device='cuda:0'), 'weight_zero_point': tensor([103.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0018], device='cuda:0'), 'weight_zero_point': tensor([111.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.046737670898438}}
 
 
 
@@ -277,7 +277,7 @@ input tensor: ``torch.randn(128, 3, 32, 32)``
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  57.111 seconds)
+   **Total running time of the script:** ( 0 minutes  55.231 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_speedup.py:

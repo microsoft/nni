@@ -5,14 +5,14 @@
 
 Computation times
 =================
-**02:36.394** total execution time for **tutorials** files:
+**02:34.670** total execution time for **tutorials** files:
 
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py` (``pruning_quick_start_mnist.py``)           | 01:26.209 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py` (``pruning_quick_start_mnist.py``)           | 01:26.953 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_quantization_speedup.py` (``quantization_speedup.py``)                     | 00:57.111 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_quantization_speedup.py` (``quantization_speedup.py``)                     | 00:55.231 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_pruning_speedup.py` (``pruning_speedup.py``)                               | 00:13.074 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_pruning_speedup.py` (``pruning_speedup.py``)                               | 00:12.486 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_hello_nas.py` (``hello_nas.py``)                                           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+

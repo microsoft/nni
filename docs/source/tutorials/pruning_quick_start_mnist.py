@@ -83,7 +83,7 @@ for name, mask in masks.items():
 
 # %%
 # Speedup the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
-# The model becomes smaller after speed-up,
+# The model becomes smaller after speedup,
 # and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the masks across layers.
 
 # need to unwrap the model, if the model is wrapped before speedup

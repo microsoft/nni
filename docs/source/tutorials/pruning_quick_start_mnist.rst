@@ -102,9 +102,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.8610, Accuracy: 7451/10000 (75%)
-    Average test loss: 0.3346, Accuracy: 8996/10000 (90%)
-    Average test loss: 0.2431, Accuracy: 9235/10000 (92%)
+    Average test loss: 0.5606, Accuracy: 8239/10000 (82%)
+    Average test loss: 0.2550, Accuracy: 9228/10000 (92%)
+    Average test loss: 0.1870, Accuracy: 9432/10000 (94%)
 
 
 
@@ -218,7 +218,7 @@ Pruners usually require `model` and `config_list` as input arguments.
 .. GENERATED FROM PYTHON SOURCE LINES 85-88
 
 Speedup the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
-The model becomes smaller after speed-up,
+The model becomes smaller after speedup,
 and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the masks across layers.
 
 .. GENERATED FROM PYTHON SOURCE LINES 88-97
@@ -308,7 +308,7 @@ Because speedup will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  26.209 seconds)
+   **Total running time of the script:** ( 1 minutes  26.953 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:
