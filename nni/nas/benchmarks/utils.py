@@ -52,7 +52,8 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
 
             f = tempfile.NamedTemporaryFile(delete=False, dir=dst_dir)
             r = requests.get(download_url, stream=True)
-            total_length = int(r.headers.get('content-length'))
+            total_length: str = r.headers.get('content-length')
+            total_length = int(total_length)
             with tqdm.tqdm(total=total_length, disable=not progress,
                            unit='B', unit_scale=True, unit_divisor=1024) as pbar:
                 for chunk in r.iter_content(8192):

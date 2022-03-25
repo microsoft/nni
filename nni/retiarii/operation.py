@@ -34,6 +34,8 @@ class Operation:
         Arbitrary key-value parameters (e.g. kernel_size).
     """
 
+    io_names: List[str] = []
+
     def __init__(self, type_name: str, parameters: Dict[str, Any] = {}, _internal: bool = False, attributes: Dict[str, Any] = {}):
         assert _internal, '`Operation()` is private, use `Operation.new()` instead'
         self.type: str = type_name
@@ -227,7 +229,7 @@ class _IOPseudoOperation(Operation):
     especially in static type checking.
     """
 
-    def __init__(self, type_name: str, io_names: List = None):
+    def __init__(self, type_name: str, io_names: List[str] = None):
         assert type_name.startswith('_')
         super(_IOPseudoOperation, self).__init__(type_name, {}, True)
         self.io_names = io_names
