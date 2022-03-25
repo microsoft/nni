@@ -232,6 +232,10 @@ def gelu_python(node, speedup):
     return torch.nn.GELU()
 
 
+def silu_python(node, speedup):
+    return torch.nn.SiLU()
+
+
 def avgpool2d_python(node, speedup):
     c_node = node.key_node
     inputs = list(c_node.inputs())
@@ -557,6 +561,7 @@ trans_from_jit_to_python = {
     'aten::squeeze': squeeze_python,
     'aten::unsqueeze': unsqueeze_python,
     'aten::constant_pad_nd': constant_pad_nd_python,
+    'aten::silu': silu_python,
     'prim::TupleUnpack': tupleunpack_python,
     'prim::ListUnpack': tupleunpack_python,
     'prim::NumToTensor': num2tensor_python,
