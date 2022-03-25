@@ -17,8 +17,6 @@ from typing import Optional, Tuple, List, Any
 
 import colorama
 
-import nni.runtime.protocol
-
 from .config import ExperimentConfig
 from .pipe import Pipe
 from . import rest
@@ -173,6 +171,7 @@ def start_experiment_retiarii(exp_id, config, port, debug):
         start_time, proc = _start_rest_server_retiarii(config, port, debug, exp_id, pipe.path)
         _logger.info('Connecting IPC pipe...')
         pipe_file = pipe.connect()
+        import nni.runtime.protocol  # TODO: Moved here for UT's reload hack. No need to be here once refactor done.
         nni.runtime.protocol.use_legacy_pipe(pipe_file)
         _logger.info('Starting web server...')
         _check_rest_server(port)
