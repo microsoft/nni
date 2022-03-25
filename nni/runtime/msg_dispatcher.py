@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import logging
 from collections import defaultdict
+import logging
+import typing
 
 from nni import NoMoreTrialError
 from nni.assessor import AssessResult
@@ -63,7 +64,7 @@ def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, p
         ret['parameter_index'] = parameter_index
     else:
         ret['parameter_index'] = 0
-    return dump(ret)
+    return typing.cast(str, dump(ret))
 
 
 class MsgDispatcher(MsgDispatcherBase):
@@ -222,7 +223,7 @@ class MsgDispatcher(MsgDispatcherBase):
 
         if result is AssessResult.Bad:
             _logger.debug('BAD, kill %s', trial_job_id)
-            send(CommandType.KillTrialJob, dump(trial_job_id))
+            send(CommandType.KillTrialJob, dump(trial_job_id))  # type: ignore
             # notify tuner
             _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]',
                           dispatcher_env_vars.NNI_INCLUDE_INTERMEDIATE_RESULTS)

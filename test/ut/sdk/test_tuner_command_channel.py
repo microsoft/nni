@@ -52,6 +52,8 @@ def test_shutdown():
 
     # release the port
     global _server
+    _server.stdin.write('_close_\n')
+    _server.stdin.flush()
     _server.terminate()
     _server = None
 
@@ -77,3 +79,4 @@ if __name__ == '__main__':
     test_send()
     test_receive()
     test_shutdown()
+    print('pass')

@@ -17,13 +17,14 @@ from __future__ import annotations
 import asyncio
 import logging
 from threading import Thread
+from typing import Any
 
 import websockets
 
 _logger = logging.getLogger(__name__)
 
-_event_loop = None  # asyncio stdlib is not type-hinted
-_ws = None
+_event_loop: asyncio.AbstractEventLoop = None  # type: ignore
+_ws: Any = None
 
 def connect(url: str) -> None:
     """
@@ -71,7 +72,7 @@ def receive() -> str | None:
     try:
         msg = _wait(_ws.recv())
         _logger.debug(f'Received {msg}')
-    except websockets.ConnectionClosed:
+    except websockets.ConnectionClosed:  # type: ignore
         _logger.debug('Connection closed by server.')
         _ws = None
         _event_loop.call_soon_threadsafe(_event_loop.stop)
@@ -100,4 +101,4 @@ async def _connect_async(url):
     # Theoretically this function is meaningless and one can directly use `websockets.connect(url)`,
     # but it will not work, raising "TypeError: A coroutine object is required".
     # Seems a design flaw in websockets.
-    return await websockets.connect(url, max_size=None)
+    return await websockets.connect(url, max_size=None)  # type: ignore

@@ -19,11 +19,11 @@ import torch
 import torch.nn as nn
 import nni.runtime.log
 from nni.common.device import GPUDevice
-from nni.experiment import Experiment, launcher, management, rest
+from nni.experiment import Experiment, RunMode, launcher, management, rest
 from nni.experiment.config import utils
 from nni.experiment.config.base import ConfigBase
 from nni.experiment.config.training_service import TrainingServiceConfig
-from nni.experiment.pipe import Pipe
+from nni.runtime import tuner_command_channel
 from nni.tools.nnictl.command_utils import kill_command
 
 from ..codegen import model_to_pytorch_script
@@ -61,7 +61,7 @@ class RetiariiExeConfig(ConfigBase):
     batch_waiting_time: Optional[int] = None
     nni_manager_ip: Optional[str] = None
     debug: bool = False
-    log_level: Optional[str] = None
+    log_level: str = 'info'
     experiment_working_directory: utils.PathLike = '~/nni-experiments'
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
@@ -186,7 +186,6 @@ class RetiariiExperiment(Experiment):
         self._dispatcher = RetiariiAdvisor()
         self._dispatcher_thread: Optional[Thread] = None
         self._proc: Optional[Popen] = None
-        self._pipe: Optional[Pipe] = None
 
         self.url_prefix = None
 
@@ -259,9 +258,10 @@ class RetiariiExperiment(Experiment):
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        self._proc, self._pipe = launcher.start_experiment_retiarii(self.id, self.config, port, debug)
+        self._proc = launcher.start_experiment('create', self.id, self.config, port, debug,
+                                               RunMode.Background, None, ['retiarii'])
         assert self._proc is not None
-        assert self._pipe is not None
+        tuner_command_channel.connect(f'ws://localhost:{port}/tuner')  # TODO: the url should not be hard coded
 
         self.port = port  # port will be None if start up failed
 
@@ -361,13 +361,9 @@ class RetiariiExperiment(Experiment):
                 _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
                 kill_command(self._proc.pid)
 
-        if self._pipe is not None:
-            self._pipe.close()
-
         self.id = None
         self.port = None
         self._proc = None
-        self._pipe = None
         self._dispatcher = None
         self._dispatcher_thread = None
         _logger.info('Experiment stopped')

@@ -184,14 +184,20 @@ class NNIManager implements Manager {
             this.trainingService = await this.initTrainingService(config);
         }
 
-        this.log.info('Setup tuner...');
-        const dispatcherCommand: string = getMsgDispatcherCommand(config);
-        this.log.debug(`dispatcher command: ${dispatcherCommand}`);
-        const checkpointDir: string = await this.createCheckpointDir();
-        await this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
+        let dispatcherPromise: Promise<IpcInterface> | undefined;
+        if (config.tuner === undefined || config.tuner === null) {
+            // FIXME: it is really smelly
+            dispatcherPromise = createDispatcherInterface();
+        } else {
+            this.log.info('Setup tuner...');
+            const dispatcherCommand: string = getMsgDispatcherCommand(config);
+            this.log.debug(`dispatcher command: ${dispatcherCommand}`);
+            const checkpointDir: string = await this.createCheckpointDir();
+            await this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
+        }
         this.setStatus('RUNNING');
         await this.storeExperimentProfile();
-        this.run().catch((err: Error) => {
+        this.run(dispatcherPromise).catch((err: Error) => {
             this.criticalError(err);
         });
 
@@ -217,11 +223,16 @@ class NNIManager implements Manager {
             return;
         }
 
-        this.log.info('Setup tuner...');
-        const dispatcherCommand: string = getMsgDispatcherCommand(config);
-        this.log.debug(`dispatcher command: ${dispatcherCommand}`);
-        const checkpointDir: string = await this.createCheckpointDir();
-        await this.setupTuner(dispatcherCommand, undefined, 'resume', checkpointDir);
+        let dispatcherPromise: Promise<IpcInterface> | undefined;
+        if (config.tuner === undefined || config.tuner === null) {
+            dispatcherPromise = createDispatcherInterface();
+        } else {
+            this.log.info('Setup tuner...');
+            const dispatcherCommand: string = getMsgDispatcherCommand(config);
+            this.log.debug(`dispatcher command: ${dispatcherCommand}`);
+            const checkpointDir: string = await this.createCheckpointDir();
+            await this.setupTuner(dispatcherCommand, undefined, 'resume', checkpointDir);
+        }
 
         const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
 
@@ -251,7 +262,7 @@ class NNIManager implements Manager {
         this.setStatus('RUNNING');
 
         // TO DO: update database record for resume event
-        this.run().catch((err: Error) => {
+        this.run(dispatcherPromise).catch((err: Error) => {
             this.criticalError(err);
         });
     }
@@ -725,7 +736,11 @@ class NNIManager implements Manager {
         return this.dataStore.storeExperimentProfile(this.experimentProfile);
     }
 
-    private async run(): Promise<void> {
+    private async run(dispatcherPromise?: Promise<IpcInterface>): Promise<void> {
+        if (dispatcherPromise !== undefined) {
+            this.dispatcher = await dispatcherPromise;
+        }
+
         assert(this.dispatcher !== undefined);
 
         this.addEventListeners();
