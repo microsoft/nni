@@ -10,7 +10,7 @@ No guarantee for forward-compatibility.
 import logging
 
 import nni
-from .formatting import deformat_parameters
+from .formatting import FormattedParameters, FormattedSearchSpace, ParameterSpec, deformat_parameters
 
 _logger = logging.getLogger(__name__)
 
@@ -36,13 +36,13 @@ class Deduplicator:
     See random tuner's source code for example usage.
     """
 
-    def __init__(self, formatted_search_space):
+    def __init__(self, formatted_search_space: FormattedSearchSpace):
         self._space = formatted_search_space
         self._never_dup = any(_spec_never_dup(spec) for spec in self._space.values())
         self._history = set()
         self._grid_search = None
 
-    def __call__(self, formatted_parameters):
+    def __call__(self, formatted_parameters: FormattedParameters) -> FormattedParameters:
         if self._never_dup or self._not_dup(formatted_parameters):
             return formatted_parameters
 
@@ -52,20 +52,20 @@ class Deduplicator:
             self._init_grid_search()
 
         while True:
-            new = self._grid_search._suggest()
+            new = self._grid_search._suggest()  # type: ignore
             if new is None:
                 raise nni.NoMoreTrialError()
             if self._not_dup(new):
                 return new
 
-    def _init_grid_search(self):
+    def _init_grid_search(self) -> None:
         from nni.algorithms.hpo.gridsearch_tuner import GridSearchTuner
         self._grid_search = GridSearchTuner()
         self._grid_search.history = self._history
         self._grid_search.space = self._space
         self._grid_search._init_grid()
 
-    def _not_dup(self, formatted_parameters):
+    def _not_dup(self, formatted_parameters: FormattedParameters) -> bool:
         params = deformat_parameters(formatted_parameters, self._space)
         params_str = nni.dump(params, sort_keys=True)
         if params_str in self._history:
@@ -74,7 +74,7 @@ class Deduplicator:
             self._history.add(params_str)
             return True
 
-def _spec_never_dup(spec):
+def _spec_never_dup(spec: ParameterSpec) -> bool:
     if spec.is_nested():
         return False  # "not chosen" duplicates with "not chosen"
     if spec.categorical or spec.q is not None:
