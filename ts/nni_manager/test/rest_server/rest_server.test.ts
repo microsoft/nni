@@ -7,7 +7,7 @@ import path from 'path';
 
 import fetch from 'node-fetch';
 
-import globals, { resetGlobals } from 'common/globals/unittest';
+import globals from 'common/globals/unittest';
 import { RestServer, UnitTestHelpers } from 'rest_server';
 import * as mock_netron_server from './mock_netron_server';
 
@@ -121,7 +121,7 @@ before(async () => {
 
 after(async () => {
     await restServer.shutdown();
-    resetGlobals();
+    globals.reset();
 });
 
 async function configRestServer(urlPrefix?: string) {
