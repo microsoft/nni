@@ -82,7 +82,7 @@ def process_github_link(line):
 for root, dirs, files in os.walk('en_US'):
     root = Path(root)
     for file in files:
-        if not file.endswith('.md') or file == 'Release_v1.0.md':
+        if not file.endswith('.md'):
             continue
 
         with open(root / file) as f:

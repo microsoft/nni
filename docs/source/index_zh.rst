@@ -23,7 +23,6 @@ Neural Network Intelligence
     参考<reference>
     示例与解决方案<misc/community_sharings>
     研究和出版物 <misc/research_publications>
-    常见问题 <misc/faq>
     从源代码安装 <notes/build_from_source>
     如何贡献 <notes/contributing>
     更改日志 <Release>

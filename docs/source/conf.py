@@ -162,7 +162,6 @@ exclude_patterns = [
     '_build',
     'Thumbs.db',
     '.DS_Store',
-    'Release_v1.0.md',
     '**.ipynb_checkpoints',
     # Exclude translations. They will be added back via replacement later if language is set.
     '**_zh.rst',

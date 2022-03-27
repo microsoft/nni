@@ -38,7 +38,6 @@ Neural Network Intelligence
 
     Use Cases and Solutions <misc/community_sharings>
     Research and Publications <misc/research_publications>
-    FAQ <misc/faq>
     notes/build_from_source
     Contribution Guide <notes/contributing>
     Change Log <Release>
@@ -48,7 +47,7 @@ Neural Network Intelligence
 * :doc:`Hyperparameter Tuning </hpo/overview>`,
 * :doc:`Neural Architecture Search </nas/index>`,
 * :doc:`Model Compression </compression/index>`,
-* :doc:`Feature Engineering </FeatureEngineering/Overview>`.
+* :doc:`Feature Engineering </feature_engineering/overview>`.
 
 .. Can't use section title here due to the limitation of toc
 
@@ -207,7 +206,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 .. codesnippetcard::
    :icon: ../img/thumbnails/feature-engineering-small.svg
    :title: Feature Engineering
-   :link: FeatureEngineering/Overview
+   :link: feature_engineering/overview
 
    .. code-block::
 

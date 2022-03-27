@@ -13,6 +13,6 @@
 ..  toctree::
     :maxdepth: 2
 
-    概述 <FeatureEngineering/Overview>
-    GradientFeatureSelector <FeatureEngineering/GradientFeatureSelector>
-    GBDTSelector <FeatureEngineering/GBDTSelector>
+    概述 <feature_engineering/overview>
+    GradientFeatureSelector <feature_engineering/GradientFeatureSelector>
+    GBDTSelector <feature_engineering/GBDTSelector>

@@ -11,6 +11,6 @@ For details, please refer to the following tutorials:
 ..  toctree::
     :maxdepth: 2
 
-    Overview <FeatureEngineering/Overview>
-    GradientFeatureSelector <FeatureEngineering/GradientFeatureSelector>
-    GBDTSelector <FeatureEngineering/GBDTSelector>
+    Overview <feature_engineering/overview>
+    GradientFeatureSelector <feature_engineering/gradient_feature_selector>
+    GBDTSelector <feature_engineering/gbdt_selector>
