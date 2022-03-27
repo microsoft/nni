@@ -6,7 +6,6 @@ import os
 import gc
 import psutil
 import sys
-import copy
 import numpy as np
 import torch
 import torchvision.models as models
@@ -19,10 +18,9 @@ import unittest
 from unittest import TestCase, main
 
 from nni.compression.pytorch import ModelSpeedup, apply_compression_results
-from nni.algorithms.compression.pytorch.pruning import L1FilterPruner, L2FilterPruner, LevelPruner, FPGMPruner, SlimPruner, ActivationMeanRankFilterPruner
+from nni.algorithms.compression.pytorch.pruning import L1FilterPruner, LevelPruner
 from nni.algorithms.compression.pytorch.pruning.weight_masker import WeightMasker
 from nni.algorithms.compression.pytorch.pruning.dependency_aware_pruner import DependencyAwarePruner
-from nni.compression.pytorch.utils.counter import count_flops_params
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -303,34 +301,6 @@ def channel_prune(model):
     pruner.export_model(model_path=MODEL_FILE, mask_path=MASK_FILE)
 
 
-class SimpleModel(nn.Module):
-    def __init__(self, num_classes, use_inorm=True):
-        super(SimpleModel, self).__init__()
-        self.use_inorm = use_inorm
-        self.conv1 = nn.Conv2d(3, 32, 3)
-        if self.use_inorm:
-            self.inorm1 = nn.InstanceNorm2d(32, affine=False)
-        self.conv2 = nn.Conv2d(32, 64, 3)
-        if self.use_inorm:
-            self.inorm2 = nn.InstanceNorm2d(64, affine=False)
-        self.conv3 = nn.Conv2d(64, 128, 3)
-        self.fc = nn.Linear(128, 256)
-        self.classifier = nn.Linear(256, num_classes)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        if self.use_inorm:
-            x = self.inorm1(x)
-        x = F.relu(self.conv2(x))
-        if self.use_inorm:
-            x = self.inorm2(x)
-        x = F.relu(self.conv3(x))
-        x = nn.functional.adaptive_avg_pool2d(x, 1).reshape(x.shape[0], -1)
-        x = self.fc(x)
-        x = self.classifier(x)
-        return x
-
-
 class SpeedupTestCase(TestCase):
 
     def test_speedup_bigmodel(self):
@@ -589,78 +559,6 @@ class SpeedupTestCase(TestCase):
             os.remove(MASK_FILE)
         # GC to release memory
         gc.collect(2)
-
-    def test_instancenorm2d_module(self):
-        def model_pruning(model: nn.Module,
-                          input_size=[1, 3, 128, 128],
-                          sparsity=0.2,
-                          prune_mod="FPGM",
-                          output_prune="pruning_output",
-                          mask_file="",
-                          dependency_aware=True,
-                          device="cpu",
-                          verbose=False,
-                          **kwargs):
-            info = ""
-            model = model.to(device)
-            if not os.path.exists(output_prune): os.makedirs(output_prune)
-            prune_file = os.path.join(output_prune, 'pruned_naive_{}filter.pth'.format(prune_mod))
-            onnx_file = os.path.join(output_prune, 'pruned_naive_{}filter.onnx'.format(prune_mod))
-            mask_file = os.path.join(output_prune,
-                                     'mask_naive_{}filter.pth'.format(prune_mod)) if not mask_file else mask_file
-            dummy_input = torch.randn(input_size).to(device)
-            flops, params, _ = count_flops_params(model, dummy_input, verbose=verbose)
-            info += f"origin-Model FLOPs {flops / 1e6:.2f}M, Params {params / 1e6:.2f}M\n"
-            if prune_mod.lower() == "Level".lower():
-                config = [{'sparsity': sparsity, 'op_types': ['Conv2d']}]
-                pruner = LevelPruner(model, config)
-            elif prune_mod.lower() == "L1".lower():
-                config = [{'sparsity': sparsity, 'op_types': ['Conv2d']}]
-                pruner = L1FilterPruner(model, config, dependency_aware, dummy_input=dummy_input)
-            elif prune_mod.lower() == "L2".lower():
-                config = [{'sparsity': sparsity, 'op_types': ['Conv2d']}]
-                pruner = L2FilterPruner(model, config, dependency_aware, dummy_input=dummy_input)
-            elif prune_mod.lower() == "FPGM".lower():
-                config = [{'sparsity': sparsity, 'op_types': ['Conv2d']}]
-                pruner = FPGMPruner(model, config, dependency_aware, dummy_input=dummy_input)
-            elif prune_mod.lower() == "Slim".lower():
-                config = [{'sparsity': sparsity, 'op_types': ['BatchNorm2d']}]
-                pruner = ActivationMeanRankFilterPruner()
-            else:
-                raise Exception("Error prune_mod:{}".format(prune_mod))
-
-            pruner.compress()
-            out = model(dummy_input)
-            flops, params, _ = count_flops_params(model, dummy_input, verbose=verbose)
-            info += f"pruner-Model FLOPs {flops / 1e6:.2f}M, Params {params / 1e6:.2f}M\n"
-            pruner.export_model(model_path=prune_file, mask_path=mask_file,
-                                onnx_path=onnx_file, input_shape=dummy_input.shape,
-                                device=device,
-                                opset_version=11)
-            pruner._unwrap_model()
-            if not os.path.exists(mask_file): raise Exception("not found mask file:{}".format(mask_file))
-            print("load mask file to speed up:{}".format(mask_file))
-            speed_up = ModelSpeedup(model, dummy_input=dummy_input, masks_file=mask_file)
-            speed_up.speedup_model()
-            out = model(dummy_input)
-            flops, params, _ = count_flops_params(model, dummy_input, verbose=verbose)
-            info += f"speedup-Model FLOPs {flops / 1e6:.2f}M, Params {params / 1e6:.2f}M\n"
-            print(info)
-            return model
-
-        device = "cuda:0"
-        num_classes = 20
-        input_size = [1, 3, 128, 128]
-        model = SimpleModel(num_classes=num_classes, use_inorm=True)
-        model.eval()
-        inputs = torch.randn(input_size)
-        model = model.to(device)
-        inputs = inputs.to(device)
-        output = model(inputs)
-        prune_model = copy.deepcopy(model)
-        prune_model = model_pruning(prune_model, input_size=input_size, sparsity=0.2, dependency_aware=True,
-                                    device=device)
-        print("inputs:", inputs.shape)
 
 
 if __name__ == '__main__':

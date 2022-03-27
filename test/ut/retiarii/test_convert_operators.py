@@ -1387,5 +1387,23 @@ class TestOperators(unittest.TestCase, ConvertMixin):
         x = torch.randn(1, 2, 3, 1, requires_grad=False).int()
         self.checkExportImport(SimpleOp(), (x, ))
 
+    def test_basic_instancenorm_2d(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x):
+                out = torch.nn.InstanceNorm2d(x)
+                return out
+
+        x = torch.randn(2, 2, 3, 1, requires_grad=False).int()
+        self.checkExportImport(SimpleOp(), (x,))
+
+    def test_basic_instancenorm_2d(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x):
+                out = torch.nn.PixelShuffle(x)
+                return out
+
+        x = torch.randn(4, 9, 4, 4, requires_grad=False).int()
+        self.checkExportImport(SimpleOp(), (x,))
+
 class TestOperatorsWithShape(TestOperators, ConvertWithShapeMixin):
     pass
