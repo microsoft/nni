@@ -1389,6 +1389,9 @@ class TestOperators(unittest.TestCase, ConvertMixin):
 
     def test_basic_instancenorm_2d(self):
         class SimpleOp(nn.Module):
+            def __init__(self):
+                super().__init__()
+                
             def forward(self, x):
                 out = torch.nn.InstanceNorm2d(x)
                 return out
@@ -1396,8 +1399,11 @@ class TestOperators(unittest.TestCase, ConvertMixin):
         x = torch.randn(2, 2, 3, 1, requires_grad=False).int()
         self.checkExportImport(SimpleOp(), (x,))
 
-    def test_basic_instancenorm_2d(self):
+    def test_basic_pixelshuffle(self):
         class SimpleOp(nn.Module):
+            def __init__(self):
+                super().__init__()
+
             def forward(self, x):
                 out = torch.nn.PixelShuffle(x)
                 return out
