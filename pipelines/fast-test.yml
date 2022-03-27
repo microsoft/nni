@@ -25,12 +25,12 @@ stages:
 
     - script: |
         cd docs
-        make -e SPHINXOPTS="-W --keep-going -T" html
+        make -e SPHINXOPTS="-W --keep-going -T -q" html
       displayName: Sphinx sanity check
 
     - script: |
         cd docs
-        make -e SPHINXOPTS="-W --keep-going -T -D language='zh'" html
+        make -e SPHINXOPTS="-W --keep-going -T -q -D language='zh'" html
       displayName: Sphinx sanity check (Chinese)
 
     - script: |
