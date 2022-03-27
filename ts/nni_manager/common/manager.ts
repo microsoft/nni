@@ -36,9 +36,6 @@ interface NNIManagerStatus {
 abstract class Manager {
     public abstract startExperiment(experimentConfig: ExperimentConfig): Promise<string>;
     public abstract resumeExperiment(readonly: boolean): Promise<void>;
-    public abstract stopExperiment(): Promise<void>;
-    public abstract stopExperimentTopHalf(): Promise<void>;
-    public abstract stopExperimentBottomHalf(): Promise<void>;
     public abstract getExperimentProfile(): Promise<ExperimentProfile>;
     public abstract updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void>;
     public abstract importData(data: string): Promise<void>;

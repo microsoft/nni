@@ -135,7 +135,7 @@ describe('Unit test for nnimanager', function () {
 
     after(async () => {
         // FIXME
-        await nniManager.stopExperimentTopHalf();
+        await (nniManager as any).stopExperimentTopHalf();
         cleanupUnitTest();
     })
 

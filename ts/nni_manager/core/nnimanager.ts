@@ -26,7 +26,6 @@ import {
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
-import { RestServer } from '../rest_server';
 
 /**
  * NNIManager which implements Manager interface
@@ -76,6 +75,8 @@ class NNIManager implements Manager {
         if (pipe !== null) {
             this.dispatcher = createDispatcherPipeInterface(pipe);
         }
+
+        globals.shutdown.register('NniManager', this.stopExperiment.bind(this));
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
@@ -294,12 +295,12 @@ class NNIManager implements Manager {
         return this.dataStore.getTrialJobStatistics();
     }
 
-    public async stopExperiment(): Promise<void> {
+    private async stopExperiment(): Promise<void> {
         await this.stopExperimentTopHalf();
         await this.stopExperimentBottomHalf();
     }
 
-    public async stopExperimentTopHalf(): Promise<void> {
+    private async stopExperimentTopHalf(): Promise<void> {
         this.setStatus('STOPPING');
         this.log.info('Stopping experiment, cleaning up ...');
 
@@ -323,7 +324,7 @@ class NNIManager implements Manager {
         this.dispatcher = undefined;
     }
 
-    public async stopExperimentBottomHalf(): Promise<void> {
+    private async stopExperimentBottomHalf(): Promise<void> {
         try {
             const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
 
@@ -351,19 +352,9 @@ class NNIManager implements Manager {
         this.setStatus('STOPPED');
         this.log.info('Experiment stopped.');
 
-        let hasError: boolean = false;
-        try {
-            await this.experimentManager.stop();
-            await component.get<TensorboardManager>(TensorboardManager).stop();
-            await this.dataStore.close();
-            await component.get<RestServer>(RestServer).shutdown();
-        } catch (err) {
-            hasError = true;
-            this.log.error(`${err.stack}`);
-        } finally {
-            await globals.logStream.close();
-            process.exit(hasError ? 1 : 0);
-        }
+        await this.experimentManager.stop();
+        await component.get<TensorboardManager>(TensorboardManager).stop();
+        await this.dataStore.close();
     }
 
     public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {

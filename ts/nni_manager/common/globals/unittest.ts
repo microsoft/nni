@@ -7,10 +7,16 @@
  *
  *  Use this module to replace NNI globals with mocked values:
  *
+ *      import 'common/globals/unittest';
+ *
+ *  Or:
+ *
  *      import globals from 'common/globals/unittest';
  *
  *  You can then edit these mocked globals and the injection will be visible to all modules.
  *  Remember to invoke `resetGlobals()` in "after()" hook if you do so.
+ *
+ *  Attention: TypeScript will remove "unused" import statements. Use the first format when "globals" is never used.
  **/
 
 import os from 'os';
@@ -49,11 +55,14 @@ export function resetGlobals(): void {
     const logStream = {
         writeLine: (_line: string): void => { /* dummy */ },
         writeLineSync: (_line: string): void => { /* dummy */ },
-        close: (): void => { /* dummy */ }
+        close: async (): Promise<void> => { /* dummy */ }
+    };
+    const shutdown = {
+        register: (..._: any): void => { /* dummy */ },
     };
 
     const globalAsAny = global as any;
-    const utGlobals = { args, paths, logStream, reset: resetGlobals };
+    const utGlobals = { args, paths, logStream, shutdown, reset: resetGlobals };
     if (globalAsAny.nni === undefined) {
         globalAsAny.nni = utGlobals;
     } else {
