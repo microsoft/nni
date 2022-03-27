@@ -128,7 +128,7 @@ def add_python(node, speedup):
 def sub_python(node, speedup):
     c_node = node.key_node
     inputs = list(c_node.inputs())
-    constant = None
+    constant = [None, None]
     for i in range(2):
         input_i = inputs[i]
         debug_name = input_i.debugName()
@@ -137,13 +137,15 @@ def sub_python(node, speedup):
             # TODO: what if this input is a constant tensor
 
             if input_i.toIValue() is not None:
-                constant = parse_constant(input_i, speedup)
+                constant[i] = parse_constant(input_i, speedup)
                 break
-    if constant is None:
-        return torch.sub
+    if constant[0] is None and constant[1] is None:
+        new_sub = torch.sub
+    elif constant[0] is not None:
+        new_sub = partial(torch.sub, input=constant)
     else:
-        new_sub = partial(torch.sub, constant)
-        return new_sub
+        new_sub = partial(torch.sub, other=constant)
+    return new_sub
 
 
 def floor_div_python(node, speedup):
