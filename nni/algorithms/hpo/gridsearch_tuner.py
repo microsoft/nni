@@ -2,14 +2,10 @@
 # Licensed under the MIT license.
 
 """
-Grid search tuner for hyper-parameter optimization.
+Grid search tuner.
 
 For categorical parameters this tuner fully explore all combinations.
 For numerical parameters it samples them at progressively decreased intervals.
-
-Use this tuner if you have abundant resource and want to find strictly optimal parameters.
-
-Grid search tuner has no argument.
 """
 
 __all__ = ['GridSearchTuner']
@@ -63,6 +59,35 @@ _logger = logging.getLogger('nni.tuner.gridsearch')
 ##
 
 class GridSearchTuner(Tuner):
+    """
+    Grid search tuner divides search space into evenly spaced grid, and performs brute-force traverse.
+
+    Recommended when the search space is small, or if you want to find strictly optimal hyperparameters.
+
+    **Implementation**
+
+    The original grid search approach performs an exhaustive search through a space consists of ``choice`` and ``randint``.
+
+    NNI's implementation extends grid search to support all search spaces types.
+
+    When the search space contains continuous parameters like ``normal`` and ``loguniform``,
+    grid search tuner works in following steps:
+
+    1. Divide the search space into a grid.
+    2. Perform an exhaustive searth through the grid.
+    3. Subdivide the grid into a finer-grained new grid.
+    4. Goto step 2, until experiment end.
+
+    As a deterministic algorithm, grid search has no argument.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.tuner.name = 'GridSearch'
+    """
+
     def __init__(self):
         self.space = None
 
@@ -175,13 +200,18 @@ class GridSearchTuner(Tuner):
                     mid = (l + r) / 2
                     diff_l = _less(l, mid, spec)
                     diff_r = _less(mid, r, spec)
-                    if diff_l and diff_r:  # we can skip these for non-q, but it will complicate the code
+                    # if l != 0 and r != 1, then they are already in the grid, else they are not
+                    # the special case is needed because for normal distribution 0 and 1 will generate infinity
+                    if (diff_l or l == 0.0) and (diff_r or r == 1.0):
+                        # we can skip these for non-q, but it will complicate the code
                         new_vals.append(mid)
                         updated = True
                     if diff_l:
                         new_divs.append((l, mid))
+                        updated = (updated or l == 0.0)
                     if diff_r:
                         new_divs.append((mid, r))
+                        updated = (updated or r == 1.0)
                 self.grid[i] += new_vals
                 self.divisions[i] = new_divs
 

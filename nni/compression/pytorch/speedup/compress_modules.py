@@ -44,6 +44,7 @@ replace_module = {
     'LayerNorm': lambda module, masks: replace_layernorm(module, masks),
     'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
     'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks)
+    'Flatten': lambda module, masks: no_replace(module, masks)
 }
 
 

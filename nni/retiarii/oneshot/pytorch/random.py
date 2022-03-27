@@ -143,7 +143,8 @@ class SinglePathTrainer(BaseOneShotTrainer):
 
         self.train_loader = torch.utils.data.DataLoader(self.dataset_train,
                                                         batch_size=batch_size,
-                                                        num_workers=workers)
+                                                        num_workers=workers,
+                                                        shuffle=True)
         self.valid_loader = torch.utils.data.DataLoader(self.dataset_valid,
                                                         batch_size=batch_size,
                                                         num_workers=workers)

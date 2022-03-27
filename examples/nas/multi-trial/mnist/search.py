@@ -1,4 +1,6 @@
+import os
 import random
+from pathlib import Path
 
 import nni
 import torch
@@ -93,6 +95,11 @@ def evaluate_model(model_cls):
     # "model_cls" is a class, need to instantiate
     model = model_cls()
 
+    # export model for visualization
+    if 'NNI_OUTPUT_DIR' in os.environ:
+        torch.onnx.export(model, (torch.randn(1, 1, 28, 28), ),
+                          Path(os.environ['NNI_OUTPUT_DIR']) / 'model.onnx')
+
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     transf = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_loader = DataLoader(MNIST('data/mnist', download=True, transform=transf), batch_size=64, shuffle=True)
@@ -100,6 +107,7 @@ def evaluate_model(model_cls):
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
+    model.to(device)
     for epoch in range(3):
         # train the model for one epoch
         train_epoch(model, device, train_loader, optimizer, epoch)
