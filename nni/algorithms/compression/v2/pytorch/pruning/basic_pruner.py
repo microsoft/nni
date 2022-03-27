@@ -125,11 +125,14 @@ class BasicPruner(Pruner):
 
 
 class LevelPruner(BasicPruner):
-    """
+    r"""
+    This is a basic pruner, and in some papers called it magnitude pruning or fine-grained pruning.
+    It will mask the smallest magnitude weights in each specified layer by a saprsity ratio configured in the config list.
+
     Parameters
     ----------
     model : torch.nn.Module
-        Model to be pruned
+        Model to be pruned.
     config_list : List[Dict]
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
@@ -145,18 +148,18 @@ class LevelPruner(BasicPruner):
         operation an example, weight tensor will be split into sub block whose shape is aligned to
         balance_gran. Then finegrained pruning will be applied internal of sub block. This sparsity
         pattern have more chance to achieve better trade-off between model performance and hardware
-        acceleration. Please refer to releated paper for further information 'Balanced Sparsity for 
-        Efficient DNN Inference on GPU'(https://arxiv.org/pdf/1811.00206.pdf).
+        acceleration. Please refer to releated paper for further information `Balanced Sparsity for
+        Efficient DNN Inference on GPU <https://arxiv.org/pdf/1811.00206.pdf>`__.
     balance_gran : list
-        Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning 
+        Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning
         without awaring balance, namely normal finegrained pruning.
         If passing list of int, LevelPruner will prune the model in the granularity of multi-dimension block.
         Attention that the length of balance_gran should be smaller than tensor dimension.
         For instance, in Linear operation, length of balance_gran should be equal or smaller than two since
-        dimension of pruning weight is two. If setting balbance_gran = [5, 5], sparsity = 0.6, pruner will 
-        divide pruning parameters into multiple block with tile size (5,5) and each bank has 5 * 5 values 
-        and 10 values would be kept after pruning. Finegrained pruning is applied in the granularity of block 
-        so that each block will kept same number of non-zero values after pruning. Such pruning method "balance" 
+        dimension of pruning weight is two. If setting balbance_gran = [5, 5], sparsity = 0.6, pruner will
+        divide pruning parameters into multiple block with tile size (5,5) and each bank has 5 * 5 values
+        and 10 values would be kept after pruning. Finegrained pruning is applied in the granularity of block
+        so that each block will kept same number of non-zero values after pruning. Such pruning method "balance"
         the non-zero value in tensor which create chance for better hardware acceleration.
 
         Note: If length of given balance_gran smaller than length of pruning tensor shape, it will be made up
@@ -181,7 +184,16 @@ class LevelPruner(BasicPruner):
 
                 pruning result: Weight tensor whose shape is [64, 64] will be split into 4 [32, 32] sub blocks.
                                 Each sub block will be pruned 256 values.
-                
+
+    Examples
+    --------
+        >>> model = ...
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import LevelPruner
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
+        >>> pruner = LevelPruner(model, config_list)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/level_pruning_torch.py <examples/model_compress/pruning/v2/level_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: Optional[List] = None):
@@ -215,7 +227,7 @@ class NormPruner(BasicPruner):
     Parameters
     ----------
     model : torch.nn.Module
-        Model to be pruned
+        Model to be pruned.
     config_list : List[Dict]
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
@@ -272,11 +284,20 @@ class NormPruner(BasicPruner):
 
 
 class L1NormPruner(NormPruner):
-    """
+    r"""
+    L1 norm pruner computes the l1 norm of the layer weight on the first dimension,
+    then prune the weight blocks on this dimension with smaller l1 norm values.
+    i.e., compute the l1 norm of the filters in convolution layer as metric values,
+    compute the l1 norm of the weight by rows in linear layer as metric values.
+
+    For more details, please refer to `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__.
+
+    In addition, L1 norm pruner also supports dependency-aware mode.
+
     Parameters
     ----------
     model : torch.nn.Module
-        Model to be pruned
+        Model to be pruned.
     config_list : List[Dict]
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
@@ -305,16 +326,21 @@ class L1NormPruner(NormPruner):
 
 
 class L2NormPruner(NormPruner):
-    """
+    r"""
+    L2 norm pruner is a variant of L1 norm pruner.
+    The only different between L2 norm pruner and L1 norm pruner is L2 norm pruner prunes the weight with the smallest L2 norm of the weights.
+
+    L2 norm pruner also supports dependency-aware mode.
+
     Parameters
     ----------
     model : torch.nn.Module
-        Model to be pruned
+        Model to be pruned.
     config_list : List[Dict]
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
-            - op_types : Conv2d and Linear are supported in L1NormPruner.
+            - op_types : Conv2d and Linear are supported in L2NormPruner.
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
@@ -330,6 +356,16 @@ class L2NormPruner(NormPruner):
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
+
+    Examples
+    --------
+        >>> model = ...
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import L2NormPruner
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+        >>> pruner = L2NormPruner(model, config_list)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_torch.py <examples/model_compress/pruning/v2/norm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict],
@@ -338,11 +374,18 @@ class L2NormPruner(NormPruner):
 
 
 class FPGMPruner(BasicPruner):
-    """
+    r"""
+    FPGM pruner prunes the blocks of the weight on the first dimension with the smallest geometric median.
+    FPGM chooses the weight blocks with the most replaceable contribution.
+
+    For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/abs/1811.00250>`__.
+
+    FPGM pruner also supports dependency-aware mode.
+
     Parameters
     ----------
     model : torch.nn.Module
-        Model to be pruned
+        Model to be pruned.
     config_list : List[Dict]
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
@@ -363,6 +406,16 @@ class FPGMPruner(BasicPruner):
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
+
+    Examples
+    --------
+        >>> model = ...
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import FPGMPruner
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+        >>> pruner = FPGMPruner(model, config_list)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/fpgm_pruning_torch.py <examples/model_compress/pruning/v2/fpgm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict],
@@ -396,11 +449,16 @@ class FPGMPruner(BasicPruner):
 
 
 class SlimPruner(BasicPruner):
-    """
+    r"""
+    Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training to identify unimportant channels.
+    The channels with small scaling factor values will be pruned.
+
+    For more details, please refer to `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/abs/1708.06519>`__\.
+
     Parameters
     ----------
     model : torch.nn.Module
-        Model to be pruned
+        Model to be pruned.
     config_list : List[Dict]
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
@@ -432,7 +490,7 @@ class SlimPruner(BasicPruner):
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
         The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
+        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_epochs : int
@@ -444,6 +502,21 @@ class SlimPruner(BasicPruner):
         If prune the model in a global way, all layer weights with same config will be considered uniformly.
         That means a single layer may not reach or exceed the sparsity setting in config,
         but the total pruned weights meet the sparsity setting.
+
+    Examples
+    --------
+        >>> import nni
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import SlimPruner
+        >>> model = ...
+        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
+        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
+        >>> trainer = ...
+        >>> criterion = ...
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+        >>> pruner = SlimPruner(model, config_list, trainer, traced_optimizer, criterion, training_epochs=1)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/slim_pruning_torch.py <examples/model_compress/pruning/v2/slim_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
@@ -507,7 +580,7 @@ class ActivationPruner(BasicPruner):
     Parameters
     ----------
     model : torch.nn.Module
-        Model to be pruned
+        Model to be pruned.
     config_list : List[Dict]
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
@@ -537,7 +610,7 @@ class ActivationPruner(BasicPruner):
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
         The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
+        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_batches
@@ -627,6 +700,82 @@ class ActivationPruner(BasicPruner):
 
 
 class ActivationAPoZRankPruner(ActivationPruner):
+    r"""
+    Activation APoZ rank pruner is a pruner which prunes on the first weight dimension,
+    with the smallest importance criterion ``APoZ`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
+    The pruning criterion ``APoZ`` is explained in the paper `Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures <https://arxiv.org/abs/1607.03250>`__.
+
+    The APoZ is defined as:
+    :math:`APoZ_{c}^{(i)} = APoZ\left(O_{c}^{(i)}\right)=\frac{\sum_{k}^{N} \sum_{j}^{M} f\left(O_{c, j}^{(i)}(k)=0\right)}{N \times M}`
+
+    Activation APoZ rank pruner also supports dependency-aware mode.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned.
+    config_list : List[Dict]
+        Supported keys:
+            - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+            - sparsity_per_layer : Equals to sparsity.
+            - op_types : Conv2d and Linear are supported in ActivationAPoZRankPruner.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
+            - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+    trainer : Callable[[Module, Optimizer, Callable], None]
+        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+        The model will be trained or inferenced `training_epochs` epochs.
+
+        Example::
+
+            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
+                training = model.training
+                model.train(mode=True)
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                for batch_idx, (data, target) in enumerate(train_loader):
+                    data, target = data.to(device), target.to(device)
+                    optimizer.zero_grad()
+                    output = model(data)
+                    loss = criterion(output, target)
+                    loss.backward()
+                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
+                    optimizer.step()
+                model.train(mode=training)
+    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
+        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``..
+    criterion : Callable[[Tensor, Tensor], Tensor]
+        The criterion function used in trainer. Take model output and target value as input, and return the loss.
+    training_batches
+        The batch number used to collect activations.
+    mode : str
+        'normal' or 'dependency_aware'.
+        If prune the model in a dependency-aware way, this pruner will
+        prune the model according to the activation-based metrics and the channel-dependency or
+        group-dependency of the model. In this way, the pruner will force the conv layers
+        that have dependencies to prune the same channels, so the speedup module can better
+        harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
+        , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
+        dependency between the conv layers.
+    dummy_input : Optional[torch.Tensor]
+        The dummy input to analyze the topology constraints. Note that, the dummy_input
+        should on the same device with the model.
+
+    Examples
+    --------
+        >>> import nni
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import ActivationAPoZRankPruner
+        >>> model = ...
+        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
+        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
+        >>> trainer = ...
+        >>> criterion = ...
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+        >>> pruner = ActivationAPoZRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
+    """
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return a matrix that the position of zero in `output` is one, others is zero.
         return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output)
@@ -636,6 +785,80 @@ class ActivationAPoZRankPruner(ActivationPruner):
 
 
 class ActivationMeanRankPruner(ActivationPruner):
+    r"""
+    Activation mean rank pruner is a pruner which prunes on the first weight dimension,
+    with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
+
+    The pruning criterion ``mean activation`` is explained in section 2.2 of the paper `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__.
+
+    Activation mean rank pruner also supports dependency-aware mode.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned.
+    config_list : List[Dict]
+        Supported keys:
+            - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+            - sparsity_per_layer : Equals to sparsity.
+            - op_types : Conv2d and Linear are supported in ActivationPruner.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
+            - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+    trainer : Callable[[Module, Optimizer, Callable], None]
+        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+        The model will be trained or inferenced `training_epochs` epochs.
+
+        Example::
+
+            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
+                training = model.training
+                model.train(mode=True)
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                for batch_idx, (data, target) in enumerate(train_loader):
+                    data, target = data.to(device), target.to(device)
+                    optimizer.zero_grad()
+                    output = model(data)
+                    loss = criterion(output, target)
+                    loss.backward()
+                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
+                    optimizer.step()
+                model.train(mode=training)
+    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
+        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``..
+    criterion : Callable[[Tensor, Tensor], Tensor]
+        The criterion function used in trainer. Take model output and target value as input, and return the loss.
+    training_batches
+        The batch number used to collect activations.
+    mode : str
+        'normal' or 'dependency_aware'.
+        If prune the model in a dependency-aware way, this pruner will
+        prune the model according to the activation-based metrics and the channel-dependency or
+        group-dependency of the model. In this way, the pruner will force the conv layers
+        that have dependencies to prune the same channels, so the speedup module can better
+        harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
+        , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
+        dependency between the conv layers.
+    dummy_input : Optional[torch.Tensor]
+        The dummy input to analyze the topology constraints. Note that, the dummy_input
+        should on the same device with the model.
+
+    Examples
+    --------
+        >>> import nni
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import ActivationMeanRankPruner
+        >>> model = ...
+        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
+        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
+        >>> trainer = ...
+        >>> criterion = ...
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+        >>> pruner = ActivationMeanRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
+    """
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return the activation of `output` directly.
         return self._activation(output.detach())
@@ -645,11 +868,21 @@ class ActivationMeanRankPruner(ActivationPruner):
 
 
 class TaylorFOWeightPruner(BasicPruner):
-    """
+    r"""
+    Taylor FO weight pruner is a pruner which prunes on the first weight dimension,
+    based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity.
+    The estimated importance is defined as the paper `Importance Estimation for Neural Network Pruning <http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf>`__.
+
+    :math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
+
+    Taylor FO weight pruner also supports dependency-aware mode.
+
+    What's more, we provide a global-sort mode for this pruner which is aligned with paper implementation.
+
     Parameters
     ----------
     model : torch.nn.Module
-        Model to be pruned
+        Model to be pruned.
     config_list : List[Dict]
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
@@ -681,7 +914,7 @@ class TaylorFOWeightPruner(BasicPruner):
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
         The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
+        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_batches : int
@@ -703,6 +936,21 @@ class TaylorFOWeightPruner(BasicPruner):
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
+
+    Examples
+    --------
+        >>> import nni
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import TaylorFOWeightPruner
+        >>> model = ...
+        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
+        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
+        >>> trainer = ...
+        >>> criterion = ...
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+        >>> pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/taylorfo_pruning_torch.py <examples/model_compress/pruning/v2/taylorfo_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
@@ -751,7 +999,7 @@ class TaylorFOWeightPruner(BasicPruner):
         return (weight_tensor.detach() * grad.detach()).data.pow(2)
 
     def reset_tools(self):
-        hook_targets = {layer_info.name: layer_info.module.weight for layer_info, _ in self._detect_modules_to_compress()}
+        hook_targets = {name: wrapper.weight for name, wrapper in self.get_modules_wrapper().items()}
         collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)
         if self.data_collector is None:
             self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
@@ -772,13 +1020,17 @@ class TaylorFOWeightPruner(BasicPruner):
 
 
 class ADMMPruner(BasicPruner):
-    """
-    ADMM (Alternating Direction Method of Multipliers) Pruner is a kind of mathematical optimization technique.
-    The metric used in this pruner is the absolute value of the weight.
-    In each iteration, the weight with small magnitudes will be set to zero.
-    Only in the final iteration, the mask will be generated and apply to model wrapper.
+    r"""
+    Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
+    by decomposing the original nonconvex problem into two subproblems that can be solved iteratively.
+    In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. 
 
-    The original paper refer to: https://arxiv.org/abs/1804.03294.
+    During the process of solving these two subproblems, the weights of the original model will be changed.
+    Then a fine-grained pruning will be applied to prune the model according to the config list given.
+
+    This solution framework applies both to non-structured and different variations of structured pruning schemes.
+
+    For more details, please refer to `A Systematic DNN Weight Pruning Framework using Alternating Direction Method of Multipliers <https://arxiv.org/abs/1804.03294>`__.
 
     Parameters
     ----------
@@ -814,13 +1066,28 @@ class ADMMPruner(BasicPruner):
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
         The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
+        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     iterations : int
         The total iteration number in admm pruning algorithm.
     training_epochs : int
         The epoch number for training model in each iteration.
+
+    Examples
+    --------
+        >>> import nni
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import ADMMPruner
+        >>> model = ...
+        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
+        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
+        >>> trainer = ...
+        >>> criterion = ...
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+        >>> pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=10, training_epochs=1)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/admm_pruning_torch.py <examples/model_compress/pruning/v2/admm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],

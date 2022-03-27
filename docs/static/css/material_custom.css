@@ -1,3 +1,30 @@
+/* Material icon: https://developers.google.com/fonts/docs/material_icons */
+/* Icon library: https://fonts.google.com/icons */
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;  /* Preferred icon size */
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+  
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+  
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+  
+    /* Support for IE. */
+    font-feature-settings: 'liga';
+}
+
 /* viewcode link should have left padding */
 span.viewcode-link {
     padding-left: 0.6rem;
@@ -10,6 +37,37 @@ dt.sig-object {
     padding: 0.5rem;
     border-left: 0.2rem solid #ec407a;  /* this should be matched with theme color. */
     word-wrap: break-word;
+}
+
+.class > dt.sig-object {
+    border-left: none;                    /* remove left border */
+    border-top: 0.18rem solid #ec407a;  /* this should be matched with theme color. */
+}
+
+.function > dt.sig-object {
+    border-left: none;                    /* remove left border */
+    border-top: 0.18rem solid #ec407a;  /* this should be matched with theme color. */
+}
+
+.exception > dt.sig-object {
+    border-left: none;                    /* remove left border */
+    border-top: 0.18rem solid #ec407a;  /* this should be matched with theme color. */
+}
+
+/* Padding on parameter list is not needed */
+dl.field-list > dt {
+    padding-left: 0 !important;
+}
+
+dl.field-list > dd {
+    margin-left: 1.5em;
+}
+
+/* show headerlink when hover/focus */
+.headerlink:focus, .headerlink:hover {
+    -webkit-transform: translate(0);
+    transform: translate(0);
+    opacity: 1;
 }
 
 /* logo is too large */
@@ -46,4 +104,116 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
 /* toc style */
 .md-nav span.caption {
     margin-top: 1.25em;
+}
+
+/* citation style */
+.citation dt {
+    padding-right: 1em;
+}
+
+/* for release icon, on home page */
+.release-icon {
+    margin-left: 8px;
+    width: 40px;
+}
+
+/* Similar to cardlink, but used in codesnippet in index page. see sphinx_gallery.css */
+.codesnippet-card-container {
+    display: flex;
+    flex-flow: wrap row;
+}
+
+.codesnippet-card.admonition {
+    border-left: 0;
+    padding: 0;
+    margin: .5rem 1rem 1rem 0rem;
+    width: 100%;
+}
+
+/* Controlling the cards in containers only */
+.codesnippet-card-container .codesnippet-card.admonition {
+    width: 47%;
+}
+
+@media only screen and (max-width:59.9375em) {
+    .codesnippet-card-container .codesnippet-card.admonition {
+        width: 100%;
+    }
+}
+
+.codesnippet-card .codesnippet-card-body {
+    min-height: 4rem;
+    position: relative;
+    padding: 0.9rem 0.9rem 3rem 0.9rem;
+}
+
+.codesnippet-card .codesnippet-card-footer {
+    padding: 0.8rem 0.9rem;
+    border-top: 1px solid #ddd;
+    margin: 0 !important;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+.codesnippet-card a:not(:hover) {
+    color: rgba(0, 0, 0, .68);
+}
+
+.codesnippet-card-title-container {
+    margin-top: 0.3rem;
+    position: relative;
+}
+
+.codesnippet-card-title-container h4 {
+    padding-left: 2.3rem;
+    line-height: 1.6rem;
+    height: 1.6rem;
+    margin-top: 0;
+}
+
+.codesnippet-card-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.codesnippet-card-icon img {
+    max-width: 100%;
+    max-height: 100%;
+    /* horizontal and vertical center */
+    /* https://stackoverflow.com/questions/7273338/how-to-vertically-align-an-image-inside-a-div */
+    text-align: center;
+    vertical-align: middle;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+}
+
+.codesnippet-card-icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    padding: 0;
+}
+
+.codesnippet-card-link {
+    position: relative;
+}
+
+.codesnippet-card-link .material-icons {
+    position: absolute;
+    right: 0;
+}
+
+/* fixes reference overlapping issue */
+/* This is originally defined to be negative in application_fixes.css */
+/* They did that to ensure the header doesn't disappear in jump links */
+/* We did this by using scroll-margin-top instead */
+dt:target {
+    margin-top: 0.15rem !important;
+    padding-top: 0.5rem !important;
+    scroll-margin-top: 3.5rem;
 }

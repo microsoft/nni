@@ -57,6 +57,8 @@ def main(args):
 
     # the configuration for training control
     nas_config = NASConfig(
+        perf_metric=args.perf_metric,
+        lut_load=args.lut_load,
         model_dir=args.snapshot,
         nas_lr=args.theta_lr,
         mode=args.mode,
@@ -150,6 +152,15 @@ def main(args):
 
 
 def parse_args():
+    def str2bool(s):
+        if isinstance(s, bool):
+            return s
+        if s.lower() in ('yes', 'true', 't', 'y', '1'):
+            return True
+        if s.lower() in ('no', 'false', 'f', 'n', '0'):
+            return False
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
     """ Parse the user arguments. """
     parser = argparse.ArgumentParser(description="FBNet for PFLD")
     parser.add_argument("--dev_id", dest="dev_id", default="0", type=str)
@@ -174,6 +185,16 @@ def parse_args():
     )
     parser.add_argument("--train_batchsize", default=256, type=int)
     parser.add_argument("--val_batchsize", default=128, type=int)
+    parser.add_argument(
+        "--perf_metric", default="flops", type=str, choices=["flops", "latency"]
+    )
+    parser.add_argument(
+        "--lut_load", type=str2bool, default=False
+    )
+    parser.add_argument(
+        "--lut_load_format", default="json", type=str, choices=["json", "numpy"]
+    )
+
     args = parser.parse_args()
     args.snapshot = os.path.join(args.snapshot, 'supernet')
     args.log_file = os.path.join(args.snapshot, "{}.log".format('supernet'))

@@ -8,10 +8,13 @@ to tell whether this trial can be early stopped or not.
 See :class:`Assessor`' specification and ``docs/en_US/assessors.rst`` for details.
 """
 
+from __future__ import annotations
+
 from enum import Enum
 import logging
 
 from .recoverable import Recoverable
+from .typehint import TrialMetric
 
 __all__ = ['AssessResult', 'Assessor']
 
@@ -54,7 +57,7 @@ class Assessor(Recoverable):
     :class:`~nni.algorithms.hpo.curvefitting_assessor.CurvefittingAssessor`
     """
 
-    def assess_trial(self, trial_job_id, trial_history):
+    def assess_trial(self, trial_job_id: str, trial_history: list[TrialMetric]) -> AssessResult:
         """
         Abstract method for determining whether a trial should be killed. Must override.
 
@@ -91,7 +94,7 @@ class Assessor(Recoverable):
         """
         raise NotImplementedError('Assessor: assess_trial not implemented')
 
-    def trial_end(self, trial_job_id, success):
+    def trial_end(self, trial_job_id: str, success: bool) -> None:
         """
         Abstract method invoked when a trial is completed or terminated. Do nothing by default.
 
@@ -103,22 +106,22 @@ class Assessor(Recoverable):
             True if the trial successfully completed; False if failed or terminated.
         """
 
-    def load_checkpoint(self):
+    def load_checkpoint(self) -> None:
         """
         Internal API under revising, not recommended for end users.
         """
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Load checkpoint ignored by assessor, checkpoint path: %s', checkpoin_path)
 
-    def save_checkpoint(self):
+    def save_checkpoint(self) -> None:
         """
         Internal API under revising, not recommended for end users.
         """
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Save checkpoint ignored by assessor, checkpoint path: %s', checkpoin_path)
 
-    def _on_exit(self):
+    def _on_exit(self) -> None:
         pass
 
-    def _on_error(self):
+    def _on_error(self) -> None:
         pass

@@ -9,6 +9,10 @@ from contextlib import contextmanager
 from typing import Any, List, Dict
 from pathlib import Path
 
+from nni.common.hpo_utils import ParameterSpec
+
+__all__ = ['NoContextError', 'ContextStack', 'ModelNamespace']
+
 
 def import_(target: str, allow_none: bool = False) -> Any:
     if target is None:
@@ -16,13 +20,6 @@ def import_(target: str, allow_none: bool = False) -> Any:
     path, identifier = target.rsplit('.', 1)
     module = __import__(path, globals(), locals(), [identifier])
     return getattr(module, identifier)
-
-
-def version_larger_equal(a: str, b: str) -> bool:
-    # TODO: refactor later
-    a = a.split('+')[0]
-    b = b.split('+')[0]
-    return tuple(map(int, a.split('.'))) >= tuple(map(int, b.split('.')))
 
 
 _last_uid = defaultdict(int)
@@ -72,12 +69,13 @@ def get_importable_name(cls, relocate_module=False):
 
 
 class NoContextError(Exception):
+    """Exception raised when context is missing."""
     pass
 
 
 class ContextStack:
     """
-    This is to maintain a globally-accessible context envinronment that is visible to everywhere.
+    This is to maintain a globally-accessible context environment that is visible to everywhere.
 
     Use ``with ContextStack(namespace, value):`` to initiate, and use ``get_current_context(namespace)`` to
     get the corresponding value in the namespace.
@@ -115,43 +113,78 @@ class ContextStack:
 
 class ModelNamespace:
     """
-    To create an individual namespace for models to enable automatic numbering.
+    To create an individual namespace for models:
+
+    1. to enable automatic numbering;
+    2. to trace general information (like creation of hyper-parameters) of model.
+
+    A namespace is bounded to a key. Namespace bounded to different keys are completed isolated.
+    Namespace can have sub-namespaces (with the same key). The numbering will be chained (e.g., ``model_1_4_2``).
     """
 
     def __init__(self, key: str = _DEFAULT_MODEL_NAMESPACE):
         # for example, key: "model_wrapper"
         self.key = key
 
+        # the "path" of current name
+        # By default, it's ``[]``
+        # If a ``@model_wrapper`` is nested inside a model_wrapper, it will become something like ``[1, 3, 2]``.
+        # See ``__enter__``.
+        self.name_path: List[int] = []
+
+        # parameter specs.
+        # Currently only used trace calls of ModelParameterChoice.
+        self.parameter_specs: List[ParameterSpec] = []
+
     def __enter__(self):
         # For example, currently the top of stack is [1, 2, 2], and [1, 2, 2, 3] is used,
         # the next thing up is [1, 2, 2, 4].
         # `reset_uid` to count from zero for "model_wrapper_1_2_2_4"
         try:
-            current_context = ContextStack.top(self.key)
-            next_uid = uid(self._simple_name(self.key, current_context))
-            ContextStack.push(self.key, current_context + [next_uid])
-            reset_uid(self._simple_name(self.key, current_context + [next_uid]))
+            parent_context: 'ModelNamespace' = ModelNamespace.current_context(self.key)
+            next_uid = uid(parent_context._simple_name())
+            self.name_path = parent_context.name_path + [next_uid]
+            ContextStack.push(self.key, self)
+            reset_uid(self._simple_name())
         except NoContextError:
-            ContextStack.push(self.key, [])
-            reset_uid(self._simple_name(self.key, []))
+            # not found, no existing namespace
+            self.name_path = []
+            ContextStack.push(self.key, self)
+            reset_uid(self._simple_name())
 
     def __exit__(self, *args, **kwargs):
         ContextStack.pop(self.key)
 
+    def _simple_name(self) -> str:
+        return self.key + ''.join(['_' + str(k) for k in self.name_path])
+
+    def __repr__(self):
+        return f'ModelNamespace(name={self._simple_name()}, num_specs={len(self.parameter_specs)})'
+
+    # Access the current context in the model #
+
+    @staticmethod
+    def current_context(key: str = _DEFAULT_MODEL_NAMESPACE) -> 'ModelNamespace':
+        """Get the current context in key."""
+        try:
+            return ContextStack.top(key)
+        except NoContextError:
+            raise NoContextError('ModelNamespace context is missing. You might have forgotten to use `@model_wrapper`.')
+
     @staticmethod
     def next_label(key: str = _DEFAULT_MODEL_NAMESPACE) -> str:
+        """Get the next label for API calls, with automatic numbering."""
         try:
             current_context = ContextStack.top(key)
         except NoContextError:
             # fallback to use "default" namespace
-            return ModelNamespace._simple_name('default', [uid()])
+            # it won't be registered
+            warnings.warn('ModelNamespace is missing. You might have forgotten to use `@model_wrapper`. '
+                          'Some features might not work. This will be an error in future releases.', RuntimeWarning)
+            current_context = ModelNamespace('default')
 
-        next_uid = uid(ModelNamespace._simple_name(key, current_context))
-        return ModelNamespace._simple_name(key, current_context + [next_uid])
-
-    @staticmethod
-    def _simple_name(key: str, lst: List[Any]) -> str:
-        return key + ''.join(['_' + str(k) for k in lst])
+        next_uid = uid(current_context._simple_name())
+        return current_context._simple_name() + '_' + str(next_uid)
 
 
 def get_current_context(key: str) -> Any:

@@ -63,6 +63,10 @@ stages:
         python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
       displayName: flake8
 
+    - script: |
+        python -m pyright nni
+      displayName: Type Check
+
   - job: typescript
     pool:
       vmImage: ubuntu-latest

@@ -107,6 +107,7 @@ def evaluate_model(model_cls):
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
+    model.to(device)
     for epoch in range(3):
         # train the model for one epoch
         train_epoch(model, device, train_loader, optimizer, epoch)

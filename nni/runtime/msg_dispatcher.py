@@ -212,6 +212,7 @@ class MsgDispatcher(MsgDispatcherBase):
         except Exception as e:
             _logger.error('Assessor error')
             _logger.exception(e)
+            raise
 
         if isinstance(result, bool):
             result = AssessResult.Good if result else AssessResult.Bad

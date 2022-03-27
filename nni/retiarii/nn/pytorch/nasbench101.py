@@ -9,7 +9,7 @@ import torch.nn as nn
 from nni.retiarii.mutator import InvalidMutation, Mutator
 from nni.retiarii.graph import Model
 from .api import InputChoice, ValueChoice, LayerChoice
-from .utils import Mutable, generate_new_label, get_fixed_dict
+from .mutation_utils import Mutable, generate_new_label, get_fixed_dict
 
 _logger = logging.getLogger(__name__)
 
@@ -219,11 +219,13 @@ class _NasBench101CellFixed(nn.Module):
 
 class NasBench101Cell(Mutable):
     """
-    Cell structure that is proposed in NAS-Bench-101 [nasbench101]_ .
+    Cell structure that is proposed in NAS-Bench-101.
 
-    This cell is usually used in evaluation of NAS algorithms because there is a ``comprehensive analysis'' of this search space
-    available, which includes a full architecture-dataset that ``maps 423k unique architectures to metrics
-    including run time and accuracy''. You can also use the space in your own space design, in which scenario it should be possible
+    Refer to :footcite:t:`ying2019bench` for details.
+
+    This cell is usually used in evaluation of NAS algorithms because there is a "comprehensive analysis" of this search space
+    available, which includes a full architecture-dataset that "maps 423k unique architectures to metrics
+    including run time and accuracy". You can also use the space in your own space design, in which scenario it should be possible
     to leverage results in the benchmark to narrow the huge space down to a few efficient architectures.
 
     The space of this cell architecture consists of all possible directed acyclic graphs on no more than ``max_num_nodes`` nodes,
@@ -232,7 +234,7 @@ class NasBench101Cell(Mutable):
     To align with the paper settings, two vertices specially labeled as operation IN and OUT, are also counted into
     ``max_num_nodes`` in our implementaion, the default value of ``max_num_nodes`` is 7 and ``max_num_edges`` is 9.
 
-    Input of this cell should be of shape :math:`[N, C_{in}, *]`, while output should be `[N, C_{out}, *]`. The shape
+    Input of this cell should be of shape :math:`[N, C_{in}, *]`, while output should be :math:`[N, C_{out}, *]`. The shape
     of each hidden nodes will be first automatically computed, depending on the cell structure. Each of the ``op_candidates``
     should be a callable that accepts computed ``num_features`` and returns a ``Module``. For example,
 
@@ -275,11 +277,6 @@ class NasBench101Cell(Mutable):
         Maximum number of edges in the cell. Default: 9.
     label : str
         Identifier of the cell. Cell sharing the same label will semantically share the same choice.
-
-    References
-    ----------
-    .. [nasbench101] Ying, Chris, et al. "Nas-bench-101: Towards reproducible neural architecture search."
-        International Conference on Machine Learning. PMLR, 2019.
     """
 
     @staticmethod
@@ -341,7 +338,10 @@ class NasBench101Cell(Mutable):
         return self._label
 
     def forward(self, x):
-        # This is a dummy forward and actually not used
+        """
+        The forward of input choice is simply selecting first on all choices.
+        It shouldn't be called directly by users in most cases.
+        """
         tensors = [x]
         for i in range(1, self.max_num_nodes):
             node_input = self.inputs[i]([self.projections[i](tensors[0])] + [t for t in tensors[1:]])

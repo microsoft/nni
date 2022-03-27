@@ -2,26 +2,30 @@
 # Licensed under the MIT license.
 
 """
-Tree-structured Parzen Estimator (TPE) tuner for hyper-parameter optimization.
+Tree-structured Parzen Estimator (TPE) tuner.
 
 Paper: https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf
+
 Official code: https://github.com/hyperopt/hyperopt/blob/master/hyperopt/tpe.py
 
 This is a slightly modified re-implementation of the algorithm.
 """
 
-__all__ = ['TpeTuner', 'TpeArguments', 'suggest', 'suggest_parameter']
+from __future__ import annotations
+
+__all__ = ['TpeTuner', 'TpeArguments']
 
 from collections import defaultdict
 import logging
 import math
-from typing import NamedTuple, Optional, Union
+from typing import Any, NamedTuple
 
 import numpy as np
 from scipy.special import erf  # pylint: disable=no-name-in-module
 
+from nni.common.hpo_utils import Deduplicator, OptimizeMode, format_search_space, deformat_parameters, format_parameters
 from nni.tuner import Tuner
-from nni.common.hpo_utils import OptimizeMode, format_search_space, deformat_parameters, format_parameters
+from nni.typehint import Literal
 from nni.utils import extract_scalar_reward
 from . import random_tuner
 
@@ -31,12 +35,13 @@ _logger = logging.getLogger('nni.tuner.tpe')
 
 class TpeArguments(NamedTuple):
     """
-    These are the hyper-parameters of TPE algorithm itself.
-    To avoid confusing with trials' hyper-parameters, they are called "arguments" in this code.
+    Hyperparameters of TPE algorithm itself.
+
+    To avoid confusing with trials' hyperparameters to be tuned, these are called "arguments" here.
 
     Parameters
-    ==========
-    constant_liar_type: 'best' | 'worst' | 'mean' | None (default: 'best')
+    ----------
+    constant_liar_type
         TPE algorithm itself does not support parallel tuning.
         This parameter specifies how to optimize for trial_concurrency > 1.
 
@@ -44,20 +49,21 @@ class TpeArguments(NamedTuple):
 
         How each liar works is explained in paper's section 6.1.
         In general "best" suit for small trial number and "worst" suit for large trial number.
+        (:doc:`experiment result </misc/parallelizing_tpe_search>`)
 
-    n_startup_jobs: int (default: 20)
-        The first N hyper-parameters are generated fully randomly for warming up.
+    n_startup_jobs
+        The first N hyperparameters are generated fully randomly for warming up.
         If the search space is large, you can increase this value.
         Or if max_trial_number is small, you may want to decrease it.
 
-    n_ei_candidates: int (default: 24)
+    n_ei_candidates
         For each iteration TPE samples EI for N sets of parameters and choose the best one. (loosely speaking)
 
-    linear_forgetting: int (default: 25)
+    linear_forgetting
         TPE will lower the weights of old trials.
         This controls how many iterations it takes for a trial to start decay.
 
-    prior_weight: float (default: 1.0)
+    prior_weight
         TPE treats user provided search space as prior.
         When generating new trials, it also incorporates the prior in trial history by transforming the search space to
         one trial configuration (i.e., each parameter of this configuration chooses the mean of its candidate range).
@@ -66,11 +72,11 @@ class TpeArguments(NamedTuple):
         With prior weight 1.0, the search space is treated as one good trial.
         For example, "normal(0, 1)" effectly equals to a trial with x = 0 which has yielded good result.
 
-    gamma: float (default: 0.25)
+    gamma
         Controls how many trials are considered "good".
         The number is calculated as "min(gamma * sqrt(N), linear_forgetting)".
     """
-    constant_liar_type: Optional[str] = 'best'
+    constant_liar_type: Literal['best', 'worst', 'mean'] | None = 'best'
     n_startup_jobs: int = 20
     n_ei_candidates: int = 24
     linear_forgetting: int = 25
@@ -79,24 +85,75 @@ class TpeArguments(NamedTuple):
 
 class TpeTuner(Tuner):
     """
+    Tree-structured Parzen Estimator (TPE) tuner.
+
+    TPE is a lightweight tuner that has no extra dependency and supports all search space types,
+    designed to be the default tuner.
+
+    It has the drawback that TPE cannot discover relationship between different hyperparameters.
+
+    **Implementation**
+
+    TPE is an SMBO algorithm.
+    It models P(x|y) and P(y) where x represents hyperparameters and y the evaluation result.
+    P(x|y) is modeled by transforming the generative process of hyperparameters,
+    replacing the distributions of the configuration prior with non-parametric densities.
+
+    Paper: `Algorithms for Hyper-Parameter Optimization
+    <https://proceedings.neurips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__
+
+    Examples
+    --------
+
+    .. code-block::
+
+        ## minimal config ##
+
+        config.tuner.name = 'TPE'
+        config.tuner.class_args = {
+            'optimize_mode': 'maximize'
+        }
+
+    .. code-block::
+
+        ## advanced config ##
+
+        config.tuner.name = 'TPE'
+        config.tuner.class_args = {
+            'optimize_mode': maximize,
+            'seed': 12345,
+            'tpe_args': {
+                'constant_liar_type': 'mean',
+                'n_startup_jobs': 10,
+                'n_ei_candidates': 20,
+                'linear_forgetting': 100,
+                'prior_weight': 0,
+                'gamma': 0.5
+            }
+        }
+
     Parameters
-    ==========
-    optimze_mode: 'minimize' | 'maximize' (default: 'minimize')
+    ----------
+    optimze_mode: Literal['minimize', 'maximize']
         Whether optimize to minimize or maximize trial result.
-    seed: int | None
+    seed
         The random seed.
-    tpe_args: dict[string, Any] | None
+    tpe_args
         Advanced users can use this to customize TPE tuner.
-        See `TpeArguments` for details.
+        See :class:`TpeArguments` for details.
     """
 
-    def __init__(self, optimize_mode='minimize', seed=None, tpe_args=None):
+    def __init__(self,
+            optimize_mode: Literal['minimize', 'maximize'] = 'minimize',
+            seed: int | None = None,
+            tpe_args: dict[str, Any] | None = None):
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.args = TpeArguments(**(tpe_args or {}))
         self.space = None
         # concurrent generate_parameters() calls are likely to yield similar result, because they use same history
         # the liar solves this problem by adding fake results to history
         self.liar = create_liar(self.args.constant_liar_type)
+        self.dedup = None
 
         if seed is None:  # explicitly generate a seed to make the experiment reproducible
             seed = np.random.default_rng().integers(2 ** 31)
@@ -109,6 +166,7 @@ class TpeTuner(Tuner):
 
     def update_search_space(self, space):
         self.space = format_search_space(space)
+        self.dedup = Deduplicator(self.space)
 
     def generate_parameters(self, parameter_id, **kwargs):
         if self.liar and self._running_params:
@@ -122,6 +180,7 @@ class TpeTuner(Tuner):
             history = self._history
 
         params = suggest(self.args, self.rng, self.space, history)
+        params = self.dedup(params)
 
         self._params[parameter_id] = params
         self._running_params[parameter_id] = params
@@ -183,7 +242,7 @@ def suggest_parameter(args, rng, spec, parameter_history):
 ## Utilities part ##
 
 class Record(NamedTuple):
-    param: Union[int, float]
+    param: int | float
     loss: float
 
 class BestLiar:  # assume running parameters have best result, it accelerates "converging"
@@ -305,7 +364,7 @@ def adaptive_parzen_normal(args, history_mus, prior_mu, prior_sigma):
     this function is used for everything other than "choice" and "randint".
 
     Parameters
-    ==========
+    ----------
     args: TpeArguments
         Algorithm arguments.
     history_mus: 1-d array of float
@@ -317,7 +376,7 @@ def adaptive_parzen_normal(args, history_mus, prior_mu, prior_sigma):
         σ value of normal search space.
 
     Returns
-    =======
+    -------
     Tuple of three 1-d float arrays: (weight, µ, σ).
 
     The tuple represents N+1 "vicinity of observations" and each one's weight,

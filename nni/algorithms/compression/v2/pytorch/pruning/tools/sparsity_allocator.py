@@ -132,7 +132,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
             if self.continuous_mask:
                 metric = metric * self._compress_mask(wrapper.weight_mask)
 
-            layer_weight_num = wrapper.module.weight.data.numel()
+            layer_weight_num = wrapper.weight.data.numel()
             total_weight_num += layer_weight_num
             expend_times = int(layer_weight_num / metric.numel())
 
