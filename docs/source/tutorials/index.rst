@@ -32,27 +32,6 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Start and Manage a New Experiment">
-
-.. only:: html
-
- .. figure:: /tutorials/images/thumb/sphx_glr_nni_experiment_thumb.png
-     :alt: Start and Manage a New Experiment
-
-     :ref:`sphx_glr_tutorials_nni_experiment.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /tutorials/nni_experiment
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Quantization reduces model size and speeds up inference time by reducing the number of bits req...">
 
 .. only:: html

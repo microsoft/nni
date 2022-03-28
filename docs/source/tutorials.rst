@@ -7,7 +7,6 @@ Tutorials
    :maxdepth: 2
    :hidden:
 
-   tutorials/nni_experiment
    tutorials/hello_nas
    tutorials/nasbench_as_dataset
    tutorials/pruning_quick_start_mnist
@@ -16,13 +15,6 @@ Tutorials
    tutorials/quantization_speed_up
 
 .. ----------------------
-
-.. cardlinkitem::
-   :header: Start and Manage a New Experiment
-   :description: Familiarize yourself with Pythonic API to manage a hyper-parameter tuning experiment
-   :link: tutorials/nni_experiment.html
-   :image: ../img/thumbnails/overview-31.png
-   :tags: Experiment/HPO
 
 .. cardlinkitem::
    :header: HPO Quickstart with PyTorch
