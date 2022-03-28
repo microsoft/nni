@@ -20,7 +20,7 @@ Neural Network Intelligence
     NNI实验 <experiment/overview>
     HPO API Reference <reference/hpo>
     Experiment API Reference <reference/experiment>
-    示例与解决方案<notes/community_sharings>
+    示例与解决方案<sharings/community_sharings>
     研究和出版物 <notes/research_publications>
     从源代码安装 <notes/build_from_source>
     如何贡献 <notes/contributing>
