@@ -29,7 +29,10 @@ stages:
       displayName: Sphinx sanity check
 
     - script: |
+        set -e
         cd docs
+        rm -rf build
+        python tools/translation_patch.py
         make -e SPHINXOPTS="-W --keep-going -T -q -D language='zh'" html
       displayName: Sphinx sanity check (Chinese)
 
