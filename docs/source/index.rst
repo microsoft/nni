@@ -35,7 +35,7 @@ Neural Network Intelligence
     :caption: Misc
     :hidden:
 
-    Use Cases and Solutions <notes/community_sharings>
+    Use Cases and Solutions <sharings/community_sharings>
     Research and Publications <notes/research_publications>
     notes/build_from_source
     Contribution Guide <notes/contributing>
