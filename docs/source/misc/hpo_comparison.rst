@@ -20,9 +20,9 @@ Hyperparameter Optimization algorithms are list below:
 
 All algorithms run in NNI local environment.
 
-Machine Environment：
+Machine Environment:
 
-.. code-block:: bash
+.. code-block:: text
 
    OS: Linux Ubuntu 16.04 LTS
    CPU: Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz 2600 MHz
@@ -215,7 +215,7 @@ The performance of ``DB_Bench`` is associated with the machine configuration and
 Machine configuration
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: bash
+.. code-block:: text
 
    RocksDB:    version 6.1
    CPU:        6 * Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz
