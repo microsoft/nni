@@ -46,8 +46,8 @@ class PrunerScoredModuleWrapper(PrunerModuleWrapper):
 
     def forward(self, *inputs):
         # apply mask to weight, bias
-        # NOTE: I don't know why training getting slower and slower if only `self.weight_mask` without `.clone().detach_()`
-        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask.clone().detach_()))
+        # NOTE: I don't know why training getting slower and slower if only `self.weight_mask` without `detach_()`
+        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask.detach_()))
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.module.bias = torch.mul(self.bias, self.bias_mask)
         return self.module(*inputs)
