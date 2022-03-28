@@ -1,4 +1,4 @@
-.. 8469fbb6aaaa624175f44eda8b20b821
+.. 964df3cb88d68ee53b1496375de461df
 
 :orphan:
 
@@ -10,4 +10,4 @@
 
     nnictl 命令 <reference/nnictl>
     Experiment 配置 <reference/experiment_config>
-    API 参考 <reference/python_api_ref>
+    API 参考 <reference/python_api>

@@ -28,7 +28,7 @@ Neural Network Intelligence
 
     nnictl Commands <reference/nnictl>
     Experiment Configuration <reference/experiment_config>
-    Python API <reference/python_api_ref>
+    Python API <reference/python_api>
 
 ..  toctree::
     :maxdepth: 2

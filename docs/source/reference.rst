@@ -10,4 +10,4 @@ References
 
     nnictl Commands <reference/nnictl>
     Experiment Configuration <reference/experiment_config>
-    API References <reference/python_api_ref>
+    API References <reference/python_api>
