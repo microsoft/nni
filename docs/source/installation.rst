@@ -36,7 +36,7 @@ NNI hosts source code on `GitHub <https://github.com/microsoft/nni>`__.
 NNI has experimental support for ARM64 CPUs, including Apple M1.
 It requires to install from source code.
 
-See :doc:`/notes/build_from_source`.
+See :doc:`/misc/build_from_source`.
 
 Using Docker
 ------------

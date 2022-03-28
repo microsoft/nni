@@ -37,9 +37,9 @@ Neural Network Intelligence
 
     Use Cases and Solutions <misc/community_sharings>
     Research and Publications <misc/research_publications>
-    notes/build_from_source
-    Contribution Guide <notes/contributing>
-    Change Log <Release>
+    misc/build_from_source
+    Contribution Guide <misc/contributing>
+    Change Log <release>
 
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
 
