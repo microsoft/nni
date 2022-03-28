@@ -24,7 +24,7 @@ Folder structure of code
 
 NNI's folder structure is shown below:
 
-.. code-block:: bash
+.. code-block:: text
 
    nni
      |- deployment
