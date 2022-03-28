@@ -11,8 +11,7 @@
 [![Version](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases)
 [![Documentation Status](https://readthedocs.org/projects/nni/badge/?version=stable)](https://nni.readthedocs.io/en/stable/?badge=stable)
 [![](https://img.shields.io/github/contributors-anon/microsoft/nni)](https://nni.readthedocs.io/en/stable/?badge=stable)
-<!-- [![Contributors](https://img.shields.io/badge/all_contributors-188-orange.svg?style=flat-square)](https://nni.readthedocs.io/en/stable/?badge=stable) -->
-<!-- contributors-NUMBER-orange NUMBER should be rewrite by hand -->
+
 
 NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/) ([简体中文版点这里](https://nni.readthedocs.io/zh/stable))**. Quick links:
 
@@ -91,9 +90,6 @@ Participating discussions via the following IM groups is also welcomed.
 
 Over the past few years, NNI has received thousands of feedbacks on GitHub issues, and pull requests from hundreds of contributors.
 We appreciate all contributions from community to make NNI thrive.
-
-<!-- contributors-NUMBER-orange NUMBER should be rewrite by hand -->
-<!-- <img src="https://img.shields.io/badge/all_contributors-188-orange.svg?style=flat-square"> -->
 
 <img src="https://img.shields.io/github/contributors-anon/microsoft/nni">
 
