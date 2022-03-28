@@ -82,27 +82,27 @@ for name, mask in masks.items():
     print(name, ' sparsity : ', '{:.2}'.format(mask['weight'].sum() / mask['weight'].numel()))
 
 # %%
-# Speed up the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
-# The model becomes smaller after speed-up,
+# Speedup the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
+# The model becomes smaller after speedup,
 # and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the masks across layers.
 
-# need to unwrap the model, if the model is wrapped before speed up
+# need to unwrap the model, if the model is wrapped before speedup
 pruner._unwrap_model()
 
-# speed up the model
+# speedup the model
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 ModelSpeedup(model, torch.rand(3, 1, 28, 28).to(device), masks).speedup_model()
 
 # %%
-# the model will become real smaller after speed up
+# the model will become real smaller after speedup
 print(model)
 
 # %%
 # Fine-tuning Compacted Model
 # ---------------------------
 # Note that if the model has been sped up, you need to re-initialize a new optimizer for fine-tuning.
-# Because speed up will replace the masked big layers with dense small ones.
+# Because speedup will replace the masked big layers with dense small ones.
 
 optimizer = SGD(model.parameters(), 1e-2)
 for epoch in range(3):
