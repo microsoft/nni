@@ -29,7 +29,7 @@ class ModelSpeedup:
     Parameters
     ----------
     model : pytorch model
-        The model user wants to speed up
+        The model user wants to speedup
     dummy_input : pytorch tensor, tuple of tensor, list of tensor
         Note: The first dimension of the dummy_input should be the batchsize.
         The dummy input for ```jit.trace```, users should put it on the right
@@ -388,6 +388,9 @@ class ModelSpeedup:
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """
         Replace the submodule according to the inferred sparsity.
+
+        Parameters
+        ----------
         unique_name: str
             The unique_name of the submodule to replace.
         reindex_dim: int
@@ -496,7 +499,7 @@ class ModelSpeedup:
         second, replace modules.
         """
 
-        _logger.info("start to speed up the model")
+        _logger.info("start to speedup the model")
         self.initialize_speedup()
         training = self.bound_model.training
         # set to the evaluation mode

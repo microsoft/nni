@@ -65,3 +65,7 @@ steps:
 - script: |
     python test/vso_tools/interim_patch.py
   displayName: Torch utils tensorboard interim patch
+
+- script: |
+    pip list
+  displayName: List pip dependencies

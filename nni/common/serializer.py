@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import abc
 import base64
 import collections.abc
@@ -5,6 +8,7 @@ import copy
 import functools
 import inspect
 import numbers
+import os
 import sys
 import types
 import warnings
@@ -256,6 +260,13 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True, inheritable: bool = Fa
         def foo(bar):
             pass
     """
+
+    # This is an internal flag to control the behavior of trace.
+    # Useful in doc build and tests.
+    # Might be changed in future.
+    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
+    if nni_trace_flag.lower() == 'disable':
+        return cls_or_func
 
     def wrap(cls_or_func):
         # already annotated, do nothing

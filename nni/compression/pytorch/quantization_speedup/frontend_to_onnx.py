@@ -37,7 +37,7 @@ def _setattr(model, name, module):
     Parameters
     ----------
     model : pytorch model
-        The model to speed up by quantization
+        The model to speedup by quantization
     name : str
         name of pytorch module
     module : torch.nn.Module
@@ -98,7 +98,7 @@ def torch_to_onnx(model, config, input_shape, model_path, input_names, output_na
     Parameters
     ----------
     model : pytorch model
-        The model to speed up by quantization
+        The model to speedup by quantization
     config : dict
         Config recording bits number and name of layers
     input_shape : tuple

@@ -25,12 +25,12 @@ stages:
 
     - script: |
         cd docs
-        make -e SPHINXOPTS="-W --keep-going -T" html
+        make -e SPHINXOPTS="-W --keep-going -T -q" html
       displayName: Sphinx sanity check
 
     - script: |
         cd docs
-        make -e SPHINXOPTS="-W --keep-going -T -D language='zh'" html
+        make -e SPHINXOPTS="-W --keep-going -T -q -D language='zh'" html
       displayName: Sphinx sanity check (Chinese)
 
     - script: |
@@ -62,6 +62,10 @@ stages:
         EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
         python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
       displayName: flake8
+
+    - script: |
+        python -m pyright nni
+      displayName: Type Check
 
   - job: typescript
     pool:

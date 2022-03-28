@@ -92,8 +92,8 @@ if __name__ == '__main__':
     # if you just want to keep the final result as the best result, you can pass evaluator as None.
     # or the result with the highest score (given by evaluator) will be the best result.
 
-    # scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=evaluator)
-    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None, reset_weight=False)
+    # scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input, evaluator=evaluator)
+    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input, evaluator=None, reset_weight=False)
 
     scheduler.compress()
 
