@@ -818,7 +818,7 @@ class GraphConverterWithShape(GraphConverter):
 
 def convert_to_graph(script_module, module, converter=None, **kwargs):
     """
-    Convert module to our graph ir, i.e., build a ```Model``` type
+    Convert module to our graph ir, i.e., build a :class:`Model` type
 
     Parameters
     ----------

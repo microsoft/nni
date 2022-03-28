@@ -1,5 +1,5 @@
 """
-Speed Up Model with Calibration Config
+SpeedUp Model with Calibration Config
 ======================================
 
 
@@ -8,10 +8,10 @@ Introduction
 
 Deep learning network has been computational intensive and memory intensive 
 which increases the difficulty of deploying deep neural network model. Quantization is a 
-fundamental technology which is widely used to reduce memory footprint and speed up inference 
+fundamental technology which is widely used to reduce memory footprint and speedup inference 
 process. Many frameworks begin to support quantization, but few of them support mixed precision 
 quantization and get real speedup. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
-not speed up the inference process. To get real speedup of mixed precision quantization and 
+not speedup the inference process. To get real speedup of mixed precision quantization and 
 help people get the real feedback from hardware, we design a general framework with simple interface to allow NNI quantization algorithms to connect different 
 DL model optimization backends (e.g., TensorRT, NNFusion), which gives users an end-to-end experience that after quantizing their model 
 with quantization algorithms, the quantized model can be directly speeded up with the connected optimization backend. NNI connects 
@@ -108,7 +108,7 @@ calibration_config = quantizer.export_model(model_path, calibration_path)
 print("calibration_config: ", calibration_config)
 
 # %%
-# build tensorRT engine to make a real speed up
+# build tensorRT engine to make a real speedup
 
 # from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
 # input_shape = (32, 1, 28, 28)

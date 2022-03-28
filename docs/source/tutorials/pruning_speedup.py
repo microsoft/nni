@@ -1,5 +1,5 @@
 """
-Speed Up Model with Mask
+Speedup Model with Mask
 ========================
 
 Introduction
@@ -12,16 +12,16 @@ to convert a model to a smaller one based on user provided masks (the masks come
 pruning algorithms).
 
 There are two types of pruning. One is fine-grained pruning, it does not change the shape of weights,
-and input/output tensors. Sparse kernel is required to speed up a fine-grained pruned layer.
+and input/output tensors. Sparse kernel is required to speedup a fine-grained pruned layer.
 The other is coarse-grained pruning (e.g., channels), shape of weights and input/output tensors usually change due to such pruning.
-To speed up this kind of pruning, there is no need to use sparse kernel, just replace the pruned layer with smaller one.
+To speedup this kind of pruning, there is no need to use sparse kernel, just replace the pruned layer with smaller one.
 Since the support of sparse kernels in community is limited,
 we only support the speedup of coarse-grained pruning and leave the support of fine-grained pruning in future.
 
 Design and Implementation
 -------------------------
 
-To speed up a model, the pruned layers should be replaced, either replaced with smaller layer for coarse-grained mask,
+To speedup a model, the pruned layers should be replaced, either replaced with smaller layer for coarse-grained mask,
 or replaced with sparse kernel for fine-grained mask. Coarse-grained mask usually changes the shape of weights or input/output tensors,
 thus, we should do shape inference to check are there other unpruned layers should be replaced as well due to shape change.
 Therefore, in our design, there are two main steps: first, do shape inference to find out all the modules that should be replaced;
@@ -64,13 +64,13 @@ model(torch.rand(128, 1, 28, 28).to(device))
 print('Original Model - Elapsed Time : ', time.time() - start)
 
 # %%
-# Speed up the model and show the model structure after speed up.
+# Speedup the model and show the model structure after speedup.
 from nni.compression.pytorch import ModelSpeedup
 ModelSpeedup(model, torch.rand(10, 1, 28, 28).to(device), masks).speedup_model()
 print(model)
 
 # %%
-# Roughly test the model after speed-up inference speed.
+# Roughly test the model after speedup inference speed.
 start = time.time()
 model(torch.rand(128, 1, 28, 28).to(device))
 print('Speedup Model - Elapsed Time : ', time.time() - start)
@@ -87,7 +87,7 @@ print('Speedup Model - Elapsed Time : ', time.time() - start)
 # For PyTorch we can only replace modules, if functions in ``forward`` should be replaced,
 # our current implementation does not work. One workaround is make the function a PyTorch module.
 #
-# If you want to speed up your own model which cannot supported by the current implementation,
+# If you want to speedup your own model which cannot supported by the current implementation,
 # you need implement the replace function for module replacement, welcome to contribute.
 #
 # Speedup Results of Examples

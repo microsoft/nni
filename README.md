@@ -39,7 +39,7 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 <tr align="center" valign="bottom">
 <td></td>
 <td>
-<b>Hyperparamter Tuning</b>
+<b>Hyperparameter Tuning</b>
 <img src="docs/img/bar.png" />
 </td>
 <td>
