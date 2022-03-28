@@ -34,8 +34,14 @@ class Cell(nn.Module):
     """
     Cell structure that is popularly used in NAS literature.
 
-    Refer to :footcite:t:`zoph2017neural,zoph2018learning,liu2018darts` for details.
-    :footcite:t:`radosavovic2019network` is a good summary of how this structure works in practice.
+    Find the details in:
+
+    * `Neural Architecture Search with Reinforcement Learning <https://arxiv.org/abs/1611.01578>`__.
+    * `Learning Transferable Architectures for Scalable Image Recognition <https://arxiv.org/abs/1707.07012>`__.
+    * `DARTS: Differentiable Architecture Search <https://arxiv.org/abs/1806.09055>`__
+
+    `On Network Design Spaces for Visual Recognition <https://arxiv.org/abs/1905.13214>`__
+    is a good summary of how this structure works in practice.
 
     A cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from
     ``op_candidates``, and takes one input from previous nodes and predecessors. Predecessor means the input of cell.
@@ -45,7 +51,10 @@ class Cell(nn.Module):
 
     .. list-table::
         :widths: 25 75
+        :header-rows: 1
 
+        * - Name
+          - Brief Description
         * - Cell
           - A cell consists of several nodes.
         * - Node
@@ -111,15 +120,20 @@ class Cell(nn.Module):
     --------
     Choose between conv2d and maxpool2d.
     The cell have 4 nodes, 1 op per node, and 2 predecessors.
+
     >>> cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2)
+
     In forward:
+
     >>> cell([input1, input2])
 
     Use ``merge_op`` to specify how to construct the output.
     The output will then have dynamic shape, depending on which input has been used in the cell.
+
     >>> cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, merge_op='loose_end')
 
     The op candidates can be callable that accepts node index in cell, op index in node, and input index.
+
     >>> cell = nn.Cell([
     ...     lambda node_index, op_index, input_index: nn.Conv2d(32, 32, 3, stride=2 if input_index < 1 else 1),
     ... ], 4, 1, 2)
