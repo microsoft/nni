@@ -35,10 +35,10 @@ Neural Network Intelligence
     :caption: Misc
     :hidden:
 
-    Use Cases and Solutions <misc/community_sharings>
-    Research and Publications <misc/research_publications>
-    misc/build_from_source
-    Contribution Guide <misc/contributing>
+    Use Cases and Solutions <sharings/community_sharings>
+    Research and Publications <sharings/research_publications>
+    notes/build_from_source
+    Contribution Guide <notes/contributing>
     Change Log <release>
 
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
@@ -81,7 +81,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 * **New demo available**: `Youtube entry <https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw>`_ | `Bilibili 入口 <https://space.bilibili.com/1649051673>`_ - *last updated on May-26-2021*
 * **New webinar**: `Introducing Retiarii, A deep learning exploratory-training framework on NNI <https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html>`_ - *scheduled on June-24-2021*
 * **New community channel**: `Discussions <https://github.com/microsoft/nni/discussions>`_
-* **New emoticons release**: :doc:`nnSpider <nnSpider>`
+* **New emoticons release**: :doc:`nnSpider <nn_spider>`
 
 .. raw:: html
 

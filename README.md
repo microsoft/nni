@@ -232,7 +232,7 @@ For more usages, please see [NNI tutorials](https://nni.readthedocs.io/en/stable
 
 ## Contribution guidelines
 
-If you want to contribute to NNI, be sure to review the [contribution guidelines](https://nni.readthedocs.io/en/stable/misc/contributing.html), which includes instructions of submitting feedbacks, best coding practices, and code of conduct.
+If you want to contribute to NNI, be sure to review the [contribution guidelines](https://nni.readthedocs.io/en/stable/notes/contributing.html), which includes instructions of submitting feedbacks, best coding practices, and code of conduct.
 
 We use [GitHub issues](https://github.com/microsoft/nni/issues) to track tracking requests and bugs.
 Please use [NNI Discussion](https://github.com/microsoft/nni/discussions) for general questions and new ideas.
