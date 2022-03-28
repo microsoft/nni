@@ -62,7 +62,6 @@ extensions = [
     'inplace_translation',
     'cardlinkitem',
     'codesnippetcard',
-    'patch_docutils',
     'patch_autodoc',
 ]
 
