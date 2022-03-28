@@ -14,5 +14,5 @@
     :maxdepth: 2
 
     概述 <feature_engineering/overview>
-    GradientFeatureSelector <feature_engineering/GradientFeatureSelector>
-    GBDTSelector <feature_engineering/GBDTSelector>
+    GradientFeatureSelector <feature_engineering/gradient_feature_selector>
+    GBDTSelector <feature_engineering/gbdt_selector>
