@@ -44,7 +44,7 @@ stages:
 
     - script: |
         cd docs
-        make -e SPHINXOPTS="-W -T -b linkcheck --keep-going" html
+        make -e SPHINXOPTS="-W -T -b linkcheck -q --keep-going" html
       displayName: External links integrity check
 
   - job: python
