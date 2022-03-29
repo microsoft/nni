@@ -38,7 +38,7 @@ Since it consumes so much computing resources, you may want to:
 2. Train the models on distributed platforms.
 3. Have a portal to monitor and control the process.
 
-And NNI will do them for you.
+NNI will do them for you.
 
 Key Features of NNI HPO
 -----------------------
@@ -125,7 +125,7 @@ Main article: :doc:`tuners`
       - Basic
       - Naive random search.
 
-    * - :class:`GridSearch <nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner>`
+    * - :class:`Grid Search <nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner>`
       - Basic
       - Brute-force search.
 
@@ -134,11 +134,11 @@ Main article: :doc:`tuners`
       - Tree-structured Parzen Estimator.
 
     * - :class:`Anneal <nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner>`
-      - Classic
+      - Heuristic
       - Simulated annealing algorithm.
 
     * - :class:`Evolution <nni.algorithms.hpo.evolution_tuner.EvolutionTuner>`
-      - Classic
+      - Heuristic
       - Naive evolution algorithm.
 
     * - :class:`SMAC <nni.algorithms.hpo.smac_tuner.SMACTuner>`
@@ -146,34 +146,34 @@ Main article: :doc:`tuners`
       - Sequential Model-based optimization for general Algorithm Configuration.
 
     * - :class:`Hyperband <nni.algorithms.hpo.hyperband_advisor.Hyperband>`
-      - Advanced
+      - Heuristic
       - Evaluate more hyperparameter sets by adaptively allocating resources.
 
-    * - :class:`MetisTuner <nni.algorithms.hpo.metis_tuner.MetisTuner>`
+    * - :class:`Metis <nni.algorithms.hpo.metis_tuner.MetisTuner>`
       - Bayesian
       - Robustly optimizing tail latencies of cloud systems.
 
     * - :class:`BOHB <nni.algorithms.hpo.bohb_advisor.BOHB>`
-      - Advanced
+      - Bayesian
       - Bayesian Optimization with HyperBand.
 
-    * - :class:`GPTuner <nni.algorithms.hpo.gp_tuner.GPTuner>`
+    * - :class:`GP <nni.algorithms.hpo.gp_tuner.GPTuner>`
       - Bayesian
       - Gaussian Process.
 
-    * - :class:`PBTTuner <nni.algorithms.hpo.pbt_tuner.PBTTuner>`
-      - Advanced
+    * - :class:`PBT <nni.algorithms.hpo.pbt_tuner.PBTTuner>`
+      - Heuristic
       - Population Based Training of neural networks.
 
-    * - :class:`DNGOTuner <nni.algorithms.hpo.dngo_tuner.DNGOTuner>`
+    * - :class:`DNGO <nni.algorithms.hpo.dngo_tuner.DNGOTuner>`
       - Bayesian
       - Deep Networks for Global Optimization.
 
-    * - :class:`PPOTuner <nni.algorithms.hpo.ppo_tuner.PPOTuner>`
+    * - :class:`PPO <nni.algorithms.hpo.ppo_tuner.PPOTuner>`
       - RL
       - Proximal Policy Optimization.
 
-    * - :class:`BatchTuner <nni.algorithms.hpo.batch_tuner.BatchTuner>`
+    * - :class:`Batch <nni.algorithms.hpo.batch_tuner.BatchTuner>`
       - Basic
       - Manually specify hyperparameter sets.
 
