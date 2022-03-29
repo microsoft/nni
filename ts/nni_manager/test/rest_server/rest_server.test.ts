@@ -128,24 +128,10 @@ async function configRestServer(urlPrefix?: string) {
         await restServer.shutdown();
     }
 
-    // Set port, URL prefix, and log path.
-    // There should be a better way to do this.
-    // Maybe rewire? I can't get it work with TypeScript.
-    setExperimentStartupInfo(
-        true,
-        path.basename(__dirname),  // hacking getLogDir()
-        0,  // ask for a random idle port
-        'local',
-        path.dirname(__dirname),
-        undefined,
-        undefined,
-        undefined,
-        urlPrefix
-    );
-
+    UnitTestHelpers.setLogDirectory(path.join(__dirname, 'log'));
     UnitTestHelpers.setWebuiPath(path.join(__dirname, 'static'));
 
-    restServer = new RestServer();
+    restServer = new RestServer(0, urlPrefix ?? '');
     await restServer.start();
     const port = UnitTestHelpers.getPort(restServer);
 

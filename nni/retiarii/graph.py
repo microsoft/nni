@@ -75,12 +75,12 @@ class Model:
     """
     Represents a neural network model.
 
-    During mutation, one `Model` object is created for each trainable snapshot.
+    During mutation, one :class:`Model` object is created for each trainable snapshot.
     For example, consider a mutator that insert a node at an edge for each iteration.
     In one iteration, the mutator invokes 4 primitives: add node, remove edge, add edge to head, add edge to tail.
-    These 4 primitives operates in one `Model` object.
+    These 4 primitives operates in one :class:`Model` object.
     When they are all done the model will be set to "frozen" (trainable) status and be submitted to execution engine.
-    And then a new iteration starts, and a new `Model` object is created by forking last model.
+    And then a new iteration starts, and a new :class:`Model` object is created by forking last model.
 
     Attributes
     ----------
@@ -89,7 +89,7 @@ class Model:
     python_init_params
         Initialization parameters of python class.
     status
-        See `ModelStatus`.
+        See :class:`ModelStatus`.
     root_graph
         The outermost graph which usually takes dataset as input and feeds output to loss function.
     graphs
@@ -98,11 +98,11 @@ class Model:
         Model evaluator
     history
         Mutation history.
-        `self` is directly mutated from `self.history[-1]`;
-        `self.history[-1] is mutated from `self.history[-2]`, and so on.
-        `self.history[0]` is the base graph.
+        ``self`` is directly mutated from ``self.history[-1]``;
+        ``self.history[-1]`` is mutated from ``self.history[-2]``, and so on.
+        ``self.history[0]`` is the base graph.
     metric
-        Training result of the model, or `None` if it's not yet trained or has failed to train.
+        Training result of the model, or ``None`` if it's not yet trained or has failed to train.
     intermediate_metrics
         Intermediate training metrics. If the model is not trained, it's an empty list.
     """
@@ -262,9 +262,9 @@ class Graph:
     Graph topology.
 
     This class simply represents the topology, with no semantic meaning.
-    All other information like metric, non-graph functions, mutation history, etc should go to `Model`.
+    All other information like metric, non-graph functions, mutation history, etc should go to :class:`Model`.
 
-    Each graph belongs to and only belongs to one `Model`.
+    Each graph belongs to and only belongs to one :class:`Model`.
 
     Attributes
     ----------
@@ -281,15 +281,15 @@ class Graph:
     output_names
         Optional mnemonic names of output values.
     input_node
-        ...
+        Incoming node.
     output_node
-        ...
+        Output node.
     hidden_nodes
-        ...
+        Hidden nodes
     nodes
         All input/output/hidden nodes.
     edges
-        ...
+        Edges.
     python_name
         The name of torch.nn.Module, should have one-to-one mapping with items in python model.
     """
@@ -529,16 +529,16 @@ class Node:
     """
     An operation or an opaque subgraph inside a graph.
 
-    Each node belongs to and only belongs to one `Graph`.
-    Nodes should never be created with constructor. Use `Graph.add_node()` instead.
+    Each node belongs to and only belongs to one :class:`Graph`.
+    Nodes should never be created with constructor. Use :meth:`Graph.add_node` instead.
 
     The node itself is for topology only.
-    Information of tensor calculation should all go inside `operation` attribute.
+    Information of tensor calculation should all go inside ``operation`` attribute.
 
     TODO: parameter of subgraph (cell)
     It's easy to assign parameters on cell node, but it's hard to "use" them.
     We need to design a way to reference stored cell parameters in inner node operations.
-    e.g. `self.fc = Linear(self.units)`  <-  how to express `self.units` in IR?
+    e.g. ``self.fc = Linear(self.units)``  <-  how to express ``self.units`` in IR?
 
     Attributes
     ----------
@@ -554,10 +554,10 @@ class Node:
     label
         Optional. If two nodes have the same label, they are considered same by the mutator.
     operation
-        ...
+        Operation.
     cell
         Read only shortcut to get the referenced subgraph.
-        If this node is not a subgraph (is a primitive operation), accessing `cell` will raise an error.
+        If this node is not a subgraph (is a primitive operation), accessing ``cell`` will raise an error.
     predecessors
         Predecessor nodes of this node in the graph. This is an optional mutation helper.
     successors
@@ -674,36 +674,36 @@ class Edge:
     """
     A tensor, or "data flow", between two nodes.
 
-    Example forward code snippet:
-    ```
-    a, b, c = split(x)
-    p = concat(a, c)
-    q = sum(b, p)
-    z = relu(q)
-    ```
+    Example forward code snippet: ::
 
-    Edges in above snippet:
-      + head: (split, 0), tail: (concat, 0)  # a in concat
-      + head: (split, 2), tail: (concat, 1)  # c in concat
-      + head: (split, 1), tail: (sum, -1 or 0)  # b in sum
-      + head: (concat, null), tail: (sum, -1 or 1)  # p in sum
-      + head: (sum, null), tail: (relu, null)  # q in relu
+        a, b, c = split(x)
+        p = concat(a, c)
+        q = sum(b, p)
+        z = relu(q)
+
+    Edges in above snippet: ::
+
+        + head: (split, 0), tail: (concat, 0)  # a in concat
+        + head: (split, 2), tail: (concat, 1)  # c in concat
+        + head: (split, 1), tail: (sum, -1 or 0)  # b in sum
+        + head: (concat, null), tail: (sum, -1 or 1)  # p in sum
+        + head: (sum, null), tail: (relu, null)  # q in relu
 
     Attributes
     ----------
     graph
-        ...
+        Graph.
     head
         Head node.
     tail
         Tail node.
     head_slot
         Index of outputs in head node.
-        If the node has only one output, this should be `null`.
+        If the node has only one output, this should be ``null``.
     tail_slot
         Index of inputs in tail node.
-        If the node has only one input, this should be `null`.
-        If the node does not care about order, this can be `-1`.
+        If the node has only one input, this should be ``null``.
+        If the node does not care about order, this can be ``-1``.
     """
 
     def __init__(self, head: EdgeEndpoint, tail: EdgeEndpoint, _internal: bool = False):

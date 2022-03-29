@@ -17,7 +17,7 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 * [Installation guide](https://nni.readthedocs.io/en/stable/installation.html)
 * [Tutorials](https://nni.readthedocs.io/en/stable/tutorials.html)
 * [Python API reference](https://nni.readthedocs.io/en/stable/reference/python_api.html)
-* [Releases](https://nni.readthedocs.io/en/stable/Release.html)
+* [Releases](https://nni.readthedocs.io/en/stable/release.html)
 
 ## What's NEW! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 

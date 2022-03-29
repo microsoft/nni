@@ -222,14 +222,16 @@ binary_modules = ['BinaryAdd', 'BinaryMul', 'BinaryMinus', 'BinaryDivide', 'Bina
 
 class AutoActivation(nn.Module):
     """
-    This module is an implementation of the paper "Searching for Activation Functions"
-    (https://arxiv.org/abs/1710.05941).
-    NOTE: current `beta` is not per-channel parameter
+    This module is an implementation of the paper `Searching for Activation Functions <https://arxiv.org/abs/1710.05941>`__.
 
     Parameters
     ----------
     unit_num : int
         the number of core units
+
+    Notes
+    -----
+    Current `beta` is not per-channel parameter.
     """
     def __init__(self, unit_num: int = 1, label: str = None):
         super().__init__()
