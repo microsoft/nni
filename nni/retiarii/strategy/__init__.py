@@ -7,4 +7,4 @@ from .evolution import RegularizedEvolution
 from .tpe_strategy import TPEStrategy
 from .local_debug_strategy import _LocalDebugStrategy
 from .rl import PolicyBasedRL
-from .oneshot import DARTS, Proxyless, SNAS, ENAS, RandomOneShot
+from .oneshot import DARTS, Proxyless, GumbelDARTS, ENAS, RandomOneShot

@@ -5,7 +5,7 @@ from .base import BaseStrategy
 
 try:
     from nni.retiarii.oneshot.pytorch.strategy import (  # pylint: disable=unused-import
-        DARTS, SNAS, Proxyless, ENAS, RandomOneShot
+        DARTS, GumbelDARTS, Proxyless, ENAS, RandomOneShot
     )
 except ImportError as import_err:
     _import_err = import_err
@@ -16,7 +16,7 @@ except ImportError as import_err:
 
     # otherwise typing check will pointing to the wrong location
     globals()['DARTS'] = ImportFailedStrategy
-    globals()['SNAS'] = ImportFailedStrategy
+    globals()['GumbelDARTS'] = ImportFailedStrategy
     globals()['Proxyless'] = ImportFailedStrategy
     globals()['ENAS'] = ImportFailedStrategy
     globals()['RandomOneShot'] = ImportFailedStrategy
