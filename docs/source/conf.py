@@ -202,11 +202,9 @@ html_theme_options = {
 
     # Set the color and the accent color
     # Remember to update static/css/material_custom.css when this is updated.
+    # Set those colors in layout.html.
     'color_primary': 'custom',
     'color_accent': 'custom',
-    # See static/css/material_theme.css.
-    'custom_color_primary': '546e7a',
-    'custom_color_accent': '448aff',
 
     # Set the repo location to get a badge with stats
     'repo_url': 'https://github.com/microsoft/nni/',
@@ -252,6 +250,7 @@ html_title = 'Neural Network Intelligence'
 
 # Add extra css files and js files
 html_css_files = [
+    'css/material_theme.css',
     'css/material_custom.css',
     'css/material_dropdown.css',
     'css/sphinx_gallery.css',

@@ -37,7 +37,7 @@ div.sphx-glr-footer {
 
 .notebook-action-link:hover .notebook-action-div {
     /* match theme */
-    border-bottom-color: #f50057;
+    border-bottom-color: var(--custom-color-accent);
 }
 
 .notebook-action-link img {
