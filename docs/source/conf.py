@@ -203,10 +203,12 @@ html_theme_options = {
     'base_url': 'https://nni.readthedocs.io/',
 
     # Set the color and the accent color
-    # We can't have our customized themes currently
     # Remember to update static/css/material_custom.css when this is updated.
-    'color_primary': 'indigo',
-    'color_accent': 'pink',
+    'color_primary': 'custom',
+    'color_accent': 'custom',
+    # See static/css/material_theme.css.
+    'custom_color_primary': '546e7a',
+    'custom_color_accent': '448aff',
 
     # Set the repo location to get a badge with stats
     'repo_url': 'https://github.com/microsoft/nni/',

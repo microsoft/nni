@@ -1,0 +1,55 @@
+/* Theme related customization */
+/* https://github.com/bashtage/sphinx-material/pull/122 */
+
+[data-md-color-primary=custom] .md-nav__extra_link:active {
+    color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-nav__item--nested > .md-nav__extra_link {
+    color: inherit
+}
+
+[data-md-color-accent=custom] .md-nav__extra_link:focus, [data-md-color-accent=custom] .md-nav__extra_link:hover {
+    color: var(--custom-color-accent)
+}
+
+button[data-md-color-primary=custom] {
+    background-color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-typeset a {
+    color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-header,
+[data-md-color-primary=custom] .md-hero {
+    background-color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-nav__link--active,
+[data-md-color-primary=custom] .md-nav__link:active {
+    color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-nav__item--nested>.md-nav__link {
+    color: inherit
+}
+
+@media only screen and (max-width:59.9375em) {
+    [data-md-color-primary=custom] .md-nav__source {
+        background-color: var(--custom-color-primary);
+        opacity: 0.0325;
+    }
+}
+
+@media only screen and (max-width:76.1875em) {
+    html [data-md-color-primary=custom] .md-nav--primary .md-nav__title--site {
+        background-color: var(--custom-color-primary)
+    }
+}
+
+@media only screen and (min-width:76.25em) {
+    [data-md-color-primary=custom] .md-tabs {
+        background-color: var(--custom-color-primary)
+    }
+}

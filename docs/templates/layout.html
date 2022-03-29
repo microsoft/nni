@@ -3,6 +3,15 @@
 {#- TO INJECT INFORMATION FROM READTHEDOCS HERE #}
 {% block scripts %}
   {{ super() }}
+
+  {#- CUSTOM THEME #}
+  <style>
+    :root {
+      --custom-color-primary: #{{ theme_custom_color_primary }};
+      --custom-color-accent: #{{ theme_custom_color_accent }};
+    }
+  </style>
+
   {% if versions %}
   <script type="text/javascript">
     READTHEDOCS_VERSIONS = {{ versions | tojson }}
