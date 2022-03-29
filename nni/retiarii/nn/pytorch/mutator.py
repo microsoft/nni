@@ -11,10 +11,10 @@ from nni.common.serializer import is_traceable
 from nni.retiarii.graph import Cell, Graph, Model, ModelStatus, Node, Evaluator
 from nni.retiarii.mutator import Mutator
 from nni.retiarii.serializer import is_basic_unit, is_model_wrapped
-from nni.retiarii.utils import uid
+from nni.retiarii.utils import ModelNamespace, uid
 
 from .api import LayerChoice, InputChoice, ValueChoice, ValueChoiceX, Placeholder
-from .component import Repeat, NasBench101Cell, NasBench101Mutator
+from .component import NasBench101Cell, NasBench101Mutator
 
 
 class LayerChoiceMutator(Mutator):
@@ -144,14 +144,15 @@ class RepeatMutator(Mutator):
         return chain
 
     def mutate(self, model):
-        min_depth = self.nodes[0].operation.parameters['min_depth']
-        max_depth = self.nodes[0].operation.parameters['max_depth']
-        if min_depth < max_depth:
-            chosen_depth = self.choice(list(range(min_depth, max_depth + 1)))
         for node in self.nodes:
             # the logic here is similar to layer choice. We find cell attached to each node.
             target: Graph = model.graphs[node.operation.cell_name]
             chain = self._retrieve_chain_from_graph(target)
+            # and we get the chosen depth (by value choice)
+            node_in_model = model.get_node_by_name(node.name)
+            # depth is a value choice in base model
+            # but it's already mutated by a ParameterChoiceMutator here
+            chosen_depth = node_in_model.operation.parameters['depth']
             for edge in chain[chosen_depth - 1].outgoing_edges:
                 edge.remove()
             target.add_edge((chain[chosen_depth - 1], None), (target.output_node, None))
@@ -184,6 +185,8 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     # `pc_nodes` are arguments of basic units. They can be compositions.
     pc_nodes: List[Tuple[Node, str, ValueChoiceX]] = []
     for node in model.get_nodes():
+        # arguments used in operators like Conv2d
+        # argument `valuechoice` used in generated repeat cell
         for name, choice in node.operation.parameters.items():
             if isinstance(choice, ValueChoiceX):
                 # e.g., (conv_node, "out_channels", ValueChoice([1, 3]))
@@ -219,9 +222,10 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     repeat_nodes = _group_by_label(filter(lambda d: d.operation.parameters.get('mutation') == 'repeat',
                                           model.get_nodes_by_type('_cell')))
     for node_list in repeat_nodes:
+        # this check is not completely reliable, because it only checks max and min
         assert _is_all_equal(map(lambda node: node.operation.parameters['max_depth'], node_list)) and \
             _is_all_equal(map(lambda node: node.operation.parameters['min_depth'], node_list)), \
-            'Repeat with the same label must have the same number of candidates.'
+            'Repeat with the same label must have the same candidates.'
         mutator = RepeatMutator(node_list)
         applied_mutators.append(mutator)
 
@@ -281,6 +285,13 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
     else:
         model.python_init_params = {}
 
+    # hyper-parameter choice
+    namespace: ModelNamespace = pytorch_model._model_namespace
+    for param_spec in namespace.parameter_specs:
+        assert param_spec.categorical and param_spec.type == 'choice'
+        node = graph.add_node(f'param_spec_{param_spec.name}', 'ModelParameterChoice', {'candidates': param_spec.values})
+        node.label = param_spec.name
+
     for name, module in pytorch_model.named_modules():
         # tricky case: value choice that serves as parameters are stored in traced arguments
         if is_basic_unit(module):
@@ -302,11 +313,6 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
             node.label = module.label
         if isinstance(module, ValueChoice):
             node = graph.add_node(name, 'ValueChoice', {'candidates': module.candidates})
-            node.label = module.label
-        if isinstance(module, Repeat) and module.min_depth <= module.max_depth:
-            node = graph.add_node(name, 'Repeat', {
-                'candidates': list(range(module.min_depth, module.max_depth + 1))
-            })
             node.label = module.label
         if isinstance(module, NasBench101Cell):
             node = graph.add_node(name, 'NasBench101Cell', {

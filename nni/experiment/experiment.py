@@ -10,7 +10,7 @@ from pathlib import Path
 import socket
 from subprocess import Popen
 import time
-from typing import Optional, Any
+from typing import Any
 
 import colorama
 import psutil
@@ -34,8 +34,7 @@ class RunMode(Enum):
     - Foreground: stop NNI manager when Python script exits; print NNI manager log to stdout.
     - Detach: do not stop NNI manager when Python script exits.
 
-    NOTE:
-    This API is non-stable and is likely to get refactored in next release.
+    NOTE: This API is non-stable and is likely to get refactored in upcoming release.
     """
     # TODO:
     # NNI manager should treat log level more seriously so we can default to "foreground" without being too verbose.
@@ -72,15 +71,15 @@ class Experiment:
         Web portal port. Or ``None`` if the experiment is not running.
     """
 
-    def __init__(self, config_or_platform: ExperimentConfig | str | list[str] | None) -> None:
+    def __init__(self, config_or_platform: ExperimentConfig | str | list[str] | None):
         nni.runtime.log.init_logger_for_command_line()
 
-        self.config: Optional[ExperimentConfig] = None
+        self.config: ExperimentConfig | None = None
         self.id: str = management.generate_experiment_id()
-        self.port: Optional[int] = None
-        self._proc: Optional[Popen] = None
-        self.action = 'create'
-        self.url_prefix: Optional[str] = None
+        self.port: int | None = None
+        self._proc: Popen | psutil.Process | None = None
+        self._action = 'create'
+        self.url_prefix: str | None = None
 
         if isinstance(config_or_platform, (str, list)):
             self.config = ExperimentConfig(config_or_platform)
@@ -101,6 +100,7 @@ class Experiment:
         debug
             Whether to start in debug mode.
         """
+        assert self.config is not None
         if run_mode is not RunMode.Detach:
             atexit.register(self.stop)
 
@@ -114,7 +114,7 @@ class Experiment:
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        self._proc = launcher.start_experiment(self.action, self.id, config, port, debug, run_mode, self.url_prefix)
+        self._proc = launcher.start_experiment(self._action, self.id, config, port, debug, run_mode, self.url_prefix)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed
@@ -144,16 +144,16 @@ class Experiment:
                 _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
                 kill_command(self._proc.pid)
 
-        self.id = None
+        self.id = None  # type: ignore
         self.port = None
         self._proc = None
         _logger.info('Experiment stopped')
 
-    def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool:
+    def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
         """
         Run the experiment.
 
-        If ``wait_completion`` is True, this function will block until experiment finish or error.
+        If ``wait_completion`` is ``True``, this function will block until experiment finish or error.
 
         Return ``True`` when experiment done; or return ``False`` when experiment failed.
 
@@ -247,7 +247,7 @@ class Experiment:
     def _resume(exp_id, exp_dir=None):
         exp = Experiment(None)
         exp.id = exp_id
-        exp.action = 'resume'
+        exp._action = 'resume'
         exp.config = launcher.get_stopped_experiment_config(exp_id, exp_dir)
         return exp
 
@@ -255,7 +255,7 @@ class Experiment:
     def _view(exp_id, exp_dir=None):
         exp = Experiment(None)
         exp.id = exp_id
-        exp.action = 'view'
+        exp._action = 'view'
         exp.config = launcher.get_stopped_experiment_config(exp_id, exp_dir)
         return exp
 

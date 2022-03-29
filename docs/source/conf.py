@@ -62,7 +62,6 @@ extensions = [
     'inplace_translation',
     'cardlinkitem',
     'codesnippetcard',
-    'patch_docutils',
     'patch_autodoc',
 ]
 
@@ -133,9 +132,9 @@ tutorials_copy_list = [
     # Others in full-scale materials
     ('tutorials/hello_nas.rst', 'tutorials/cp_hello_nas_quickstart.rst'),
     ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
-    ('tutorials/pruning_speed_up.rst', 'tutorials/cp_pruning_speed_up.rst'),
+    ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
     ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
-    ('tutorials/quantization_speed_up.rst', 'tutorials/cp_quantization_speed_up.rst'),
+    ('tutorials/quantization_speedup.rst', 'tutorials/cp_quantization_speedup.rst'),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -162,7 +161,6 @@ exclude_patterns = [
     '_build',
     'Thumbs.db',
     '.DS_Store',
-    'Release_v1.0.md',
     '**.ipynb_checkpoints',
     # Exclude translations. They will be added back via replacement later if language is set.
     '**_zh.rst',

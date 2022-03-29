@@ -4,7 +4,7 @@
 '''
 NNI example for supported level pruning algorithm.
 In this example, we show the end-to-end pruning process: pre-training -> pruning -> fine-tuning.
-Note that pruners use masks to simulate the real pruning. In order to obtain a real compressed model, model speed up is required.
+Note that pruners use masks to simulate the real pruning. In order to obtain a real compressed model, model speedup is required.
 
 '''
 import argparse

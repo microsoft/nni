@@ -198,16 +198,16 @@ def compute_sparsity(origin_model: Module, compact_model: Module, compact_model_
     The current state means `compact_model` + `compact_model_masks`
     (i.e., `compact_model_masks` applied on `compact_model`).
     The compact model is the origin model after pruning,
-    and it may have different structure with origin_model cause of speed up.
+    and it may have different structure with origin_model cause of speedup.
 
     Parameters
     ----------
     origin_model : torch.nn.Module
         The original un-pruned model.
     compact_model : torch.nn.Module
-        The model after speed up or original model.
+        The model after speedup or original model.
     compact_model_masks: Dict[str, Dict[str, Tensor]]
-        The masks applied on the compact model, if the original model have been speed up, this should be {}.
+        The masks applied on the compact model, if the original model have been speedup, this should be {}.
     config_list : List[Dict]
         The config_list used by pruning the original model.
 

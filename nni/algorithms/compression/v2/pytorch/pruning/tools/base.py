@@ -384,7 +384,7 @@ class SparsityAllocator:
             weight_mask = weight_mask.expand(expand_size).reshape(reshape_size)
 
         wrapper = self.pruner.get_modules_wrapper()[name]
-        weight_size = wrapper.module.weight.data.size()
+        weight_size = wrapper.weight.data.size()
 
         if self.dim is None:
             assert weight_mask.size() == weight_size

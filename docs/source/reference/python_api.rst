@@ -1,10 +1,11 @@
-:orphan:
+API Reference
+=============
 
-Python API Reference
-====================
+..  toctree::
+    :maxdepth: 1
 
-.. autosummary::
-   :toctree: _modules
-   :recursive:
-
-   nni
+    Hyperparameter Optimization <hpo>
+    Neural Architecture Search <nas>
+    Model Compression <compression>
+    Experiment <experiment>
+    Others <others>

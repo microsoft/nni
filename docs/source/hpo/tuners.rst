@@ -108,4 +108,4 @@ These articles have compared built-in tuners' performance on some different task
 
 :doc:`hpo_benchmark_stats`
 
-:doc:`/misc/hpo_comparison`
+:doc:`/sharings/hpo_comparison`

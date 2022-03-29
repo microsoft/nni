@@ -1,4 +1,4 @@
-.. 4d622b7ee5031e9cccec635bf6c7427d
+.. 6b958f21bd23025c81836e54a7f4fbe4
 
 ###########################
 Neural Network Intelligence
@@ -16,17 +16,18 @@ Neural Network Intelligence
     自动（超参数）调优 <hpo/index>
     神经网络架构搜索<nas/index>
     模型压缩<compression/index>
-    特征工程<feature_engineering>
+    特征工程<feature_engineering/index>
     NNI实验 <experiment/overview>
     HPO API Reference <reference/hpo>
     Experiment API Reference <reference/experiment>
-    参考<reference>
-    示例与解决方案<misc/community_sharings>
-    研究和出版物 <misc/research_publications>
-    常见问题 <misc/faq>
+    nnictl Commands <reference/nnictl>
+    Experiment Configuration <reference/experiment_config>
+    Python API <reference/python_api>
+    示例与解决方案<sharings/community_sharings>
+    研究和出版物 <notes/research_publications>
     从源代码安装 <notes/build_from_source>
     如何贡献 <notes/contributing>
-    更改日志 <Release>
+    更改日志 <release>
 
 
 .. raw:: html

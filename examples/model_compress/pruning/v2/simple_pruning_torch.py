@@ -77,12 +77,12 @@ if __name__ == '__main__':
     pruner._unwrap_model()
     ModelSpeedup(model, dummy_input=torch.rand(10, 3, 32, 32).to(device), masks_file=masks).speedup_model()
 
-    print('\nThe accuracy after speed up:')
+    print('\nThe accuracy after speedup:')
     evaluator(model)
 
     # Need a new optimizer due to the modules in model will be replaced during speedup.
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
-    print('\nFinetune the model after speed up:')
+    print('\nFinetune the model after speedup:')
     for i in range(5):
         trainer(model, optimizer, criterion, i)
         evaluator(model)

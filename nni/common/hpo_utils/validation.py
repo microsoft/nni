@@ -1,8 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import logging
-from typing import Any, List, Optional
+from typing import Any
 
 common_search_space_types = [
     'choice',
@@ -19,7 +21,7 @@ common_search_space_types = [
 
 def validate_search_space(
         search_space: Any,
-        support_types: Optional[List[str]] = None,
+        support_types: list[str] | None = None,
         raise_exception: bool = False  # for now, in case false positive
     ) -> bool:
 
