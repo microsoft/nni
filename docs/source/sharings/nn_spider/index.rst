@@ -7,7 +7,7 @@
     <ul class="emotion">
         <li class="first">
             <div>
-                <a href="{{ pathto('nnSpider/nobug') }}">
+                <a href="{{ pathto('nobug') }}">
                     <img src="_static/img/NoBug.png" alt="NoBug" />
                 </a>
             </div>
@@ -15,7 +15,7 @@
         </li>
         <li class="first">
             <div>
-                <a href="{{ pathto('nnSpider/holiday') }}">
+                <a href="{{ pathto('holiday') }}">
                     <img src="_static/img/Holiday.png" alt="Holiday" />
                 </a>
             </div>
@@ -23,7 +23,7 @@
         </li>
         <li class="first">
             <div>
-                <a href="{{ pathto('nnSpider/errorEmotion') }}">
+                <a href="{{ pathto('error_emotion') }}">
                     <img src="_static/img/Error.png" alt="Error" />
                 </a>
             </div>
@@ -31,7 +31,7 @@
         </li>
         <li class="second">
             <div>
-                <a href="{{ pathto('nnSpider/working') }}">
+                <a href="{{ pathto('working') }}">
                     <img class="working" src="_static/img/Working.png" alt="Working" />
                 </a>
             </div>
@@ -39,7 +39,7 @@
         </li>
         <li class="second">
             <div>
-                <a href="{{ pathto('nnSpider/sign') }}">
+                <a href="{{ pathto('sign') }}">
                     <img class="sign" src="_static/img/Sign.png" alt="Sign" />
                 </a>
             </div>
@@ -47,7 +47,7 @@
         </li>
         <li class="second">
             <div>
-                <a href="{{ pathto('nnSpider/crying') }}">
+                <a href="{{ pathto('crying') }}">
                     <img class="crying" src="_static/img/Crying.png" alt="Crying" />
                 </a>
             </div>
@@ -55,7 +55,7 @@
         </li>
         <li class="three">
             <div>
-                <a href="{{ pathto('nnSpider/cut') }}">
+                <a href="{{ pathto('cut') }}">
                     <img src="_static/img/Cut.png" alt="Crying" />
                 </a>
             </div>
@@ -63,7 +63,7 @@
         </li>
         <li class="three">
             <div>
-                <a href="{{ pathto('nnSpider/weaving') }}">
+                <a href="{{ pathto('weaving') }}">
                     <img class="weaving" src="_static/img/Weaving.png" alt="Weaving" />
                 </a>
             </div>
@@ -71,7 +71,7 @@
         </li>
         <li class="three">
             <div class="comfort">
-                <a href="{{ pathto('nnSpider/comfort') }}">
+                <a href="{{ pathto('comfort') }}">
                     <img src="_static/img/Comfort.png" alt="Weaving" />
                 </a>
             </div>
@@ -79,7 +79,7 @@
         </li>
         <li class="four">
             <div>
-                <a href="{{ pathto('nnSpider/sweat') }}">
+                <a href="{{ pathto('sweat') }}">
                     <img src="_static/img/Sweat.png" alt="Sweat" />
                 </a>
             </div>

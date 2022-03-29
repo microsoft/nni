@@ -6,8 +6,8 @@ We are glad to announce the alpha release for Feature Engineering toolkit on top
 For now, we support the following feature selector:
 
 
-* `GradientFeatureSelector <./GradientFeatureSelector.rst>`__
-* `GBDTSelector <./GBDTSelector.rst>`__
+* `GradientFeatureSelector <./gradient_feature_selector.rst>`__
+* `GBDTSelector <./gbdt_selector.rst>`__
 
 These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
 

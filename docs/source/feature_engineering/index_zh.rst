@@ -1,4 +1,4 @@
-.. 0958703dcd6f8078a1ad1bcaef9c7199
+.. 74ffd973c9cc0edea8dc524ed9a86840
 
 ###################
 特征工程
@@ -13,6 +13,6 @@
 ..  toctree::
     :maxdepth: 2
 
-    概述 <FeatureEngineering/Overview>
-    GradientFeatureSelector <FeatureEngineering/GradientFeatureSelector>
-    GBDTSelector <FeatureEngineering/GBDTSelector>
+    概述 <overview>
+    GradientFeatureSelector <gradient_feature_selector>
+    GBDTSelector <gbdt_selector>
