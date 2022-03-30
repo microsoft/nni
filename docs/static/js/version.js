@@ -38,15 +38,14 @@ try {
     // The above code is injected by readthedocs in production.
 }
 
-function create_dropdown(button_text, items) {
-    const dropdown = document.createElement("div");
-    dropdown.className = "md-flex__cell md-flex__cell--shrink drop";
+function create_dropdown(selector, button_text, items) {
+    const dropdown = $(selector);
     const button = document.createElement("button");
     button.innerHTML = button_text;
     const content = document.createElement("ul");
     // content.className = "dropdown-content md-hero";
-    dropdown.appendChild(button);
-    dropdown.appendChild(content);
+    dropdown.append(button);
+    dropdown.append(content);
 
     for (const key in items) {
         if (items.hasOwnProperty(key)) {
@@ -64,8 +63,8 @@ function create_dropdown(button_text, items) {
     $(button).click(function (e) {
         // first close all others.
         $(".drop").find(".active").removeClass("active");
-        $(dropdown).find("ul").addClass("active");
-        $(dropdown).find("button").addClass("active");
+        dropdown.find("ul").addClass("active");
+        dropdown.find("button").addClass("active");
         e.stopPropagation();
     })
     $(document).click(function () {
@@ -83,7 +82,7 @@ function add_version_dropdown() {
     );
 
     const current_version = 'v: ' + READTHEDOCS_DATA["version"];
-    $(".navheader").append(create_dropdown(current_version, prev_versions));
+    create_dropdown(".drop.version", current_version, prev_versions);
 }
 
 function add_language_dropdown() {
@@ -105,10 +104,10 @@ function add_language_dropdown() {
         return pathname.join('/');
     }
 
-    $(".navheader").append(create_dropdown(language_dropdown[current_language], {
+    create_dropdown(".drop.language", language_dropdown[current_language], {
         [language_dropdown['en']]: get_dropdown_href('en'),
         [language_dropdown['zh']]: get_dropdown_href('zh')
-    }))
+    });
 }
 
 function hide_nav() {

@@ -257,3 +257,14 @@ dt:target {
         height: 4.6rem !important;
     }
 }
+
+/* Nav bar and heroes */
+@media only screen and (min-width:60em) {
+    .md-search__form, .md-search__input {
+        border-radius: .3rem !important;   /* even rounder */
+    }
+}
+
+.md-header-nav__source, .md-source {
+    padding-right: 0 !important;
+}

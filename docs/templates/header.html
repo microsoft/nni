@@ -22,15 +22,19 @@
           <span class="md-header-nav__topic">{{ theme_nav_title or shorttitle }}</span>
           <span class="md-header-nav__topic"> {{ title|striptags|e }} </span>
         </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+        {% include "searchbox.html" %}
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink drop version"></div>
+      <div class="md-flex__cell md-flex__cell--shrink drop language"></div>
+      <div class="md-flex__cell md-flex__cell--shrink">
         {% if theme_repo_url %}
         <div class="md-header-nav__source">
           {% include "repo.html" %}
         </div>
         {% endif %}
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
-        {% include "searchbox.html" %}
       </div>
     </div>
   </nav>
