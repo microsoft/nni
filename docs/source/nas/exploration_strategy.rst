@@ -56,8 +56,6 @@ TPE
    :members:
    :noindex:
 
-.. footbibliography::
-
 .. _policy-based-rl-strategy:
 
 PolicyBasedRL
@@ -66,8 +64,6 @@ PolicyBasedRL
 .. autoclass:: nni.retiarii.strategy.PolicyBasedRL
    :members:
    :noindex:
-
-.. footbibliography::
 
 .. _one-shot-nas:
 

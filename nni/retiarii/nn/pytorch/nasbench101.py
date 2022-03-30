@@ -9,7 +9,7 @@ import torch.nn as nn
 from nni.retiarii.mutator import InvalidMutation, Mutator
 from nni.retiarii.graph import Model
 from .api import InputChoice, ValueChoice, LayerChoice
-from .utils import Mutable, generate_new_label, get_fixed_dict
+from .mutation_utils import Mutable, generate_new_label, get_fixed_dict
 
 _logger = logging.getLogger(__name__)
 
@@ -221,7 +221,7 @@ class NasBench101Cell(Mutable):
     """
     Cell structure that is proposed in NAS-Bench-101.
 
-    Refer to :footcite:t:`ying2019bench` for details.
+    Proposed by `NAS-Bench-101: Towards Reproducible Neural Architecture Search <http://proceedings.mlr.press/v97/ying19a/ying19a.pdf>`__.
 
     This cell is usually used in evaluation of NAS algorithms because there is a "comprehensive analysis" of this search space
     available, which includes a full architecture-dataset that "maps 423k unique architectures to metrics

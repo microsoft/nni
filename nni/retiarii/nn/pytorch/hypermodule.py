@@ -8,7 +8,7 @@ import torch.nn as nn
 from nni.retiarii.serializer import basic_unit
 
 from .api import LayerChoice
-from .utils import generate_new_label
+from .mutation_utils import generate_new_label
 
 __all__ = ['AutoActivation']
 
@@ -222,14 +222,16 @@ binary_modules = ['BinaryAdd', 'BinaryMul', 'BinaryMinus', 'BinaryDivide', 'Bina
 
 class AutoActivation(nn.Module):
     """
-    This module is an implementation of the paper "Searching for Activation Functions"
-    (https://arxiv.org/abs/1710.05941).
-    NOTE: current `beta` is not per-channel parameter
+    This module is an implementation of the paper `Searching for Activation Functions <https://arxiv.org/abs/1710.05941>`__.
 
     Parameters
     ----------
     unit_num : int
         the number of core units
+
+    Notes
+    -----
+    Current `beta` is not per-channel parameter.
     """
     def __init__(self, unit_num: int = 1, label: str = None):
         super().__init__()

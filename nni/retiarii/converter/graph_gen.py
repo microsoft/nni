@@ -660,8 +660,9 @@ class GraphConverter:
             attrs = {
                 'mutation': 'repeat',
                 'label': module.label,
+                'depth': module.depth_choice,
+                'max_depth': module.max_depth,
                 'min_depth': module.min_depth,
-                'max_depth': module.max_depth
             }
             return ir_graph, attrs
 
@@ -817,7 +818,7 @@ class GraphConverterWithShape(GraphConverter):
 
 def convert_to_graph(script_module, module, converter=None, **kwargs):
     """
-    Convert module to our graph ir, i.e., build a ```Model``` type
+    Convert module to our graph ir, i.e., build a :class:`Model` type
 
     Parameters
     ----------

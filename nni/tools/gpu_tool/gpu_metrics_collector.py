@@ -28,8 +28,8 @@ def main(argv):
 
 
 def parse_nvidia_smi_result(smi, outputDir):
+    old_umask = os.umask(0)
     try:
-        old_umask = os.umask(0)
         xmldoc = minidom.parseString(smi)
         gpuList = xmldoc.getElementsByTagName('gpu')
         with open(os.path.join(outputDir, "gpu_metrics"), 'a') as outputFile:
@@ -62,8 +62,8 @@ def parse_nvidia_smi_result(smi, outputDir):
 
 
 def gen_empty_gpu_metric(outputDir):
+    old_umask = os.umask(0)
     try:
-        old_umask = os.umask(0)
         with open(os.path.join(outputDir, "gpu_metrics"), 'a') as outputFile:
             outPut = {}
             outPut["Timestamp"] = time.asctime(time.localtime())

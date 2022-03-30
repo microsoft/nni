@@ -290,8 +290,8 @@ if __name__ == '__main__':
     #                     help='learning rate to finetune the model')
 
     # speedup
-    # parser.add_argument('--speed-up', action='store_true', default=False,
-    #                     help='whether to speed-up the pruned model')
+    # parser.add_argument('--speedup', action='store_true', default=False,
+    #                     help='whether to speedup the pruned model')
 
     # parser.add_argument('--nni', action='store_true', default=False,
     #                     help="whether to tune the pruners using NNi tuners")

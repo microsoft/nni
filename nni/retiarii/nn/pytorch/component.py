@@ -1,16 +1,17 @@
 import copy
+import warnings
 from collections import OrderedDict
 from typing import Callable, List, Union, Tuple, Optional
 
 import torch
 import torch.nn as nn
 
-from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
+from nni.retiarii.utils import NoContextError, STATE_DICT_PY_MAPPING_PARTIAL
 
-from .api import LayerChoice
+from .api import LayerChoice, ValueChoice, ValueChoiceX
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
-from .utils import Mutable, generate_new_label, get_fixed_value
+from .mutation_utils import Mutable, generate_new_label, get_fixed_value
 
 
 __all__ = ['Repeat', 'Cell', 'NasBench101Cell', 'NasBench101Mutator', 'NasBench201Cell']
@@ -30,7 +31,7 @@ class Repeat(Mutable):
     depth : int or tuple of int
         If one number, the block will be repeated by a fixed number of times. If a tuple, it should be (min, max),
         meaning that the block will be repeated at least ``min`` times and at most ``max`` times.
-
+        If a ValueChoice, it should choose from a series of positive integers.
 
     Examples
     --------
@@ -51,6 +52,10 @@ class Repeat(Mutable):
     we need a factory function that accepts index (0, 1, 2, ...) and returns the module of the ``index``-th layer. ::
 
         self.blocks = nn.Repeat(lambda index: nn.LayerChoice([...], label=f'layer{index}'), (1, 3))
+
+    Depth can be a ValueChoice to support arbitrary depth candidate list. ::
+
+        self.blocks = nn.Repeat(Block(), nn.ValueChoice([1, 3, 5]))
     """
 
     @classmethod
@@ -59,17 +64,26 @@ class Repeat(Mutable):
                                           List[Callable[[int], nn.Module]],
                                           nn.Module,
                                           List[nn.Module]],
-                            depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
-        repeat = get_fixed_value(label)
-        result = nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
+                            depth: Union[int, Tuple[int, int], ValueChoice], *, label: Optional[str] = None):
+        if isinstance(depth, tuple):
+            # we can't create a value choice here,
+            # otherwise we will have two value choices, one created here, another in init.
+            depth = get_fixed_value(label)
 
-        if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
-            # already has a mapping, will merge with it
-            prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
-            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'blocks.{v}' for k, v in prev_mapping.items()})
-        else:
-            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': 'blocks'})
-        return result
+        if isinstance(depth, int):
+            # if depth is a valuechoice, it should be already an int
+            result = nn.Sequential(*cls._replicate_and_instantiate(blocks, depth))
+
+            if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
+                # already has a mapping, will merge with it
+                prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
+                setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'blocks.{v}' for k, v in prev_mapping.items()})
+            else:
+                setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': 'blocks'})
+
+            return result
+
+        raise NoContextError(f'Not in fixed mode, or {depth} not an integer.')
 
     def __init__(self,
                  blocks: Union[Callable[[int], nn.Module],
@@ -78,15 +92,32 @@ class Repeat(Mutable):
                                List[nn.Module]],
                  depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
         super().__init__()
-        self._label = generate_new_label(label)
-        self.min_depth = depth if isinstance(depth, int) else depth[0]
-        self.max_depth = depth if isinstance(depth, int) else depth[1]
+
+        if isinstance(depth, ValueChoiceX):
+            if label is not None:
+                warnings.warn(
+                    'In repeat, `depth` is already a ValueChoice, but `label` is still set. It will be ignored.',
+                    RuntimeWarning
+                )
+            self.depth_choice = depth
+            all_values = list(self.depth_choice.all_options())
+            self.min_depth = min(all_values)
+            self.max_depth = max(all_values)
+        elif isinstance(depth, tuple):
+            self.min_depth = depth if isinstance(depth, int) else depth[0]
+            self.max_depth = depth if isinstance(depth, int) else depth[1]
+            self.depth_choice = ValueChoice(list(range(self.min_depth, self.max_depth + 1)), label=label)
+        elif isinstance(depth, int):
+            self.min_depth = self.max_depth = depth
+            self.depth_choice = depth
+        else:
+            raise TypeError(f'Unsupported "depth" type: {type(depth)}')
         assert self.max_depth >= self.min_depth > 0
         self.blocks = nn.ModuleList(self._replicate_and_instantiate(blocks, self.max_depth))
 
     @property
     def label(self):
-        return self._label
+        return self.depth_choice.label
 
     def forward(self, x):
         for block in self.blocks:
@@ -107,12 +138,16 @@ class Repeat(Mutable):
             blocks = [b(i) for i, b in enumerate(blocks)]
         return blocks
 
+    def __getitem__(self, index):
+        # shortcut for blocks[index]
+        return self.blocks[index]
+
 
 class NasBench201Cell(nn.Module):
     """
     Cell structure that is proposed in NAS-Bench-201.
 
-    Refer to :footcite:t:`dong2019bench` for details.
+    Proposed by `NAS-Bench-201: Extending the Scope of Reproducible Neural Architecture Search <https://arxiv.org/abs/2001.00326>`__.
 
     This cell is a densely connected DAG with ``num_tensors`` nodes, where each node is tensor.
     For every i < j, there is an edge from i-th node to j-th node.

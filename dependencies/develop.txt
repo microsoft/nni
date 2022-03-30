@@ -5,11 +5,12 @@ ipython
 jupyterlab
 nbsphinx
 pylint
+pyright
 pytest
 pytest-azurepipelines
 pytest-cov
 rstcheck
-sphinx >= 4.4
+sphinx >= 4.5
 sphinx-argparse-nni >= 0.4.0
 sphinx-gallery
 sphinxcontrib-bibtex

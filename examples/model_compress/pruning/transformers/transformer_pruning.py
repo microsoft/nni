@@ -53,8 +53,8 @@ def parse_args():
     parser.add_argument("--epochs_per_iteration", type=int, default=1,
                         help="Epochs to finetune before the next pruning iteration "
                              "(only effective if num_iterations > 1).")
-    parser.add_argument("--speed_up", action="store_true", default=False,
-                        help="Whether to speed-up the pruned model")
+    parser.add_argument("--speedup", action="store_true", default=False,
+                        help="Whether to speedup the pruned model")
 
     # parameters for model training; no need to change them for running examples
     parser.add_argument("--max_length", type=int, default=128,
@@ -338,8 +338,8 @@ def main():
     # Currently, speeding up Transformers through NNI ModelSpeedup is not supported because of shape inference issues.
     # However, if you are using the transformers library, you can use the following workaround:
     # The following code gets the head pruning decisions from the pruner and calls the _prune_heads() function
-    # implemented in models from the transformers library to speed up the model.
-    if args.speed_up:
+    # implemented in models from the transformers library to speedup the model.
+    if args.speedup:
         speedup_rules = {}
         for group_idx, group in enumerate(pruner.attention_name_groups):
             # get the layer index

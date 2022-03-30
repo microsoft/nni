@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import contextlib
 from dataclasses import dataclass, fields
 from datetime import datetime
@@ -126,9 +128,9 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
 
     return proc
 
-def _start_rest_server(nni_manager_args, run_mode) -> Tuple[int, Popen]:
+def _start_rest_server(nni_manager_args, run_mode) -> Popen:
     import nni_node
-    node_dir = Path(nni_node.__path__[0])
+    node_dir = Path(nni_node.__path__[0])  # type: ignore
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
     cmd = [node, '--max-old-space-size=4096', main_js]
@@ -151,10 +153,10 @@ def _start_rest_server(nni_manager_args, run_mode) -> Tuple[int, Popen]:
         from subprocess import CREATE_NEW_PROCESS_GROUP
         return Popen(cmd, stdout=out, stderr=err, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
     else:
-        return Popen(cmd, stdout=out, stderr=err, cwd=node_dir, preexec_fn=os.setpgrp)
+        return Popen(cmd, stdout=out, stderr=err, cwd=node_dir, preexec_fn=os.setpgrp)  # type: ignore
 
 
-def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Popen:
+def start_experiment_retiarii(exp_id, config, port, debug):
     pipe = None
     proc = None
 
@@ -221,7 +223,7 @@ def _start_rest_server_retiarii(config: ExperimentConfig, port: int, debug: bool
         args['dispatcher_pipe'] = pipe_path
 
     import nni_node
-    node_dir = Path(nni_node.__path__[0])
+    node_dir = Path(nni_node.__path__[0])  # type: ignore
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
     cmd = [node, '--max-old-space-size=4096', main_js]
@@ -259,8 +261,8 @@ def _save_experiment_information(experiment_id: str, port: int, start_time: int,
 
 
 def get_stopped_experiment_config(exp_id, exp_dir=None):
-    config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
-    config = ExperimentConfig(**config_json)
+    config_json = get_stopped_experiment_config_json(exp_id, exp_dir)  # type: ignore
+    config = ExperimentConfig(**config_json)  # type: ignore
     if exp_dir and not os.path.samefile(exp_dir, config.experiment_working_directory):
         msg = 'Experiment working directory provided in command line (%s) is different from experiment config (%s)'
         _logger.warning(msg, exp_dir, config.experiment_working_directory)

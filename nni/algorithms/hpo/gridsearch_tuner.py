@@ -200,13 +200,18 @@ class GridSearchTuner(Tuner):
                     mid = (l + r) / 2
                     diff_l = _less(l, mid, spec)
                     diff_r = _less(mid, r, spec)
-                    if diff_l and diff_r:  # we can skip these for non-q, but it will complicate the code
+                    # if l != 0 and r != 1, then they are already in the grid, else they are not
+                    # the special case is needed because for normal distribution 0 and 1 will generate infinity
+                    if (diff_l or l == 0.0) and (diff_r or r == 1.0):
+                        # we can skip these for non-q, but it will complicate the code
                         new_vals.append(mid)
                         updated = True
                     if diff_l:
                         new_divs.append((l, mid))
+                        updated = (updated or l == 0.0)
                     if diff_r:
                         new_divs.append((mid, r))
+                        updated = (updated or r == 1.0)
                 self.grid[i] += new_vals
                 self.divisions[i] = new_divs
 

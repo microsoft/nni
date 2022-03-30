@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from dataclasses import dataclass
 import json
 from typing import List
@@ -111,6 +114,8 @@ class TrialJob:
         Stderr log path.
     sequenceId: int
         Sequence Id.
+    message: str
+        Message including platform/environment.
     """
     trialJobId: str
     status: str
@@ -121,9 +126,11 @@ class TrialJob:
     finalMetricData: List[TrialMetricData]
     stderrPath: str
     sequenceId: int
+    message: str
 
-    def __init__(self, trialJobId: str, status: str, logPath: str, startTime: int, sequenceId: int,
-                 endTime: int = -1, stderrPath: str = '', hyperParameters: List = [], finalMetricData: List = []):
+    def __init__(self, trialJobId: str, status: str, startTime: int, sequenceId: int, logPath: str = '',
+                 endTime: int = -1, stderrPath: str = '', hyperParameters: List = [], finalMetricData: List = [],
+                 message: str = '--'):
         self.trialJobId = trialJobId
         self.status = status
         self.hyperParameters = [TrialHyperParameters(**json.loads(e)) for e in hyperParameters]
@@ -133,3 +140,4 @@ class TrialJob:
         self.finalMetricData = [TrialMetricData(**e) for e in finalMetricData]
         self.stderrPath = stderrPath
         self.sequenceId = sequenceId
+        self.message = message

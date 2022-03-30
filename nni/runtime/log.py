@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+from __future__ import annotations
+
 import logging
 import sys
 from datetime import datetime
@@ -105,7 +110,7 @@ def _init_logger_standalone() -> None:
     _register_handler(StreamHandler(sys.stdout), logging.INFO)
 
 
-def _prepare_log_dir(path: Optional[str]) -> Path:
+def _prepare_log_dir(path: Path | str) -> Path:
     if path is None:
         return Path()
     ret = Path(path)
@@ -148,7 +153,7 @@ class _LogFileWrapper(TextIOBase):
     def __init__(self, log_file: TextIOBase):
         self.file: TextIOBase = log_file
         self.line_buffer: Optional[str] = None
-        self.line_start_time: Optional[datetime] = None
+        self.line_start_time: datetime = datetime.fromtimestamp(0)
 
     def write(self, s: str) -> int:
         cur_time = datetime.now()
