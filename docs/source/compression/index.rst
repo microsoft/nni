@@ -31,7 +31,6 @@ We further elaborate on the two methods, pruning and quantization, in the follow
 NNI provides an easy-to-use toolkit to help users design and use model pruning and quantization algorithms.
 For users to compress their models, they only need to add several lines in their code.
 There are some popular model compression algorithms built-in in NNI.
-Users could further use NNI’s auto-tuning power to find the best-compressed model, which is detailed in Auto Model Compression.
 On the other hand, users could easily customize their new compression algorithms using NNI’s interface.
 
 There are several core features supported by NNI model compression:
@@ -54,7 +53,7 @@ If users want to apply both, a sequential mode is recommended as common practise
 
 .. note::
   Note that NNI pruners or quantizers are not meant to physically compact the model but for simulating the compression effect. Whereas NNI speedup tool can truly compress model by changing the network architecture and therefore reduce latency.
-  To obtain a truly compact model, users should conduct :doc:`pruning speedup <../tutorials/pruning_speedup>` or :doc:`quantizaiton speedup <../tutorials/quantization_speedup>`. 
+  To obtain a truly compact model, users should conduct :doc:`pruning speedup <../tutorials/cp_pruning_speedup>` or :doc:`quantizaiton speedup <../tutorials/cp_quantization_speedup>`. 
   The interface and APIs are unified for both PyTorch and TensorFlow. Currently only PyTorch version has been supported, and TensorFlow version will be supported in future.
 
 
@@ -69,7 +68,7 @@ Pruning algorithms compress the original network by removing redundant weights o
    * - Name
      - Brief Introduction of Algorithm
    * - :ref:`level-pruner`
-     - Pruning the specified ratio on each weight based on absolute values of weights
+     - Pruning the specified ratio on each weight element based on absolute value of weight element
    * - :ref:`l1-norm-pruner`
      - Pruning output channels with the smallest L1 norm of weights (Pruning Filters for Efficient Convnets) `Reference Paper <https://arxiv.org/abs/1608.08710>`__
    * - :ref:`l2-norm-pruner`
@@ -140,8 +139,8 @@ The following figure shows how NNI prunes and speeds up your models.
    :scale: 40%
    :alt:
 
-The detailed tutorial of Speedup Model with Mask can be found :doc:`here <../tutorials/pruning_speedup>`.
-The detailed tutorial of Speedup Model with Calibration Config can be found :doc:`here <../tutorials/quantization_speedup>`.
+The detailed tutorial of Speedup Model with Mask can be found :doc:`here <../tutorials/cp_pruning_speedup>`.
+The detailed tutorial of Speedup Model with Calibration Config can be found :doc:`here <../tutorials/cp_quantization_speedup>`.
 
 .. attention::
 
