@@ -23,7 +23,7 @@ It usually takes model and config as input arguments, then generate a mask for t
 
 .. rubric:: Scheduled Pruner
 
-Scheduled pruner decides how to allocate sparsity ratio to each pruning targets, it also handles the pruning speed up and finetuning logic.
+Scheduled pruner decides how to allocate sparsity ratio to each pruning targets, it also handles the pruning speedup and finetuning logic.
 From the implementation logic, the scheduled pruner is a combination of pruning scheduler, basic pruner and task generator.
 
 Task generator only cares about the pruning effect that should be achieved in each round, and uses a config list to express how to pruning.
@@ -105,4 +105,4 @@ In the dependency-aware mode, the pruner will provide a better speed gain from t
 
     Quickstart <../tutorials/cp_pruning_quick_start_mnist>
     Pruner <pruner>
-    Speed Up <../tutorials/cp_pruning_speed_up>
+    Speedup <../tutorials/cp_pruning_speed_up>
