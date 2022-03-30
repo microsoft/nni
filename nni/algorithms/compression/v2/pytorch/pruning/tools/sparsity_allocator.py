@@ -70,8 +70,7 @@ class BankSparsityAllocator(SparsityAllocator):
             # make up for balance_gran
             balance_gran = [1] * (n_dim - len(self.balance_gran)) + self.balance_gran
             for i, j in zip(metric.shape, balance_gran):
-                assert i % j == 0, 'Length of {} weight is not \
-                    aligned with balance granularity'.format(name)
+                assert i % j == 0, 'Length of {} weight is not aligned with balance granularity'.format(name)
 
             mask = torch.zeros(metric.shape).type_as(metric)
             loop_iters = [range(int(i / j)) for i, j in zip(metric.shape, balance_gran)]
