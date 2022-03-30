@@ -1,37 +1,42 @@
-// Uncomment the following for debug
-// READTHEDOCS_DATA = {
-//     "ad_free": false,
-//     "api_host": "https://readthedocs.org",
-//     "build_date": "2022-01-25T06:27:55Z",
-//     "builder": "sphinx",
-//     "canonical_url": null,
-//     "commit": "ca66e346",
-//     "docroot": "/docs/en_US/",
-//     "features": { "docsearch_disabled": false },
-//     "global_analytics_code": "UA-17997319-1",
-//     "language": "en",
-//     "page": "Tutorial",
-//     "programming_language": "words",
-//     "project": "nni",
-//     "proxied_api_host": "/_",
-//     "source_suffix": ".rst",
-//     "subprojects": { "nni-zh": "https://nni.readthedocs.io/zh/stable/" },
-//     "theme": "sphinx_material",
-//     "user_analytics_code": "UA-136029994-1",
-//     "version": "latest"
-// };
+try {
+    READTHEDOCS_DATA;
+} catch (e) {
+    console.log('READTHEDOCS_DATA is undefined. In debug mode.');
 
-// READTHEDOCS_VERSIONS = [
-//     ["latest", "/en/latest/"],
-//     ["stable", "/en/stable/"],
-//     ["v2.6", "/en/v2.6/"],
-//     ["v2.5", "/en/v2.5/"],
-//     ["v2.4", "/en/v2.4/"],
-//     ["v2.3", "/en/v2.3/"],
-//     ["test-version", "/en/test-version"]
-// ];
-// The above code is injected by readthedocs in production.
-
+    // mock info
+    READTHEDOCS_DATA = {
+        "ad_free": false,
+        "api_host": "https://readthedocs.org",
+        "build_date": "2022-01-25T06:27:55Z",
+        "builder": "sphinx",
+        "canonical_url": null,
+        "commit": "ca66e346",
+        "docroot": "/docs/en_US/",
+        "features": { "docsearch_disabled": false },
+        "global_analytics_code": "UA-17997319-1",
+        "language": "en",
+        "page": "Tutorial",
+        "programming_language": "words",
+        "project": "nni",
+        "proxied_api_host": "/_",
+        "source_suffix": ".rst",
+        "subprojects": { "nni-zh": "https://nni.readthedocs.io/zh/stable/" },
+        "theme": "sphinx_material",
+        "user_analytics_code": "UA-136029994-1",
+        "version": "latest"
+    };
+    
+    READTHEDOCS_VERSIONS = [
+        ["latest", "/en/latest/"],
+        ["stable", "/en/stable/"],
+        ["v2.6", "/en/v2.6/"],
+        ["v2.5", "/en/v2.5/"],
+        ["v2.4", "/en/v2.4/"],
+        ["v2.3", "/en/v2.3/"],
+        ["test-version", "/en/test-version"]
+    ];
+    // The above code is injected by readthedocs in production.
+}
 
 function create_dropdown(button_text, items) {
     const dropdown = document.createElement("div");

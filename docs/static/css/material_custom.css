@@ -226,5 +226,20 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
 dt:target {
     margin-top: 0.15rem !important;
     padding-top: 0.5rem !important;
+}
+
+:target {
+    /* header height */
     scroll-margin-top: 3.5rem;
+}
+
+/* Responsive nav bar */
+@media only screen and (max-width:59.9375em) {
+    .md-header-nav__topic.long {
+        display: hidden;
+    }
+    .md-header-nav__topic.short {
+        display: block;
+        opacity: 1;
+    }
 }

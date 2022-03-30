@@ -208,7 +208,7 @@ html_theme_options = {
 
     # Set the repo location to get a badge with stats
     'repo_url': 'https://github.com/microsoft/nni/',
-    'repo_name': 'nni',
+    'repo_name': 'GitHub',
 
     # Visible levels of the global TOC; -1 means unlimited
     'globaltoc_depth': 3,
