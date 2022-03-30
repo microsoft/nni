@@ -51,13 +51,13 @@ Only :ref:`level-pruner` and :ref:`admm-pruner` support fine-grained pruning, al
 
 .. rubric:: Dependency-aware Mode for Output Channel Pruning
 
-Currently, we support ``dependency aware`` mode in several ``pruner``: :ref:`l1-norm-pruner`, :ref:`l2-norm-pruner`, :ref:`fpgm-pruner`,
+Currently, we support dependency-aware mode in several ``pruner``: :ref:`l1-norm-pruner`, :ref:`l2-norm-pruner`, :ref:`fpgm-pruner`,
 :ref:`activation-apoz-rank-pruner`, :ref:`activation-mean-rank-pruner`, :ref:`taylor-fo-weight-pruner`.
 
 In these pruning algorithms, the pruner will prune each layer separately. While pruning a layer,
 the algorithm will quantify the importance of each filter based on some specific metrics(such as l1 norm), and prune the less important output channels.
 
-We use pruning convolutional layers as an example to explain ``dependency aware`` mode.
+We use pruning convolutional layers as an example to explain dependency-aware mode.
 As :ref:`topology analysis utils <topology-analysis>` shows, if the output channels of two convolutional layers(conv1, conv2) are added together,
 then these two convolutional layers have channel dependency with each other (more details please see :ref:`ChannelDependency <topology-analysis>`).
 Take the following figure as an example.
