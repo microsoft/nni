@@ -74,10 +74,6 @@ function create_dropdown(button_text, items) {
     return dropdown;
 }
 
-function remove_version_dropdown() {
-    $(".navheader").children().last().remove();
-}
-
 function add_version_dropdown() {
     const prev_versions = Object.assign(
         {},
@@ -124,7 +120,6 @@ function hide_nav() {
 
 $(document).ready(function () {
     hide_nav();
-    remove_version_dropdown();
     add_language_dropdown();
     add_version_dropdown();
 });

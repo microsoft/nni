@@ -19,8 +19,8 @@
       </div>
       <div class="md-flex__cell md-flex__cell--stretch">
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-          <span class="md-header-nav__topic long">Neural Network Intelligence</span>
-          <span class="md-header-nav__topic short">NNI</span>
+          <span class="md-header-nav__topic">{{ theme_nav_title or shorttitle }}</span>
+          <span class="md-header-nav__topic"> {{ title|striptags|e }} </span>
         </div>
         {% if theme_repo_url %}
         <div class="md-header-nav__source">
@@ -32,7 +32,6 @@
         <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
         {% include "searchbox.html" %}
       </div>
-      {% include "version_dropdown.html" %}
     </div>
   </nav>
 </header>

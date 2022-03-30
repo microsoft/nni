@@ -234,12 +234,26 @@ dt:target {
 }
 
 /* Responsive nav bar */
-@media only screen and (max-width:59.9375em) {
-    .md-header-nav__topic.long {
-        display: hidden;
+.md-source__fact {
+    padding: 0 !important;
+}
+
+@media only screen and (max-width:76.1875em) {
+    .md-nav--primary .md-nav__link {
+        padding: .15rem .5rem !important;
     }
-    .md-header-nav__topic.short {
-        display: block;
-        opacity: 1;
+    .md-nav--primary span.md-nav__link.caption {
+        margin-top: 0.75em;
+    }
+    .md-nav--primary .md-nav__item .md-nav__list .md-nav__item {
+        padding-left: .3rem;
+    }
+    html .md-nav--primary .md-nav__title--site .md-nav__button {
+        height: auto !important;
+        font-size: inherit !important;
+    }
+    html .md-nav--primary .md-nav__title {
+        padding-top: 2rem !important;
+        height: 4.6rem !important;
     }
 }

@@ -80,7 +80,7 @@ button[data-md-color-accent=custom] {
 @media only screen and (max-width:59.9375em) {
     [data-md-color-primary=custom] .md-nav__source {
         background-color: var(--custom-color-primary);
-        opacity: 0.0325;
+        opacity: 0.9675;
     }
 }
 

@@ -1,5 +1,11 @@
 /* https://codepen.io/mildrenben/pen/RPwQEY */
 
+@media only screen and (max-width:44.9375em) {
+    .drop {
+        display: none;
+    }
+}
+
 .drop {
     width: 125px;
     vertical-align: middle;
