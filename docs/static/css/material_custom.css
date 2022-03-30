@@ -233,6 +233,13 @@ dt:target {
     scroll-margin-top: 3.5rem;
 }
 
+/* fix code block style on mobile */
+@media only screen and (max-width: 44.9375em) {
+    .md-typeset pre {
+        margin: 1em -0.3em !important;
+    }
+}
+
 /* Responsive nav bar */
 .md-source__fact {
     padding: 0 !important;
@@ -267,4 +274,50 @@ dt:target {
 
 .md-header-nav__source, .md-source {
     padding-right: 0 !important;
+}
+
+.md-hero {
+    position: relative;
+}
+
+.md-hero__background {
+    max-width: 73rem;
+    position: absolute;
+    bottom: -46px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    z-index: 0;
+}
+
+.md-hero__background img {
+    width: 100%;
+}
+
+@media only screen and (max-width:59.9375em) {
+    .md-hero__background {
+        display: none;
+    }
+}
+
+@media only screen and (max-width:76.1875em) {
+    .md-hero__background {
+        bottom: -5%;
+        top: auto;
+    }
+}
+
+.md-hero__inner {
+    z-index: 1;
+    position: relative;
+    padding-right: 35%;
+}
+
+@media only screen and (min-width:76.2em) {
+    .md-hero__inner {
+        padding-top: 2.4rem;
+        padding-bottom: 1.2rem;
+    }
 }
