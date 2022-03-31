@@ -45,6 +45,10 @@ h1, h2, h3, h4, .md-header, .md-tabs, .md-hero {
     }
 }
 
+.md-typeset h4, .md-typeset h5, .md-typeset h6 {
+    font-weight: 600;
+}
+
 /* viewcode link should have left padding */
 span.viewcode-link {
     padding-left: 0.6rem;
