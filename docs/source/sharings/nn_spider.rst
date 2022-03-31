@@ -1,10 +1,6 @@
 nnSpider Emoticons
 ==================
 
-.. image:: images/nn_spider/home.svg
-   :width: 100%
-
-
 * Comfort
 
   .. image:: images/nn_spider/comfort.png
@@ -54,4 +50,3 @@ nnSpider Emoticons
 
   .. image:: images/nn_spider/working.png
      :width: 400
-
