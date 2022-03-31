@@ -371,6 +371,7 @@ dt:target {
 /* Enlarge table */
 .md-typeset table:not([class]) {
     font-size: 0.7rem;
+    box-shadow: 0 2px 2px 0 rgb(0 0 0 / 8%), 0 1px 5px 0 rgb(0 0 0 / 7%), 0 3px 1px -2px rgb(0 0 0 / 14%);
 }
 
 .md-typeset table:not([class]) th {
@@ -387,6 +388,10 @@ dt:target {
 /* On this page TOC */
 .md-sidebar--secondary .md-nav--secondary {
     border-inline-start: 4px solid var(--custom-color-primary);
+}
+
+.md-nav__link {
+    margin-top: 0.45em;
 }
 
 /* Override style for copy button */
