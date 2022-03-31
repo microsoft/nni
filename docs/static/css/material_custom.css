@@ -236,7 +236,7 @@ dt:target {
 /* fix code block style on mobile */
 @media only screen and (max-width: 44.9375em) {
     .md-typeset pre {
-        margin: 1em -0.3em !important;
+        margin: 1em -0.3em;
     }
 }
 
@@ -247,7 +247,7 @@ dt:target {
 
 @media only screen and (max-width:76.1875em) {
     .md-nav--primary .md-nav__link {
-        padding: .15rem .5rem !important;
+        padding: .15rem .5rem;
     }
     .md-nav--primary span.md-nav__link.caption {
         margin-top: 0.75em;
@@ -256,19 +256,19 @@ dt:target {
         padding-left: .3rem;
     }
     html .md-nav--primary .md-nav__title--site .md-nav__button {
-        height: auto !important;
-        font-size: inherit !important;
+        height: auto;
+        font-size: inherit;
     }
     html .md-nav--primary .md-nav__title {
-        padding-top: 2rem !important;
-        height: 4.6rem !important;
+        padding-top: 2rem;
+        height: 4.6rem;
     }
 }
 
 /* Nav bar and heroes */
 @media only screen and (min-width:60em) {
     .md-search__form, .md-search__input {
-        border-radius: .3rem !important;   /* even rounder */
+        border-radius: .3rem;   /* even rounder */
     }
 }
 
@@ -351,13 +351,18 @@ dt:target {
     padding: .4rem .7rem;
 }
 
+/* On this page TOC */
+.md-sidebar--secondary .md-nav--secondary {
+    border-inline-start: 4px solid var(--custom-color-primary);
+}
+
 /* Override style for copy button */
 button.copybtn {
-    opacity: 1 !important;
+    opacity: 1;
 }
 
 .o-tooltip--left:after {
-    transform: translateX(-5%) translateY(-125%) !important;
+    transform: translateX(-5%) translateY(-125%);
     padding: .4em;
     font-size: .5rem;
     font-weight: 600;
@@ -365,7 +370,7 @@ button.copybtn {
 }
 
 .o-tooltip--left:hover:after {
-    transform: translateX(-5%) translateY(-120%) !important;
+    transform: translateX(-5%) translateY(-120%);
 }
 
 /* Sphinx tabs */

@@ -275,6 +275,7 @@ html_js_files = [
     'js/version.js',
     'js/github.js',
     'js/sphinx_gallery.js',
+    'js/misc.js'
 ]
 
 # HTML context that can be used in jinja templates
