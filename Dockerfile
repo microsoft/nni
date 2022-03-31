@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # fix E: The repository 'XXX  Release' does not have a Release file.
 RUN echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64 /" > /etc/apt/sources.list.d/cuda.list
-RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004/x86_64 /" > /etc/apt/sources.list.d/nvidia_ml.list
+RUN echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list
 
 RUN apt-get -y update
 RUN apt-get -y install \
