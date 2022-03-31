@@ -59,23 +59,23 @@ dt.sig-object {
     position: relative;
     background: #f4f5f7;
     padding: 0.5rem;
-    border-left: 0.2rem solid var(--custom-color-accent);  /* this should be matched with theme color. */
+    border-left: 0.2rem solid var(--custom-color-accent);
     word-wrap: break-word;
 }
 
 .class > dt.sig-object {
     border-left: none;                    /* remove left border */
-    border-top: 0.18rem solid var(--custom-color-accent);  /* this should be matched with theme color. */
+    border-top: 0.18rem solid var(--custom-color-accent);
 }
 
 .function > dt.sig-object {
     border-left: none;                    /* remove left border */
-    border-top: 0.18rem solid var(--custom-color-accent);  /* this should be matched with theme color. */
+    border-top: 0.18rem solid var(--custom-color-accent);
 }
 
 .exception > dt.sig-object {
     border-left: none;                    /* remove left border */
-    border-top: 0.18rem solid var(--custom-color-accent);  /* this should be matched with theme color. */
+    border-top: 0.18rem solid var(--custom-color-accent);
 }
 
 /* Padding on parameter list is not needed */
@@ -88,7 +88,7 @@ dl.field-list > dd {
 }
 
 /* show headerlink when hover/focus */
-.headerlink:focus, .headerlink:hover {
+dt.sig-object:focus .headerlink, dt.sig-object:hover .headerlink {
     -webkit-transform: translate(0);
     transform: translate(0);
     opacity: 1;
