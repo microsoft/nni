@@ -1,5 +1,5 @@
-Tutorials
-=========
+Examples
+========
 
 .. TOC
 
@@ -15,6 +15,8 @@ Tutorials
    tutorials/quantization_speedup
 
 .. ----------------------
+
+More examples can be found in our :githublink:`GitHub repository <nni/examples>`.
 
 .. cardlinkitem::
    :header: HPO Quickstart with PyTorch

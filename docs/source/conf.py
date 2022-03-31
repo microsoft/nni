@@ -233,8 +233,8 @@ html_theme_options = {
 
     # Text to appear at the top of the home page in a "hero" div.
     'heroes': {
-        # We can have heroes for the home pages of HPO, NAS, Compression in future.
-        'index': 'An open source AutoML toolkit for neural architecture search, model compression and hyper-parameter tuning.'
+        'index': 'An open source AutoML toolkit for hyperparameter optimization, neural architecture search, '
+                 'model compression and feature engineering.'
     }
 }
 
