@@ -11,11 +11,9 @@
 [![Version](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases)
 [![Documentation Status](https://readthedocs.org/projects/nni/badge/?version=stable)](https://nni.readthedocs.io/en/stable/?badge=stable)
 
-NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/) ([简体中文版点这里](https://nni.readthedocs.io/zh/stable))**.
+[<img src="docs/img/readme_banner.png" width="100%"/>](https://nni.readthedocs.io/)
 
-<div align="center">
-<img src="docs/img/readme_banner.png" width="100%"/>
-</div>
+NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/) ([简体中文版点这里](https://nni.readthedocs.io/zh/stable))**.
 
 ## What's NEW! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 
