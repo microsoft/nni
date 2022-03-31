@@ -13,15 +13,19 @@
 
 NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/) ([简体中文版点这里](https://nni.readthedocs.io/zh/stable))**.
 
+<div align="center">
+<img src="docs/img/readme_banner.png" width="100%"/>
+</div>
+
 ## What's NEW! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 
 * **New release**: [v2.6 is available](https://github.com/microsoft/nni/releases/tag/v2.6) - _released on Jan-19-2022_
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
-* **New emoticons release**: [nnSpider](./docs/source/Tutorial/NNSpider.md)
+* **New emoticons release**: nnSpider
 <div align="center">
-<a href="#nni-spider"><img width="100%" src="docs/img/emoicons/home.svg" /></a>
+<a href="#nni-spider"><img width="100%" src="docs/source/sharings/images/nn_spider/home.svg" /></a>
 </div>
 
 ## Installation
@@ -206,10 +210,10 @@ To update NNI to the latest version, add `--upgrade` flag to the above commands.
 
 * [NNI Documentation Homepage](https://nni.readthedocs.io/)
 * [NNI Installation Guide](https://nni.readthedocs.io/en/stable/installation.html)
-* [NNI Examples](https://nni.readthedocs.io/en/stable/examples.html)
-* [Python API Reference](https://nni.readthedocs.io/en/stable/reference/python_api.html)
-* [Releases (Change Log)](https://nni.readthedocs.io/en/stable/release.html)
-* [Related Research and Publications](https://nni.readthedocs.io/en/stable/notes/research_publications.html)
+* [NNI Examples](https://nni.readthedocs.io/en/latest/examples.html)
+* [Python API Reference](https://nni.readthedocs.io/en/latest/reference/python_api.html)
+* [Releases (Change Log)](https://nni.readthedocs.io/en/latest/release.html)
+* [Related Research and Publications](https://nni.readthedocs.io/en/latest/notes/research_publications.html)
 * [Youtube Channel of NNI](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw)
 * [Bilibili Space of NNI](https://space.bilibili.com/1649051673)
 * [Webinar of Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html)
