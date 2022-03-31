@@ -1,42 +1,57 @@
 nnSpider Emoticons
 ==================
 
-.. img:: images/nn_spider/home/svg
+.. image:: images/nn_spider/home.svg
    :width: 100%
 
-.. list-table::
-   :header-rows: 1
-   :widths: auto
 
-   * - Name
-     - Image
-   * - Comfort
-     -
-       .. img:: images/nn_spider/comfort.png
-   * - Crying
-     -
-       .. img:: images/nn_spider/crying.png
-   * - Cut
-     -
-       .. img:: images/nn_spider/cut.png
-   * - Error
-     -
-       .. img:: images/nn_spider/error.png
-   * - Holiday
-     -
-       .. img:: images/nn_spider/holiday.png
-   * - No bug
-     -
-       .. img:: images/nn_spider/nobug.png
-   * - Sign
-     -
-       .. img:: images/nn_spider/sign.png
-   * - Sweat
-     -
-       .. img:: images/nn_spider/sweat.png
-   * - Weaving
-     -
-       .. img:: images/nn_spider/weaving.png
-   * - Working
-     -
-       .. img:: images/nn_spider/working.png
+* Comfort
+
+  .. image:: images/nn_spider/comfort.png
+     :width: 400
+
+* Crying
+
+  .. image:: images/nn_spider/crying.png
+     :width: 400
+
+* Cut
+
+  .. image:: images/nn_spider/cut.png
+     :width: 400
+
+* Error
+
+  .. image:: images/nn_spider/error.png
+     :width: 400
+
+* Holiday
+
+  .. image:: images/nn_spider/holiday.png
+     :width: 400
+
+* No bug
+
+  .. image:: images/nn_spider/nobug.png
+     :width: 400
+
+* Sign
+
+  .. image:: images/nn_spider/sign.png
+     :width: 400
+
+* Sweat
+
+  .. image:: images/nn_spider/sweat.png
+     :width: 400
+
+* Weaving
+
+  .. image:: images/nn_spider/weaving.png
+     :width: 400
+
+* Working
+
+  .. image:: images/nn_spider/working.png
+     :width: 400
+

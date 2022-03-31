@@ -21,7 +21,7 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
-* **New emoticons release**: nnSpider
+* **New emoticons release**: [nnSpider](https://nni.readthedocs.io/en/latest/sharings/nn_spider.html)
 <div align="center">
 <a href="#nni-spider"><img width="100%" src="docs/source/sharings/images/nn_spider/home.svg" /></a>
 </div>
