@@ -110,15 +110,7 @@ function add_language_dropdown() {
     });
 }
 
-function hide_nav() {
-    const d = $('nav.md-tabs[data-md-component="tabs"]');
-    if (d.find('li').length <= 1) {
-        d.addClass('hidden');
-    }
-}
-
 $(document).ready(function () {
-    hide_nav();
     add_language_dropdown();
     add_version_dropdown();
 });
