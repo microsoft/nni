@@ -124,6 +124,9 @@ sphinx_gallery_conf = {
 copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
 copybutton_prompt_is_regexp = True
 
+# Copybutton: customize selector to exclude gallery outputs.
+copybutton_selector = ":not(div.sphx-glr-script-out) > div.highlight pre"
+
 # Allow additional builders to be considered compatible.
 sphinx_tabs_valid_builders = ['linkcheck']
 
