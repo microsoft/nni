@@ -124,6 +124,9 @@ sphinx_gallery_conf = {
 copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
 copybutton_prompt_is_regexp = True
 
+# Copybutton: customize selector to exclude gallery outputs.
+copybutton_selector = ":not(div.sphx-glr-script-out) > div.highlight pre"
+
 # Allow additional builders to be considered compatible.
 sphinx_tabs_valid_builders = ['linkcheck']
 
@@ -213,14 +216,14 @@ html_theme_options = {
     'base_url': 'https://nni.readthedocs.io/',
 
     # Set the color and the accent color
-    # We can't have our customized themes currently
     # Remember to update static/css/material_custom.css when this is updated.
-    'color_primary': 'indigo',
-    'color_accent': 'pink',
+    # Set those colors in layout.html.
+    'color_primary': 'custom',
+    'color_accent': 'custom',
 
     # Set the repo location to get a badge with stats
     'repo_url': 'https://github.com/microsoft/nni/',
-    'repo_name': 'nni',
+    'repo_name': 'GitHub',
 
     # Visible levels of the global TOC; -1 means unlimited
     'globaltoc_depth': 3,
@@ -262,6 +265,7 @@ html_title = 'Neural Network Intelligence'
 
 # Add extra css files and js files
 html_css_files = [
+    'css/material_theme.css',
     'css/material_custom.css',
     'css/material_dropdown.css',
     'css/sphinx_gallery.css',
@@ -271,6 +275,7 @@ html_js_files = [
     'js/version.js',
     'js/github.js',
     'js/sphinx_gallery.js',
+    'js/misc.js'
 ]
 
 # HTML context that can be used in jinja templates
