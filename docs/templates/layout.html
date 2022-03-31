@@ -1,5 +1,25 @@
 {% extends "!layout.html" %}
 
+{#- SPECIFY PARTICULAR FONTS FOR HEADERS #}
+{% block font %}
+  <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:300,400,400i,700|Google+Sans:400,500&display=fallback" rel="stylesheet">
+
+  <style>
+    body, input {
+      font-family: "Roboto", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    code, kbd, pre {
+      font-family: "Roboto Mono", "Consolas", "Courier New", Courier, monospace;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: "Google Sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+  </style>
+{% endblock %}
+
 {#- TO INJECT INFORMATION FROM READTHEDOCS HERE #}
 {% block scripts %}
   {{ super() }}
