@@ -56,6 +56,8 @@ extensions = [
     # 'nbsphinx',  # nbsphinx has conflicts with sphinx-gallery.
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
+    'sphinx_tabs.tabs',
+    'sphinx_copybutton',
 
     # Custom extensions in extension/ folder.
     'tutorial_links',  # this has to be after sphinx-gallery
@@ -117,6 +119,16 @@ sphinx_gallery_conf = {
     # Working directory is strange, needs full path.
     'default_thumb_file': os.path.join(os.path.dirname(__file__), '../img/thumbnails/nni_icon_blue.png'),
 }
+
+# Copybutton: strip and configure input prompts for code cells.
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
+
+# Allow additional builders to be considered compatible.
+sphinx_tabs_valid_builders = ['linkcheck']
+
+# Disallow the sphinx tabs css from loading.
+sphinx_tabs_disable_css_loading = True
 
 # Some tutorials might need to appear more than once in toc.
 # In this list, we make source/target tutorial pairs.

@@ -68,9 +68,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.4877, Accuracy: 8541/10000 (85%)
-    Average test loss: 0.2618, Accuracy: 9191/10000 (92%)
-    Average test loss: 0.1626, Accuracy: 9543/10000 (95%)
+    Average test loss: 0.4043, Accuracy: 8879/10000 (89%)
+    Average test loss: 0.2668, Accuracy: 9212/10000 (92%)
+    Average test loss: 0.1599, Accuracy: 9510/10000 (95%)
 
 
 
@@ -117,7 +117,7 @@ Detailed about how to write ``config_list`` please refer :doc:`compression confi
 
 finetuning the model by using QAT
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-72
+.. GENERATED FROM PYTHON SOURCE LINES 64-69
 
 .. code-block:: default
 
@@ -125,6 +125,45 @@ finetuning the model by using QAT
     dummy_input = torch.rand(32, 1, 28, 28).to(device)
     quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
     quantizer.compress()
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    op_names ['relu1'] not found in model
+    op_names ['relu2'] not found in model
+
+    TorchModel(
+      (conv1): QuantizerModuleWrapper(
+        (module): Conv2d(1, 6, kernel_size=(5, 5), stride=(1, 1))
+      )
+      (conv2): QuantizerModuleWrapper(
+        (module): Conv2d(6, 16, kernel_size=(5, 5), stride=(1, 1))
+      )
+      (fc1): Linear(in_features=256, out_features=120, bias=True)
+      (fc2): Linear(in_features=120, out_features=84, bias=True)
+      (fc3): Linear(in_features=84, out_features=10, bias=True)
+    )
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 70-73
+
+The model has now been wrapped, and quantization targets ('quant_types' setting in `config_list`)
+will be quantized & dequantized for simulated quantization in the wrapped layers.
+QAT is a training-aware quantizer, it will update scale and zero point during training.
+
+.. GENERATED FROM PYTHON SOURCE LINES 73-78
+
+.. code-block:: default
+
+
     for epoch in range(3):
         trainer(model, optimizer, criterion)
         evaluator(model)
@@ -139,20 +178,18 @@ finetuning the model by using QAT
 
  .. code-block:: none
 
-    op_names ['relu1'] not found in model
-    op_names ['relu2'] not found in model
-    Average test loss: 0.1739, Accuracy: 9441/10000 (94%)
-    Average test loss: 0.1078, Accuracy: 9671/10000 (97%)
-    Average test loss: 0.0991, Accuracy: 9696/10000 (97%)
+    Average test loss: 0.1332, Accuracy: 9601/10000 (96%)
+    Average test loss: 0.1180, Accuracy: 9657/10000 (97%)
+    Average test loss: 0.0894, Accuracy: 9714/10000 (97%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 73-74
+.. GENERATED FROM PYTHON SOURCE LINES 79-80
 
 export model and get calibration_config
 
-.. GENERATED FROM PYTHON SOURCE LINES 74-79
+.. GENERATED FROM PYTHON SOURCE LINES 80-85
 
 .. code-block:: default
 
@@ -171,7 +208,7 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0034], device='cuda:0'), 'weight_zero_point': tensor([75.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0018], device='cuda:0'), 'weight_zero_point': tensor([110.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 13.838628768920898}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0040], device='cuda:0'), 'weight_zero_point': tensor([84.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([111.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 18.413312911987305}}
 
 
 
@@ -179,7 +216,7 @@ export model and get calibration_config
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  51.644 seconds)
+   **Total running time of the script:** ( 1 minutes  46.015 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start_mnist.py:

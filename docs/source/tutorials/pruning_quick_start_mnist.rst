@@ -22,21 +22,21 @@ Pruning Quickstart
 ==================
 
 Model pruning is a technique to reduce the model size and computation by reducing model weight size or intermediate state size.
-It usually has following paths:
+There are three common practices for pruning a DNN model:
 
-#. Pre-training a model -> Pruning the model -> Fine-tuning the model
-#. Pruning the model aware training -> Fine-tuning the model
-#. Pruning the model -> Pre-training the compact model
+#. Pre-training a model -> Pruning the model -> Fine-tuning the pruned model
+#. Pruning a model during training (i.e., pruning aware training) -> Fine-tuning the pruned model
+#. Pruning a model -> Training the pruned model from scratch
 
-NNI supports the above three modes and mainly focuses on the pruning stage.
-Follow this tutorial for a quick look at how to use NNI to prune a model in a common practice.
+NNI supports all of the above pruning practices by working on the key pruning stage.
+Following this tutorial for a quick look at how to use NNI to prune a model in a common practice.
 
 .. GENERATED FROM PYTHON SOURCE LINES 17-22
 
 Preparation
 -----------
 
-In this tutorial, we use a simple model and pre-train on MNIST dataset.
+In this tutorial, we use a simple model and pre-trained on MNIST dataset.
 If you are familiar with defining a model and training in pytorch, you can skip directly to `Pruning Model`_.
 
 .. GENERATED FROM PYTHON SOURCE LINES 22-35
@@ -102,9 +102,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.5606, Accuracy: 8239/10000 (82%)
-    Average test loss: 0.2550, Accuracy: 9228/10000 (92%)
-    Average test loss: 0.1870, Accuracy: 9432/10000 (94%)
+    Average test loss: 0.5266, Accuracy: 8345/10000 (83%)
+    Average test loss: 0.2713, Accuracy: 9209/10000 (92%)
+    Average test loss: 0.1919, Accuracy: 9356/10000 (94%)
 
 
 
@@ -114,11 +114,11 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 Pruning Model
 -------------
 
-Using L1NormPruner pruning the model and generating the masks.
-Usually, pruners require original model and ``config_list`` as parameters.
+Using L1NormPruner to prune the model and generate the masks.
+Usually, a pruner requires original model and ``config_list`` as its inputs.
 Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
 
-This `config_list` means all layers whose type is `Linear` or `Conv2d` will be pruned,
+The following `config_list` means all layers whose type is `Linear` or `Conv2d` will be pruned,
 except the layer named `fc3`, because `fc3` is `exclude`.
 The final sparsity ratio for each layer is 50%. The layer named `fc3` will not be pruned.
 
@@ -308,7 +308,7 @@ Because speedup will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  26.953 seconds)
+   **Total running time of the script:** ( 1 minutes  24.976 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:
