@@ -25,6 +25,26 @@
     font-feature-settings: 'liga';
 }
 
+/* Global font */
+body, input {
+    font-family: "Roboto", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+code, kbd, pre {
+    font-family: "Roboto Mono", "Consolas", "Courier New", Courier, monospace;
+}
+
+h1, h2, h3, h4, .md-header, .md-tabs, .md-hero {
+    font-family: "Google Sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Title font */
+@media only screen and (min-width: 45em) {
+    .md-header-nav__title {
+        font-weight: 500;
+    }
+}
+
 /* viewcode link should have left padding */
 span.viewcode-link {
     padding-left: 0.6rem;
@@ -263,6 +283,11 @@ dt:target {
         padding-top: 2rem;
         height: 4.6rem;
     }
+}
+
+/* Increase TOC padding */
+.md-nav--primary ul li ul li {
+    padding-left: 0.8rem;
 }
 
 /* Nav bar and heroes */
