@@ -10,7 +10,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         sudo apt-get install -y pandoc
@@ -47,7 +46,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         # pylint requires newer typing extension. Override requirements in tensorflow
@@ -76,7 +74,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         set -e
@@ -103,7 +100,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop
@@ -157,7 +153,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-legacy
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop
@@ -189,7 +184,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: windows
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop --no-user
@@ -217,7 +211,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: macos
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop
