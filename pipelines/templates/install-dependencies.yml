@@ -26,12 +26,12 @@ steps:
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'macos'))
 
 - script: |
-    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_token)' dependencies.zip
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
   displayName: (POSIX) Download cache
   condition: and(succeeded(), ${{ parameters.useCache }}, not(contains('${{ parameters.platform }}', 'windows')))
 
 - powershell: |
-    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_token)' dependencies.zip
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
   displayName: (Windows) Download cache
   condition: and(succeeded(), ${{ parameters.useCache }}, contains('${{ parameters.platform }}', 'windows'))
 
