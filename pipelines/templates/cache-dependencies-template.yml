@@ -2,6 +2,16 @@ parameters:
 - name: platform
   type: string
 
+# variables set on VSO: (for security concern)
+#   azure_blob_url
+#
+# its value should be:
+#   https://nni.blob.core.windows.net/cache/dependencies.zip?sp=racw&st=2022-04-01T00:00:00Z&...
+#
+# how to re-generate:
+#   1. find the storage on azure portal: nni (resource group) -> nni (storage account) -> cache (container)
+#   2. settings - shared access tokens - generate sas token and url
+
 steps:
 - template: config-version.yml
   parameters:
@@ -63,12 +73,9 @@ steps:
   displayName: Install Web UI dependencies
 
 - script: |
-    python test/vso_tools/pack_dependencies.py $(Build.ArtifactStagingDirectory)
+    python test/vso_tools/pack_dependencies.py dependencies.zip
   displayName: Create cache archive
 
-- task: UniversalPackages@0
-  inputs:
-    command: publish
-    vstsFeedPublish: NNIOpenSource/dependencies
-    vstsFeedPackagePublish: dependencies-${{ parameters.platform }}
+- script: |
+    azcopy copy dependencies.zip $(azure_blob_url)
   displayName: Upload cache archive
