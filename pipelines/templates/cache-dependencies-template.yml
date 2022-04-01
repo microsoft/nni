@@ -3,10 +3,10 @@ parameters:
   type: string
 
 # variables set on VSO: (for security concern)
-#   azure_blob_url
+#   sas_token
 #
 # its value should be:
-#   https://nni.blob.core.windows.net/cache/dependencies.zip?sp=racw&st=2022-04-01T00:00:00Z&...
+#   sp=racw&st=2022-04-01T00:00:00Z&se=......
 #
 # how to re-generate:
 #   1. find the storage on azure portal: nni (resource group) -> nni (storage account) -> cache (container)
@@ -29,14 +29,14 @@ steps:
 
 - script: |
     set -e
-    echo '===== develop ====='
-    ./pip-install -r dependencies/develop.txt
+    #echo '===== develop ====='
+    #./pip-install -r dependencies/develop.txt
     echo '===== required ====='
     ./pip-install -r dependencies/required.txt
-    echo '===== required extra ====='
-    ./pip-install -r dependencies/required_extra.txt
-    echo '===== recommended ====='
-    ./pip-install -r dependencies/recommended.txt
+    #echo '===== required extra ====='
+    #./pip-install -r dependencies/required_extra.txt
+    #echo '===== recommended ====='
+    #./pip-install -r dependencies/recommended.txt
     echo '===== fix shebang ====='
     python test/vso_tools/fix_shebang.py python-packages/bin
   displayName: (POSIX) Install Python packages
@@ -44,14 +44,14 @@ steps:
 
 # FIXME: It does not stop on failure. Tried "ErrorActionPreference" with no luck.
 - powershell: |
-    echo '===== develop ====='
-    ./pip-install -r dependencies/develop.txt
+    #echo '===== develop ====='
+    #./pip-install -r dependencies/develop.txt
     echo '===== required ====='
     ./pip-install -r dependencies/required.txt
-    echo '===== required extra ====='
-    ./pip-install -r dependencies/required_extra.txt
-    echo '===== recommended ====='
-    ./pip-install -r dependencies/recommended.txt
+    #echo '===== required extra ====='
+    #./pip-install -r dependencies/required_extra.txt
+    #echo '===== recommended ====='
+    #./pip-install -r dependencies/recommended.txt
   displayName: (Windows) Install Python packages
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
 
@@ -68,14 +68,15 @@ steps:
     yarn --cwd ts/nni_manager install
   displayName: Install NNI Manager dependencies
 
-- script: |
-    yarn --cwd ts/webui install
-  displayName: Install Web UI dependencies
+#- script: |
+#    yarn --cwd ts/webui install
+#  displayName: Install Web UI dependencies
 
 - script: |
     python test/vso_tools/pack_dependencies.py dependencies.zip
   displayName: Create cache archive
 
 - script: |
-    azcopy copy dependencies.zip $(azure_blob_url)
+    azcopy copy dependencies.zip 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_token)'
+    cat /home/vsts/.azcopy/*.log
   displayName: Upload cache archive
