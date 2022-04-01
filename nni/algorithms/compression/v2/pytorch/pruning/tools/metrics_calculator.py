@@ -19,7 +19,8 @@ class StraightMetricsCalculator(MetricsCalculator):
     def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
         metrics = {}
         for name, tensor in data.items():
-            metrics[name] = tensor.clone().detach()
+            # use inplace detach `detach_` here to avoid creating a new tensor
+            metrics[name] = tensor.clone().detach_()
         return metrics
 
 
