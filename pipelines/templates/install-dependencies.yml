@@ -25,16 +25,18 @@ steps:
   displayName: (macOS) Downgrade swig
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'macos'))
 
-- task: UniversalPackages@0
-  inputs:
-    vstsFeed: NNIOpenSource/dependencies
-    vstsFeedPackage: dependencies-${{ parameters.platform }}
-    vstsPackageVersion: "*"
-  displayName: Download cache
-  condition: and(succeeded(), ${{ parameters.useCache }})
+- script: |
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_token)' dependencies.zip
+  displayName: (POSIX) Download cache
+  condition: and(succeeded(), ${{ parameters.useCache }}, not(contains('${{ parameters.platform }}', 'windows')))
+
+- powershell: |
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_token)' dependencies.zip
+  displayName: (Windows) Download cache
+  condition: and(succeeded(), ${{ parameters.useCache }}, contains('${{ parameters.platform }}', 'windows'))
 
 - script: |
-    python test/vso_tools/unpack_dependencies.py
+    python test/vso_tools/unpack_dependencies.py dependencies.zip
   displayName: Unpack cache
   condition: and(succeeded(), ${{ parameters.useCache }})
 
