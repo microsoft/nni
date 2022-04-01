@@ -20,8 +20,11 @@ stages:
 
     - script: |
         cd docs
-        # rstcheck -r source
-      displayName: rstcheck (disabled for now)  # TODO: rstcheck
+        rstcheck -r source \
+          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse \
+          --ignore-roles githublink --ignore-substitutions release \
+          --report warning
+      displayName: rstcheck
 
     - script: |
         cd docs
