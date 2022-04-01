@@ -68,9 +68,9 @@ steps:
     yarn --cwd ts/nni_manager install
   displayName: Install NNI Manager dependencies
 
-#- script: |
-#    yarn --cwd ts/webui install
-#  displayName: Install Web UI dependencies
+- script: |
+    yarn --cwd ts/webui install
+  displayName: Install Web UI dependencies
 
 - script: |
     python test/vso_tools/pack_dependencies.py dependencies.zip
