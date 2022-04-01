@@ -1,6 +1,4 @@
-trigger:
-  branches:
-    exclude: [ l10n_master ]
+trigger: none
 
 stages:
 - stage: lint
