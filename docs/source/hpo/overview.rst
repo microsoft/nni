@@ -101,7 +101,7 @@ After you are familiar with basic usage, you can explore more HPO features:
 
 * :doc:`Use command line tool to create and manage experiments (nnictl) </reference/nnictl>`
 * :doc:`Early stop non-optimal models (assessor) <assessors>`
-* :doc:`TensorBoard integration <tensorboard>`
+* :doc:`TensorBoard integration </experiment/tensorboard>`
 * :doc:`Implement your own algorithm <custom_algorithm>`
 * :doc:`Benchmark tuners <hpo_benchmark>`
 
