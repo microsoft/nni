@@ -260,12 +260,10 @@ Search Space Types Supported by Each Tuner
 
 Known Limitations:
 
-
 * 
-  GP Tuner, Metis Tuner and DNGO tuner support only **numerical values** in search space (\ ``choice`` type values can be no-numerical with other tuners, e.g. string values). Both GP Tuner and Metis Tuner use Gaussian Process Regressor(GPR). GPR make predictions based on a kernel function and the 'distance' between different points, it's hard to get the true distance between no-numerical values.
+  GP Tuner, Metis Tuner and DNGO tuner support only **numerical values** in search space (``choice`` type values can be no-numerical with other tuners, e.g. string values). Both GP Tuner and Metis Tuner use Gaussian Process Regressor(GPR). GPR make predictions based on a kernel function and the 'distance' between different points, it's hard to get the true distance between no-numerical values.
 
 * 
   Note that for nested search space:
-
 
   * Only Random Search/TPE/Anneal/Evolution/Grid Search tuner supports nested search space
