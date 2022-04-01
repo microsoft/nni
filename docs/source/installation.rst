@@ -18,19 +18,19 @@ Using pip
 
 NNI provides official packages for x86-64 CPUs. They can be installed with pip:
 
-.. code-block:: none
+.. code-block:: text
 
     pip install nni
 
 Or to upgrade to latest version:
 
-.. code-block:: none
+.. code-block:: text
 
     pip install --latest nni
 
 You can check installation with:
 
-.. code-block:: none
+.. code-block:: text
 
     nnictl --version
 
@@ -61,7 +61,7 @@ Using Docker
 
 NNI provides official Docker image on `Docker Hub <https://hub.docker.com/r/msranni/nni>`__.
 
-.. code-block:: none
+.. code-block:: text
 
     docker pull msranni/nni
 
@@ -73,7 +73,7 @@ Use ``nni[<algorithm-name>]`` to install their dependencies.
 
 For example, to install dependencies of :class:`DNGO tuner<nni.algorithms.hpo.dngo_tuner.DNGOTuner>` :
 
-.. code-block:: none
+.. code-block:: text
 
     pip install nni[DNGO]
 
@@ -81,7 +81,7 @@ This command will not reinstall NNI itself, even if it was installed in developm
 
 Alternatively, you may install all extra dependencies at once:
 
-.. code-block:: none
+.. code-block:: text
 
     pip install nni[all]
 
