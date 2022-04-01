@@ -13,7 +13,7 @@ Neural Network Intelligence
     入门 <quickstart>
     安装 <installation>
     教程<tutorials>
-    自动（超参数）调优 <hpo/index>
+    超参调优 <hpo/index>
     神经网络架构搜索<nas/index>
     模型压缩<compression/index>
     特征工程<feature_engineering/index>
