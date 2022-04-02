@@ -42,16 +42,6 @@ function hide_nav() {
     }
 }
 
-function hide_toc_header() {
-    const d = $(".md-nav__title.md-nav__title--site");
-    // https://stackoverflow.com/questions/11362085/jquery-get-text-for-element-without-children-text
-    const pageTitle = $("#index--page-root").clone().children().remove().end().text();
-    if (d.text().trim() == pageTitle) {
-        d.hide();
-    }
-}
-
 $(document).ready(function() {
     hide_nav();
-    hide_toc_header();
 });

@@ -1,45 +1,45 @@
-Neural Network Intelligence
-===========================
+NNI Documentation
+=================
 
-..  toctree::
-    :maxdepth: 2
-    :caption: Get Started
-    :hidden:
+.. toctree::
+   :maxdepth: 2
+   :caption: Get Started
+   :hidden:
 
-    installation
-    quickstart
+   installation
+   quickstart
 
-..  toctree::
-    :maxdepth: 2
-    :caption: User Guide
-    :hidden:
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
+   :hidden:
 
-    Hyperparameter Optimization <hpo/index>
-    Neural Architecture Search <nas/index>
-    Model Compression <compression/index>
-    Feature Engineering <feature_engineering/index>
-    Experiment <experiment/overview>
+   Hyperparameter Optimization <hpo/index>
+   Neural Architecture Search <nas/index>
+   Model Compression <compression/index>
+   Feature Engineering <feature_engineering/index>
+   Experiment <experiment/overview>
 
-..  toctree::
-    :maxdepth: 2
-    :caption: References
-    :hidden:
+.. toctree::
+   :maxdepth: 2
+   :caption: References
+   :hidden:
 
-    nnictl Commands <reference/nnictl>
-    Experiment Configuration <reference/experiment_config>
-    Python API <reference/python_api>
+   Python API <reference/python_api>
+   reference/experiment_config
+   reference/nnictl
 
-..  toctree::
-    :maxdepth: 2
-    :caption: Misc
-    :hidden:
+.. toctree::
+   :maxdepth: 2
+   :caption: Misc
+   :hidden:
 
-    examples
-    sharings/community_sharings
-    notes/research_publications
-    notes/build_from_source
-    notes/contributing
-    release
+   examples
+   sharings/community_sharings
+   notes/research_publications
+   notes/build_from_source
+   notes/contributing
+   release
 
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
 
@@ -62,13 +62,13 @@ See the :doc:`installation guide </installation>` if you need additional help on
 Try your first NNI experiment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To run this experiment, you need to have [PyTorch](https://pytorch.org/) (as well as [torchvision](https://pytorch.org/vision/stable/index.html)) installed.
+To run your first NNI experiment:
 
 .. code-block:: shell
 
    $ nnictl hello
 
-*Note: you need to have `PyTorch <https://pytorch.org/>`_ (as well as `torchvision <https://pytorch.org/vision/stable/index.html>`_) installed to run this experiment.*
+.. note:: you need to have `PyTorch <https://pytorch.org/>`_ (as well as `torchvision <https://pytorch.org/vision/stable/index.html>`_) installed to run this experiment.
 
 To start your journey now, please follow the :doc:`absolute quickstart of NNI <quickstart>`!
 
