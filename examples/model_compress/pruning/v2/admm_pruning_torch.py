@@ -4,7 +4,7 @@
 '''
 NNI example for supported ADMM pruning algorithms.
 In this example, we show the end-to-end pruning process: pre-training -> pruning -> fine-tuning.
-Note that pruners use masks to simulate the real pruning. In order to obtain a real compressed model, model speed up is required.
+Note that pruners use masks to simulate the real pruning. In order to obtain a real compressed model, model speedup is required.
 
 '''
 import argparse
@@ -15,6 +15,7 @@ from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
 import nni
+from nni.compression.pytorch.speedup import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import ADMMPruner
 
@@ -108,18 +109,17 @@ if __name__ == '__main__':
     config_list = [{
         'sparsity': 0.8,
         'op_types': ['Conv2d'],
-    }, {
-        'sparsity': 0.92,
-        'op_types': ['Conv2d'],
     }]
 
     # make sure you have used nni.trace to wrap the optimizer class before initialize
     traced_optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-    pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=2, training_epochs=2)
+    pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=10, training_epochs=1, granularity='coarse-grained')
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
 
-    # Fine-grained method does not need to speedup
+    pruner._unwrap_model()
+    ModelSpeedup(model, torch.randn([128, 3, 32, 32]).to(device), masks).speedup_model()
+
     print('\n' + '=' * 50 + ' EVALUATE THE MODEL AFTER PRUNING ' + '=' * 50)
     evaluator(model)
 

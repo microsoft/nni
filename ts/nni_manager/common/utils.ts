@@ -104,18 +104,6 @@ function randomSelect<T>(a: T[]): T {
     return a[Math.floor(Math.random() * a.length)];
 }
 
-function parseArg(names: string[]): string {
-    if (process.argv.length >= 4) {
-        for (let i: number = 2; i < process.argv.length - 1; i++) {
-            if (names.includes(process.argv[i])) {
-                return process.argv[i + 1];
-            }
-        }
-    }
-
-    return '';
-}
-
 function getCmdPy(): string {
     let cmd = 'python3';
     if (process.platform === 'win32') {
@@ -165,9 +153,17 @@ function prepareUnitTest(): void {
     Container.snapshot(Manager);
     Container.snapshot(ExperimentManager);
 
-    const logLevel: string = parseArg(['--log_level', '-ll']);
-
-    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
+    setExperimentStartupInfo({
+        port: 8080,
+        experimentId: 'unittest',
+        action: 'create',
+        experimentsDirectory: path.join(os.homedir(), 'nni-experiments'),
+        logLevel: 'info',
+        foreground: false,
+        urlPrefix: '',
+        mode: 'unittest',
+        dispatcherPipe: undefined,
+    });
     mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');
@@ -188,8 +184,6 @@ function cleanupUnitTest(): void {
     Container.restore(DataStore);
     Container.restore(Database);
     Container.restore(ExperimentManager);
-    const logLevel: string = parseArg(['--log_level', '-ll']);
-    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
 }
 
 let cachedIpv4Address: string | null = null;
@@ -434,5 +428,5 @@ export function importModule(modulePath: string): any {
 export {
     countFilesRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync, getFreePort, isPortOpen,
-    mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
+    mkDirP, mkDirPSync, delay, prepareUnitTest, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };

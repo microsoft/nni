@@ -292,8 +292,8 @@ def main(args):
             os.path.join(args.experiment_data_dir, 'model_masked.pth'), os.path.join(args.experiment_data_dir, 'mask.pth'))
         print('Masked model saved to %s' % args.experiment_data_dir)
 
-    # model speed up
-    if args.speed_up:
+    # model speedup
+    if args.speedup:
         if args.pruner != 'AutoCompressPruner':
             if args.model == 'LeNet':
                 model = LeNet().to(device)
@@ -310,11 +310,11 @@ def main(args):
             m_speedup = ModelSpeedup(model, dummy_input, masks_file, device)
             m_speedup.speedup_model()
             evaluation_result = evaluator(model)
-            print('Evaluation result (speed up model): %s' % evaluation_result)
+            print('Evaluation result (speedup model): %s' % evaluation_result)
             result['performance']['speedup'] = evaluation_result
 
-            torch.save(model.state_dict(), os.path.join(args.experiment_data_dir, 'model_speed_up.pth'))
-            print('Speed up model saved to %s' % args.experiment_data_dir)
+            torch.save(model.state_dict(), os.path.join(args.experiment_data_dir, 'model_speedup.pth'))
+            print('Speedup model saved to %s' % args.experiment_data_dir)
         flops, params, _ = count_flops_params(model, get_input_size(args.dataset))
         result['flops']['speedup'] = flops
         result['params']['speedup'] = params
@@ -402,9 +402,9 @@ if __name__ == '__main__':
     parser.add_argument('--sparsity-per-iteration', type=float, default=0.05,
                         help='sparsity_per_iteration of NetAdaptPruner')
 
-    # speed-up
-    parser.add_argument('--speed-up', type=str2bool, default=False,
-                        help='Whether to speed-up the pruned model')
+    # speedup
+    parser.add_argument('--speedup', type=str2bool, default=False,
+                        help='Whether to speedup the pruned model')
 
     # others
     parser.add_argument('--log-interval', type=int, default=200,

@@ -35,14 +35,14 @@ Using AGP Pruning as an example to explain how to implement an iterative pruning
 
     pruner = L1NormPruner(model=None, config_list=None, mode='dependency_aware', dummy_input=torch.rand(10, 3, 224, 224).to(device))
     task_generator = AGPTaskGenerator(total_iteration=10, origin_model=model, origin_config_list=config_list, log_dir='.', keep_intermediate_result=True)
-    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None, reset_weight=False)
+    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input, evaluator=None, reset_weight=False)
 
     scheduler.compress()
     _, model, masks, _, _ = scheduler.get_best_result()
 
 The full script can be found :githublink:`here <examples/model_compress/pruning/v2/scheduler_torch.py>`.
 
-In this example, we use ``dependency_aware`` mode L1 Norm Pruner as a basic pruner during each iteration.
+In this example, we use dependency-aware mode L1 Norm Pruner as a basic pruner during each iteration.
 Note we do not need to pass ``model`` and ``config_list`` to the pruner, because in each iteration the ``model`` and ``config_list`` used by the pruner are received from the task generator.
 Then we can use ``scheduler`` as an iterative pruner directly. In fact, this is the implementation of ``AGPPruner`` in NNI.
 

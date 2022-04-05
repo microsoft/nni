@@ -56,13 +56,14 @@ extensions = [
     # 'nbsphinx',  # nbsphinx has conflicts with sphinx-gallery.
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
+    'sphinx_tabs.tabs',
+    'sphinx_copybutton',
 
     # Custom extensions in extension/ folder.
     'tutorial_links',  # this has to be after sphinx-gallery
     'inplace_translation',
     'cardlinkitem',
     'codesnippetcard',
-    'patch_docutils',
     'patch_autodoc',
 ]
 
@@ -119,6 +120,19 @@ sphinx_gallery_conf = {
     'default_thumb_file': os.path.join(os.path.dirname(__file__), '../img/thumbnails/nni_icon_blue.png'),
 }
 
+# Copybutton: strip and configure input prompts for code cells.
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
+
+# Copybutton: customize selector to exclude gallery outputs.
+copybutton_selector = ":not(div.sphx-glr-script-out) > div.highlight pre"
+
+# Allow additional builders to be considered compatible.
+sphinx_tabs_valid_builders = ['linkcheck']
+
+# Disallow the sphinx tabs css from loading.
+sphinx_tabs_disable_css_loading = True
+
 # Some tutorials might need to appear more than once in toc.
 # In this list, we make source/target tutorial pairs.
 # Each "source" tutorial rst will be copied to "target" tutorials.
@@ -133,9 +147,9 @@ tutorials_copy_list = [
     # Others in full-scale materials
     ('tutorials/hello_nas.rst', 'tutorials/cp_hello_nas_quickstart.rst'),
     ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
-    ('tutorials/pruning_speed_up.rst', 'tutorials/cp_pruning_speed_up.rst'),
+    ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
     ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
-    ('tutorials/quantization_speed_up.rst', 'tutorials/cp_quantization_speed_up.rst'),
+    ('tutorials/quantization_speedup.rst', 'tutorials/cp_quantization_speedup.rst'),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -162,7 +176,6 @@ exclude_patterns = [
     '_build',
     'Thumbs.db',
     '.DS_Store',
-    'Release_v1.0.md',
     '**.ipynb_checkpoints',
     # Exclude translations. They will be added back via replacement later if language is set.
     '**_zh.rst',
@@ -203,14 +216,14 @@ html_theme_options = {
     'base_url': 'https://nni.readthedocs.io/',
 
     # Set the color and the accent color
-    # We can't have our customized themes currently
     # Remember to update static/css/material_custom.css when this is updated.
-    'color_primary': 'indigo',
-    'color_accent': 'pink',
+    # Set those colors in layout.html.
+    'color_primary': 'custom',
+    'color_accent': 'custom',
 
     # Set the repo location to get a badge with stats
     'repo_url': 'https://github.com/microsoft/nni/',
-    'repo_name': 'nni',
+    'repo_name': 'GitHub',
 
     # Visible levels of the global TOC; -1 means unlimited
     'globaltoc_depth': 3,
@@ -252,6 +265,7 @@ html_title = 'Neural Network Intelligence'
 
 # Add extra css files and js files
 html_css_files = [
+    'css/material_theme.css',
     'css/material_custom.css',
     'css/material_dropdown.css',
     'css/sphinx_gallery.css',
@@ -261,6 +275,7 @@ html_js_files = [
     'js/version.js',
     'js/github.js',
     'js/sphinx_gallery.js',
+    'js/misc.js'
 ]
 
 # HTML context that can be used in jinja templates

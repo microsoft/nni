@@ -94,8 +94,8 @@ if __name__ == '__main__':
                         choices=['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz',
                                  'mean_activation', 'taylorfo', 'admm'],
                         help='algorithm to evaluate weights to prune')
-    parser.add_argument('--speed-up', type=bool, default=False,
-                        help='Whether to speed-up the pruned model')
+    parser.add_argument('--speedup', type=bool, default=False,
+                        help='Whether to speedup the pruned model')
     parser.add_argument('--reset-weight', type=bool, default=True,
                         help='Whether to reset weight during each iteration')
 
@@ -120,8 +120,8 @@ if __name__ == '__main__':
                'evaluator': None,
                'finetuner': finetuner}
 
-    if args.speed_up:
-        kw_args['speed_up'] = args.speed_up
+    if args.speedup:
+        kw_args['speedup'] = args.speedup
         kw_args['dummy_input'] = torch.rand(10, 3, 32, 32).to(device)
 
     if args.pruner == 'linear':

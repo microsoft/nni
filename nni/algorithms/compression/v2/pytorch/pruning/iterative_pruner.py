@@ -93,10 +93,10 @@ class LinearPruner(IterativePruner):
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handled all finetune logic, use a pytorch module as input.
         It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
-    speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+    speedup : bool
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speedup` is True, `dummy_input` is required for tracing the model in speedup.
     evaluator : Optional[Callable[[Module], float]]
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
@@ -117,7 +117,7 @@ class LinearPruner(IterativePruner):
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None,
+                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False, dummy_input: Optional[Tensor] = None,
                  evaluator: Optional[Callable[[Module], float]] = None, pruning_params: Dict = {}):
         task_generator = LinearTaskGenerator(total_iteration=total_iteration,
                                              origin_model=model,
@@ -127,7 +127,7 @@ class LinearPruner(IterativePruner):
         if 'traced_optimizer' in pruning_params:
             pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
+        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
 
 
@@ -158,10 +158,10 @@ class AGPPruner(IterativePruner):
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handled all finetune logic, use a pytorch module as input.
         It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
-    speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+    speedup : bool
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speedup` is True, `dummy_input` is required for tracing the model in speedup.
     evaluator : Optional[Callable[[Module], float]]
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
@@ -182,7 +182,7 @@ class AGPPruner(IterativePruner):
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None,
+                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False, dummy_input: Optional[Tensor] = None,
                  evaluator: Optional[Callable[[Module], float]] = None, pruning_params: Dict = {}):
         task_generator = AGPTaskGenerator(total_iteration=total_iteration,
                                           origin_model=model,
@@ -192,7 +192,7 @@ class AGPPruner(IterativePruner):
         if 'traced_optimizer' in pruning_params:
             pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
+        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
 
 
@@ -234,10 +234,10 @@ class LotteryTicketPruner(IterativePruner):
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handled all finetune logic, use a pytorch module as input.
         It will be called at the end of each iteration if reset_weight is False, will be called at the beginning of each iteration otherwise.
-    speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+    speedup : bool
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speedup` is True, `dummy_input` is required for tracing the model in speedup.
     evaluator : Optional[Callable[[Module], float]]
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
@@ -261,7 +261,7 @@ class LotteryTicketPruner(IterativePruner):
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None,
+                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False, dummy_input: Optional[Tensor] = None,
                  evaluator: Optional[Callable[[Module], float]] = None, reset_weight: bool = True,
                  pruning_params: Dict = {}):
         task_generator = LotteryTicketTaskGenerator(total_iteration=total_iteration,
@@ -272,7 +272,7 @@ class LotteryTicketPruner(IterativePruner):
         if 'traced_optimizer' in pruning_params:
             pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
+        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=reset_weight)
 
 
@@ -318,10 +318,10 @@ class SimulatedAnnealingPruner(IterativePruner):
         If keeping the intermediate result, including intermediate model and masks during each iteration.
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
-    speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+    speedup : bool
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speedup` is True, `dummy_input` is required for tracing the model in speedup.
 
     Examples
     --------
@@ -340,7 +340,7 @@ class SimulatedAnnealingPruner(IterativePruner):
     def __init__(self, model: Module, config_list: List[Dict], evaluator: Callable[[Module], float], start_temperature: float = 100,
                  stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
                  pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None):
+                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False, dummy_input: Optional[Tensor] = None):
         task_generator = SimulatedAnnealingTaskGenerator(origin_model=model,
                                                          origin_config_list=config_list,
                                                          start_temperature=start_temperature,
@@ -352,5 +352,5 @@ class SimulatedAnnealingPruner(IterativePruner):
         if 'traced_optimizer' in pruning_params:
             pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
+        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)

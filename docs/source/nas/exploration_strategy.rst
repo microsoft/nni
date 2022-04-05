@@ -56,8 +56,6 @@ TPE
    :members:
    :noindex:
 
-.. footbibliography::
-
 .. _policy-based-rl-strategy:
 
 PolicyBasedRL
@@ -66,8 +64,6 @@ PolicyBasedRL
 .. autoclass:: nni.retiarii.strategy.PolicyBasedRL
    :members:
    :noindex:
-
-.. footbibliography::
 
 .. _one-shot-nas:
 
@@ -243,7 +239,7 @@ To run the tutorial, follow the steps below:
 
 2. **Search**: Based on the architecture of simplified PFLD, the setting of multi-stage search space and hyper-parameters for searching should be firstly configured to construct the supernet. For example,
 
-   .. code-block:: bash
+   .. code-block::
 
       from lib.builder import search_space
       from lib.ops import PRIMITIVES
@@ -253,13 +249,13 @@ To run the tutorial, follow the steps below:
       # configuration of hyper-parameters
       # search_space defines the multi-stage search space
       nas_config = NASConfig(
-            model_dir="./ckpt_save",
-            nas_lr=0.01,
-            mode="mul",
-            alpha=0.25,
-            beta=0.6,
-            search_space=search_space,
-         )
+         model_dir="./ckpt_save",
+         nas_lr=0.01,
+         mode="mul",
+         alpha=0.25,
+         beta=0.6,
+         search_space=search_space,
+      )
       # lookup table to manage the information
       lookup_table = LookUpTable(config=nas_config, primitives=PRIMITIVES)
       # created supernet

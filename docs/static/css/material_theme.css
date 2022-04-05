@@ -1,0 +1,97 @@
+/* Theme related customization */
+/* https://github.com/bashtage/sphinx-material/pull/122 */
+
+/* first part */
+button[data-md-color-primary=custom] {
+    background-color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-typeset a {
+    color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-header,
+[data-md-color-primary=custom] .md-hero {
+    background-color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-nav__link--active,
+[data-md-color-primary=custom] .md-nav__link:active {
+    color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-nav__item--nested>.md-nav__link {
+    color: inherit
+}
+
+[data-md-color-primary=custom] .md-nav__extra_link:active {
+    color: var(--custom-color-primary)
+}
+
+[data-md-color-primary=custom] .md-nav__item--nested > .md-nav__extra_link {
+    color: inherit
+}
+
+/* second part */
+button[data-md-color-accent=custom] {
+    background-color: var(--custom-color-accent)
+}
+
+[data-md-color-accent=custom] .md-typeset a:active,
+[data-md-color-accent=custom] .md-typeset a:hover {
+    color: var(--custom-color-accent)
+}
+
+[data-md-color-accent=custom] .md-typeset .codehilite pre::-webkit-scrollbar-thumb:hover,
+[data-md-color-accent=custom] .md-typeset pre code::-webkit-scrollbar-thumb:hover {
+    background-color: var(--custom-color-accent)
+}
+
+[data-md-color-accent=custom] .md-nav__link:focus,
+[data-md-color-accent=custom] .md-nav__link:hover,
+[data-md-color-accent=custom] .md-typeset .footnote li:hover .footnote-backref:hover,
+[data-md-color-accent=custom] .md-typeset .footnote li:target .footnote-backref,
+[data-md-color-accent=custom] .md-typeset .md-clipboard:active:before,
+[data-md-color-accent=custom] .md-typeset .md-clipboard:hover:before,
+[data-md-color-accent=custom] .md-typeset [id] .headerlink:focus,
+[data-md-color-accent=custom] .md-typeset [id]:hover .headerlink:hover,
+[data-md-color-accent=custom] .md-typeset [id]:target .headerlink {
+    color: var(--custom-color-accent)
+}
+
+[data-md-color-accent=custom] .md-search__scrollwrap::-webkit-scrollbar-thumb:hover {
+    background-color: var(--custom-color-accent)
+}
+
+[data-md-color-accent=custom] .md-search-result__link:hover,
+[data-md-color-accent=custom] .md-search-result__link[data-md-state=active] {
+    background-color: rgba(83, 109, 254, .1)
+}
+
+[data-md-color-accent=custom] .md-sidebar__scrollwrap::-webkit-scrollbar-thumb:hover {
+    background-color: var(--custom-color-accent)
+}
+
+[data-md-color-accent=custom] .md-source-file:hover:before {
+    background-color: var(--custom-color-accent)
+}
+
+/* third part */
+@media only screen and (max-width:59.9375em) {
+    [data-md-color-primary=custom] .md-nav__source {
+        background-color: var(--custom-color-primary);
+        opacity: 0.9675;
+    }
+}
+
+@media only screen and (max-width:76.1875em) {
+    html [data-md-color-primary=custom] .md-nav--primary .md-nav__title--site {
+        background-color: var(--custom-color-primary)
+    }
+}
+
+@media only screen and (min-width:76.25em) {
+    [data-md-color-primary=custom] .md-tabs {
+        background-color: var(--custom-color-primary)
+    }
+}

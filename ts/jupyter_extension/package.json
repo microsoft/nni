@@ -6,11 +6,14 @@
         "build": "tsc && jupyter labextension build ."
     },
     "dependencies": {
-        "@jupyterlab/application": "^3.0.11",
-        "@jupyterlab/launcher": "^3.0.9"
+        "@jupyterlab/application": "^3.3.2",
+        "@jupyterlab/launcher": "^3.3.2"
     },
     "devDependencies": {
-        "@jupyterlab/builder": "^3.0.9"
+        "@jupyterlab/builder": "^3.3.2"
+    },
+    "resolutions": {
+      "marked": ">=4.0.12"
     },
     "jupyterlab": {
         "extension": true,

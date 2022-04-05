@@ -18,7 +18,7 @@ Neural Network Intelligence
     Hyperparameter Optimization <hpo/index>
     Neural Architecture Search <nas/index>
     Model Compression <compression/index>
-    Feature Engineering <feature_engineering>
+    Feature Engineering <feature_engineering/index>
     Experiment <experiment/overview>
 
 ..  toctree::
@@ -28,27 +28,25 @@ Neural Network Intelligence
 
     nnictl Commands <reference/nnictl>
     Experiment Configuration <reference/experiment_config>
-    Python API <reference/_modules/nni>
-    API Reference <reference/python_api_ref>
+    Python API <reference/python_api>
 
 ..  toctree::
     :maxdepth: 2
     :caption: Misc
     :hidden:
 
-    Use Cases and Solutions <misc/community_sharings>
-    Research and Publications <misc/research_publications>
-    FAQ <misc/faq>
+    Use Cases and Solutions <sharings/community_sharings>
+    Research and Publications <notes/research_publications>
     notes/build_from_source
     Contribution Guide <notes/contributing>
-    Change Log <Release>
+    Change Log <release>
 
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
 
 * :doc:`Hyperparameter Tuning </hpo/overview>`,
 * :doc:`Neural Architecture Search </nas/index>`,
 * :doc:`Model Compression </compression/index>`,
-* :doc:`Feature Engineering </FeatureEngineering/Overview>`.
+* :doc:`Feature Engineering </feature_engineering/overview>`.
 
 .. Can't use section title here due to the limitation of toc
 
@@ -83,7 +81,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 * **New demo available**: `Youtube entry <https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw>`_ | `Bilibili 入口 <https://space.bilibili.com/1649051673>`_ - *last updated on May-26-2021*
 * **New webinar**: `Introducing Retiarii, A deep learning exploratory-training framework on NNI <https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html>`_ - *scheduled on June-24-2021*
 * **New community channel**: `Discussions <https://github.com/microsoft/nni/discussions>`_
-* **New emoticons release**: :doc:`nnSpider <nnSpider>`
+* **New emoticons release**: :doc:`nnSpider <sharings/nn_spider/index>`
 
 .. raw:: html
 
@@ -134,14 +132,14 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
           L1NormPruner(model, config). \
           compress()
 
-      # apply the masks for real speed up
+      # apply the masks for real speedup
       ModelSpeedup(unwrapped_model, input, masks). \
           speedup_model()
 
 .. codesnippetcard::
    :icon: ../img/thumbnails/quantization-small.svg
    :title: Quantization
-   :link: tutorials/quantization_speed_up
+   :link: tutorials/quantization_speedup
 
    .. code-block::
 
@@ -158,7 +156,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
       # Training...
 
       # export calibration config and
-      # generate TensorRT engine for real speed up
+      # generate TensorRT engine for real speedup
       calibration_config = quantizer.export_model(
           model_path, calibration_path)
       engine = ModelSpeedupTensorRT(
@@ -207,7 +205,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 .. codesnippetcard::
    :icon: ../img/thumbnails/feature-engineering-small.svg
    :title: Feature Engineering
-   :link: FeatureEngineering/Overview
+   :link: feature_engineering/overview
 
    .. code-block::
 

@@ -1073,6 +1073,11 @@ class ADMMPruner(BasicPruner):
         The total iteration number in admm pruning algorithm.
     training_epochs : int
         The epoch number for training model in each iteration.
+    granularity : str
+        'fine-grained' or 'coarse-grained'.
+        If 'coarse-grained' is set, ADMM pruner will generate masks on output channels wise.
+        In original admm pruning paper, author implemented a fine-grained admm pruning.
+        In auto-compress paper, author used coarse-grained admm pruning.
 
     Examples
     --------
@@ -1091,7 +1096,8 @@ class ADMMPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
+                 traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int,
+                 training_epochs: int, granularity: str = 'fine-grained'):
         self.trainer = trainer
         if isinstance(traced_optimizer, OptimizerConstructHelper):
             self.optimizer_helper = traced_optimizer
@@ -1100,6 +1106,8 @@ class ADMMPruner(BasicPruner):
         self.criterion = criterion
         self.iterations = iterations
         self.training_epochs = training_epochs
+        assert granularity in ['fine-grained', 'coarse-grained']
+        self.granularity = granularity
         super().__init__(model, config_list)
 
     def reset(self, model: Optional[Module], config_list: Optional[List[Dict]]):
@@ -1131,9 +1139,15 @@ class ADMMPruner(BasicPruner):
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
-            self.metrics_calculator = NormMetricsCalculator()
+            if self.granularity == 'fine-grained':
+                self.metrics_calculator = NormMetricsCalculator(p=1)
+            elif self.granularity == 'coarse-grained':
+                self.metrics_calculator = NormMetricsCalculator(dim=0, p=1)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = NormalSparsityAllocator(self)
+            if self.granularity == 'fine-grained':
+                self.sparsity_allocator = NormalSparsityAllocator(self)
+            elif self.granularity == 'coarse-grained':
+                self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
 
     def compress(self) -> Tuple[Module, Dict]:
         """

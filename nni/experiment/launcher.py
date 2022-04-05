@@ -120,7 +120,11 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
 
     link = Path(config.experiment_working_directory, '_latest')
     try:
-        link.unlink(missing_ok=True)
+        if sys.version_info >= (3, 8):
+            link.unlink(missing_ok=True)
+        else:
+            if link.exists():
+                link.unlink()
         link.symlink_to(exp_id, target_is_directory=True)
     except Exception:
         if sys.platform != 'win32':

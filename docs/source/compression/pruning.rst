@@ -13,17 +13,18 @@ The following concepts can help you understand pruning in NNI.
 
 Pruning target means where we apply the sparsity.
 Most pruning methods prune the weights to reduce the model size and accelerate the inference latency.
-Other pruning methods also apply sparsity on the inputs, outputs or intermediate states to accelerate the inference latency.
-NNI support pruning module weights right now, and will support other pruning targets in the future.
+Other pruning methods also apply sparsity on activations (e.g., inputs, outputs, or feature maps) to accelerate the inference latency.
+NNI supports pruning module weights right now, and will support other pruning targets in the future.
 
 .. rubric:: Basic Pruner
 
-Basic pruner generates the masks for each pruning targets (weights) for a determined sparsity ratio.
-It usually takes model and config as input arguments, then generate a mask for the model.
+Basic pruner generates the masks for each pruning target (weights) for a determined sparsity ratio.
+It usually takes model and config as input arguments, then generates masks for each pruning target.
 
 .. rubric:: Scheduled Pruner
 
-Scheduled pruner decides how to allocate sparsity ratio to each pruning targets, it also handles the pruning speed up and finetuning logic.
+Scheduled pruner decides how to allocate sparsity ratio to each pruning target,
+it also handles the model speedup (after each pruning iteration) and finetuning logic.
 From the implementation logic, the scheduled pruner is a combination of pruning scheduler, basic pruner and task generator.
 
 Task generator only cares about the pruning effect that should be achieved in each round, and uses a config list to express how to pruning.
@@ -42,23 +43,23 @@ More information about scheduled pruning process please refer to :doc:`Pruning S
 .. rubric:: Granularity
 
 Fine-grained pruning or unstructured pruning refers to pruning each individual weights separately.
-Coarse-grained pruning or structured pruning is pruning entire group of weights, such as a convolutional filter.
+Coarse-grained pruning or structured pruning is pruning a regular group of weights, such as a convolutional filter.
 
-:ref:`level-pruner` is the only fine-grained pruner in NNI, all other pruners pruning the output channels on weights.
+Only :ref:`level-pruner` and :ref:`admm-pruner` support fine-grained pruning, all other pruners do some kind of structured pruning on weights.
 
 .. _dependency-awareode-for-output-channel-pruning:
 
 .. rubric:: Dependency-aware Mode for Output Channel Pruning
 
-Currently, we support ``dependency aware`` mode in several ``pruner``: :ref:`l1-norm-pruner`, :ref:`l2-norm-pruner`, :ref:`fpgm-pruner`,
+Currently, we support dependency-aware mode in several ``pruner``: :ref:`l1-norm-pruner`, :ref:`l2-norm-pruner`, :ref:`fpgm-pruner`,
 :ref:`activation-apoz-rank-pruner`, :ref:`activation-mean-rank-pruner`, :ref:`taylor-fo-weight-pruner`.
 
 In these pruning algorithms, the pruner will prune each layer separately. While pruning a layer,
-the algorithm will quantify the importance of each filter based on some specific rules(such as l1 norm), and prune the less important output channels.
+the algorithm will quantify the importance of each filter based on some specific metrics(such as l1 norm), and prune the less important output channels.
 
-We use pruning convolutional layers as an example to explain ``dependency aware`` mode.
-As :doc:`dependency analysis utils <./compression_utils>` shows, if the output channels of two convolutional layers(conv1, conv2) are added together,
-then these two convolutional layers have channel dependency with each other(more details please see :doc:`Compression Utils <./compression_utils>` ).
+We use pruning convolutional layers as an example to explain dependency-aware mode.
+As :ref:`topology analysis utils <topology-analysis>` shows, if the output channels of two convolutional layers(conv1, conv2) are added together,
+then these two convolutional layers have channel dependency with each other (more details please see :ref:`ChannelDependency <topology-analysis>`).
 Take the following figure as an example.
 
 .. image:: ../../img/mask_conflict.jpg
@@ -105,4 +106,4 @@ In the dependency-aware mode, the pruner will provide a better speed gain from t
 
     Quickstart <../tutorials/cp_pruning_quick_start_mnist>
     Pruner <pruner>
-    Speed Up <../tutorials/cp_pruning_speed_up>
+    Speedup <../tutorials/cp_pruning_speedup>

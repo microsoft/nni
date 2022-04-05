@@ -63,7 +63,7 @@ Then run one-shot ProxylessNAS demo:
 
 .. code-block:: bash
 
-   python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware <hardware> --reference_latency <reference latency (ms)>
+   python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware HARDWARE --reference_latency REFERENCE_LATENCY_MS
 
 How the demo works
 ^^^^^^^^^^^^^^^^^^
