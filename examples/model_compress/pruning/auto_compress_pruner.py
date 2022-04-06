@@ -8,7 +8,7 @@ import nni
 from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

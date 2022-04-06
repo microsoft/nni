@@ -156,7 +156,7 @@ class MovementPruner(BasicPruner):
         >>> pruner = MovementPruner(model, config_list, trainer, traced_optimizer, criterion, 10, 3000, 27000)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/movement_pruning_glue.py <examples/model_compress/pruning/v2/movement_pruning_glue.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/movement_pruning_glue.py <examples/model_compress/pruning/movement_pruning_glue.py>`
     """
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,

@@ -3,13 +3,13 @@ from tqdm import tqdm
 
 import torch
 from torchvision import datasets, transforms
-from torch.optim.lr_scheduler import MultiStepLR
 
-from nni.algorithms.compression.v2.pytorch.pruning import AMCPruner
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
+from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
+from nni.algorithms.compression.v2.pytorch.pruning.basic_scheduler import PruningScheduler
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
 
 
@@ -71,28 +71,30 @@ def evaluator(model):
 
 
 if __name__ == '__main__':
-    # model = MobileNetV2(n_class=10).to(device)
     model = VGG().to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
-    scheduler = MultiStepLR(optimizer, milestones=[50, 75], gamma=0.1)
     criterion = torch.nn.CrossEntropyLoss()
 
-    for i in range(100):
+    # pre-train the model
+    for i in range(5):
         trainer(model, optimizer, criterion, i)
-    pre_best_acc = evaluator(model)
+
+    # No need to pass model and config_list to pruner during initializing when using scheduler.
+    pruner = L1NormPruner(None, None)
+
+    # you can specify the log_dir, all intermediate results and best result will save under this folder.
+    # if you don't want to keep intermediate results, you can set `keep_intermediate_result=False`.
+    config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+    task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermediate_result=True)
 
     dummy_input = torch.rand(10, 3, 32, 32).to(device)
-    pre_flops, pre_params, _ = count_flops_params(model, dummy_input)
-
-    config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
 
     # if you just want to keep the final result as the best result, you can pass evaluator as None.
     # or the result with the highest score (given by evaluator) will be the best result.
-    ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 100, 'discount': 1., 'bsize': 64,
-                   'rmsize': 100, 'window_length': 1, 'tau': 0.01, 'init_delta': 0.5, 'delta_decay': 0.99, 'max_episode_length': 1e9, 'epsilon': 50000}
-    pruner = AMCPruner(400, model, config_list, dummy_input, evaluator, finetuner=finetuner, ddpg_params=ddpg_params, target='flops')
-    pruner.compress()
-    _, model, masks, best_acc, _ = pruner.get_best_result()
-    flops, params, _ = count_flops_params(model, dummy_input)
-    print(f'Pretrained model FLOPs {pre_flops/1e6:.2f} M, #Params: {pre_params/1e6:.2f}M, Accuracy: {pre_best_acc: .2f}%')
-    print(f'Finetuned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M, Accuracy: {best_acc: .2f}%')
+
+    # scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input, evaluator=evaluator)
+    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input, evaluator=None, reset_weight=False)
+
+    scheduler.compress()
+
+    _, model, masks, _, _ = scheduler.get_best_result()

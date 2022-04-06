@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 '''
-NNI example for simulated anealing pruning algorithm.
+NNI example for supported iterative pruning algorithms.
 In this example, we show the end-to-end iterative pruning process: pre-training -> pruning -> fine-tuning.
 
 '''
@@ -13,10 +13,14 @@ from tqdm import tqdm
 import torch
 from torchvision import datasets, transforms
 
-from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
+from nni.algorithms.compression.v2.pytorch.pruning import (
+    LinearPruner,
+    AGPPruner,
+    LotteryTicketPruner
+)
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
 
 
@@ -79,14 +83,21 @@ def evaluator(model):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch Iterative Example for model comporession')
+    parser.add_argument('--pruner', type=str, default='linear',
+                        choices=['linear', 'agp', 'lottery'],
+                        help='pruner to use')
     parser.add_argument('--pretrain-epochs', type=int, default=10,
                         help='number of epochs to pretrain the model')
+    parser.add_argument('--total-iteration', type=int, default=10,
+                        help='number of iteration to iteratively prune the model')
     parser.add_argument('--pruning-algo', type=str, default='l1',
                         choices=['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz',
                                  'mean_activation', 'taylorfo', 'admm'],
                         help='algorithm to evaluate weights to prune')
-    parser.add_argument('--cool-down-rate', type=float, default=0.9,
-                        help='Cool down rate of the temperature.')
+    parser.add_argument('--speedup', type=bool, default=False,
+                        help='Whether to speedup the pruned model')
+    parser.add_argument('--reset-weight', type=bool, default=True,
+                        help='Whether to reset weight during each iteration')
 
     args = parser.parse_args()
 
@@ -99,11 +110,29 @@ if __name__ == '__main__':
         trainer(model, optimizer, criterion, i)
         evaluator(model)
 
-    config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
+    config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+    dummy_input = torch.rand(10, 3, 32, 32).to(device)
 
-    # evaluator in 'SimulatedAnnealingPruner' could not be None.
-    pruner = SimulatedAnnealingPruner(model, config_list, pruning_algorithm=args.pruning_algo,
-                                      evaluator=evaluator, cool_down_rate=args.cool_down_rate, finetuner=finetuner)
+    # if you just want to keep the final result as the best result, you can pass evaluator as None.
+    # or the result with the highest score (given by evaluator) will be the best result.
+    kw_args = {'pruning_algorithm': args.pruning_algo,
+               'total_iteration': args.total_iteration,
+               'evaluator': None,
+               'finetuner': finetuner}
+
+    if args.speedup:
+        kw_args['speedup'] = args.speedup
+        kw_args['dummy_input'] = torch.rand(10, 3, 32, 32).to(device)
+
+    if args.pruner == 'linear':
+        iterative_pruner = LinearPruner
+    elif args.pruner == 'agp':
+        iterative_pruner = AGPPruner
+    elif args.pruner == 'lottery':
+        kw_args['reset_weight'] = args.reset_weight
+        iterative_pruner = LotteryTicketPruner
+
+    pruner = iterative_pruner(model, config_list, **kw_args)
     pruner.compress()
     _, model, masks, _, _ = pruner.get_best_result()
     evaluator(model)

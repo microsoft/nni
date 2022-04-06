@@ -112,7 +112,7 @@ class LinearPruner(IterativePruner):
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
@@ -177,7 +177,7 @@ class AGPPruner(IterativePruner):
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
@@ -255,7 +255,7 @@ class LotteryTicketPruner(IterativePruner):
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
 
     """
 
@@ -334,7 +334,7 @@ class SimulatedAnnealingPruner(IterativePruner):
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py <examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/simulated_anealing_pruning_torch.py <examples/model_compress/pruning/simulated_anealing_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], evaluator: Callable[[Module], float], start_temperature: float = 100,

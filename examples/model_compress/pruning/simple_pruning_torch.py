@@ -8,7 +8,7 @@ from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
 
 

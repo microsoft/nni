@@ -19,7 +19,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 from basic_pruners_torch import get_data
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from mnist.lenet import LeNet
 from cifar10.vgg import VGG
 

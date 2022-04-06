@@ -143,7 +143,7 @@ class AutoCompressPruner(IterativePruner):
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    The full script can be found :githublink:`here <examples/model_compress/pruning/v2/auto_compress_pruner.py>`.
+    The full script can be found :githublink:`here <examples/model_compress/pruning/auto_compress_pruner.py>`.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,

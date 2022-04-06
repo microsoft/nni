@@ -5,7 +5,7 @@ import time
 import torch
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[3] / 'models'))
 from cifar10.vgg import VGG
 from mnist.lenet import LeNet
 

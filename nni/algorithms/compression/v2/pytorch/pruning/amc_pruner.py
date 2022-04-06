@@ -231,7 +231,7 @@ class AMCPruner(IterativePruner):
         >>> pruner = AMCPruner(400, model, config_list, dummy_input, evaluator, finetuner=finetuner)
         >>> pruner.compress()
 
-    The full script can be found :githublink:`here <examples/model_compress/pruning/v2/amc_pruning_torch.py>`.
+    The full script can be found :githublink:`here <examples/model_compress/pruning/amc_pruning_torch.py>`.
     """
 
     def __init__(self, total_episode: int, model: Module, config_list: List[Dict], dummy_input: Tensor,

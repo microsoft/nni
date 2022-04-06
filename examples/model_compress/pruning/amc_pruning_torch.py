@@ -1,26 +1,15 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT license.
-
-'''
-NNI example for supported iterative pruning algorithms.
-In this example, we show the end-to-end iterative pruning process: pre-training -> pruning -> fine-tuning.
-
-'''
 import sys
-import argparse
 from tqdm import tqdm
 
 import torch
 from torchvision import datasets, transforms
+from torch.optim.lr_scheduler import MultiStepLR
 
-from nni.algorithms.compression.v2.pytorch.pruning import (
-    LinearPruner,
-    AGPPruner,
-    LotteryTicketPruner
-)
+from nni.algorithms.compression.v2.pytorch.pruning import AMCPruner
+from nni.compression.pytorch.utils.counter import count_flops_params
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
 
 
@@ -82,57 +71,28 @@ def evaluator(model):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='PyTorch Iterative Example for model comporession')
-    parser.add_argument('--pruner', type=str, default='linear',
-                        choices=['linear', 'agp', 'lottery'],
-                        help='pruner to use')
-    parser.add_argument('--pretrain-epochs', type=int, default=10,
-                        help='number of epochs to pretrain the model')
-    parser.add_argument('--total-iteration', type=int, default=10,
-                        help='number of iteration to iteratively prune the model')
-    parser.add_argument('--pruning-algo', type=str, default='l1',
-                        choices=['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz',
-                                 'mean_activation', 'taylorfo', 'admm'],
-                        help='algorithm to evaluate weights to prune')
-    parser.add_argument('--speedup', type=bool, default=False,
-                        help='Whether to speedup the pruned model')
-    parser.add_argument('--reset-weight', type=bool, default=True,
-                        help='Whether to reset weight during each iteration')
-
-    args = parser.parse_args()
-
+    # model = MobileNetV2(n_class=10).to(device)
     model = VGG().to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    scheduler = MultiStepLR(optimizer, milestones=[50, 75], gamma=0.1)
     criterion = torch.nn.CrossEntropyLoss()
 
-    # pre-train the model
-    for i in range(args.pretrain_epochs):
+    for i in range(100):
         trainer(model, optimizer, criterion, i)
-        evaluator(model)
+    pre_best_acc = evaluator(model)
 
-    config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
     dummy_input = torch.rand(10, 3, 32, 32).to(device)
+    pre_flops, pre_params, _ = count_flops_params(model, dummy_input)
+
+    config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
 
     # if you just want to keep the final result as the best result, you can pass evaluator as None.
     # or the result with the highest score (given by evaluator) will be the best result.
-    kw_args = {'pruning_algorithm': args.pruning_algo,
-               'total_iteration': args.total_iteration,
-               'evaluator': None,
-               'finetuner': finetuner}
-
-    if args.speedup:
-        kw_args['speedup'] = args.speedup
-        kw_args['dummy_input'] = torch.rand(10, 3, 32, 32).to(device)
-
-    if args.pruner == 'linear':
-        iterative_pruner = LinearPruner
-    elif args.pruner == 'agp':
-        iterative_pruner = AGPPruner
-    elif args.pruner == 'lottery':
-        kw_args['reset_weight'] = args.reset_weight
-        iterative_pruner = LotteryTicketPruner
-
-    pruner = iterative_pruner(model, config_list, **kw_args)
+    ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 100, 'discount': 1., 'bsize': 64,
+                   'rmsize': 100, 'window_length': 1, 'tau': 0.01, 'init_delta': 0.5, 'delta_decay': 0.99, 'max_episode_length': 1e9, 'epsilon': 50000}
+    pruner = AMCPruner(400, model, config_list, dummy_input, evaluator, finetuner=finetuner, ddpg_params=ddpg_params, target='flops')
     pruner.compress()
-    _, model, masks, _, _ = pruner.get_best_result()
-    evaluator(model)
+    _, model, masks, best_acc, _ = pruner.get_best_result()
+    flops, params, _ = count_flops_params(model, dummy_input)
+    print(f'Pretrained model FLOPs {pre_flops/1e6:.2f} M, #Params: {pre_params/1e6:.2f}M, Accuracy: {pre_best_acc: .2f}%')
+    print(f'Finetuned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M, Accuracy: {best_acc: .2f}%')

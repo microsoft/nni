@@ -20,7 +20,7 @@ from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from mnist.lenet import LeNet
 from cifar10.vgg import VGG
 from cifar10.resnet import ResNet18, ResNet50

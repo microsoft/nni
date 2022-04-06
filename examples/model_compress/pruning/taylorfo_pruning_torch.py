@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 '''
-NNI example for supported ActivationAPoZRank and ActivationMeanRank pruning algorithms.
+NNI example for supported TaylorFOWeight pruning algorithms.
 In this example, we show the end-to-end pruning process: pre-training -> pruning -> fine-tuning.
 Note that pruners use masks to simulate the real pruning. In order to obtain a real compressed model, model speedup is required.
 
@@ -17,10 +17,10 @@ from torch.optim.lr_scheduler import MultiStepLR
 import nni
 from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
-from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import ActivationAPoZRankPruner, ActivationMeanRankPruner
+from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import TaylorFOWeightPruner
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -79,9 +79,6 @@ def optimizer_scheduler_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch Example for model comporession')
-    parser.add_argument('--pruner', type=str, default='apoz',
-                        choices=['apoz', 'mean'],
-                        help='pruner to use')
     parser.add_argument('--pretrain-epochs', type=int, default=20,
                         help='number of epochs to pretrain the model')
     parser.add_argument('--fine-tune-epochs', type=int, default=20,
@@ -116,10 +113,7 @@ if __name__ == '__main__':
 
     # make sure you have used nni.trace to wrap the optimizer class before initialize
     traced_optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-    if 'apoz' in args.pruner:
-        pruner = ActivationAPoZRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
-    else:
-        pruner = ActivationMeanRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
+    pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
     pruner._unwrap_model()

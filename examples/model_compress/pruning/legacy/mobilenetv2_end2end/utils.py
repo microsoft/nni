@@ -10,7 +10,7 @@ import numpy as np
 from nni.compression.pytorch.utils.counter import count_flops_params
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[3] / 'models'))
 from mobilenet import MobileNet
 from mobilenet_v2 import MobileNetV2
 

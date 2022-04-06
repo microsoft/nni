@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 '''
-NNI example for supported level pruning algorithm.
+NNI example for supported l1norm and l2norm pruning algorithms.
 In this example, we show the end-to-end pruning process: pre-training -> pruning -> fine-tuning.
 Note that pruners use masks to simulate the real pruning. In order to obtain a real compressed model, model speedup is required.
 
@@ -14,11 +14,12 @@ import torch
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
+from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
-from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import LevelPruner
+from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import L1NormPruner, L2NormPruner
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -77,6 +78,9 @@ def optimizer_scheduler_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch Example for model comporession')
+    parser.add_argument('--pruner', type=str, default='l1norm',
+                        choices=['l1norm', 'l2norm'],
+                        help='pruner to use')
     parser.add_argument('--pretrain-epochs', type=int, default=20,
                         help='number of epochs to pretrain the model')
     parser.add_argument('--fine-tune-epochs', type=int, default=20,
@@ -100,19 +104,23 @@ if __name__ == '__main__':
     print("Best accuracy: {}".format(pre_best_acc))
     model.load_state_dict(best_state_dict)
     pre_flops, pre_params, _ = count_flops_params(model, torch.randn([128, 3, 32, 32]).to(device))
+    g_epoch = 0
 
     # Start to prune and speedup
     print('\n' + '=' * 50 + ' START TO PRUNE THE BEST ACCURACY PRETRAINED MODEL ' + '=' * 50)
     config_list = [{
         'sparsity': 0.5,
-        'op_types': ['default']
+        'op_types': ['Conv2d']
     }]
-    pruner = LevelPruner(model, config_list)
+    if 'l1' in args.pruner:
+        pruner = L1NormPruner(model, config_list)
+    else:
+        pruner = L2NormPruner(model, config_list)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
-
-    # Fine-grained method does not need to speedup
-    print('\n' + '=' * 50 + ' EVALUATE THE MODEL AFTER PRUNING ' + '=' * 50)
+    pruner._unwrap_model()
+    ModelSpeedup(model, dummy_input=torch.rand([10, 3, 32, 32]).to(device), masks_file=masks).speedup_model()
+    print('\n' + '=' * 50 + ' EVALUATE THE MODEL AFTER SPEEDUP ' + '=' * 50)
     evaluator(model)
 
     # Optimizer used in the pruner might be patched, so recommend to new an optimizer for fine-tuning stage.
@@ -120,7 +128,6 @@ if __name__ == '__main__':
     optimizer, scheduler = optimizer_scheduler_generator(model, _lr=0.01, total_epoch=args.fine_tune_epochs)
 
     best_acc = 0.0
-    g_epoch = 0
     for i in range(args.fine_tune_epochs):
         trainer(model, optimizer, criterion)
         scheduler.step()

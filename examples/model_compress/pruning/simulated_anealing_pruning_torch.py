@@ -1,15 +1,22 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+'''
+NNI example for simulated anealing pruning algorithm.
+In this example, we show the end-to-end iterative pruning process: pre-training -> pruning -> fine-tuning.
+
+'''
 import sys
+import argparse
 from tqdm import tqdm
 
 import torch
 from torchvision import datasets, transforms
 
-from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
-from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
-from nni.algorithms.compression.v2.pytorch.pruning.basic_scheduler import PruningScheduler
+from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
 
 from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
 
 
@@ -71,30 +78,32 @@ def evaluator(model):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='PyTorch Iterative Example for model comporession')
+    parser.add_argument('--pretrain-epochs', type=int, default=10,
+                        help='number of epochs to pretrain the model')
+    parser.add_argument('--pruning-algo', type=str, default='l1',
+                        choices=['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz',
+                                 'mean_activation', 'taylorfo', 'admm'],
+                        help='algorithm to evaluate weights to prune')
+    parser.add_argument('--cool-down-rate', type=float, default=0.9,
+                        help='Cool down rate of the temperature.')
+
+    args = parser.parse_args()
+
     model = VGG().to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     criterion = torch.nn.CrossEntropyLoss()
 
     # pre-train the model
-    for i in range(5):
+    for i in range(args.pretrain_epochs):
         trainer(model, optimizer, criterion, i)
+        evaluator(model)
 
-    # No need to pass model and config_list to pruner during initializing when using scheduler.
-    pruner = L1NormPruner(None, None)
+    config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
 
-    # you can specify the log_dir, all intermediate results and best result will save under this folder.
-    # if you don't want to keep intermediate results, you can set `keep_intermediate_result=False`.
-    config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-    task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermediate_result=True)
-
-    dummy_input = torch.rand(10, 3, 32, 32).to(device)
-
-    # if you just want to keep the final result as the best result, you can pass evaluator as None.
-    # or the result with the highest score (given by evaluator) will be the best result.
-
-    # scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input, evaluator=evaluator)
-    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input, evaluator=None, reset_weight=False)
-
-    scheduler.compress()
-
-    _, model, masks, _, _ = scheduler.get_best_result()
+    # evaluator in 'SimulatedAnnealingPruner' could not be None.
+    pruner = SimulatedAnnealingPruner(model, config_list, pruning_algorithm=args.pruning_algo,
+                                      evaluator=evaluator, cool_down_rate=args.cool_down_rate, finetuner=finetuner)
+    pruner.compress()
+    _, model, masks, _, _ = pruner.get_best_result()
+    evaluator(model)
