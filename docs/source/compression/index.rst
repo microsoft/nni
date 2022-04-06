@@ -26,6 +26,7 @@ We further elaborate on the two methods, pruning and quantization, in the follow
 .. image:: ../../img/prune_quant.jpg
    :target: ../../img/prune_quant.jpg
    :scale: 40%
+   :align: center
    :alt:
 
 NNI provides an easy-to-use toolkit to help users design and use model pruning and quantization algorithms.
@@ -46,8 +47,9 @@ There are several core features supported by NNI model compression:
 
 .. image:: ../../img/compression_pipeline.png
    :target: ../../img/compression_pipeline.png
-   :alt: 
-   :scale: 20%
+   :alt:
+   :align: center
+   :scale: 30%
 
 The overall compression pipeline in NNI is shown above. For compressing a pretrained model, pruning and quantization can be used alone or in combination.
 If users want to apply both, a sequential mode is recommended as common practise.
@@ -137,7 +139,8 @@ The following figure shows how NNI prunes and speeds up your models.
 
 .. image:: ../../img/nni_prune_process.png
    :target: ../../img/nni_prune_process.png
-   :scale: 20%
+   :scale: 30%
+   :align: center
    :alt:
 
 The detailed tutorial of Speedup Model with Mask can be found :doc:`here <../tutorials/cp_pruning_speedup>`.
