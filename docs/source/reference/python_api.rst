@@ -6,6 +6,6 @@ API Reference
 
     Hyperparameter Optimization <hpo>
     Neural Architecture Search <nas>
-    Model Compression <compression>
+    Model Compression <compression/index>
     Experiment <experiment>
     Others <others>
