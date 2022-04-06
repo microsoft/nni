@@ -29,7 +29,7 @@ Following code snippet demonstrates a naive HPO process:
                     best_accuracy = accuracy
                     best_hyperparameters = (learning_rate, momentum, activation_type)
 
-     print('Best hyperparameters:', best_hyperparameters)
+    print('Best hyperparameters:', best_hyperparameters)
 
 You may have noticed, the example will train 4×10×3=120 models in total.
 Since it consumes so much computing resources, you may want to:

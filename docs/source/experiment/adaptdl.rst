@@ -140,11 +140,11 @@ Follow the log streaming of a certain trial:
 
 .. code-block:: bash
 
-   nnictl log trial --trial_id=<trial_id>
+   nnictl log trial --trial_id=TRIAL_ID
 
 .. code-block:: bash
 
-   nnictl log trial <experiment_id> --trial_id=<trial_id>
+   nnictl log trial EXPERIMENT_ID --trial_id=TRIAL_ID
 
 Note that *after* a trial has done and its pod has been deleted,
 no logs can be retrieved then via this command.
@@ -195,7 +195,7 @@ If having multiple experiment running at the same time, you may use
 
 .. code-block:: bash
 
-   nnictl tensorboard start <experiment_id>
+   nnictl tensorboard start EXPERIMENT_ID
 
 It will provide you the web url to access the tensorboard.
 

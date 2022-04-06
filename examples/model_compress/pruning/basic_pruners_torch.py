@@ -356,7 +356,7 @@ if __name__ == '__main__':
     parser.add_argument('--sparsity', type=float, default=0.5,
                         help='target overall target sparsity')
     parser.add_argument('--dependency-aware', action='store_true', default=False,
-                        help='toggle dependency aware mode')
+                        help='toggle dependency-aware mode')
     parser.add_argument('--global-sort', action='store_true', default=False,
                         help='toggle global sort mode')
     parser.add_argument('--pruner', type=str, default='l1filter',

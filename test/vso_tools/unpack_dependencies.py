@@ -1,5 +1,5 @@
 """
-Extract an archive created by pack_dependencies.py.
+Extract archive sys.argv[1] created by pack_dependencies.py.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ def main() -> None:
     print('All Python paths:')
     print('\n'.join(sys.path), flush=True)
 
-    extract_all(ZipFile('cache.zip'))
+    extract_all(ZipFile(sys.argv[1]))
     empty_dirs = json.loads(Path('directories.json').read_text())
     symlinks = json.loads(Path('symlinks.json').read_text())
     for dir_ in empty_dirs:
