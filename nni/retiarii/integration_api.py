@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import warnings
 from typing import NewType, Any
 
 import nni
+from nni.common.version import version_check
 
 # NOTE: this is only for passing flake8, we cannot import RetiariiAdvisor
 # because it would induce cycled import
@@ -37,6 +39,14 @@ def receive_trial_parameters() -> dict:
     Reload with our json loads because NNI didn't use Retiarii serializer to load the data.
     """
     params = nni.get_next_parameter()
+
+    # version check, optional
+    raw_params = nni.trial._params
+    if raw_params is not None and 'version_info' in raw_params:
+        version_check(raw_params['version_info'])
+    else:
+        warnings.warn('Version check failed because `version_info` is not found.')
+
     return params
 
 
