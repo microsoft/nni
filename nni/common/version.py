@@ -15,7 +15,8 @@ import yaml
 import nni
 
 def _minor_version_tuple(version_str: str) -> tuple[int, int]:
-    return tuple(int(x) if x.isdigit() else x for x in version_str.split(".")[:2])
+    # If not a number, returns -1 (e.g., 999.dev0)
+    res = tuple(int(x) if x.isdigit() else -1 for x in version_str.split(".")[:2])
 
 PYTHON_VERSION = sys.version_info[:2]
 NUMPY_VERSION = _minor_version_tuple(numpy.__version__)
@@ -49,7 +50,7 @@ PYYAML_VERSION = _minor_version_tuple(yaml.__version__)
 
 NNI_VERSION = _minor_version_tuple(nni.__version__)
 
-def version_dump() -> dict[str, tuple[int, int]]:
+def version_dump() -> dict[str, tuple[int, int] | None]:
     return {
         'python': PYTHON_VERSION,
         'numpy': NUMPY_VERSION,
