@@ -18,6 +18,10 @@ Retrain (Architecture Evaluation)
 Utilities
 ---------
 
+..  autofunction:: nni.retiarii.basic_unit
+
+..  autofunction:: nni.retiarii.model_wrapper
+
 ..  automodule:: nni.retiarii.nn.pytorch.mutation_utils
     :imported-members:
     :members:

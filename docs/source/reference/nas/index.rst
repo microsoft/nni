@@ -7,4 +7,4 @@ Neural Architecture Search
    search_space
    strategy
    evaluator
-   others
+   Others <others>

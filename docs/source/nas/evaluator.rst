@@ -55,7 +55,7 @@ NNI provides some commonly used model evaluators for users' convenience. These e
 
 We recommend to read the :doc:`serialization tutorial <serialization>` before using these evaluators. A few notes to summarize the tutorial:
 
-1. :class:`nni.retarii.evaluator.pytorch.DataLoader` should be used in place of ``torch.utils.data.DataLoader``.
+1. :class:`nni.retiarii.evaluator.pytorch.DataLoader` should be used in place of ``torch.utils.data.DataLoader``.
 2. The datasets used in data-loader should be decorated with :meth:`nni.trace` recursively.
 
 For example,

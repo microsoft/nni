@@ -1,5 +1,5 @@
-NAS Reference for Search Space
-==============================
+Search Space
+============
 
 .. _mutation-primitives:
 

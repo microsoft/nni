@@ -392,3 +392,30 @@ Reproduction Results
 """"""""""""""""""""
 
 To reproduce the result, we first run the search, we found that though it runs many epochs the chosen architecture converges at the first several epochs. This is probably induced by hyper-parameters or the implementation, we are working on it.
+
+Customization
+-------------
+
+Multi-trial
+^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.Sampler
+    :members:
+
+..  autoclass:: nni.retiarii.strategy.BaseStrategy
+    :members:
+
+..  automodule:: nni.retiarii.execution
+    :members:
+    :imported-members:
+    :undoc-members:
+
+One-shot
+^^^^^^^^
+
+..  autoclass:: nni.retiarii.oneshot.BaseOneShotTrainer
+    :members:
+
+..  autofunction:: nni.retiarii.oneshot.pytorch.utils.replace_layer_choice
+
+..  autofunction:: nni.retiarii.oneshot.pytorch.utils.replace_input_choice
