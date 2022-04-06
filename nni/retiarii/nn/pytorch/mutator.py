@@ -2,8 +2,7 @@
 # Licensed under the MIT license.
 
 import inspect
-from collections import defaultdict
-from typing import Any, List, Optional, Tuple, Dict, Callable, Iterator
+from typing import Any, List, Optional, Tuple, Dict, Iterator
 
 import torch.nn as nn
 
@@ -464,10 +463,10 @@ def _group_by_label(nodes: List[Node]) -> List[List[Node]]:
 def _expand_nested_trace_kwargs(obj: Any) -> Iterator[Any]:
     # Get items from `trace_kwargs`.
     # If some item is traceable itself, get items recursively.
-    
+
     if not is_traceable(obj):
         return
 
-    for key, param in obj.trace_kwargs.items():
+    for param in obj.trace_kwargs.values():
         yield param
         yield from _expand_nested_trace_kwargs(param)
