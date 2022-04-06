@@ -412,7 +412,7 @@ def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mu
                     if mutator.label == choice.label:
                         raise ValueError(
                             f'Found duplicated labels “{choice.label}”. When two value choices have the same name, '
-                            'they would share choices. However, sharing choices between model and evaluator is not yet supported.'
+                            'they would share choices. However, sharing choices between model and evaluator is not supported.'
                         )
                 if choice.label in mutator_candidates and mutator_candidates[choice.label] != choice.candidates:
                     raise ValueError(
