@@ -1,5 +1,5 @@
-Construct Space with Mutators
-=============================
+Construct Space with Mutator
+============================
 
 Besides the inline mutation APIs demonstrated :ref:`above <mutation-primitives>`, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. Those inline mutation APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
 
@@ -65,48 +65,3 @@ Starting an experiment is almost the same as using inline mutation APIs. The onl
 
 References
 ----------
-
-Placeholder
-^^^^^^^^^^^
-
-..  autoclass:: nni.retiarii.nn.pytorch.Placeholder
-    :members:
-    :noindex:
-
-Mutator
-^^^^^^^
-
-..  autoclass:: nni.retiarii.Mutator
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Sampler
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.InvalidMutation
-    :members:
-    :noindex:
-
-Graph
-^^^^^
-
-..  autoclass:: nni.retiarii.Model
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Graph
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Node
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Edge
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Operation
-    :members:
-    :noindex:

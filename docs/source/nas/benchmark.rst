@@ -1,5 +1,5 @@
-NAS Benchmarks
-==============
+NAS Benchmark
+=============
 
 .. toctree::
    :hidden:

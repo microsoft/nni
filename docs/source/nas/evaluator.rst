@@ -1,5 +1,5 @@
-Model Evaluators
-================
+Model Evaluator
+===============
 
 A model evaluator is for training and validating each generated model. They are necessary to evaluate the performance of new explored models.
 
