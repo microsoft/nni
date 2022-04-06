@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from .basic_pruner import *
 from .basic_scheduler import PruningScheduler
 from .iterative_pruner import *

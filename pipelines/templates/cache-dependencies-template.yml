@@ -2,6 +2,16 @@ parameters:
 - name: platform
   type: string
 
+# variables set on VSO: (for security concern)
+#   sas_token
+#
+# its value should be:
+#   sp=racw&st=2022-04-01T00:00:00Z&se=......
+#
+# how to re-generate:
+#   1. find the storage on azure portal: nni (resource group) -> nni (storage account) -> cache (container)
+#   2. settings - shared access tokens - generate sas token and url
+
 steps:
 - template: config-version.yml
   parameters:
@@ -63,12 +73,15 @@ steps:
   displayName: Install Web UI dependencies
 
 - script: |
-    python test/vso_tools/pack_dependencies.py $(Build.ArtifactStagingDirectory)
+    python test/vso_tools/pack_dependencies.py dependencies.zip
   displayName: Create cache archive
 
-- task: UniversalPackages@0
-  inputs:
-    command: publish
-    vstsFeedPublish: NNIOpenSource/dependencies
-    vstsFeedPackagePublish: dependencies-${{ parameters.platform }}
-  displayName: Upload cache archive
+- script: |
+    azcopy copy dependencies.zip 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_token)'
+  displayName: (POSIX) Upload cache archive
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
+
+- powershell: |
+    azcopy copy dependencies.zip 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_token)'
+  displayName: (Windows) Upload cache archive
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))

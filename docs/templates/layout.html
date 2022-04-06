@@ -1,8 +1,23 @@
 {% extends "!layout.html" %}
 
+{#- SPECIFY PARTICULAR FONTS FOR HEADERS #}
+{% block font %}
+  <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:400,400i,500,700|Google+Sans:400,500,600&display=fallback" rel="stylesheet">
+{% endblock %}
+
 {#- TO INJECT INFORMATION FROM READTHEDOCS HERE #}
 {% block scripts %}
   {{ super() }}
+
+  {#- CUSTOM THEME #}
+  <style>
+    :root {
+      --custom-color-primary: #1381cf;
+      --custom-color-accent: #0e619d;
+    }
+  </style>
+
   {% if versions %}
   <script type="text/javascript">
     READTHEDOCS_VERSIONS = {{ versions | tojson }}

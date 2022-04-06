@@ -1,1 +1,1 @@
-tensorflow==1.15.4
+tensorflow  # tested version: 1.15.4

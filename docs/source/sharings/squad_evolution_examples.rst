@@ -146,9 +146,9 @@ Among those files, ``trial.py`` and ``graph_to_tf.py`` are special.
            if topo_i == '|':
                continue
            if graph.layers[topo_i].graph_type == LayerType.input.value:
-               # ......
+               ...
            elif graph.layers[topo_i].graph_type == LayerType.attention.value:
-               # ......
+               ...
            # More layers to handle
 
 As we can see, this function is actually a compiler, that converts the internal model DAG configuration (which will be introduced in the ``Model configuration format`` section) ``graph``\ , to a Tensorflow computation graph.
@@ -162,6 +162,7 @@ performs topological sorting on the internal graph representation, and the code 
 .. code-block:: python
 
    for _, topo_i in enumerate(topology):
+       ...
 
 performs actually conversion that maps each layer to a part in Tensorflow computation graph.
 

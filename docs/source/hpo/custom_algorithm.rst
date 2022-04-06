@@ -19,7 +19,7 @@ Here is an example:
    from nni.tuner import Tuner
 
    class CustomizedTuner(Tuner):
-       def __init__(self, ...):
+       def __init__(self, *args, **kwargs):
            ...
 
 **2. Implement receive_trial_result, generate_parameter and update_search_space function**
@@ -29,7 +29,7 @@ Here is an example:
    from nni.tuner import Tuner
 
    class CustomizedTuner(Tuner):
-       def __init__(self, ...):
+       def __init__(self, *args, **kwargs):
            ...
 
        def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
@@ -143,7 +143,7 @@ If you want to implement a customized Assessor, there are three things to do:
    from nni.assessor import Assessor
 
    class CustomizedAssessor(Assessor):
-       def __init__(self, ...):
+       def __init__(self, *args, **kwargs):
            ...
 
 **2. Implement assess trial function**
@@ -153,7 +153,7 @@ If you want to implement a customized Assessor, there are three things to do:
    from nni.assessor import Assessor, AssessResult
 
    class CustomizedAssessor(Assessor):
-       def __init__(self, ...):
+       def __init__(self, *args, **kwargs):
            ...
 
        def assess_trial(self, trial_history):

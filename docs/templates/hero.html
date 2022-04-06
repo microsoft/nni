@@ -1,0 +1,11 @@
+{% if pagename in theme_heroes %}
+{% set hero = theme_heroes[pagename] %}
+<div class="md-hero{% if nav_bar_tabs %} md-hero--expand{% endif %}" data-md-component="hero">
+  <div class="md-hero__inner md-grid">
+    <p>{{ hero }}</p>
+  </div>
+  <div class="md-hero__background">
+    <img src="{{ pathto('_static/img/hero-background.svg', 1) }}" />
+  </div>
+</div>
+{% endif %}
