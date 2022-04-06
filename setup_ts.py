@@ -223,7 +223,16 @@ def copy_nni_node(version):
     """
     _print('Copying files')
 
-    shutil.copytree('ts/nni_manager/dist', 'nni_node', dirs_exist_ok=True)
+    if sys.version_info >= (3, 8):
+        shutil.copytree('ts/nni_manager/dist', 'nni_node', dirs_exist_ok=True)
+    else:
+        for item in os.listdir('ts/nni_manager/dist'):
+            subsrc = os.path.join('ts/nni_manager/dist', item)
+            subdst = os.path.join('nni_node', item)
+            if os.path.isdir(subsrc):
+                shutil.copytree(subsrc, subdst)
+            else:
+                shutil.copy2(subsrc, subdst)
     shutil.copyfile('ts/nni_manager/yarn.lock', 'nni_node/yarn.lock')
     Path('nni_node/nni_manager.tsbuildinfo').unlink()
 

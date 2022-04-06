@@ -683,6 +683,27 @@ class GraphIR(unittest.TestCase):
             new_model = _apply_all_mutators(model, mutators, samplers)
             self.assertTrue((self._get_converted_pytorch_model(new_model)(torch.zeros(1, 16)) == target).all())
 
+    def test_repeat_valuechoicex(self):
+        class AddOne(nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(AddOne(), nn.ValueChoice([0, 2, 4]) + 1)
+
+            def forward(self, x):
+                return self.block(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 1 + self.repeat_incr + self.value_choice_incr)
+        samplers = [EnumerateSampler() for _ in range(len(mutators))]
+        for target in [1, 3, 5]:
+            new_model = _apply_all_mutators(model, mutators, samplers)
+            self.assertTrue((self._get_converted_pytorch_model(new_model)(torch.zeros(1, 16)) == target).all())
+
     def test_repeat_weight_inheritance(self):
         @model_wrapper
         class Net(nn.Module):
