@@ -5,6 +5,7 @@ from collections import Counter
 
 import pytest
 
+import nni
 import nni.retiarii.nn.pytorch as nn
 import torch
 import torch.nn.functional as F
@@ -1137,7 +1138,28 @@ class Shared(unittest.TestCase):
             assert (model.evaluator.trace_kwargs['x'], model.evaluator.trace_kwargs['y']) in [(1, 2), (3, 4)]
 
     def test_valuechoice_in_evaluator_nested(self):
-        pass
+        @nni.trace
+        class FooClass:
+            def __init__(self, a):
+                self.a = a
+
+        obj = FooClass(ValueChoice([1, 2, 3], label='t'))
+
+        def foo():
+            pass
+
+        evaluator = FunctionalEvaluator(foo, t=obj, v=ValueChoice([1, 2, 3], label='t') + ValueChoice([10, 20, 30]))
+        mutators = process_evaluator_mutations(evaluator, [])
+        assert len(mutators) == 3
+        init_model = Model(_internal=True)
+        init_model.evaluator = evaluator
+        samplers = [RandomSampler() for _ in range(3)]
+        for _ in range(10):
+            model = _apply_all_mutators(init_model, mutators, samplers)
+            a, v = model.evaluator.trace_kwargs['t'].trace_kwargs['a'], model.evaluator.trace_kwargs['v']
+            assert v % 10 == a
+            assert a in [1, 2, 3]
+            assert v // 10 in [1, 2, 3]
 
     def test_retiarii_nn_import(self):
         dummy = torch.zeros(1, 16, 32, 24)
