@@ -400,6 +400,7 @@ Multi-trial
 ^^^^^^^^^^^
 
 ..  autoclass:: nni.retiarii.Sampler
+    :noindex:
     :members:
 
 ..  autoclass:: nni.retiarii.strategy.BaseStrategy

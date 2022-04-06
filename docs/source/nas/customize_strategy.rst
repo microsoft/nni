@@ -38,7 +38,7 @@ Below is a very simple random strategy, which makes the choices completely rando
 
 You can find that this strategy does not know the search space beforehand, it passively makes decisions every time ``choice`` is invoked from mutators. If a strategy wants to know the whole search space before making any decision (e.g., TPE, SMAC), it can use ``dry_run`` function provided by ``Mutator`` to obtain the space. An example strategy can be found :githublink:`here <nni/retiarii/strategy/tpe_strategy.py>`.
 
-After generating a new model, the strategy can use our provided APIs (e.g., :meth:`nni.retiarii.execution.submit_models`, :meth:`nni.retiarii.execution.is_stopped_exec`) to submit the model and get its reported results.
+After generating a new model, the strategy can use our provided APIs (e.g., :func:`nni.retiarii.execution.submit_models`, :func:`nni.retiarii.execution.is_stopped_exec`) to submit the model and get its reported results.
 
 Customize a New One-shot Trainer (legacy)
 -----------------------------------------

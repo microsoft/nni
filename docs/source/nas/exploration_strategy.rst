@@ -53,14 +53,14 @@ Multi-trial strategy
 
 Multi-trial NAS means each sampled model from model space is trained independently. A typical multi-trial NAS is `NASNet <https://arxiv.org/abs/1707.07012>`__. In multi-trial NAS, users need model evaluator to evaluate the performance of each sampled model, and need an exploration strategy to sample models from a defined model space. Here, users could use NNI provided model evaluators or write their own model evalutor. They can simply choose a exploration strategy. Advanced users can also customize new exploration strategy.
 
-To use an exploration strategy, users simply instantiate an exploration strategy and pass the instantiated object to :class:`nni.retiarii.nn.pytorch.RetiariiExperiment`. Below is a simple example.
+To use an exploration strategy, users simply instantiate an exploration strategy and pass the instantiated object to :class:`RetiariiExperiment <nni.retiarii.experiment.pytorch.RetiariiExperiment>`. Below is a simple example.
 
 .. code-block:: python
 
    import nni.retiarii.strategy as strategy
    exploration_strategy = strategy.Random(dedup=True)
 
-Rather than using ``strategy.Random``, users can choose one of the strategies from the table above.
+Rather than using :class:`strategy.Random <nni.retiarii.strategy.Random>`, users can choose one of the strategies from the table above.
 
 .. _one-shot-nas:
 
@@ -86,7 +86,7 @@ Currently, the usage of one-shot NAS strategy is a little different from multi-t
    )
    trainer.fit()
 
-One-shot strategy can be used without :class:`nni.retiairi.nn.pytorch.RetiariiExperiment`. Thus, the ``trainer.fit()`` here runs the experiment locally.
+One-shot strategy can be used without :class:`RetiariiExperiment <nni.retiairi.experiment.pytorch.RetiariiExperiment>`. Thus, the ``trainer.fit()`` here runs the experiment locally.
 
 After ``trainer.fit()`` completes, we can use ``trainer.export()`` to export the searched architecture (a dict of choices) to a file.
 
