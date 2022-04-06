@@ -8,7 +8,6 @@ There are two types of model space exploration approach: **Multi-trial strategy*
 
 Here is the list of exploration strategies that NNI has supported.
 
-
    * - Name
      - Category
      - Brief Description
@@ -82,6 +81,8 @@ Currently, the usage of one-shot NAS strategy is a little different from multi-t
       log_frequency=50
    )
    trainer.fit()
+
+One-shot strategy can be used without :class:`nni.retiairi.nn.pytorch.RetiariiExperiment`. Thus, the ``trainer.fit()`` here runs the experiment locally.
 
 After ``trainer.fit()`` completes, we can use ``trainer.export()`` to export the searched architecture (a dict of choices) to a file.
 

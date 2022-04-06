@@ -1,10 +1,10 @@
 Evaluator
 =========
 
-FunctionEvaluator
------------------
+FunctionalEvaluator
+-------------------
 
-..  autoclass:: nni.retiarii.evaluator.FunctionEvaluator
+..  autoclass:: nni.retiarii.evaluator.FunctionalEvaluator
     :members:
 
 Classification

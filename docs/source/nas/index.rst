@@ -56,7 +56,7 @@ Tutorials
 
 To start using NNI NAS framework, we recommend at least going through the following tutorials:
 
-* :doc:`Quickstart <tutorials/hello_nas>`
+* :doc:`Quickstart </tutorials/hello_nas>`
 * :doc:`construct_space`
 * :doc:`exploration_strategy`
 * :doc:`evaluator`

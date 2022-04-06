@@ -16,7 +16,7 @@ Pure-python Execution Engine is the default engine, we recommend users to keep u
 
 One steps are needed to use this engine now.
 
-1. Add :function:`nni.retiarii.model_wrapper` decorator outside the whole PyTorch model.
+1. Add :meth:`nni.retiarii.model_wrapper` decorator outside the whole PyTorch model.
 
 .. note:: You should always use ``super().__init__()`` instead of ``super(MyNetwork, self).__init__()`` in the PyTorch model, because the latter one has issues with model wrapper.
 
@@ -25,7 +25,7 @@ Graph-based Execution Engine
 
 For graph-based execution engine, it converts user-defined model to a graph representation (called graph IR) using `TorchScript <https://pytorch.org/docs/stable/jit.html>`__, each instantiated module in the model is converted to a subgraph. Then mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed on the user specified training service.
 
-Users may find ``@basic_unit`` helpful in some cases. :function:`nni.retiarii.basic_unit` here means the module will not be converted to a subgraph, instead, it is converted to a single graph node as a basic unit.
+Users may find ``@basic_unit`` helpful in some cases. :meth:`nni.retiarii.basic_unit` here means the module will not be converted to a subgraph, instead, it is converted to a single graph node as a basic unit.
 
 ``@basic_unit`` is usually used in the following cases:
 

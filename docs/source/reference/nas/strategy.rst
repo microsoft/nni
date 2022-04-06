@@ -133,7 +133,7 @@ Examples
 FBNet
 ^^^^^
 
-.. note:: This one-shot NAS is still implemented under NNI NAS 1.0, and will `be migrated to Retiarii framework in v2.4 <https://github.com/microsoft/nni/issues/3814>`__.
+.. note:: This one-shot NAS is still implemented under NNI NAS 1.0, and will `be migrated to Retiarii framework in near future <https://github.com/microsoft/nni/issues/3814>`__.
 
 For the mobile application of facial landmark, based on the basic architecture of PFLD model, we have applied the FBNet (Block-wise DNAS) to design an concise model with the trade-off between latency and accuracy. References are listed as below:
 
@@ -142,7 +142,7 @@ For the mobile application of facial landmark, based on the basic architecture o
 
 FBNet is a block-wise differentiable NAS method (Block-wise DNAS), where the best candidate building blocks can be chosen by using Gumbel Softmax random sampling and differentiable training. At each layer (or stage) to be searched, the diverse candidate blocks are side by side planned (just like the effectiveness of structural re-parameterization), leading to sufficient pre-training of the supernet. The pre-trained supernet is further sampled for finetuning of the subnet, to achieve better performance.
 
-.. image:: ../../img/fbnet.png
+.. image:: ../../../img/fbnet.png
 
 PFLD is a lightweight facial landmark model for realtime application. The architecture of PLFD is firstly simplified for acceleration, by using the stem block of PeleeNet, average pooling with depthwise convolution and eSE module.
 
@@ -351,11 +351,11 @@ Reproduction is still undergoing. Due to the gap between official release and or
 ProxylessNAS
 ^^^^^^^^^^^^
 
-The paper `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/pdf/1812.00332.pdf>`__ removes proxy, it directly learns the architectures for large-scale target tasks and target hardware platforms. They address high memory consumption issue of differentiable NAS and reduce the computational cost to the same level of regular training while still allowing a large candidate set. Please refer to the paper for the details.
+The paper `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/abs/1812.00332>`__ removes proxy, it directly learns the architectures for large-scale target tasks and target hardware platforms. They address high memory consumption issue of differentiable NAS and reduce the computational cost to the same level of regular training while still allowing a large candidate set. Please refer to the paper for the details.
 
 ..  autoclass:: nni.retiarii.oneshot.pytorch.ProxylessTrainer
 
-To use ProxylessNAS training/searching approach, users need to specify search space in their model using :doc:`NNI NAS interface <./construct_space>`, e.g., ``LayerChoice``, ``InputChoice``. After defining and instantiating the model, the following work can be leaved to ProxylessNasTrainer by instantiating the trainer and passing the model to it.
+To use ProxylessNAS training/searching approach, users need to specify search space in their model using :doc:`NNI NAS interface </nas/construct_space>`, e.g., ``LayerChoice``, ``InputChoice``. After defining and instantiating the model, the following work can be leaved to ProxylessNasTrainer by instantiating the trainer and passing the model to it.
 
 .. code-block:: python
 
@@ -384,7 +384,7 @@ The official implementation supports different targeted hardware, including 'mob
 
 Below we will describe implementation details. Like other one-shot NAS algorithms on NNI, ProxylessNAS is composed of two parts: *search space* and *training approach*. For users to flexibly define their own search space and use built-in ProxylessNAS training approach, please refer to :githublink:`example code <examples/nas/oneshot/proxylessnas>` for a reference.
 
-.. image:: ../../img/proxylessnas.png
+.. image:: ../../../img/proxylessnas.png
 
 ProxylessNAS training approach is composed of ProxylessLayerChoice and ProxylessNasTrainer. ProxylessLayerChoice instantiates MixedOp for each mutable (i.e., LayerChoice), and manage architecture weights in MixedOp. **For DataParallel**, architecture weights should be included in user model. Specifically, in ProxylessNAS implementation, we add MixedOp to the corresponding mutable (i.e., LayerChoice) as a member variable. The ProxylessLayerChoice class also exposes two member functions, i.e., ``resample``, ``finalize_grad``, for the trainer to control the training of architecture weights.
 

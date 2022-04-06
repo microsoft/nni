@@ -145,7 +145,6 @@ tutorials_copy_list = [
     ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_global_quickstart_compression.rst'),
 
     # Others in full-scale materials
-    ('tutorials/hello_nas.rst', 'tutorials/cp_hello_nas_quickstart.rst'),
     ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
     ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
     ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
