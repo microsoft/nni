@@ -28,7 +28,6 @@ You can follow below steps to build a customized tuner/assessor/advisor, and reg
 
 Reference following instructions to create:
 
-
 * `customized tuner <../Tuner/CustomizeTuner.rst>`_
 * `customized assessor <../Assessor/CustomizeAssessor.rst>`_
 * `customized advisor <../Tuner/CustomizeAdvisor.rst>`_
@@ -101,9 +100,9 @@ Run following command to register the customized algorithms as builtin algorithm
 
 .. code-block:: bash
 
-   nnictl algo register --meta <path_to_meta_file>
+   nnictl algo register --meta PATH_TO_META_FILE
 
-The ``<path_to_meta_file>`` is the path to the yaml file your created in above section.
+The ``PATH_TO_META_FILE`` is the path to the yaml file your created in above section.
 
 Reference `customized tuner example <#example-register-a-customized-tuner-as-a-builtin-tuner>`_ for a full example.
 
@@ -128,7 +127,7 @@ List builtin algorithms
 
 Run following command to list the registered builtin algorithms:
 
-.. code-block:: bash
+.. code-block:: text
 
    nnictl algo list
    +-----------------+------------+-----------+--------=-------------+------------------------------------------+
@@ -213,7 +212,7 @@ Check the registered builtin algorithms
 
 Then run command ``nnictl algo list``\ , you should be able to see that demotuner is installed:
 
-.. code-block:: bash
+.. code-block:: text
 
    +-----------------+------------+-----------+--------=-------------+------------------------------------------+
    |      Name       |    Type    |   source  |      Class Name      |               Module Name                |
