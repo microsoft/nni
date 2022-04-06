@@ -65,12 +65,6 @@ NasBench201Cell
 Hyper-module Library (experimental)
 -----------------------------------
 
-Hyper-module is a (PyTorch) module which contains many architecture/hyperparameter candidates for this module. By using hypermodule in user defined model, NNI will help users automatically find the best architecture/hyperparameter of the hyper-modules for this model. This follows the design philosophy of Retiarii that users write DNN model as a space.
-
-We are planning to support some of the hyper-modules commonly used in the community, such as AutoDropout, AutoActivation. These are considered complementary to :ref:`mutation-primitives`, as they are often more concrete, specific, and tailored for particular needs.
-
-.. _nas-autoactivation:
-
 AutoActivation
 ^^^^^^^^^^^^^^
 

@@ -3,9 +3,8 @@ Neural Architecture Search
 
 .. toctree::
    :hidden:
-   :titlesonly:
 
-   Quick Start <tutorials/hello_nas>
+   Quickstart <tutorials/hello_nas>
    construct_space
    exploration_strategy
    evaluator
@@ -52,107 +51,20 @@ We now explain why NAS is challegning without NNI and how NNI tackles them to he
 * **Exploration strategy:** The exploration strategy details how to explore the search space (which is often exponentially large). It encompasses the classical exploration-exploitation trade-off since, on the one hand, it is desirable to find well-performing architectures quickly, while on the other hand, premature convergence to a region of suboptimal architectures should be avoided. In NNI, we have also provided :doc:`a list of strategies <exploration_strategy>`. Some of them are powerful, but time consuming, while others might be suboptimal but really efficient. Users can always find one that matches their need.
 * **Performance estimation / evaluator:** The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. In NNI, this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. The choices of evaluators also range from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations.
 
-Basic Ideas
------------
+Tutorials
+---------
 
-.. rubric:: Writing Model Space
+To start using NNI NAS framework, we recommend at least going through the following tutorials:
 
-The following APIs are provided to ease the engineering effort of writing a new search space.
+* :doc:`Quickstart <tutorials/hello_nas>`
+* :doc:`construct_space`
+* :doc:`exploration_strategy`
+* :doc:`evaluator`
 
-.. list-table::
-   :header-rows: 1
-   :widths: auto
+Resources
+---------
 
-   * - Name
-     - Category
-     - Brief Description
-   * - :ref:`nas-layer-choice`
-     - :ref:`Mutation Primitives <mutation-primitives>`
-     - Select from some PyTorch modules
-   * - :ref:`nas-input-choice`
-     - :ref:`Mutation Primitives <mutation-primitives>`
-     - Select from some inputs (tensors)
-   * - :ref:`nas-value-choice`
-     - :ref:`Mutation Primitives <mutation-primitives>`
-     - Select from some candidate values
-   * - :ref:`nas-repeat`
-     - :ref:`Mutation Primitives <mutation-primitives>`
-     - Repeat a block by a variable number of times
-   * - :ref:`nas-cell`
-     - :ref:`Mutation Primitives <mutation-primitives>`
-     - Cell structure popularly used in literature
-   * - :ref:`nas-cell-101`
-     - :ref:`Mutation Primitives <mutation-primitives>`
-     - Cell structure (variant) proposed by NAS-Bench-101
-   * - :ref:`nas-cell-201`
-     - :ref:`Mutation Primitives <mutation-primitives>`
-     - Cell structure (variant) proposed by NAS-Bench-201
-   * - :ref:`nas-autoactivation`
-     - :ref:`Hyper-modules <hyper-modules>`
-     - Searching for activation functions
-   * - :doc:`Mutator <mutator>`
-     - :doc:`mutator`
-     - Flexible mutations on graphs
+The following articles will help with a better understanding of the current arts of NAS:
 
-.. rubric:: Exploring the Search Space
-
-We provide the following (built-in) algorithms to explore the user-defined search space.
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - Name
-     - Category
-     - Brief Description
-   * - :ref:`random-strategy`
-     - :ref:`Multi-trial <multi-trial-nas>`
-     - Randomly sample an architecture each time
-   * - :ref:`grid-search-strategy`
-     - :ref:`Multi-trial <multi-trial-nas>`
-     - Traverse the search space and try all possibilities
-   * - :ref:`regularized-evolution-strategy`
-     - :ref:`Multi-trial <multi-trial-nas>`
-     - Evolution algorithm for NAS. `Reference <https://arxiv.org/abs/1802.01548>`__
-   * - :ref:`tpe-strategy`
-     - :ref:`Multi-trial <multi-trial-nas>`
-     - Tree-structured Parzen Estimator (TPE). `Reference <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__
-   * - :ref:`policy-based-rl-strategy`
-     - :ref:`Multi-trial <multi-trial-nas>`
-     - Policy-based reinforcement learning, based on implementation of tianshou. `Reference <https://arxiv.org/abs/1611.01578>`__
-   * - :ref:`darts-strategy`
-     - :ref:`One-shot <one-shot-nas>`
-     - Continuous relaxation of the architecture representation, allowing efficient search of the architecture using gradient descent. `Reference <https://arxiv.org/abs/1806.09055>`__
-   * - :ref:`enas-strategy`
-     - :ref:`One-shot <one-shot-nas>`
-     - RL controller learns to generate the best network on a super-net. `Reference <https://arxiv.org/abs/1802.03268>`__
-   * - :ref:`fbnet-strategy`
-     - :ref:`One-shot <one-shot-nas>`
-     - Choose the best block by using Gumbel Softmax random sampling and differentiable training. `Reference <https://arxiv.org/abs/1812.03443>`__
-   * - :ref:`spos-strategy`
-     - :ref:`One-shot <one-shot-nas>`
-     - Train a super-net with uniform path sampling. `Reference <https://arxiv.org/abs/1904.00420>`__
-   * - :ref:`proxylessnas-strategy`
-     - :ref:`One-shot <one-shot-nas>`
-     - A low-memory-consuming optimized version of differentiable architecture search. `Reference <https://arxiv.org/abs/1812.00332>`__
-
-.. rubric:: Evaluators
-
-The evaluator APIs can be used to build performance assessment component of your neural architecture search process.
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - Name
-     - Type
-     - Brief Description
-   * - :ref:`functional-evaluator`
-     - General
-     - Evaluate with any Python function
-   * - :ref:`classification-evaluator`
-     - Built upon `PyTorch Lightning <https://www.pytorchlightning.ai/>`__
-     - For classification tasks
-   * - :ref:`regression-evaluator`
-     - Built upon `PyTorch Lightning <https://www.pytorchlightning.ai/>`__
-     - For regression tasks
+* `Neural Architecture Search: A Survey <https://arxiv.org/abs/1808.05377>`__
+* `A Comprehensive Survey of Neural Architecture Search: Challenges and Solutions <https://arxiv.org/abs/2006.02903>`__

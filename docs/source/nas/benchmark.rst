@@ -51,7 +51,7 @@ Please make sure there is at least 10GB free disk space and note that the conver
 Example Usages
 --------------
 
-Please refer to `examples usages of Benchmarks API <../BenchmarksExample.rst>`__.
+Please refer to :doc:`examples usages of Benchmarks API </tutorials/nasbench_as_dataset>`.
 
 NAS-Bench-101
 -------------

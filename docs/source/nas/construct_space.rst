@@ -45,4 +45,4 @@ The following APIs are provided to ease the engineering effort of writing a new 
      - Searching for activation functions
    * - :class:`Mutator <nni.retiarii.Mutator>`
      - :doc:`Mutator <mutator>`
-     - Flexible mutations on graphs. `See tutorial here <mutator>`__
+     - Flexible mutations on graphs. :doc:`See tutorial here <mutator>`
