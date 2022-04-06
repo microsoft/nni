@@ -14,8 +14,6 @@ Neural Architecture Search
 
 .. note:: PyTorch is the **only supported framework on Retiarii**. Inquiries of NAS support on Tensorflow is in `this discussion <https://github.com/microsoft/nni/discussions/4605>`__. If you intend to run NAS with DL frameworks other than PyTorch and Tensorflow, please `open new issues <https://github.com/microsoft/nni/issues>`__ to let us know.
 
-.. note:: The implementation of NNI NAS framework is based on the research of `Retiarii: A Deep Learning Exploratory-Training Framework <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__.
-
 Basic Idea of NAS
 -----------------
 
@@ -36,7 +34,7 @@ The process is similar to :doc:`Hyperparameter Optimization </hpo/index>`, excep
 Key Features
 ------------
 
-We highlight the following features for Retiarii:
+The current NAS framework in NNI is powered by the research of `Retiarii: A Deep Learning Exploratory-Training Framework <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__, where we highlight the following features:
 
 * :doc:`Simple APIs to construct search space easily <construct_space>`
 * :doc:`SOTA NAS algorithms to explore search space <exploration_strategy>`
