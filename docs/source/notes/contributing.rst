@@ -275,7 +275,7 @@ Writing new documents
 
 Other than built-in directives provided by Sphinx, we also provide some custom directives:
 
-* ``.. cardlinkitem::``: A tutorial card, useful in :doc:`../tutorials`.
+* ``.. cardlinkitem::``: A tutorial card, useful in :doc:`/examples`.
 * |githublink_example| or |githublink_example_2|: reference a file on the GitHub. Linked to the same commit id as where the documentation is built.
 
 Writing new tutorials

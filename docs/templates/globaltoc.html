@@ -2,6 +2,9 @@
 {% if toctree and sidebars and 'globaltoc.html' in sidebars %}
   {% set toctree_nodes = derender_toc(toctree, False) %}
   <ul class="md-nav__list">
+    <li class="md-nav__item md-nav__overview">
+      <a href="{{ pathto('index')|e }}" class="md-nav__link{% if pagename == 'index' %} md-nav__link--active{% endif %}">{{ _('Overview') }}</a>
+    </li>
   {%- for item in toctree_nodes recursive %}
     <li class="md-nav__item">
     {% if "caption" in item %}
