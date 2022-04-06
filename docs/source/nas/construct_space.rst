@@ -9,9 +9,6 @@ NNI provides powerful (and multi-level) APIs for users to easily express model s
 
 The following table summarizes all the APIs we have provided for constructing search space.
 
-
-The following APIs are provided to ease the engineering effort of writing a new search space.
-
 .. list-table::
    :header-rows: 1
    :widths: auto

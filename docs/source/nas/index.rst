@@ -4,7 +4,7 @@ Neural Architecture Search
 .. toctree::
    :hidden:
 
-   Quickstart <tutorials/hello_nas>
+   Quickstart </tutorials/hello_nas>
    construct_space
    exploration_strategy
    evaluator
@@ -14,8 +14,8 @@ Neural Architecture Search
 
 .. note:: PyTorch is the **only supported framework on Retiarii**. Inquiries of NAS support on Tensorflow is in `this discussion <https://github.com/microsoft/nni/discussions/4605>`__. If you intend to run NAS with DL frameworks other than PyTorch and Tensorflow, please `open new issues <https://github.com/microsoft/nni/issues>`__ to let us know.
 
-Basic Idea of NAS
------------------
+Basics
+------
 
 Automatic neural architecture search is playing an increasingly important role in finding better models. Recent research has proven the feasibility of automatic NAS and has led to models that beat many manually designed and tuned models. Representative works include `NASNet <https://arxiv.org/abs/1707.07012>`__, `ENAS <https://arxiv.org/abs/1802.03268>`__, `DARTS <https://arxiv.org/abs/1806.09055>`__, `Network Morphism <https://arxiv.org/abs/1806.10282>`__, and `Evolution <https://arxiv.org/abs/1703.01041>`__. In addition, new innovations continue to emerge.
 
@@ -40,14 +40,31 @@ The current NAS framework in NNI is powered by the research of `Retiarii: A Deep
 * :doc:`SOTA NAS algorithms to explore search space <exploration_strategy>`
 * :doc:`Experiment backend support to scale up experiments on large-scale AI platforms </experiment/overview>`
 
-Relieving Engineering Efforts of NAS
-------------------------------------
+Why NAS with NNI
+----------------
 
-We now explain why NAS is challegning without NNI and how NNI tackles them to help users run NAS easily. We break down this into three components (described above).
+We list out the three perspectives where NAS can be particularly challegning without NNI. NNI provides solutions to relieve users' engineering effort when they want to try NAS techniques in their own scenario.
 
-* **Search space design:** The search space defines which architectures can be represented in principle. Incorporating prior knowledge about typical properties of architectures well-suited for a task can reduce the size of the search space and simplify the search. However, this also introduces a human bias, which may prevent finding novel architectural building blocks that go beyond the current human knowledge. In NNI, we provide a wide range of APIs to build the search space. There are :doc:`high-level APIs <construct_space>`, that enables incorporating human knowledge about what makes a good architecture or search space. There are also :doc:`low-level APIs <mutator>`, that is a list of primitives to construct a network from operator to operator.
-* **Exploration strategy:** The exploration strategy details how to explore the search space (which is often exponentially large). It encompasses the classical exploration-exploitation trade-off since, on the one hand, it is desirable to find well-performing architectures quickly, while on the other hand, premature convergence to a region of suboptimal architectures should be avoided. In NNI, we have also provided :doc:`a list of strategies <exploration_strategy>`. Some of them are powerful, but time consuming, while others might be suboptimal but really efficient. Users can always find one that matches their need.
-* **Performance estimation / evaluator:** The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. In NNI, this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. The choices of evaluators also range from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations.
+Search Space Design
+^^^^^^^^^^^^^^^^^^^
+
+The search space defines which architectures can be represented in principle. Incorporating prior knowledge about typical properties of architectures well-suited for a task can reduce the size of the search space and simplify the search. However, this also introduces a human bias, which may prevent finding novel architectural building blocks that go beyond the current human knowledge. Search space design can be very challenging for beginners, who might not possess the experience to balance the richness and simplicity.
+
+In NNI, we provide a wide range of APIs to build the search space. There are :doc:`high-level APIs <construct_space>`, that enables incorporating human knowledge about what makes a good architecture or search space. There are also :doc:`low-level APIs <mutator>`, that is a list of primitives to construct a network from operator to operator.
+
+Exploration strategy
+^^^^^^^^^^^^^^^^^^^^
+
+The exploration strategy details how to explore the search space (which is often exponentially large). It encompasses the classical exploration-exploitation trade-off since, on the one hand, it is desirable to find well-performing architectures quickly, while on the other hand, premature convergence to a region of suboptimal architectures should be avoided. The "best" exploration strategy for a particular scenario is usually found via trial-and-error. As many state-of-the-art strategies are implemented with their own code-base, it becomes very troublesome to switch from one to another.
+
+In NNI, we have also provided :doc:`a list of strategies <exploration_strategy>`. Some of them are powerful yet time consuming, while others might be suboptimal but really efficient. Given that all strategies are implemented with a unified interface, users can always find one that matches their need.
+
+Performance estimation
+^^^^^^^^^^^^^^^^^^^^^^
+
+The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. The problem with performance estimation is mostly its scalability, i.e., how can I run and manage multiple trials simultaneously.
+
+In NNI, we standardize this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. The choices of evaluators also range from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations. Evaluators are run in *trials*, where trials can be spawn onto distributed platforms with our powerful :doc:`training service </experiment/training_service>`.
 
 Tutorials
 ---------

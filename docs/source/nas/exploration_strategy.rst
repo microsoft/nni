@@ -8,6 +8,10 @@ There are two types of model space exploration approach: **Multi-trial strategy*
 
 Here is the list of exploration strategies that NNI has supported.
 
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
    * - Name
      - Category
      - Brief Description
@@ -92,4 +96,4 @@ After ``trainer.fit()`` completes, we can use ``trainer.export()`` to export the
    print('Final architecture:', trainer.export())
    json.dump(trainer.export(), open('checkpoint.json', 'w'))
 
-.. tip:: The trained super-net (neither the weights or exported JSON) can't be used directly. It's only an intermediate result used for deriving the final architecture. The exported architecture (can be retrieved with :function:`nni.retiarii.fixed_arch`) needs to be *retrained* with a standard training recipe to get the final model.
+.. tip:: The trained super-net (neither the weights or exported JSON) can't be used directly. It's only an intermediate result used for deriving the final architecture. The exported architecture (can be retrieved with :meth:`nni.retiarii.fixed_arch`) needs to be *retrained* with a standard training recipe to get the final model.

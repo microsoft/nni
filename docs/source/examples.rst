@@ -7,8 +7,6 @@ Examples
    :maxdepth: 2
    :hidden:
 
-   tutorials/hello_nas
-   tutorials/nasbench_as_dataset
    tutorials/pruning_quick_start_mnist
    tutorials/pruning_speedup
    tutorials/quantization_quick_start_mnist

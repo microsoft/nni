@@ -35,7 +35,7 @@ User-defined mutator should inherit :class:`nni.retiarii.Mutator` class, and imp
         chosen_op = self.choice(self.candidate_op_list)
         node.update_operation(chosen_op.type, chosen_op.params)
 
-The input of :meth:`nni.retiarii.Mutator.mutate` is graph IR (Intermediate Representation) of the base model, users can mutate the graph using the graph's member functions (e.g., :meth:`nni.retiarii.Graph.get_nodes_by_label`, :meth:`nni.retiarii.Node.get_nodes_by_label`). The mutation operations can be combined with the API ``self.choice``, in order to express a set of possible mutations. In the above example, the node's operation can be changed to any operation from ``candidate_op_list``.
+The input of :meth:`nni.retiarii.Mutator.mutate` is graph IR (Intermediate Representation) of the base model, users can mutate the graph using the graph's member functions (e.g., :meth:`nni.retiarii.Model.get_nodes_by_label`). The mutation operations can be combined with the API ``self.choice``, in order to express a set of possible mutations. In the above example, the node's operation can be changed to any operation from ``candidate_op_list``.
 
 Use placeholder to make mutation easier: :class:`nni.retiarii.nn.pytorch.Placeholder`. If you want to mutate a subgraph or node of your model, you can define a placeholder in this model to represent the subgraph or node. Then, use mutator to mutate this placeholder to make it real modules.
 
