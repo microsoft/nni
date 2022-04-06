@@ -1136,6 +1136,9 @@ class Shared(unittest.TestCase):
             model = _apply_all_mutators(init_model, mutators, sampler)
             assert (model.evaluator.trace_kwargs['x'], model.evaluator.trace_kwargs['y']) in [(1, 2), (3, 4)]
 
+    def test_valuechoice_in_evaluator_nested(self):
+        pass
+
     def test_retiarii_nn_import(self):
         dummy = torch.zeros(1, 16, 32, 24)
         nn.init.uniform_(dummy)
