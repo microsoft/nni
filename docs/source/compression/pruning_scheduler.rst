@@ -56,7 +56,8 @@ The pruning result will return to the ``TaskGenerator`` at the end of each itera
 
 The information included in the ``Task`` and ``TaskResult`` can be found :githublink:`here <nni/algorithms/compression/v2/pytorch/base/scheduler.py>`.
 
-A clearer iterative pruning flow chart can be found `here <v2_pruning.rst>`__.
+A clearer iterative pruning flow chart can be found :doc:`here <pruning>`.
+
 
 If you want to implement your own task generator, please following the ``TaskGenerator`` :githublink:`interface <nni/algorithms/compression/v2/pytorch/pruning/tools/base.py>`.
 Two main functions should be implemented, ``init_pending_tasks(self) -> List[Task]`` and ``generate_tasks(self, task_result: TaskResult) -> List[Task]``.
