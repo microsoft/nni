@@ -10,6 +10,9 @@
 [![Pull Requests](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen)
 [![Version](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases)
 [![Documentation Status](https://readthedocs.org/projects/nni/badge/?version=stable)](https://nni.readthedocs.io/en/stable/?badge=stable)
+[![](https://img.shields.io/github/contributors-anon/microsoft/nni)](https://github.com/microsoft/nni/graphs/contributors)
+
+
 
 [<img src="docs/img/readme_banner.png" width="100%"/>](https://nni.readthedocs.io/)
 
@@ -233,6 +236,8 @@ Participating discussions via the following IM groups is also welcomed.
 
 Over the past few years, NNI has received thousands of feedbacks on GitHub issues, and pull requests from hundreds of contributors.
 We appreciate all contributions from community to make NNI thrive.
+
+<img src="https://img.shields.io/github/contributors-anon/microsoft/nni"/>
 
 <a href="https://github.com/microsoft/nni/graphs/contributors"><img src="https://contrib.rocks/image?repo=microsoft/nni&max=240&columns=18" /></a>
 
