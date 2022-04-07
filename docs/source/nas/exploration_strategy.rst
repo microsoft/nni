@@ -86,7 +86,7 @@ Currently, the usage of one-shot NAS strategy is a little different from multi-t
    )
    trainer.fit()
 
-One-shot strategy can be used without :class:`RetiariiExperiment <nni.retiairi.experiment.pytorch.RetiariiExperiment>`. Thus, the ``trainer.fit()`` here runs the experiment locally.
+One-shot strategy can be used without :class:`RetiariiExperiment <nni.retiarii.experiment.pytorch.RetiariiExperiment>`. Thus, the ``trainer.fit()`` here runs the experiment locally.
 
 After ``trainer.fit()`` completes, we can use ``trainer.export()`` to export the searched architecture (a dict of choices) to a file.
 

@@ -14,9 +14,7 @@ Pure-python Execution Engine
 
 Pure-python Execution Engine is the default engine, we recommend users to keep using this execution engine, if they are new to NNI NAS. Pure-python execution engine plays magic within the scope of inline mutation APIs, while does not touch the rest of user model. Thus, it has minimal requirement on user model. 
 
-One steps are needed to use this engine now.
-
-1. Add :meth:`nni.retiarii.model_wrapper` decorator outside the whole PyTorch model.
+Rememeber to add :meth:`nni.retiarii.model_wrapper` decorator outside the whole PyTorch model before using this engine.
 
 .. note:: You should always use ``super().__init__()`` instead of ``super(MyNetwork, self).__init__()`` in the PyTorch model, because the latter one has issues with model wrapper.
 

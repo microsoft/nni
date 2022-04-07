@@ -91,6 +91,9 @@ autodoc_typehints = 'description'
 autodoc_typehints_description_target = 'documented'
 autodoc_inherit_docstrings = False
 
+# Sphinx will warn about all references where the target cannot be found.
+nitpicky = False  # disabled for now
+
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']
 

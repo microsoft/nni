@@ -143,6 +143,8 @@ For the mobile application of facial landmark, based on the basic architecture o
 FBNet is a block-wise differentiable NAS method (Block-wise DNAS), where the best candidate building blocks can be chosen by using Gumbel Softmax random sampling and differentiable training. At each layer (or stage) to be searched, the diverse candidate blocks are side by side planned (just like the effectiveness of structural re-parameterization), leading to sufficient pre-training of the supernet. The pre-trained supernet is further sampled for finetuning of the subnet, to achieve better performance.
 
 .. image:: ../../../img/fbnet.png
+   :width: 800
+   :align: center
 
 PFLD is a lightweight facial landmark model for realtime application. The architecture of PLFD is firstly simplified for acceleration, by using the stem block of PeleeNet, average pooling with depthwise convolution and eSE module.
 
@@ -385,6 +387,8 @@ The official implementation supports different targeted hardware, including 'mob
 Below we will describe implementation details. Like other one-shot NAS algorithms on NNI, ProxylessNAS is composed of two parts: *search space* and *training approach*. For users to flexibly define their own search space and use built-in ProxylessNAS training approach, please refer to :githublink:`example code <examples/nas/oneshot/proxylessnas>` for a reference.
 
 .. image:: ../../../img/proxylessnas.png
+   :width: 450
+   :align: center
 
 ProxylessNAS training approach is composed of ProxylessLayerChoice and ProxylessNasTrainer. ProxylessLayerChoice instantiates MixedOp for each mutable (i.e., LayerChoice), and manage architecture weights in MixedOp. **For DataParallel**, architecture weights should be included in user model. Specifically, in ProxylessNAS implementation, we add MixedOp to the corresponding mutable (i.e., LayerChoice) as a member variable. The ProxylessLayerChoice class also exposes two member functions, i.e., ``resample``, ``finalize_grad``, for the trainer to control the training of architecture weights.
 

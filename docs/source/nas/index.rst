@@ -22,6 +22,8 @@ Automatic neural architecture search is playing an increasingly important role i
 High-level speaking, aiming to solve any particular task with neural architecture search typically requires: search space design, search strategy selection, and performance evaluation. The three components work together with the following loop (from the famous `NAS survey <https://arxiv.org/abs/1808.05377>`__):
 
 .. image:: ../../img/nas_abstract_illustration.png
+   :align: center
+   :width: 700
 
 In this figure:
 

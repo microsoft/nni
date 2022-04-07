@@ -1,7 +1,7 @@
 Construct Space with Mutator
 ============================
 
-Besides the mutation primitives demonstrated in the `basic tutorial <construct_space>`, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. The high-level APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
+Besides the mutation primitives demonstrated in the :doc:`basic tutorial <construct_space>`, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. The high-level APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
 
 .. warning:: Mutator and inline mutation APIs can NOT be used together.
 
