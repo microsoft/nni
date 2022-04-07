@@ -9,63 +9,63 @@ Basic Pruner
 Level Pruner
 ^^^^^^^^^^^^
 
-..  autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LevelPruner
+..  autoclass:: nni.compression.pytorch.pruning.LevelPruner
 
 .. _l1-norm-pruner:
 
 L1 Norm Pruner
 ^^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.L1NormPruner
+.. autoclass:: nni.compression.pytorch.pruning.L1NormPruner
 
 .. _l2-norm-pruner:
 
 L2 Norm Pruner
 ^^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.L2NormPruner
+.. autoclass:: nni.compression.pytorch.pruning.L2NormPruner
 
 .. _fpgm-pruner:
 
 FPGM Pruner
 ^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.FPGMPruner
+.. autoclass:: nni.compression.pytorch.pruning.FPGMPruner
 
 .. _slim-pruner:
 
 Slim Pruner
 ^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.SlimPruner
+.. autoclass:: nni.compression.pytorch.pruning.SlimPruner
 
 .. _activation-apoz-rank-pruner:
 
 Activation APoZ Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ActivationAPoZRankPruner
+.. autoclass:: nni.compression.pytorch.pruning.ActivationAPoZRankPruner
 
 .. _activation-mean-rank-pruner:
 
 Activation Mean Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ActivationMeanRankPruner
+.. autoclass:: nni.compression.pytorch.pruning.ActivationMeanRankPruner
 
 .. _taylor-fo-weight-pruner:
 
 Taylor FO Weight Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.TaylorFOWeightPruner
+.. autoclass:: nni.compression.pytorch.pruning.TaylorFOWeightPruner
 
 .. _admm-pruner:
 
 ADMM Pruner
 ^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ADMMPruner
+.. autoclass:: nni.compression.pytorch.pruning.ADMMPruner
 
 Scheduled Pruners
 -----------------
@@ -75,42 +75,42 @@ Scheduled Pruners
 Linear Pruner
 ^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LinearPruner
+.. autoclass:: nni.compression.pytorch.pruning.LinearPruner
 
 .. _agp-pruner:
 
 AGP Pruner
 ^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AGPPruner
+.. autoclass:: nni.compression.pytorch.pruning.AGPPruner
 
 .. _lottery-ticket-pruner:
 
 Lottery Ticket Pruner
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LotteryTicketPruner
+.. autoclass:: nni.compression.pytorch.pruning.LotteryTicketPruner
 
 .. _simulated-annealing-pruner:
 
 Simulated Annealing Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.SimulatedAnnealingPruner
+.. autoclass:: nni.compression.pytorch.pruning.SimulatedAnnealingPruner
 
 .. _auto-compress-pruner:
 
 Auto Compress Pruner
 ^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AutoCompressPruner
+.. autoclass:: nni.compression.pytorch.pruning.AutoCompressPruner
 
 .. _amc-pruner:
 
 AMC Pruner
 ^^^^^^^^^^
 
-..  autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AMCPruner
+..  autoclass:: nni.compression.pytorch.pruning.AMCPruner
 
 Other Pruner
 ------------
@@ -120,4 +120,4 @@ Other Pruner
 Movement Pruner
 ^^^^^^^^^^^^^^^
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.MovementPruner
+.. autoclass:: nni.compression.pytorch.pruning.MovementPruner

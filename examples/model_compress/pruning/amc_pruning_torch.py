@@ -5,8 +5,8 @@ import torch
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
-from nni.algorithms.compression.v2.pytorch.pruning import AMCPruner
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.pruning import AMCPruner
+from nni.compression.pytorch.utils import count_flops_params
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))

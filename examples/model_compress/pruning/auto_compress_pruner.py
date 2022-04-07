@@ -5,7 +5,7 @@ import torch
 from torchvision import datasets, transforms
 
 import nni
-from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
+from nni.compression.pytorch.pruning import AutoCompressPruner
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))

@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 import numpy as np
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils import count_flops_params
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parents[3] / 'models'))

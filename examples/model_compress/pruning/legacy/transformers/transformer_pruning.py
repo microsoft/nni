@@ -9,7 +9,7 @@ import torch
 from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
 
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils import count_flops_params
 from nni.algorithms.compression.pytorch.pruning import TransformerHeadPruner
 
 import datasets

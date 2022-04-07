@@ -4,7 +4,7 @@ from tqdm import tqdm
 import torch
 from torchvision import datasets, transforms
 
-from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
+from nni.compression.pytorch.pruning import L1NormPruner
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 from pathlib import Path

@@ -67,7 +67,7 @@ config_list = [{
 # %%
 # Pruners usually require `model` and `config_list` as input arguments.
 
-from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
+from nni.compression.pytorch.pruning import L1NormPruner
 pruner = L1NormPruner(model, config_list)
 
 # show the wrapped model structure, `PrunerModuleWrapper` have wrapped the layers that configured in the config_list.

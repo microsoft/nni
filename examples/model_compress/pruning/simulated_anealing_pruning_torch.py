@@ -13,7 +13,7 @@ from tqdm import tqdm
 import torch
 from torchvision import datasets, transforms
 
-from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
+from nni.compression.pytorch.pruning import SimulatedAnnealingPruner
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))

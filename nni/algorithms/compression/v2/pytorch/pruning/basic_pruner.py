@@ -188,7 +188,7 @@ class LevelPruner(BasicPruner):
     Examples
     --------
         >>> model = ...
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import LevelPruner
+        >>> from nni.compression.pytorch.pruning import LevelPruner
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
         >>> pruner = LevelPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
@@ -360,7 +360,7 @@ class L2NormPruner(NormPruner):
     Examples
     --------
         >>> model = ...
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import L2NormPruner
+        >>> from nni.compression.pytorch.pruning import L2NormPruner
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
         >>> pruner = L2NormPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
@@ -410,7 +410,7 @@ class FPGMPruner(BasicPruner):
     Examples
     --------
         >>> model = ...
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import FPGMPruner
+        >>> from nni.compression.pytorch.pruning import FPGMPruner
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
         >>> pruner = FPGMPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
@@ -506,7 +506,7 @@ class SlimPruner(BasicPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import SlimPruner
+        >>> from nni.compression.pytorch.pruning import SlimPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -764,7 +764,7 @@ class ActivationAPoZRankPruner(ActivationPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import ActivationAPoZRankPruner
+        >>> from nni.compression.pytorch.pruning import ActivationAPoZRankPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -847,7 +847,7 @@ class ActivationMeanRankPruner(ActivationPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import ActivationMeanRankPruner
+        >>> from nni.compression.pytorch.pruning import ActivationMeanRankPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -940,7 +940,7 @@ class TaylorFOWeightPruner(BasicPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import TaylorFOWeightPruner
+        >>> from nni.compression.pytorch.pruning import TaylorFOWeightPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -1082,7 +1082,7 @@ class ADMMPruner(BasicPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import ADMMPruner
+        >>> from nni.compression.pytorch.pruning import ADMMPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())

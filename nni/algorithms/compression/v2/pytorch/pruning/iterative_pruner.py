@@ -105,7 +105,7 @@ class LinearPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import LinearPruner
+        >>> from nni.compression.pytorch.pruning import LinearPruner
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> finetuner = ...
         >>> pruner = LinearPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
@@ -170,7 +170,7 @@ class AGPPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import AGPPruner
+        >>> from nni.compression.pytorch.pruning import AGPPruner
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> finetuner = ...
         >>> pruner = AGPPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
@@ -248,7 +248,7 @@ class LotteryTicketPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import LotteryTicketPruner
+        >>> from nni.compression.pytorch.pruning import LotteryTicketPruner
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> finetuner = ...
         >>> pruner = LotteryTicketPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner, reset_weight=True)
@@ -325,7 +325,7 @@ class SimulatedAnnealingPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
+        >>> from nni.compression.pytorch.pruning import SimulatedAnnealingPruner
         >>> model = ...
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> evaluator = ...

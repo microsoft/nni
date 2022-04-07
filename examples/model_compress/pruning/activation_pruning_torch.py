@@ -16,8 +16,8 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 import nni
 from nni.compression.pytorch import ModelSpeedup
-from nni.compression.pytorch.utils.counter import count_flops_params
-from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import ActivationAPoZRankPruner, ActivationMeanRankPruner
+from nni.compression.pytorch.utils import count_flops_params
+from nni.compression.pytorch.pruning import ActivationAPoZRankPruner, ActivationMeanRankPruner
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))

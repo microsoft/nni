@@ -17,7 +17,7 @@ from torchvision import datasets, transforms
 from nni.algorithms.compression.pytorch.pruning import L1FilterPruner, L2FilterPruner, FPGMPruner
 from nni.algorithms.compression.pytorch.pruning import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
 from nni.compression.pytorch import ModelSpeedup
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils import count_flops_params
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))

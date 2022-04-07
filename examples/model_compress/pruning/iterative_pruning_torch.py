@@ -13,7 +13,7 @@ from tqdm import tqdm
 import torch
 from torchvision import datasets, transforms
 
-from nni.algorithms.compression.v2.pytorch.pruning import (
+from nni.compression.pytorch.pruning import (
     LinearPruner,
     AGPPruner,
     LotteryTicketPruner

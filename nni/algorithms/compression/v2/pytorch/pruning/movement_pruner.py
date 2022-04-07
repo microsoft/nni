@@ -146,7 +146,7 @@ class MovementPruner(BasicPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import MovementPruner
+        >>> from nni.compression.pytorch.pruning import MovementPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())

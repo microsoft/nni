@@ -120,7 +120,7 @@ class AutoCompressPruner(IterativePruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
+        >>> from nni.compression.pytorch.pruning import AutoCompressPruner
         >>> model = ...
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize

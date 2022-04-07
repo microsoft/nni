@@ -15,7 +15,7 @@ from transformers import (
 )
 
 import nni
-from nni.algorithms.compression.v2.pytorch.pruning import MovementPruner
+from nni.compression.pytorch.pruning import MovementPruner
 
 
 task_to_keys = {

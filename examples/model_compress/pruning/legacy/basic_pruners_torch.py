@@ -23,7 +23,7 @@ from mnist.lenet import LeNet
 from cifar10.vgg import VGG
 from cifar10.resnet import ResNet18
 
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils import count_flops_params
 
 import nni
 from nni.compression.pytorch import ModelSpeedup

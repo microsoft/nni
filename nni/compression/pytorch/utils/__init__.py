@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from .counter import count_flops_params
+from .mask_conflict import ChannelMaskConflict, GroupMaskConflict
 from .utils import *
+from .sensitivity_analysis import SensitivityAnalysis
 from .shape_dependency import *
-from .shape_dependency import ReshapeDependency
 
 def not_safe_to_prune(model, dummy_input):
     """

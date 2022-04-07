@@ -172,7 +172,7 @@ Usage
 
 .. code-block:: python
 
-   from nni.compression.pytorch.utils.counter import count_flops_params
+   from nni.compression.pytorch.utils import count_flops_params
 
    # Given input size (1, 1, 28, 28)
    flops, params, results = count_flops_params(model, (1, 1, 28, 28)) 

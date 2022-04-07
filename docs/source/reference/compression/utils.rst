@@ -4,37 +4,37 @@ Compression Utilities
 SensitivityAnalysis
 -------------------
 
-.. autoclass:: nni.compression.pytorch.utils.sensitivity_analysis.SensitivityAnalysis
+.. autoclass:: nni.compression.pytorch.utils.SensitivityAnalysis
     :members:
 
 ChannelDependency
 -----------------
 
-.. autoclass:: nni.compression.pytorch.utils.shape_dependency.ChannelDependency
+.. autoclass:: nni.compression.pytorch.utils.ChannelDependency
     :members:
 
 GroupDependency
 ---------------
 
-.. autoclass:: nni.compression.pytorch.utils.shape_dependency.GroupDependency
+.. autoclass:: nni.compression.pytorch.utils.GroupDependency
     :members:
 
 ChannelMaskConflict
 -------------------
 
-.. autoclass:: nni.compression.pytorch.utils.mask_conflict.ChannelMaskConflict
+.. autoclass:: nni.compression.pytorch.utils.ChannelMaskConflict
     :members:
 
 GroupMaskConflict
 -----------------
 
-.. autoclass:: nni.compression.pytorch.utils.mask_conflict.GroupMaskConflict
+.. autoclass:: nni.compression.pytorch.utils.GroupMaskConflict
     :members:
 
 count_flops_params
 ------------------
 
-.. autofunction:: nni.compression.pytorch.utils.counter.count_flops_params
+.. autofunction:: nni.compression.pytorch.utils.count_flops_params
 
 compute_sparsity
 ----------------
