@@ -93,6 +93,8 @@ class Repeat(Mutable):
                  depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
         super().__init__()
 
+        self._label = None  # by default, no label
+
         if isinstance(depth, ValueChoiceX):
             if label is not None:
                 warnings.warn(
@@ -103,10 +105,16 @@ class Repeat(Mutable):
             all_values = list(self.depth_choice.all_options())
             self.min_depth = min(all_values)
             self.max_depth = max(all_values)
+
+            if isinstance(depth, ValueChoice):
+                self._label = depth.label  # if a leaf node
+
         elif isinstance(depth, tuple):
             self.min_depth = depth if isinstance(depth, int) else depth[0]
             self.max_depth = depth if isinstance(depth, int) else depth[1]
             self.depth_choice = ValueChoice(list(range(self.min_depth, self.max_depth + 1)), label=label)
+            self._label = self.depth_choice.label
+
         elif isinstance(depth, int):
             self.min_depth = self.max_depth = depth
             self.depth_choice = depth
@@ -116,8 +124,8 @@ class Repeat(Mutable):
         self.blocks = nn.ModuleList(self._replicate_and_instantiate(blocks, self.max_depth))
 
     @property
-    def label(self):
-        return self.depth_choice.label
+    def label(self) -> Optional[str]:
+        return self._label
 
     def forward(self, x):
         for block in self.blocks:
@@ -141,6 +149,9 @@ class Repeat(Mutable):
     def __getitem__(self, index):
         # shortcut for blocks[index]
         return self.blocks[index]
+
+    def __len__(self):
+        return self.max_depth
 
 
 class NasBench201Cell(nn.Module):

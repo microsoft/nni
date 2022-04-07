@@ -388,7 +388,7 @@ def _valuechoice_staticmethod_helper(orig_func):
     return orig_func
 
 
-class ValueChoiceX(Translatable):
+class ValueChoiceX(Translatable, nn.Module):
     """Internal API. Implementation note:
 
     The transformed (X) version of value choice.
@@ -404,6 +404,8 @@ class ValueChoiceX(Translatable):
     2. For graph-engine, it uses evaluate to calculate the result.
 
     Potentially, we have to implement the evaluation logic in oneshot algorithms. I believe we can postpone the discussion till then.
+
+    This class is implemented as a ``nn.Module`` so that it can be scanned by python engine / torchscript.
     """
 
     def __init__(self, function: Callable[..., Any], repr_template: str, arguments: List[Any], dry_run: bool = True):
@@ -423,6 +425,9 @@ class ValueChoiceX(Translatable):
         if dry_run:
             # for sanity check
             self.dry_run()
+
+    def forward(self) -> None:
+        raise RuntimeError('You should never call forward of the composition of a value-choice.')
 
     def inner_choices(self) -> Iterable['ValueChoice']:
         """

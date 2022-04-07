@@ -1,4 +1,4 @@
-.. 6b958f21bd23025c81836e54a7f4fbe4
+.. 57966d1be5afdd7a7fcb74e7ea25b1ec
 
 ###########################
 Neural Network Intelligence
@@ -12,7 +12,7 @@ Neural Network Intelligence
 
     入门 <quickstart>
     安装 <installation>
-    教程<tutorials>
+    教程<examples>
     超参调优 <hpo/index>
     神经网络架构搜索<nas/index>
     模型压缩<compression/index>

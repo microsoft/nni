@@ -1,5 +1,5 @@
-API Reference
-=============
+Python API Reference
+====================
 
 ..  toctree::
     :maxdepth: 1

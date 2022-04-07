@@ -44,9 +44,10 @@ There are several core features supported by NNI model compression:
 
 .. rubric:: Compression Pipeline
 
-.. image:: ../../img/compression_flow.jpg
-   :target: ../../img/compression_flow.jpg
+.. image:: ../../img/compression_pipeline.png
+   :target: ../../img/compression_pipeline.png
    :alt: 
+   :scale: 20%
 
 The overall compression pipeline in NNI is shown above. For compressing a pretrained model, pruning and quantization can be used alone or in combination.
 If users want to apply both, a sequential mode is recommended as common practise.
@@ -134,9 +135,9 @@ Given the output masks and quantization bits produced by those algorithms, NNI c
 
 The following figure shows how NNI prunes and speeds up your models. 
 
-.. image:: ../../img/pipeline_compress.jpg
-   :target: ../../img/pipeline_compress.jpg
-   :scale: 40%
+.. image:: ../../img/nni_prune_process.png
+   :target: ../../img/nni_prune_process.png
+   :scale: 20%
    :alt:
 
 The detailed tutorial of Speedup Model with Mask can be found :doc:`here <../tutorials/cp_pruning_speedup>`.
