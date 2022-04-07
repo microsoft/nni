@@ -1,5 +1,8 @@
+Customizing Algorithms
+======================
+
 Customize Tuner
-===============
+---------------
 
 NNI provides state-of-the-art tuning algorithm in builtin-tuners. NNI supports to build a tuner by yourself for tuning demand.
 
@@ -125,7 +128,7 @@ Write a more advanced automl algorithm
 The methods above are usually enough to write a general tuner. However, users may also want more methods, for example, intermediate results, trials' state (e.g., the methods in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called ``advisor`` which directly inherits from ``MsgDispatcherBase`` in :githublink:`msg_dispatcher_base.py <nni/runtime/msg_dispatcher_base.py>`. Please refer to `here <CustomizeAdvisor.rst>`__ for how to write a customized advisor.
 
 Customize Assessor
-==================
+------------------
 
 NNI supports to build an assessor by yourself for tuning demand.
 

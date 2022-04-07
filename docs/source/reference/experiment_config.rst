@@ -242,9 +242,9 @@ AlgorithmConfig
 
 For customized algorithms, there are two ways to describe them:
 
-  1. `Register the algorithm <../Tutorial/InstallCustomizedAlgos.rst>`__ to use it like built-in. (preferred)
+1. :doc:`Register the algorithm </hpo/custom_algorithm_installation>` to use it like built-in. (preferred)
 
-  2. Specify code directory and class name directly.
+2. Specify code directory and class name directly.
 
 .. list-table::
     :widths: 10 10 80
@@ -616,9 +616,9 @@ Currently only support `LocalConfig`_, `RemoteConfig`_, `OpenpaiConfig`_ and `Am
 SharedStorageConfig
 ^^^^^^^^^^^^^^^^^^^
 
-Detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+Detailed usage can be found :doc:`here </experiment/shared_storage>`.
 
-nfsConfig
+NfsConfig
 ---------
 
 .. list-table::
@@ -657,7 +657,7 @@ nfsConfig
       - ``str``
       - Exported directory of NFS server, detailed `here <https://www.ibm.com/docs/en/aix/7.2?topic=system-nfs-exporting-mounting>`_.
 
-azureBlobConfig
+AzureBlobConfig
 ---------------
 
 .. list-table::

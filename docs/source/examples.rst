@@ -1,5 +1,5 @@
-Tutorials
-=========
+Examples
+========
 
 .. TOC
 
@@ -7,14 +7,14 @@ Tutorials
    :maxdepth: 2
    :hidden:
 
-   tutorials/hello_nas
-   tutorials/nasbench_as_dataset
    tutorials/pruning_quick_start_mnist
    tutorials/pruning_speedup
    tutorials/quantization_quick_start_mnist
    tutorials/quantization_speedup
 
 .. ----------------------
+
+More examples can be found in our :githublink:`GitHub repository <nni/examples>`.
 
 .. cardlinkitem::
    :header: HPO Quickstart with PyTorch

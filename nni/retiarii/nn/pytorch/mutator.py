@@ -311,9 +311,10 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
             node = graph.add_node(name, 'InputChoice',
                                   {'n_candidates': module.n_candidates, 'n_chosen': module.n_chosen})
             node.label = module.label
-        if isinstance(module, ValueChoice):
-            node = graph.add_node(name, 'ValueChoice', {'candidates': module.candidates})
-            node.label = module.label
+        if isinstance(module, ValueChoiceX):
+            for i, choice in enumerate(module.inner_choices()):
+                node = graph.add_node(f'{name}.{i}', 'ValueChoice', {'candidates': choice.candidates})
+                node.label = choice.label
         if isinstance(module, NasBench101Cell):
             node = graph.add_node(name, 'NasBench101Cell', {
                 'max_num_edges': module.max_num_edges

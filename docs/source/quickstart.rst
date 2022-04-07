@@ -17,7 +17,7 @@ Quickstart
    :header: HPO Quickstart with PyTorch
    :description: Use HPO to tune a PyTorch FashionMNIST model
    :link: tutorials/hpo_quickstart_pytorch/cp_global_quickstart_hpo.html
-   :image: ../img/thumbnails/hpo-tensorflow.svg
+   :image: ../img/thumbnails/hpo-pytorch.svg
    :background: purple
 
 .. cardlinkitem::

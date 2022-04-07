@@ -4,7 +4,7 @@ Customize Exploration Strategy
 Customize Multi-trial Strategy
 ------------------------------
 
-If users want to innovate a new exploration strategy, they can easily customize a new one following the interface provided by NNI. Specifically, users should inherit the base strategy class ``BaseStrategy``, then implement the member function ``run``. This member function takes ``base_model`` and ``applied_mutators`` as its input arguments. It can simply apply the user specified mutators in ``applied_mutators`` onto ``base_model`` to generate a new model. When a mutator is applied, it should be bound with a sampler (e.g., ``RandomSampler``). Every sampler implements the ``choice`` function which chooses value(s) from candidate values. The ``choice`` functions invoked in mutators are executed with the sampler.
+If users want to innovate a new exploration strategy, they can easily customize a new one following the interface provided by NNI. Specifically, users should inherit the base strategy class :class:`nni.retiarii.strategy.BaseStrategy`, then implement the member function ``run``. This member function takes ``base_model`` and ``applied_mutators`` as its input arguments. It can simply apply the user specified mutators in ``applied_mutators`` onto ``base_model`` to generate a new model. When a mutator is applied, it should be bound with a sampler (e.g., ``RandomSampler``). Every sampler implements the ``choice`` function which chooses value(s) from candidate values. The ``choice`` functions invoked in mutators are executed with the sampler.
 
 Below is a very simple random strategy, which makes the choices completely random.
 
@@ -38,18 +38,7 @@ Below is a very simple random strategy, which makes the choices completely rando
 
 You can find that this strategy does not know the search space beforehand, it passively makes decisions every time ``choice`` is invoked from mutators. If a strategy wants to know the whole search space before making any decision (e.g., TPE, SMAC), it can use ``dry_run`` function provided by ``Mutator`` to obtain the space. An example strategy can be found :githublink:`here <nni/retiarii/strategy/tpe_strategy.py>`.
 
-After generating a new model, the strategy can use our provided APIs (e.g., ``submit_models``, ``is_stopped_exec``) to submit the model and get its reported results.
-
-References
-^^^^^^^^^^
-
-..  autoclass:: nni.retiarii.Sampler
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.strategy.BaseStrategy
-    :members:
-    :noindex:
+After generating a new model, the strategy can use our provided APIs (e.g., :func:`nni.retiarii.execution.submit_models`, :func:`nni.retiarii.execution.is_stopped_exec`) to submit the model and get its reported results.
 
 Customize a New One-shot Trainer (legacy)
 -----------------------------------------
@@ -58,12 +47,12 @@ One-shot trainers should inherit :class:`nni.retiarii.oneshot.BaseOneShotTrainer
 
 Writing a one-shot trainer is very different to single-arch evaluator. First of all, there are no more restrictions on init method arguments, any Python arguments are acceptable. Secondly, the model fed into one-shot trainers might be a model with Retiarii-specific modules, such as LayerChoice and InputChoice. Such model cannot directly forward-propagate and trainers need to decide how to handle those modules.
 
-A typical example is DartsTrainer, where learnable-parameters are used to combine multiple choices in LayerChoice. Retiarii provides ease-to-use utility functions for module-replace purposes, namely ``replace_layer_choice``, ``replace_input_choice``. A simplified example is as follows: 
+A typical example is DartsTrainer, where learnable-parameters are used to combine multiple choices in LayerChoice. Retiarii provides ease-to-use utility functions for module-replace purposes, namely :meth:`nni.retiarii.oneshot.pytorch.utils.replace_layer_choice`, :meth:`nni.retiarii.oneshot.pytorch.utils.replace_input_choice`. A simplified example is as follows: 
 
 .. code-block:: python
 
     from nni.retiarii.oneshot import BaseOneShotTrainer
-    from nni.retiarii.oneshot.pytorch import replace_layer_choice, replace_input_choice
+    from nni.retiarii.oneshot.pytorch.utils import replace_layer_choice, replace_input_choice
 
 
     class DartsLayerChoice(nn.Module):
@@ -107,10 +96,3 @@ A typical example is DartsTrainer, where learnable-parameters are used to combin
             return result
 
 The full code of DartsTrainer is available to Retiarii source code. Please have a check at :githublink:`DartsTrainer <nni/retiarii/oneshot/pytorch/darts.py>`.
-
-References
-^^^^^^^^^^
-
-..  autoclass:: nni.retiarii.oneshot.BaseOneShotTrainer
-    :members:
-    :noindex:

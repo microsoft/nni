@@ -21,5 +21,4 @@ Auto hyperparameter optimization (HPO), or auto tuning, is one of the key featur
     Search Space <search_space>
     Tuners <tuners>
     Assessors <assessors>
-    TensorBoard Integration <tensorboard>
     Advanced Usage <advanced_toctree.rst>

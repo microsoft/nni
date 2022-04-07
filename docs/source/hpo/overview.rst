@@ -34,14 +34,16 @@ Following code snippet demonstrates a naive HPO process:
 You may have noticed, the example will train 4×10×3=120 models in total.
 Since it consumes so much computing resources, you may want to:
 
-1. Find the best set of hyperparameters with less iterations.
-2. Train the models on distributed platforms.
-3. Have a portal to monitor and control the process.
+1. :ref:`Find the best hyperparameter set with less iterations. <hpo-overview-tuners>`
+2. :ref:`Train the models on distributed platforms. <hpo-overview-platforms>`
+3. :ref:`Have a portal to monitor and control the process. <hpo-overview-portal>`
 
-And NNI will do them for you.
+NNI will do them for you.
 
 Key Features of NNI HPO
 -----------------------
+
+.. _hpo-overview-tuners:
 
 Tuning Algorithms
 ^^^^^^^^^^^^^^^^^
@@ -61,6 +63,8 @@ RL based algorithms like PPO, and much more.
 
 Main article: :doc:`tuners`
 
+.. _hpo-overview-platforms:
+
 Training Platforms
 ^^^^^^^^^^^^^^^^^^
 
@@ -74,6 +78,8 @@ With NNI you can write one piece of model code, and concurrently evaluate hyperp
 Kubernetes-based clusters, AzureML service, and much more.
 
 Main article: :doc:`/experiment/training_service`
+
+.. _hpo-overview-portal:
 
 Web Portal
 ^^^^^^^^^^
@@ -101,96 +107,6 @@ After you are familiar with basic usage, you can explore more HPO features:
 
 * :doc:`Use command line tool to create and manage experiments (nnictl) </reference/nnictl>`
 * :doc:`Early stop non-optimal models (assessor) <assessors>`
-* :doc:`TensorBoard integration <tensorboard>`
+* :doc:`TensorBoard integration </experiment/tensorboard>`
 * :doc:`Implement your own algorithm <custom_algorithm>`
 * :doc:`Benchmark tuners <hpo_benchmark>`
-
-Built-in Algorithms
--------------------
-
-Tuning Algorithms
-^^^^^^^^^^^^^^^^^
-
-Main article: :doc:`tuners`
-
-.. list-table::
-    :header-rows: 1
-    :widths: auto
-
-    * - Name
-      - Category
-      - Brief Description
-
-    * - :class:`Random <nni.algorithms.hpo.random_tuner.RandomTuner>`
-      - Basic
-      - Naive random search.
-
-    * - :class:`GridSearch <nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner>`
-      - Basic
-      - Brute-force search.
-
-    * - :class:`TPE <nni.algorithms.hpo.tpe_tuner.TpeTuner>`
-      - Bayesian
-      - Tree-structured Parzen Estimator.
-
-    * - :class:`Anneal <nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner>`
-      - Classic
-      - Simulated annealing algorithm.
-
-    * - :class:`Evolution <nni.algorithms.hpo.evolution_tuner.EvolutionTuner>`
-      - Classic
-      - Naive evolution algorithm.
-
-    * - :class:`SMAC <nni.algorithms.hpo.smac_tuner.SMACTuner>`
-      - Bayesian
-      - Sequential Model-based optimization for general Algorithm Configuration.
-
-    * - :class:`Hyperband <nni.algorithms.hpo.hyperband_advisor.Hyperband>`
-      - Advanced
-      - Evaluate more hyperparameter sets by adaptively allocating resources.
-
-    * - :class:`MetisTuner <nni.algorithms.hpo.metis_tuner.MetisTuner>`
-      - Bayesian
-      - Robustly optimizing tail latencies of cloud systems.
-
-    * - :class:`BOHB <nni.algorithms.hpo.bohb_advisor.BOHB>`
-      - Advanced
-      - Bayesian Optimization with HyperBand.
-
-    * - :class:`GPTuner <nni.algorithms.hpo.gp_tuner.GPTuner>`
-      - Bayesian
-      - Gaussian Process.
-
-    * - :class:`PBTTuner <nni.algorithms.hpo.pbt_tuner.PBTTuner>`
-      - Advanced
-      - Population Based Training of neural networks.
-
-    * - :class:`DNGOTuner <nni.algorithms.hpo.dngo_tuner.DNGOTuner>`
-      - Bayesian
-      - Deep Networks for Global Optimization.
-
-    * - :class:`PPOTuner <nni.algorithms.hpo.ppo_tuner.PPOTuner>`
-      - RL
-      - Proximal Policy Optimization.
-
-    * - :class:`BatchTuner <nni.algorithms.hpo.batch_tuner.BatchTuner>`
-      - Basic
-      - Manually specify hyperparameter sets.
-
-Early Stopping
-^^^^^^^^^^^^^^
-
-Main article: :doc:`assessors`
-
-.. list-table::
-    :header-rows: 1
-    :widths: auto
-
-    * - Name
-      - Brief Description
-
-    * - :class:`Medianstop <nni.algorithms.hpo.medianstop_assessor.MedianstopAssessor>`
-      - Stop if the hyperparameter set performs worse than median at any step.
-
-    * - :class:`Curvefitting <nni.algorithms.hpo.curvefitting_assessor.CurvefittingAssessor>`
-      - Stop if the learning curve will likely converge to suboptimal result.
