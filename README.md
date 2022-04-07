@@ -10,7 +10,7 @@
 [![Pull Requests](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen)
 [![Version](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases)
 [![Documentation Status](https://readthedocs.org/projects/nni/badge/?version=stable)](https://nni.readthedocs.io/en/stable/?badge=stable)
-[![](https://img.shields.io/github/contributors-anon/microsoft/nni)]()
+[![](https://img.shields.io/github/contributors-anon/microsoft/nni)](https://github.com/microsoft/nni/graphs/contributors)
 
 
 
