@@ -90,8 +90,8 @@ class MovementPruner(BasicPruner):
 
     The following figure from the paper shows the weight pruning by movement pruning.
 
-    .. image:: ../../img/movement_pruning.png
-        :target: ../../img/movement_pruning.png
+    .. image:: ../../../img/movement_pruning.png
+        :target: ../../../img/movement_pruning.png
         :alt:
 
     For more details, please refer to `Movement Pruning: Adaptive Sparsity by Fine-Tuning <https://arxiv.org/abs/2005.07683>`__.
