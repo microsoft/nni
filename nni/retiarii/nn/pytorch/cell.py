@@ -45,7 +45,18 @@ class Cell(nn.Module):
 
     A cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from
     ``op_candidates``, and takes one input from previous nodes and predecessors. Predecessor means the input of cell.
-    The output of cell is the concatenation of some of the nodes in the cell (currently all the nodes).
+    The output of cell is the concatenation of some of the nodes in the cell (by default all the nodes).
+
+    Two examples of searched cells are illustrated in the figure below.
+    In these two cells, ``op_candidates`` are series of convolutions and pooling operations.
+    ``num_nodes_per_node`` is set to 2. ``num_nodes`` is set to 5. ``merge_op`` is ``loose_end``.
+    Please take a look at this
+    `review article <https://sh-tsang.medium.com/review-nasnet-neural-architecture-search-network-image-classification-23139ea0425d>`__
+    if you are interested in details.
+
+    .. image:: ../../../img/nasnet_cell.png
+       :width: 900
+       :align: center
 
     Here is a glossary table, which could help better understand the terms used above:
 
@@ -56,9 +67,9 @@ class Cell(nn.Module):
         * - Name
           - Brief Description
         * - Cell
-          - A cell consists of several nodes.
+          - A cell consists of ``num_nodes`` nodes.
         * - Node
-          - A node is the **sum** of several operators.
+          - A node is the **sum** of ``num_ops_per_node`` operators.
         * - Operator
           - Each operator is independently chosen from a list of user-specified candidate operators.
         * - Operator's input
@@ -66,7 +77,7 @@ class Cell(nn.Module):
         * - Predecessors
           - Input of cell. A cell can have multiple predecessors. Predecessors are sent to *preprocessor* for preprocessing.
         * - Cell's output
-          - Output of cell. Usually concatenation of several nodes (possibly all nodes) in the cell. Cell's output,
+          - Output of cell. Usually concatenation of some nodes (possibly all nodes) in the cell. Cell's output,
             along with predecessors, are sent to *postprocessor* for postprocessing.
         * - Preprocessor
           - Extra preprocessing to predecessors. Usually used in shape alignment (e.g., predecessors have different shapes).
@@ -142,11 +153,11 @@ class Cell(nn.Module):
 
         class Preprocessor:
             def __init__(self):
-            self.conv1 = nn.Conv2d(16, 32, 1)
-            self.conv2 = nn.Conv2d(64, 32, 1)
+                self.conv1 = nn.Conv2d(16, 32, 1)
+                self.conv2 = nn.Conv2d(64, 32, 1)
 
             def forward(self, x):
-            return [self.conv1(x[0]), self.conv2(x[1])]
+                return [self.conv1(x[0]), self.conv2(x[1])]
 
         cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, preprocessor=Preprocessor())
         cell([torch.randn(1, 16, 48, 48), torch.randn(1, 64, 48, 48)])  # the two inputs will be sent to conv1 and conv2 respectively
