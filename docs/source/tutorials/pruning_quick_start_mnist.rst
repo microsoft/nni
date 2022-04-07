@@ -102,9 +102,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.5266, Accuracy: 8345/10000 (83%)
-    Average test loss: 0.2713, Accuracy: 9209/10000 (92%)
-    Average test loss: 0.1919, Accuracy: 9356/10000 (94%)
+    Average test loss: 0.5822, Accuracy: 8311/10000 (83%)
+    Average test loss: 0.2795, Accuracy: 9154/10000 (92%)
+    Average test loss: 0.2036, Accuracy: 9345/10000 (93%)
 
 
 
@@ -151,7 +151,7 @@ Pruners usually require `model` and `config_list` as input arguments.
 .. code-block:: default
 
 
-    from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
+    from nni.compression.pytorch.pruning import L1NormPruner
     pruner = L1NormPruner(model, config_list)
 
     # show the wrapped model structure, `PrunerModuleWrapper` have wrapped the layers that configured in the config_list.
@@ -308,7 +308,7 @@ Because speedup will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  24.976 seconds)
+   **Total running time of the script:** ( 1 minutes  38.500 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:
