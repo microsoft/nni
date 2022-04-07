@@ -34,7 +34,7 @@ For a clearer structure vision, please refer to the figure below.
 
 .. image:: ../../img/pruning_process.png
    :target: ../../img/pruning_process.png
-   :scale: 80%
+   :scale: 30%
    :align: center
    :alt:
 

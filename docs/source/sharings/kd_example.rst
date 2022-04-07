@@ -35,12 +35,12 @@ PyTorch code
          loss.backward()
 
 
-The complete code for fine-tuning the pruned model can be found :githublink:`here <examples/model_compress/pruning/finetune_kd_torch.py>`
+The complete code for fine-tuning the pruned model can be found :githublink:`here <examples/model_compress/pruning/legacy/finetune_kd_torch.py>`
 
 .. code-block:: bash
 
    python finetune_kd_torch.py --model [model name] --teacher-model-dir [pretrained checkpoint path]  --student-model-dir [pruned checkpoint path] --mask-path [mask file path]
 
-Note that: for fine-tuning a pruned model, run :githublink:`basic_pruners_torch.py <examples/model_compress/pruning/basic_pruners_torch.py>` first to get the mask file, then pass the mask path as argument to the script.
+Note that: for fine-tuning a pruned model, run :githublink:`basic_pruners_torch.py <examples/model_compress/pruning/legacy/basic_pruners_torch.py>` first to get the mask file, then pass the mask path as argument to the script.
 
 

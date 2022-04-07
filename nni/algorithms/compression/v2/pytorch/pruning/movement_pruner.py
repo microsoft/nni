@@ -90,8 +90,8 @@ class MovementPruner(BasicPruner):
 
     The following figure from the paper shows the weight pruning by movement pruning.
 
-    .. image:: ../../img/movement_pruning.png
-        :target: ../../img/movement_pruning.png
+    .. image:: ../../../img/movement_pruning.png
+        :target: ../../../img/movement_pruning.png
         :alt:
 
     For more details, please refer to `Movement Pruning: Adaptive Sparsity by Fine-Tuning <https://arxiv.org/abs/2005.07683>`__.
@@ -146,7 +146,7 @@ class MovementPruner(BasicPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import MovementPruner
+        >>> from nni.compression.pytorch.pruning import MovementPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -156,7 +156,7 @@ class MovementPruner(BasicPruner):
         >>> pruner = MovementPruner(model, config_list, trainer, traced_optimizer, criterion, 10, 3000, 27000)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/movement_pruning_glue.py <examples/model_compress/pruning/v2/movement_pruning_glue.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/movement_pruning_glue.py <examples/model_compress/pruning/movement_pruning_glue.py>`
     """
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,

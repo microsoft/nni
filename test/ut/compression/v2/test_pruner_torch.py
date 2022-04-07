@@ -9,7 +9,7 @@ import torch
 import torch.nn.functional as F
 
 import nni
-from nni.algorithms.compression.v2.pytorch.pruning import (
+from nni.compression.pytorch.pruning import (
     LevelPruner,
     L1NormPruner,
     L2NormPruner,

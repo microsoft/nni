@@ -12,7 +12,7 @@ from torch.nn import Module
 
 from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
 from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity, config_list_canonical
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils import count_flops_params
 
 from .iterative_pruner import IterativePruner, PRUNER_DICT
 from .tools import TaskGenerator
@@ -223,7 +223,7 @@ class AMCPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import AMCPruner
+        >>> from nni.compression.pytorch.pruning import AMCPruner
         >>> config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
         >>> dummy_input = torch.rand(...).to(device)
         >>> evaluator = ...
@@ -231,7 +231,7 @@ class AMCPruner(IterativePruner):
         >>> pruner = AMCPruner(400, model, config_list, dummy_input, evaluator, finetuner=finetuner)
         >>> pruner.compress()
 
-    The full script can be found :githublink:`here <examples/model_compress/pruning/v2/amc_pruning_torch.py>`.
+    The full script can be found :githublink:`here <examples/model_compress/pruning/amc_pruning_torch.py>`.
     """
 
     def __init__(self, total_episode: int, model: Module, config_list: List[Dict], dummy_input: Tensor,
