@@ -1,6 +1,5 @@
 trigger: none
 
-job: debug
 pool:
   vmImage: ubuntu-latest
 
