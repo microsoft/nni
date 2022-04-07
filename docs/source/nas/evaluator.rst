@@ -1,5 +1,5 @@
-Model Evaluators
-================
+Model Evaluator
+===============
 
 A model evaluator is for training and validating each generated model. They are necessary to evaluate the performance of new explored models.
 
@@ -8,7 +8,7 @@ A model evaluator is for training and validating each generated model. They are 
 Customize Evaluator with Any Function
 -------------------------------------
 
-The simplest way to customize a new evaluator is with functional APIs, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to FunctionEvaluator as its initialization parameters (note that they will be :doc:`serialized <./serialization>`). In this way, users get everything under their control, but expose less information to the framework and as a result, further optimizations like :ref:`CGO <cgo-execution-engine>` might be not feasible. An example is as belows:
+The simplest way to customize a new evaluator is with :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>` as its initialization parameters (note that they will be :doc:`serialized <./serialization>`). In this way, users get everything under their control, but expose less information to the framework and as a result, further optimizations like :ref:`CGO <cgo-execution-engine>` might be not feasible. An example is as belows:
 
 .. code-block:: python
 
@@ -48,11 +48,14 @@ Evaluators with PyTorch-Lightning
 Use Built-in Evaluators
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-NNI provides some commonly used model evaluators for users' convenience. These evaluators are built upon the awesome library PyTorch-Lightning.
+NNI provides some commonly used model evaluators for users' convenience. These evaluators are built upon the awesome library PyTorch-Lightning. Read the :doc:`reference </reference/nas/evaluator>` for their detailed usages.
 
-We recommend to read the `serialization tutorial <./Serialization.rst>`__ before using these evaluators. A few notes to summarize the tutorial:
+* :class:`nni.retiarii.evaluator.pytorch.Classification`: for classification tasks.
+* :class:`nni.retiarii.evaluator.pytorch.Regression`: for regression tasks.
 
-1. :class:`nni.retarii.evaluator.pytorch.DataLoader`` should be used in place of ``torch.utils.data.DataLoader``.
+We recommend to read the :doc:`serialization tutorial <serialization>` before using these evaluators. A few notes to summarize the tutorial:
+
+1. :class:`nni.retiarii.evaluator.pytorch.DataLoader` should be used in place of ``torch.utils.data.DataLoader``.
 2. The datasets used in data-loader should be decorated with :meth:`nni.trace` recursively.
 
 For example,
@@ -141,39 +144,3 @@ Then, users need to wrap everything (including LightningModule, trainer and data
                              train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
     experiment = RetiariiExperiment(base_model, lightning, mutators, strategy)
-
-References
-----------
-
-FunctionalEvaluator
-^^^^^^^^^^^^^^^^^^^
-
-..  autoclass:: nni.retiarii.evaluator.FunctionalEvaluator
-    :members:
-    :noindex:
-
-.. _classification-evaluator:
-
-Classification
-^^^^^^^^^^^^^^
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Classification
-    :members:
-    :noindex:
-
-.. _regression-evaluator:
-
-Regression
-^^^^^^^^^^
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Regression
-    :members:
-    :noindex:
-
-Lightning
-^^^^^^^^^
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Lightning
-    :members:
-    :noindex:
-

@@ -91,6 +91,9 @@ autodoc_typehints = 'description'
 autodoc_typehints_description_target = 'documented'
 autodoc_inherit_docstrings = False
 
+# Sphinx will warn about all references where the target cannot be found.
+nitpicky = False  # disabled for now
+
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']
 
@@ -145,7 +148,6 @@ tutorials_copy_list = [
     ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_global_quickstart_compression.rst'),
 
     # Others in full-scale materials
-    ('tutorials/hello_nas.rst', 'tutorials/cp_hello_nas_quickstart.rst'),
     ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
     ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
     ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
