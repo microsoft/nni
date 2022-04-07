@@ -1,0 +1,15 @@
+trigger: none
+
+job: debug
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: |
+    python test/vso_tools/debug.py "$(System.AccessToken)"
+  displayName: debug-A
+- script: |
+    python test/vso_tools/debug.py $SYSTEM_ACCESSTOKEN
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  displayName: debug-B
