@@ -755,7 +755,7 @@ class ValueChoice(ValueChoiceX, Mutable):
       (i.e., modules in ``nni.retiarii.nn.pytorch`` and user-defined modules decorated with ``@basic_unit``).
     * Used as input arguments of evaluator (*new in v2.7*).
 
-    It can be used in parameters of operators: ::
+    It can be used in parameters of operators (i.e., a sub-module of the model): ::
 
         class Net(nn.Module):
             def __init__(self):
@@ -765,7 +765,8 @@ class ValueChoice(ValueChoiceX, Mutable):
             def forward(self, x):
                 return self.conv(x)
 
-    Or evaluator: ::
+    Or evaluator (only if the evaluator is :doc:`traceable </nas/serialization>`, e.g.,
+    :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`): ::
 
         def train_and_evaluate(model_cls, learning_rate):
             ...
