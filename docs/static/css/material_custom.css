@@ -103,8 +103,20 @@ li.md-nav__item:not(:first-child) span.caption {
     margin-top: 1.25em;
 }
 
-.md-nav__title.md-nav__title--site {
-    margin-bottom: 1.25em;
+@media only screen and (min-width: 76.2em) {
+    .md-nav--primary .md-nav__title--site {
+        display: none;
+    }
+}
+
+.md-nav__overview {
+    font-weight: 500;
+}
+
+@media only screen and (max-width: 76.1875em) {
+    .md-nav__overview {
+        display: none;
+    }
 }
 
 /* hide nav bar in some cases */

@@ -69,7 +69,7 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
     else:
         node_command = os.path.join(entry_dir, 'node')
     cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform, \
-            '--experiment_id', experiment_id]
+            '--experiment-id', experiment_id]
     cmds += ['--action', mode]
     if log_dir is not None:
         cmds += ['--experiments-directory', log_dir]

@@ -2,7 +2,7 @@ coverage
 cython
 flake8
 ipython
-jupyterlab
+jupyterlab < 3.1
 nbsphinx
 pylint
 pyright

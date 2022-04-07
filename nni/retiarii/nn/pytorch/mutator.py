@@ -2,8 +2,7 @@
 # Licensed under the MIT license.
 
 import inspect
-from collections import defaultdict
-from typing import Any, List, Optional, Tuple, Dict
+from typing import Any, List, Optional, Tuple, Dict, Iterator
 
 import torch.nn as nn
 
@@ -311,9 +310,10 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
             node = graph.add_node(name, 'InputChoice',
                                   {'n_candidates': module.n_candidates, 'n_chosen': module.n_chosen})
             node.label = module.label
-        if isinstance(module, ValueChoice):
-            node = graph.add_node(name, 'ValueChoice', {'candidates': module.candidates})
-            node.label = module.label
+        if isinstance(module, ValueChoiceX):
+            for i, choice in enumerate(module.inner_choices()):
+                node = graph.add_node(f'{name}.{i}', 'ValueChoice', {'candidates': choice.candidates})
+                node.label = choice.label
         if isinstance(module, NasBench101Cell):
             node = graph.add_node(name, 'NasBench101Cell', {
                 'max_num_edges': module.max_num_edges
@@ -360,26 +360,41 @@ class EvaluatorValueChoiceMutator(Mutator):
     # works in the same way as `ParameterChoiceMutator`
     # we only need one such mutator for one model/evaluator
 
-    def mutate(self, model: Model):
-        # make a copy to mutate the evaluator
-        model.evaluator = model.evaluator.trace_copy()
+    def _mutate_traceable_object(self, obj: Any, value_choice_decisions: Dict[str, Any]) -> Any:
+        if not is_traceable(obj):
+            return obj
 
+        if not any(isinstance(value, ValueChoiceX) for value in obj.trace_kwargs.values()):
+            # No valuechoice, not interesting
+            return obj
+
+        # Make a copy
+        obj = obj.trace_copy()
+
+        result = {}
+
+        # For each argument that is a composition of value choice
+        # we find all the leaf-value-choice in the mutation
+        # and compute the final result
+        for key, param in obj.trace_kwargs.items():
+            if isinstance(param, ValueChoiceX):
+                leaf_node_values = [value_choice_decisions[choice.label] for choice in param.inner_choices()]
+                result[key] = param.evaluate(leaf_node_values)
+            elif is_traceable(param):
+                # Recursively
+                result[key] = self._mutate_traceable_object(param, value_choice_decisions)
+
+        obj.trace_kwargs.update(result)
+
+        return obj
+
+    def mutate(self, model: Model):
         value_choice_decisions = {}
         for mutation in model.history:
             if isinstance(mutation.mutator, EvaluatorValueChoiceLeafMutator):
                 value_choice_decisions[mutation.mutator.label] = mutation.samples[0]
 
-        result = {}
-
-        # for each argument that is a composition of value choice
-        # we find all the leaf-value-choice in the mutation
-        # and compute the final result
-        for key, param in model.evaluator.trace_kwargs.items():
-            if isinstance(param, ValueChoiceX):
-                leaf_node_values = [value_choice_decisions[choice.label] for choice in param.inner_choices()]
-                result[key] = param.evaluate(leaf_node_values)
-
-        model.evaluator.trace_kwargs.update(result)
+        model.evaluator = self._mutate_traceable_object(model.evaluator, value_choice_decisions)
 
 
 def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mutator]) -> List[Mutator]:
@@ -388,27 +403,25 @@ def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mu
     if not is_traceable(evaluator):
         return []
     mutator_candidates = {}
-    mutator_keys = defaultdict(list)
-    for key, param in evaluator.trace_kwargs.items():
+    for param in _expand_nested_trace_kwargs(evaluator):
         if isinstance(param, ValueChoiceX):
             for choice in param.inner_choices():
                 # merge duplicate labels
                 for mutator in existing_mutators:
-                    if mutator.name == choice.label:
+                    if mutator.label == choice.label:
                         raise ValueError(
                             f'Found duplicated labels “{choice.label}”. When two value choices have the same name, '
-                            'they would share choices. However, sharing choices between model and evaluator is not yet supported.'
+                            'they would share choices. However, sharing choices between model and evaluator is not supported.'
                         )
                 if choice.label in mutator_candidates and mutator_candidates[choice.label] != choice.candidates:
                     raise ValueError(
                         f'Duplicate labels for evaluator ValueChoice {choice.label}. They should share choices.'
                         f'But their candidate list is not equal: {mutator_candidates[choice.label][1]} vs. {choice.candidates}'
                     )
-                mutator_keys[choice.label].append(key)
                 mutator_candidates[choice.label] = choice.candidates
     mutators = []
-    for label in mutator_keys:
-        mutators.append(EvaluatorValueChoiceLeafMutator(mutator_candidates[label], label))
+    for label, candidates in mutator_candidates.items():
+        mutators.append(EvaluatorValueChoiceLeafMutator(candidates, label))
     if mutators:
         # one last mutator to actually apply the mutations
         mutators.append(EvaluatorValueChoiceMutator())
@@ -445,3 +458,15 @@ def _group_by_label(nodes: List[Node]) -> List[List[Node]]:
             result[label] = []
         result[label].append(node)
     return list(result.values())
+
+
+def _expand_nested_trace_kwargs(obj: Any) -> Iterator[Any]:
+    # Get items from `trace_kwargs`.
+    # If some item is traceable itself, get items recursively.
+
+    if not is_traceable(obj):
+        return
+
+    for param in obj.trace_kwargs.values():
+        yield param
+        yield from _expand_nested_trace_kwargs(param)

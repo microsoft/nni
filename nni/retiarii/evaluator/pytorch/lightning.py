@@ -177,7 +177,6 @@ class _SupervisedLearningModule(LightningModule):
             self.export_onnx = Path(export_onnx)
         else:
             self.export_onnx = None
-        self._already_exported = False
 
     def forward(self, x):
         y_hat = self.model(x)
@@ -196,12 +195,12 @@ class _SupervisedLearningModule(LightningModule):
         x, y = batch
         y_hat = self(x)
 
-        if not self._already_exported:
+        if self.export_onnx is not None:
             try:
                 self.to_onnx(self.export_onnx, x, export_params=True)
             except RuntimeError as e:
                 warnings.warn(f'ONNX conversion failed. As a result, you might not be able to use visualization. Error message: {e}')
-            self._already_exported = True
+            self.export_onnx = None
 
         self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)
         for name, metric in self.metrics.items():

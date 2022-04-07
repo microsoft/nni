@@ -35,7 +35,7 @@ export interface NniManagerArgs {
 }
 
 export function parseArgs(rawArgs: string[]): NniManagerArgs {
-    const parser = yargs(rawArgs).options(yargsOptions).strict().fail((_msg, err, _yargs) => { throw err; });
+    const parser = yargs(rawArgs).options(yargsOptions).strict().fail(false);
     const parsedArgs: NniManagerArgs = parser.parseSync();
 
     // strip yargs leftovers
