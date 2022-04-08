@@ -40,7 +40,7 @@ Using AGP Pruning as an example to explain how to implement an iterative pruning
     scheduler.compress()
     _, model, masks, _, _ = scheduler.get_best_result()
 
-The full script can be found :githublink:`here <examples/model_compress/pruning/v2/scheduler_torch.py>`.
+The full script can be found :githublink:`here <examples/model_compress/pruning/scheduler_torch.py>`.
 
 In this example, we use dependency-aware mode L1 Norm Pruner as a basic pruner during each iteration.
 Note we do not need to pass ``model`` and ``config_list`` to the pruner, because in each iteration the ``model`` and ``config_list`` used by the pruner are received from the task generator.
@@ -56,7 +56,8 @@ The pruning result will return to the ``TaskGenerator`` at the end of each itera
 
 The information included in the ``Task`` and ``TaskResult`` can be found :githublink:`here <nni/algorithms/compression/v2/pytorch/base/scheduler.py>`.
 
-A clearer iterative pruning flow chart can be found `here <v2_pruning.rst>`__.
+A clearer iterative pruning flow chart can be found :doc:`here <pruning>`.
+
 
 If you want to implement your own task generator, please following the ``TaskGenerator`` :githublink:`interface <nni/algorithms/compression/v2/pytorch/pruning/tools/base.py>`.
 Two main functions should be implemented, ``init_pending_tasks(self) -> List[Task]`` and ``generate_tasks(self, task_result: TaskResult) -> List[Task]``.

@@ -188,12 +188,12 @@ class LevelPruner(BasicPruner):
     Examples
     --------
         >>> model = ...
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import LevelPruner
+        >>> from nni.compression.pytorch.pruning import LevelPruner
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
         >>> pruner = LevelPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/level_pruning_torch.py <examples/model_compress/pruning/v2/level_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/level_pruning_torch.py <examples/model_compress/pruning/level_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: Optional[List] = None):
@@ -360,12 +360,12 @@ class L2NormPruner(NormPruner):
     Examples
     --------
         >>> model = ...
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import L2NormPruner
+        >>> from nni.compression.pytorch.pruning import L2NormPruner
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
         >>> pruner = L2NormPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_torch.py <examples/model_compress/pruning/v2/norm_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/norm_pruning_torch.py <examples/model_compress/pruning/norm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict],
@@ -410,12 +410,12 @@ class FPGMPruner(BasicPruner):
     Examples
     --------
         >>> model = ...
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import FPGMPruner
+        >>> from nni.compression.pytorch.pruning import FPGMPruner
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
         >>> pruner = FPGMPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/fpgm_pruning_torch.py <examples/model_compress/pruning/v2/fpgm_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/fpgm_pruning_torch.py <examples/model_compress/pruning/fpgm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict],
@@ -506,7 +506,7 @@ class SlimPruner(BasicPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import SlimPruner
+        >>> from nni.compression.pytorch.pruning import SlimPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -516,7 +516,7 @@ class SlimPruner(BasicPruner):
         >>> pruner = SlimPruner(model, config_list, trainer, traced_optimizer, criterion, training_epochs=1)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/slim_pruning_torch.py <examples/model_compress/pruning/v2/slim_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/slim_pruning_torch.py <examples/model_compress/pruning/slim_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
@@ -764,7 +764,7 @@ class ActivationAPoZRankPruner(ActivationPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import ActivationAPoZRankPruner
+        >>> from nni.compression.pytorch.pruning import ActivationAPoZRankPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -774,7 +774,7 @@ class ActivationAPoZRankPruner(ActivationPruner):
         >>> pruner = ActivationAPoZRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return a matrix that the position of zero in `output` is one, others is zero.
@@ -847,7 +847,7 @@ class ActivationMeanRankPruner(ActivationPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import ActivationMeanRankPruner
+        >>> from nni.compression.pytorch.pruning import ActivationMeanRankPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -857,7 +857,7 @@ class ActivationMeanRankPruner(ActivationPruner):
         >>> pruner = ActivationMeanRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return the activation of `output` directly.
@@ -940,7 +940,7 @@ class TaylorFOWeightPruner(BasicPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import TaylorFOWeightPruner
+        >>> from nni.compression.pytorch.pruning import TaylorFOWeightPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -950,7 +950,7 @@ class TaylorFOWeightPruner(BasicPruner):
         >>> pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/taylorfo_pruning_torch.py <examples/model_compress/pruning/v2/taylorfo_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/taylorfo_pruning_torch.py <examples/model_compress/pruning/taylorfo_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
@@ -1082,7 +1082,7 @@ class ADMMPruner(BasicPruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import ADMMPruner
+        >>> from nni.compression.pytorch.pruning import ADMMPruner
         >>> model = ...
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
         >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
@@ -1092,7 +1092,7 @@ class ADMMPruner(BasicPruner):
         >>> pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=10, training_epochs=1)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/admm_pruning_torch.py <examples/model_compress/pruning/v2/admm_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/admm_pruning_torch.py <examples/model_compress/pruning/admm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],

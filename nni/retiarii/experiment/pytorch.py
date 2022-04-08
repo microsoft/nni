@@ -144,6 +144,10 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_
                            'do not use mutators when you use LayerChoice/InputChoice')
     if mutators is not None:
         applied_mutators = mutators
+
+    # Add mutations on evaluators
+    applied_mutators += process_evaluator_mutations(trainer, applied_mutators)
+
     return base_model_ir, applied_mutators
 
 
@@ -203,7 +207,6 @@ class RetiariiExperiment(Experiment):
             full_ir=self.config.execution_engine not in ['py', 'benchmark'],
             dummy_input=self.config.dummy_input
         )
-        self.applied_mutators += process_evaluator_mutations(self.trainer, self.applied_mutators)
 
         _logger.info('Start strategy...')
         search_space = dry_run_for_formatted_search_space(base_model_ir, self.applied_mutators)

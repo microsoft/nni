@@ -13,7 +13,7 @@ The experiments are performed with the following pruners/datasets/models:
 
 
 * 
-  Models: :githublink:`VGG16, ResNet18, ResNet50 <examples/model_compress/pruning/models/cifar10>`
+  Models: :githublink:`VGG16, ResNet18, ResNet50 <examples/model_compress/models/cifar10>`
 
 * 
   Datasets: CIFAR-10
@@ -50,24 +50,24 @@ The experiment result are shown in the following figures:
 CIFAR-10, VGG16:
 
 
-.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_vgg16.png
-   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_vgg16.png
+.. image:: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_vgg16.png
+   :target: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_vgg16.png
    :alt: 
 
 
 CIFAR-10, ResNet18:
 
 
-.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet18.png
-   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet18.png
+.. image:: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_resnet18.png
+   :target: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_resnet18.png
    :alt: 
 
 
 CIFAR-10, ResNet50:
 
 
-.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet50.png
-   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet50.png
+.. image:: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_resnet50.png
+   :target: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_resnet50.png
    :alt: 
 
 
@@ -96,14 +96,14 @@ Implementation Details
   This avoids potential issues of counting them of masked models.
 
 * 
-  The experiment code can be found :githublink:`here <examples/model_compress/pruning/auto_pruners_torch.py>`.
+  The experiment code can be found :githublink:`here <examples/model_compress/pruning/legacy/auto_pruners_torch.py>`.
 
 Experiment Result Rendering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 
-  If you follow the practice in the :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>`\ , for every single pruning experiment, the experiment result will be saved in JSON format as follows:
+  If you follow the practice in the :githublink:`example <examples/model_compress/pruning/legacy/auto_pruners_torch.py>`\ , for every single pruning experiment, the experiment result will be saved in JSON format as follows:
 
   .. code-block:: json
 
@@ -114,8 +114,8 @@ Experiment Result Rendering
        }
 
 * 
-  The experiment results are saved :githublink:`here <examples/model_compress/pruning/comparison_of_pruners>`. 
-  You can refer to :githublink:`analyze <examples/model_compress/pruning/comparison_of_pruners/analyze.py>` to plot new performance comparison figures.
+  The experiment results are saved :githublink:`here <examples/model_compress/pruning/legacy/comparison_of_pruners>`. 
+  You can refer to :githublink:`analyze <examples/model_compress/pruning/legacy/comparison_of_pruners/analyze.py>` to plot new performance comparison figures.
 
 Contribution
 ------------

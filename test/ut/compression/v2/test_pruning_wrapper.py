@@ -6,7 +6,7 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
+from nni.compression.pytorch.pruning import L1NormPruner
 
 class TorchModel(torch.nn.Module):
     def __init__(self):

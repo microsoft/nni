@@ -120,7 +120,7 @@ class AutoCompressPruner(IterativePruner):
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
+        >>> from nni.compression.pytorch.pruning import AutoCompressPruner
         >>> model = ...
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
@@ -143,7 +143,7 @@ class AutoCompressPruner(IterativePruner):
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    The full script can be found :githublink:`here <examples/model_compress/pruning/v2/auto_compress_pruner.py>`.
+    The full script can be found :githublink:`here <examples/model_compress/pruning/auto_compress_pruner.py>`.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,

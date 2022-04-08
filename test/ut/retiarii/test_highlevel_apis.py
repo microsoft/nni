@@ -5,6 +5,7 @@ from collections import Counter
 
 import pytest
 
+import nni
 import nni.retiarii.nn.pytorch as nn
 import torch
 import torch.nn.functional as F
@@ -13,6 +14,7 @@ from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.evaluator import FunctionalEvaluator
 from nni.retiarii.execution.utils import _unpack_if_only_one
+from nni.retiarii.experiment.pytorch import preprocess_model
 from nni.retiarii.graph import Model
 from nni.retiarii.nn.pytorch.api import ValueChoice
 from nni.retiarii.nn.pytorch.mutator import process_evaluator_mutations, process_inline_mutation, extract_mutation_from_pt_module
@@ -68,6 +70,8 @@ class GraphIR(unittest.TestCase):
     value_choice_incr = 1
     # graph engine has an extra mutator to apply the depth choice to nodes
     repeat_incr = 1
+    # graph engine parse the model into graph
+    graph_engine = True
 
     def _convert_to_ir(self, model):
         script_module = torch.jit.script(model)
@@ -565,6 +569,48 @@ class GraphIR(unittest.TestCase):
         with pytest.raises(AssertionError):
             self._get_model_with_mutators(Net())
 
+    def test_valuechoice_hybrid_arch_hparams(self):
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv = nn.Conv2d(3, 5, kernel_size=nn.ValueChoice([3, 5]))
+
+            def forward(self, x):
+                return self.conv(x)
+
+        def foo():
+            pass
+
+        evaluator = FunctionalEvaluator(foo, t=1, x=ValueChoice([1, 2]), y=ValueChoice([3, 4]))
+        model, mutators = preprocess_model(Net(), evaluator, [], full_ir=self.graph_engine)
+        samplers = [EnumerateSampler() for _ in range(len(mutators))]
+        model1 = _apply_all_mutators(model, mutators, samplers)
+        model2 = _apply_all_mutators(model, mutators, samplers)
+        self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 5, 5)).size(),
+                         torch.Size([1, 5, 3, 3]))
+        self.assertEqual(model1.evaluator.trace_kwargs['x'], 1)
+        self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 5, 5)).size(),
+                         torch.Size([1, 5, 1, 1]))
+        self.assertEqual(model2.evaluator.trace_kwargs['y'], 4)
+
+    def test_valuechoice_hybrid_arch_hparams_conflict_label(self):
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv = nn.Conv2d(3, 5, kernel_size=nn.ValueChoice([3, 5], label='123'))
+
+            def forward(self, x):
+                return self.conv(x)
+
+        def foo():
+            pass
+
+        evaluator = FunctionalEvaluator(foo, t=1, x=ValueChoice([3, 5], label='123'))
+        with pytest.raises(ValueError, match='share'):
+            preprocess_model(Net(), evaluator, [], full_ir=self.graph_engine)
+
     def test_repeat(self):
         class AddOne(nn.Module):
             def forward(self, x):
@@ -672,6 +718,27 @@ class GraphIR(unittest.TestCase):
             def __init__(self):
                 super().__init__()
                 self.block = nn.Repeat(AddOne(), nn.ValueChoice([1, 3, 5]))
+
+            def forward(self, x):
+                return self.block(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 1 + self.repeat_incr + self.value_choice_incr)
+        samplers = [EnumerateSampler() for _ in range(len(mutators))]
+        for target in [1, 3, 5]:
+            new_model = _apply_all_mutators(model, mutators, samplers)
+            self.assertTrue((self._get_converted_pytorch_model(new_model)(torch.zeros(1, 16)) == target).all())
+
+    def test_repeat_valuechoicex(self):
+        class AddOne(nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(AddOne(), nn.ValueChoice([0, 2, 4]) + 1)
 
             def forward(self, x):
                 return self.block(x)
@@ -827,6 +894,7 @@ class Python(GraphIR):
     # Python engine doesn't have the extra mutator
     value_choice_incr = 0
     repeat_incr = 0
+    graph_engine = False
 
     def _get_converted_pytorch_model(self, model_ir):
         mutation = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model_ir.history}
@@ -1114,6 +1182,30 @@ class Shared(unittest.TestCase):
         for _ in range(10):
             model = _apply_all_mutators(init_model, mutators, sampler)
             assert (model.evaluator.trace_kwargs['x'], model.evaluator.trace_kwargs['y']) in [(1, 2), (3, 4)]
+
+    def test_valuechoice_in_evaluator_nested(self):
+        @nni.trace
+        class FooClass:
+            def __init__(self, a):
+                self.a = a
+
+        obj = FooClass(ValueChoice([1, 2, 3], label='t'))
+
+        def foo():
+            pass
+
+        evaluator = FunctionalEvaluator(foo, t=obj, v=ValueChoice([1, 2, 3], label='t') + ValueChoice([10, 20, 30]))
+        mutators = process_evaluator_mutations(evaluator, [])
+        assert len(mutators) == 3
+        init_model = Model(_internal=True)
+        init_model.evaluator = evaluator
+        samplers = [RandomSampler() for _ in range(3)]
+        for _ in range(10):
+            model = _apply_all_mutators(init_model, mutators, samplers)
+            a, v = model.evaluator.trace_kwargs['t'].trace_kwargs['a'], model.evaluator.trace_kwargs['v']
+            assert v % 10 == a
+            assert a in [1, 2, 3]
+            assert v // 10 in [1, 2, 3]
 
     def test_retiarii_nn_import(self):
         dummy = torch.zeros(1, 16, 32, 24)
