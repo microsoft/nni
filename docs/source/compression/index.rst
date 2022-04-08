@@ -49,7 +49,7 @@ There are several core features supported by NNI model compression:
    :target: ../../img/compression_pipeline.png
    :alt:
    :align: center
-   :scale: 30%
+   :scale: 20%
 
 The overall compression pipeline in NNI is shown above. For compressing a pretrained model, pruning and quantization can be used alone or in combination.
 If users want to apply both, a sequential mode is recommended as common practise.
@@ -71,7 +71,7 @@ The following figure shows how NNI prunes and speeds up your models.
 
 .. image:: ../../img/nni_prune_process.png
    :target: ../../img/nni_prune_process.png
-   :scale: 30%
+   :scale: 20%
    :align: center
    :alt:
 
