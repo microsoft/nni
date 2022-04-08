@@ -228,7 +228,10 @@ html_theme_options = {
     'repo_name': 'GitHub',
 
     # Visible levels of the global TOC; -1 means unlimited
-    'globaltoc_depth': 3,
+    'globaltoc_depth': 5,
+
+    # Expand all toc so that they can be dynamically collapsed
+    'globaltoc_collapse': False,
 
     'version_dropdown': True,
     # This is a placeholder, which should be replaced later.
