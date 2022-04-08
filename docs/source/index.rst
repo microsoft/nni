@@ -159,14 +159,15 @@ NNI makes AutoML techniques plug-and-play
    :title: Neural Architecture Search
    :link: tutorials/hello_nas
 
-   .. code-block:: diff
+   .. code-block:: python
 
       # define model space
-      -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
-      +   self.conv2 = nn.LayerChoice([
-      +       nn.Conv2d(32, 64, 3, 1),
-      +       DepthwiseSeparableConv(32, 64)
-      +   ])
+      class Model(nn.Module):
+          self.conv2 = nn.LayerChoice([
+              nn.Conv2d(32, 64, 3, 1),
+              DepthwiseSeparableConv(32, 64)
+          ])
+      model_space = Model()
       # search strategy + evaluator
       strategy = RegularizedEvolution()
       evaluator = FunctionalEvaluator(
