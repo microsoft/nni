@@ -48,7 +48,7 @@ NNI 具备以下几个核心特性:
    :target: ../../img/compression_pipeline.png
    :alt:
    :align: center
-   :scale: 20%
+   :scale: 30%
 
 NNI中模型压缩的整体流程如上图所示。
 为了压缩一个预先训练好的模型，可以单独或联合使用修剪和量化。
@@ -73,7 +73,7 @@ NNI中模型压缩的整体流程如上图所示。
 
 .. image:: ../../img/nni_prune_process.png
    :target: ../../img/nni_prune_process.png
-   :scale: 20%
+   :scale: 30%
    :align: center
    :alt:
 
