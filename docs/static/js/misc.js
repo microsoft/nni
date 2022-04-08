@@ -42,6 +42,33 @@ function hide_nav() {
     }
 }
 
+// Expand link
+function expand_link() {
+    // on load, collapse all links without active on the inside
+    $(".md-nav__expand").filter(function (index) {
+        return $(".md-nav__link--active", this).length >= 1;
+    }).addClass("md-nav__expand--active");
+
+    // bind click events
+    $(".md-nav__expand > a").click(function (e) {
+        if (window.matchMedia("only screen and (min-width: 76.2em)").matches) {
+            // not a drawer
+            e.preventDefault();
+            
+            const target = $(e.target).parent();
+            if (target.hasClass("md-nav__expand--active")) {
+                target.removeClass("md-nav__expand--active");
+            } else {
+                target.addClass("md-nav__expand--active");
+            }
+
+            return false;
+        }
+        return true;
+    });
+}
+
 $(document).ready(function() {
     hide_nav();
+    expand_link();
 });
