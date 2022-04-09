@@ -118,6 +118,8 @@ class Cell(nn.Module):
         Its return type should be either one tensor, or a tuple of tensors.
         The return value of postprocessor is the return value of the cell's forward.
         By default, it returns only the output of the current cell.
+    concat_dim : int
+        The result will be a concatenation of several nodes on this dim. Default: 1.
     label : str
         Identifier of the cell. Cell sharing the same label will semantically share the same choice.
 
@@ -176,6 +178,7 @@ class Cell(nn.Module):
                  preprocessor: Optional[Callable[[List[torch.Tensor]], List[torch.Tensor]]] = None,
                  postprocessor: Optional[Callable[[torch.Tensor, List[torch.Tensor]],
                                          Union[Tuple[torch.Tensor, ...], torch.Tensor]]] = None,
+                 concat_dim: int = 1,
                  *,
                  label: Optional[str] = None):
         super().__init__()
@@ -196,6 +199,8 @@ class Cell(nn.Module):
         assert merge_op in ['all', 'loose_end']
         self.merge_op = merge_op
         self.output_node_indices = list(range(num_predecessors, num_predecessors + num_nodes))
+
+        self.concat_dim = concat_dim
 
         # fill-in the missing modules
         self._create_modules(op_candidates)
@@ -229,9 +234,24 @@ class Cell(nn.Module):
         return self._label
 
     def forward(self, x: List[torch.Tensor]):
-        # The return type should be 'Union[Tuple[torch.Tensor, ...], torch.Tensor]'.
-        # Cannot decorate it as annotation. Otherwise torchscript will complain.
+        """Forward propagation of cell.
+
+        Parameters
+        ----------
+        x
+            Must be a list of tensors, even if there's only one predecessor.
+            The number should be equal to ``num_predecessors``.
+
+        Returns
+        -------
+        Tuple[torch.Tensor] | torch.Tensor
+            The return type depends on the output of ``postprocessor``.
+            By default, it's the output of ``merge_op``, which is a contenation (on ``concat_dim``)
+            of some of (possibly all) the nodes' outputs in the cell.
+        """
+        # Cannot decorate return type as annotation. Otherwise torchscript will complain.
         assert isinstance(x, list), 'We currently only support input of cell as a list, even if you have only one predecessor.'
+        assert len(x) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
         states = self.preprocessor(x)
         for ops, inps in zip(self.ops, self.inputs):
             current_state = []
@@ -241,9 +261,9 @@ class Cell(nn.Module):
             states.append(current_state)
         if self.merge_op == 'all':
             # a special case for graph engine
-            this_cell = torch.cat(states[self.num_predecessors:], 1)
+            this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)
         else:
-            this_cell = torch.cat([states[k] for k in self.output_node_indices], 1)
+            this_cell = torch.cat([states[k] for k in self.output_node_indices], self.concat_dim)
         return self.postprocessor(this_cell, x)
 
     @staticmethod
