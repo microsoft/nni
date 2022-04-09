@@ -17,8 +17,8 @@ NNI Documentation
    Hyperparameter Optimization <hpo/index>
    Neural Architecture Search <nas/index>
    Model Compression <compression/index>
-   Feature Engineering <feature_engineering/toctree>
-   Experiment <experiment/toctree>
+   feature_engineering/toctree
+   experiment/toctree
 
 .. toctree::
    :maxdepth: 2

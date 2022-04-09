@@ -1,5 +1,5 @@
-NNI Experiment
-==============
+Experiment
+==========
 
 ..  toctree::
     :maxdepth: 2
