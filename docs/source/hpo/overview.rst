@@ -77,7 +77,7 @@ from simple on-premise servers to scalable commercial clouds.
 With NNI you can write one piece of model code, and concurrently evaluate hyperparameter sets on local machine, SSH servers,
 Kubernetes-based clusters, AzureML service, and much more.
 
-Main article: :doc:`/experiment/training_service`
+Main article: :doc:`/experiment/training_service/overview`
 
 .. _hpo-overview-portal:
 
@@ -87,7 +87,7 @@ Web Portal
 NNI provides a web portal to monitor training progress, to visualize hyperparameter performance,
 to manually customize hyperparameters, and to manage multiple HPO experiments.
 
-Main article: :doc:`/experiment/web_portal`
+Main article: :doc:`/experiment/web_portal/web_portal`
 
 .. image:: ../../static/img/webui.gif
     :width: 100%
@@ -107,6 +107,6 @@ After you are familiar with basic usage, you can explore more HPO features:
 
 * :doc:`Use command line tool to create and manage experiments (nnictl) </reference/nnictl>`
 * :doc:`Early stop non-optimal models (assessor) <assessors>`
-* :doc:`TensorBoard integration </experiment/tensorboard>`
+* :doc:`TensorBoard integration </experiment/web_portal/tensorboard>`
 * :doc:`Implement your own algorithm <custom_algorithm>`
 * :doc:`Benchmark tuners <hpo_benchmark>`

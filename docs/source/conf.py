@@ -150,6 +150,20 @@ tutorials_copy_list = [
     ('tutorials/quantization_speedup.rst', 'tutorials/cp_quantization_speedup.rst'),
 ]
 
+# Toctree ensures that toctree docs do not contain any other contents.
+# Home page should be an exception.
+toctree_check_whitelist = [
+    'index',
+
+    # FIXME: Other exceptions should be correctly handled.
+    'nas/index',
+    'nas/benchmarks',
+    'compression/index',
+    'compression/pruning',
+    'compression/quantization',
+    'hpo/hpo_benchmark',
+]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['../templates']
 

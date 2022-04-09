@@ -488,7 +488,7 @@ Launch the experiment. The experiment should take several minutes to finish on a
 
 .. GENERATED FROM PYTHON SOURCE LINES 306-324
 
-Users can also run Retiarii Experiment with :doc:`different training services </experiment/training_service>`
+Users can also run Retiarii Experiment with :doc:`different training services </experiment/training_service/overview>`
 besides ``local`` training service.
 
 Visualize the Experiment
@@ -496,7 +496,7 @@ Visualize the Experiment
 
 Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment.
 For example, open ``localhost:8081`` in your browser, 8081 is the port that you set in ``exp.run``.
-Please refer to :doc:`here </experiment/webui>` for details.
+Please refer to :doc:`here </experiment/web_portal/web_portal>` for details.
 
 We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__).
 This can be used by clicking ``Visualization`` in detail panel for each trial.

@@ -66,7 +66,7 @@ Performance estimation
 
 The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. The problem with performance estimation is mostly its scalability, i.e., how can I run and manage multiple trials simultaneously.
 
-In NNI, we standardize this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. The choices of evaluators also range from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations. Evaluators are run in *trials*, where trials can be spawn onto distributed platforms with our powerful :doc:`training service </experiment/training_service>`.
+In NNI, we standardize this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. The choices of evaluators also range from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations. Evaluators are run in *trials*, where trials can be spawn onto distributed platforms with our powerful :doc:`training service </experiment/training_service/overview>`.
 
 Tutorials
 ---------

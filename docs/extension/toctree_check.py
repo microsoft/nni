@@ -42,7 +42,8 @@ def toctree_check(app: Sphinx, doctree: nodes.document, docname: str):
     if has_toctree and other_types:
         # We don't allow a document with toctree to have other types of contents
         logger.warning('Expect a toctree document to contain only a toctree, '
-                       'but found other types of contents in "%s": %s', docname, str(set(other_types)))
+                       'but found other types of contents: %s', str(set(other_types)),
+                       location=docname)
 
 
 def setup(app):
