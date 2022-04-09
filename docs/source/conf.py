@@ -143,11 +143,13 @@ sphinx_tabs_disable_css_loading = True
 # The anchors will be replaced to avoid dupilcate labels.
 # Target should start with ``cp_`` to be properly ignored in git.
 tutorials_copy_list = [
-    # Others in full-scale materials
-    ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
-    ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
-    ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
-    ('tutorials/quantization_speedup.rst', 'tutorials/cp_quantization_speedup.rst'),
+    # Seems that we don't need it for now.
+    # Add tuples back if we need it in future.
+
+    # ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
+    # ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
+    # ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
+    # ('tutorials/quantization_speedup.rst', 'tutorials/cp_quantization_speedup.rst'),
 ]
 
 # Toctree ensures that toctree docs do not contain any other contents.
