@@ -65,6 +65,7 @@ extensions = [
     'cardlinkitem',
     'codesnippetcard',
     'patch_autodoc',
+    'toctree_check',
 ]
 
 # Autosummary related settings
@@ -142,11 +143,6 @@ sphinx_tabs_disable_css_loading = True
 # The anchors will be replaced to avoid dupilcate labels.
 # Target should start with ``cp_`` to be properly ignored in git.
 tutorials_copy_list = [
-    # The global quickstart
-    ('tutorials/hpo_quickstart_pytorch/main.rst', 'tutorials/hpo_quickstart_pytorch/cp_global_quickstart_hpo.rst'),
-    ('tutorials/hello_nas.rst', 'tutorials/cp_global_quickstart_nas.rst'),
-    ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_global_quickstart_compression.rst'),
-
     # Others in full-scale materials
     ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
     ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
