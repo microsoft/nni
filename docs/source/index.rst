@@ -18,7 +18,7 @@ NNI Documentation
    Neural Architecture Search <nas/index>
    Model Compression <compression/index>
    Feature Engineering <feature_engineering/index>
-   Experiment <experiment/overview>
+   Experiment <experiment/toctree>
 
 .. toctree::
    :maxdepth: 2

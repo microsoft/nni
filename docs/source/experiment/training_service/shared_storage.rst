@@ -43,8 +43,8 @@ If you want to use AzureBlob, add below to your config. Full config file see :gi
 
 You can find ``storageAccountName``, ``storageAccountKey``, ``containerName`` on azure storage account portal.
 
-.. image:: ../../img/azure_storage.png
-   :target: ../../img/azure_storage.png
+.. image:: ../../../img/azure_storage.png
+   :target: ../../../img/azure_storage.png
    :alt: 
 
 If you want to use NFS, add below to your config. Full config file see :githublink:`mnist-sharedstorage/config_nfs.yml <examples/trials/mnist-sharedstorage/config_nfs.yml>`.

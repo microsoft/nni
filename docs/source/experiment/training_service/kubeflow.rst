@@ -61,8 +61,8 @@ Prerequisite for Azure Kubernetes Service
 Design
 ------
 
-.. image:: ../../img/kubeflow_training_design.png
-   :target: ../../img/kubeflow_training_design.png
+.. image:: ../../../img/kubeflow_training_design.png
+   :target: ../../../img/kubeflow_training_design.png
    :alt: 
 
 Kubeflow training service instantiates a Kubernetes rest client to interact with your K8s cluster's API server.

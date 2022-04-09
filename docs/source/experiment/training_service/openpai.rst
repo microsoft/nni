@@ -10,22 +10,22 @@ Prerequisite
 
 2. Get token. Open web portal of OpenPAI, and click ``My profile`` button in the top-right side.
 
-   .. image:: ../../img/pai_profile.jpg
+   .. image:: ../../../../img/pai_profile.jpg
       :scale: 80%
 
    Click ``copy`` button in the page to copy a jwt token.
 
-   .. image:: ../../img/pai_token.jpg
+   .. image:: ../../../../img/pai_token.jpg
       :scale: 67%
 
 3. Mount NFS storage to local machine. If you don't know where to find the NFS storage, please click ``Submit job`` button in web portal.
 
-   .. image:: ../../img/pai_job_submission_page.jpg
+   .. image:: ../../../../img/pai_job_submission_page.jpg
       :scale: 50%
 
    Find the data management region in job submission page.
 
-   .. image:: ../../img/pai_data_management_page.jpg
+   .. image:: ../../../../img/pai_data_management_page.jpg
       :scale: 33%  
 
    The ``Preview container paths`` is the NFS host and path that OpenPAI provided, you need to mount the corresponding host and path to your local machine first, then NNI could use the OpenPAI's NFS storage to upload data/code to or download from OpenPAI cluster. To mount the storage, please use ``mount`` command, for example:
@@ -69,13 +69,13 @@ Once completing the configuration and run nnictl / use Python to launch the expe
 
 The job name format is something like ``nni_exp_{experiment_id}_trial_{trial_id}``. You can see jobs created by NNI on the OpenPAI cluster's web portal, like:
 
-.. image:: ../../img/nni_pai_joblist.jpg
+.. image:: ../../../../img/nni_pai_joblist.jpg
 
 .. note:: For OpenPAI training service, NNI will start an additional rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is ``8080``, the rest server will listen on ``8081``, to receive metrics from trial job running in Kubernetes. So you should ``enable 8081`` TCP port in your firewall rule to allow incoming traffic.
 
 Once a trial job is completed, you can go to NNI WebUI's overview page (like ``http://localhost:8080/oview``) to check trial's information. For example, you can expand a trial information in trial list view, click the logPath link like:
 
-.. image:: ../../img/nni_webui_joblist.png
+.. image:: ../../../../img/nni_webui_joblist.png
     :scale: 30%
 
 Configuration References
@@ -137,7 +137,7 @@ Check policy:
 If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.
 
 
-.. image:: ../../img/webui-img/experimentError.png
+.. image:: ../../../../img/webui-img/experimentError.png
    :scale: 80%
 
 With local training service, the whole experiment (e.g., tuning algorithms, trials) runs on a single machine, i.e., user's dev machine. The generated trials run on this machine following ``trialConcurrency`` set in the configuration yaml file. If GPUs are used by trial, local training service will allocate required number of GPUs for each trial, like a resource scheduler.
