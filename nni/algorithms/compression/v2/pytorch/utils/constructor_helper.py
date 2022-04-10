@@ -10,15 +10,10 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
 from nni.common.serializer import _trace_cls
-from nni.common.serializer import Traceable
+from nni.common.serializer import Traceable, is_traceable
 
-__all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper', 'trace_parameters']
+__all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper']
 
-
-def trace_parameters(base, kw_only=True):
-    if not isinstance(base, type):
-        raise Exception('Only class can be traced by this function.')
-    return _trace_cls(base, kw_only, call_super=False)
 
 class ConstructHelper:
     def __init__(self, callable_obj: Callable, *args, **kwargs):
@@ -85,14 +80,14 @@ class OptimizerConstructHelper(ConstructHelper):
 
     @staticmethod
     def from_trace(model: Module, optimizer_trace: Traceable):
-        assert isinstance(optimizer_trace, Traceable), \
-            'Please use nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize the optimizer.'
+        assert is_traceable(optimizer_trace), \
+            'Please use nni.trace to wrap the optimizer class before initialize the optimizer.'
         assert isinstance(optimizer_trace, Optimizer), \
             'It is not an instance of torch.nn.Optimizer.'
         return OptimizerConstructHelper(model,
-                                        optimizer_trace._get_nni_attr('symbol'),
-                                        *optimizer_trace._get_nni_attr('args'),
-                                        **optimizer_trace._get_nni_attr('kwargs'))
+                                        optimizer_trace.trace_symbol,
+                                        *optimizer_trace.trace_args,
+                                        **optimizer_trace.trace_kwargs)
 
 
 class LRSchedulerConstructHelper(ConstructHelper):
@@ -117,8 +112,8 @@ class LRSchedulerConstructHelper(ConstructHelper):
 
     @staticmethod
     def from_trace(lr_scheduler_trace: Traceable):
-        assert isinstance(lr_scheduler_trace, Traceable), \
-            'Please use nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the lr scheduler class before initialize the scheduler.'
+        assert is_traceable(lr_scheduler_trace), \
+            'Please use nni.trace to wrap the lr scheduler class before initialize the scheduler.'
         assert isinstance(lr_scheduler_trace, _LRScheduler), \
             'It is not an instance of torch.nn.lr_scheduler._LRScheduler.'
         return LRSchedulerConstructHelper(lr_scheduler_trace.trace_symbol,

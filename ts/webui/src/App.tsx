@@ -1,18 +1,20 @@
 import * as React from 'react';
 import { Stack } from '@fluentui/react';
-import { COLUMN } from './static/const';
-import { EXPERIMENT, TRIALS } from './static/datamodel';
-import { isManagerExperimentPage } from './static/function';
-import NavCon from './components/NavCon';
-import MessageInfo from './components/modals/MessageInfo';
-import { SlideNavBtns } from './components/slideNav/SlideNavBtns';
+import { SlideNavBtns } from '@components/nav/slideNav/SlideNavBtns';
+import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import NavCon from '@components/nav/Nav';
+import MessageInfo from '@components/common/MessageInfo';
+import { COLUMN } from '@static/const';
+import { isManagerExperimentPage } from '@static/function';
+
+import '@style/App.scss';
+import '@style/common/common.scss';
+import '@style/experiment/trialdetail/trialsDetail.scss';
+
 const echarts = require('echarts/lib/echarts');
 echarts.registerTheme('nni_theme', {
     color: '#3c8dbc'
 });
-import './App.scss';
-import './static/style/common.scss';
-import './static/style/trialsDetail.scss';
 
 interface AppState {
     interval: number;

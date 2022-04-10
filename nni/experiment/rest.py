@@ -1,7 +1,15 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 from typing import Any, Optional
 
 import requests
+
+# API URL must be synchronized with:
+#  - ts/nni_manager/rest_server/index.ts
+#  - ts/webui/src/static/constant.ts
+# Remember to update them if the values are changed, or if this file is moved.
 
 _logger = logging.getLogger(__name__)
 

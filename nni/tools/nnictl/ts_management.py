@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import importlib
 import json
 
@@ -9,7 +12,7 @@ _builtin_training_services = [
     'remote',
     'openpai', 'pai',
     'aml',
-    'dlc'
+    'dlc',
     'kubeflow',
     'frameworkcontroller',
     'adl',

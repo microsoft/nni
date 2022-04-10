@@ -1,4 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
+import warnings
 
 import numpy as np
 import torch
@@ -43,7 +47,20 @@ def _random_config(search_space, random_state):
 
 
 class DNGOTuner(Tuner):
+    """
+    Use neural networks as an alternative to GPs to model distributions over functions in bayesian optimization.
 
+    Parameters
+    ----------
+    optimize : maximize | minimize, default = maximize
+        If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+    sample_size : int, default = 1000
+        Number of samples to select in each iteration. The best one will be picked from the samples as the next trial.
+    trials_per_update : int, default = 20
+        Number of trials to collect before updating the model.
+    num_epochs_per_training : int, default = 500
+        Number of epochs to train DNGO model.
+    """
     def __init__(self, optimize_mode='maximize', sample_size=1000, trials_per_update=20, num_epochs_per_training=500):
         self.searchspace_json = None
         self.random_state = None
@@ -112,7 +129,10 @@ class DNGOTuner(Tuner):
         x_arr = []
         for x in self.x:
             x_arr.append([x[k] for k in sorted(x.keys())])
-        self.model.train(np.array(x_arr), np.array(self.y), do_optimize=True)
+        try:
+            self.model.train(np.array(x_arr), np.array(self.y), do_optimize=True)
+        except np.linalg.LinAlgError as e:
+            warnings.warn(f'numpy linalg error encountered in DNGO model training: {e}')
         self._model_initialized = True
 
     def _get_default_value(self, value):

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import contextlib
 from dataclasses import dataclass, fields
 from datetime import datetime
@@ -15,7 +17,6 @@ from typing import Optional, Tuple, List, Any
 
 import colorama
 
-import nni_node  # pylint: disable=wrong-import-order, import-error
 import nni.runtime.protocol
 
 from .config import ExperimentConfig
@@ -28,23 +29,27 @@ _logger = logging.getLogger('nni.experiment')
 
 @dataclass(init=False)
 class NniManagerArgs:
+    # argv sent to "ts/nni_manager/main.js"
+
     port: int
     experiment_id: int
-    start_mode: str  # new or resume
-    mode: str  # training service platform
-    log_dir: str
+    action: str  # 'new', 'resume', 'view'
+    mode: str  # training service platform, to be removed
+    experiments_directory: str  # renamed "config.nni_experiments_directory", must be absolute
     log_level: str
-    readonly: bool = False
     foreground: bool = False
-    url_prefix: Optional[str] = None
+    url_prefix: Optional[str] = None  # leading and trailing "/" must be stripped
     dispatcher_pipe: Optional[str] = None
 
     def __init__(self, action, exp_id, config, port, debug, foreground, url_prefix):
         self.port = port
         self.experiment_id = exp_id
+        self.action = action
         self.foreground = foreground
         self.url_prefix = url_prefix
-        self.log_dir = config.experiment_working_directory
+        # config field name "experiment_working_directory" is a mistake
+        # see "ts/nni_manager/common/globals/arguments.ts" for details
+        self.experiments_directory = config.experiment_working_directory
 
         if isinstance(config.training_service, list):
             self.mode = 'hybrid'
@@ -55,20 +60,14 @@ class NniManagerArgs:
         if debug and self.log_level not in ['debug', 'trace']:
             self.log_level = 'debug'
 
-        if action == 'resume':
-            self.start_mode = 'resume'
-        elif action == 'view':
-            self.start_mode = 'resume'
-            self.readonly = True
-        else:
-            self.start_mode = 'new'
-
     def to_command_line_args(self):
+        # reformat fields to meet yargs library's format
+        # see "ts/nni_manager/common/globals/arguments.ts" for details
         ret = []
         for field in fields(self):
             value = getattr(self, field.name)
             if value is not None:
-                ret.append('--' + field.name)
+                ret.append('--' + field.name.replace('_', '-'))
                 if isinstance(value, bool):
                     ret.append(str(value).lower())
                 else:
@@ -77,6 +76,8 @@ class NniManagerArgs:
 
 def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
     foreground = run_mode.value == 'foreground'
+    if url_prefix is not None:
+        url_prefix = url_prefix.strip('/')
     nni_manager_args = NniManagerArgs(action, exp_id, config, port, debug, foreground, url_prefix)
 
     _ensure_port_idle(port)
@@ -104,12 +105,11 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
             pid=proc.pid,
             logDir=config.experiment_working_directory,
             tag=[],
+            prefixUrl=url_prefix
         )
 
         _logger.info('Setting up...')
         rest.post(port, '/experiment', config.json(), url_prefix)
-
-        return proc
 
     except Exception as e:
         _logger.error('Create experiment failed')
@@ -118,15 +118,30 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
                 proc.kill()
         raise e
 
-def _start_rest_server(nni_manager_args, run_mode) -> Tuple[int, Popen]:
-    node_dir = Path(nni_node.__path__[0])
+    link = Path(config.experiment_working_directory, '_latest')
+    try:
+        if sys.version_info >= (3, 8):
+            link.unlink(missing_ok=True)
+        else:
+            if link.exists():
+                link.unlink()
+        link.symlink_to(exp_id, target_is_directory=True)
+    except Exception:
+        if sys.platform != 'win32':
+            _logger.warning(f'Failed to create link {link}')
+
+    return proc
+
+def _start_rest_server(nni_manager_args, run_mode) -> Popen:
+    import nni_node
+    node_dir = Path(nni_node.__path__[0])  # type: ignore
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
     cmd = [node, '--max-old-space-size=4096', main_js]
     cmd += nni_manager_args.to_command_line_args()
 
     if run_mode.value == 'detach':
-        log = Path(nni_manager_args.log_dir, nni_manager_args.experiment_id, 'log')
+        log = Path(nni_manager_args.experiments_directory, nni_manager_args.experiment_id, 'log')
         out = (log / 'nnictl_stdout.log').open('a')
         err = (log / 'nnictl_stderr.log').open('a')
         header = f'Experiment {nni_manager_args.experiment_id} start: {datetime.now()}'
@@ -142,10 +157,10 @@ def _start_rest_server(nni_manager_args, run_mode) -> Tuple[int, Popen]:
         from subprocess import CREATE_NEW_PROCESS_GROUP
         return Popen(cmd, stdout=out, stderr=err, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
     else:
-        return Popen(cmd, stdout=out, stderr=err, cwd=node_dir, preexec_fn=os.setpgrp)
+        return Popen(cmd, stdout=out, stderr=err, cwd=node_dir, preexec_fn=os.setpgrp)  # type: ignore
 
 
-def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Popen:
+def start_experiment_retiarii(exp_id, config, port, debug):
     pipe = None
     proc = None
 
@@ -192,7 +207,7 @@ def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
 
 
 def _start_rest_server_retiarii(config: ExperimentConfig, port: int, debug: bool, experiment_id: str,
-                                pipe_path: str = None, mode: str = 'new') -> Tuple[int, Popen]:
+                                pipe_path: str, mode: str = 'create') -> Tuple[int, Popen]:
     if isinstance(config.training_service, list):
         ts = 'hybrid'
     else:
@@ -204,23 +219,20 @@ def _start_rest_server_retiarii(config: ExperimentConfig, port: int, debug: bool
         'port': port,
         'mode': ts,
         'experiment_id': experiment_id,
-        'start_mode': mode,
-        'log_dir': config.experiment_working_directory,
+        'action': mode,
+        'experiments_directory': config.experiment_working_directory,
         'log_level': 'debug' if debug else 'info'
     }
     if pipe_path is not None:
         args['dispatcher_pipe'] = pipe_path
 
-    if mode == 'view':
-        args['start_mode'] = 'resume'
-        args['readonly'] = 'true'
-
-    node_dir = Path(nni_node.__path__[0])
+    import nni_node
+    node_dir = Path(nni_node.__path__[0])  # type: ignore
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
     cmd = [node, '--max-old-space-size=4096', main_js]
     for arg_key, arg_value in args.items():
-        cmd.append('--' + arg_key)
+        cmd.append('--' + arg_key.replace('_', '-'))
         cmd.append(str(arg_value))
 
     if sys.platform == 'win32':
@@ -253,14 +265,17 @@ def _save_experiment_information(experiment_id: str, port: int, start_time: int,
 
 
 def get_stopped_experiment_config(exp_id, exp_dir=None):
+    config_json = get_stopped_experiment_config_json(exp_id, exp_dir)  # type: ignore
+    config = ExperimentConfig(**config_json)  # type: ignore
+    if exp_dir and not os.path.samefile(exp_dir, config.experiment_working_directory):
+        msg = 'Experiment working directory provided in command line (%s) is different from experiment config (%s)'
+        _logger.warning(msg, exp_dir, config.experiment_working_directory)
+        config.experiment_working_directory = exp_dir
+    return config
+
+def get_stopped_experiment_config_json(exp_id, exp_dir=None):
     if exp_dir:
-        exp_config = Config(exp_id, exp_dir).get_config()
-        config = ExperimentConfig(**exp_config)
-        if not os.path.samefile(exp_dir, config.experiment_working_directory):
-            msg = 'Experiment working directory provided in command line (%s) is different from experiment config (%s)'
-            _logger.warning(msg, exp_dir, config.experiment_working_directory)
-            config.experiment_working_directory = exp_dir
-        return config
+        return Config(exp_id, exp_dir).get_config()
     else:
         update_experiment()
         experiments_config = Experiments()
@@ -268,9 +283,8 @@ def get_stopped_experiment_config(exp_id, exp_dir=None):
         experiment_metadata = experiments_dict.get(exp_id)
         if experiment_metadata is None:
             _logger.error('Id %s not exist!', exp_id)
-            return
+            return None
         if experiment_metadata['status'] != 'STOPPED':
             _logger.error('Only stopped experiments can be resumed or viewed!')
-            return
-        experiment_config = Config(exp_id, experiment_metadata['logDir']).get_config()
-        return ExperimentConfig(**experiment_config)
+            return None
+        return Config(exp_id, experiment_metadata['logDir']).get_config()

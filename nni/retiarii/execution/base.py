@@ -17,6 +17,8 @@ _logger = logging.getLogger(__name__)
 
 class BaseGraphData:
     """
+    Data sent between strategy and trial, in graph-based execution engine.
+
     Attributes
     ----------
     model_script
@@ -34,13 +36,16 @@ class BaseGraphData:
     def dump(self) -> dict:
         return {
             'model_script': self.model_script,
-            'evaluator': self.evaluator,
+            # engine needs to call dump here,
+            # otherwise, evaluator will become binary
+            # also, evaluator can be none in tests
+            'evaluator': self.evaluator._dump() if self.evaluator is not None else None,
             'mutation_summary': self.mutation_summary
         }
 
     @staticmethod
     def load(data) -> 'BaseGraphData':
-        return BaseGraphData(data['model_script'], data['evaluator'], data['mutation_summary'])
+        return BaseGraphData(data['model_script'], Evaluator._load(data['evaluator']), data['mutation_summary'])
 
 
 class BaseExecutionEngine(AbstractExecutionEngine):

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from .base import (
     HookCollectorInfo,
     DataCollector,
@@ -20,6 +23,7 @@ from .metrics_calculator import (
 )
 from .sparsity_allocator import (
     NormalSparsityAllocator,
+    BankSparsityAllocator,
     GlobalSparsityAllocator,
     Conv2dDependencyAwareAllocator
 )
