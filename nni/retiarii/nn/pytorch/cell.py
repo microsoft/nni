@@ -242,14 +242,14 @@ class Cell(nn.Module):
     def label(self):
         return self._label
 
-    def forward(self, x: List[torch.Tensor]):
+    def forward(self, inputs: List[torch.Tensor]):
         """Forward propagation of cell.
 
         Parameters
         ----------
-        x
+        inputs
             Must be a list of tensors, even if there's only one predecessor.
-            The number should be equal to ``num_predecessors``.
+            The length of the list should be equal to ``num_predecessors``.
 
         Returns
         -------
@@ -259,9 +259,9 @@ class Cell(nn.Module):
             of some of (possibly all) the nodes' outputs in the cell.
         """
         # Cannot decorate return type as annotation. Otherwise torchscript will complain.
-        assert isinstance(x, list), 'We currently only support input of cell as a list, even if you have only one predecessor.'
-        assert len(x) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
-        states = self.preprocessor(x)
+        assert isinstance(inputs, list), 'We currently only support input of cell as a list, even if you have only one predecessor.'
+        assert len(inputs) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
+        states = self.preprocessor(inputs)
         for ops, inps in zip(self.ops, self.inputs):
             current_state = []
             for op, inp in zip(ops, inps):
@@ -273,7 +273,7 @@ class Cell(nn.Module):
             this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)
         else:
             this_cell = torch.cat([states[k] for k in self.output_node_indices], self.concat_dim)
-        return self.postprocessor(this_cell, x)
+        return self.postprocessor(this_cell, inputs)
 
     @staticmethod
     def _convert_op_candidates(op_candidates, node_index, op_index, chosen) -> Union[Dict[str, nn.Module], List[nn.Module]]:
