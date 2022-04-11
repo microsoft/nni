@@ -10,7 +10,7 @@ import torch
 from schema import And, Optional
 from nni.compression.pytorch.compressor import Pruner
 from nni.compression.pytorch.utils.config_validation import PrunerSchema
-from nni.compression.pytorch.utils.sensitivity_analysis import SensitivityAnalysis
+from nni.compression.pytorch.utils import SensitivityAnalysis
 
 from .constants_pruner import PRUNER_DICT
 

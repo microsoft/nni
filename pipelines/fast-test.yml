@@ -1,6 +1,4 @@
-trigger:
-  branches:
-    exclude: [ l10n_master ]
+trigger: none
 
 stages:
 - stage: lint
@@ -12,7 +10,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         sudo apt-get install -y pandoc
@@ -20,8 +17,11 @@ stages:
 
     - script: |
         cd docs
-        # rstcheck -r source
-      displayName: rstcheck (disabled for now)  # TODO: rstcheck
+        rstcheck -r source \
+          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs \
+          --ignore-roles githublink --ignore-substitutions release \
+          --report warning
+      displayName: rstcheck
 
     - script: |
         cd docs
@@ -54,7 +54,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         # pylint requires newer typing extension. Override requirements in tensorflow
@@ -83,7 +82,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         set -e
@@ -110,7 +108,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop
@@ -164,7 +161,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-legacy
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop
@@ -196,7 +192,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: windows
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop --no-user
@@ -224,7 +219,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: macos
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop

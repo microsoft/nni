@@ -5,9 +5,9 @@ This article describes how to build and install NNI from `source code`_.
 
 We recommend using latest setuptools:
 
-.. code-block::
+.. code-block:: text
 
-    python -m pip install --upgrade setuptools pip wheel
+    pip install --upgrade setuptools pip wheel
 
 .. _source code: https://github.com/microsoft/nni
 
@@ -16,7 +16,7 @@ Development Build
 
 If you want to build NNI for your own use, we recommend using `development mode`_.
 
-.. code-block::
+.. code-block:: text
 
     python setup.py develop
 
@@ -32,15 +32,15 @@ NNI does not support setuptools' "install" command.
 
 A release package requires jupyterlab to build the extension:
 
-.. code-block::
+.. code-block:: text
 
-    python -m pip install jupyterlab
+    pip install jupyterlab
 
 And you need to set ``NNI_RELEASE`` environment variable, and compile TypeScript modules before "bdist_wheel".
 
 In bash:
 
-.. code-block::
+.. code-block:: bash
 
     export NNI_RELEASE=2.7
     python setup.py build_ts
@@ -48,7 +48,7 @@ In bash:
 
 In PowerShell:
 
-.. code-block::
+.. code-block:: powershell
 
     $env:NNI_RELEASE=2.7
     python setup.py build_ts
@@ -69,9 +69,9 @@ If successful, you will find the wheel in ``dist`` directory.
 Build Docker Image
 ------------------
 
-You can build a Docker image with Dockerfile:
+You can build a Docker image with :githublink:`Dockerfile <Dockerfile>`:
 
-.. code-block::
+.. code-block:: bash
 
     export NNI_RELEASE=2.7
     python setup.py build_ts
@@ -88,7 +88,7 @@ Clean
 
 If the build fails, please clean up and try again:
 
-.. code::
+.. code:: text
 
     python setup.py clean
 
@@ -99,6 +99,6 @@ This is useful when you have uninstalled NNI from development mode and want to i
 
 It will not work if you have never built TypeScript modules before.
 
-.. code::
+.. code:: text
 
     python setup.py develop --skip-ts

@@ -105,14 +105,14 @@ class LinearPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import LinearPruner
+        >>> from nni.compression.pytorch.pruning import LinearPruner
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> finetuner = ...
         >>> pruner = LinearPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
@@ -170,14 +170,14 @@ class AGPPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import AGPPruner
+        >>> from nni.compression.pytorch.pruning import AGPPruner
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> finetuner = ...
         >>> pruner = AGPPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
@@ -248,14 +248,14 @@ class LotteryTicketPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import LotteryTicketPruner
+        >>> from nni.compression.pytorch.pruning import LotteryTicketPruner
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> finetuner = ...
         >>> pruner = LotteryTicketPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner, reset_weight=True)
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
 
     """
 
@@ -325,7 +325,7 @@ class SimulatedAnnealingPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
+        >>> from nni.compression.pytorch.pruning import SimulatedAnnealingPruner
         >>> model = ...
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> evaluator = ...
@@ -334,7 +334,7 @@ class SimulatedAnnealingPruner(IterativePruner):
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py <examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/simulated_anealing_pruning_torch.py <examples/model_compress/pruning/simulated_anealing_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], evaluator: Callable[[Module], float], start_temperature: float = 100,

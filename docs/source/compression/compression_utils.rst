@@ -83,6 +83,8 @@ not have model accuracies/losses under all sparsities, for example, its accuracy
    features.8,0.55696,0.54194,0.48892,0.42986,0.33048,0.2266,0.09566,0.02348,0.0056
    features.10,0.55468,0.5394,0.49576,0.4291,0.3591,0.28138,0.14256,0.05446,0.01578
 
+.. _topology-analysis:
+
 Topology Analysis
 -----------------
 
@@ -170,7 +172,7 @@ Usage
 
 .. code-block:: python
 
-   from nni.compression.pytorch.utils.counter import count_flops_params
+   from nni.compression.pytorch.utils import count_flops_params
 
    # Given input size (1, 1, 28, 28)
    flops, params, results = count_flops_params(model, (1, 1, 28, 28)) 
@@ -178,10 +180,10 @@ Usage
    # Given input tensor with size (1, 1, 28, 28) and switch to full mode
    x = torch.randn(1, 1, 28, 28)
 
-   flops, params, results = count_flops_params(model, (x,) mode='full') # tuple of tensor as input
+   flops, params, results = count_flops_params(model, (x,), mode='full') # tuple of tensor as input
 
    # Format output size to M (i.e., 10^6)
-   print(f'FLOPs: {flops/1e6:.3f}M,  Params: {params/1e6:.3f}M)
+   print(f'FLOPs: {flops/1e6:.3f}M,  Params: {params/1e6:.3f}M')
    print(results)
    {
    'conv': {'flops': [60], 'params': [20], 'weight_size': [(5, 3, 1, 1)], 'input_size': [(1, 3, 2, 2)], 'output_size': [(1, 5, 2, 2)], 'module_type': ['Conv2d']}, 

@@ -11,7 +11,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils import count_flops_params
 
 LUT_FILE = "lut.npy"
 LUT_JSON_FILE = "lut.txt"

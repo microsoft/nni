@@ -1,9 +1,9 @@
-Construct Space with Mutators
-=============================
+Construct Space with Mutator
+============================
 
-Besides the inline mutation APIs demonstrated :ref:`above <mutation-primitives>`, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. Those inline mutation APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
+Besides the mutation primitives demonstrated in the :doc:`basic tutorial <construct_space>`, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. The high-level APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
 
-.. note:: Mutator and inline mutation APIs cannot be used together.
+.. warning:: Mutator and inline mutation APIs can NOT be used together.
 
 A mutator is a piece of logic to express how to mutate a given model. Users are free to write their own mutators. Then a model space is expressed with a base model and a list of mutators. A model in the model space is sampled by applying the mutators on the base model one after another. An example is shown below.
 
@@ -18,7 +18,7 @@ A mutator is a piece of logic to express how to mutate a given model. Users are 
 Write a mutator
 ---------------
 
-User-defined mutator should inherit ``Mutator`` class, and implement mutation logic in the member function ``mutate``.
+User-defined mutator should inherit :class:`nni.retiarii.Mutator` class, and implement mutation logic in the member function :meth:`nni.retiarii.Mutator.mutate`.
 
 .. code-block:: python
 
@@ -35,9 +35,9 @@ User-defined mutator should inherit ``Mutator`` class, and implement mutation lo
         chosen_op = self.choice(self.candidate_op_list)
         node.update_operation(chosen_op.type, chosen_op.params)
 
-The input of ``mutate`` is graph IR (Intermediate Representation) of the base model (please refer to `here <./ApiReference.rst>`__ for the format and APIs of the IR), users can mutate the graph using the graph's member functions (e.g., ``get_nodes_by_label``, ``update_operation``). The mutation operations can be combined with the API ``self.choice``, in order to express a set of possible mutations. In the above example, the node's operation can be changed to any operation from ``candidate_op_list``.
+The input of :meth:`nni.retiarii.Mutator.mutate` is graph IR (Intermediate Representation) of the base model, users can mutate the graph using the graph's member functions (e.g., :meth:`nni.retiarii.Model.get_nodes_by_label`). The mutation operations can be combined with the API ``self.choice``, in order to express a set of possible mutations. In the above example, the node's operation can be changed to any operation from ``candidate_op_list``.
 
-Use placeholder to make mutation easier: ``nn.Placeholder``. If you want to mutate a subgraph or node of your model, you can define a placeholder in this model to represent the subgraph or node. Then, use mutator to mutate this placeholder to make it real modules.
+Use placeholder to make mutation easier: :class:`nni.retiarii.nn.pytorch.Placeholder`. If you want to mutate a subgraph or node of your model, you can define a placeholder in this model to represent the subgraph or node. Then, use mutator to mutate this placeholder to make it real modules.
 
 .. code-block:: python
 
@@ -62,51 +62,3 @@ Starting an experiment is almost the same as using inline mutation APIs. The onl
   exp_config.max_trial_number = 10
   exp_config.training_service.use_active_gpu = False
   exp.run(exp_config, 8081)
-
-References
-----------
-
-Placeholder
-^^^^^^^^^^^
-
-..  autoclass:: nni.retiarii.nn.pytorch.Placeholder
-    :members:
-    :noindex:
-
-Mutator
-^^^^^^^
-
-..  autoclass:: nni.retiarii.Mutator
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Sampler
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.InvalidMutation
-    :members:
-    :noindex:
-
-Graph
-^^^^^
-
-..  autoclass:: nni.retiarii.Model
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Graph
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Node
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Edge
-    :members:
-    :noindex:
-
-..  autoclass:: nni.retiarii.Operation
-    :members:
-    :noindex:

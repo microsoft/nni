@@ -1,13 +1,15 @@
 Feature Engineering with NNI
 ============================
 
-We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on user feedback. We'd like to invite you to use, feedback and even contribute.
+.. note::
+
+    We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on user feedback. We'd like to invite you to use, feedback and even contribute.
 
 For now, we support the following feature selector:
 
 
-* `GradientFeatureSelector <./gradient_feature_selector.rst>`__
-* `GBDTSelector <./gbdt_selector.rst>`__
+* :doc:`GradientFeatureSelector <./gradient_feature_selector>`
+* :doc:`GBDTSelector <./gbdt_selector>`
 
 These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
 
@@ -61,8 +63,8 @@ Here is an example:
    from nni.feature_engineering.feature_selector import FeatureSelector
 
    class CustomizedSelector(FeatureSelector):
-       def __init__(self, ...):
-       ...
+       def __init__(self, *args, **kwargs):
+           ...
 
 **2. Implement fit and _get_selected features Function**
 
@@ -73,8 +75,8 @@ Here is an example:
    from nni.feature_engineering.feature_selector import FeatureSelector
 
    class CustomizedSelector(FeatureSelector):
-       def __init__(self, ...):
-       ...
+       def __init__(self, *args, **kwargs):
+           ...
 
        def fit(self, X, y, **kwargs):
            """
@@ -126,16 +128,15 @@ Here is an example:
    from nni.feature_engineering.feature_selector import FeatureSelector
 
    class CustomizedSelector(FeatureSelector, BaseEstimator):
-       def __init__(self, ...):
-       ...
+       def __init__(self, *args, **kwargs):
+           ...
 
-       def get_params(self, ...):
+       def get_params(self, *args, **kwargs):
            """
            Get parameters for this estimator.
            """
            params = self.__dict__
-           params = {key: val for (key, val) in params.items()
-           if not key.endswith('_')}
+           params = {key: val for (key, val) in params.items() if not key.endswith('_')}
            return params
 
        def set_params(self, **params):
@@ -143,8 +144,8 @@ Here is an example:
            Set the parameters of this estimator.
            """
            for param in params:
-           if hasattr(self, param):
-           setattr(self, param, params[param])
+               if hasattr(self, param):
+                   setattr(self, param, params[param])
            return self
 
 **2. Inherit the SelectorMixin Class and its Function**
@@ -157,10 +158,10 @@ Here is an example:
    from nni.feature_engineering.feature_selector import FeatureSelector
 
    class CustomizedSelector(FeatureSelector, BaseEstimator, SelectorMixin):
-       def __init__(self, ...):
+       def __init__(self, *args, **kwargs):
            ...
 
-       def get_params(self, ...):
+       def get_params(self, *args, **kwargs):
            """
            Get parameters for this estimator.
            """
@@ -174,8 +175,8 @@ Here is an example:
            Set the parameters of this estimator.
            """
            for param in params:
-           if hasattr(self, param):
-           setattr(self, param, params[param])
+               if hasattr(self, param):
+                   setattr(self, param, params[param])
            return self
 
        def get_support(self, indices=False):

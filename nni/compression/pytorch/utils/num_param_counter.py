@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 def get_total_num_weights(model, op_types=['default']):
         '''
         calculate the total number of weights

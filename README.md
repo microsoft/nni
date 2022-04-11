@@ -10,14 +10,13 @@
 [![Pull Requests](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen)
 [![Version](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases)
 [![Documentation Status](https://readthedocs.org/projects/nni/badge/?version=stable)](https://nni.readthedocs.io/en/stable/?badge=stable)
+[![](https://img.shields.io/github/contributors-anon/microsoft/nni)](https://github.com/microsoft/nni/graphs/contributors)
 
-NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/) ([简体中文版点这里](https://nni.readthedocs.io/zh/stable))**. Quick links:
 
-* [Documentation homepage](https://nni.readthedocs.io/)
-* [Installation guide](https://nni.readthedocs.io/en/stable/installation.html)
-* [Tutorials](https://nni.readthedocs.io/en/stable/tutorials.html)
-* [Python API reference](https://nni.readthedocs.io/en/stable/reference/python_api.html)
-* [Releases](https://nni.readthedocs.io/en/stable/release.html)
+
+[<img src="docs/img/readme_banner.png" width="100%"/>](https://nni.readthedocs.io/)
+
+NNI automates feature engineering, neural architecture search, hyperparameter tuning, and model compression for deep learning. Find the latest features, API, examples and tutorials in our **[official documentation](https://nni.readthedocs.io/) ([简体中文版点这里](https://nni.readthedocs.io/zh/stable))**.
 
 ## What's NEW! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 
@@ -25,10 +24,22 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
-* **New emoticons release**: [nnSpider](./docs/source/Tutorial/NNSpider.md)
+* **New emoticons release**: [nnSpider](https://nni.readthedocs.io/en/latest/sharings/nn_spider.html)
 <div align="center">
-<a href="#nni-spider"><img width="100%" src="docs/img/emoicons/home.svg" /></a>
+<a href="#nni-spider"><img width="100%" src="docs/source/sharings/images/nn_spider/home.svg" /></a>
 </div>
+
+## Installation
+
+See the [NNI installation guide](https://nni.readthedocs.io/en/stable/installation.html) to install from pip, or build from source.
+
+To install the current release:
+
+```
+$ pip install nni
+```
+
+To update NNI to the latest version, add `--upgrade` flag to the above commands.
 
 ## NNI capabilities in a glance
 
@@ -194,41 +205,20 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 </tbody>
 </table>
 
-## Installation
-
-See the [NNI installation guide](https://nni.readthedocs.io/en/stable/installation.html) to install from pip, or build from source.
-
-To install the current release:
-
-```
-$ pip install nni
-```
-
-To update NNI to the latest version, add `--upgrade` flag to the above commands.
-  
-## Run your first experiment
-
-<!-- delete this before next release -->
-
-**NOTE:** To run an experiment following instructions below, you need to build NNI from source. Installing from pip won't work until next release.
-
-To run this experiment, you need to have [PyTorch](https://pytorch.org/) (as well as [torchvision](https://pytorch.org/vision/stable/index.html)) installed.
-
-```shell
-$ nnictl hello
-```
-
-It will generate `nni_hello_hpo` folder in your current working directory, which contains a minimum hyper-parameter tuning example. It will also prompt you to run
-
-```shell
-python nni_hello_hpo/main.py
-```
-
-to launch your first NNI experiment. Use the web portal URL shown in the console to monitor the running status of your experiment.
-
 <img src="docs/static/img/webui.gif" alt="webui" width="100%"/>
 
-For more usages, please see [NNI tutorials](https://nni.readthedocs.io/en/stable/tutorials.html).
+## Resources
+
+* [NNI Documentation Homepage](https://nni.readthedocs.io/)
+* [NNI Installation Guide](https://nni.readthedocs.io/en/stable/installation.html)
+* [NNI Examples](https://nni.readthedocs.io/en/latest/examples.html)
+* [Python API Reference](https://nni.readthedocs.io/en/latest/reference/python_api.html)
+* [Releases (Change Log)](https://nni.readthedocs.io/en/latest/release.html)
+* [Related Research and Publications](https://nni.readthedocs.io/en/latest/notes/research_publications.html)
+* [Youtube Channel of NNI](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw)
+* [Bilibili Space of NNI](https://space.bilibili.com/1649051673)
+* [Webinar of Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html)
+* [Community Discussions](https://github.com/microsoft/nni/discussions)
 
 ## Contribution guidelines
 
@@ -246,6 +236,8 @@ Participating discussions via the following IM groups is also welcomed.
 
 Over the past few years, NNI has received thousands of feedbacks on GitHub issues, and pull requests from hundreds of contributors.
 We appreciate all contributions from community to make NNI thrive.
+
+<img src="https://img.shields.io/github/contributors-anon/microsoft/nni"/>
 
 <a href="https://github.com/microsoft/nni/graphs/contributors"><img src="https://contrib.rocks/image?repo=microsoft/nni&max=240&columns=18" /></a>
 
