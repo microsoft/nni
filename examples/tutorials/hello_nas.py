@@ -342,7 +342,7 @@ def evaluate_model_with_visualization(model_cls):
     evaluate_model(model_cls)
 
 # %%
-# Relaunch the experiment, and a button is shown on WebUI.
+# Relaunch the experiment, and a button is shown on Web portal.
 #
 # .. image:: ../../img/netron_entrance_webui.png
 #

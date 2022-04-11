@@ -44,7 +44,7 @@ NNI Documentation
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
 
 * :doc:`Hyperparameter Optimization </hpo/overview>`
-* :doc:`Neural Architecture Search </nas/index>`
+* :doc:`Neural Architecture Search </nas/overview>`
 * :doc:`Model Compression </compression/index>`
 * :doc:`Feature Engineering </feature_engineering/overview>`
 
@@ -180,7 +180,7 @@ NNI makes AutoML techniques plug-and-play
 .. codesnippetcard::
    :icon: ../img/thumbnails/one-shot-nas-small.svg
    :title: One-shot NAS
-   :link: nas/index
+   :link: nas/exploration_strategy
 
    .. code-block::
 

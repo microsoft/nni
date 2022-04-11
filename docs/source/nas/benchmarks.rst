@@ -1,11 +1,6 @@
 NAS Benchmark
 =============
 
-.. toctree::
-   :hidden:
-
-   Example usage of NAS benchmarks </tutorials/nasbench_as_dataset>
-
 .. note:: :doc:`Example usage of NAS benchmarks </tutorials/nasbench_as_dataset>`.
 
 To improve the reproducibility of NAS algorithms as well as reducing computing resource requirements, researchers proposed a series of NAS benchmarks such as `NAS-Bench-101 <https://arxiv.org/abs/1902.09635>`__, `NAS-Bench-201 <https://arxiv.org/abs/2001.00326>`__, `NDS <https://arxiv.org/abs/1905.13214>`__, etc. NNI provides a query interface for users to acquire these benchmarks. Within just a few lines of code, researcher are able to evaluate their NAS algorithms easily and fairly by utilizing these benchmarks.
