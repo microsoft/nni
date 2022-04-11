@@ -95,6 +95,12 @@ autodoc_inherit_docstrings = False
 # Sphinx will warn about all references where the target cannot be found.
 nitpicky = False  # disabled for now
 
+# A list of regular expressions that match URIs that should not be checked.
+linkcheck_ignore = [r'http://localhost:\d+/']
+
+# Ignore all links located in release.rst
+linkcheck_exclude_documents = [r'release\.rst']
+
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']
 
