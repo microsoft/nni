@@ -1,7 +1,7 @@
 .. b4703fc8c8e8dc1babdb38ba9ebcd4a6
 
 安装 NNI
-=======
+========
 
 NNI 依赖于 Python 3.7 或以上版本。
 
@@ -14,7 +14,7 @@ NNI 依赖于 Python 3.7 或以上版本。
 .. _zh-installation-pip:
 
 pip 安装
--------
+--------
 
 NNI 为 x86-64 平台提供预编译的安装包，您可以使用 pip 进行安装：
 
@@ -56,7 +56,7 @@ NNI 对 ARM64 平台（包括苹果 M1）提供实验性支持，如果�
 .. _zh-installation-docker:
 
 Docker 镜像
-----------
+-----------
 
 NNI 在 `Docker Hub <https://hub.docker.com/r/msranni/nni>`__ 上提供了官方镜像。
 
