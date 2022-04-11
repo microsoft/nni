@@ -15,7 +15,7 @@ NNI Documentation
    :hidden:
 
    Hyperparameter Optimization <hpo/index>
-   Neural Architecture Search <nas/index>
+   nas/toctree
    Model Compression <compression/index>
    feature_engineering/toctree
    experiment/toctree
