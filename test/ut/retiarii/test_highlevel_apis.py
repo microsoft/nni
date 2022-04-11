@@ -6,6 +6,7 @@ from collections import Counter
 import pytest
 
 import nni
+import nni.retiarii.evaluator.pytorch.lightning as pl
 import nni.retiarii.nn.pytorch as nn
 import torch
 import torch.nn.functional as F
@@ -1202,10 +1203,29 @@ class Shared(unittest.TestCase):
         samplers = [RandomSampler() for _ in range(3)]
         for _ in range(10):
             model = _apply_all_mutators(init_model, mutators, samplers)
-            a, v = model.evaluator.trace_kwargs['t'].trace_kwargs['a'], model.evaluator.trace_kwargs['v']
+            a, v = model.evaluator.trace_kwargs['t'].a, model.evaluator.trace_kwargs['v']
             assert v % 10 == a
             assert a in [1, 2, 3]
             assert v // 10 in [1, 2, 3]
+
+    def test_valuechoice_lightning(self):
+        @nni.trace
+        class AnyModule(pl.LightningModule):
+            pass
+
+        evaluator = pl.Lightning(AnyModule(), pl.Trainer(max_epochs=nn.ValueChoice([1, 2, 3])))
+        mutators = process_evaluator_mutations(evaluator, [])
+        assert len(mutators) == 2
+        init_model = Model(_internal=True)
+        init_model.evaluator = evaluator
+        samplers = [RandomSampler() for _ in range(2)]
+        values = []
+        for _ in range(20):
+            model = _apply_all_mutators(init_model, mutators, samplers)
+            values.append(model.evaluator.trainer.max_epochs)
+            model._dump()
+
+        assert len(set(values)) == 3
 
     def test_retiarii_nn_import(self):
         dummy = torch.zeros(1, 16, 32, 24)
