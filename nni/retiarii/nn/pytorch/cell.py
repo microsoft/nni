@@ -166,10 +166,12 @@ class Cell(nn.Module):
     ----------
     output_node_indices : list of int
         An attribute that contains indices of the nodes concatenated to the output (a list of integers).
+
         When the cell is first instantiated in the base model, or when ``merge_op`` is ``all``,
         ``output_node_indices`` must be ``range(num_predecessors, num_predecessors + num_nodes)``.
+
         When ``merge_op`` is ``loose_end``, ``output_node_indices`` is useful to compute the shape of this cell's output,
-        because the output shape depends on the connection in the cell, and which nodes are considered as "loose ends".
+        because the output shape depends on the connection in the cell, and which nodes are "loose ends" depends on mutation.
     """
 
     def __init__(self,
