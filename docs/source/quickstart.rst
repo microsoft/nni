@@ -1,35 +1,23 @@
 Quickstart
 ==========
 
-.. TOC
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   tutorials/hpo_quickstart_pytorch/cp_global_quickstart_hpo
-   tutorials/cp_global_quickstart_nas
-   tutorials/cp_global_quickstart_compression
-
-.. ----------------------
-
 .. cardlinkitem::
-   :header: HPO Quickstart with PyTorch
-   :description: Use HPO to tune a PyTorch FashionMNIST model
-   :link: tutorials/hpo_quickstart_pytorch/cp_global_quickstart_hpo.html
+   :header: Hyperparameter Optimization Quickstart with PyTorch
+   :description: Use Hyperparameter Optimization (HPO) to tune a PyTorch FashionMNIST model.
+   :link: tutorials/hpo_quickstart_pytorch/main
    :image: ../img/thumbnails/hpo-pytorch.svg
    :background: purple
 
 .. cardlinkitem::
-   :header: NAS Quickstart
+   :header: Neural Architecture Search Quickstart
    :description: Beginners' NAS tutorial on how to search for neural architectures for MNIST dataset.
-   :link: tutorials/cp_global_quickstart_nas.html
+   :link: tutorials/hello_nas
    :image: ../img/thumbnails/nas-tutorial.svg
    :background: cyan
 
 .. cardlinkitem::
-   :header: Get Started with Model Pruning on MNIST
+   :header: Model Compression Quickstart
    :description: Familiarize yourself with pruning to compress your model.
-   :link: tutorials/cp_global_quickstart_compression.html
+   :link: tutorials/pruning_quick_start_mnist
    :image: ../img/thumbnails/pruning-tutorial.svg
    :background: blue

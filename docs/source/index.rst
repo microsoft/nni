@@ -17,8 +17,8 @@ NNI Documentation
    Hyperparameter Optimization <hpo/index>
    Neural Architecture Search <nas/index>
    Model Compression <compression/index>
-   Feature Engineering <feature_engineering/index>
-   Experiment <experiment/overview>
+   feature_engineering/toctree
+   experiment/toctree
 
 .. toctree::
    :maxdepth: 2
@@ -224,7 +224,7 @@ NNI eases the effort to scale and manage AutoML experiments
 .. codesnippetcard::
    :icon: ../img/thumbnails/training-service-small.svg
    :title: Training Service
-   :link: experiment/training_service
+   :link: experiment/training_service/overview
    :seemore: See more here.
 
    An AutoML experiment requires many trials to explore feasible and potentially good-performing models.
@@ -235,7 +235,7 @@ NNI eases the effort to scale and manage AutoML experiments
 .. codesnippetcard::
    :icon: ../img/thumbnails/web-portal-small.svg
    :title: Web Portal
-   :link: experiment/web_portal
+   :link: experiment/web_portal/web_portal
    :seemore: See more here.
 
    Web portal visualizes the tuning process, exposing the ability to inspect, monitor and control the experiment.
@@ -246,7 +246,7 @@ NNI eases the effort to scale and manage AutoML experiments
 .. codesnippetcard::
    :icon: ../img/thumbnails/experiment-management-small.svg
    :title: Experiment Management
-   :link: experiment/exp_management
+   :link: experiment/experiment_management
    :seemore: See more here.
 
    The DNN model tuning often requires more than one experiment.

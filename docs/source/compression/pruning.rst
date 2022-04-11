@@ -104,6 +104,6 @@ In the dependency-aware mode, the pruner will provide a better speed gain from t
     :hidden:
     :maxdepth: 2
 
-    Quickstart <../tutorials/cp_pruning_quick_start_mnist>
+    Quickstart <../tutorials/pruning_quick_start_mnist>
     Pruner <pruner>
-    Speedup <../tutorials/cp_pruning_speedup>
+    Speedup <../tutorials/pruning_speedup>

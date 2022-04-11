@@ -65,6 +65,7 @@ extensions = [
     'cardlinkitem',
     'codesnippetcard',
     'patch_autodoc',
+    'toctree_check',
 ]
 
 # Autosummary related settings
@@ -142,16 +143,27 @@ sphinx_tabs_disable_css_loading = True
 # The anchors will be replaced to avoid dupilcate labels.
 # Target should start with ``cp_`` to be properly ignored in git.
 tutorials_copy_list = [
-    # The global quickstart
-    ('tutorials/hpo_quickstart_pytorch/main.rst', 'tutorials/hpo_quickstart_pytorch/cp_global_quickstart_hpo.rst'),
-    ('tutorials/hello_nas.rst', 'tutorials/cp_global_quickstart_nas.rst'),
-    ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_global_quickstart_compression.rst'),
+    # Seems that we don't need it for now.
+    # Add tuples back if we need it in future.
 
-    # Others in full-scale materials
-    ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
-    ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
-    ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
-    ('tutorials/quantization_speedup.rst', 'tutorials/cp_quantization_speedup.rst'),
+    # ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
+    # ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
+    # ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
+    # ('tutorials/quantization_speedup.rst', 'tutorials/cp_quantization_speedup.rst'),
+]
+
+# Toctree ensures that toctree docs do not contain any other contents.
+# Home page should be an exception.
+toctree_check_whitelist = [
+    'index',
+
+    # FIXME: Other exceptions should be correctly handled.
+    'nas/index',
+    'nas/benchmarks',
+    'compression/index',
+    'compression/pruning',
+    'compression/quantization',
+    'hpo/hpo_benchmark',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
