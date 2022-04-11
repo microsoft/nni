@@ -1,4 +1,4 @@
-.. c1bc8b763bfdbd579d5f9c35cd141611
+.. 8e936d24b52a41ecadb3f41938863379
 
 ###########################
 Neural Network Intelligence
@@ -16,8 +16,8 @@ Neural Network Intelligence
     超参调优 <hpo/index>
     神经网络架构搜索<nas/index>
     模型压缩<compression/index>
-    特征工程<feature_engineering/index>
-    NNI实验 <experiment/overview>
+    特征工程<feature_engineering/toctree>
+    NNI实验 <experiment/toctree>
     HPO API Reference <reference/hpo>
     Experiment API Reference <reference/experiment>
     nnictl Commands <reference/nnictl>

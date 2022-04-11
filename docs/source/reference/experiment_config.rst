@@ -294,7 +294,7 @@ For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../
 LocalConfig
 -----------
 
-Introduction of the corresponding local training service can be found :doc:`../experiment/local`.
+Introduction of the corresponding local training service can be found :doc:`/experiment/training_service/local`.
 
 .. list-table::
     :widths: 10 10 80
@@ -337,7 +337,7 @@ Introduction of the corresponding local training service can be found :doc:`../e
 RemoteConfig
 ------------
 
-Detailed usage can be found :doc:`../experiment/remote`.
+Detailed usage can be found :doc:`/experiment/training_service/remote`.
 
 .. list-table::
     :widths: 10 10 80
@@ -616,7 +616,7 @@ Currently only support `LocalConfig`_, `RemoteConfig`_, `OpenpaiConfig`_ and `Am
 SharedStorageConfig
 ^^^^^^^^^^^^^^^^^^^
 
-Detailed usage can be found :doc:`here </experiment/shared_storage>`.
+Detailed usage can be found :doc:`here </experiment/training_service/shared_storage>`.
 
 NfsConfig
 ---------

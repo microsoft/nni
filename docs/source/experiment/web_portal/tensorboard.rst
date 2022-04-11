@@ -26,20 +26,20 @@ Launch Tensorboard
 
 * Like compare, select the trials you want to combine to launch the tensorboard at first, then click the ``Tensorboard`` button.
 
-.. image:: ../../img/Tensorboard_1.png
-   :target: ../../img/Tensorboard_1.png
+.. image:: ../../../img/Tensorboard_1.png
+   :target: ../../../img/Tensorboard_1.png
    :alt: 
 
 * After click the ``OK`` button in the pop-up box, you will jump to the tensorboard portal.
 
-.. image:: ../../img/Tensorboard_2.png
-   :target: ../../img/Tensorboard_2.png
+.. image:: ../../../img/Tensorboard_2.png
+   :target: ../../../img/Tensorboard_2.png
    :alt: 
 
 * You can see the ``SequenceID-TrialID`` on the tensorboard portal.
 
-.. image:: ../../img/Tensorboard_3.png
-   :target: ../../img/Tensorboard_3.png
+.. image:: ../../../img/Tensorboard_3.png
+   :target: ../../../img/Tensorboard_3.png
    :alt: 
 
 Stop All
@@ -48,8 +48,8 @@ Stop All
 
 If you want to open the portal you have already launched, click the tensorboard id. If you don't need the tensorboard anymore, click ``Stop all tensorboard`` button.
 
-.. image:: ../../img/Tensorboard_4.png
-   :target: ../../img/Tensorboard_4.png
+.. image:: ../../../img/Tensorboard_4.png
+   :target: ../../../img/Tensorboard_4.png
    :alt: 
 
 

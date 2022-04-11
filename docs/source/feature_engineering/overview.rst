@@ -1,13 +1,15 @@
 Feature Engineering with NNI
 ============================
 
-We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on user feedback. We'd like to invite you to use, feedback and even contribute.
+.. note::
+
+    We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on user feedback. We'd like to invite you to use, feedback and even contribute.
 
 For now, we support the following feature selector:
 
 
-* `GradientFeatureSelector <./gradient_feature_selector.rst>`__
-* `GBDTSelector <./gbdt_selector.rst>`__
+* :doc:`GradientFeatureSelector <./gradient_feature_selector>`
+* :doc:`GBDTSelector <./gbdt_selector>`
 
 These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
 

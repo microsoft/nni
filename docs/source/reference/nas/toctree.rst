@@ -1,5 +1,5 @@
-Neural Architecture Search
-==========================
+NAS API Reference
+=================
 
 .. toctree::
    :maxdepth: 2

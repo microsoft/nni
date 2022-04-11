@@ -5,7 +5,7 @@ Python API Reference
     :maxdepth: 1
 
     Hyperparameter Optimization <hpo>
-    Neural Architecture Search <nas/index>
-    Model Compression <compression/index>
+    Neural Architecture Search <nas/toctree>
+    Model Compression <compression/toctree>
     Experiment <experiment>
     Others <others>

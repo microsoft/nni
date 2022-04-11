@@ -84,6 +84,11 @@ div.sphx-glr-footer {
     font-size: 0.75rem;
 }
 
+/* hide link */
+.card-link-anchor {
+    display: none;
+}
+
 .card-link-tag {
     margin-right: 0.4rem;
     background: #eeeff2;
