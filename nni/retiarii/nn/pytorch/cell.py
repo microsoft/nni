@@ -50,6 +50,9 @@ class Cell(nn.Module):
     Two examples of searched cells are illustrated in the figure below.
     In these two cells, ``op_candidates`` are series of convolutions and pooling operations.
     ``num_nodes_per_node`` is set to 2. ``num_nodes`` is set to 5. ``merge_op`` is ``loose_end``.
+    Assuming nodes are enumerated from bottom to top, left to right,
+    ``output_node_indices`` for the normal cell is ``[2, 3, 4, 5, 6]``.
+    For the reduction cell, it's ``[4, 5, 6]``.
     Please take a look at this
     `review article <https://sh-tsang.medium.com/review-nasnet-neural-architecture-search-network-image-classification-23139ea0425d>`__
     if you are interested in details.
@@ -106,7 +109,7 @@ class Cell(nn.Module):
         will be ``list(range(num_predecessors, num_predecessors + num_nodes))``.
         If "loose_end", only the nodes that have never been used as other nodes' inputs will be concatenated to the output.
         Predecessors are not considered when calculating unused nodes.
-        Details can be found in reference [nds]. Default: all.
+        Details can be found in `NDS paper <https://arxiv.org/abs/1905.13214>`__. Default: all.
     preprocessor : callable
         Override this if some extra transformation on cell's input is intended.
         It should be a callable (``nn.Module`` is also acceptable) that takes a list of tensors which are predecessors,
@@ -123,12 +126,6 @@ class Cell(nn.Module):
     label : str
         Identifier of the cell. Cell sharing the same label will semantically share the same choice.
 
-    Attributes
-    ----------
-    output_node_indices : list of int
-        Indices of the nodes concatenated to the output. For example, if the following operation is a 2d-convolution,
-        its input channels is ``len(output_node_indices) * channels``.
-
     Examples
     --------
     Choose between conv2d and maxpool2d.
@@ -144,6 +141,7 @@ class Cell(nn.Module):
     The output will then have dynamic shape, depending on which input has been used in the cell.
 
     >>> cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, merge_op='loose_end')
+    >>> cell_out_channels = len(cell.output_node_indices) * 32
 
     The op candidates can be callable that accepts node index in cell, op index in node, and input index.
 
@@ -163,6 +161,15 @@ class Cell(nn.Module):
 
         cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, preprocessor=Preprocessor())
         cell([torch.randn(1, 16, 48, 48), torch.randn(1, 64, 48, 48)])  # the two inputs will be sent to conv1 and conv2 respectively
+
+    Attributes
+    ----------
+    output_node_indices : list of int
+        An attribute that contains indices of the nodes concatenated to the output (a list of integers).
+        When the cell is first instantiated in the base model, or when ``merge_op`` is ``all``,
+        ``output_node_indices`` must be ``range(num_predecessors, num_predecessors + num_nodes)``.
+        When ``merge_op`` is ``loose_end``, ``output_node_indices`` is useful to compute the shape of this cell's output,
+        because the output shape depends on the connection in the cell, and which nodes are considered as "loose ends".
     """
 
     def __init__(self,
