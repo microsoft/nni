@@ -75,7 +75,7 @@ NNI provides an easy-to-use model compression framework to compress deep neural 
 inference speed without losing performance significantlly. Model compression on NNI includes pruning algorithms and quantization algorithms. NNI provides many pruning and
 quantization algorithms through NNI trial SDK. Users can directly use them in their trial code and run the trial code without starting an NNI experiment. Users can also use NNI model compression framework to customize their own pruning and quantization algorithms.
 
-A detailed description of model compression and its usage can be found :doc:`here <../compression/index>`.
+A detailed description of model compression and its usage can be found :doc:`here <../compression/overview>`.
 
 Automatic Feature Engineering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -16,7 +16,7 @@ NNI Documentation
 
    Hyperparameter Optimization <hpo/index>
    Neural Architecture Search <nas/index>
-   Model Compression <compression/index>
+   Model Compression <compression/toctree>
    feature_engineering/toctree
    experiment/toctree
 
@@ -45,7 +45,7 @@ NNI Documentation
 
 * :doc:`Hyperparameter Optimization </hpo/overview>`
 * :doc:`Neural Architecture Search </nas/index>`
-* :doc:`Model Compression </compression/index>`
+* :doc:`Model Compression </compression/overview>`
 * :doc:`Feature Engineering </feature_engineering/overview>`
 
 Get Started

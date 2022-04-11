@@ -6,6 +6,6 @@ Pruning
     :maxdepth: 2
 
     Overview <pruning>
-    Quickstart <../tutorials/cp_pruning_quick_start_mnist>
+    Quickstart </tutorials/pruning_quick_start_mnist>
     Pruner <pruner>
-    Speedup <../tutorials/cp_pruning_speedup>
+    Speedup </tutorials/pruning_speedup>
