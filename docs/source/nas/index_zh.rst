@@ -40,7 +40,7 @@
 
 NNI 中当前的架构搜索框架由 `Retiarii: A Deep Learning Exploratory-Training Framework <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ 的研究支撑，具有以下特点：
 
-* :doc:`简单的 API，让你轻松构建搜索空间 <construct_space>`
+* :doc:`简单的 API，让您轻松构建搜索空间 <construct_space>`
 * :doc:`SOTA 架构搜索算法，以高效探索搜索空间 <exploration_strategy>`
 * :doc:`后端支持，在大规模 AI 平台上运行实验 </experiment/overview>`
 
