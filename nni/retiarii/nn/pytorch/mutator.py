@@ -386,6 +386,9 @@ class EvaluatorValueChoiceMutator(Mutator):
 
         obj.trace_kwargs.update(result)
 
+        # Instantiate the full object
+        obj = obj.get()
+
         return obj
 
     def mutate(self, model: Model):
