@@ -1,4 +1,4 @@
-.. 9b97cac44e07efbd393a2ab21f247c95
+.. 317442fd7a0540c0776a08ad773566cf
 
 超参调优
 ========
@@ -66,7 +66,7 @@ NNI内建了很多流行的调优算法，包括朴素算法如随机搜索、�
 
 如果想利用更多计算资源加速调优过程，您也可以使用NNI内建的训练平台集成，从简单的SSH服务器到可扩容的Kubernetes集群NNI都提供支持。
 
-完整内容： :doc:`/experiment/training_service`
+完整内容： :doc:`/experiment/training_service/overview`
 
 .. _zh-hpo-overview-portal:
 
@@ -75,7 +75,7 @@ NNI内建了很多流行的调优算法，包括朴素算法如随机搜索、�
 
 您可以使用NNI的网页控制台来监控超参调优实验，它支持实时显示实验进度、对超参性能进行可视化、人工修改超参数值、同时管理多个实验等诸多功能。
 
-完整内容： :doc:`/experiment/web_portal`
+完整内容： :doc:`/experiment/web_portal/web_portal`
 
 .. image:: ../../static/img/webui.gif
     :width: 100%
@@ -95,6 +95,6 @@ NNI内建了很多流行的调优算法，包括朴素算法如随机搜索、�
 
 * :doc:`Use command line tool to create and manage experiments (nnictl) </reference/nnictl>`
 * :doc:`Early stop non-optimal models (assessor) <assessors>`
-* :doc:`TensorBoard integration </experiment/tensorboard>`
+* :doc:`TensorBoard integration </experiment/web_portal/tensorboard>`
 * :doc:`Implement your own algorithm <custom_algorithm>`
 * :doc:`Benchmark tuners <hpo_benchmark>`

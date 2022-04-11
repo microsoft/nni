@@ -16,11 +16,11 @@ Prerequisite
 
 4. Log into your Azure account with a web browser and create a Machine Learning resource. You will need to choose a resource group and specific a workspace name. Then download ``config.json`` which will be used later.
 
-   .. image:: ../../img/aml_workspace.png
+   .. image:: ../../../img/aml_workspace.png
 
 5. Create an AML cluster as the compute target.
 
-   .. image:: ../../img/aml_cluster.png
+   .. image:: ../../../img/aml_cluster.png
 
 6. Open a command line and install AML package environment.
 

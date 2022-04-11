@@ -10,8 +10,8 @@ System architecture
 -------------------
 
 
-.. image:: ../../img/NNIDesign.jpg
-   :target: ../../img/NNIDesign.jpg
+.. image:: ../../../img/NNIDesign.jpg
+   :target: ../../../img/NNIDesign.jpg
    :alt: 
 
 
@@ -175,8 +175,8 @@ NNI offers a TrialKeeper tool to help maintaining trial jobs. Users can find the
 The running architecture of TrialKeeper is show as follow:
 
 
-.. image:: ../../img/trialkeeper.jpg
-   :target: ../../img/trialkeeper.jpg
+.. image:: ../../../img/trialkeeper.jpg
+   :target: ../../../img/trialkeeper.jpg
    :alt: 
 
 

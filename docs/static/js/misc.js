@@ -49,26 +49,30 @@ function expand_link() {
         return $(".md-nav__link--active", this).length >= 1;
     }).addClass("md-nav__expand--active");
 
-    // bind click events
-    $(".md-nav__expand > a").click(function (e) {
-        if (window.matchMedia("only screen and (min-width: 76.2em)").matches) {
-            // not a drawer
-            e.preventDefault();
-            
-            const target = $(e.target).parent();
-            if (target.hasClass("md-nav__expand--active")) {
-                target.removeClass("md-nav__expand--active");
-            } else {
-                target.addClass("md-nav__expand--active");
-            }
+    function toggleExpand(event) {
+        event.preventDefault();
 
-            return false;
-        }
-        return true;
+        $(event.target)
+            .closest(".md-nav__expand")
+            .toggleClass("md-nav__expand--active");
+
+        return false;
+    }
+
+    // bind click events
+    $(".md-nav__expand > a").click(toggleExpand);
+    $(".md-nav__expand > a > .md-nav__tocarrow").click(toggleExpand);
+}
+
+// Propagate card link from another element
+function propagate_card_link() {
+    $(".card-link-clickable").each(function() {
+        $(this).attr("href", $(this).next("a.reference").attr("href"));
     });
 }
 
 $(document).ready(function() {
     hide_nav();
     expand_link();
+    propagate_card_link();
 });
