@@ -12,9 +12,9 @@
    评估器 <evaluator>
    高级用法 <advanced_usage>
 
-.. 注意:: NNI 最新的架构搜索支持都是基于 Retiarii 框架，还在使用 `NNI 架构搜索的早期版本 <https://nni.readthedocs.io/en/v2.2/nas.html >`__ 的用户应尽快将您的工作迁移到 Retiarii。我们计划在接下来的几个版本中删除旧的架构搜索框架。
+.. attention:: NNI 最新的架构搜索支持都是基于 Retiarii 框架，还在使用 `NNI 架构搜索的早期版本 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ 的用户应尽快将您的工作迁移到 Retiarii。我们计划在接下来的几个版本中删除旧的架构搜索框架。
 
-.. 注意:: PyTorch 是 **Retiarii 唯一支持的框架**。有关 Tensorflow 上架构搜索支持的需求在 `此讨论 <https://github.com/microsoft/nni/discussions/4605>`__ 中。另外，如果您打算使用 PyTorch 和 Tensorflow 以外的 DL 框架运行 NAS，请`open new issues <https://github.com/microsoft/nni/issues>`__ 让我们知道。
+.. attention:: PyTorch 是 **Retiarii 唯一支持的框架**。有关 Tensorflow 上架构搜索支持的需求在 `此讨论 <https://github.com/microsoft/nni/discussions/4605>`__ 中。另外，如果您打算使用 PyTorch 和 Tensorflow 以外的 DL 框架运行 NAS，请 `创建新 issue <https://github.com/microsoft/nni/issues>`__ 让我们知道。
 
 概述
 ------
@@ -86,4 +86,4 @@ NNI 中当前的架构搜索框架由 `Retiarii: A Deep Learning Exploratory-Tra
 以下文章将有助于更好地了解 NAS 的最新发展：
 
 * `神经架构搜索：综述 <https://arxiv.org/abs/1808.05377>`__
-* `神经架构搜索的综述：挑战和解决方案<https://arxiv.org/abs/2006.02903>`__
+* `神经架构搜索的综述：挑战和解决方案 <https://arxiv.org/abs/2006.02903>`__

@@ -8,8 +8,8 @@ NNI 文档
    :caption: 开始使用
    :hidden:
 
-   安装
-   快速入门
+   安装 <installation>
+   快速入门 <quickstart>
 
 .. toctree::
    :maxdepth: 2
@@ -73,7 +73,7 @@ NNI 文档
 请阅读 :doc:`NNI 快速入门 <quickstart>` 以开启你的 NNI 旅程！
 
 为什么选择 NNI？
----------------
+--------------------
 
 NNI 使得自动机器学习技术即插即用
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
