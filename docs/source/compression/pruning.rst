@@ -15,11 +15,15 @@ Most pruning methods prune the weights to reduce the model size and accelerate t
 Other pruning methods also apply sparsity on activations (e.g., inputs, outputs, or feature maps) to accelerate the inference latency.
 NNI supports pruning module weights right now, and will support other pruning targets in the future.
 
+.. _basic-pruner:
+
 Basic Pruner
 ------------
 
 Basic pruner generates the masks for each pruning target (weights) for a determined sparsity ratio.
 It usually takes model and config as input arguments, then generates masks for each pruning target.
+
+.. _scheduled-pruner:
 
 Scheduled Pruner
 ----------------
