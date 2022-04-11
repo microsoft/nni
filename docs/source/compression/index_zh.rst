@@ -58,7 +58,7 @@ NNI中模型压缩的整体流程如上图所示。
 .. note::
   值得注意的是，NNI的pruner或quantizer并不能改变网络结构，只能模拟压缩的效果。
   真正能够压缩模型、改变网络结构、降低推理延迟的是NNI的加速工具。
-  为了获得一个真正的压缩的模型，用户需要执行 :doc:`剪枝加速 <../tutorials/cp_pruning_speedup>` or :doc:`量化加速 <../tutorials/cp_quantization_speedup>`. 
+  为了获得一个真正的压缩的模型，用户需要执行 :doc:`剪枝加速 <../tutorials/pruning_speedup>` or :doc:`量化加速 <../tutorials/quantization_speedup>`. 
   PyTorch和TensorFlow的接口都是统一的。目前只支持PyTorch版本，未来将支持TensorFlow版本。
 
 
@@ -77,8 +77,8 @@ NNI中模型压缩的整体流程如上图所示。
    :align: center
    :alt:
 
-关于用掩码进行模型加速的详细文档可以参考 :doc:`here <../tutorials/cp_pruning_speedup>`.
-关于用校准配置进行模型加速的详细文档可以参考 :doc:`here <../tutorials/cp_quantization_speedup>`.
+关于用掩码进行模型加速的详细文档可以参考 :doc:`here <../tutorials/pruning_speedup>`.
+关于用校准配置进行模型加速的详细文档可以参考 :doc:`here <../tutorials/quantization_speedup>`.
 
 
 .. attention::
