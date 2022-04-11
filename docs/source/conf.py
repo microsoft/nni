@@ -99,7 +99,7 @@ nitpicky = False  # disabled for now
 linkcheck_ignore = [r'http://localhost:\d+/']
 
 # Ignore all links located in release.rst
-linkcheck_exclude_documents = ['release']
+linkcheck_exclude_documents = ['^release']
 
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']
