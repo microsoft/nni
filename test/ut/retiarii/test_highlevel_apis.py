@@ -8,6 +8,7 @@ import pytest
 import nni
 import nni.retiarii.evaluator.pytorch.lightning as pl
 import nni.retiarii.nn.pytorch as nn
+import pytorch_lightning
 import torch
 import torch.nn.functional as F
 from nni.retiarii import InvalidMutation, Sampler, basic_unit
@@ -1208,6 +1209,7 @@ class Shared(unittest.TestCase):
             assert a in [1, 2, 3]
             assert v // 10 in [1, 2, 3]
 
+    @unittest.skipIf(pytorch_lightning.__version__ < '1.0', 'Legacy PyTorch-lightning not supported')
     def test_valuechoice_lightning(self):
         @nni.trace
         class AnyModule(pl.LightningModule):
