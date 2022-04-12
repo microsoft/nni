@@ -566,9 +566,8 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 .. GENERATED FROM PYTHON SOURCE LINES 358-361
 
-The output is ``json``` object which records the mutation actions of the top model.
-If users want to output source code of the top model, they can use graph-based execution engine for the experiment,
-by simply adding the following two lines.
+输出是一个 JSON 对象，记录了最好的模型的每一个选择都选了什么。
+如果用户想要搜出来的模型的源代码，他们可以使用 :ref:`基于图的引擎 <graph-based-execution-engine>`，只需增加如下两行。
 
 .. GENERATED FROM PYTHON SOURCE LINES 361-364
 
