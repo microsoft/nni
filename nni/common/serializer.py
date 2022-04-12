@@ -826,5 +826,5 @@ def _wrapped_cloudpickle_loads(b: bytes) -> Any:
         return cloudpickle.loads(b)
     except TypeError:
         warnings.warn('TypeError encountered during deserializing object. This could be caused by '
-                      'consistency between Python versions where dump and load happens.')
+                      'inconsistency between Python versions where dump and load happens.')
         raise
