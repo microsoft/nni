@@ -1,3 +1,0 @@
-If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
-%%%%%%
-If the id ends with \*, nnictl will stop all experiments whose ids matchs the regular.

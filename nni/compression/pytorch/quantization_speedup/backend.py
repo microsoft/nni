@@ -10,7 +10,7 @@ class BaseModelSpeedup:
         Parameters
         ----------
         model : pytorch model
-            The model to speed up by quantization.
+            The model to speedup by quantization.
         config : dict
             Config recording bit number and name of layers.
         """

@@ -191,7 +191,8 @@ class PBTTuner(Tuner):
     1. **Provide checkpoint directory**. Since some trials need to load other trial's checkpoint,
        users should provide a directory (i.e., ``all_checkpoint_dir``) which is accessible by every trial.
        It is easy for local mode, users could directly use the default directory or specify any directory on the local machine.
-       For other training services, users should follow :doc:`the document of those training services <../experiment/training_service>`
+       For other training services, users should follow
+       :doc:`the document of those training services </experiment/training_service/shared_storage>`
        to provide a directory in a shared storage, such as NFS, Azure storage.
 
     2. **Modify your trial code**. Before running a step, a trial needs to load a checkpoint,

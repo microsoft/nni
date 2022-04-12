@@ -1,6 +1,12 @@
 Uncategorized Modules
 =====================
 
+nni.common.serializer
+---------------------
+
+.. automodule:: nni.common.serializer
+    :members:
+
 nni.typehint
 ------------
 

@@ -51,7 +51,7 @@ In ``exp_config``, ``dummy_input`` is required for tracing shape info.
 End-to-end ProxylessNAS with Latency Constraints
 ------------------------------------------------
 
-`ProxylessNAS <https://arxiv.org/pdf/1812.00332.pdf>`__ is a hardware-aware one-shot NAS algorithm. ProxylessNAS applies the expected latency of the model to build a differentiable metric and design efficient neural network architectures for hardware. The latency loss is added as a regularization term for architecture parameter optimization. In this example, nn-Meter provides a latency estimator to predict expected latency for the mixed operation on other types of mobile and edge hardware. 
+`ProxylessNAS <https://arxiv.org/abs/1812.00332>`__ is a hardware-aware one-shot NAS algorithm. ProxylessNAS applies the expected latency of the model to build a differentiable metric and design efficient neural network architectures for hardware. The latency loss is added as a regularization term for architecture parameter optimization. In this example, nn-Meter provides a latency estimator to predict expected latency for the mixed operation on other types of mobile and edge hardware. 
 
 To run the one-shot ProxylessNAS demo, first install nn-Meter by running:
 
@@ -63,7 +63,7 @@ Then run one-shot ProxylessNAS demo:
 
 .. code-block:: bash
 
-   python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware <hardware> --reference_latency <reference latency (ms)>
+   python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware HARDWARE --reference_latency REFERENCE_LATENCY_MS
 
 How the demo works
 ^^^^^^^^^^^^^^^^^^

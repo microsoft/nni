@@ -65,6 +65,12 @@ from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
 dummy_input = torch.rand(32, 1, 28, 28).to(device)
 quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
 quantizer.compress()
+
+# %%
+# The model has now been wrapped, and quantization targets ('quant_types' setting in `config_list`)
+# will be quantized & dequantized for simulated quantization in the wrapped layers.
+# QAT is a training-aware quantizer, it will update scale and zero point during training.
+
 for epoch in range(3):
     trainer(model, optimizer, criterion)
     evaluator(model)

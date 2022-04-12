@@ -1,15 +1,12 @@
-
-**How to register customized algorithms as builtin tuners, assessors and advisors**
-=======================================================================================
-
-.. contents::
+How to register customized algorithms as builtin tuners, assessors and advisors
+===============================================================================
 
 Overview
 --------
 
-NNI provides a lot of `builtin tuners <../Tuner/BuiltinTuner.rst>`_, `advisors <../Tuner/HyperbandAdvisor.rst>`__ and `assessors <../Assessor/BuiltinAssessor.rst>`__ can be used directly for Hyper Parameter Optimization, and some extra algorithms can be registered via ``nnictl algo register --meta <path_to_meta_file>`` after NNI is installed. You can check builtin algorithms via ``nnictl algo list`` command.
+NNI provides a lot of :doc:`builtin tuners <tuners>`, and :doc:`assessors <assessors>` can be used directly for Hyper Parameter Optimization, and some extra algorithms can be registered via ``nnictl algo register --meta <path_to_meta_file>`` after NNI is installed. You can check builtin algorithms via ``nnictl algo list`` command.
 
-NNI also provides the ability to build your own customized tuners, advisors and assessors. To use the customized algorithm, users can simply follow the spec in experiment config file to properly reference the algorithm, which has been illustrated in the tutorials of `customized tuners <../Tuner/CustomizeTuner.rst>`_ / `advisors <../Tuner/CustomizeAdvisor.rst>`__ / `assessors <../Assessor/CustomizeAssessor.rst>`__.
+NNI also provides the ability to build your own customized tuners, advisors and assessors. To use the customized algorithm, users can simply follow the spec in experiment config file to properly reference the algorithm, which has been illustrated in the tutorials of :doc:`customized algorithms <custom_algorithm>`.
 
 NNI also allows users to install the customized algorithm as a builtin algorithm, in order for users to use the algorithm in the same way as NNI builtin tuners/advisors/assessors. More importantly, it becomes much easier for users to share or distribute their implemented algorithm to others. Customized tuners/advisors/assessors can be installed into NNI as builtin algorithms, once they are installed into NNI, you can use your customized algorithms the same way as builtin tuners/advisors/assessors in your experiment configuration file. For example, you built a customized tuner and installed it into NNI using a builtin name ``mytuner``, then you can use this tuner in your configuration file like below:
 
@@ -18,20 +15,15 @@ NNI also allows users to install the customized algorithm as a builtin algorithm
    tuner:
      builtinTunerName: mytuner
 
-Register customized algorithms as builtin tuners, assessors and advisors
-------------------------------------------------------------------------
+Register customized algorithms like builtin tuners, assessors and advisors
+--------------------------------------------------------------------------
 
 You can follow below steps to build a customized tuner/assessor/advisor, and register it into NNI as builtin algorithm.
 
 1. Create a customized tuner/assessor/advisor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Reference following instructions to create:
-
-
-* `customized tuner <../Tuner/CustomizeTuner.rst>`_
-* `customized assessor <../Assessor/CustomizeAssessor.rst>`_
-* `customized advisor <../Tuner/CustomizeAdvisor.rst>`_
+Reference following instruction: :doc:`custom_algorithm`
 
 2. (Optional) Create a validator to validate classArgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -101,9 +93,9 @@ Run following command to register the customized algorithms as builtin algorithm
 
 .. code-block:: bash
 
-   nnictl algo register --meta <path_to_meta_file>
+   nnictl algo register --meta PATH_TO_META_FILE
 
-The ``<path_to_meta_file>`` is the path to the yaml file your created in above section.
+The ``PATH_TO_META_FILE`` is the path to the yaml file your created in above section.
 
 Reference `customized tuner example <#example-register-a-customized-tuner-as-a-builtin-tuner>`_ for a full example.
 
@@ -128,7 +120,7 @@ List builtin algorithms
 
 Run following command to list the registered builtin algorithms:
 
-.. code-block:: bash
+.. code-block:: text
 
    nnictl algo list
    +-----------------+------------+-----------+--------=-------------+------------------------------------------+
@@ -167,7 +159,8 @@ For example:
 Porting customized algorithms from v1.x to v2.x
 -----------------------------------------------
 
-All that needs to be modified is to delete ``NNI Package :: tuner`` metadata in ``setup.py`` and add a meta file mentioned in `4. Prepare meta file`_. Then you can follow `Register customized algorithms as builtin tuners, assessors and advisors`_ to register your customized algorithms.
+All that needs to be modified is to delete ``NNI Package :: tuner`` metadata in ``setup.py`` and add a meta file mentioned in `4. Prepare meta file`_.
+Then you can follow `Register customized algorithms like builtin tuners, assessors and advisors`_ to register your customized algorithms.
 
 Example: Register a customized tuner as a builtin tuner
 -------------------------------------------------------
@@ -213,7 +206,7 @@ Check the registered builtin algorithms
 
 Then run command ``nnictl algo list``\ , you should be able to see that demotuner is installed:
 
-.. code-block:: bash
+.. code-block:: text
 
    +-----------------+------------+-----------+--------=-------------+------------------------------------------+
    |      Name       |    Type    |   source  |      Class Name      |               Module Name                |

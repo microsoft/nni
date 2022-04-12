@@ -232,7 +232,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
     Parameters
     ----------
     model : pytorch model
-        The model to speed up by quantization.
+        The model to speedup by quantization.
     input_shape : tuple
         The input shape of model, shall pass it to torch.onnx.export.
     config : dict

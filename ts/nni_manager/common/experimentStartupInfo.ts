@@ -1,71 +1,39 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import assert from 'assert';
-import os from 'os';
+import assert from 'assert/strict';
 import path from 'path';
 
-const API_ROOT_URL: string = '/api/v1/nni';
+import type { NniManagerArgs } from 'common/globals/arguments';
 
 let singleton: ExperimentStartupInfo | null = null;
 
 export class ExperimentStartupInfo {
 
-    public experimentId: string = '';
-    public newExperiment: boolean = true;
-    public basePort: number = -1;
-    public initialized: boolean = false;
+    public experimentId: string;
+    public newExperiment: boolean;
+    public basePort: number;
     public logDir: string = '';
-    public logLevel: string = '';
-    public readonly: boolean = false;
-    public dispatcherPipe: string | null = null;
-    public platform: string = '';
-    public urlprefix: string = '';
+    public logLevel: string;
+    public readonly: boolean;
+    public dispatcherPipe: string | null;
+    public platform: string;
+    public urlprefix: string;
 
-    constructor(
-            newExperiment: boolean,
-            experimentId: string,
-            basePort: number,
-            platform: string,
-            logDir?: string,
-            logLevel?: string,
-            readonly?: boolean,
-            dispatcherPipe?: string,
-            urlprefix?: string) {
-        this.newExperiment = newExperiment;
-        this.experimentId = experimentId;
-        this.basePort = basePort;
-        this.platform = platform;
-
-        if (logDir !== undefined && logDir.length > 0) {
-            this.logDir = path.join(path.normalize(logDir), experimentId);
-        } else {
-            this.logDir = path.join(os.homedir(), 'nni-experiments', experimentId);
-        }
-
-        if (logLevel !== undefined && logLevel.length > 1) {
-            this.logLevel = logLevel;
-        }
-
-        if (readonly !== undefined) {
-            this.readonly = readonly;
-        }
-
-        if (dispatcherPipe != undefined && dispatcherPipe.length > 0) {
-            this.dispatcherPipe = dispatcherPipe;
-        }
-
-        if(urlprefix != undefined && urlprefix.length > 0){
-            this.urlprefix = urlprefix;
-        }
-    }
-
-    public get apiRootUrl(): string {
-        return this.urlprefix === '' ? API_ROOT_URL : `/${this.urlprefix}${API_ROOT_URL}`;
+    constructor(args: NniManagerArgs) {
+        this.experimentId = args.experimentId;
+        this.newExperiment = (args.action === 'create');
+        this.basePort = args.port;
+        this.logDir = path.join(args.experimentsDirectory, args.experimentId);  // TODO: handle in globals
+        this.logLevel = args.logLevel;
+        this.readonly = (args.action === 'view');
+        this.dispatcherPipe = args.dispatcherPipe ?? null;
+        this.platform = args.mode as string;
+        this.urlprefix = args.urlPrefix;
     }
 
     public static getInstance(): ExperimentStartupInfo {
-        assert(singleton !== null);
+        assert.notEqual(singleton, null);
         return singleton!;
     }
 }
@@ -74,27 +42,8 @@ export function getExperimentStartupInfo(): ExperimentStartupInfo {
     return ExperimentStartupInfo.getInstance();
 }
 
-export function setExperimentStartupInfo(
-        newExperiment: boolean,
-        experimentId: string,
-        basePort: number,
-        platform: string,
-        logDir?: string,
-        logLevel?: string,
-        readonly?: boolean,
-        dispatcherPipe?: string,
-        urlprefix?: string): void {
-    singleton = new ExperimentStartupInfo(
-        newExperiment,
-        experimentId,
-        basePort,
-        platform,
-        logDir,
-        logLevel,
-        readonly,
-        dispatcherPipe,
-        urlprefix
-    );
+export function setExperimentStartupInfo(args: NniManagerArgs): void {
+    singleton = new ExperimentStartupInfo(args);
 }
 
 export function getExperimentId(): string {
@@ -119,13 +68,4 @@ export function isReadonly(): boolean {
 
 export function getDispatcherPipe(): string | null {
     return getExperimentStartupInfo().dispatcherPipe;
-}
-
-export function getAPIRootUrl(): string {
-    return getExperimentStartupInfo().apiRootUrl;
-}
-
-export function getPrefixUrl(): string {
-    const prefix = getExperimentStartupInfo().urlprefix === '' ? '' : `/${getExperimentStartupInfo().urlprefix}`;
-    return prefix;
 }

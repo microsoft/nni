@@ -18,11 +18,10 @@
  *    2. Refactor ClusterJobRestServer to an express-ws application so it doesn't require extra port.
  *    3. Provide public API to register express app, so this can be decoupled with other modules' implementation.
  *    4. Refactor NNIRestHandler. It's a mess.
- *    5. Get rid of IOC.
- *    6. Deal with log path mismatch between REST API and file system.
- *    7. Strip slashes of URL prefix inside ExperimentStartupInfo.
+ *    5. Deal with log path mismatch between REST API and file system.
  **/
 
+import assert from 'assert/strict';
 import type { Server } from 'http';
 import type { AddressInfo } from 'net';
 import path from 'path';
@@ -32,7 +31,6 @@ import httpProxy from 'http-proxy';
 import { Deferred } from 'ts-deferred';
 
 import { Singleton } from 'common/component';
-import { getBasePort, getPrefixUrl } from 'common/experimentStartupInfo';
 import { Logger, getLogger } from 'common/log';
 import { getLogDir } from 'common/utils';
 import { createRestHandler } from './restHandler';
@@ -50,25 +48,23 @@ export class RestServer {
     private server: Server | null = null;
     private logger: Logger = getLogger('RestServer');
 
-    // I would prefer to get port and urlPrefix by constructor parameters,
-    // but this is impossible due to limitation of IOC.
-    constructor() {
-        this.port = getBasePort();
-        // Stripping slashes should be done inside ExperimentInfo, but I don't want to touch it for now.
-        this.urlPrefix = '/' + stripSlashes(getPrefixUrl());
+    constructor(port: number, urlPrefix: string) {
+        assert(!urlPrefix.startsWith('/') && !urlPrefix.endsWith('/'));
+        this.port = port;
+        this.urlPrefix = urlPrefix;
     }
 
     // The promise is resolved when it's ready to serve requests.
     // This worth nothing for now,
     // but for example if we connect to tuner using WebSocket then it must be launched after promise resolved.
     public start(): Promise<void> {
-        this.logger.info(`Starting REST server at port ${this.port}, URL prefix: "${this.urlPrefix}"`);
+        this.logger.info(`Starting REST server at port ${this.port}, URL prefix: "/${this.urlPrefix}"`);
 
         const app = express();
         // FIXME: We should have a global handler for critical errors.
         // `shutdown()` is not a callback and should not be passed to NNIRestHandler.
-        app.use(this.urlPrefix, rootRouter(this.shutdown.bind(this)));
-        app.all('*', (_req: Request, res: Response) => { res.status(404).send(`Outside prefix "${this.urlPrefix}"`); });
+        app.use('/' + this.urlPrefix, rootRouter(this.shutdown.bind(this)));
+        app.all('*', (_req: Request, res: Response) => { res.status(404).send(`Outside prefix "/${this.urlPrefix}"`); });
         this.server = app.listen(this.port);
 
         const deferred = new Deferred<void>();
@@ -126,7 +122,7 @@ function rootRouter(stopCallback: () => Promise<void>): Router {
     // The REST API path "/logs" does not match file system path "/log".
     // Here we use an additional router to workaround this problem.
     const logRouter = Router();
-    logRouter.get('*', express.static(getLogDir()));
+    logRouter.get('*', express.static(logDirectory ?? getLogDir()));
     router.use('/logs', logRouter);
 
     /* NAS model visualization */
@@ -153,12 +149,9 @@ function netronProxy(): Router {
     return router;
 }
 
-function stripSlashes(str: string): string {
-    return str.replace(/^\/+/, '').replace(/\/+$/, '');
-}
-
 let webuiPath: string = path.resolve('static');
 let netronUrl: string = 'https://netron.app';
+let logDirectory: string | undefined = undefined;
 
 export namespace UnitTestHelpers {
     export function getPort(server: RestServer): number {
@@ -171,5 +164,9 @@ export namespace UnitTestHelpers {
 
     export function setNetronUrl(mockUrl: string): void {
         netronUrl = mockUrl;
+    }
+
+    export function setLogDirectory(path: string): void {
+        logDirectory = path;
     }
 }
