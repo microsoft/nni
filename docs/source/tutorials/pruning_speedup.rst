@@ -108,6 +108,12 @@ Show the original model structure.
       (fc1): Linear(in_features=256, out_features=120, bias=True)
       (fc2): Linear(in_features=120, out_features=84, bias=True)
       (fc3): Linear(in_features=84, out_features=10, bias=True)
+      (relu1): ReLU()
+      (relu2): ReLU()
+      (relu3): ReLU()
+      (relu4): ReLU()
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
@@ -136,7 +142,7 @@ Roughly test the original model inference speed.
 
  .. code-block:: none
 
-    Original Model - Elapsed Time :  0.13896703720092773
+    Original Model - Elapsed Time :  0.5094916820526123
 
 
 
@@ -165,7 +171,7 @@ Speedup the model and show the model structure after speedup.
 
     aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
     Note: .aten::log_softmax.12 does not have corresponding mask inference object
-    /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
+    /home/nishang/anaconda3/envs/MCM/lib/python3.9/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  /opt/conda/conda-bld/pytorch_1640811803361/work/build/aten/src/ATen/core/TensorBody.h:417.)
       return self._grad
     TorchModel(
       (conv1): Conv2d(1, 3, kernel_size=(5, 5), stride=(1, 1))
@@ -173,6 +179,12 @@ Speedup the model and show the model structure after speedup.
       (fc1): Linear(in_features=256, out_features=120, bias=True)
       (fc2): Linear(in_features=120, out_features=84, bias=True)
       (fc3): Linear(in_features=84, out_features=10, bias=True)
+      (relu1): ReLU()
+      (relu2): ReLU()
+      (relu3): ReLU()
+      (relu4): ReLU()
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
@@ -200,7 +212,7 @@ Roughly test the model after speedup inference speed.
 
  .. code-block:: none
 
-    Speedup Model - Elapsed Time :  0.003123760223388672
+    Speedup Model - Elapsed Time :  0.006000041961669922
 
 
 
@@ -208,7 +220,7 @@ Roughly test the model after speedup inference speed.
 .. GENERATED FROM PYTHON SOURCE LINES 79-240
 
 For combining usage of ``Pruner`` masks generation with ``ModelSpeedup``,
-please refer to `Pruning Quick Start <./pruning_quick_start_mnist.html>`__.
+please refer to :doc:`Pruning Quick Start <pruning_quick_start_mnist>`.
 
 NOTE: The current implementation supports PyTorch 1.3.1 or newer.
 
@@ -224,9 +236,9 @@ you need implement the replace function for module replacement, welcome to contr
 Speedup Results of Examples
 ---------------------------
 
-The code of these experiments can be found :githublink:`here <examples/model_compress/pruning/speedup/model_speedup.py>`.
+The code of these experiments can be found :githublink:`here <examples/model_compress/pruning/legacy/speedup/model_speedup.py>`.
 
-These result are tested on the `legacy pruning framework <../comporession/pruning_legacy>`__, new results will coming soon.
+These result are tested on the `legacy pruning framework <https://nni.readthedocs.io/en/v2.6/Compression/pruning.html>`_, new results will coming soon.
 
 slim pruner example
 ^^^^^^^^^^^^^^^^^^^
@@ -372,7 +384,7 @@ The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(1
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  12.486 seconds)
+   **Total running time of the script:** ( 0 minutes  4.528 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_speedup.py:

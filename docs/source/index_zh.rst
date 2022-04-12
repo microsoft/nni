@@ -1,4 +1,4 @@
-.. 66e81fbc0b791fdb8f5b79205a8b8f76
+.. 27dfb81863f35f50fabc494a7d1ca457
 
 NNI 文档
 =================
@@ -18,7 +18,7 @@ NNI 文档
 
    超参调优 <hpo/index>
    架构搜索 <nas/toctree>
-   模型压缩 <compression/index>
+   模型压缩 <compression/toctree>
    特征工程 <feature_engineering/toctree>
    实验管理 <experiment/overview>
 
