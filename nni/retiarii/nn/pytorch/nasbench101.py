@@ -277,6 +277,10 @@ class NasBench101Cell(Mutable):
         Maximum number of edges in the cell. Default: 9.
     label : str
         Identifier of the cell. Cell sharing the same label will semantically share the same choice.
+
+    Warnings
+    --------
+    :class:`NasBench101Cell` is not supported in :ref:`graph-based execution engine <graph-based-exeuction-engine>`.
     """
 
     @staticmethod

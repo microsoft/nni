@@ -776,82 +776,6 @@ class GraphIR(unittest.TestCase):
             b = model_new(inp)
             self.assertLess((a - b).abs().max().item(), 1E-4)
 
-    def test_cell(self):
-        @model_wrapper
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)],
-                                    num_nodes=4, num_ops_per_node=2, num_predecessors=2, merge_op='all')
-
-            def forward(self, x, y):
-                return self.cell([x, y])
-
-        raw_model, mutators = self._get_model_with_mutators(Net())
-        for _ in range(10):
-            sampler = EnumerateSampler()
-            model = raw_model
-            for mutator in mutators:
-                model = mutator.bind_sampler(sampler).apply(model)
-            self.assertTrue(self._get_converted_pytorch_model(model)(
-                torch.randn(1, 16), torch.randn(1, 16)).size() == torch.Size([1, 64]))
-
-        @model_wrapper
-        class Net2(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], num_nodes=4)
-
-            def forward(self, x):
-                return self.cell([x])
-
-        raw_model, mutators = self._get_model_with_mutators(Net2())
-        for _ in range(10):
-            sampler = EnumerateSampler()
-            model = raw_model
-            for mutator in mutators:
-                model = mutator.bind_sampler(sampler).apply(model)
-            self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(1, 16)).size() == torch.Size([1, 64]))
-
-    def test_cell_predecessors(self):
-        from typing import List, Tuple
-
-        class Preprocessor(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.linear = nn.Linear(3, 16)
-
-            def forward(self, x: List[torch.Tensor]) -> List[torch.Tensor]:
-                return [self.linear(x[0]), x[1]]
-
-        class Postprocessor(nn.Module):
-            def forward(self, this: torch.Tensor, prev: List[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
-                return prev[-1], this
-
-        @model_wrapper
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.cell = nn.Cell({
-                    'first': nn.Linear(16, 16),
-                    'second': nn.Linear(16, 16, bias=False)
-                }, num_nodes=4, num_ops_per_node=2, num_predecessors=2,
-                preprocessor=Preprocessor(), postprocessor=Postprocessor(), merge_op='all')
-
-            def forward(self, x, y):
-                return self.cell([x, y])
-
-        raw_model, mutators = self._get_model_with_mutators(Net())
-        for _ in range(10):
-            sampler = EnumerateSampler()
-            model = raw_model
-            for mutator in mutators:
-                model = mutator.bind_sampler(sampler).apply(model)
-            result = self._get_converted_pytorch_model(model)(
-                torch.randn(1, 3), torch.randn(1, 16))
-            self.assertTrue(result[0].size() == torch.Size([1, 16]))
-            self.assertTrue(result[1].size() == torch.Size([1, 64]))
-
     def test_nasbench201_cell(self):
         @model_wrapper
         class Net(nn.Module):
@@ -977,6 +901,82 @@ class Python(GraphIR):
 
         with self.assertRaises(NoContextError):
             model = Net()
+
+    def test_cell(self):
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)],
+                                    num_nodes=4, num_ops_per_node=2, num_predecessors=2, merge_op='all')
+
+            def forward(self, x, y):
+                return self.cell(x, y)
+
+        raw_model, mutators = self._get_model_with_mutators(Net())
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(
+                torch.randn(1, 16), torch.randn(1, 16)).size() == torch.Size([1, 64]))
+
+        @model_wrapper
+        class Net2(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], num_nodes=4)
+
+            def forward(self, x):
+                return self.cell(x)
+
+        raw_model, mutators = self._get_model_with_mutators(Net2())
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(1, 16)).size() == torch.Size([1, 64]))
+
+    def test_cell_predecessors(self):
+        from typing import List, Tuple
+
+        class Preprocessor(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = nn.Linear(3, 16)
+
+            def forward(self, x: List[torch.Tensor]) -> List[torch.Tensor]:
+                return [self.linear(x[0]), x[1]]
+
+        class Postprocessor(nn.Module):
+            def forward(self, this: torch.Tensor, prev: List[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+                return prev[-1], this
+
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.Cell({
+                    'first': nn.Linear(16, 16),
+                    'second': nn.Linear(16, 16, bias=False)
+                }, num_nodes=4, num_ops_per_node=2, num_predecessors=2,
+                preprocessor=Preprocessor(), postprocessor=Postprocessor(), merge_op='all')
+
+            def forward(self, x, y):
+                return self.cell([x, y])
+
+        raw_model, mutators = self._get_model_with_mutators(Net())
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            result = self._get_converted_pytorch_model(model)(
+                torch.randn(1, 3), torch.randn(1, 16))
+            self.assertTrue(result[0].size() == torch.Size([1, 16]))
+            self.assertTrue(result[1].size() == torch.Size([1, 64]))
 
     def test_cell_loose_end(self):
         @model_wrapper

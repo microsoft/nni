@@ -145,10 +145,14 @@ model_space = ModelSpace()
 model_space
 
 # %%
-# This example uses two mutation APIs, ``nn.LayerChoice`` and ``nn.ValueChoice``.
-# ``nn.LayerChoice`` takes a list of candidate modules (two in this example), one will be chosen for each sampled model.
+# This example uses two mutation APIs,
+# :class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>` and
+# :class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>`.
+# :class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>`
+# takes a list of candidate modules (two in this example), one will be chosen for each sampled model.
 # It can be used like normal PyTorch module.
-# ``nn.ValueChoice`` takes a list of candidate values, one will be chosen to take effect for each sampled model.
+# :class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>` takes a list of candidate values,
+# one will be chosen to take effect for each sampled model.
 #
 # More detailed API description and usage can be found :doc:`here </nas/construct_space>`.
 #
@@ -188,8 +192,9 @@ search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is
 # The performance is sent to the exploration strategy for the strategy to generate better models.
 #
 # Retiarii has provided :doc:`built-in model evaluators </nas/evaluator>`, but to start with,
-# it is recommended to use ``FunctionalEvaluator``, that is, to wrap your own training and evaluation code with one single function.
-# This function should receive one single model class and uses ``nni.report_final_result`` to report the final score of this model.
+# it is recommended to use :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`,
+# that is, to wrap your own training and evaluation code with one single function.
+# This function should receive one single model class and uses :func:`nni.report_final_result` to report the final score of this model.
 #
 # An example here creates a simple evaluator that runs on MNIST dataset, trains for 2 epochs, and reports its validation accuracy.
 
@@ -268,10 +273,11 @@ evaluator = FunctionalEvaluator(evaluate_model)
 
 # %%
 #
-# The ``train_epoch`` and ``test_epoch`` here can be any customized function, where users can write their own training recipe.
+# The ``train_epoch`` and ``test_epoch`` here can be any customized function,
+# where users can write their own training recipe.
 #
-# It is recommended that the :doc:``evaluate_model`` here accepts no additional arguments other than ``model_cls``.
-# However, in the `advanced tutorial </nas/evaluator>`, we will show how to use additional arguments in case you actually need those.
+# It is recommended that the ``evaluate_model`` here accepts no additional arguments other than ``model_cls``.
+# However, in the :doc:`advanced tutorial </nas/evaluator>`, we will show how to use additional arguments in case you actually need those.
 # In future, we will support mutation on the arguments of evaluators, which is commonly called "Hyper-parmeter tuning".
 #
 # Launch an Experiment
@@ -303,7 +309,7 @@ exp_config.training_service.use_active_gpu = True
 exp.run(exp_config, 8081)
 
 # %%
-# Users can also run Retiarii Experiment with :doc:`different training services </experiment/training_service>`
+# Users can also run Retiarii Experiment with :doc:`different training services </experiment/training_service/overview>`
 # besides ``local`` training service.
 #
 # Visualize the Experiment
@@ -311,7 +317,7 @@ exp.run(exp_config, 8081)
 #
 # Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment.
 # For example, open ``localhost:8081`` in your browser, 8081 is the port that you set in ``exp.run``.
-# Please refer to :doc:`here </experiment/webui>` for details.
+# Please refer to :doc:`here </experiment/web_portal/web_portal>` for details.
 #
 # We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__).
 # This can be used by clicking ``Visualization`` in detail panel for each trial.
@@ -336,7 +342,7 @@ def evaluate_model_with_visualization(model_cls):
     evaluate_model(model_cls)
 
 # %%
-# Relaunch the experiment, and a button is shown on WebUI.
+# Relaunch the experiment, and a button is shown on Web portal.
 #
 # .. image:: ../../img/netron_entrance_webui.png
 #

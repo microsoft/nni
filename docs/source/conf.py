@@ -158,8 +158,6 @@ toctree_check_whitelist = [
     'index',
 
     # FIXME: Other exceptions should be correctly handled.
-    'nas/index',
-    'nas/benchmarks',
     'compression/index',
     'compression/pruning',
     'compression/quantization',
