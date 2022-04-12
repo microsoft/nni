@@ -73,7 +73,6 @@ def evaluate_acc(class_cls, criterion, args):
     model.cuda()
 
     if args.spos_preprocessing:
-        # ``nni.trace`` is used to make transforms serializable, so that the trials can run other processes or on remote servers.
         train_trans = transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
@@ -81,7 +80,6 @@ def evaluate_acc(class_cls, criterion, args):
             ToBGRTensor()
         ])
     else:
-        # ``nni.trace`` is used to make transforms serializable, so that the trials can run other processes or on remote servers.
         train_trans = transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.ToTensor()
