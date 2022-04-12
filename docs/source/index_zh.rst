@@ -1,4 +1,4 @@
-.. b1421b75629e06cb368f4c02a12a5f7d
+.. 954c2f433b4617a40d684df9b1a5f16b
 
 ###########################
 Neural Network Intelligence
@@ -15,7 +15,7 @@ Neural Network Intelligence
     教程<examples>
     超参调优 <hpo/index>
     神经网络架构搜索<nas/toctree>
-    模型压缩<compression/index>
+    模型压缩<compression/toctree>
     特征工程<feature_engineering/toctree>
     NNI实验 <experiment/toctree>
     HPO API Reference <reference/hpo>

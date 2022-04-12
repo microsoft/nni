@@ -309,13 +309,3 @@ Benchmark
 The dataset of benchmark could be download in `here <https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/>`__
 
 The code could be refenrence ``/examples/feature_engineering/gradient_feature_selector/benchmark_test.py``.
-
-Reference and Feedback
-----------------------
-
-
-* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__ for this feature in GitHub;
-* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__ for this feature in GitHub;
-* To know more about :githublink:`Neural Architecture Search with NNI <docs/en_US/NAS/Overview.rst>`\ ;
-* To know more about :githublink:`Model Compression with NNI <docs/en_US/Compression/Overview.rst>`\ ;
-* To know more about :githublink:`Hyperparameter Tuning with NNI <docs/en_US/Tuner/BuiltinTuner.rst>`\ ;

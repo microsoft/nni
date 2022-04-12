@@ -1,16 +1,7 @@
-.. 3f7d3620b31e7bab985f1429044b7adc
+.. b6bdf52910e2e2c72085d03482d45340
 
 模型压缩
 ========
-
-..  toctree::
-    :hidden:
-    :maxdepth: 2
-
-    模型剪枝 <pruning>
-    模型量化 <quantization>
-    用户配置 <compression_config_list>
-    高级用法 <advanced_usage>
 
 深度神经网络（DNNs）在计算机视觉、自然语言处理、语音处理等领域取得了巨大的成功。   
 然而，典型的神经网络是计算和能源密集型的，很难将其部署在计算资源匮乏
@@ -42,7 +33,8 @@ NNI 具备以下几个核心特性:
 * 提供友好和易于使用的压缩工具，让用户深入到压缩过程和结果。
 * 简洁的界面，供用户自定义自己的压缩算法。
 
-.. rubric:: 压缩流程
+压缩流程
+---------
 
 .. image:: ../../img/compression_pipeline.png
    :target: ../../img/compression_pipeline.png
@@ -62,7 +54,8 @@ NNI中模型压缩的整体流程如上图所示。
   PyTorch和TensorFlow的接口都是统一的。目前只支持PyTorch版本，未来将支持TensorFlow版本。
 
 
-.. rubric:: 模型加速
+模型加速
+---------
 
 模型压缩的最终目标是减少推理延迟和模型大小。
 然而，现有的模型压缩算法主要是通过仿真来检测压缩模型的性能。
