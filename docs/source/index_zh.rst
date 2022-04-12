@@ -1,4 +1,4 @@
-.. 376dd6c98d5e4e8633506b196835bf5b
+.. 66e81fbc0b791fdb8f5b79205a8b8f76
 
 NNI 文档
 =================
@@ -17,9 +17,9 @@ NNI 文档
    :hidden:
 
    超参调优 <hpo/index>
-   架构搜索 <nas/index>
+   架构搜索 <nas/toctree>
    模型压缩 <compression/index>
-   特征工程 <feature_engineering/index>
+   特征工程 <feature_engineering/toctree>
    实验管理 <experiment/overview>
 
 .. toctree::
@@ -163,7 +163,7 @@ NNI 使得自动机器学习技术即插即用
    :link: tutorials/hello_nas
    :seemore: 点这里阅读完整教程
 
-   .. code-block:: diff
+   .. code-block::
 
       # define model space
       -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
@@ -183,7 +183,7 @@ NNI 使得自动机器学习技术即插即用
 .. codesnippetcard::
    :icon: ../img/thumbnails/one-shot-nas-small.svg
    :title: 单尝试 (One-shot) NAS
-   :link: nas/index
+   :link: nas/exploration_strategy
    :seemore: 点这里阅读完整教程
 
    .. code-block::

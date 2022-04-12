@@ -1,4 +1,4 @@
-.. dee1c91f361c4a83bd0e8d89fe5cf0c5
+.. 1bfa9317e112e9ffc5c7c6a2625188ab
 
 神经架构搜索
 ===========================
@@ -68,7 +68,7 @@ NNI 中当前的架构搜索框架由 `Retiarii: A Deep Learning Exploratory-Tra
 
 架构搜索的目标通常是找到能够在测试数据集表现理想的网络结构。性能评估的作用便是量化每个网络的好坏。其主要难点在于可扩展性，即如何在大规模训练平台上同时运行和管理多个试验。
 
-在 NNI 中，我们使用 :doc:`evaluator <evaluator>` 来标准化性能评估流程。它负责估计模型的性能。NNI 内建了不少性能评估器，从最简单的交叉验证，到复杂的自定义配置。评估器在 *试验 (trials)* 中运行，可以通过我们强大的 :doc:`训练平台 </experiment/training_service>` 将试验分发到大规模训练平台上。
+在 NNI 中，我们使用 :doc:`evaluator <evaluator>` 来标准化性能评估流程。它负责估计模型的性能。NNI 内建了不少性能评估器，从最简单的交叉验证，到复杂的自定义配置。评估器在 *试验 (trials)* 中运行，可以通过我们强大的 :doc:`训练平台 </experiment/training_service/overview>` 将试验分发到大规模训练平台上。
 
 教程
 ---------

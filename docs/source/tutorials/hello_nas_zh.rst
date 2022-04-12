@@ -1,4 +1,4 @@
-.. 12d44d57543e4ec4ba27a65836f484cc
+.. 96973eaa8f2215c88f684709832c317b
 
 
 .. DO NOT EDIT.
@@ -207,12 +207,12 @@
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 148-178
+.. GENERATED FROM PYTHON SOURCE LINES 148-182
 
-这个例子使用了两个模型变化的 API， ``nn.LayerChoice`` 和 ``nn.ValueChoice``。
-``nn.LayerChoice`` 可以从一系列的候选子模块中（在本例中为两个），为每个采样模型选择一个。
+这个例子使用了两个模型变化的 API， :class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>` 和 :class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>`。
+:class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>` 可以从一系列的候选子模块中（在本例中为两个），为每个采样模型选择一个。
 它可以像原来的 PyTorch 子模块一样使用。
-``nn.ValueChoice`` 的参数是一个候选值列表，语义是为每个采样模型选择一个值。
+:class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>` 的参数是一个候选值列表，语义是为每个采样模型选择一个值。
 
 更详细的 API 描述和用法可以在 :doc:`这里 </nas/construct_space>` 找到。
 
@@ -240,7 +240,7 @@ Retiarii 支持许多 :doc:`探索策略</nas/exploration_strategy>`。
 
 只需选择（即实例化）探索策略，就如下面的代码演示的一样：
 
-.. GENERATED FROM PYTHON SOURCE LINES 178-182
+.. GENERATED FROM PYTHON SOURCE LINES 182-186
 
 .. code-block:: default
 
@@ -258,8 +258,6 @@ Retiarii 支持许多 :doc:`探索策略</nas/exploration_strategy>`。
 
  .. code-block:: none
 
-    [2022-02-28 14:01:11] INFO (hyperopt.utils/MainThread) Failed to load dill, try installing dill via "pip install dill" for enhanced pickling support.
-    [2022-02-28 14:01:11] INFO (hyperopt.fmin/MainThread) Failed to load dill, try installing dill via "pip install dill" for enhanced pickling support.
 
     /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/ray/autoscaler/_private/cli_logger.py:57: FutureWarning: Not all Ray CLI dependencies were found. In Ray 1.4+, the Ray CLI, autoscaler, and dashboard will only be usable via `pip install 'ray[default]'`. Please update your install command.
       warnings.warn(
@@ -267,7 +265,7 @@ Retiarii 支持许多 :doc:`探索策略</nas/exploration_strategy>`。
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 183-195
+.. GENERATED FROM PYTHON SOURCE LINES 187-200
 
 挑选或自定义模型评估器
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -276,12 +274,12 @@ Retiarii 支持许多 :doc:`探索策略</nas/exploration_strategy>`。
 该性能作为模型的得分被发送到探索策略以帮助其生成更好的模型。
 
 Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之前，
-我们建议使用 “FunctionalEvaluator”，即用一个函数包装您自己的训练和评估代码。
-这个函数应该接收一个单一的模型类并使用 nni.report_final_result 报告这个模型的最终分数。
+我们建议使用 :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`，即用一个函数包装您自己的训练和评估代码。
+这个函数应该接收一个单一的模型类并使用 :func:`nni.report_final_result` 报告这个模型的最终分数。
 
 此处的示例创建了一个简单的评估器，该评估器在 MNIST 数据集上运行，训练 2 个 epoch，并报告其在验证集上的准确率。
 
-.. GENERATED FROM PYTHON SOURCE LINES 195-263
+.. GENERATED FROM PYTHON SOURCE LINES 200-268
 
 .. code-block:: default
 
@@ -360,11 +358,11 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 264-265
+.. GENERATED FROM PYTHON SOURCE LINES 269-270
 
 创建评估器
 
-.. GENERATED FROM PYTHON SOURCE LINES 265-269
+.. GENERATED FROM PYTHON SOURCE LINES 270-274
 
 .. code-block:: default
 
@@ -379,7 +377,7 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 270-280
+.. GENERATED FROM PYTHON SOURCE LINES 275-286
 
 这里的 ``train_epoch`` 和 ``test_epoch`` 可以是任何自定义函数，用户可以在其中编写自己的训练逻辑。
 
@@ -392,7 +390,7 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 一切都已准备就绪，现在就可以开始做模型搜索的实验了。如下所示。
 
-.. GENERATED FROM PYTHON SOURCE LINES 281-287
+.. GENERATED FROM PYTHON SOURCE LINES 287-293
 
 .. code-block:: default
 
@@ -409,11 +407,11 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 288-289
+.. GENERATED FROM PYTHON SOURCE LINES 294-295
 
 以下配置可以用于控制最多/同时运行多少试验。
 
-.. GENERATED FROM PYTHON SOURCE LINES 289-293
+.. GENERATED FROM PYTHON SOURCE LINES 295-299
 
 .. code-block:: default
 
@@ -428,12 +426,12 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 294-296
+.. GENERATED FROM PYTHON SOURCE LINES 300-302
 
 如果要使用 GPU，请设置以下配置。
-如果您希望使用被占用了的 GPU（比如 GPU 上可能正在运行 GUI），则 “use_active_gpu” 应设置为 true。
+如果您希望使用被占用了的 GPU（比如 GPU 上可能正在运行 GUI），则 ``use_active_gpu`` 应设置为 true。
 
-.. GENERATED FROM PYTHON SOURCE LINES 296-300
+.. GENERATED FROM PYTHON SOURCE LINES 302-306
 
 .. code-block:: default
 
@@ -448,11 +446,11 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 301-302
+.. GENERATED FROM PYTHON SOURCE LINES 307-308
 
 启动实验。 在一个有两块 GPU 的工作站上完成整个实验大约需要几分钟时间。
 
-.. GENERATED FROM PYTHON SOURCE LINES 302-305
+.. GENERATED FROM PYTHON SOURCE LINES 308-311
 
 .. code-block:: default
 
@@ -463,40 +461,19 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    [2022-02-28 14:01:13] INFO (nni.experiment/MainThread) Creating experiment, Experiment ID: dt84p16a
-    [2022-02-28 14:01:13] INFO (nni.experiment/MainThread) Connecting IPC pipe...
-    [2022-02-28 14:01:14] INFO (nni.experiment/MainThread) Starting web server...
-    [2022-02-28 14:01:15] INFO (nni.experiment/MainThread) Setting up...
-    [2022-02-28 14:01:15] INFO (nni.runtime.msg_dispatcher_base/Thread-3) Dispatcher started
-    [2022-02-28 14:01:15] INFO (nni.retiarii.experiment.pytorch/MainThread) Web UI URLs: http://127.0.0.1:8081 http://10.190.172.35:8081 http://192.168.49.1:8081 http://172.17.0.1:8081
-    [2022-02-28 14:01:15] INFO (nni.retiarii.experiment.pytorch/MainThread) Start strategy...
-    [2022-02-28 14:01:15] INFO (root/MainThread) Successfully update searchSpace.
-    [2022-02-28 14:01:15] INFO (nni.retiarii.strategy.bruteforce/MainThread) Random search running in fixed size mode. Dedup: on.
-    [2022-02-28 14:05:16] INFO (nni.retiarii.experiment.pytorch/Thread-4) Stopping experiment, please wait...
-    [2022-02-28 14:05:16] INFO (nni.retiarii.experiment.pytorch/MainThread) Strategy exit
-    [2022-02-28 14:05:16] INFO (nni.retiarii.experiment.pytorch/MainThread) Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...
-    [2022-02-28 14:05:17] INFO (nni.runtime.msg_dispatcher_base/Thread-3) Dispatcher exiting...
-    [2022-02-28 14:05:17] INFO (nni.retiarii.experiment.pytorch/Thread-4) Experiment stopped
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 312-330
 
-.. GENERATED FROM PYTHON SOURCE LINES 306-324
-
-除了 ``local`` 训练平台，用户还可以使用 :doc:`不同的训练平台 </experiment/training_service>` 来运行 Retiarii 试验。
+除了 ``local`` 训练平台，用户还可以使用 :doc:`不同的训练平台 </experiment/training_service/overview>` 来运行 Retiarii 试验。
 
 可视化实验
 ----------------------
 
 用户可以可视化他们的架构搜索实验，就像可视化超参调优实验一样。
 例如，在浏览器中打开 ``localhost:8081``，8081 是您在 ``exp.run`` 中设置的端口。
-详情请参考 :doc:`这里</experiment/webui>`。
+详情请参考 :doc:`这里</experiment/web_portal/web_portal>`。
 
 我们支持使用第三方可视化引擎（如 `Netron <https://netron.app/>`__）对模型进行可视化。
 这可以通过单击每个试验的详细面板中的“可视化”来使用。
@@ -507,7 +484,7 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 对于您自己的评估器，您需要将文件保存到 ``$NNI_OUTPUT_DIR/model.onnx``。
 例如，
 
-.. GENERATED FROM PYTHON SOURCE LINES 324-338
+.. GENERATED FROM PYTHON SOURCE LINES 330-344
 
 .. code-block:: default
 
@@ -532,7 +509,7 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 339-347
+.. GENERATED FROM PYTHON SOURCE LINES 345-353
 
 重新启动实验，Web 界面上会显示一个按钮。
 
@@ -543,7 +520,7 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 搜索完成后，用户可以使用 ``export_top_models`` 导出最优模型。
 
-.. GENERATED FROM PYTHON SOURCE LINES 347-359
+.. GENERATED FROM PYTHON SOURCE LINES 353-365
 
 .. code-block:: default
 
@@ -577,7 +554,7 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 4 minutes  6.818 seconds)
+   **Total running time of the script:** ( 2 minutes  15.810 seconds)
 
 
 .. _sphx_glr_download_tutorials_hello_nas.py:
