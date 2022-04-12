@@ -62,7 +62,7 @@ This is a core and basic feature of NNI, we provide many popular :doc:`automatic
 General NAS Framework
 ^^^^^^^^^^^^^^^^^^^^^
 
-This NAS framework is for users to easily specify candidate neural architectures, for example, one can specify multiple candidate operations (e.g., separable conv, dilated conv) for a single layer, and specify possible skip connections. NNI will find the best candidate automatically. On the other hand, the NAS framework provides a simple interface for another type of user (e.g., NAS algorithm researchers) to implement new NAS algorithms. A detailed description of NAS and its usage can be found :doc:`here <../nas/index>`.
+This NAS framework is for users to easily specify candidate neural architectures, for example, one can specify multiple candidate operations (e.g., separable conv, dilated conv) for a single layer, and specify possible skip connections. NNI will find the best candidate automatically. On the other hand, the NAS framework provides a simple interface for another type of user (e.g., NAS algorithm researchers) to implement new NAS algorithms. A detailed description of NAS and its usage can be found :doc:`here </nas/overview>`.
 
 NNI has support for many one-shot NAS algorithms such as ENAS and DARTS through NNI trial SDK. To use these algorithms you do not have to start an NNI experiment. Instead, import an algorithm in your trial code and simply run your trial code. If you want to tune the hyperparameters in the algorithms or want to run multiple instances, you can choose a tuner and start an NNI experiment.
 

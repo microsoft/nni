@@ -364,27 +364,27 @@ class EvaluatorValueChoiceMutator(Mutator):
         if not is_traceable(obj):
             return obj
 
-        if not any(isinstance(value, ValueChoiceX) for value in obj.trace_kwargs.values()):
-            # No valuechoice, not interesting
-            return obj
-
-        # Make a copy
-        obj = obj.trace_copy()
-
-        result = {}
+        updates = {}
 
         # For each argument that is a composition of value choice
         # we find all the leaf-value-choice in the mutation
-        # and compute the final result
+        # and compute the final updates
         for key, param in obj.trace_kwargs.items():
             if isinstance(param, ValueChoiceX):
                 leaf_node_values = [value_choice_decisions[choice.label] for choice in param.inner_choices()]
-                result[key] = param.evaluate(leaf_node_values)
+                updates[key] = param.evaluate(leaf_node_values)
             elif is_traceable(param):
                 # Recursively
-                result[key] = self._mutate_traceable_object(param, value_choice_decisions)
+                sub_update = self._mutate_traceable_object(param, value_choice_decisions)
+                if sub_update is not param:  # if mutated
+                    updates[key] = sub_update
 
-        obj.trace_kwargs.update(result)
+        if updates:
+            mutated_obj = obj.trace_copy()                  # Make a copy
+            mutated_obj.trace_kwargs.update(updates)        # Mutate
+            mutated_obj = mutated_obj.get()                 # Instantiate the full mutated object
+
+            return mutated_obj
 
         return obj
 
