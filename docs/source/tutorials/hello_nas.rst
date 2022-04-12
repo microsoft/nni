@@ -205,12 +205,16 @@ This results in the following code:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 148-178
+.. GENERATED FROM PYTHON SOURCE LINES 148-182
 
-This example uses two mutation APIs, ``nn.LayerChoice`` and ``nn.ValueChoice``.
-``nn.LayerChoice`` takes a list of candidate modules (two in this example), one will be chosen for each sampled model.
+This example uses two mutation APIs,
+:class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>` and
+:class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>`.
+:class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>`
+takes a list of candidate modules (two in this example), one will be chosen for each sampled model.
 It can be used like normal PyTorch module.
-``nn.ValueChoice`` takes a list of candidate values, one will be chosen to take effect for each sampled model.
+:class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>` takes a list of candidate values,
+one will be chosen to take effect for each sampled model.
 
 More detailed API description and usage can be found :doc:`here </nas/construct_space>`.
 
@@ -238,7 +242,7 @@ Retiarii supports many :doc:`exploration strategies </nas/exploration_strategy>`
 
 Simply choosing (i.e., instantiate) an exploration strategy as below.
 
-.. GENERATED FROM PYTHON SOURCE LINES 178-182
+.. GENERATED FROM PYTHON SOURCE LINES 182-186
 
 .. code-block:: default
 
@@ -256,8 +260,6 @@ Simply choosing (i.e., instantiate) an exploration strategy as below.
 
  .. code-block:: none
 
-    [2022-02-28 14:01:11] INFO (hyperopt.utils/MainThread) Failed to load dill, try installing dill via "pip install dill" for enhanced pickling support.
-    [2022-02-28 14:01:11] INFO (hyperopt.fmin/MainThread) Failed to load dill, try installing dill via "pip install dill" for enhanced pickling support.
 
     /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/ray/autoscaler/_private/cli_logger.py:57: FutureWarning: Not all Ray CLI dependencies were found. In Ray 1.4+, the Ray CLI, autoscaler, and dashboard will only be usable via `pip install 'ray[default]'`. Please update your install command.
       warnings.warn(
@@ -265,7 +267,7 @@ Simply choosing (i.e., instantiate) an exploration strategy as below.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 183-195
+.. GENERATED FROM PYTHON SOURCE LINES 187-200
 
 Pick or customize a model evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -275,12 +277,13 @@ and validating each generated model to obtain the model's performance.
 The performance is sent to the exploration strategy for the strategy to generate better models.
 
 Retiarii has provided :doc:`built-in model evaluators </nas/evaluator>`, but to start with,
-it is recommended to use ``FunctionalEvaluator``, that is, to wrap your own training and evaluation code with one single function.
-This function should receive one single model class and uses ``nni.report_final_result`` to report the final score of this model.
+it is recommended to use :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`,
+that is, to wrap your own training and evaluation code with one single function.
+This function should receive one single model class and uses :func:`nni.report_final_result` to report the final score of this model.
 
 An example here creates a simple evaluator that runs on MNIST dataset, trains for 2 epochs, and reports its validation accuracy.
 
-.. GENERATED FROM PYTHON SOURCE LINES 195-263
+.. GENERATED FROM PYTHON SOURCE LINES 200-268
 
 .. code-block:: default
 
@@ -359,11 +362,11 @@ An example here creates a simple evaluator that runs on MNIST dataset, trains fo
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 264-265
+.. GENERATED FROM PYTHON SOURCE LINES 269-270
 
 Create the evaluator
 
-.. GENERATED FROM PYTHON SOURCE LINES 265-269
+.. GENERATED FROM PYTHON SOURCE LINES 270-274
 
 .. code-block:: default
 
@@ -378,12 +381,13 @@ Create the evaluator
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 270-280
+.. GENERATED FROM PYTHON SOURCE LINES 275-286
 
-The ``train_epoch`` and ``test_epoch`` here can be any customized function, where users can write their own training recipe.
+The ``train_epoch`` and ``test_epoch`` here can be any customized function,
+where users can write their own training recipe.
 
-It is recommended that the :doc:``evaluate_model`` here accepts no additional arguments other than ``model_cls``.
-However, in the `advanced tutorial </nas/evaluator>`, we will show how to use additional arguments in case you actually need those.
+It is recommended that the ``evaluate_model`` here accepts no additional arguments other than ``model_cls``.
+However, in the :doc:`advanced tutorial </nas/evaluator>`, we will show how to use additional arguments in case you actually need those.
 In future, we will support mutation on the arguments of evaluators, which is commonly called "Hyper-parmeter tuning".
 
 Launch an Experiment
@@ -391,7 +395,7 @@ Launch an Experiment
 
 After all the above are prepared, it is time to start an experiment to do the model search. An example is shown below.
 
-.. GENERATED FROM PYTHON SOURCE LINES 281-287
+.. GENERATED FROM PYTHON SOURCE LINES 287-293
 
 .. code-block:: default
 
@@ -408,11 +412,11 @@ After all the above are prepared, it is time to start an experiment to do the mo
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 288-289
+.. GENERATED FROM PYTHON SOURCE LINES 294-295
 
 The following configurations are useful to control how many trials to run at most / at the same time.
 
-.. GENERATED FROM PYTHON SOURCE LINES 289-293
+.. GENERATED FROM PYTHON SOURCE LINES 295-299
 
 .. code-block:: default
 
@@ -427,12 +431,12 @@ The following configurations are useful to control how many trials to run at mos
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 294-296
+.. GENERATED FROM PYTHON SOURCE LINES 300-302
 
 Remember to set the following config if you want to GPU.
 ``use_active_gpu`` should be set true if you wish to use an occupied GPU (possibly running a GUI).
 
-.. GENERATED FROM PYTHON SOURCE LINES 296-300
+.. GENERATED FROM PYTHON SOURCE LINES 302-306
 
 .. code-block:: default
 
@@ -447,11 +451,11 @@ Remember to set the following config if you want to GPU.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 301-302
+.. GENERATED FROM PYTHON SOURCE LINES 307-308
 
 Launch the experiment. The experiment should take several minutes to finish on a workstation with 2 GPUs.
 
-.. GENERATED FROM PYTHON SOURCE LINES 302-305
+.. GENERATED FROM PYTHON SOURCE LINES 308-311
 
 .. code-block:: default
 
@@ -462,33 +466,12 @@ Launch the experiment. The experiment should take several minutes to finish on a
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    [2022-02-28 14:01:13] INFO (nni.experiment/MainThread) Creating experiment, Experiment ID: dt84p16a
-    [2022-02-28 14:01:13] INFO (nni.experiment/MainThread) Connecting IPC pipe...
-    [2022-02-28 14:01:14] INFO (nni.experiment/MainThread) Starting web server...
-    [2022-02-28 14:01:15] INFO (nni.experiment/MainThread) Setting up...
-    [2022-02-28 14:01:15] INFO (nni.runtime.msg_dispatcher_base/Thread-3) Dispatcher started
-    [2022-02-28 14:01:15] INFO (nni.retiarii.experiment.pytorch/MainThread) Web UI URLs: http://127.0.0.1:8081 http://10.190.172.35:8081 http://192.168.49.1:8081 http://172.17.0.1:8081
-    [2022-02-28 14:01:15] INFO (nni.retiarii.experiment.pytorch/MainThread) Start strategy...
-    [2022-02-28 14:01:15] INFO (root/MainThread) Successfully update searchSpace.
-    [2022-02-28 14:01:15] INFO (nni.retiarii.strategy.bruteforce/MainThread) Random search running in fixed size mode. Dedup: on.
-    [2022-02-28 14:05:16] INFO (nni.retiarii.experiment.pytorch/Thread-4) Stopping experiment, please wait...
-    [2022-02-28 14:05:16] INFO (nni.retiarii.experiment.pytorch/MainThread) Strategy exit
-    [2022-02-28 14:05:16] INFO (nni.retiarii.experiment.pytorch/MainThread) Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...
-    [2022-02-28 14:05:17] INFO (nni.runtime.msg_dispatcher_base/Thread-3) Dispatcher exiting...
-    [2022-02-28 14:05:17] INFO (nni.retiarii.experiment.pytorch/Thread-4) Experiment stopped
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 312-330
 
-.. GENERATED FROM PYTHON SOURCE LINES 306-324
-
-Users can also run Retiarii Experiment with :doc:`different training services </experiment/training_service>`
+Users can also run Retiarii Experiment with :doc:`different training services </experiment/training_service/overview>`
 besides ``local`` training service.
 
 Visualize the Experiment
@@ -496,7 +479,7 @@ Visualize the Experiment
 
 Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment.
 For example, open ``localhost:8081`` in your browser, 8081 is the port that you set in ``exp.run``.
-Please refer to :doc:`here </experiment/webui>` for details.
+Please refer to :doc:`here </experiment/web_portal/web_portal>` for details.
 
 We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__).
 This can be used by clicking ``Visualization`` in detail panel for each trial.
@@ -507,7 +490,7 @@ Built-in evaluators (e.g., Classification) will automatically export the model i
 For your own evaluator, you need to save your file into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work.
 For instance,
 
-.. GENERATED FROM PYTHON SOURCE LINES 324-338
+.. GENERATED FROM PYTHON SOURCE LINES 330-344
 
 .. code-block:: default
 
@@ -532,9 +515,9 @@ For instance,
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 339-347
+.. GENERATED FROM PYTHON SOURCE LINES 345-353
 
-Relaunch the experiment, and a button is shown on webportal.
+Relaunch the experiment, and a button is shown on Web portal.
 
 .. image:: ../../img/netron_entrance_webui.png
 
@@ -543,7 +526,7 @@ Export Top Models
 
 Users can export top models after the exploration is done using ``export_top_models``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 347-359
+.. GENERATED FROM PYTHON SOURCE LINES 353-365
 
 .. code-block:: default
 
@@ -569,7 +552,7 @@ Users can export top models after the exploration is done using ``export_top_mod
 
  .. code-block:: none
 
-    {'model_1': '0', 'model_2': 0.25, 'model_3': 128}
+    {'model_1': '0', 'model_2': 0.75, 'model_3': 128}
 
 
 
@@ -577,7 +560,7 @@ Users can export top models after the exploration is done using ``export_top_mod
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 4 minutes  6.818 seconds)
+   **Total running time of the script:** ( 2 minutes  15.810 seconds)
 
 
 .. _sphx_glr_download_tutorials_hello_nas.py:

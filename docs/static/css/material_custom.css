@@ -258,32 +258,6 @@ dt:target {
     padding: 0 !important;
 }
 
-@media only screen and (max-width:76.1875em) {
-    .md-nav--primary .md-nav__link {
-        padding: .15rem .5rem;
-    }
-    .md-nav--primary .md-nav__tocarrow {
-        display: none;
-    }
-    .md-nav--primary span.md-nav__link.caption {
-        margin-top: 0.75em;
-    }
-    .md-nav--primary .md-nav__item .md-nav__list .md-nav__item {
-        padding-left: .3rem;
-    }
-    html .md-nav--primary .md-nav__title--site .md-nav__button {
-        height: auto;
-        font-size: inherit;
-    }
-    html .md-nav--primary .md-nav__title {
-        padding-top: 2rem;
-        height: 4.6rem;
-    }
-    .md-nav__expand .md-nav__list {
-        display: block;
-    }
-}
-
 /* collapsible toctree */
 .md-nav--primary ul li {
     padding-left: .8rem;
@@ -312,6 +286,36 @@ dt:target {
 
 .md-nav__expand--active > a > .md-nav__tocarrow {
     transform: rotate(0);
+}
+
+@media only screen and (max-width:76.1875em) {
+    .md-nav--primary .md-nav__link {
+        padding: .15rem .2rem .15rem .6rem;
+    }
+    .md-nav__expand > a > .md-nav__tocarrow {
+        left: 0;
+        top: .25rem;
+    }
+    .md-nav--primary span.md-nav__link.caption {
+        margin-top: 0.75em;
+    }
+    .md-nav--primary .md-nav__item .md-nav__list .md-nav__item {
+        padding-left: .3rem;
+    }
+    html .md-nav--primary .md-nav__title--site .md-nav__button {
+        height: auto;
+        font-size: inherit;
+        left: 0;
+    }
+    html .md-nav--primary .md-nav__title {
+        padding-top: 2rem;
+        padding-left: .6rem;
+        height: 4.6rem;
+    }
+    .md-nav--primary .md-nav__item, .md-nav--primary .md-nav__title {
+        font-size: .7rem;
+        line-height: 1.3;
+    }
 }
 
 /* Increase TOC padding */

@@ -15,10 +15,10 @@ NNI Documentation
    :hidden:
 
    Hyperparameter Optimization <hpo/index>
-   Neural Architecture Search <nas/index>
+   nas/toctree
    Model Compression <compression/index>
-   Feature Engineering <feature_engineering/index>
-   Experiment <experiment/overview>
+   feature_engineering/toctree
+   experiment/toctree
 
 .. toctree::
    :maxdepth: 2
@@ -44,7 +44,7 @@ NNI Documentation
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
 
 * :doc:`Hyperparameter Optimization </hpo/overview>`
-* :doc:`Neural Architecture Search </nas/index>`
+* :doc:`Neural Architecture Search </nas/overview>`
 * :doc:`Model Compression </compression/index>`
 * :doc:`Feature Engineering </feature_engineering/overview>`
 
@@ -157,14 +157,15 @@ NNI makes AutoML techniques plug-and-play
    :title: Neural Architecture Search
    :link: tutorials/hello_nas
 
-   .. code-block:: diff
+   .. code-block:: python
 
       # define model space
-      -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
-      +   self.conv2 = nn.LayerChoice([
-      +       nn.Conv2d(32, 64, 3, 1),
-      +       DepthwiseSeparableConv(32, 64)
-      +   ])
+      class Model(nn.Module):
+          self.conv2 = nn.LayerChoice([
+              nn.Conv2d(32, 64, 3, 1),
+              DepthwiseSeparableConv(32, 64)
+          ])
+      model_space = Model()
       # search strategy + evaluator
       strategy = RegularizedEvolution()
       evaluator = FunctionalEvaluator(
@@ -177,7 +178,7 @@ NNI makes AutoML techniques plug-and-play
 .. codesnippetcard::
    :icon: ../img/thumbnails/one-shot-nas-small.svg
    :title: One-shot NAS
-   :link: nas/index
+   :link: nas/exploration_strategy
 
    .. code-block::
 
@@ -222,7 +223,7 @@ NNI eases the effort to scale and manage AutoML experiments
 .. codesnippetcard::
    :icon: ../img/thumbnails/training-service-small.svg
    :title: Training Service
-   :link: experiment/training_service
+   :link: experiment/training_service/overview
    :seemore: See more here.
 
    An AutoML experiment requires many trials to explore feasible and potentially good-performing models.
@@ -233,7 +234,7 @@ NNI eases the effort to scale and manage AutoML experiments
 .. codesnippetcard::
    :icon: ../img/thumbnails/web-portal-small.svg
    :title: Web Portal
-   :link: experiment/web_portal
+   :link: experiment/web_portal/web_portal
    :seemore: See more here.
 
    Web portal visualizes the tuning process, exposing the ability to inspect, monitor and control the experiment.
@@ -244,7 +245,7 @@ NNI eases the effort to scale and manage AutoML experiments
 .. codesnippetcard::
    :icon: ../img/thumbnails/experiment-management-small.svg
    :title: Experiment Management
-   :link: experiment/exp_management
+   :link: experiment/experiment_management
    :seemore: See more here.
 
    The DNN model tuning often requires more than one experiment.

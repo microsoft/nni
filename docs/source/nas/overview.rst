@@ -1,14 +1,5 @@
-Neural Architecture Search
-==========================
-
-.. toctree::
-   :hidden:
-
-   Quickstart </tutorials/hello_nas>
-   construct_space
-   exploration_strategy
-   evaluator
-   advanced_usage
+Overview
+========
 
 .. attention:: NNI's latest NAS supports are all based on Retiarii Framework, users who are still on `early version using NNI NAS v1.0 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ shall migrate your work to Retiarii as soon as possible. We plan to remove the legacy NAS framework in the next few releases.
 
@@ -66,7 +57,7 @@ Performance estimation
 
 The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. The problem with performance estimation is mostly its scalability, i.e., how can I run and manage multiple trials simultaneously.
 
-In NNI, we standardize this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. NNI has quite a few built-in supports of evaluators, ranging from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations. Evaluators are run in *trials*, where trials can be spawn onto distributed platforms with our powerful :doc:`training service </experiment/training_service>`.
+In NNI, we standardize this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. NNI has quite a few built-in supports of evaluators, ranging from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations. Evaluators are run in *trials*, where trials can be spawn onto distributed platforms with our powerful :doc:`training service </experiment/training_service/overview>`.
 
 Tutorials
 ---------
