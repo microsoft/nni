@@ -20,7 +20,7 @@ NNI 文档
    架构搜索 <nas/toctree>
    模型压缩 <compression/toctree>
    特征工程 <feature_engineering/toctree>
-   实验管理 <experiment/overview>
+   实验管理 <experiment/toctree>
 
 .. toctree::
    :maxdepth: 2
@@ -46,8 +46,8 @@ NNI 文档
 **NNI (Neural Network Intelligence)** 是一个轻量而强大的工具，可以帮助用户 **自动化**：
 
 * :doc:`超参调优 </hpo/overview>`
-* :doc:`架构搜索 </nas/index>`
-* :doc:`模型压缩 </compression/index>`
+* :doc:`架构搜索 </nas/overview>`
+* :doc:`模型压缩 </compression/overview>`
 * :doc:`特征工程 </feature_engineering/overview>`
 
 开始使用
@@ -230,7 +230,7 @@ NNI 可降低自动机器学习实验管理的成本
 .. codesnippetcard::
    :icon: ../img/thumbnails/training-service-small.svg
    :title: 训练平台
-   :link: experiment/training_service
+   :link: experiment/training_service/overview
    :seemore: 点这里了解更多
 
    一个自动机器学习实验通常需要很多次尝试，来找到合适且具有潜力的模型。
@@ -240,7 +240,7 @@ NNI 可降低自动机器学习实验管理的成本
 .. codesnippetcard::
    :icon: ../img/thumbnails/web-portal-small.svg
    :title: 网页控制台
-   :link: experiment/web_portal
+   :link: experiment/web_portal/web_portal
    :seemore: 点这里了解更多
 
    网页控制台提供了可视化调优过程的能力，让你可以轻松检查、跟踪、控制实验流程。
@@ -251,7 +251,7 @@ NNI 可降低自动机器学习实验管理的成本
 .. codesnippetcard::
    :icon: ../img/thumbnails/experiment-management-small.svg
    :title: 多实验管理
-   :link: experiment/exp_management
+   :link: experiment/experiment_management
    :seemore: 点这里了解更多
 
    深度学习模型往往需要多个实验不断迭代，例如用户可能想尝试不同的调优算法，优化他们的搜索空间，或者切换到其他的计算资源。
