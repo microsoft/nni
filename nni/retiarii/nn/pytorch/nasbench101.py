@@ -360,7 +360,10 @@ class NasBench101Mutator(Mutator):
     # for validation purposes
     # for python execution engine
 
+    label: str  # label must be str
+
     def __init__(self, label: Optional[str]):
+        assert label is not None
         super().__init__(label=label)
 
     @staticmethod
@@ -377,9 +380,11 @@ class NasBench101Mutator(Mutator):
         return 1
 
     def mutate(self, model: Model):
+        max_num_edges: Optional[int] = None
         for node in model.get_nodes_by_label(self.label):
             max_num_edges = node.operation.parameters['max_num_edges']
             break
+        assert max_num_edges is not None
         mutation_dict = {mut.mutator.label: mut.samples for mut in model.history}
         num_nodes = mutation_dict[f'{self.label}/num_nodes'][0]
         adjacency_list = [mutation_dict[f'{self.label}/input{i}'] for i in range(1, num_nodes)]

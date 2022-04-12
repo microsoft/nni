@@ -45,7 +45,7 @@ class Operation:
     def to_init_code(self, field: str) -> str:
         raise NotImplementedError()
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         raise NotImplementedError()
 
     def _to_class_name(self) -> str:
@@ -144,7 +144,7 @@ class PyTorchOperation(Operation):
             return f'self.{field} = {self._to_class_name()}({kw_params})'
         return None
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         """
         Parameters
         ----------
@@ -219,7 +219,7 @@ class Cell(PyTorchOperation):
         # TODO: ugly, think about how to refactor this part
         return _convert_name(self.cell_name)
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = self.{field}({", ".join(inputs)})'
 
 class _IOPseudoOperation(Operation):
@@ -237,7 +237,7 @@ class _IOPseudoOperation(Operation):
     def to_init_code(self, field: str) -> str:
         raise ValueError(f'Cannot generate code for pseudo operation "{self.type}"')
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         raise ValueError(f'Cannot generate code for pseudo operation "{self.type}"')
 
     def __bool__(self) -> bool:

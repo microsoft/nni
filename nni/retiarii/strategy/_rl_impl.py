@@ -12,6 +12,7 @@ import numpy as np
 import tianshou
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from gym import spaces
 from tianshou.data import to_torch
@@ -150,7 +151,7 @@ class Preprocessor(nn.Module):
         self.rnn = nn.LSTM(hidden_dim, hidden_dim, num_layers, batch_first=True)
 
     def forward(self, obs):
-        seq = nn.functional.pad(obs['action_history'] + 1, (1, 1))  # pad the start token and end token
+        seq = F.pad(obs['action_history'] + 1, (1, 1))  # pad the start token and end token
         # end token is used to avoid out-of-range of v_s_. Will not actually affect BP.
         seq = self.embedding(seq.long())
         feature, _ = self.rnn(seq)
@@ -170,7 +171,7 @@ class Actor(nn.Module):
         # to take care of choices with different number of options
         mask = torch.arange(self.action_dim).expand(len(out), self.action_dim) >= obs['action_dim'].unsqueeze(1)
         out[mask.to(out.device)] = float('-inf')
-        return nn.functional.softmax(out, dim=-1), kwargs.get('state', None)
+        return F.softmax(out, dim=-1), kwargs.get('state', None)
 
 
 class Critic(nn.Module):

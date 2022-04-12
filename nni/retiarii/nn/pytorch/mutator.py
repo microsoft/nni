@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import inspect
+import typing
 from typing import Any, List, Optional, Tuple, Dict, Iterator
 
 import torch.nn as nn
@@ -280,7 +281,7 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         if not is_model_wrapped(pytorch_model):
             raise ValueError('Please annotate the model with @model_wrapper decorator in python execution mode '
                              'if your model has init parameters.')
-        model.python_init_params = pytorch_model.trace_kwargs
+        model.python_init_params = typing.cast(dict, pytorch_model.trace_kwargs)
     else:
         model.python_init_params = {}
 

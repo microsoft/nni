@@ -1,26 +1,32 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import inspect
-import warnings
 from pathlib import Path
 
-import torch
-import torch.nn as nn
-
 # To make auto-completion happy, we generate a _nn.py that lists out all the classes.
-
 nn_cache_file_path = Path(__file__).parent / '_nn.py'
 
-cache_valid = False
+def validate_cache() -> bool:
+    import torch
 
-if nn_cache_file_path.exists():
-    from . import _nn  # pylint: disable=no-name-in-module
-    # valid only when torch version match
-    if _nn._torch_version == torch.__version__:
-        cache_valid = True
+    cache_valid = False
 
-if not cache_valid:
+    if nn_cache_file_path.exists():
+        from . import _nn  # pylint: disable=no-name-in-module
+        # valid only when torch version match
+        if _nn._torch_version == torch.__version__:
+            cache_valid = True
+
+    return cache_valid
+
+
+def write_cache() -> None:
+    import inspect
+    import warnings
+
+    import torch
+    import torch.nn as nn
+
     _NO_WRAP_CLASSES = [
         # not an nn.Module
         'Parameter',
@@ -48,6 +54,7 @@ if not cache_valid:
         '# When pytorch version does not match, it will get automatically updated.',
         '# pylint: skip-file',
         f'_torch_version = "{torch.__version__}"',
+        'import typing',
         'import torch.nn as nn',
         'from nni.retiarii.serializer import basic_unit',
     ]
@@ -66,9 +73,9 @@ if not cache_valid:
                               'It means your PyTorch version might not be supported.', RuntimeWarning)
                 code.append(f'{name} = nn.{name}')
             elif name in _WRAP_WITHOUT_TAG_CLASSES:
-                code.append(f'{name} = basic_unit(nn.{name}, basic_unit_tag=False)')
+                code.append(f'{name} = typing.cast(nn.{name}, basic_unit(nn.{name}, basic_unit_tag=False))')
             else:
-                code.append(f'{name} = basic_unit(nn.{name})')
+                code.append(f'{name} = typing.cast(nn.{name}, basic_unit(nn.{name}))')
 
             all_names.append(name)
 
@@ -81,9 +88,12 @@ if not cache_valid:
     with nn_cache_file_path.open('w') as fp:
         fp.write('\n'.join(code))
 
+if not validate_cache():
+    write_cache()
+
+del Path, validate_cache, write_cache, nn_cache_file_path
 
 # Import all modules from generated _nn.py
 
 from . import _nn  # pylint: disable=no-name-in-module
-__all__ = _nn.__all__
 from ._nn import *  # pylint: disable=import-error, wildcard-import
