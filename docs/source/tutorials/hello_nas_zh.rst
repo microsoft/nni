@@ -1,4 +1,4 @@
-.. 1e8fe0a3e2fe5dfb2b6cfe5e6ad6dc7a
+.. 8a873f2c9cb0e8e3ed2d66b9d16c330f
 
 
 .. DO NOT EDIT.
@@ -467,7 +467,7 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
  .. code-block:: none
 
-    INFO:nni.experiment:Creating experiment, Experiment ID: 90wpga3h
+    INFO:nni.experiment:Creating experiment, Experiment ID: z8ns5fv7
     INFO:nni.experiment:Connecting IPC pipe...
     INFO:nni.experiment:Starting web server...
     INFO:nni.experiment:Setting up...
@@ -559,17 +559,17 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
  .. code-block:: none
 
-    {'model_1': '0', 'model_2': 0.25, 'model_3': 256}
+    {'model_1': '0', 'model_2': 0.25, 'model_3': 64}
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 358-361
+.. GENERATED FROM PYTHON SOURCE LINES 358-362
 
 输出是一个 JSON 对象，记录了最好的模型的每一个选择都选了什么。
 如果用户想要搜出来的模型的源代码，他们可以使用 :ref:`基于图的引擎 <graph-based-execution-engine>`，只需增加如下两行。
 
-.. GENERATED FROM PYTHON SOURCE LINES 361-364
+.. GENERATED FROM PYTHON SOURCE LINES 362-365
 
 .. code-block:: default
 
@@ -586,7 +586,7 @@ Retiarii 提供了 :doc:`内置模型评估器 </nas/evaluator>`，但在此之�
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  14.458 seconds)
+   **Total running time of the script:** ( 2 minutes  4.499 seconds)
 
 
 .. _sphx_glr_download_tutorials_hello_nas.py:

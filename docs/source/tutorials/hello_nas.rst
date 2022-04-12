@@ -472,7 +472,7 @@ Launch the experiment. The experiment should take several minutes to finish on a
 
  .. code-block:: none
 
-    INFO:nni.experiment:Creating experiment, Experiment ID: 90wpga3h
+    INFO:nni.experiment:Creating experiment, Experiment ID: z8ns5fv7
     INFO:nni.experiment:Connecting IPC pipe...
     INFO:nni.experiment:Starting web server...
     INFO:nni.experiment:Setting up...
@@ -565,18 +565,19 @@ Users can export top models after the exploration is done using ``export_top_mod
 
  .. code-block:: none
 
-    {'model_1': '0', 'model_2': 0.25, 'model_3': 256}
+    {'model_1': '0', 'model_2': 0.25, 'model_3': 64}
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 358-361
+.. GENERATED FROM PYTHON SOURCE LINES 358-362
 
-The output is ``json``` object which records the mutation actions of the top model.
-If users want to output source code of the top model, they can use graph-based execution engine for the experiment,
+The output is ``json`` object which records the mutation actions of the top model.
+If users want to output source code of the top model,
+they can use :ref:`graph-based execution engine <graph-based-execution-engine>` for the experiment,
 by simply adding the following two lines.
 
-.. GENERATED FROM PYTHON SOURCE LINES 361-364
+.. GENERATED FROM PYTHON SOURCE LINES 362-365
 
 .. code-block:: default
 
@@ -593,7 +594,7 @@ by simply adding the following two lines.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  14.458 seconds)
+   **Total running time of the script:** ( 2 minutes  4.499 seconds)
 
 
 .. _sphx_glr_download_tutorials_hello_nas.py:
