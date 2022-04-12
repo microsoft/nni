@@ -9,7 +9,7 @@ Execution engine is for running Retiarii Experiment. NNI supports three executio
 
 * **CGO execution engine** has the same requirements and capabilities as the **Graph-based execution engine**. But further enables cross-model optimizations, which makes model space exploration faster.
 
-.. _pure-python-exeuction-engine:
+.. _pure-python-execution-engine:
 
 Pure-python Execution Engine
 ----------------------------
@@ -20,7 +20,7 @@ Rememeber to add :meth:`nni.retiarii.model_wrapper` decorator outside the whole 
 
 .. note:: You should always use ``super().__init__()`` instead of ``super(MyNetwork, self).__init__()`` in the PyTorch model, because the latter one has issues with model wrapper.
 
-.. _graph-based-exeuction-engine:
+.. _graph-based-execution-engine:
 
 Graph-based Execution Engine
 ----------------------------

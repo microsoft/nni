@@ -169,7 +169,7 @@ class Cell(nn.Module):
 
     Warnings
     --------
-    :class:`Cell` is not supported in :ref:`graph-based execution engine <graph-based-exeuction-engine>`.
+    :class:`Cell` is not supported in :ref:`graph-based execution engine <graph-based-execution-engine>`.
 
     Attributes
     ----------
