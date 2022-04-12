@@ -137,6 +137,11 @@ class Cell(nn.Module):
 
     >>> cell([input1, input2])
 
+    The "list bracket" can be omitted:
+
+    >>> cell(only_input)                    # only one input
+    >>> cell(tensor1, tensor2, tensor3)     # multiple inputs
+
     Use ``merge_op`` to specify how to construct the output.
     The output will then have dynamic shape, depending on which input has been used in the cell.
 
@@ -161,6 +166,10 @@ class Cell(nn.Module):
 
         cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2, preprocessor=Preprocessor())
         cell([torch.randn(1, 16, 48, 48), torch.randn(1, 64, 48, 48)])  # the two inputs will be sent to conv1 and conv2 respectively
+
+    Warnings
+    --------
+    :class:`Cell` is not supported in :ref:`graph-based execution engine <graph-based-exeuction-engine>`.
 
     Attributes
     ----------
@@ -242,14 +251,14 @@ class Cell(nn.Module):
     def label(self):
         return self._label
 
-    def forward(self, inputs: List[torch.Tensor]):
+    def forward(self, *inputs: Union[List[torch.Tensor], torch.Tensor]) -> Union[Tuple[torch.Tensor, ...], torch.Tensor]:
         """Forward propagation of cell.
 
         Parameters
         ----------
         inputs
-            Must be a list of tensors, even if there's only one predecessor.
-            The length of the list should be equal to ``num_predecessors``.
+            Can be a list of tensors, or several tensors.
+            The length should be equal to ``num_predecessors``.
 
         Returns
         -------
@@ -258,8 +267,10 @@ class Cell(nn.Module):
             By default, it's the output of ``merge_op``, which is a contenation (on ``concat_dim``)
             of some of (possibly all) the nodes' outputs in the cell.
         """
-        # Cannot decorate return type as annotation. Otherwise torchscript will complain.
-        assert isinstance(inputs, list), 'We currently only support input of cell as a list, even if you have only one predecessor.'
+        if len(inputs) == 1 and isinstance(inputs[0], list):
+            inputs = inputs[0]
+        else:
+            inputs = list(inputs)
         assert len(inputs) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
         states = self.preprocessor(inputs)
         for ops, inps in zip(self.ops, self.inputs):
