@@ -12,7 +12,7 @@ NNI has supported many training services listed below. Users can go through each
     * - Local
       - The whole experiment runs on your dev machine (i.e., a single local machine)
     * - Remote
-      - The trials are dispatched to your configured remote servers
+      - The trials are dispatched to your configured SSH servers
     * - OpenPAI
       - Running trials on OpenPAI, a DNN model training platform based on Kubernetes
     * - Kubeflow
@@ -22,7 +22,7 @@ NNI has supported many training services listed below. Users can go through each
     * - FrameworkController
       - Running trials with FrameworkController, a DNN model training framework on Kubernetes
     * - AML
-      - Running trials on AML cloud service
+      - Running trials on Azure Machine Learning (AML) cloud service
     * - PAI-DLC
       - Running trials on PAI-DLC, which is deep learning containers based on Alibaba ACK
     * - Hybrid

@@ -62,13 +62,11 @@ See the :doc:`installation guide </installation>` if you need additional help on
 Try your first NNI experiment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To run your first NNI experiment:
-
 .. code-block:: shell
 
    $ nnictl hello
 
-.. note:: you need to have `PyTorch <https://pytorch.org/>`_ (as well as `torchvision <https://pytorch.org/vision/stable/index.html>`_) installed to run this experiment.
+.. note:: You need to have `PyTorch <https://pytorch.org/>`_ (as well as `torchvision <https://pytorch.org/vision/stable/index.html>`_) installed to run this experiment.
 
 To start your journey now, please follow the :doc:`absolute quickstart of NNI <quickstart>`!
 
@@ -261,7 +259,7 @@ Get Support and Contribute Back
 NNI is maintained on the `NNI GitHub repository <https://github.com/microsoft/nni>`_. We collect feedbacks and new proposals/ideas on GitHub. You can:
 
 * Open a `GitHub issue <https://github.com/microsoft/nni/issues>`_ for bugs and feature requests.
-* Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to contribute code (make sure to read the `contribution guide </contribution>` before doing this).
+* Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to contribute code (make sure to read the :doc:`contribution guide <notes/contributing>` before doing this).
 * Participate in `NNI Discussion <https://github.com/microsoft/nni/discussions>`_ for general questions and new ideas.
 * Join the following IM groups.
 
