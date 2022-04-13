@@ -275,17 +275,17 @@ Search Space Types Supported by Each Tuner
      - 
 
    * - :class:`BOHB <nni.algorithms.hpo.bohb_advisor.BOHB>`
-     - choice
-     - choice(nested)
-     - randint
-     - uniform
-     - quniform
-     - loguniform
-     - qloguniform
-     - normal
-     - qnormal
-     - lognormal
-     - qlognormal
+     - ✓
+     -
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
 
    * - :class:`GP <nni.algorithms.hpo.gp_tuner.GPTuner>`
      - ✓
@@ -301,17 +301,17 @@ Search Space Types Supported by Each Tuner
      - 
 
    * - :class:`PBT <nni.algorithms.hpo.pbt_tuner.PBTTuner>`
-     - choice
-     - choice(nested)
-     - randint
-     - uniform
-     - quniform
-     - loguniform
-     - qloguniform
-     - normal
-     - qnormal
-     - lognormal
-     - qlognormal
+     - ✓
+     -
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
+     - ✓
 
    * - :class:`DNGO <nni.algorithms.hpo.dngo_tuner.DNGOTuner>`
      - ✓

@@ -20,6 +20,14 @@ More examples can be found in our :githublink:`GitHub repository <nni/examples>`
    :tags: HPO
 
 .. cardlinkitem::
+   :header: HPO using command line tool
+   :description: Run HPO experiment with nnictl
+   :link: tutorials/hpo_nnictl/nnictl
+   :image: ../img/thumbnails/hpo-pytorch.svg
+   :background: purple
+   :tags: HPO
+
+.. cardlinkitem::
    :header: Hello, NAS!
    :description: Beginners' NAS tutorial on how to search for neural architectures for MNIST dataset.
    :link: tutorials/hello_nas

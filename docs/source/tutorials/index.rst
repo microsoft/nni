@@ -189,12 +189,12 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="There is also a TensorFlow version&lt;../hpo_quickstart_tensorflow/main&gt; if you prefer it.">
+    <div class="sphx-glr-thumbcontainer" tooltip="The tutorial consists of 4 steps: ">
 
 .. only:: html
 
  .. figure:: /tutorials/hpo_quickstart_pytorch/images/thumb/sphx_glr_main_thumb.png
-     :alt: NNI HPO Quickstart with PyTorch
+     :alt: HPO Quickstart with PyTorch
 
      :ref:`sphx_glr_tutorials_hpo_quickstart_pytorch_main.py`
 
@@ -246,7 +246,7 @@ Tutorials
 .. only:: html
 
  .. figure:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_main_thumb.png
-     :alt: NNI HPO Quickstart with TensorFlow
+     :alt: HPO Quickstart with TensorFlow
 
      :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_main.py`
 

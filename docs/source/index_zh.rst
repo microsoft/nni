@@ -1,4 +1,4 @@
-.. 954c2f433b4617a40d684df9b1a5f16b
+.. 332171e7e69b4cab0d90d7444bd53d66
 
 ###########################
 Neural Network Intelligence
@@ -13,7 +13,7 @@ Neural Network Intelligence
     入门 <quickstart>
     安装 <installation>
     教程<examples>
-    超参调优 <hpo/index>
+    超参调优 <hpo/toctree>
     神经网络架构搜索<nas/toctree>
     模型压缩<compression/toctree>
     特征工程<feature_engineering/toctree>

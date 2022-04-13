@@ -1,6 +1,6 @@
 """
-NNI HPO Quickstart with TensorFlow
-==================================
+HPO Quickstart with TensorFlow
+==============================
 This tutorial optimizes the model in `official TensorFlow quickstart`_ with auto-tuning.
 
 The tutorial consists of 4 steps: 
@@ -113,16 +113,16 @@ experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
 experiment.config.max_trial_number = 10
 experiment.config.trial_concurrency = 2
 # %%
+# You may also set ``max_experiment_duration = '1h'`` to limit running time.
+#
+# If neither ``max_trial_number`` nor ``max_experiment_duration`` are set,
+# the experiment will run forever until you press Ctrl-C.
+#
 # .. note::
 #
 #     ``max_trial_number`` is set to 10 here for a fast example.
 #     In real world it should be set to a larger number.
 #     With default config TPE tuner requires 20 trials to warm up.
-#
-# You may also set ``max_experiment_duration = '1h'`` to limit running time.
-#
-# If neither ``max_trial_number`` nor ``max_experiment_duration`` are set,
-# the experiment will run forever until you press Ctrl-C.
 
 # %%
 # Step 4: Run the experiment
@@ -154,4 +154,4 @@ experiment.stop()
 #
 #     This example uses :doc:`Python API </reference/experiment>` to create experiment.
 #
-#     You can also create and manage experiments with :doc:`command line tool </reference/nnictl>`.
+#     You can also create and manage experiments with :doc:`command line tool <../hpo_nnictl/nnictl>`.

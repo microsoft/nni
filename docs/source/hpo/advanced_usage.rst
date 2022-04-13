@@ -1,9 +1,8 @@
-###########################
-Hyperparameter Optimization
-###########################
+Advanced Usage
+==============
 
-..  toctree::
-    :maxdepth: 2
+.. toctree::
+    :hidden:
 
     Implement Custom Tuners and Assessors <custom_algorithm>
     Install Custom or 3rd-party Tuners and Assessors <custom_algorithm_installation>

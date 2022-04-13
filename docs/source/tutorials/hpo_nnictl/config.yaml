@@ -1,0 +1,24 @@
+search_space:
+  features:
+    _type: choice
+    _value: [ 128, 256, 512, 1024 ]
+  lr:
+    _type: loguniform
+    _value: [ 0.0001, 0.1 ]
+  momentum:
+    _type: uniform
+    _value: [ 0, 1 ]
+
+trial_command: python model.py
+trial_code_directory: .
+
+trial_concurrency: 2
+max_trial_number: 10
+
+tuner:
+  name: TPE
+  class_args:
+    optimize_mode: maximize
+
+training_service:
+  platform: local
