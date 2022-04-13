@@ -137,6 +137,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 }
                 this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
                     this.kubeflowClusterConfig.operator, this.kubeflowClusterConfig.apiVersion);
+                this.kubernetesCRDClient.setNamespace = this.kubeflowClusterConfig.namespace ? this.kubeflowClusterConfig.namespace : "default";
                 break;
             }
             case TrialConfigMetadataKey.TRIAL_CONFIG: {
@@ -368,7 +369,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             kind: this.kubernetesCRDClient.jobKind,
             metadata: {
                 name: kubeflowJobName,
-                namespace: 'default',
+                namespace: this.kubernetesCRDClient.getNamespace,
                 labels: {
                     app: this.NNI_KUBERNETES_TRIAL_LABEL,
                     expId: getExperimentId(),

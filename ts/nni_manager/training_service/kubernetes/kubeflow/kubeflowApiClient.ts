@@ -17,7 +17,7 @@ class TFOperatorClientV1Alpha2 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis['kubeflow.org'].v1alpha2.namespaces('default').tfjobs;
+        return this.client.apis['kubeflow.org'].v1alpha2.namespaces(this.namespace).tfjobs;
     }
 
     public get containerName(): string {
@@ -36,7 +36,7 @@ class TFOperatorClientV1Beta1 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis['kubeflow.org'].v1beta1.namespaces('default').tfjobs;
+        return this.client.apis['kubeflow.org'].v1beta1.namespaces(this.namespace).tfjobs;
     }
 
     public get containerName(): string {
@@ -55,7 +55,7 @@ class TFOperatorClientV1Beta2 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis['kubeflow.org'].v1beta2.namespaces('default').tfjobs;
+        return this.client.apis['kubeflow.org'].v1beta2.namespaces(this.namespace).tfjobs;
     }
 
     public get containerName(): string {
@@ -74,7 +74,7 @@ class TFOperatorClientV1 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis['kubeflow.org'].v1.namespaces('default').tfjobs;
+        return this.client.apis['kubeflow.org'].v1.namespaces(this.namespace).tfjobs;
     }
 
     public get containerName(): string {
@@ -92,7 +92,7 @@ class PyTorchOperatorClientV1 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis['kubeflow.org'].v1.namespaces('default').pytorchjobs;
+        return this.client.apis['kubeflow.org'].v1.namespaces(this.namespace).pytorchjobs;
     }
 
     public get containerName(): string {
@@ -110,7 +110,7 @@ class PyTorchOperatorClientV1Alpha2 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis['kubeflow.org'].v1alpha2.namespaces('default').pytorchjobs;
+        return this.client.apis['kubeflow.org'].v1alpha2.namespaces(this.namespace).pytorchjobs;
     }
 
     public get containerName(): string {
@@ -129,7 +129,7 @@ class PyTorchOperatorClientV1Beta1 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis['kubeflow.org'].v1beta1.namespaces('default').pytorchjobs;
+        return this.client.apis['kubeflow.org'].v1beta1.namespaces(this.namespace).pytorchjobs;
     }
 
     public get containerName(): string {
@@ -148,7 +148,7 @@ class PyTorchOperatorClientV1Beta2 extends KubernetesCRDClient {
     }
 
     protected get operator(): any {
-        return this.client.apis['kubeflow.org'].v1beta2.namespaces('default').pytorchjobs;
+        return this.client.apis['kubeflow.org'].v1beta2.namespaces(this.namespace).pytorchjobs;
     }
 
     public get containerName(): string {

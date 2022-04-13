@@ -150,6 +150,7 @@ abstract class KubernetesCRDClient {
     protected readonly client: any;
     protected readonly log: Logger = getLogger('KubernetesCRDClient');
     protected crdSchema: any;
+    protected namespace: string = 'default';
 
     constructor() {
         this.client = new Client1_10({config: getKubernetesConfig()});
@@ -157,6 +158,14 @@ abstract class KubernetesCRDClient {
     }
 
     protected abstract get operator(): any;
+
+    public set setNamespace(namespace: string) {
+        this.namespace = namespace;
+    }
+
+    public get getNamespace(): string {
+        return this.namespace;
+    }
 
     public abstract get containerName(): string;
 
