@@ -18,6 +18,7 @@ kubeflow:
     azureStorage:
       accountName:
       azureShare:
+    namespace: kubeflow
   trial:
     worker:
       replicas: 1
