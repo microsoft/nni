@@ -329,6 +329,8 @@ To build the translated documentation (for example Chinese documentation), pleas
 
    make -e SPHINXOPTS="-D language='zh'" html
 
+If you ever encountered problems for translation builds, try to remove the previous build via ``rm -r docs/build/``.
+
 .. _code-of-conduct:
 
 Code of Conduct
