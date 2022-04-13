@@ -60,9 +60,7 @@ Follow the `guideline <https://github.com/Microsoft/frameworkcontroller/tree/mas
 to set up FrameworkController in the Kubernetes cluster, NNI supports FrameworkController by the stateful set mode.
 If your cluster enforces authorization, you need to create a service account with granted permission for FrameworkController,
 and then pass the name of the FrameworkController service account to the NNI Experiment Config.
-`refer <https://github.com/Microsoft/frameworkcontroller/tree/master/example/run#run-by-kubernetes-statefulset>`__.  
-If the k8s cluster enforces Authorization, you also need to create a ServiceAccount with granted permission for FrameworkController,
-`refer <https://github.com/microsoft/frameworkcontroller/tree/master/example/run#prerequisite>`__.  
+If the k8s cluster enforces Authorization, you also need to create a ServiceAccount with granted permission for FrameworkController.
 
 Design
 ------

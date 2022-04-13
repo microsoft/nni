@@ -8,7 +8,7 @@ PAI-DSW server performs the role to submit a job while PAI-DLC is where the trai
 Prerequisite
 ------------
 
-Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart.rst>`__.
+Step 1. Install NNI, follow the :doc:`install guide </installation>`.
 
 Step 2. Create PAI-DSW server following this `link <https://help.aliyun.com/document_detail/163684.html?section-2cw-lsi-es9#title-ji9-re9-88x>`__. Note as the training service will be run on PAI-DLC, it won't cost many resources to run and you may just need a PAI-DSW server with CPU.
 
