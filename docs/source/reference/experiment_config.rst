@@ -20,11 +20,6 @@ A config file is needed when creating an experiment. This document describes the
 
     4. Setting a field to ``None`` or ``null`` is equivalent to not setting the field.
 
-.. contents:: Contents
-   :local:
-   :depth: 3
- 
-
 Examples
 ========
 
