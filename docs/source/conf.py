@@ -182,7 +182,10 @@ locale_dir = ['locales']
 
 gettext_documents = [
     r'^index$',
-    r'^nas/overview$',
+    r'^quickstart$',
+    r'^installation$',
+    r'^(nas|hpo|compression)/overview$',
+    r'^tutorials/(hello_nas|pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
 ]
 
 # List of patterns, relative to source directory, that match files and

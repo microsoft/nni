@@ -38,8 +38,10 @@ stages:
       displayName: Sphinx sanity check (Chinese)
 
     - script: |
+        set -e
         cd docs
-        python tools/chineselink.py check
+        make i18n
+        git diff --exit-code source/locales
       displayName: Translation up-to-date
 
   - job: python
