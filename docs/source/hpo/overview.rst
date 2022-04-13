@@ -107,7 +107,7 @@ After you are familiar with basic usage, you can explore more HPO features:
 
 * :doc:`Use command line tool to create and manage experiments (nnictl) </reference/nnictl>`
 
-  * :doc:`nnictl tutorial </tutorials/hpo_nnictl/nnictl>`
+  * :doc:`nnictl example </tutorials/hpo_nnictl/nnictl>`
 
 * :doc:`Early stop non-optimal models (assessor) <assessors>`
 * :doc:`TensorBoard integration </experiment/web_portal/tensorboard>`

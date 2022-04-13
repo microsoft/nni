@@ -95,7 +95,7 @@ NNI 内建了很多流行的调优算法，包括朴素算法如随机搜索�
 
 * :doc:`Use command line tool to create and manage experiments (nnictl) </reference/nnictl>`
 
-  * :doc:`nnictl tutorial </tutorials/hpo_nnictl/nnictl>`
+  * :doc:`nnictl example </tutorials/hpo_nnictl/nnictl>`
 
 * :doc:`Early stop non-optimal models (assessor) <assessors>`
 * :doc:`TensorBoard integration </experiment/web_portal/tensorboard>`
