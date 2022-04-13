@@ -29,7 +29,19 @@ class _MultiModelSupervisedLearningModule(LightningModule):
         self.criterion_cls = criterion
         self.optimizer = optimizer
         self.metrics = nn.ModuleDict({name: cls() for name, cls in metrics.items()})
+        self.metrics_args = metrics
         self.n_models = n_models
+
+    def dump_kwargs(self):
+        kwargs = {}
+        kwargs['criterion'] = self.criterion_cls
+        kwargs['metrics'] = self.metrics_args
+        kwargs['n_models'] = self.n_models
+        kwargs['learning_rate'] = self.hparams['learning_rate']
+        kwargs['weight_decay'] = self.hparams['weight_decay']
+        kwargs['optimizer'] = self.optimizer
+        return kwargs
+
 
     def forward(self, x):
         y_hat = self.model(x)
@@ -101,7 +113,6 @@ class _MultiModelSupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-@nni.trace
 class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
     """
     Lightning Module of SupervisedLearning for Cross-Graph Optimization.
@@ -126,8 +137,7 @@ class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
         super().__init__(criterion, metrics, learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 
-@nni.trace
-class _ClassificationModule(MultiModelSupervisedLearningModule):
+class _ClassificationModule(_MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
@@ -173,9 +183,7 @@ class Classification(Lightning):
         super().__init__(module, Trainer(use_cgo=True, **trainer_kwargs),
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
-
-@nni.trace
-class _RegressionModule(MultiModelSupervisedLearningModule):
+class _RegressionModule(_MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
