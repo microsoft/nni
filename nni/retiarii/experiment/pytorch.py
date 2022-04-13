@@ -150,7 +150,7 @@ def preprocess_model(base_model, evaluator, applied_mutators, full_ir=True, dumm
         applied_mutators = mutators
 
     # Add mutations on evaluators
-    applied_mutators += process_evaluator_mutations(trainer, applied_mutators)
+    applied_mutators += process_evaluator_mutations(evaluator, applied_mutators)
 
     return base_model_ir, applied_mutators
 
