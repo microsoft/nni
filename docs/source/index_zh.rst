@@ -1,4 +1,4 @@
-.. 1c1500ed177d6b4badecd72037a24a30
+.. 954c2f433b4617a40d684df9b1a5f16b
 
 ###########################
 Neural Network Intelligence
@@ -10,20 +10,24 @@ Neural Network Intelligence
     :titlesonly:
     :hidden:
 
-    概述<Overview>
+    入门 <quickstart>
     安装 <installation>
-    入门<Tutorial/QuickStart>
-    教程<tutorials>
-    自动（超参数）调优 <hyperparameter_tune>
-    神经网络架构搜索<nas>
-    模型压缩<model_compression>
-    特征工程<feature_engineering>
-    参考<reference>
-    示例与解决方案<CommunitySharings/community_sharings>
-    研究和出版物 <ResearchPublications>
-    常见问题 <Tutorial/FAQ>
-    如何贡献 <contribution>
-    更改日志 <Release>
+    教程<examples>
+    超参调优 <hpo/index>
+    神经网络架构搜索<nas/toctree>
+    模型压缩<compression/toctree>
+    特征工程<feature_engineering/toctree>
+    NNI实验 <experiment/toctree>
+    HPO API Reference <reference/hpo>
+    Experiment API Reference <reference/experiment>
+    nnictl Commands <reference/nnictl>
+    Experiment Configuration <reference/experiment_config>
+    Python API <reference/python_api>
+    示例与解决方案<sharings/community_sharings>
+    研究和出版物 <notes/research_publications>
+    从源代码安装 <notes/build_from_source>
+    如何贡献 <notes/contributing>
+    更改日志 <release>
 
 
 .. raw:: html

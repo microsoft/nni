@@ -6,6 +6,7 @@ hyperopt == 0.1.2
 json_tricks >= 3.15.5
 numpy < 1.22 ; python_version < "3.8"
 numpy ; python_version >= "3.8"
+packaging
 pandas
 prettytable
 psutil
@@ -18,5 +19,5 @@ scikit-learn >= 0.24.1
 scipy < 1.8 ; python_version < "3.8"
 scipy ; python_version >= "3.8"
 typeguard
-typing_extensions ; python_version < "3.8"
+typing_extensions >= 4.0.0 ; python_version < "3.8"
 websockets >= 10.1

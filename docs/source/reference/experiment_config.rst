@@ -242,9 +242,9 @@ AlgorithmConfig
 
 For customized algorithms, there are two ways to describe them:
 
-  1. `Register the algorithm <../Tutorial/InstallCustomizedAlgos.rst>`__ to use it like built-in. (preferred)
+1. :doc:`Register the algorithm </hpo/custom_algorithm_installation>` to use it like built-in. (preferred)
 
-  2. Specify code directory and class name directly.
+2. Specify code directory and class name directly.
 
 .. list-table::
     :widths: 10 10 80
@@ -289,10 +289,12 @@ One of the following:
 
 For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platforms, it is suggested to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
 
+.. _reference-local-config-label:
+
 LocalConfig
 -----------
 
-Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
+Introduction of the corresponding local training service can be found :doc:`/experiment/training_service/local`.
 
 .. list-table::
     :widths: 10 10 80
@@ -330,10 +332,12 @@ Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
         If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
         This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
+.. _reference-remote-config-label:
+
 RemoteConfig
 ------------
 
-Detailed usage can be found `here <../TrainingService/RemoteMachineMode.rst>`__.
+Detailed usage can be found :doc:`/experiment/training_service/remote`.
 
 .. list-table::
     :widths: 10 10 80
@@ -612,9 +616,9 @@ Currently only support `LocalConfig`_, `RemoteConfig`_, `OpenpaiConfig`_ and `Am
 SharedStorageConfig
 ^^^^^^^^^^^^^^^^^^^
 
-Detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+Detailed usage can be found :doc:`here </experiment/training_service/shared_storage>`.
 
-nfsConfig
+NfsConfig
 ---------
 
 .. list-table::
@@ -653,7 +657,7 @@ nfsConfig
       - ``str``
       - Exported directory of NFS server, detailed `here <https://www.ibm.com/docs/en/aix/7.2?topic=system-nfs-exporting-mounting>`_.
 
-azureBlobConfig
+AzureBlobConfig
 ---------------
 
 .. list-table::

@@ -105,7 +105,8 @@ def json2parameter(ss_spec, random_state):
 
 
 class Bracket():
-    """A bracket in Hyperband, all the information of a bracket is managed by an instance of this class
+    """
+    A bracket in Hyperband, all the information of a bracket is managed by an instance of this class
 
     Parameters
     ----------
@@ -267,24 +268,136 @@ class HyperbandClassArgsValidator(ClassArgsValidator):
 
 class Hyperband(MsgDispatcherBase):
     """
-    Hyperband inherit from MsgDispatcherBase rather than Tuner, because it integrates both tuner's functions and assessor's functions.
-    This is an implementation that could fully leverage available resources or follow the algorithm process,
-    i.e., high parallelism or serial.
-    A single execution of Hyperband takes a finite budget of (s_max + 1)B.
+    `Hyperband <https://arxiv.org/pdf/1603.06560.pdf>`__ is a multi-fidelity hyperparameter tuning algorithm
+    based on successive halving.
+
+    The basic idea of Hyperband is to create several buckets,
+    each having ``n`` randomly generated hyperparameter configurations,
+    each configuration using ``r`` resources (e.g., epoch number, batch number).
+    After the ``n`` configurations are finished, it chooses the top ``n/eta`` configurations
+    and runs them using increased ``r*eta`` resources.
+    At last, it chooses the best configuration it has found so far.
+    Please refer to the paper :footcite:t:`li2017hyperband` for detailed algorithm.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.advisor.name = 'Hyperband'
+        config.advisor.class_args = {
+            'optimize_mode': 'maximize',
+            'R': 60,
+            'eta': 3
+        }
+
+
+    Note that once you use Advisor, you are not allowed to add a Tuner and Assessor spec in the config file.
+    When Hyperband is used, the dict returned by :func:`nni.get_next_parameter` one more key
+    called ``TRIAL_BUDGET`` besides the hyperparameters and their values.
+    **With this TRIAL_BUDGET, users can control in trial code how long a trial runs by following
+    the suggested trial budget from Hyperband.** ``TRIAL_BUDGET`` is a relative number,
+    users can interpret them as number of epochs, number of mini-batches, running time, etc.
+
+    Here is a concrete example of ``R=81`` and ``eta=3``:
+
+    .. list-table::
+        :header-rows: 1
+        :widths: auto
+
+        * -
+          - s=4
+          - s=3
+          - s=2
+          - s=1
+          - s=0
+        * - i
+          - n r
+          - n r
+          - n r
+          - n r
+          - n r
+        * - 0
+          - 81 1
+          - 27 3
+          - 9 9
+          - 6 27
+          - 5 81
+        * - 1
+          - 27 3
+          - 9 9
+          - 3 27
+          - 2 81
+          -
+        * - 2
+          - 9 9
+          - 3 27
+          - 1 81
+          -
+          -
+        * - 3
+          - 3 27
+          - 1 81
+          -
+          -
+          -
+        * - 4
+          - 1 81
+          -
+          -
+          -
+          -
+
+
+    ``s`` means bucket, ``n`` means the number of configurations that are generated,
+    the corresponding ``r`` means how many budgets these configurations run.
+    ``i`` means round, for example, bucket 4 has 5 rounds, bucket 3 has 4 rounds.
+
+    A complete example can be found :githublink:`examples/trials/mnist-advisor`.
 
     Parameters
     ----------
-    R: int
-        the maximum amount of resource that can be allocated to a single configuration
-    eta: int
-        the variable that controls the proportion of configurations discarded in each round of SuccessiveHalving
     optimize_mode: str
-        optimize mode, 'maximize' or 'minimize'
+        Optimize mode, 'maximize' or 'minimize'.
+
+    R: int
+        The maximum amount of budget that can be allocated to a single configuration.
+        Here, trial budget could mean the number of epochs, number of mini-batches, etc.,
+        depending on how users interpret it.
+        Each trial should use ``TRIAL_BUDGET`` to control how long it runs.
+
+    eta: int
+        The variable that controls the proportion of configurations discarded in each round of SuccessiveHalving.
+        ``1/eta`` configurations will survive and rerun using more budgets in each round.
+
     exec_mode: str
-        execution mode, 'serial' or 'parallelism'
+        Execution mode, 'serial' or 'parallelism'.
+        If 'parallelism', the tuner will try to use available resources to start new bucket immediately.
+        If 'serial', the tuner will only start new bucket after the current bucket is done.
+
+
+    Notes
+    -----
+
+    First, Hyperband an example of how to write an autoML algorithm based on MsgDispatcherBase,
+    rather than based on Tuner and Assessor. Hyperband is implemented in this way
+    because it integrates the functions of both Tuner and Assessor,thus, we call it Advisor.
+
+    Second, this implementation fully leverages Hyperband's internal parallelism.
+    Specifically, the next bucket is not started strictly after the current bucket.
+    Instead, it starts when there are available resources. If you want to use full parallelism mode,
+    set ``exec_mode`` to ``parallelism``.
+
+    Or if you want to set ``exec_mode`` with ``serial`` according to the original algorithm.
+    In this mode, the next bucket will start strictly after the current bucket.
+
+    ``parallelism`` mode may lead to multiple unfinished buckets,
+    in contrast, there is at most one unfinished bucket under ``serial`` mode.
+    The advantage of ``parallelism`` mode is to make full use of resources,
+    which may reduce the experiment duration multiple times.
     """
 
-    def __init__(self, R=60, eta=3, optimize_mode='maximize', exec_mode='parallelism'):
+    def __init__(self, optimize_mode='maximize', R=60, eta=3, exec_mode='parallelism'):
         """B = (s_max + 1)R"""
         super(Hyperband, self).__init__()
         self.R = R

@@ -1,46 +1,51 @@
-// Uncomment the following for debug
-// READTHEDOCS_DATA = {
-//     "ad_free": false,
-//     "api_host": "https://readthedocs.org",
-//     "build_date": "2022-01-25T06:27:55Z",
-//     "builder": "sphinx",
-//     "canonical_url": null,
-//     "commit": "ca66e346",
-//     "docroot": "/docs/en_US/",
-//     "features": { "docsearch_disabled": false },
-//     "global_analytics_code": "UA-17997319-1",
-//     "language": "en",
-//     "page": "Tutorial",
-//     "programming_language": "words",
-//     "project": "nni",
-//     "proxied_api_host": "/_",
-//     "source_suffix": ".rst",
-//     "subprojects": { "nni-zh": "https://nni.readthedocs.io/zh/stable/" },
-//     "theme": "sphinx_material",
-//     "user_analytics_code": "UA-136029994-1",
-//     "version": "latest"
-// };
+try {
+    READTHEDOCS_DATA;
+} catch (e) {
+    console.log('READTHEDOCS_DATA is undefined. In debug mode.');
 
-// READTHEDOCS_VERSIONS = [
-//     ["latest", "/en/latest/"],
-//     ["stable", "/en/stable/"],
-//     ["v2.6", "/en/v2.6/"],
-//     ["v2.5", "/en/v2.5/"],
-//     ["v2.4", "/en/v2.4/"],
-//     ["v2.3", "/en/v2.3/"]
-// ];
-// The above code is injected by readthedocs in production.
+    // mock info
+    READTHEDOCS_DATA = {
+        "ad_free": false,
+        "api_host": "https://readthedocs.org",
+        "build_date": "2022-01-25T06:27:55Z",
+        "builder": "sphinx",
+        "canonical_url": null,
+        "commit": "ca66e346",
+        "docroot": "/docs/en_US/",
+        "features": { "docsearch_disabled": false },
+        "global_analytics_code": "UA-17997319-1",
+        "language": "en",
+        "page": "Tutorial",
+        "programming_language": "words",
+        "project": "nni",
+        "proxied_api_host": "/_",
+        "source_suffix": ".rst",
+        "subprojects": { "nni-zh": "https://nni.readthedocs.io/zh/stable/" },
+        "theme": "sphinx_material",
+        "user_analytics_code": "UA-136029994-1",
+        "version": "latest"
+    };
+    
+    READTHEDOCS_VERSIONS = [
+        ["latest", "/en/latest/"],
+        ["stable", "/en/stable/"],
+        ["v2.6", "/en/v2.6/"],
+        ["v2.5", "/en/v2.5/"],
+        ["v2.4", "/en/v2.4/"],
+        ["v2.3", "/en/v2.3/"],
+        ["test-version", "/en/test-version"]
+    ];
+    // The above code is injected by readthedocs in production.
+}
 
-
-function create_dropdown(button_text, items) {
-    const dropdown = document.createElement("div");
-    dropdown.className = "md-flex__cell md-flex__cell--shrink drop";
+function create_dropdown(selector, button_text, items) {
+    const dropdown = $(selector);
     const button = document.createElement("button");
     button.innerHTML = button_text;
     const content = document.createElement("ul");
     // content.className = "dropdown-content md-hero";
-    dropdown.appendChild(button);
-    dropdown.appendChild(content);
+    dropdown.append(button);
+    dropdown.append(content);
 
     for (const key in items) {
         if (items.hasOwnProperty(key)) {
@@ -58,8 +63,8 @@ function create_dropdown(button_text, items) {
     $(button).click(function (e) {
         // first close all others.
         $(".drop").find(".active").removeClass("active");
-        $(dropdown).find("ul").addClass("active");
-        $(dropdown).find("button").addClass("active");
+        dropdown.find("ul").addClass("active");
+        dropdown.find("button").addClass("active");
         e.stopPropagation();
     })
     $(document).click(function () {
@@ -68,15 +73,16 @@ function create_dropdown(button_text, items) {
     return dropdown;
 }
 
-function remove_version_dropdown() {
-    $(".navheader").children().last().remove();
-}
-
 function add_version_dropdown() {
-    const prev_versions = Object.assign({}, ...READTHEDOCS_VERSIONS.map(([k, v]) => ({ [k]: v })));
+    const prev_versions = Object.assign(
+        {},
+        ...READTHEDOCS_VERSIONS
+            .filter(([k, v]) => (k === 'stable' || k == 'latest' || k.startsWith('v')))
+            .map(([k, v]) => ({ [k]: v }))
+    );
 
     const current_version = 'v: ' + READTHEDOCS_DATA["version"];
-    $(".navheader").append(create_dropdown(current_version, prev_versions));
+    create_dropdown(".drop.version", current_version, prev_versions);
 }
 
 function add_language_dropdown() {
@@ -98,14 +104,13 @@ function add_language_dropdown() {
         return pathname.join('/');
     }
 
-    $(".navheader").append(create_dropdown(language_dropdown[current_language], {
+    create_dropdown(".drop.language", language_dropdown[current_language], {
         [language_dropdown['en']]: get_dropdown_href('en'),
         [language_dropdown['zh']]: get_dropdown_href('zh')
-    }))
+    });
 }
 
 $(document).ready(function () {
-    remove_version_dropdown();
     add_language_dropdown();
     add_version_dropdown();
 });

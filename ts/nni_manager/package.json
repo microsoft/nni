@@ -21,7 +21,6 @@
     "js-base64": "^3.6.1",
     "kubernetes-client": "^6.12.1",
     "lockfile": "^1.0.4",
-    "npm": ">=8.3.0",
     "python-shell": "^3.0.0",
     "rx": "^4.1.0",
     "sqlite3": "5.0.2",
@@ -33,7 +32,8 @@
     "ts-deferred": "^1.0.4",
     "typescript-ioc": "^1.2.6",
     "typescript-string-operations": "^1.4.1",
-    "ws": "^7.4.6"
+    "ws": "^7.4.6",
+    "yargs": "^17.3.1"
   },
   "devDependencies": {
     "@types/chai": "^4.2.18",
@@ -55,6 +55,7 @@
     "@types/tar": "^4.0.4",
     "@types/tmp": "^0.2.0",
     "@types/ws": "^7.4.4",
+    "@types/yargs": "^17.0.8",
     "@typescript-eslint/eslint-plugin": "^2.10.0",
     "@typescript-eslint/parser": "^4.26.0",
     "chai": "^4.3.4",
@@ -63,6 +64,7 @@
     "glob": "^7.1.7",
     "mocha": "^9.0.2",
     "node-fetch": "<3.0.0",
+    "npm": ">=8.3.0",
     "nyc": "^15.1.0",
     "request": "^2.88.2",
     "rmdir": "^1.2.0",

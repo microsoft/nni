@@ -10,6 +10,7 @@ from .runtime.log import init_logger
 init_logger()
 
 from .common.serializer import trace, dump, load
+from .experiment import Experiment
 from .runtime.env_vars import dispatcher_env_vars
 from .utils import ClassArgsValidator
 
@@ -19,7 +20,7 @@ if dispatcher_env_vars.SDK_PROCESS != 'dispatcher':
     from .common.nas_utils import training_update
 
 class NoMoreTrialError(Exception):
-    def __init__(self, ErrorInfo):
+    def __init__(self, ErrorInfo='Search space fully explored'):
         super().__init__(self)
         self.errorinfo = ErrorInfo
 

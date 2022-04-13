@@ -107,6 +107,7 @@ def evaluate_model(model_cls):
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
+    model.to(device)
     for epoch in range(3):
         # train the model for one epoch
         train_epoch(model, device, train_loader, optimizer, epoch)
@@ -138,7 +139,7 @@ if __name__ == '__main__':
     # exp_config.execution_engine = 'base'
     # export_formatter = 'code'
 
-    exp.run(exp_config, 8081 + random.randint(0, 100))
+    exp.run(exp_config, 8080)
     print('Final model:')
     for model_code in exp.export_top_models(formatter=export_formatter):
         print(model_code)
