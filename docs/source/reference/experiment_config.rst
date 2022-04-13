@@ -286,8 +286,8 @@ One of the following:
 - `AmlConfig`_
 - `DlcConfig`_
 - `HybridConfig`_
-- FrameworkControllerConfig
-- KubeflowConfig
+- :doc:`FrameworkControllerConfig </experiment/training_service/frameworkcontroller>`
+- :doc:`KubeflowConfig </experiment/training_service/kubeflow>`
 
 .. _reference-local-config-label:
 
