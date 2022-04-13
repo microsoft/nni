@@ -132,6 +132,7 @@ export interface KubeflowConfig extends TrainingServiceConfig {
     master?: KubeflowRoleConfig;
     reuseMode: boolean;
     maxTrialNumberPerGpu?: number;
+    namespace?: 'default';
 }
 
 export interface FrameworkControllerTaskRoleConfig {
