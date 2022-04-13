@@ -180,6 +180,7 @@ language = None
 # Translation related settings
 locale_dir = ['locales']
 
+# Documents that requires translation: https://github.com/microsoft/nni/issues/4298
 gettext_documents = [
     r'^index$',
     r'^quickstart$',
