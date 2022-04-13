@@ -12,16 +12,16 @@ $(document).ready(function() {
         // the image links are stored in layout.html
         // to leverage jinja engine
         downloadNote.html(`
-            <a class="notebook-action-link" href="${colabLink}">
-                <div class="notebook-action-div">
-                    <img src="${GALLERY_LINKS.colab}"/>
-                    <div>Run in Google Colab</div>
-                </div>
-            </a>
             <a class="notebook-action-link" href="${notebookLink}">
                 <div class="notebook-action-div">
                     <img src="${GALLERY_LINKS.notebook}"/>
                     <div>Download Notebook</div>
+                </div>
+            </a>
+            <a class="notebook-action-link" href="${colabLink}">
+                <div class="notebook-action-div">
+                    <img src="${GALLERY_LINKS.colab}"/>
+                    <div>Run in Google Colab</div>
                 </div>
             </a>
             <a class="notebook-action-link" href="${githubLink}">
