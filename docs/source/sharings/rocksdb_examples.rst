@@ -48,8 +48,7 @@ In this example, the search space is specified by a ``search_space.json`` file a
 Benchmark code
 ^^^^^^^^^^^^^^
 
-Benchmark code should receive a configuration from NNI manager, and report the corresponding benchmark result back. Following NNI APIs are designed for this purpose. In this example, writing operations per second (OPS) is used as a performance metric. Please refer to :doc:`here </hpo/overview>` for detailed information.
-
+Benchmark code should receive a configuration from NNI manager, and report the corresponding benchmark result back. Following NNI APIs are designed for this purpose. In this example, writing operations per second (OPS) is used as a performance metric.
 
 * Use ``nni.get_next_parameter()`` to get next system configuration.
 * Use ``nni.report_final_result(metric)`` to report the benchmark result.

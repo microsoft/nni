@@ -37,7 +37,7 @@ Verify the Prerequisites
 Usage
 -----
 
-We have a CIFAR10 example that fully leverages the AdaptDL scheduler under :githublink:`examples/trials/cifar10_pytorch` folder. (:githublink:`main_adl.py <examples/trials/cifar10_pytorch/main_adl.py>` and :githublink:`config_adl.yaml <examples/trials/cifar10_pytorch/config_adl.yaml>`)
+We have a CIFAR10 example that fully leverages the AdaptDL scheduler under :githublink:`examples/trials/cifar10_pytorch` folder. (:githublink:`main_adl.py <examples/trials/cifar10_pytorch/main_adl.py>` and :githublink:`config_adl.yaml <examples/trials/cifar10_pytorch/config_adl.yml>`)
 
 Here is a template configuration specification to use AdaptDL as a training service.
 

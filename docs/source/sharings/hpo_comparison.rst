@@ -28,7 +28,7 @@ AutoGBDT Example
 Problem Description
 ^^^^^^^^^^^^^^^^^^^
 
-Nonconvex problem on the hyper-parameter search of `AutoGBDT example <examples/trials/auto-gdbt>`.
+Nonconvex problem on the hyper-parameter search of :githublink:`AutoGBDT example <examples/trials/auto-gdbt>`.
 
 Search Space
 ^^^^^^^^^^^^
