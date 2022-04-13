@@ -7,16 +7,15 @@ Comparison of Hyperparameter Optimization (HPO) algorithms on several problems.
 
 Hyperparameter Optimization algorithms are list below:
 
-
-* `Random Search <../Tuner/BuiltinTuner.rst>`__
-* `Grid Search <../Tuner/BuiltinTuner.rst>`__
-* `Evolution <../Tuner/BuiltinTuner.rst>`__
-* `Anneal <../Tuner/BuiltinTuner.rst>`__
-* `Metis <../Tuner/BuiltinTuner.rst>`__
-* `TPE <../Tuner/BuiltinTuner.rst>`__
-* `SMAC <../Tuner/BuiltinTuner.rst>`__
-* `HyperBand <../Tuner/BuiltinTuner.rst>`__
-* `BOHB <../Tuner/BuiltinTuner.rst>`__
+* :doc:`Random Search </hpo/tuners>`
+* :doc:`Grid Search </hpo/tuners>`
+* :doc:`Evolution </hpo/tuners>`
+* :doc:`Anneal </hpo/tuners>`
+* :doc:`Metis </hpo/tuners>`
+* :doc:`TPE </hpo/tuners>`
+* :doc:`SMAC </hpo/tuners>`
+* :doc:`HyperBand </hpo/tuners>`
+* :doc:`BOHB </hpo/tuners>`
 
 All algorithms run in NNI local environment.
 
@@ -39,7 +38,7 @@ AutoGBDT Example
 Problem Description
 ^^^^^^^^^^^^^^^^^^^
 
-Nonconvex problem on the hyper-parameter search of `AutoGBDT <../TrialExample/GbdtExample.rst>`__ example.
+Nonconvex problem on the hyper-parameter search of AutoGBDT example.
 
 Search Space
 ^^^^^^^^^^^^
