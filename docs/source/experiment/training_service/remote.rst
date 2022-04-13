@@ -111,4 +111,4 @@ Remote training service support shared storage, which can help use your own stor
 Monitor via TensorBoard
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Remote training service support trial visualization via TensorBoard. Follow the guide :doc:`experiment/web_portal/tensorboard` to learn how to use TensorBoard.
+Remote training service support trial visualization via TensorBoard. Follow the guide :doc:`/experiment/web_portal/tensorboard` to learn how to use TensorBoard.
