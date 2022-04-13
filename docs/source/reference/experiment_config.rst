@@ -613,6 +613,8 @@ HybridConfig
 
 Currently only support `LocalConfig`_, `RemoteConfig`_, `OpenpaiConfig`_ and `AmlConfig`_ . Detailed usage can be found `here <../TrainingService/HybridMode.rst>`__.
 
+.. _reference-sharedstorage-config-label:
+
 SharedStorageConfig
 ^^^^^^^^^^^^^^^^^^^
 

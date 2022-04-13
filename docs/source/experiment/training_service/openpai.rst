@@ -6,7 +6,7 @@ NNI supports running an experiment on `OpenPAI <https://github.com/Microsoft/pai
 Prerequisite
 ------------
 
-1. Before starting to use OpenPAI training service, you should have an account to access an `OpenPAI <https://github.com/Microsoft/pai>`__ cluster. See `here <https://github.com/Microsoft/pai#how-to-deploy>`__ if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. Please note that, on OpenPAI, your trial program will run in Docker containers.
+1. Before starting to use OpenPAI training service, you should have an account to access an `OpenPAI <https://github.com/Microsoft/pai>`__ cluster. See `here <https://github.com/Microsoft/pai>`__ if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. Please note that, on OpenPAI, your trial program will run in Docker containers.
 
 2. Get token. Open web portal of OpenPAI, and click ``My profile`` button in the top-right side.
 
