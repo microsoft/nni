@@ -96,7 +96,10 @@ autodoc_inherit_docstrings = False
 nitpicky = False  # disabled for now
 
 # A list of regular expressions that match URIs that should not be checked.
-linkcheck_ignore = [r'http://localhost:\d+']
+linkcheck_ignore = [
+    r'http://localhost:\d+',
+    r'#/',                      # Modern websites that has URLs like xxx.com/#/guide
+]
 
 # Ignore all links located in release.rst
 linkcheck_exclude_documents = ['^release']
