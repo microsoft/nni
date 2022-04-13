@@ -9,4 +9,4 @@ Advanced Usage
     mutator
     customize_strategy
     serialization
-    benchmarks
+    benchmarks_toctree

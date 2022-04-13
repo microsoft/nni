@@ -72,6 +72,12 @@ If you are familiar with defining a model and training in pytorch, you can skip 
       (fc1): Linear(in_features=256, out_features=120, bias=True)
       (fc2): Linear(in_features=120, out_features=84, bias=True)
       (fc3): Linear(in_features=84, out_features=10, bias=True)
+      (relu1): ReLU()
+      (relu2): ReLU()
+      (relu3): ReLU()
+      (relu4): ReLU()
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
@@ -102,9 +108,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.5822, Accuracy: 8311/10000 (83%)
-    Average test loss: 0.2795, Accuracy: 9154/10000 (92%)
-    Average test loss: 0.2036, Accuracy: 9345/10000 (93%)
+    Average test loss: 0.5368, Accuracy: 8321/10000 (83%)
+    Average test loss: 0.3092, Accuracy: 9104/10000 (91%)
+    Average test loss: 0.2070, Accuracy: 9380/10000 (94%)
 
 
 
@@ -181,6 +187,12 @@ Pruners usually require `model` and `config_list` as input arguments.
         (module): Linear(in_features=120, out_features=84, bias=True)
       )
       (fc3): Linear(in_features=84, out_features=10, bias=True)
+      (relu1): ReLU()
+      (relu2): ReLU()
+      (relu3): ReLU()
+      (relu4): ReLU()
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
@@ -229,7 +241,7 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
     # need to unwrap the model, if the model is wrapped before speedup
     pruner._unwrap_model()
 
-    # speedup the model
+    # speedup the model, for more information about speedup, please refer :doc:`pruning_speedup`.
     from nni.compression.pytorch.speedup import ModelSpeedup
 
     ModelSpeedup(model, torch.rand(3, 1, 28, 28).to(device), masks).speedup_model()
@@ -246,7 +258,7 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 
     aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
     Note: .aten::log_softmax.12 does not have corresponding mask inference object
-    /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
+    /home/nishang/anaconda3/envs/MCM/lib/python3.9/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  /opt/conda/conda-bld/pytorch_1640811803361/work/build/aten/src/ATen/core/TensorBody.h:417.)
       return self._grad
 
 
@@ -278,6 +290,12 @@ the model will become real smaller after speedup
       (fc1): Linear(in_features=128, out_features=60, bias=True)
       (fc2): Linear(in_features=60, out_features=42, bias=True)
       (fc3): Linear(in_features=42, out_features=10, bias=True)
+      (relu1): ReLU()
+      (relu2): ReLU()
+      (relu3): ReLU()
+      (relu4): ReLU()
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
@@ -308,7 +326,7 @@ Because speedup will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  38.500 seconds)
+   **Total running time of the script:** ( 0 minutes  58.337 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:

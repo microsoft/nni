@@ -66,6 +66,12 @@ class Traceable:
         """
         raise NotImplementedError()
 
+    def get(self) -> Any:
+        """
+        Get the original object. Usually used together with ``trace_copy``.
+        """
+        raise NotImplementedError()
+
 
 class Translatable(abc.ABC):
     """
@@ -136,6 +142,13 @@ class SerializableObject(Traceable):
             {k: copy.copy(v) for k, v in self.trace_kwargs.items()},
         )
 
+    def get(self) -> T:
+        if not self._get_nni_attr('call_super'):
+            # Reinitialize
+            return trace(self.trace_symbol)(*self.trace_args, **self.trace_kwargs)
+
+        return self
+
     @property
     def trace_symbol(self) -> Any:
         return self._get_nni_attr('symbol')
@@ -202,11 +215,15 @@ def _make_class_traceable(cls: T, create_wrapper: bool = False) -> T:
             {k: copy.copy(v) for k, v in self.trace_kwargs.items()},
         )
 
+    def get(self):
+        return self
+
     attributes = {
         'trace_symbol': property(getter_factory('symbol'), setter_factory('symbol')),
         'trace_args': property(getter_factory('args'), setter_factory('args')),
         'trace_kwargs': property(getter_factory('kwargs'), setter_factory('kwargs')),
-        'trace_copy': trace_copy
+        'trace_copy': trace_copy,
+        'get': get,
     }
 
     if not create_wrapper:
@@ -562,13 +579,13 @@ class _pickling_object:
     # Used in `_trace_cls`.
 
     def __new__(cls, type_, kw_only, data):
-        type_ = cloudpickle.loads(type_)
+        type_ = _wrapped_cloudpickle_loads(type_)
         # Restore the trace type
         type_ = _trace_cls(type_, kw_only)
 
         # restore type
         if '_nni_symbol' in data:
-            data['_nni_symbol'] = cloudpickle.loads(data['_nni_symbol'])
+            data['_nni_symbol'] = _wrapped_cloudpickle_loads(data['_nni_symbol'])
 
         # https://docs.python.org/3/library/pickle.html#pickling-class-instances
         obj = type_.__new__(type_)
@@ -674,7 +691,7 @@ def _formulate_arguments(func, args, kwargs, kw_only, is_class_init=False):
 def _is_function(obj: Any) -> bool:
     # https://stackoverflow.com/questions/624926/how-do-i-detect-whether-a-python-variable-is-a-function
     return isinstance(obj, (types.FunctionType, types.BuiltinFunctionType, types.MethodType,
-                            types.BuiltinMethodType))
+                            types.BuiltinMethodType)) and obj is not None
 
 
 def _import_cls_or_func_from_name(target: str) -> Any:
@@ -727,7 +744,7 @@ def get_hybrid_cls_or_func_name(cls_or_func: Any, pickle_size_limit: int = 4096)
 def import_cls_or_func_from_hybrid_name(s: str) -> Any:
     if s.startswith('bytes:'):
         b = base64.b64decode(s.split(':', 1)[-1])
-        return cloudpickle.loads(b)
+        return _wrapped_cloudpickle_loads(b)
     if s.startswith('path:'):
         s = s.split(':', 1)[-1]
     return _import_cls_or_func_from_name(s)
@@ -800,5 +817,14 @@ def _json_tricks_any_object_decode(obj: Dict[str, Any]) -> Any:
     if isinstance(obj, dict) and '__nni_obj__' in obj:
         obj = obj['__nni_obj__']
         b = base64.b64decode(obj)
-        return cloudpickle.loads(b)
+        return _wrapped_cloudpickle_loads(b)
     return obj
+
+
+def _wrapped_cloudpickle_loads(b: bytes) -> Any:
+    try:
+        return cloudpickle.loads(b)
+    except TypeError:
+        warnings.warn('TypeError encountered during deserializing object. This could be caused by '
+                      'inconsistency between Python versions where dump and load happens.')
+        raise
