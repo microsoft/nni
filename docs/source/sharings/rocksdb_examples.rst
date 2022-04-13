@@ -69,7 +69,7 @@ Here is an example of tuning RocksDB with TPE algorithm:
 
 :githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-fillrandom/config_tpe.yml>`
 
-Other tuners can be easily adopted in the same way. Please refer to `here <../Tuner/BuiltinTuner.rst>`__ for more information.
+Other tuners can be easily adopted in the same way. Please refer to :doc:`here </hpo/tuners>` for more information.
 
 Finally, we could enter the example folder and start the experiment using following commands:
 
