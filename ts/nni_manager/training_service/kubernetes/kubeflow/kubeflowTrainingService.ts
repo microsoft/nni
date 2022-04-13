@@ -120,6 +120,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG: {
                 const kubeflowClusterJsonObject: object = JSON.parse(value);
                 this.kubeflowClusterConfig = KubeflowClusterConfigFactory.generateKubeflowClusterConfig(kubeflowClusterJsonObject);
+                this.genericK8sClient.setNamespace = this.kubeflowClusterConfig.namespace ? this.kubeflowClusterConfig.namespace : "default";
                 if (this.kubeflowClusterConfig.storageType === 'azureStorage') {
                     const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
                     this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
@@ -138,7 +139,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
                     this.kubeflowClusterConfig.operator, this.kubeflowClusterConfig.apiVersion);
                 this.kubernetesCRDClient.setNamespace = this.kubeflowClusterConfig.namespace ? this.kubeflowClusterConfig.namespace : "default";
-                this.log.info(`${this.kubernetesCRDClient.getNamespace}`)
                 break;
             }
             case TrialConfigMetadataKey.TRIAL_CONFIG: {
