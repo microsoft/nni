@@ -69,7 +69,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         }
 
         if (this.kubernetesRestServerPort === undefined) {
-            const restServer: KubeflowJobRestServer = component.get(KubeflowJobRestServer);
+            const restServer: KubeflowJobRestServer = new KubeflowJobRestServer(this);
             this.kubernetesRestServerPort = restServer.clusterRestServerPort;
         }
 
@@ -138,6 +138,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
                     this.kubeflowClusterConfig.operator, this.kubeflowClusterConfig.apiVersion);
                 this.kubernetesCRDClient.setNamespace = this.kubeflowClusterConfig.namespace ? this.kubeflowClusterConfig.namespace : "default";
+                this.log.info(`${this.kubernetesCRDClient.getNamespace}`)
                 break;
             }
             case TrialConfigMetadataKey.TRIAL_CONFIG: {
@@ -311,7 +312,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         // Generate kubeflow job resource config object
         const kubeflowJobConfig: any = await this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources,
                                                                       nonWorkerResources);
-
+        this.log.info(`${JSON.stringify(kubeflowJobConfig)}`)
         return Promise.resolve(kubeflowJobConfig);
     }
 
