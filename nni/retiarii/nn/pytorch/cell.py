@@ -131,7 +131,7 @@ class Cell(nn.Module):
     Choose between conv2d and maxpool2d.
     The cell have 4 nodes, 1 op per node, and 2 predecessors.
 
-    >>> cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2)
+    >>> cell = nn.Cell([nn.Conv2d(32, 32, 3, padding=1), nn.MaxPool2d(3, padding=1)], 4, 1, 2)
 
     In forward:
 
