@@ -134,7 +134,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         const trialJobId: string = uniqueString(5);
         // Set trial's NFS working folder
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
-        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
+        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials', trialJobId);
         let frameworkcontrollerJobName: string = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
 
         let frameworkcontrollerJobConfig: any;

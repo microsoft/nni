@@ -81,7 +81,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         const trialJobId: string = uniqueString(5);
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
         const kubeflowJobName: string = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
-        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
+        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials', trialJobId);
         //prepare the runscript
         await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, form);
         //upload script files to sotrage
