@@ -295,7 +295,7 @@ def run(args):
             continue
 
         # remote mode need more time to cleanup 
-        if args.ts == 'remote' or args.ts == 'hybrid':
+        if args.ts == 'remote' or args.ts == 'hybrid' or args.ts == 'aml':
             if args.ts == 'remote':
                 if not match_remoteConfig(test_case_config, args.nni_source_dir):
                     print('skipped {}, remoteConfig not match.'.format(name))
