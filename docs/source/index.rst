@@ -14,7 +14,7 @@ NNI Documentation
    :caption: User Guide
    :hidden:
 
-   Hyperparameter Optimization <hpo/index>
+   hpo/toctree
    nas/toctree
    Model Compression <compression/toctree>
    feature_engineering/toctree
@@ -82,7 +82,7 @@ NNI makes AutoML techniques plug-and-play
 
 .. codesnippetcard::
    :icon: ../img/thumbnails/hpo-small.svg
-   :title: Hyper-parameter Tuning
+   :title: Hyperparameter Tuning
    :link: tutorials/hpo_quickstart_pytorch/main
 
    .. code-block::
