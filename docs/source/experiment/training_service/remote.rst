@@ -13,7 +13,7 @@ Prerequisite
 
 2. Make sure remote machines can be accessed through SSH from the machine which runs ``nnictl`` command. It supports both password and key authentication of SSH. For advanced usage, please refer to :ref:`reference-remote-config-label` in reference for detailed usage.
 
-3. Make sure the NNI version on each machine is consistent. Follow the install guide `here <../Tutorial/QuickStart.rst>`__ to install NNI.
+3. Make sure the NNI version on each machine is consistent. Follow the install guide :doc:`here </installation>` to install NNI.
 
 4. Make sure the command of Trial is compatible with remote OSes, if you want to use remote Linux and Windows together. For example, the default python 3.x executable called ``python3`` on Linux, and ``python`` on Windows.
 

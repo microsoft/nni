@@ -24,7 +24,7 @@ Search Space
 
 For simplicity, this example tunes three parameters, ``write_buffer_size``\ , ``min_write_buffer_num`` and ``level0_file_num_compaction_trigger``\ , for writing 16M keys with 20 Bytes of key size and 100 Bytes of value size randomly, based on writing operations per second (OPS). ``write_buffer_size`` sets the size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created. ``min_write_buffer_num`` is the minimum number of memtables to be merged before flushing to storage. Once the number of files in level 0 reaches ``level0_file_num_compaction_trigger``\ , level 0 to level 1 compaction is triggered.
 
-In this example, the search space is specified by a ``search_space.json`` file as shown below. Detailed explanation of search space could be found `here <../Tutorial/SearchSpaceSpec.rst>`__.
+In this example, the search space is specified by a ``search_space.json`` file as shown below. Detailed explanation of search space could be found :doc:`here </hpo/search_space>`.
 
 .. code-block:: json
 
