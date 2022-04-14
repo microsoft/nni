@@ -60,7 +60,7 @@ Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML file's 
 
 Note: You should set ``platform: dlc`` in NNI config YAML file if you want to start experiment in dlc mode.
 
-Compared with `LocalMode <LocalMode.rst>`__ training service configuration in dlc mode have these additional keys like ``type/image/jobType/podCount/ecsSpec/region/nasDataSourceId/accessKeyId/accessKeySecret``, for detailed explanation ref to this `link <https://help.aliyun.com/document_detail/203111.html#h2-url-3>`__.
+Compared with :doc:`local`, training service configuration in dlc mode have these additional keys like ``type/image/jobType/podCount/ecsSpec/region/nasDataSourceId/accessKeyId/accessKeySecret``, for detailed explanation ref to this `link <https://help.aliyun.com/document_detail/203111.html#h2-url-3>`__.
 
 Also, as dlc mode requires DSW/DLC to mount the same NAS disk to share information, there are two extra keys related to this: ``localStorageMountPoint`` and ``containerStorageMountPoint``.
 

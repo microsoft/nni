@@ -1,7 +1,7 @@
 Examples
 ========
 
-More examples can be found in our :githublink:`GitHub repository <nni/examples>`.
+More examples can be found in our :githublink:`GitHub repository <examples>`.
 
 .. cardlinkitem::
    :header: HPO Quickstart with PyTorch
@@ -16,6 +16,14 @@ More examples can be found in our :githublink:`GitHub repository <nni/examples>`
    :description: Use HPO to tune a TensorFlow MNIST model
    :link: tutorials/hpo_quickstart_tensorflow/main
    :image: ../img/thumbnails/hpo-tensorflow.svg
+   :background: purple
+   :tags: HPO
+
+.. cardlinkitem::
+   :header: HPO using command line tool
+   :description: Run HPO experiment with nnictl
+   :link: tutorials/hpo_nnictl/nnictl
+   :image: ../img/thumbnails/hpo-pytorch.svg
    :background: purple
    :tags: HPO
 

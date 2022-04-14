@@ -42,6 +42,11 @@ stages:
         python tools/chineselink.py check
       displayName: Translation up-to-date
 
+    - script: |
+        cd docs
+        make -e SPHINXOPTS="-W -T -b linkcheck -q --keep-going" html
+      displayName: External links integrity check
+
   - job: python
     pool:
       vmImage: ubuntu-latest

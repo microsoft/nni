@@ -352,7 +352,7 @@ Detailed usage can be found :doc:`/experiment/training_service/remote`.
 
     * - reuseMode
       - ``bool``, optional
-      - Default: ``True``. Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
+      - Default: ``True``. Enable :ref:`reuse mode <training-service-reuse>`.
 
 RemoteMachineConfig
 """""""""""""""""""
@@ -490,7 +490,7 @@ Detailed usage can be found :doc:`here </experiment/training_service/openpai>`.
 
     * - reuseMode
       - ``bool``, optional
-      - Default: ``True``. Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
+      - Default: ``True``. Enable :ref:`reuse mode <training-service-reuse>`.
 
     * - openpaiConfig
       - ``JSON``, optional
