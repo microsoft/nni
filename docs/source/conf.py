@@ -98,7 +98,7 @@ nitpicky = False  # disabled for now
 # A list of regular expressions that match URIs that should not be checked.
 linkcheck_ignore = [
     r'http://localhost:\d+',
-    r'.*://.*/#/',                        # Modern websites that has URLs like xxx.com/#/guide
+    r'.*://.*/#/',                          # Modern websites that has URLs like xxx.com/#/guide
     r'https://github.com/JSong-Jia/Pic/',   # Community links can't be found any more
 ]
 
