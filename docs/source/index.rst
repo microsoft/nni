@@ -128,7 +128,7 @@ NNI makes AutoML techniques plug-and-play
 .. codesnippetcard::
    :icon: ../img/thumbnails/quantization-small.svg
    :title: Quantization
-   :link: tutorials/quantization_speedup
+   :link: tutorials/quantization_quick_start_mnist
 
    .. code-block::
 
