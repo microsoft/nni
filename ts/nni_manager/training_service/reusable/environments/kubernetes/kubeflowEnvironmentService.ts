@@ -26,7 +26,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         // Create kubernetesCRDClient
         this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
             this.config.operator, this.config.apiVersion);
-        this.kubernetesCRDClient.setNamespace = this.config.namespace ?? "default";
+        this.kubernetesCRDClient.namespace = this.config.namespace ?? "default";
         // Create storage
         if (this.config.storage.storageType === 'azureStorage') {
             if (this.config.storage.azureShare === undefined ||
@@ -187,7 +187,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
             kind: this.kubernetesCRDClient.jobKind,
             metadata: {
                 name: kubeflowJobName,
-                namespace: this.kubernetesCRDClient.getNamespace,
+                namespace: this.kubernetesCRDClient.namespace,
                 labels: {
                     app: this.NNI_KUBERNETES_TRIAL_LABEL,
                     expId: this.experimentId,
