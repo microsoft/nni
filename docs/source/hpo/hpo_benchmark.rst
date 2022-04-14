@@ -2,7 +2,7 @@ HPO Benchmarks
 ==============
 
 We provide a benchmarking tool to compare the performances of tuners provided by NNI (and users' custom tuners) on different
-types of tasks. This tool uses the `automlbenchmark repository <https://github.com/openml/automlbenchmark)>`_  to run different *benchmarks* on the NNI *tuners*.
+types of tasks. This tool uses the `automlbenchmark repository <https://github.com/openml/automlbenchmark>`_  to run different *benchmarks* on the NNI *tuners*.
 The tool is located in ``examples/trials/benchmarking/automlbenchmark``. This document provides a brief introduction to the tool, its usage, and currently available benchmarks.
 
 Overview and Terminologies

@@ -1,7 +1,7 @@
 Examples
 ========
 
-More examples can be found in our :githublink:`GitHub repository <nni/examples>`.
+More examples can be found in our :githublink:`GitHub repository <examples>`.
 
 .. cardlinkitem::
    :header: HPO Quickstart with PyTorch
