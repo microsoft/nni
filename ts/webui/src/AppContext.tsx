@@ -1,7 +1,7 @@
 import React from 'react';
 import { COLUMN } from '@static/const';
 
-export const AppContext = React.createContext({
+const AppContext = React.createContext({
     interval: 10, // sendons
     columnList: COLUMN,
     experimentUpdateBroadcast: 0,
@@ -31,3 +31,5 @@ export const AppContext = React.createContext({
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     lastRefresh: (): void => {}
 });
+
+export default AppContext;

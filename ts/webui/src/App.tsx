@@ -6,7 +6,7 @@ import NavCon from '@components/nav/Nav';
 import MessageInfo from '@components/common/MessageInfo';
 import { COLUMN } from '@static/const';
 import { isManagerExperimentPage } from '@static/function';
-import { AppContext } from './appContext';
+import AppContext from './AppContext';
 import '@style/App.scss';
 import '@style/common/common.scss';
 import '@style/experiment/trialdetail/trialsDetail.scss';

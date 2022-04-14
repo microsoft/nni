@@ -4,7 +4,7 @@ import { Stack, PrimaryButton, Dropdown, IDropdownOption } from '@fluentui/react
 import { EXPERIMENT } from '@static/datamodel';
 import { getDropdownOptions, getSearchInputValueBySearchList } from './searchFunction';
 import { gap10 } from '@components/fluent/ChildrenGap';
-import { AppContext } from '@/appContext';
+import AppContext from '@/AppContext';
 
 // This file is for filtering trial parameters and trial status
 
