@@ -10,6 +10,7 @@ import '@style/nav/slideNavBtns.scss';
  * this file is the container of [config, search space, dispatcher/nnimanager log]
  * these three button is in the right of page
  */
+
 export const SlideNavBtns = (): any => {
     const [isShowConfigPanel, setShowConfigPanle] = useState(false);
     const [isShowLogPanel, setShowLogPanel] = useState(false);

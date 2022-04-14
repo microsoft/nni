@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Stack, Icon, Dropdown, DefaultButton } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { Trial } from '@static/model/trial';
-import { AppContext } from '@/App';
+import { AppContext } from '@/appContext';
 import { Title } from './Title';
 import SuccessTable from './table/SuccessTable';
 import DefaultPoint from '../trialdetail/chart/DefaultMetricPoint';

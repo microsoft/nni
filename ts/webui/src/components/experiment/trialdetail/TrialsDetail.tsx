@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Stack, Pivot, PivotItem } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
-import { AppContext } from '@/App';
+import { AppContext } from '@/appContext';
 import DefaultPoint from './chart/DefaultMetricPoint';
 import Duration from './chart/Duration';
 import Para from './chart/Para';
@@ -96,7 +96,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         </div>
                         {/* trial table list */}
                         <div className='detailTable' style={{ marginTop: 10 }}>
-                            <TableList tableSource={source} updateDetailPage={this.context.updateDetailPage} />
+                            <TableList tableSource={source} />
                         </div>
                     </React.Fragment>
                 )}
