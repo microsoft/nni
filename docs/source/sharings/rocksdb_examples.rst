@@ -58,7 +58,7 @@ Benchmark code should receive a configuration from NNI manager, and report the c
 Config file
 ^^^^^^^^^^^
 
-One could start a NNI experiment with a config file. A config file for NNI is a ``yaml`` file usually including experiment settings (\ ``trialConcurrency``\ , ``trialGpuNumber``\ , etc.), platform settings (\ ``trainingService``\ ), path settings (\ ``searchSpaceFile``\ , ``trialCodeDirectory``\ , etc.) and tuner settings (\ ``tuner``\ , ``tuner optimize_mode``\ , etc.). Please refer to `here <../Tutorial/QuickStart.rst>`__ for more information.
+One could start a NNI experiment with a config file. A config file for NNI is a ``yaml`` file usually including experiment settings (\ ``trialConcurrency``\ , ``trialGpuNumber``\ , etc.), platform settings (\ ``trainingService``\ ), path settings (\ ``searchSpaceFile``\ , ``trialCodeDirectory``\ , etc.) and tuner settings (\ ``tuner``\ , ``tuner optimize_mode``\ , etc.). Please refer to :doc:`/reference/experiment_config`.
 
 Here is an example of tuning RocksDB with SMAC algorithm:
 
