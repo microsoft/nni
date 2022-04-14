@@ -1,5 +1,6 @@
 .. a1d8d55b7ef4d97c6559d54bbe04c7b8
 
+
 NNI 文档
 =================
 
@@ -16,7 +17,7 @@ NNI 文档
    :caption: 用户指南
    :hidden:
 
-   超参调优 <hpo/index>
+   超参调优 <hpo/toctree>
    架构搜索 <nas/toctree>
    模型压缩 <compression/toctree>
    特征工程 <feature_engineering/toctree>

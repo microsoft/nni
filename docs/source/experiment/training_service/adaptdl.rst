@@ -4,6 +4,8 @@ AdaptDL Training Service
 Now NNI supports running experiment on `AdaptDL <https://github.com/petuum/adaptdl>`__, which is a resource-adaptive deep learning training and scheduling framework. With AdaptDL training service, your trial program will run as AdaptDL job in Kubernetes cluster.
 AdaptDL aims to make distributed deep learning easy and efficient in dynamic-resource environments such as shared clusters and the cloud.
 
+.. note:: AdaptDL doesn't support :ref:`reuse mode <training-service-reuse>`.
+
 Prerequisite
 ------------
 

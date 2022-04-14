@@ -22,7 +22,7 @@ In this figure:
 * *Exploration strategy* is the algorithm that is used to explore a model search space. Sometimes we also call it *search strategy*.
 * *Model evaluator* is responsible for training a model and evaluating its performance.
 
-The process is similar to :doc:`Hyperparameter Optimization </hpo/index>`, except that the target is the best architecture rather than hyperparameter. Concretely, an exploration strategy selects an architecture from a predefined search space. The architecture is passed to a performance evaluation to get a score, which represents how well this architecture performs on a particular task. This process is repeated until the search process is able to find the best architecture.
+The process is similar to :doc:`Hyperparameter Optimization </hpo/overview>`, except that the target is the best architecture rather than hyperparameter. Concretely, an exploration strategy selects an architecture from a predefined search space. The architecture is passed to a performance evaluation to get a score, which represents how well this architecture performs on a particular task. This process is repeated until the search process is able to find the best architecture.
 
 Key Features
 ------------

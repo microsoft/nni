@@ -65,7 +65,7 @@ If the k8s cluster enforces Authorization, you also need to create a ServiceAcco
 Design
 ------
 
-Please refer the design of `Kubeflow training service <KubeflowMode.rst>`__,
+Please refer the design of :doc:`Kubeflow training service <kubeflow>`,
 FrameworkController training service pipeline is similar.
 
 Example
@@ -113,7 +113,7 @@ If you use Azure Kubernetes Service, you should set storage config as follows:
     experiment.config.training_service.storage.key_vault_name = 'your_vault_name'
     experiment.config.training_service.storage.key_vault_key = 'your_secret_name'
 
-If you set `ServiceAccount <https://github.com/microsoft/frameworkcontroller/tree/master/example/run#prerequisite>`__ in your k8s,
+If you set `ServiceAccount <https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/>`__ in your k8s,
 please set ``serviceAccountName`` in your config:
 
 .. code-block:: python
