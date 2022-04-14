@@ -312,7 +312,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         // Generate kubeflow job resource config object
         const kubeflowJobConfig: any = await this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources,
                                                                       nonWorkerResources);
-        this.log.info(`${kubeflowJobConfig}`)
+        this.log.info('kubeflowJobConfig:', kubeflowJobConfig);
         return Promise.resolve(kubeflowJobConfig);
     }
 
