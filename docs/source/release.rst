@@ -22,19 +22,19 @@ Hyper-Parameter Optimization
 
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-* Jointly search for architecture and hyper-parameters: ValueChoice in evaluator (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#valuechoice>`__)
-* Support composition (transformation) of one or several value choices (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#valuechoice>`__)
-* Enhanced Cell API (``merge_op``, preprocessor, postprocessor) (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#cell>`__)
-* Repeat depth now allows a ValueChoice (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#repeat>`__)
-* Support loading ``state_dict`` between sub-net and super-net (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/others.html#nni.retiarii.utils.original_state_dict_hooks>`__, `example in spos <https://nni.readthedocs.io/en/v2.7/reference/nas/strategy.html#spos>`__)
-* Support BN fine-tuning and evaluation in SPOS example (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/strategy.html#spos>`__)
-* *Experimental* Model hyper-parameter choice (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#modelparameterchoice>`__)
-* *Preview* Lightning implementation for Retiarii including DARTS, ENAS, ProxylessNAS and RandomNAS (`example usage <https://github.com/microsoft/nni/blob/v2.7/test/ut/retiarii/test_oneshot.py>`__)
-* *Preview* A search space hub that contains 10 search spaces (`code <https://github.com/microsoft/nni/tree/v2.7/nni/retiarii/hub>`__)
+* Jointly search for architecture and hyper-parameters: ValueChoice in evaluator. (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#valuechoice>`__)
+* Support composition (transformation) of one or several value choices. (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#valuechoice>`__)
+* Enhanced Cell API (``merge_op``, preprocessor, postprocessor). (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#cell>`__)
+* The argument ``depth`` in the ``Repeat`` API allows ValueChoice. (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#repeat>`__)
+* Support loading ``state_dict`` between sub-net and super-net. (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/others.html#nni.retiarii.utils.original_state_dict_hooks>`__, `example in spos <https://nni.readthedocs.io/en/v2.7/reference/nas/strategy.html#spos>`__)
+* Support BN fine-tuning and evaluation in SPOS example. (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/strategy.html#spos>`__)
+* *Experimental* Model hyper-parameter choice. (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#modelparameterchoice>`__)
+* *Preview* Lightning implementation for Retiarii including DARTS, ENAS, ProxylessNAS and RandomNAS. (`example usage <https://github.com/microsoft/nni/blob/v2.7/test/ut/retiarii/test_oneshot.py>`__)
+* *Preview* A search space hub that contains 10 search spaces. (`code <https://github.com/microsoft/nni/tree/v2.7/nni/retiarii/hub>`__)
 
 Model Compression
 ^^^^^^^^^^^^^^^^^
-* Pruning V2 is promoted as default pruning framework, old pruning is legacy and keeps for few releases.(`doc <https://nni.readthedocs.io/en/v2.7/reference/compression/pruner.html>`__)
+* Pruning V2 is promoted as default pruning framework, old pruning is legacy and keeps for a few releases.(`doc <https://nni.readthedocs.io/en/v2.7/reference/compression/pruner.html>`__)
 * A new pruning mode ``balance`` is supported in ``LevelPruner``.(`doc <https://nni.readthedocs.io/en/v2.7/reference/compression/pruner.html#level-pruner>`__)
 * Support coarse-grained pruning in ``ADMMPruner``.(`doc <https://nni.readthedocs.io/en/v2.7/reference/compression/pruner.html#admm-pruner>`__)
 * [Improvement] Support more operation types in pruning speedup.
