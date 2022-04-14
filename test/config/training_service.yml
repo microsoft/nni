@@ -36,7 +36,7 @@ frameworkcontroller:
   maxTrialNum: 2
   trialConcurrency: 2
   frameworkcontrollerConfig:
-    serviceAccountName: frameworkbarrier
+    serviceAccountName: frameworkcontroller
     storage: azureStorage
     keyVault:
       vaultName:
@@ -44,6 +44,7 @@ frameworkcontroller:
     azureStorage:
       accountName:
       azureShare:
+    namespace: kubeflow
   trial:
     taskRoles:
       - name: worker
