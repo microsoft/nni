@@ -26,7 +26,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         // Create kubernetesCRDClient
         this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
             this.config.operator, this.config.apiVersion);
-        this.kubernetesCRDClient.setNamespace = this.config.namespace ? this.config.namespace : "default";
+        this.kubernetesCRDClient.setNamespace = this.config.namespace ?? "default";
         // Create storage
         if (this.config.storage.storageType === 'azureStorage') {
             if (this.config.storage.azureShare === undefined ||
@@ -42,7 +42,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
                 this.config.operator, this.config.apiVersion, keyValutConfig, azureStorage);
             this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
             this.azureStorageShare = azureKubeflowClusterConfig.azureStorage.azureShare;
-            this.genericK8sClient.setNamespace = this.config.namespace ? this.config.namespace : "default";
+            this.genericK8sClient.setNamespace = this.config.namespace ?? "default";
             this.createStoragePromise = this.createAzureStorage(
                 azureKubeflowClusterConfig.keyVault.vaultName,
                 azureKubeflowClusterConfig.keyVault.name

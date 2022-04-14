@@ -118,7 +118,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         } else {
             configTaskRoles = this.parseCustomTaskRoles(this.fcTemplate.spec.taskRoles)
         }
-        const namespace = this.fcClusterConfig.namespace ? this.fcClusterConfig.namespace : "default";
+        const namespace = this.fcClusterConfig.namespace ?? "default";
         this.genericK8sClient.setNamespace = namespace;
 
         if (this.kubernetesRestServerPort === undefined) {
@@ -439,7 +439,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             kind: 'Framework',
             metadata: {
                 name: frameworkcontrollerJobName,
-                namespace: this.fcClusterConfig.namespace ? this.fcClusterConfig.namespace : "default",
+                namespace: this.fcClusterConfig.namespace ?? "default",
                 labels: {
                     app: this.NNI_KUBERNETES_TRIAL_LABEL,
                     expId: getExperimentId(),

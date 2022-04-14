@@ -194,7 +194,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             kind: 'Framework',
             metadata: {
                 name: frameworkcontrollerJobName,
-                namespace: this.config.namespace ? this.config.namespace : "default",
+                namespace: this.config.namespace ?? "default",
                 labels: {
                     app: this.NNI_KUBERNETES_TRIAL_LABEL,
                     expId: this.experimentId,
