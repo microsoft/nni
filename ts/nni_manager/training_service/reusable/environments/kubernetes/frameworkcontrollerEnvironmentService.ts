@@ -29,6 +29,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         this.config = config;
         // Create kubernetesCRDClient
         this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient(this.config.namespace);
+        this.genericK8sClient.setNamespace = this.config.namespace ?? "default"
         // Create storage
         if (this.config.storage.storageType === 'azureStorage') {
             if (this.config.storage.azureShare === undefined ||

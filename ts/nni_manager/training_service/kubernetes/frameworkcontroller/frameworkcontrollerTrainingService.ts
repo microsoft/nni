@@ -204,6 +204,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 let namespace: string | undefined;
                 this.fcClusterConfig = FrameworkControllerClusterConfigFactory
                     .generateFrameworkControllerClusterConfig(frameworkcontrollerClusterJsonObject);
+                this.genericK8sClient.setNamespace = this.fcClusterConfig.namespace ?? "default";
                 if (this.fcClusterConfig.storageType === 'azureStorage') {
                     const azureFrameworkControllerClusterConfig: FrameworkControllerClusterConfigAzure =
                         <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
