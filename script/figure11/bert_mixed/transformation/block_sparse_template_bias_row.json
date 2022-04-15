@@ -1,0 +1,47 @@
+[
+    {
+        "kernel_identifier": "kernel_1",
+        "tvm_func_name": "Blocksparse with fused add",
+        "op_type": "SparseDot",
+        "parameters": {
+            "arg0_shape": [
+                256,
+                256
+            ],
+            "arg1_shape": [
+                256,
+                256
+            ],
+            "arg2_shape": [
+                256,
+                256
+            ],
+            "arg3_shape": [
+                256,
+                256
+            ],
+            "arg4_shape": [
+                256,
+                256
+            ],
+            "output_shape": [
+                256,
+                256
+            ],
+            "transpose_A": false,
+            "transpose_B": false
+
+        },
+        "code": "\n__global__ void BLOCK_SPARSE_MATMUL(float* A, float* W_val, int* W_row, int* W_col, float* C, int M, int K, int N){\nconst int BLOCK_SIZE_M=BLOCK_SIZE_M_VALUE;\nconst int BLOCK_SIZE_K=BLOCK_SIZE_K_VALUE;\nconst int BLOCK_SIZE_N=BLOCK_SIZE_N_VALUE;\nconst int THREAD_SIZE_M=THREAD_SIZE_M_VALUE;\nconst int THREAD_SIZE_K=THREAD_SIZE_K_VALUE;\nconst int THREAD_SIZE_N=THREAD_SIZE_N_VALUE;\n\nint by = blockIdx.y;\nint bx = blockIdx.x;\nint ty = threadIdx.y;\nint tx = threadIdx.x;\n\n__shared__ float As[BLOCK_SIZE_M * BLOCK_SIZE_K];\n__shared__ float Bs[BLOCK_SIZE_N * BLOCK_SIZE_K];\n\nfloat accum[THREAD_SIZE_N][THREAD_SIZE_M] = {0};\nfloat a_frag[THREAD_SIZE_M][THREAD_SIZE_K];\nfloat b_frag[THREAD_SIZE_N][THREAD_SIZE_K];\n\nint A_THREAD_PER_ROW = BLOCK_SIZE_M / 4;\nint B_THREAD_PER_ROW = BLOCK_SIZE_N / 4;\n\nint bszy = BLOCK_SIZE_M / THREAD_SIZE_M;\nint bszx = BLOCK_SIZE_N / THREAD_SIZE_N;\n\nint THREADS_PER_BLOCK = bszy * bszx;\n\nint A_TILE_ROW_STRIDE = THREADS_PER_BLOCK / A_THREAD_PER_ROW;\nint B_TILE_ROW_STRIDE = THREADS_PER_BLOCK / B_THREAD_PER_ROW;\n\nint tid = ty * bszx + tx;\n\nint A_BLOCK_ROW_START = tid / A_THREAD_PER_ROW;\nint B_BLOCK_ROW_START = tid / B_THREAD_PER_ROW;\n\nint A_BLOCK_COL_START = tid % A_THREAD_PER_ROW * 4;\nint B_BLOCK_COL_START = tid % B_THREAD_PER_ROW * 4;\n\nint index_start = W_row[bx], index_end = W_row[bx+1];\n\nconst int vBLOCK_SIZE_M = BLOCK_SIZE_M / THREAD_SIZE_M;\nconst int vBLOCK_SIZE_N = BLOCK_SIZE_N / THREAD_SIZE_N;\nfor(int tile_block_idx = index_start; tile_block_idx < index_end; tile_block_idx += 1){\n    int tile_idx = W_col[tile_block_idx] * BLOCK_SIZE_K;\n    #pragma unroll\n    for(int k = 0; k < BLOCK_SIZE_K; k += A_TILE_ROW_STRIDE){\n        FETCH_FLOAT4(As[OFFSET(k+A_BLOCK_ROW_START, A_BLOCK_COL_START, BLOCK_SIZE_M)]) = \n            FETCH_FLOAT4(A[OFFSET(tile_idx+k+A_BLOCK_ROW_START, by*BLOCK_SIZE_M+A_BLOCK_COL_START, M)]);\n    }\n\n    #pragma unroll\n    for(int k = 0; k < BLOCK_SIZE_K; k += B_TILE_ROW_STRIDE){\n        FETCH_FLOAT4(Bs[OFFSET(k+B_BLOCK_ROW_START, B_BLOCK_COL_START, BLOCK_SIZE_N)]) = \n            FETCH_FLOAT4(W_val[tile_block_idx * BLOCK_SIZE_N * BLOCK_SIZE_K + (k+B_BLOCK_ROW_START) * BLOCK_SIZE_N + B_BLOCK_COL_START]);\n            // FETCH_FLOAT4(B[OFFSET(tile_idx+k+B_BLOCK_ROW_START, bx*BLOCK_SIZE_N+B_BLOCK_COL_START, N)]);\n    }\n\n    __syncthreads();\n\n    #pragma unroll\n    for(int k = 0; k < BLOCK_SIZE_K; k += THREAD_SIZE_K){\n        #pragma unroll\n        for(int i = 0; i < THREAD_SIZE_K; i++){\n            #pragma unroll\n            for(int j = 0; j < THREAD_SIZE_M; j += 1){\n                a_frag[j][i] = As[OFFSET(k+i, ty + vBLOCK_SIZE_M * j, BLOCK_SIZE_M)];\n            }\n        }\n\n        #pragma unroll\n        for(int i = 0; i < THREAD_SIZE_K; i++){\n            #pragma unroll\n            for(int j = 0; j < THREAD_SIZE_N; j += 1){\n                b_frag[j][i] = Bs[OFFSET(k+i, tx + vBLOCK_SIZE_N * j, BLOCK_SIZE_N)];\n            }\n        }\n\n        #pragma unroll\n        for(int i = 0; i < THREAD_SIZE_N; i++){\n            #pragma unroll\n            for(int j = 0; j < THREAD_SIZE_M; j++){\n                #pragma unroll\n                for(int k_in = 0; k_in < THREAD_SIZE_K; k_in++){\n                    // accum[i][j] = fma(a_frag[j][k_in], b_frag[i][k_in], accum[i][j]);\n                    accum[i][j] += a_frag[j][k_in] * b_frag[i][k_in];\n                }\n            }\n        }\n    }\n\n    __syncthreads();\n}\n\n#pragma unroll\nfor(int thread_x = 0; thread_x < THREAD_SIZE_N; thread_x++){\n    #pragma unroll\n    for(int thread_y = 0; thread_y < THREAD_SIZE_M; thread_y+=1){\n        (C[OFFSET(\n            BLOCK_SIZE_N * bx + tx + thread_x * vBLOCK_SIZE_N,\n            BLOCK_SIZE_M * by + ty + thread_y * vBLOCK_SIZE_M,\n            M\n        )]) = (accum[thread_x][thread_y]);\n    }\n}\n\n}",
+        "gridDim": [
+            8,
+            8,
+            1
+        ],
+        "blockDim": [
+            32,
+            32,
+            1
+        ]
+    }
+]

@@ -1,0 +1,20 @@
+authorName: zql
+experimentName: sparse_matmul_MK
+trialConcurrency: 39
+maxExecDuration: 1000h
+maxTrialNum: 1000
+#choice: local, remote, pai
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: GridSearch
+trial:
+  command: python3 code_gen_short_anyshape_gpu.py
+  codeDir: .
+  gpuNum: 1
+localConfig:
+  maxTrialNumPerGpu: 13

@@ -1,0 +1,73 @@
+// GLOBALS: input0:float32[13, 1, 1], input1:float32[32, 49, 128], input10:float32[32, 49, 128], input11:float32[32, 49, 128], input12:float32[32, 49, 128], input13:float32[32, 49, 128], input2:float32[32, 49, 128], input3:float32[32, 49, 128], input4:float32[32, 49, 128], input5:float32[32, 49, 128], input6:float32[32, 49, 128], input7:float32[32, 49, 128], input8:float32[32, 49, 128], input9:float32[32, 49, 128] -> output0:float32[32, 49, 128]
+// BACKEND: c-cuda (default)
+// CONFIG: {"Routput0:S": 0, "Routput0:R0": [-1, 1], "Routput0:W": 1, "Routput0:D0": [-1, 4], "Routput0:D1": [-1, 1], "Routput0:D2": [-1, 16]}
+// COMPUTE_V1: - einstein_v2(" mediate0[N0] = input0[N0, 0, 0] ;   mediate1[N0, N1, N2, N3] = mediate0[N1] where N0 in 32, N2 in 49, N3 in 128;   mediate2[N0, N1, N2, N3] = input1[N0, N2, N3] where N1 in 1;   mediate3[N0, N1, N2, N3] = input2[N0, N2, N3] where N1 in 1;   mediate4[N0, N1, N2, N3] = input3[N0, N2, N3] where N1 in 1;   mediate5[N0, N1, N2, N3] = input4[N0, N2, N3] where N1 in 1;   mediate6[N0, N1, N2, N3] = input5[N0, N2, N3] where N1 in 1;   mediate7[N0, N1, N2, N3] = input6[N0, N2, N3] where N1 in 1;   mediate8[N0, N1, N2, N3] = input7[N0, N2, N3] where N1 in 1;   mediate9[N0, N1, N2, N3] = input8[N0, N2, N3] where N1 in 1;   mediate10[N0, N1, N2, N3] = input9[N0, N2, N3] where N1 in 1;   mediate11[N0, N1, N2, N3] = input10[N0, N2, N3] where N1 in 1;   mediate12[N0, N1, N2, N3] = input11[N0, N2, N3] where N1 in 1;   mediate13[N0, N1, N2, N3] = input12[N0, N2, N3] where N1 in 1;   mediate14[N0, N1, N2, N3] = input13[N0, N2, N3] where N1 in 1;   mediate15[N0, N1, N2, N3] =  mediate14[N0, N1 - 0, N2, N3].when(N1 < 1,  mediate13[N0, N1 - 1, N2, N3].when(N1 < 2,  mediate12[N0, N1 - 2, N2, N3].when(N1 < 3,  mediate11[N0, N1 - 3, N2, N3].when(N1 < 4,  mediate10[N0, N1 - 4, N2, N3].when(N1 < 5,  mediate9[N0, N1 - 5, N2, N3].when(N1 < 6,  mediate8[N0, N1 - 6, N2, N3].when(N1 < 7,  mediate7[N0, N1 - 7, N2, N3].when(N1 < 8,  mediate6[N0, N1 - 8, N2, N3].when(N1 < 9,  mediate5[N0, N1 - 9, N2, N3].when(N1 < 10,  mediate4[N0, N1 - 10, N2, N3].when(N1 < 11,  mediate3[N0, N1 - 11, N2, N3].when(N1 < 12, mediate2[N0, N1 - 12, N2, N3]) ) ) ) ) ) ) ) ) ) ) )  where N1 in 13; mediate16[N0, N1, N2, N3] = mediate15[N0, N1, N2, N3] * mediate1[N0, N1, N2, N3];output0[N0, N2, N3] +=! mediate16[N0, N1, N2, N3]", input_dict={ "input0" : { "dtype" : "float32", "shape" : [13, 1, 1]} ,  "input1" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input2" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input3" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input4" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input5" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input6" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input7" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input8" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input9" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input10" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input11" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input12" : { "dtype" : "float32", "shape" : [32, 49, 128]} ,  "input13" : { "dtype" : "float32", "shape" : [32, 49, 128]} }) ## @:
+
+
+// ---------------------------------------------------------------------------
+// LOCAL: template_op_kernel0 -- input0:float32[13, 1, 1], input1:float32[32, 49, 128], input10:float32[32, 49, 128], input11:float32[32, 49, 128], input12:float32[32, 49, 128], input13:float32[32, 49, 128], input2:float32[32, 49, 128], input3:float32[32, 49, 128], input4:float32[32, 49, 128], input5:float32[32, 49, 128], input6:float32[32, 49, 128], input7:float32[32, 49, 128], input8:float32[32, 49, 128], input9:float32[32, 49, 128] -> output0:float32[32, 49, 128]
+
+#include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <mma.h>
+
+#ifndef __CUDA_COMMON_MACRO__
+#define __CUDA_COMMON_MACRO__
+
+#define __ITEM_0_OF__(v) (v).x
+#define __ITEM_1_OF__(v) (v).y
+#define __ITEM_2_OF__(v) (v).z
+#define __ITEM_3_OF__(v) (v).w
+
+#define __STORE_ITEM_0__(t, out, ido, in, idi) *(t*)(out + ido) = *(t*)(in + idi)
+#define __STORE_ITEM_1__(t, out, ido, in, idi)
+#define __STORE_ITEM_2__(t, out, ido, in, idi)
+#define __STORE_ITEM_3__(t, out, ido, in, idi)
+
+#define MAKE_VEC4_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y, l.z + r.z, l.w + r.w); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y, l.z - r.z, l.w - r.w); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y, l.z * r.z, l.w * r.w); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y, l.z / r.z, l.w / r.w); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y, l.z % r.z, l.w % r.w); }
+#define MAKE_VEC2_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y); }
+
+MAKE_VEC4_OP(int4)
+MAKE_VEC2_OP(int2)
+
+__forceinline__ __device__ __half max(const __half a, const __half b) { return a > b ? a : b; }
+__forceinline__ __device__ __half min(const __half a, const __half b) { return a < b ? a : b; }
+
+#endif
+
+
+extern "C" __global__ __launch_bounds__(128) void template_op_kernel0(float* __restrict__ input0, float* __restrict__ input1, float* __restrict__ input10, float* __restrict__ input11, float* __restrict__ input12, float* __restrict__ input13, float* __restrict__ input2, float* __restrict__ input3, float* __restrict__ input4, float* __restrict__ input5, float* __restrict__ input6, float* __restrict__ input7, float* __restrict__ input8, float* __restrict__ input9, float* __restrict__ output0) {
+  // [thread_extent] blockIdx.x = 3136
+  // [thread_extent] threadIdx.y = 64
+  // [thread_extent] threadIdx.x = 2
+  float normal_reduce_temp0[1];
+  __shared__ float red_buf0[128];
+  normal_reduce_temp0[(0)] = 0.000000e+00f;
+  for (int N1_outer = 0; N1_outer < 7; ++N1_outer) {
+    if (((N1_outer * 2) + ((int)threadIdx.x)) < 13) {
+      normal_reduce_temp0[(0)] = (normal_reduce_temp0[(0)] + (((((N1_outer * 2) + ((int)threadIdx.x)) < 1) ? input13[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 2) ? input12[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 3) ? input11[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 4) ? input10[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 5) ? input9[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 6) ? input8[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 7) ? input7[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 8) ? input6[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 9) ? input5[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 10) ? input4[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 11) ? input3[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : ((((N1_outer * 2) + ((int)threadIdx.x)) < 12) ? input2[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] : input1[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))])))))))))))) * input0[(((N1_outer * 2) + ((int)threadIdx.x)))]));
+    }
+  }
+  __syncthreads();
+  ((volatile float*)red_buf0)[(((((int)threadIdx.y) * 2) + ((int)threadIdx.x)))] = normal_reduce_temp0[(0)];
+  __syncthreads();
+  if (((int)threadIdx.x) < 1) {
+    float w_1_0 = (((volatile float*)red_buf0)[(((((int)threadIdx.y) * 2) + ((int)threadIdx.x)))] + ((volatile float*)red_buf0)[((((((int)threadIdx.y) * 2) + ((int)threadIdx.x)) + 1))]);
+    ((volatile float*)red_buf0)[(((((int)threadIdx.y) * 2) + ((int)threadIdx.x)))] = w_1_0;
+  }
+  __syncthreads();
+  output0[((((((((int)blockIdx.x) / 392) * 25088) + ((((int)threadIdx.y) >> 4) * 6272)) + ((((int)blockIdx.x) % 392) * 16)) + (((int)threadIdx.y) & 15)))] = ((volatile float*)red_buf0)[((((int)threadIdx.y) * 2))];
+}
+
+// Saved Perf = 2.926150e-05 sec / run; Step Produced = 415; Planned Steps = 1000;
+// Antares Tuning Completed in 1000 steps.

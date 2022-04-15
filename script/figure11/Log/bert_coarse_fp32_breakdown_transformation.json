@@ -1,0 +1,10 @@
+{
+    "other": {
+        "THREAD_SIZE_N_VALUE": 8,
+        "THREAD_SIZE_K_VALUE": 4,
+        "THREAD_SIZE_M_VALUE": 8,
+        "BLOCK_SIZE_N_VALUE": 64,
+        "BLOCK_SIZE_K_VALUE": 32,
+        "BLOCK_SIZE_M_VALUE": 32
+    }
+}

@@ -1,0 +1,1 @@
+from .sparta import SpartaModel

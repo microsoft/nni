@@ -1,0 +1,42 @@
+{
+    "5": {
+        "THREAD_SIZE_N_VALUE": 8,
+        "THREAD_SIZE_K_VALUE": 1,
+        "THREAD_SIZE_M_VALUE": 8,
+        "BLOCK_SIZE_N_VALUE": 128,
+        "BLOCK_SIZE_K_VALUE": 8,
+        "BLOCK_SIZE_M_VALUE": 64
+    },
+    "11": {
+        "THREAD_SIZE_N_VALUE": 8,
+        "THREAD_SIZE_K_VALUE": 2,
+        "THREAD_SIZE_M_VALUE": 8,
+        "BLOCK_SIZE_N_VALUE": 128,
+        "BLOCK_SIZE_K_VALUE": 8,
+        "BLOCK_SIZE_M_VALUE": 64
+    },
+    "59": {
+        "THREAD_SIZE_N_VALUE": 8,
+        "THREAD_SIZE_K_VALUE": 2,
+        "THREAD_SIZE_M_VALUE": 8,
+        "BLOCK_SIZE_N_VALUE": 128,
+        "BLOCK_SIZE_K_VALUE": 8,
+        "BLOCK_SIZE_M_VALUE": 64
+    },
+    "35": {
+        "THREAD_SIZE_N_VALUE": 8,
+        "THREAD_SIZE_K_VALUE": 4,
+        "THREAD_SIZE_M_VALUE": 8,
+        "BLOCK_SIZE_N_VALUE": 128,
+        "BLOCK_SIZE_K_VALUE": 8,
+        "BLOCK_SIZE_M_VALUE": 64
+    },
+    "other": {
+        "THREAD_SIZE_N_VALUE": 8,
+        "THREAD_SIZE_K_VALUE": 2,
+        "THREAD_SIZE_M_VALUE": 8,
+        "BLOCK_SIZE_N_VALUE": 128,
+        "BLOCK_SIZE_K_VALUE": 8,
+        "BLOCK_SIZE_M_VALUE": 64
+    }
+}

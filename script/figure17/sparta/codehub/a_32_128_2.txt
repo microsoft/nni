@@ -1,0 +1,20 @@
+==11899== NVPROF is profiling process 11899, command: ./codehub/_generated_gpu_embed_sparse_matrix_1024_1024_1024_50_TESAID_0_bert_osdi_final_32_128_2
+==11899== Profiling application: ./codehub/_generated_gpu_embed_sparse_matrix_1024_1024_1024_50_TESAID_0_bert_osdi_final_32_128_2
+==11899== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   96.49%  21.867ms         2  10.933ms  879.80us  20.987ms  [CUDA memcpy HtoD]
+                    1.96%  443.04us         1  443.04us  443.04us  443.04us  [CUDA memcpy DtoH]
+                    1.55%  351.55us         1  351.55us  351.55us  351.55us  matrixMultiplication(float*, float*, float*)
+      API calls:   97.66%  1.97267s         3  657.56ms  139.85us  1.97235s  cudaMalloc
+                    1.14%  23.016ms         3  7.6720ms  661.42us  21.217ms  cudaMemcpy
+                    1.05%  21.296ms         3  7.0986ms  181.49us  20.872ms  cudaFree
+                    0.07%  1.3314ms         3  443.79us  435.24us  454.50us  cuDeviceTotalMem
+                    0.05%  1.0332ms       291  3.5500us     209ns  147.69us  cuDeviceGetAttribute
+                    0.02%  361.54us         2  180.77us  7.9820us  353.56us  cudaDeviceSynchronize
+                    0.01%  137.67us         3  45.890us  30.249us  76.601us  cuDeviceGetName
+                    0.00%  74.140us         1  74.140us  74.140us  74.140us  cudaLaunchKernel
+                    0.00%  12.481us         3  4.1600us  3.3240us  4.7100us  cuDeviceGetPCIBusId
+                    0.00%  6.2780us         6  1.0460us     388ns  3.2590us  cuDeviceGet
+                    0.00%  2.3060us         2  1.1530us     379ns  1.9270us  cuDeviceGetCount
+                    0.00%  1.8320us         3     610ns     415ns     803ns  cuDeviceGetUuid
+                    0.00%     572ns         1     572ns     572ns     572ns  cudaGetLastError

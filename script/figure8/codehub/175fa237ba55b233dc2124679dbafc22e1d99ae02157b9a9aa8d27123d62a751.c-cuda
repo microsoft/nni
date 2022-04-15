@@ -1,0 +1,77 @@
+// GLOBALS: input0:float32[1], input1:float32[32, 1024], input2:float32[120, 1024] -> output0:float32[32, 120]
+// BACKEND: c-cuda (default)
+// CONFIG: {"Toutput0:D0": [-1, 1, 1, 1], "Toutput0:D1": [-1, 1, 60, 1], "Toutput0:R0": [-1, 1, 64], "Toutput0:RA": 0, "Toutput0:S": 3, "Toutput0:U": 0}
+// COMPUTE_V1: - einstein_v2(" mediate0[N0, N1] = input0[0] where N0 in 32, N1 in 1024;  mediate1[N0, N1] = input1[N0, N1] / mediate0[N0, N1]; output0[N, M] +=! mediate1[N, K] * input2[M, K]; ", input_dict={ "input0" : { "dtype" : "float32", "shape" : [1]} ,  "input1" : { "dtype" : "float32", "shape" : [32, 1024]} ,  "input2" : { "dtype" : "float32", "shape" : [120, 1024]} }) ## @:  memcpy
+
+
+// ---------------------------------------------------------------------------
+// LOCAL: template_op_kernel0 -- input0:float32[1], input1:float32[32, 1024], input2:float32[120, 1024] -> output0:float32[32, 120]
+
+#include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <mma.h>
+
+#ifndef __CUDA_COMMON_MACRO__
+#define __CUDA_COMMON_MACRO__
+
+#define __ITEM_0_OF__(v) (v).x
+#define __ITEM_1_OF__(v) (v).y
+#define __ITEM_2_OF__(v) (v).z
+#define __ITEM_3_OF__(v) (v).w
+
+#define __STORE_ITEM_0__(t, out, ido, in, idi) *(t*)(out + ido) = *(t*)(in + idi)
+#define __STORE_ITEM_1__(t, out, ido, in, idi)
+#define __STORE_ITEM_2__(t, out, ido, in, idi)
+#define __STORE_ITEM_3__(t, out, ido, in, idi)
+
+#define MAKE_VEC4_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y, l.z + r.z, l.w + r.w); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y, l.z - r.z, l.w - r.w); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y, l.z * r.z, l.w * r.w); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y, l.z / r.z, l.w / r.w); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y, l.z % r.z, l.w % r.w); }
+#define MAKE_VEC2_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y); }
+
+MAKE_VEC4_OP(int4)
+MAKE_VEC2_OP(int2)
+
+#endif
+
+
+extern "C" __global__ __launch_bounds__(60) void template_op_kernel0(float* __restrict__ input0, float* __restrict__ input1, float* __restrict__ input2, float* __restrict__ output0) {
+  // [thread_extent] blockIdx.x = 64
+  // [thread_extent] threadIdx.x = 60
+  float output0_local[1];
+  output0_local[(0)] = 0.000000e+00f;
+  for (int K_outer_outer = 0; K_outer_outer < 16; ++K_outer_outer) {
+    __shared__ float mediate1_shared[64];
+    __syncthreads();
+    #pragma unroll
+    for (int ax0_ax1_fused_outer_outer = 0; ax0_ax1_fused_outer_outer < 2; ++ax0_ax1_fused_outer_outer) {
+  // [thread_extent] threadIdx.x = 60
+      if (((ax0_ax1_fused_outer_outer * 60) + ((int)threadIdx.x)) < 64) {
+        mediate1_shared[(((ax0_ax1_fused_outer_outer * 60) + ((int)threadIdx.x)))] = (input1[((((((((int)blockIdx.x) >> 1) * 1024) + (K_outer_outer * 64)) + (ax0_ax1_fused_outer_outer * 60)) + ((int)threadIdx.x)))] / input0[(0)]);
+      }
+    }
+    __shared__ float input2_shared[3840];
+    #pragma unroll
+    for (int ax0_ax1_fused_outer_outer1 = 0; ax0_ax1_fused_outer_outer1 < 64; ++ax0_ax1_fused_outer_outer1) {
+  // [thread_extent] threadIdx.x = 60
+      input2_shared[(((ax0_ax1_fused_outer_outer1 * 60) + ((int)threadIdx.x)))] = input2[((((((((int)blockIdx.x) & 1) * 61440) + ((((ax0_ax1_fused_outer_outer1 * 60) + ((int)threadIdx.x)) >> 6) * 1024)) + (K_outer_outer * 64)) + (((ax0_ax1_fused_outer_outer1 * 60) + ((int)threadIdx.x)) & 63)))];
+    }
+    __syncthreads();
+    #pragma unroll
+    for (int K_inner = 0; K_inner < 64; ++K_inner) {
+      output0_local[(0)] = (output0_local[(0)] + (mediate1_shared[(K_inner)] * input2_shared[(((((int)threadIdx.x) * 64) + K_inner))]));
+    }
+  }
+  output0[(((((int)blockIdx.x) * 60) + ((int)threadIdx.x)))] = output0_local[(0)];
+}
+
+// Saved Perf = 3.121930e-05 sec / run; Step Produced = 924; Planned Steps = 1000;
+// Antares Tuning Completed in 1000 steps.

@@ -1,0 +1,4733 @@
+{
+    "": {
+        "in_shape": [
+            [
+                32,
+                16000,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                12,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertForSequenceClassification'>"
+    },
+    "hubert": {
+        "in_shape": [
+            [
+                32,
+                16000,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertModel'>"
+    },
+    "hubert.feature_extractor": {
+        "in_shape": [
+            [
+                32,
+                16000,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                49,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeatureExtractor'>"
+    },
+    "hubert.feature_extractor.conv_layers": {
+        "in_shape": [],
+        "out_shape": [],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.ModuleList'>"
+    },
+    "hubert.feature_extractor.conv_layers.0": {
+        "in_shape": [
+            [
+                32,
+                1,
+                16000,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                3199,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertGroupNormConvLayer'>"
+    },
+    "hubert.feature_extractor.conv_layers.0.conv": {
+        "in_shape": [
+            [
+                32,
+                1,
+                16000,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                3199,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                1,
+                10
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv1d'>"
+    },
+    "hubert.feature_extractor.conv_layers.0.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                512,
+                3199,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                3199,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.GroupNorm'>"
+    },
+    "hubert.feature_extractor.conv_layers.1": {
+        "in_shape": [
+            [
+                32,
+                512,
+                3199,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                1599,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertNoLayerNormConvLayer'>"
+    },
+    "hubert.feature_extractor.conv_layers.1.conv": {
+        "in_shape": [
+            [
+                32,
+                512,
+                3199,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                1599,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                512,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv1d'>"
+    },
+    "hubert.feature_extractor.conv_layers.2": {
+        "in_shape": [
+            [
+                32,
+                512,
+                1599,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                799,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertNoLayerNormConvLayer'>"
+    },
+    "hubert.feature_extractor.conv_layers.2.conv": {
+        "in_shape": [
+            [
+                32,
+                512,
+                1599,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                799,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                512,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv1d'>"
+    },
+    "hubert.feature_extractor.conv_layers.3": {
+        "in_shape": [
+            [
+                32,
+                512,
+                799,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                399,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertNoLayerNormConvLayer'>"
+    },
+    "hubert.feature_extractor.conv_layers.3.conv": {
+        "in_shape": [
+            [
+                32,
+                512,
+                799,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                399,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                512,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv1d'>"
+    },
+    "hubert.feature_extractor.conv_layers.4": {
+        "in_shape": [
+            [
+                32,
+                512,
+                399,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                199,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertNoLayerNormConvLayer'>"
+    },
+    "hubert.feature_extractor.conv_layers.4.conv": {
+        "in_shape": [
+            [
+                32,
+                512,
+                399,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                199,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                512,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv1d'>"
+    },
+    "hubert.feature_extractor.conv_layers.5": {
+        "in_shape": [
+            [
+                32,
+                512,
+                199,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                99,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertNoLayerNormConvLayer'>"
+    },
+    "hubert.feature_extractor.conv_layers.5.conv": {
+        "in_shape": [
+            [
+                32,
+                512,
+                199,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                99,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                512,
+                2
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv1d'>"
+    },
+    "hubert.feature_extractor.conv_layers.6": {
+        "in_shape": [
+            [
+                32,
+                512,
+                99,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                49,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertNoLayerNormConvLayer'>"
+    },
+    "hubert.feature_extractor.conv_layers.6.conv": {
+        "in_shape": [
+            [
+                32,
+                512,
+                99,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                512,
+                49,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                512,
+                2
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv1d'>"
+    },
+    "hubert.feature_projection": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeatureProjection'>"
+    },
+    "hubert.feature_projection.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.feature_projection.projection": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.feature_projection.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ],
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoder'>"
+    },
+    "hubert.encoder.pos_conv_embed": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertPositionalConvEmbedding'>"
+    },
+    "hubert.encoder.pos_conv_embed.conv": {
+        "in_shape": [
+            [
+                32,
+                128,
+                49,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                128,
+                50,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                8,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv1d'>"
+    },
+    "hubert.encoder.pos_conv_embed.padding": {
+        "in_shape": [
+            [
+                32,
+                128,
+                50,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                128,
+                49,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertSamePadLayer'>"
+    },
+    "hubert.encoder.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers": {
+        "in_shape": [],
+        "out_shape": [],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.ModuleList'>"
+    },
+    "hubert.encoder.layers.0": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.0.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.0.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.0.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.0.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.0.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.0.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.0.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.0.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.0.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.0.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.0.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.0.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.0.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.1": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.1.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.1.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.1.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.1.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.1.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.1.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.1.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.1.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.1.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.1.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.1.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.1.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.1.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.2": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.2.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.2.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.2.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.2.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.2.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.2.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.2.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.2.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.2.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.2.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.2.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.2.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.2.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.3": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.3.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.3.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.3.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.3.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.3.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.3.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.3.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.3.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.3.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.3.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.3.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.3.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.3.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.4": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.4.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.4.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.4.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.4.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.4.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.4.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.4.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.4.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.4.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.4.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.4.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.4.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.4.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.5": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.5.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.5.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.5.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.5.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.5.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.5.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.5.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.5.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.5.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.5.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.5.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.5.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.5.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.6": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.6.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.6.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.6.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.6.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.6.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.6.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.6.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.6.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.6.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.6.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.6.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.6.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.6.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.7": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.7.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.7.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.7.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.7.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.7.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.7.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.7.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.7.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.7.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.7.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.7.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.7.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.7.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.8": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.8.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.8.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.8.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.8.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.8.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.8.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.8.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.8.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.8.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.8.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.8.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.8.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.8.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.9": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.9.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.9.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.9.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.9.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.9.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.9.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.9.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.9.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.9.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.9.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.9.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.9.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.9.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.10": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.10.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.10.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.10.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.10.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.10.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.10.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.10.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.10.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.10.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.10.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.10.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.10.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.10.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.11": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertEncoderLayer'>"
+    },
+    "hubert.encoder.layers.11.attention": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertAttention'>"
+    },
+    "hubert.encoder.layers.11.attention.k_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.11.attention.v_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.11.attention.q_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.11.attention.out_proj": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.11.dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.11.layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "hubert.encoder.layers.11.feed_forward": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'transformers.models.hubert.modeling_hubert.HubertFeedForward'>"
+    },
+    "hubert.encoder.layers.11.feed_forward.intermediate_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.11.feed_forward.intermediate_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                512,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.11.feed_forward.output_dense": {
+        "in_shape": [
+            [
+                32,
+                49,
+                512,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128,
+                512
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "hubert.encoder.layers.11.feed_forward.output_dropout": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.dropout.Dropout'>"
+    },
+    "hubert.encoder.layers.11.final_layer_norm": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.normalization.LayerNorm'>"
+    },
+    "projector": {
+        "in_shape": [
+            [
+                32,
+                49,
+                128,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                49,
+                256,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                256,
+                128
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    },
+    "classifier": {
+        "in_shape": [
+            [
+                32,
+                256,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                12,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                12,
+                256
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    }
+}

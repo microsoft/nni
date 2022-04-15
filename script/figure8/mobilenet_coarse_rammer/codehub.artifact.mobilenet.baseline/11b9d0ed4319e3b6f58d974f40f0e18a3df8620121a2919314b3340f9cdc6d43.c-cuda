@@ -1,0 +1,103 @@
+// GLOBALS: input0:float32[256, 1, 3, 3], input1:float32[256], input2:float32[32, 256, 28, 28] -> output0:float32[32, 256, 14, 14]
+// BACKEND: c-cuda (default)
+// CONFIG: {"Toutput0:D0": [-1, 2, 2, 1], "Toutput0:D1": [-1, 1, 1, 1], "Toutput0:D2": [-1, 1, 1, 1], "Toutput0:D3": [-1, 1, 14, 1], "Toutput0:R0": [-1, 3, 1], "Toutput0:R1": [-1, 1, 3], "Toutput0:RA": 0, "Toutput0:S": 3, "Toutput0:U": 1}
+// COMPUTE_V1: - einstein_v2(" mediate0[N2, N3, N0, N1] = input0[N0, N1, N2, N3] ;  mediate1[N0, N1, N2, N3] = input1[N1] where N0 in 32, N2 in 28, N3 in 28;   mediate2[N0, N1, N2, N3] = input2[N0, N1, N2, N3] + mediate1[N0, N1, N2, N3]; mediate3[N0, N1, N2, N3] = mediate2[N0, N1, N2, N3].call(`max`, [const(0).cast(mediate2[N0, N1, N2, N3].dtype())]); output0[N, C, HO, WO] +=! mediate3[N, C, -1 + KH + HO * 2, -1 + KW + WO * 2].when([-1 + KH + HO * 2 >= 0, -1 + KH + HO * 2 < 28, -1 + KW + WO * 2 >= 0, -1 + KW + WO * 2 < 28], const(0.0).cast(mediate3[N, C, -1 + KH + HO * 2, -1 + KW + WO * 2].dtype())) * mediate0[KH, KW, C, 0] where HO in 14, WO in 14, KH in 3, KW in 3; ", input_dict={ "input0" : { "dtype" : "float32", "shape" : [256, 1, 3, 3]} ,  "input1" : { "dtype" : "float32", "shape" : [256]} ,  "input2" : { "dtype" : "float32", "shape" : [32, 256, 28, 28]} }) ## @:  memcpy
+
+
+// ---------------------------------------------------------------------------
+// LOCAL: template_op_kernel0 -- input0:float32[256, 1, 3, 3], input1:float32[256], input2:float32[32, 256, 28, 28] -> output0:float32[32, 256, 14, 14]
+
+#include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <mma.h>
+
+#ifndef __CUDA_COMMON_MACRO__
+#define __CUDA_COMMON_MACRO__
+
+#define __ITEM_0_OF__(v) (v).x
+#define __ITEM_1_OF__(v) (v).y
+#define __ITEM_2_OF__(v) (v).z
+#define __ITEM_3_OF__(v) (v).w
+
+#define __STORE_ITEM_0__(t, out, ido, in, idi) *(t*)(out + ido) = *(t*)(in + idi)
+#define __STORE_ITEM_1__(t, out, ido, in, idi)
+#define __STORE_ITEM_2__(t, out, ido, in, idi)
+#define __STORE_ITEM_3__(t, out, ido, in, idi)
+
+#define MAKE_VEC4_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y, l.z + r.z, l.w + r.w); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y, l.z - r.z, l.w - r.w); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y, l.z * r.z, l.w * r.w); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y, l.z / r.z, l.w / r.w); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y, l.z % r.z, l.w % r.w); }
+#define MAKE_VEC2_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y); }
+
+MAKE_VEC4_OP(int4)
+MAKE_VEC2_OP(int2)
+
+#endif
+
+
+extern "C" __global__ __launch_bounds__(28) void template_op_kernel0(float* __restrict__ input0, float* __restrict__ input1, float* __restrict__ input2, float* __restrict__ output0) {
+  // [thread_extent] blockIdx.x = 28672
+  // [thread_extent] threadIdx.x = 28
+  float output0_local[2];
+  output0_local[(0)] = 0.000000e+00f;
+  output0_local[(1)] = 0.000000e+00f;
+  __shared__ float mediate3_shared[336];
+  // [thread_extent] threadIdx.x = 28
+  if (1 <= (((int)blockIdx.x) % 14)) {
+    mediate3_shared[(((int)threadIdx.x))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) - 28))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  }
+  mediate3_shared[((((int)threadIdx.x) + 28))] = max((input2[(((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  mediate3_shared[((((int)threadIdx.x) + 56))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 28))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  if (1 <= (((int)blockIdx.x) % 14)) {
+    mediate3_shared[((((int)threadIdx.x) + 84))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 200676))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  }
+  mediate3_shared[((((int)threadIdx.x) + 112))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 200704))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  mediate3_shared[((((int)threadIdx.x) + 140))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 200732))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  if (1 <= (((int)blockIdx.x) % 14)) {
+    mediate3_shared[((((int)threadIdx.x) + 168))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 401380))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  }
+  mediate3_shared[((((int)threadIdx.x) + 196))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 401408))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  mediate3_shared[((((int)threadIdx.x) + 224))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 401436))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  if (1 <= (((int)blockIdx.x) % 14)) {
+    mediate3_shared[((((int)threadIdx.x) + 252))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 602084))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  }
+  mediate3_shared[((((int)threadIdx.x) + 280))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 602112))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  mediate3_shared[((((int)threadIdx.x) + 308))] = max((input2[((((((((int)blockIdx.x) / 3584) * 802816) + ((((int)blockIdx.x) % 3584) * 56)) + ((int)threadIdx.x)) + 602140))] + input1[(((((int)blockIdx.x) % 3584) / 14))]), 0.000000e+00f);
+  __shared__ float mediate0_shared[9];
+  // [thread_extent] threadIdx.x = 28
+  if (((int)threadIdx.x) < 9) {
+    mediate0_shared[(((int)threadIdx.x))] = input0[(((((((int)blockIdx.x) % 3584) / 14) * 9) + ((int)threadIdx.x)))];
+  }
+  __syncthreads();
+  output0_local[(0)] = (output0_local[(0)] + ((((1 <= (((int)blockIdx.x) % 14)) && (1 <= (((int)threadIdx.x) % 14))) ? mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) - 1))] : 0.000000e+00f) * mediate0_shared[(0)]));
+  output0_local[(1)] = (output0_local[(1)] + ((((1 <= (((int)blockIdx.x) % 14)) && (1 <= (((int)threadIdx.x) % 14))) ? mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 167))] : 0.000000e+00f) * mediate0_shared[(0)]));
+  output0_local[(0)] = (output0_local[(0)] + (((1 <= (((int)blockIdx.x) % 14)) ? mediate3_shared[((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)))] : 0.000000e+00f) * mediate0_shared[(1)]));
+  output0_local[(1)] = (output0_local[(1)] + (((1 <= (((int)blockIdx.x) % 14)) ? mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 168))] : 0.000000e+00f) * mediate0_shared[(1)]));
+  output0_local[(0)] = (output0_local[(0)] + (((1 <= (((int)blockIdx.x) % 14)) ? mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 1))] : 0.000000e+00f) * mediate0_shared[(2)]));
+  output0_local[(1)] = (output0_local[(1)] + (((1 <= (((int)blockIdx.x) % 14)) ? mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 169))] : 0.000000e+00f) * mediate0_shared[(2)]));
+  output0_local[(0)] = (output0_local[(0)] + (((1 <= (((int)threadIdx.x) % 14)) ? mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 27))] : 0.000000e+00f) * mediate0_shared[(3)]));
+  output0_local[(1)] = (output0_local[(1)] + (((1 <= (((int)threadIdx.x) % 14)) ? mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 195))] : 0.000000e+00f) * mediate0_shared[(3)]));
+  output0_local[(0)] = (output0_local[(0)] + (mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 28))] * mediate0_shared[(4)]));
+  output0_local[(1)] = (output0_local[(1)] + (mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 196))] * mediate0_shared[(4)]));
+  output0_local[(0)] = (output0_local[(0)] + (mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 29))] * mediate0_shared[(5)]));
+  output0_local[(1)] = (output0_local[(1)] + (mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 197))] * mediate0_shared[(5)]));
+  output0_local[(0)] = (output0_local[(0)] + (((1 <= (((int)threadIdx.x) % 14)) ? mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 55))] : 0.000000e+00f) * mediate0_shared[(6)]));
+  output0_local[(1)] = (output0_local[(1)] + (((1 <= (((int)threadIdx.x) % 14)) ? mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 223))] : 0.000000e+00f) * mediate0_shared[(6)]));
+  output0_local[(0)] = (output0_local[(0)] + (mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 56))] * mediate0_shared[(7)]));
+  output0_local[(1)] = (output0_local[(1)] + (mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 224))] * mediate0_shared[(7)]));
+  output0_local[(0)] = (output0_local[(0)] + (mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 57))] * mediate0_shared[(8)]));
+  output0_local[(1)] = (output0_local[(1)] + (mediate3_shared[(((((((int)threadIdx.x) / 14) * 84) + ((((int)threadIdx.x) % 14) * 2)) + 225))] * mediate0_shared[(8)]));
+  output0[((((((((int)blockIdx.x) / 3584) * 200704) + ((((int)threadIdx.x) / 14) * 50176)) + ((((int)blockIdx.x) % 3584) * 14)) + (((int)threadIdx.x) % 14)))] = output0_local[(0)];
+  output0[(((((((((int)blockIdx.x) / 3584) * 200704) + ((((int)threadIdx.x) / 14) * 50176)) + ((((int)blockIdx.x) % 3584) * 14)) + (((int)threadIdx.x) % 14)) + 100352))] = output0_local[(1)];
+}
+
+// Saved Perf = 6.068430e-05 sec / run; Step Produced = 880; Planned Steps = 1000;
+// Antares Tuning Completed in 1000 steps.

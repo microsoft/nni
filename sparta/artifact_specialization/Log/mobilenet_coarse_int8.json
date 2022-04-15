@@ -1,0 +1,30 @@
+{
+    "6272_192_208":{
+        "CHUNK_K_VALUE":1,
+        "BLOCK_ROW_WARPS_VALUE":1,
+        "BLOCK_COL_WARPS_VALUE":1,
+        "WARP_ROW_TILES_VALUE":2,
+        "WARP_COL_TILES_VALUE":1
+    },
+    "100352_32_48":{
+        "CHUNK_K_VALUE":1,
+        "BLOCK_ROW_WARPS_VALUE":1,
+        "BLOCK_COL_WARPS_VALUE":2,
+        "WARP_ROW_TILES_VALUE":2,
+        "WARP_COL_TILES_VALUE":1
+    },
+    "25088_64_96":{
+        "CHUNK_K_VALUE":1,
+        "BLOCK_ROW_WARPS_VALUE":1,
+        "BLOCK_COL_WARPS_VALUE":2,
+        "WARP_ROW_TILES_VALUE":2,
+        "WARP_COL_TILES_VALUE":1
+    },
+    "other":{
+        "CHUNK_K_VALUE":1,
+        "BLOCK_ROW_WARPS_VALUE":1,
+        "BLOCK_COL_WARPS_VALUE":2,
+        "WARP_ROW_TILES_VALUE":2,
+        "WARP_COL_TILES_VALUE":1
+    }
+}

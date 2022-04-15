@@ -1,0 +1,2688 @@
+{
+    "": {
+        "in_shape": [
+            [
+                32,
+                3,
+                224,
+                224,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                120,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'models.mobilenet.MobileNet'>"
+    },
+    "conv1": {
+        "in_shape": [
+            [
+                32,
+                3,
+                224,
+                224,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "conv1.0": {
+        "in_shape": [
+            [
+                32,
+                3,
+                224,
+                224,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                16,
+                3,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            2,
+            2
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "conv1.1": {
+        "in_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                16
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "conv1.2": {
+        "in_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features": {
+        "in_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                416,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.0": {
+        "in_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                32,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.0.0": {
+        "in_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                16,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.0.1": {
+        "in_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                16
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.0.2": {
+        "in_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.0.3": {
+        "in_shape": [
+            [
+                32,
+                16,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                32,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                32,
+                16,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.0.4": {
+        "in_shape": [
+            [
+                32,
+                32,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                32,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                32
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.0.5": {
+        "in_shape": [
+            [
+                32,
+                32,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                32,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.1": {
+        "in_shape": [
+            [
+                32,
+                32,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.1.0": {
+        "in_shape": [
+            [
+                32,
+                32,
+                112,
+                112,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                32,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                32,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            2,
+            2
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.1.1": {
+        "in_shape": [
+            [
+                32,
+                32,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                32,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                32
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.1.2": {
+        "in_shape": [
+            [
+                32,
+                32,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                32,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.1.3": {
+        "in_shape": [
+            [
+                32,
+                32,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                48,
+                32,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.1.4": {
+        "in_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                48
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.1.5": {
+        "in_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.2": {
+        "in_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                64,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.2.0": {
+        "in_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                48,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.2.1": {
+        "in_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                48
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.2.2": {
+        "in_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.2.3": {
+        "in_shape": [
+            [
+                32,
+                48,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                64,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                64,
+                48,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.2.4": {
+        "in_shape": [
+            [
+                32,
+                64,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                64,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                64
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.2.5": {
+        "in_shape": [
+            [
+                32,
+                64,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                64,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.3": {
+        "in_shape": [
+            [
+                32,
+                64,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.3.0": {
+        "in_shape": [
+            [
+                32,
+                64,
+                56,
+                56,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                64,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                64,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            2,
+            2
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.3.1": {
+        "in_shape": [
+            [
+                32,
+                64,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                64,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                64
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.3.2": {
+        "in_shape": [
+            [
+                32,
+                64,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                64,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.3.3": {
+        "in_shape": [
+            [
+                32,
+                64,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                96,
+                64,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.3.4": {
+        "in_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                96
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.3.5": {
+        "in_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.4": {
+        "in_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                112,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.4.0": {
+        "in_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                96,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.4.1": {
+        "in_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                96
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.4.2": {
+        "in_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.4.3": {
+        "in_shape": [
+            [
+                32,
+                96,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                112,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                112,
+                96,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.4.4": {
+        "in_shape": [
+            [
+                32,
+                112,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                112,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                112
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.4.5": {
+        "in_shape": [
+            [
+                32,
+                112,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                112,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.5": {
+        "in_shape": [
+            [
+                32,
+                112,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.5.0": {
+        "in_shape": [
+            [
+                32,
+                112,
+                28,
+                28,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                112,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                112,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            2,
+            2
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.5.1": {
+        "in_shape": [
+            [
+                32,
+                112,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                112,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                112
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.5.2": {
+        "in_shape": [
+            [
+                32,
+                112,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                112,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.5.3": {
+        "in_shape": [
+            [
+                32,
+                112,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192,
+                112,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.5.4": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.5.5": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.6": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.6.0": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.6.1": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.6.2": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.6.3": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192,
+                192,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.6.4": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.6.5": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.7": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.7.0": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.7.1": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.7.2": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.7.3": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192,
+                192,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.7.4": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.7.5": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.8": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.8.0": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.8.1": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                192
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.8.2": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.8.3": {
+        "in_shape": [
+            [
+                32,
+                192,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208,
+                192,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.8.4": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.8.5": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.9": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.9.0": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.9.1": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.9.2": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.9.3": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208,
+                208,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.9.4": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.9.5": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.10": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.10.0": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.10.1": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.10.2": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.10.3": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208,
+                208,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.10.4": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.10.5": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.11": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.11.0": {
+        "in_shape": [
+            [
+                32,
+                208,
+                14,
+                14,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            2,
+            2
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.11.1": {
+        "in_shape": [
+            [
+                32,
+                208,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                208
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.11.2": {
+        "in_shape": [
+            [
+                32,
+                208,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                208,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.11.3": {
+        "in_shape": [
+            [
+                32,
+                208,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                400,
+                208,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.11.4": {
+        "in_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                400
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.11.5": {
+        "in_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.12": {
+        "in_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                416,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "features.12.0": {
+        "in_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                400,
+                1,
+                3,
+                3
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            1,
+            1
+        ]
+    },
+    "features.12.1": {
+        "in_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                400
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.12.2": {
+        "in_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "features.12.3": {
+        "in_shape": [
+            [
+                32,
+                400,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                416,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                416,
+                400,
+                1,
+                1
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.conv.Conv2d'>",
+        "stride": [
+            1,
+            1
+        ],
+        "padding": [
+            0,
+            0
+        ]
+    },
+    "features.12.4": {
+        "in_shape": [
+            [
+                32,
+                416,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                416,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                416
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.batchnorm.BatchNorm2d'>"
+    },
+    "features.12.5": {
+        "in_shape": [
+            [
+                32,
+                416,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                416,
+                7,
+                7,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.activation.ReLU'>"
+    },
+    "classifier": {
+        "in_shape": [
+            [
+                32,
+                416,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                120,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [],
+        "type": "<class 'torch.nn.modules.container.Sequential'>"
+    },
+    "classifier.0": {
+        "in_shape": [
+            [
+                32,
+                416,
+                "torch.float32"
+            ]
+        ],
+        "out_shape": [
+            [
+                32,
+                120,
+                "torch.float32"
+            ]
+        ],
+        "weight_shape": [
+            [
+                120,
+                416
+            ]
+        ],
+        "type": "<class 'torch.nn.modules.linear.Linear'>"
+    }
+}

@@ -1,0 +1,78 @@
+// GLOBALS: input0:float32[1], input1:float32[32, 49, 128] -> output0:float32[32, 49]
+// BACKEND: c-cuda (default)
+// CONFIG: {"Routput0:S": 0, "Routput0:R0": [-1, 32], "Routput0:W": 0, "Routput0:D0": [-1, 2], "Routput0:D1": [-1, 1]}
+// COMPUTE_V1: - einstein_v2(" mediate0[N0, N1, N2] = input0[0] where N0 in 32, N1 in 49, N2 in 128;  mediate1[N0, N1, N2] = input1[N0, N1, N2].call(`pow`, [mediate0[N0, N1, N2]]);output0[N0, N1] +=! mediate1[N0, N1, N2]", input_dict={ "input0" : { "dtype" : "float32", "shape" : [1]} ,  "input1" : { "dtype" : "float32", "shape" : [32, 49, 128]} }) ## @:  memcpy
+
+
+// ---------------------------------------------------------------------------
+// LOCAL: template_op_kernel0 -- input0:float32[1], input1:float32[32, 49, 128] -> output0:float32[32, 49]
+
+#include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <mma.h>
+
+#ifndef __CUDA_COMMON_MACRO__
+#define __CUDA_COMMON_MACRO__
+
+#define __ITEM_0_OF__(v) (v).x
+#define __ITEM_1_OF__(v) (v).y
+#define __ITEM_2_OF__(v) (v).z
+#define __ITEM_3_OF__(v) (v).w
+
+#define __STORE_ITEM_0__(t, out, ido, in, idi) *(t*)(out + ido) = *(t*)(in + idi)
+#define __STORE_ITEM_1__(t, out, ido, in, idi)
+#define __STORE_ITEM_2__(t, out, ido, in, idi)
+#define __STORE_ITEM_3__(t, out, ido, in, idi)
+
+#define MAKE_VEC4_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y, l.z + r.z, l.w + r.w); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y, l.z - r.z, l.w - r.w); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y, l.z * r.z, l.w * r.w); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y, l.z / r.z, l.w / r.w); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y, l.z % r.z, l.w % r.w); }
+#define MAKE_VEC2_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y); }
+
+MAKE_VEC4_OP(int4)
+MAKE_VEC2_OP(int2)
+
+__forceinline__ __device__ __half max(const __half a, const __half b) { return a > b ? a : b; }
+__forceinline__ __device__ __half min(const __half a, const __half b) { return a < b ? a : b; }
+
+#endif
+
+
+extern "C" __global__ __launch_bounds__(64) void template_op_kernel0(float* __restrict__ input0, float* __restrict__ input1, float* __restrict__ output0) {
+  // [thread_extent] blockIdx.x = 784
+  // [thread_extent] threadIdx.y = 2
+  // [thread_extent] threadIdx.x = 32
+  float normal_reduce_temp0[1];
+  float red_buf0[1];
+  normal_reduce_temp0[(0)] = 0.000000e+00f;
+  for (int N2_outer = 0; N2_outer < 4; ++N2_outer) {
+    normal_reduce_temp0[(0)] = (normal_reduce_temp0[(0)] + pow(input1[(((((((((int)blockIdx.x) / 49) * 12544) + (((int)threadIdx.y) * 6272)) + ((((int)blockIdx.x) % 49) * 128)) + (N2_outer * 32)) + ((int)threadIdx.x)))], input0[(0)]));
+  }
+  uint mask[1];
+  float t0[1];
+  red_buf0[(0)] = normal_reduce_temp0[(0)];
+  mask[(0)] = __activemask();
+  t0[(0)] = __shfl_down_sync(mask[(0)], red_buf0[(0)], 16, 32);
+  red_buf0[(0)] = (red_buf0[(0)] + t0[(0)]);
+  t0[(0)] = __shfl_down_sync(mask[(0)], red_buf0[(0)], 8, 32);
+  red_buf0[(0)] = (red_buf0[(0)] + t0[(0)]);
+  t0[(0)] = __shfl_down_sync(mask[(0)], red_buf0[(0)], 4, 32);
+  red_buf0[(0)] = (red_buf0[(0)] + t0[(0)]);
+  t0[(0)] = __shfl_down_sync(mask[(0)], red_buf0[(0)], 2, 32);
+  red_buf0[(0)] = (red_buf0[(0)] + t0[(0)]);
+  t0[(0)] = __shfl_down_sync(mask[(0)], red_buf0[(0)], 1, 32);
+  red_buf0[(0)] = (red_buf0[(0)] + t0[(0)]);
+  red_buf0[(0)] = __shfl_sync(mask[(0)], red_buf0[(0)], 0, 32);
+  output0[(((((((int)blockIdx.x) / 49) * 98) + (((int)threadIdx.y) * 49)) + (((int)blockIdx.x) % 49)))] = red_buf0[(0)];
+}
+
+// Saved Perf = 5.813430e-06 sec / run; Step Produced = 862; Planned Steps = 1000;
+// Antares Tuning Completed in 1000 steps.
