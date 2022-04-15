@@ -13,7 +13,7 @@ import { SearchItems } from '@static/interface';
 import SearchParameterConditions from './SearchParameterConditions';
 import GeneralSearch from './GeneralSearch';
 import { classNames, isChoiceType } from './searchFunction';
-import { AppContext } from '@/AppContext';
+import { AppContext } from '@/App';
 
 // TableList search layout
 

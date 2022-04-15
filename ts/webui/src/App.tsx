@@ -6,7 +6,6 @@ import NavCon from '@components/nav/Nav';
 import MessageInfo from '@components/common/MessageInfo';
 import { COLUMN } from '@static/const';
 import { isManagerExperimentPage } from '@static/function';
-import AppContext from './AppContext';
 import '@style/App.scss';
 import '@style/common/common.scss';
 import '@style/experiment/trialdetail/trialsDetail.scss';
@@ -14,6 +13,37 @@ import '@style/experiment/trialdetail/trialsDetail.scss';
 const echarts = require('echarts/lib/echarts');
 echarts.registerTheme('nni_theme', {
     color: '#3c8dbc'
+});
+
+export const AppContext = React.createContext({
+    interval: 10, // sendons
+    columnList: COLUMN,
+    experimentUpdateBroadcast: 0,
+    trialsUpdateBroadcast: 0,
+    metricGraphMode: 'max',
+    bestTrialEntries: '10',
+    maxDurationUnit: 'm',
+    expandRowIDs: new Set(['']),
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeColumn: (_val: string[]): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeMetricGraphMode: (_val: 'max' | 'min'): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeMaxDurationUnit: (_val: string): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeEntries: (_val: string): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    updateOverviewPage: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    updateDetailPage: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeExpandRowIDs: (_val: string, _type?: string): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    startTimer: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    closeTimer: (): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    lastRefresh: (): void => {}
 });
 
 interface AppState {
@@ -54,7 +84,6 @@ class App extends React.Component<{}, AppState> {
 
     async componentDidMount(): Promise<void> {
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
-        
         this.setState(state => ({
             experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1,
@@ -116,6 +145,7 @@ class App extends React.Component<{}, AppState> {
                                         <MessageInfo info={expWarningMessage} typeInfo='warning' />
                                     </div>
                                 )}
+                                {/* <AppContext.Provider */}
                                 <AppContext.Provider
                                     value={{
                                         interval,

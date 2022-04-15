@@ -376,10 +376,7 @@ function _inferColumnTitle(columnKey: string): string {
 
 const getIntermediateAllKeys = (intermediateDialogTrial: any): string[] => {
     let intermediateAllKeysList: string[] = [];
-    if (
-        intermediateDialogTrial!.intermediateMetrics !== undefined &&
-        intermediateDialogTrial!.intermediateMetrics[0]
-    ) {
+    if (intermediateDialogTrial!.intermediateMetrics !== undefined && intermediateDialogTrial!.intermediateMetrics[0]) {
         const parsedMetric = parseMetrics(intermediateDialogTrial!.intermediateMetrics[0].data);
         if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
             const allIntermediateKeys: string[] = [];
@@ -430,5 +427,4 @@ export {
     reformatRetiariiParameter,
     getIntermediateAllKeys,
     _inferColumnTitle
-
 };

@@ -28,13 +28,13 @@ async function main() {
 
     console.log('Creating an development build...');
 
-    const config = configFactory('production');
+    const config = configFactory('development');
     const compiler = webpack(config);
     const result = await asyncRun(compiler);
-
     const { errors, warnings } = formatWebpackMessages(result);
 
     if (errors.length) {
+        console.log(JSON.stringify(errors));
         console.log(chalk.red('Failed to compile.\n'));
         printBuildError(new Error(errors[0]));
         process.exit(1);

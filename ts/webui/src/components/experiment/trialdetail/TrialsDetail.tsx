@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Stack, Pivot, PivotItem } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
-import AppContext from '@/AppContext';
+import { AppContext } from '@/App';
 import DefaultPoint from './chart/DefaultMetricPoint';
 import Duration from './chart/Duration';
 import Para from './chart/Para';

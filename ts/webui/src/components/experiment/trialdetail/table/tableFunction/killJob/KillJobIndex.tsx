@@ -7,7 +7,7 @@ import KillJobDialog from './KillJobDialog';
 import { blocked } from '@components/fluent/Icon';
 import { gap10 } from '@components/fluent/ChildrenGap';
 import { styles } from '@components/experiment/overview/params/basicInfoStyles';
-import AppContext from '@/AppContext';
+import { AppContext } from '@/App';
 
 function KillJobIndex(props): any {
     const menuButtonElement = useRef(null);

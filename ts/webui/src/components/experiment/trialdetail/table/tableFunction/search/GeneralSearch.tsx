@@ -2,8 +2,8 @@ import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Stack, PrimaryButton } from '@fluentui/react';
 import { gap10 } from '@components/fluent/ChildrenGap';
+import { AppContext } from '@/App';
 import { getSearchInputValueBySearchList } from './searchFunction';
-import AppContext from '@/AppContext';
 
 // This file is for search trial ['Trial id', 'Trial No.']
 

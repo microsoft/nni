@@ -13,7 +13,14 @@ import {
 import { Trial } from '@model/trial';
 import { TOOLTIP_BACKGROUND_COLOR } from '@static/const';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
-import { convertDuration, formatTimestamp, copyAndSort, parametersType, _inferColumnTitle, getIntermediateAllKeys } from '@static/function';
+import {
+    convertDuration,
+    formatTimestamp,
+    copyAndSort,
+    parametersType,
+    _inferColumnTitle,
+    getIntermediateAllKeys
+} from '@static/function';
 import { TableObj, SortInfo, SearchItems } from '@static/interface';
 import { blocked, copy, LineChart, tableListIcon } from '@components/fluent/Icon';
 import Search from './tableFunction/search/Search';
@@ -21,7 +28,7 @@ import Customize from './tableFunction/CustomizedTrial';
 import TensorboardUI from './tableFunction/tensorboard/TensorboardUI';
 import ChangeColumnComponent from '../ChangeColumnComponent';
 import Compare from './tableFunction/Compare';
-import KillJobIndex from './tableFunction/killTrial/KillJobIndex';
+import KillJobIndex from './tableFunction/killJob/KillJobIndex';
 import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction';
 import ExpandableDetails from '@components/common/ExpandableDetails';
 import PaginationTable from '@components/common/PaginationTable';
