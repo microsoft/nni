@@ -49,12 +49,8 @@ testCases:
     kwargs:
       rootpath: /tmp/nnimount/testlocalrootpath
 
-- name: test-waiting
-  configFile: test/config/examples/sklearn-regression.yml
-  launchCommand: sleep 100
-  stopCommand: sleep 10
-
 - name: sklearn-regression
+  launchCommand: sleep 100 && nnictl create --config $configFile --debug
   configFile: test/config/examples/sklearn-regression.yml
 
 # mount point in local may late to umount when stop experiment in shared-storage-remote-azureblob,
