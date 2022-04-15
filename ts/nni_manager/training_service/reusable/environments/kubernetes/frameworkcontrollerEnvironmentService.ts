@@ -80,7 +80,9 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         environment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         const frameworkcontrollerJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
-        const command = this.generateCommandScript(this.config.taskRoles, environment.command);
+        // comment this line for disable the frameworkbarrier
+        // const command = this.generateCommandScript(this.config.taskRoles, environment.command);
+        const command = environment.command;
         await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), command, { encoding: 'utf8' });
 
         //upload script files to sotrage
@@ -204,6 +206,10 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             },
             spec: {
                 executionType: 'Start',
+                // retryPolicy: {
+                //     fancyRetryPolicy: true,
+                //     maxRetryCount: 2
+                // },
                 taskRoles: taskRoles
             }
         });
@@ -222,9 +228,9 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                         shareName: `${this.azureStorageShare}`,
                         readonly: false
                     }
-                }, {
-                    name: 'frameworkbarrier-volume',
-                    emptyDir: {}
+                // }, {
+                //     name: 'frameworkbarrier-volume',
+                //     emptyDir: {}
                 }]);
         } else {
             volumeSpecMap.set('nniVolumes', [
@@ -234,9 +240,9 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                         server: `${this.config.storage.server}`,
                         path: `${this.config.storage.path}`
                     }
-                }, {
-                    name: 'frameworkbarrier-volume',
-                    emptyDir: {}
+                // }, {
+                //     name: 'frameworkbarrier-volume',
+                //     emptyDir: {}
                 }]);
         }
 
@@ -249,9 +255,9 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                     {
                         name: 'nni-vol',
                         mountPath: this.CONTAINER_MOUNT_PATH
-                    }, {
-                        name: 'frameworkbarrier-volume',
-                        mountPath: '/mnt/frameworkbarrier'
+                    // }, {
+                    //     name: 'frameworkbarrier-volume',
+                    //     mountPath: '/mnt/frameworkbarrier'
                     }],
                 resources: podResources,
                 ports: [{
@@ -272,7 +278,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
 
         const spec: any = {
             containers: containers,
-            initContainers: initContainers,
+            // initContainers: initContainers,
             restartPolicy: 'OnFailure',
             volumes: volumeSpecMap.get('nniVolumes'),
             hostNetwork: false

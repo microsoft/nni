@@ -347,8 +347,10 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         for (const taskRole of configTaskRoles) {
             const runScriptContent: string =
                 await this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder,
-                    this.generateCommandScript(configTaskRoles, taskRole.command), form.sequenceId.toString(),
-                    taskRole.name, taskRole.gpuNum ? taskRole.gpuNum : 0);
+                    // comment this line for disable the frameworkbarrier
+                    // this.generateCommandScript(configTaskRoles, taskRole.command),
+                    taskRole.command, 
+                    form.sequenceId.toString(), taskRole.name, taskRole.gpuNum ? taskRole.gpuNum : 0);
             await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, {encoding: 'utf8'});
         }
 
@@ -449,6 +451,10 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             },
             spec: {
                 executionType: 'Start',
+                // retryPolicy: {
+                //     fancyRetryPolicy: true,
+                //     maxRetryCount: 2
+                // },
                 taskRoles: taskRoles
             }
         });
@@ -474,9 +480,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         shareName: `${this.azureStorageShare}`,
                         readonly: false
                     }
-                }, {
-                    name: 'frameworkbarrier-volume',
-                    emptyDir: {}
+                // }, {
+                //     name: 'frameworkbarrier-volume',
+                //     emptyDir: {}
                 }]);
         } else {
             const frameworkcontrollerClusterConfigNFS: FrameworkControllerClusterConfigNFS =
@@ -488,9 +494,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         server: `${frameworkcontrollerClusterConfigNFS.nfs.server}`,
                         path: `${frameworkcontrollerClusterConfigNFS.nfs.path}`
                     }
-                }, {
-                    name: 'frameworkbarrier-volume',
-                    emptyDir: {}
+                // }, {
+                //     name: 'frameworkbarrier-volume',
+                //     emptyDir: {}
                 }]);
         }
 
@@ -503,10 +509,11 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     {
                         name: 'nni-vol',
                         mountPath: this.CONTAINER_MOUNT_PATH
-                    }, {
-                        name: 'frameworkbarrier-volume',
-                        mountPath: '/mnt/frameworkbarrier'
                     }],
+                    // }, {
+                    //     name: 'frameworkbarrier-volume',
+                    //     mountPath: '/mnt/frameworkbarrier'
+                    // }],
                 resources: podResources,
                 ports: [{
                     containerPort: containerPort
@@ -526,7 +533,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
 
         const spec: any = {
             containers: containers,
-            initContainers: initContainers,
+            // initContainers: initContainers,
             restartPolicy: 'OnFailure',
             volumes: volumeSpecMap.get('nniVolumes'),
             hostNetwork: false
