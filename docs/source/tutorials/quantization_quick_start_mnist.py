@@ -19,7 +19,7 @@ import torch
 import torch.nn.functional as F
 from torch.optim import SGD
 
-from scripts.compression_mnist_model import TorchModel, trainer, evaluator, device
+from scripts.compression_mnist_model import TorchModel, trainer, evaluator, device, test_trt
 
 # define the model
 model = TorchModel().to(device)
@@ -44,19 +44,15 @@ for epoch in range(3):
 config_list = [{
     'quant_types': ['input', 'weight'],
     'quant_bits': {'input': 8, 'weight': 8},
-    'op_names': ['conv1']
+    'op_types': ['Conv2d']
 }, {
     'quant_types': ['output'],
     'quant_bits': {'output': 8},
-    'op_names': ['relu1']
+    'op_types': ['ReLU']
 }, {
     'quant_types': ['input', 'weight'],
     'quant_bits': {'input': 8, 'weight': 8},
-    'op_names': ['conv2']
-}, {
-    'quant_types': ['output'],
-    'quant_bits': {'output': 8},
-    'op_names': ['relu2']
+    'op_names': ['fc1', 'fc2']
 }]
 
 # %%
@@ -82,3 +78,12 @@ calibration_path = "./log/mnist_calibration.pth"
 calibration_config = quantizer.export_model(model_path, calibration_path)
 
 print("calibration_config: ", calibration_config)
+
+# %%
+# build tensorRT engine to make a real speedup, for more information about speedup, please refer :doc:`quantization_speedup`.
+
+from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+input_shape = (32, 1, 28, 28)
+engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
+engine.compress()
+test_trt(engine)

@@ -89,7 +89,7 @@ for name, mask in masks.items():
 # need to unwrap the model, if the model is wrapped before speedup
 pruner._unwrap_model()
 
-# speedup the model
+# speedup the model, for more information about speedup, please refer :doc:`pruning_speedup`.
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 ModelSpeedup(model, torch.rand(3, 1, 28, 28).to(device), masks).speedup_model()

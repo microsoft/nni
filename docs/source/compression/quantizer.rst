@@ -1,7 +1,8 @@
 Quantizer in NNI
 ================
 
-Quantization algorithms compress the original network by reducing the number of bits required to represent weights or activations, which can reduce the computations and the inference time.
+NNI implements the main part of the quantizaiton algorithm as quantizer. All quantizers are implemented as close as possible to what is described in the paper (if it has).
+The following table provides a brief introduction to the quantizers implemented in nni, click the link in table to view a more detailed introduction and use cases.
 
 .. list-table::
    :header-rows: 1

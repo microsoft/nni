@@ -32,27 +32,6 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Quantization reduces model size and speeds up inference time by reducing the number of bits req...">
-
-.. only:: html
-
- .. figure:: /tutorials/images/thumb/sphx_glr_quantization_quick_start_mnist_thumb.png
-     :alt: Quantization Quickstart
-
-     :ref:`sphx_glr_tutorials_quantization_quick_start_mnist.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /tutorials/quantization_quick_start_mnist
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip=" Introduction ------------">
 
 .. only:: html
@@ -71,6 +50,27 @@ Tutorials
    :hidden:
 
    /tutorials/quantization_speedup
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Quantization reduces model size and speeds up inference time by reducing the number of bits req...">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_quantization_quick_start_mnist_thumb.png
+     :alt: Quantization Quickstart
+
+     :ref:`sphx_glr_tutorials_quantization_quick_start_mnist.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/quantization_quick_start_mnist
 
 .. raw:: html
 

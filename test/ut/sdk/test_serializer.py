@@ -353,3 +353,25 @@ def test_subclass():
     assert obj.trace_kwargs == {'c': 1, 'd': 2}
     assert issubclass(type(obj), Super)
     assert isinstance(obj, Super)
+
+
+def test_get():
+    @nni.trace
+    class Foo:
+        def __init__(self, a = 1):
+            self._a = a
+
+        def bar(self):
+            return self._a + 1
+
+    obj = Foo(3)
+    assert nni.load(nni.dump(obj)).bar() == 4
+    obj1 = obj.trace_copy()
+    with pytest.raises(AttributeError):
+        obj1.bar()
+    obj1.trace_kwargs['a'] = 5
+    obj1 = obj1.get()
+    assert obj1.bar() == 6
+    obj2 = obj1.trace_copy()
+    obj2.trace_kwargs['a'] = -1
+    assert obj2.get().bar() == 0

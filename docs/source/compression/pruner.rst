@@ -1,7 +1,10 @@
 Pruner in NNI
 =============
 
-Pruning algorithms compress the original network by removing redundant weights or channels of layers, which can reduce model complexity and mitigate the over-fitting issue.
+NNI implements the main part of the pruning algorithm as pruner. All pruners are implemented as close as possible to what is described in the paper (if it has).
+The following table provides a brief introduction to the pruners implemented in nni, click the link in table to view a more detailed introduction and use cases.
+
+There are two kinds of pruners in NNI, please refer to `basic pruner <basic-pruner>`_ and `scheduled pruner <scheduled-pruner>`_ for details.
 
 .. list-table::
    :header-rows: 1

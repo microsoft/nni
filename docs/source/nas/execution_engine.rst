@@ -9,6 +9,8 @@ Execution engine is for running Retiarii Experiment. NNI supports three executio
 
 * **CGO execution engine** has the same requirements and capabilities as the **Graph-based execution engine**. But further enables cross-model optimizations, which makes model space exploration faster.
 
+.. _pure-python-exeuction-engine:
+
 Pure-python Execution Engine
 ----------------------------
 
@@ -17,6 +19,8 @@ Pure-python Execution Engine is the default engine, we recommend users to keep u
 Rememeber to add :meth:`nni.retiarii.model_wrapper` decorator outside the whole PyTorch model before using this engine.
 
 .. note:: You should always use ``super().__init__()`` instead of ``super(MyNetwork, self).__init__()`` in the PyTorch model, because the latter one has issues with model wrapper.
+
+.. _graph-based-exeuction-engine:
 
 Graph-based Execution Engine
 ----------------------------
@@ -59,7 +63,7 @@ CGO Execution Engine (experimental)
 CGO (Cross-Graph Optimization) execution engine does cross-model optimizations based on the graph-based execution engine. In CGO execution engine, multiple models could be merged and trained together in one trial.
 Currently, it only supports ``DedupInputOptimizer`` that can merge graphs sharing the same dataset to only loading and pre-processing each batch of data once, which can avoid bottleneck on data loading. 
 
-.. note :: To use CGO engine, PyTorch-lightning above version 1.4.2 is required.
+.. note :: To use CGO engine, PyTorch Lightning of 1.5.x is required.
 
 To enable CGO execution engine, you need to follow these steps:
 

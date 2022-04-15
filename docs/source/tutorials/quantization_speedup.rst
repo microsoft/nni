@@ -77,7 +77,7 @@ Note
 Usage
 -----
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-96
+.. GENERATED FROM PYTHON SOURCE LINES 64-92
 
 .. code-block:: default
 
@@ -89,25 +89,21 @@ Usage
     config_list = [{
         'quant_types': ['input', 'weight'],
         'quant_bits': {'input': 8, 'weight': 8},
-        'op_names': ['conv1']
+        'op_types': ['Conv2d']
     }, {
         'quant_types': ['output'],
         'quant_bits': {'output': 8},
-        'op_names': ['relu1']
+        'op_types': ['ReLU']
     }, {
         'quant_types': ['input', 'weight'],
         'quant_bits': {'input': 8, 'weight': 8},
-        'op_names': ['conv2']
-    }, {
-        'quant_types': ['output'],
-        'quant_bits': {'output': 8},
-        'op_names': ['relu2']
+        'op_names': ['fc1', 'fc2']
     }]
 
     model = TorchModel().to(device)
     optimizer = SGD(model.parameters(), lr=0.01, momentum=0.5)
     criterion = F.nll_loss
-    dummy_input = torch.rand(32, 1, 28,28).to(device)
+    dummy_input = torch.rand(32, 1, 28, 28).to(device)
 
     from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
     quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
@@ -123,8 +119,6 @@ Usage
 
  .. code-block:: none
 
-    op_names ['relu1'] not found in model
-    op_names ['relu2'] not found in model
 
     TorchModel(
       (conv1): QuantizerModuleWrapper(
@@ -133,18 +127,36 @@ Usage
       (conv2): QuantizerModuleWrapper(
         (module): Conv2d(6, 16, kernel_size=(5, 5), stride=(1, 1))
       )
-      (fc1): Linear(in_features=256, out_features=120, bias=True)
-      (fc2): Linear(in_features=120, out_features=84, bias=True)
+      (fc1): QuantizerModuleWrapper(
+        (module): Linear(in_features=256, out_features=120, bias=True)
+      )
+      (fc2): QuantizerModuleWrapper(
+        (module): Linear(in_features=120, out_features=84, bias=True)
+      )
       (fc3): Linear(in_features=84, out_features=10, bias=True)
+      (relu1): QuantizerModuleWrapper(
+        (module): ReLU()
+      )
+      (relu2): QuantizerModuleWrapper(
+        (module): ReLU()
+      )
+      (relu3): QuantizerModuleWrapper(
+        (module): ReLU()
+      )
+      (relu4): QuantizerModuleWrapper(
+        (module): ReLU()
+      )
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 97-98
+.. GENERATED FROM PYTHON SOURCE LINES 93-94
 
 finetuning the model by using QAT
 
-.. GENERATED FROM PYTHON SOURCE LINES 98-102
+.. GENERATED FROM PYTHON SOURCE LINES 94-98
 
 .. code-block:: default
 
@@ -162,21 +174,23 @@ finetuning the model by using QAT
 
  .. code-block:: none
 
-    Average test loss: 0.3100, Accuracy: 9056/10000 (91%)
-    Average test loss: 0.1559, Accuracy: 9558/10000 (96%)
-    Average test loss: 0.1031, Accuracy: 9690/10000 (97%)
+    Average test loss: 0.3444, Accuracy: 9141/10000 (91%)
+    Average test loss: 0.1325, Accuracy: 9599/10000 (96%)
+    Average test loss: 0.0980, Accuracy: 9700/10000 (97%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 103-104
+.. GENERATED FROM PYTHON SOURCE LINES 99-100
 
 export model and get calibration_config
 
-.. GENERATED FROM PYTHON SOURCE LINES 104-110
+.. GENERATED FROM PYTHON SOURCE LINES 100-108
 
 .. code-block:: default
 
+    import os
+    os.makedirs('log', exist_ok=True)
     model_path = "./log/mnist_model.pth"
     calibration_path = "./log/mnist_calibration.pth"
     calibration_config = quantizer.export_model(model_path, calibration_path)
@@ -193,34 +207,43 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0031], device='cuda:0'), 'weight_zero_point': tensor([103.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0018], device='cuda:0'), 'weight_zero_point': tensor([111.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.046737670898438}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0029], device='cuda:0'), 'weight_zero_point': tensor([121.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0015], device='cuda:0'), 'weight_zero_point': tensor([109.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 7.498777389526367}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0009], device='cuda:0'), 'weight_zero_point': tensor([125.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 13.905810356140137}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([118.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 12.378301620483398}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 7.626255035400391}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 14.335213661193848}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 12.815309524536133}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 11.077027320861816}}
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 111-112
+.. GENERATED FROM PYTHON SOURCE LINES 109-110
 
 build tensorRT engine to make a real speedup
 
-.. GENERATED FROM PYTHON SOURCE LINES 112-119
+.. GENERATED FROM PYTHON SOURCE LINES 110-117
 
 .. code-block:: default
 
 
-    # from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-    # input_shape = (32, 1, 28, 28)
-    # engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
-    # engine.compress()
-    # test_trt(engine)
+    from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+    input_shape = (32, 1, 28, 28)
+    engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
+    engine.compress()
+    test_trt(engine)
 
 
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Loss: 0.09857580718994141  Accuracy: 96.96%
+    Inference elapsed_time (whole dataset): 0.044492483139038086s
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 120-171
+
+.. GENERATED FROM PYTHON SOURCE LINES 118-169
 
 Note that NNI also supports post-training quantization directly, please refer to complete examples for detail.
 
@@ -277,7 +300,7 @@ input tensor: ``torch.randn(128, 3, 32, 32)``
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  55.231 seconds)
+   **Total running time of the script:** ( 0 minutes  59.208 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_speedup.py:

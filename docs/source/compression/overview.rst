@@ -1,18 +1,5 @@
-Model Compression with NNI
-==========================
-
-.. toctree::
-    :hidden:
-    :maxdepth: 2
-
-    Pruning <pruning>
-    Quantization <quantization>
-    Config Specification <compression_config_list>
-    Advanced Usage <advanced_usage>
-
-.. Using rubric to prevent the section heading to be include into toc
-
-.. rubric:: Overview
+Overview of NNI Model Compression
+=================================
 
 Deep neural networks (DNNs) have achieved great success in many tasks like computer vision, nature launguage processing, speech processing.
 However, typical neural networks are both computationally expensive and energy-intensive,
@@ -43,7 +30,8 @@ There are several core features supported by NNI model compression:
 * Concise interface for users to customize their own compression algorithms.
 
 
-.. rubric:: Compression Pipeline
+Compression Pipeline
+--------------------
 
 .. image:: ../../img/compression_pipeline.png
    :target: ../../img/compression_pipeline.png
@@ -60,7 +48,8 @@ If users want to apply both, a sequential mode is recommended as common practise
   The interface and APIs are unified for both PyTorch and TensorFlow. Currently only PyTorch version has been supported, and TensorFlow version will be supported in future.
 
 
-.. rubric:: Model Speedup
+Model Speedup
+-------------
 
 The final goal of model compression is to reduce inference latency and model size.
 However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model.

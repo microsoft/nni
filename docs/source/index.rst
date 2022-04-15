@@ -15,8 +15,8 @@ NNI Documentation
    :hidden:
 
    Hyperparameter Optimization <hpo/index>
-   Neural Architecture Search <nas/index>
-   Model Compression <compression/index>
+   nas/toctree
+   Model Compression <compression/toctree>
    feature_engineering/toctree
    experiment/toctree
 
@@ -44,8 +44,8 @@ NNI Documentation
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
 
 * :doc:`Hyperparameter Optimization </hpo/overview>`
-* :doc:`Neural Architecture Search </nas/index>`
-* :doc:`Model Compression </compression/index>`
+* :doc:`Neural Architecture Search </nas/overview>`
+* :doc:`Model Compression </compression/overview>`
 * :doc:`Feature Engineering </feature_engineering/overview>`
 
 Get Started
@@ -159,14 +159,15 @@ NNI makes AutoML techniques plug-and-play
    :title: Neural Architecture Search
    :link: tutorials/hello_nas
 
-   .. code-block:: diff
+   .. code-block:: python
 
       # define model space
-      -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
-      +   self.conv2 = nn.LayerChoice([
-      +       nn.Conv2d(32, 64, 3, 1),
-      +       DepthwiseSeparableConv(32, 64)
-      +   ])
+      class Model(nn.Module):
+          self.conv2 = nn.LayerChoice([
+              nn.Conv2d(32, 64, 3, 1),
+              DepthwiseSeparableConv(32, 64)
+          ])
+      model_space = Model()
       # search strategy + evaluator
       strategy = RegularizedEvolution()
       evaluator = FunctionalEvaluator(
@@ -179,7 +180,7 @@ NNI makes AutoML techniques plug-and-play
 .. codesnippetcard::
    :icon: ../img/thumbnails/one-shot-nas-small.svg
    :title: One-shot NAS
-   :link: nas/index
+   :link: nas/exploration_strategy
 
    .. code-block::
 
