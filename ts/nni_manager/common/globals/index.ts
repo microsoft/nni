@@ -24,7 +24,7 @@ export { NniManagerArgs, NniPaths };
 /**
  *  Collection of global objects.
  *
- *  It can be obtained with `import globals from '...'` or `globals.nni`.
+ *  It can be obtained with `import globals from 'common/globals'` or `global.nni`.
  *  The former is preferred because it exposes less underlying implementations.
  **/
 export interface NniGlobals {
@@ -37,13 +37,17 @@ declare global {
     var nni: NniGlobals;  // eslint-disable-line
 }
 
+// prepare the namespace object and export it
 if (global.nni === undefined) {
     global.nni = {} as NniGlobals;
 }
 const globals: NniGlobals = global.nni;
 export default globals;
 
-// Must and must only be invoked once in "main.ts".
+/**
+ *  Initialize globals.
+ *  Must and must only be invoked once in "main.ts".
+ **/
 export function initGlobals(): void {
     assert.deepEqual(global.nni, {});
 

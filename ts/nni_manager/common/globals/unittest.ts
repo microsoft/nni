@@ -3,13 +3,14 @@
 
 /**
  *  Unit test helper.
+ *  It should be inside "test", but must be here for compatibility, until we refactor all test cases.
  *
  *  Use this module to replace NNI globals with mocked values:
  *
  *      import globals from 'common/globals/unittest';
  *
  *  You can then edit these mocked globals and the injection will be visible to all modules.
- *  Remember to invoke `resetGlobals()` in after hook if you do so.
+ *  Remember to invoke `resetGlobals()` in "after()" hook if you do so.
  **/
 
 import os from 'os';

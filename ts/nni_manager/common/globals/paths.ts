@@ -5,7 +5,7 @@
  *  Manage experiment paths.
  *
  *  Ideally all path constants should be put here so other modules (especially training services)
- *  do not need to know file hierarchy of nni-experiments folders, which is an implicit undocumented protocol.
+ *  do not need to know file hierarchy of nni-experiments folder, which is an implicit undocumented protocol.
  **/
 
 import assert from 'assert/strict';
@@ -17,7 +17,7 @@ import type { NniManagerArgs } from './arguments';
 export interface NniPaths {
     readonly experimentRoot: string;
     readonly experimentsDirectory: string;
-    readonly logDirectory: string;  // contains nni manager and dispatcher log. trial logs are not here
+    readonly logDirectory: string;  // contains nni manager and dispatcher log; trial logs are not here
     readonly nniManagerLog: string;
 }
 
@@ -40,5 +40,5 @@ export function createPaths(args: NniManagerArgs): NniPaths {
         experimentsDirectory: args.experimentsDirectory,
         logDirectory,
         nniManagerLog,
-    }
+    };
 }
