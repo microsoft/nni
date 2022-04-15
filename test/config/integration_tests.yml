@@ -49,6 +49,11 @@ testCases:
     kwargs:
       rootpath: /tmp/nnimount/testlocalrootpath
 
+- name: test-waiting
+  configFile: test/config/examples/sklearn-regression.yml
+  launchCommand: sleep 100
+  stopCommand: sleep 10
+
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
 
