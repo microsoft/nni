@@ -36,7 +36,7 @@ First we also need get the source code and initialize the environment
 # install the sparta
 git clone https://github.com/microsoft/nni && cd nni && git checkout sparta_artifact
 conda activate artifact
-cd SparTA && python setup.py develop
+python setup.py develop
 # initialize the environment
 cd script && bash init_env.sh
 ```
