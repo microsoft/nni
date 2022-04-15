@@ -6,16 +6,20 @@ from pathlib import Path
 # To make auto-completion happy, we generate a _nn.py that lists out all the classes.
 nn_cache_file_path = Path(__file__).parent / '_nn.py'
 
+# Update this when cache format changes, to enforce an update.
+cache_version = 1
+
 def validate_cache() -> bool:
     import torch
 
-    cache_valid = False
+    cache_valid = True
 
     if nn_cache_file_path.exists():
         from . import _nn  # pylint: disable=no-name-in-module
-        # valid only when torch version match
-        if _nn._torch_version == torch.__version__:
-            cache_valid = True
+        if _nn._torch_version != torch.__version__:
+            cache_valid = False
+        elif getattr(_nn, '_torch_nn_cache_version', -1) != cache_version:
+            cache_valid = False
 
     return cache_valid
 
@@ -53,7 +57,9 @@ def write_cache() -> None:
         '# This file is auto-generated to make auto-completion work.',
         '# When pytorch version does not match, it will get automatically updated.',
         '# pylint: skip-file',
+        '# pyright: reportGeneralTypeIssues=false',
         f'_torch_version = "{torch.__version__}"',
+        f'_torch_nn_cache_version = {cache_version}',
         'import typing',
         'import torch.nn as nn',
         'from nni.retiarii.serializer import basic_unit',
@@ -73,9 +79,9 @@ def write_cache() -> None:
                               'It means your PyTorch version might not be supported.', RuntimeWarning)
                 code.append(f'{name} = nn.{name}')
             elif name in _WRAP_WITHOUT_TAG_CLASSES:
-                code.append(f'{name} = typing.cast(nn.{name}, basic_unit(nn.{name}, basic_unit_tag=False))')
+                code.append(f'{name} = typing.cast(typing.Type[nn.{name}], basic_unit(nn.{name}, basic_unit_tag=False))')
             else:
-                code.append(f'{name} = typing.cast(nn.{name}, basic_unit(nn.{name}))')
+                code.append(f'{name} = typing.cast(typing.Type[nn.{name}], basic_unit(nn.{name}))')
 
             all_names.append(name)
 

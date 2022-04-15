@@ -5,7 +5,7 @@ import math
 import itertools
 import operator
 import warnings
-from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar, Sequence
+from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar, Sequence, cast
 
 import torch
 import torch.nn as nn
@@ -408,7 +408,10 @@ class ValueChoiceX(Translatable, nn.Module):
     This class is implemented as a ``nn.Module`` so that it can be scanned by python engine / torchscript.
     """
 
-    def __init__(self, function: Callable[..., Any], repr_template: str, arguments: List[Any], dry_run: bool = True):
+    def __init__(self, function: Callable[..., Any] = cast(Callable[..., Any], None),
+                 repr_template: str = cast(str, None),
+                 arguments: List[Any] = cast(List[Any], None),
+                 dry_run: bool = True):
         super().__init__()
 
         if function is None:

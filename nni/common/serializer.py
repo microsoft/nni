@@ -13,7 +13,7 @@ import sys
 import types
 import warnings
 from io import IOBase
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union, cast
 
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
@@ -308,12 +308,14 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True, inheritable: bool = Fa
 
 
 def dump(obj: Any, fp: Optional[Any] = None, *, use_trace: bool = True, pickle_size_limit: int = 4096,
-         allow_nan: bool = True, **json_tricks_kwargs) -> Union[str, bytes]:
+         allow_nan: bool = True, **json_tricks_kwargs) -> str:
     """
     Convert a nested data structure to a json string. Save to file if fp is specified.
     Use json-tricks as main backend. For unhandled cases in json-tricks, use cloudpickle.
     The serializer is not designed for long-term storage use, but rather to copy data between processes.
     The format is also subject to change between NNI releases.
+
+    To compress the payload, please use :func:`dump_bytes`.
 
     Parameters
     ----------
@@ -334,6 +336,39 @@ def dump(obj: Any, fp: Optional[Any] = None, *, use_trace: bool = True, pickle_s
         Normally str. Sometimes bytes (if compressed).
     """
 
+    if json_tricks_kwargs.get('compression') is not None:
+        raise ValueError('If you meant to compress the dumped payload, please use `dump_bytes`.')
+    result = _dump(
+        obj=obj,
+        fp=fp,
+        use_trace=use_trace,
+        pickle_size_limit=pickle_size_limit,
+        allow_nan=allow_nan,
+        **json_tricks_kwargs)
+    return cast(str, result)
+
+
+def dump_bytes(obj: Any, fp: Optional[Any] = None, *, compression: int = cast(int, None),
+               use_trace: bool = True, pickle_size_limit: int = 4096,
+               allow_nan: bool = True, **json_tricks_kwargs) -> bytes:
+    """
+    Same as :func:`dump`, but to comporess payload, with `compression <https://json-tricks.readthedocs.io/en/stable/#dump>`__.
+    """
+    if compression is None:
+        raise ValueError('compression must be set.')
+    result = _dump(
+        obj=obj,
+        fp=fp,
+        compression=compression,
+        use_trace=use_trace,
+        pickle_size_limit=pickle_size_limit,
+        allow_nan=allow_nan,
+        **json_tricks_kwargs)
+    return cast(bytes, result)
+
+
+def _dump(*, obj: Any, fp: Optional[Any], use_trace: bool, pickle_size_limit: int,
+          allow_nan: bool, **json_tricks_kwargs) -> Union[str, bytes]:
     encoders = [
         # we don't need to check for dependency as many of those have already been required by NNI
         json_tricks.pathlib_encode,         # pathlib is a required dependency for NNI

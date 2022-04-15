@@ -270,12 +270,13 @@ class Cell(nn.Module):
             By default, it's the output of ``merge_op``, which is a contenation (on ``concat_dim``)
             of some of (possibly all) the nodes' outputs in the cell.
         """
+        states: List[torch.Tensor]
         if len(inputs) == 1 and isinstance(inputs[0], list):
-            inputs = inputs[0]
+            states = inputs[0]
         else:
-            inputs = list(inputs)
-        assert len(inputs) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
-        states = self.preprocessor(inputs)
+            states = list(inputs)
+        assert len(states) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
+        states = self.preprocessor(states)
         for ops, inps in zip(self.ops, self.inputs):
             current_state = []
             for op, inp in zip(ops, inps):
@@ -287,7 +288,7 @@ class Cell(nn.Module):
             this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)
         else:
             this_cell = torch.cat([states[k] for k in self.output_node_indices], self.concat_dim)
-        return self.postprocessor(this_cell, inputs)
+        return self.postprocessor(this_cell, states[:self.num_predecessors])
 
     @staticmethod
     def _convert_op_candidates(op_candidates, node_index, op_index, chosen) -> Union[Dict[str, nn.Module], List[nn.Module]]:

@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import (Any, Dict, List)
 
 import torch
-import torch.nn.functional
+import torch.nn.functional as nn_functional
 
 from ..operation import PyTorchOperation
 
@@ -58,7 +58,7 @@ class FunctionalOperator(PyTorchOperation):
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         func_name = self.type[len('Function.'):]
-        if not hasattr(torch.nn.functional, func_name):
+        if not hasattr(nn_functional, func_name):
             raise RuntimeError('For now, we only support calling independent functions from `torch.nn.functional`, '
                                f'{func_name} is not in it.')
         return f'{output} = F.{func_name}({", ".join(inputs)})'

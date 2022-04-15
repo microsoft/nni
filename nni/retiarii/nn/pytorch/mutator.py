@@ -2,8 +2,7 @@
 # Licensed under the MIT license.
 
 import inspect
-import typing
-from typing import Any, List, Optional, Tuple, Dict, Iterator
+from typing import Any, List, Optional, Tuple, Dict, Iterator, cast
 
 import torch.nn as nn
 
@@ -29,12 +28,14 @@ class LayerChoiceMutator(Mutator):
             # Each layer choice corresponds to a cell, which is unconnected in the base graph.
             # We add the connections here in the mutation logic.
             # Thus, the mutated model should not be mutated again. Everything should be based on the original base graph.
-            target = model.graphs[node.operation.cell_name]
+            target = model.graphs[cast(Cell, node.operation).cell_name]
             chosen_node = target.get_node_by_name(chosen)
             assert chosen_node is not None
             target.add_edge((target.input_node, 0), (chosen_node, None))
             target.add_edge((chosen_node, None), (target.output_node, None))
-            model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
+            operation = cast(Cell, node.operation)
+            target_node = cast(Node, model.get_node_by_name(node.name))
+            target_node.update_operation(Cell(operation.cell_name))
 
             # remove redundant nodes
             for rm_node in list(target.hidden_nodes):  # remove from a list on the fly will cause issues
@@ -58,7 +59,7 @@ class InputChoiceMutator(Mutator):
         else:
             chosen = [self.choice(candidates) for _ in range(n_chosen)]
         for node in self.nodes:
-            target = model.get_node_by_name(node.name)
+            target = cast(Node, model.get_node_by_name(node.name))
             target.update_operation('__torch__.nni.retiarii.nn.pytorch.ChosenInputs',
                                     {'chosen': chosen, 'reduction': node.operation.parameters['reduction']})
 
@@ -75,7 +76,7 @@ class ValueChoiceMutator(Mutator):
         # no need to support transformation here,
         # because it is naturally done in forward loop
         for node in self.nodes:
-            target = model.get_node_by_name(node.name)
+            target = cast(Node, model.get_node_by_name(node.name))
             target.update_operation('prim::Constant', {'type': type(chosen).__name__, 'value': chosen})
 
 
@@ -87,7 +88,7 @@ class ParameterChoiceLeafMutator(Mutator):
         super().__init__(label=label)
         self.candidates = candidates
 
-    def mutate(self, model: Model) -> Model:
+    def mutate(self, model: Model) -> None:
         # leave a record here
         # real mutations will be done in ParameterChoiceMutator
         self.choice(self.candidates)
@@ -104,7 +105,7 @@ class ParameterChoiceMutator(Mutator):
 
         self.nodes = nodes
 
-    def mutate(self, model: Model) -> Model:
+    def mutate(self, model: Model) -> None:
         # looks like {"label1": "cat", "label2": 123}
         value_choice_decisions = {}
         for mutation in model.history:
@@ -139,7 +140,7 @@ class RepeatMutator(Mutator):
         while u != graph.output_node:
             if u != graph.input_node:
                 chain.append(u)
-            assert len(u.successors) == 1, f'This graph is an illegal chain. {u} has output {u.successor}.'
+            assert len(u.successors) == 1, f'This graph is an illegal chain. {u} has output {u.successors}.'
             u = u.successors[0]
         return chain
 
@@ -149,10 +150,10 @@ class RepeatMutator(Mutator):
             target: Graph = model.graphs[node.operation.cell_name]
             chain = self._retrieve_chain_from_graph(target)
             # and we get the chosen depth (by value choice)
-            node_in_model = model.get_node_by_name(node.name)
+            node_in_model = cast(Node, model.get_node_by_name(node.name))
             # depth is a value choice in base model
             # but it's already mutated by a ParameterChoiceMutator here
-            chosen_depth = node_in_model.operation.parameters['depth']
+            chosen_depth: int = node_in_model.operation.parameters['depth']
             for edge in chain[chosen_depth - 1].outgoing_edges:
                 edge.remove()
             target.add_edge((chain[chosen_depth - 1], None), (target.output_node, None))
@@ -161,7 +162,7 @@ class RepeatMutator(Mutator):
                     edge.remove()
                 rm_node.remove()
             # to delete the unused parameters.
-            model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
+            cast(Node, model.get_node_by_name(node.name)).update_operation(Cell(node.operation.cell_name))
 
 
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
@@ -242,7 +243,7 @@ class ManyChooseManyMutator(Mutator):
     Choose based on labels. Will not affect the model itself.
     """
 
-    def __init__(self, label: Optional[str]):
+    def __init__(self, label: str):
         super().__init__(label=label)
 
     @staticmethod
@@ -258,7 +259,7 @@ class ManyChooseManyMutator(Mutator):
             return node.operation.parameters['n_chosen']
         return 1
 
-    def mutate(self, model: Model):
+    def mutate(self, model: Model) -> None:
         # this mutate does not have any effect, but it is recorded in the mutation history
         for node in model.get_nodes_by_label(self.label):
             n_chosen = self.number_of_chosen(node)
@@ -281,7 +282,7 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         if not is_model_wrapped(pytorch_model):
             raise ValueError('Please annotate the model with @model_wrapper decorator in python execution mode '
                              'if your model has init parameters.')
-        model.python_init_params = typing.cast(dict, pytorch_model.trace_kwargs)
+        model.python_init_params = cast(dict, pytorch_model.trace_kwargs)
     else:
         model.python_init_params = {}
 
@@ -295,7 +296,8 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
     for name, module in pytorch_model.named_modules():
         # tricky case: value choice that serves as parameters are stored in traced arguments
         if is_basic_unit(module):
-            for key, value in module.trace_kwargs.items():
+            trace_kwargs = cast(Dict[str, Any], module.trace_kwargs)
+            for key, value in trace_kwargs.items():
                 if isinstance(value, ValueChoiceX):
                     for i, choice in enumerate(value.inner_choices()):
                         node = graph.add_node(f'{name}.init.{key}.{i}', 'ValueChoice', {'candidates': choice.candidates})
@@ -330,14 +332,17 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
     mutators = []
     mutators_final = []
     for nodes in _group_by_label_and_type(graph.hidden_nodes):
+        label = nodes[0].label
+        assert label is not None, f'label of {nodes[0]} can not be None.'
         assert _is_all_equal(map(lambda n: n.operation.type, nodes)), \
-            f'Node with label "{nodes[0].label}" does not all have the same type.'
+            f'Node with label "{label}" does not all have the same type.'
         assert _is_all_equal(map(lambda n: n.operation.parameters, nodes)), \
-            f'Node with label "{nodes[0].label}" does not agree on parameters.'
+            f'Node with label "{label}" does not agree on parameters.'
         if nodes[0].operation.type == 'NasBench101Cell':
-            mutators_final.append(NasBench101Mutator(nodes[0].label))
+            # The mutation of Nas-bench-101 is special, and has to be done lastly.
+            mutators_final.append(NasBench101Mutator(label))
         else:
-            mutators.append(ManyChooseManyMutator(nodes[0].label))
+            mutators.append(ManyChooseManyMutator(label))
     return model, mutators + mutators_final
 
 
@@ -351,7 +356,7 @@ class EvaluatorValueChoiceLeafMutator(Mutator):
         super().__init__(label=label)
         self.candidates = candidates
 
-    def mutate(self, model: Model) -> Model:
+    def mutate(self, model: Model) -> None:
         # leave a record here
         # real mutations will be done in ParameterChoiceMutator
         self.choice(self.candidates)
@@ -389,7 +394,7 @@ class EvaluatorValueChoiceMutator(Mutator):
 
         return obj
 
-    def mutate(self, model: Model):
+    def mutate(self, model: Model) -> None:
         value_choice_decisions = {}
         for mutation in model.history:
             if isinstance(mutation.mutator, EvaluatorValueChoiceLeafMutator):
