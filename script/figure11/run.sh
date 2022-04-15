@@ -7,6 +7,11 @@ mkdir ${cur_dir}/log
 source ~/anaconda/etc/profile.d/conda.sh
 conda activate artifact
 
+pushd baseline
+bash run.sh > ${cur_dir}/log/bert_baseline.log
+popd
+
+
 pushd bert_coarse
 pushd sparse_kernel
 /bin/bash run.sh > ${cur_dir}/log/bert_coarse_sparse_kernel.log

@@ -36,10 +36,11 @@ parse_data = {}
 for optimization in optimizations:
     tmp_result = []
     for pattern in patterns:
-        log_name = os.path.join("log", pattern+"_"+optimization)
+        log_name = os.path.join("log", pattern+"_"+optimization+'.log')
         tmp_result.append(rammer_parse_log(log_name))
     parse_data[optimization] = tmp_result
 
+dense_baseline = rammer_parse_log('log/bert_baseline.log')
 """
 data = {
         "Rammer":[72.761024,72.761024,72.761024,72.761024],
@@ -50,7 +51,7 @@ data = {
 }
 """
 data = {
-        "Rammer":[72.761024,72.761024,72.761024,72.761024],
+        "Rammer":[dense_baseline, dense_baseline, dense_baseline, dense_baseline],
         "+Sparse Kernel":parse_data['sparse_kernel'],
         "+Propagation":parse_data['propagation'],
         "+Transformation":parse_data['transformation'],
