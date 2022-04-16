@@ -37,19 +37,18 @@ for optimization in optimizations:
     tmp_result = []
     for pattern in patterns:
         log_name = os.path.join("log", pattern+"_"+optimization+'.log')
-        tmp_result.append(rammer_parse_log(log_name))
+        tmp_time = 0
+        try:
+            tmp_time = rammer_parse_log(log_name)
+        except Exception as err:
+            print(err)
+        tmp_result.append(tmp_time)
     parse_data[optimization] = tmp_result
-
-dense_baseline = rammer_parse_log('log/bert_baseline.log')
-"""
-data = {
-        "Rammer":[72.761024,72.761024,72.761024,72.761024],
-        "+Sparse Kernel":[32.16, 47.95, 26, 32.16],
-        "+Propagation":[25.84, 46.95, 21.89, 25.84],
-        "+Transformation":[20.53, 46.95, 16.08, 16.08 ],
-        "+Specialization": [18.85, 42.51, 13.89, 14.06]
-}
-"""
+dense_baseline = 80
+try:
+    dense_baseline = rammer_parse_log('log/bert_baseline.log')
+except Exception as err:
+    print(err)
 data = {
         "Rammer":[dense_baseline, dense_baseline, dense_baseline, dense_baseline],
         "+Sparse Kernel":parse_data['sparse_kernel'],
