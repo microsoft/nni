@@ -237,7 +237,7 @@ def _make_class_traceable(cls: T, create_wrapper: bool = False) -> T:
         return wrapper
 
 
-def trace(cls_or_func: T = None, *, kw_only: bool = True, inheritable: bool = False) -> Union[T, Traceable]:
+def trace(cls_or_func: T = None, *, kw_only: bool = True, inheritable: bool = False) -> T:
     """
     Annotate a function or a class if you want to preserve where it comes from.
     This is usually used in the following scenarios:

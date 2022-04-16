@@ -5,7 +5,7 @@ import math
 import itertools
 import operator
 import warnings
-from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar, Sequence, cast
+from typing import Any, List, Union, Dict, Optional, Callable, Iterator, Iterable, NoReturn, TypeVar, Sequence, cast
 
 import torch
 import torch.nn as nn
@@ -432,9 +432,9 @@ class ValueChoiceX(Translatable, nn.Module):
     def forward(self) -> None:
         raise RuntimeError('You should never call forward of the composition of a value-choice.')
 
-    def inner_choices(self) -> Iterable['ValueChoice']:
+    def inner_choices(self) -> Iterator['ValueChoice']:
         """
-        Return an iterable of all leaf value choices.
+        Return a generator of all leaf value choices.
         Useful for composition of value choices.
         No deduplication on labels. Mutators should take care.
         """
@@ -449,7 +449,7 @@ class ValueChoiceX(Translatable, nn.Module):
         # values are not used
         return self._evaluate(iter([]), True)
 
-    def all_options(self) -> Iterable[Any]:
+    def all_options(self) -> Iterator[Any]:
         """Explore all possibilities of a value choice.
         """
         # Record all inner choices: label -> candidates, no duplicates.
@@ -473,14 +473,14 @@ class ValueChoiceX(Translatable, nn.Module):
             chosen = dict(zip(dedup_labels, chosen))
             yield self.evaluate([chosen[label] for label in all_labels])
 
-    def evaluate(self, values: Iterable[Any]) -> Any:
+    def evaluate(self, values: Iterator[Any]) -> Any:
         """
         Evaluate the result of this group.
         ``values`` should in the same order of ``inner_choices()``.
         """
         return self._evaluate(iter(values), False)
 
-    def _evaluate(self, values: Iterable[Any], dry_run: bool = False) -> Any:
+    def _evaluate(self, values: Iterator[Any], dry_run: bool = False) -> Any:
         # "values" iterates in the recursion
         eval_args = []
         for arg in self.arguments:
@@ -893,14 +893,14 @@ class ValueChoice(ValueChoiceX, Mutable):
         warnings.warn('You should not run forward of this module directly.')
         return self.candidates[0]
 
-    def inner_choices(self) -> Iterable['ValueChoice']:
+    def inner_choices(self) -> Iterator['ValueChoice']:
         # yield self because self is the only value choice here
         yield self
 
     def dry_run(self) -> Any:
         return self.candidates[0]
 
-    def _evaluate(self, values: Iterable[Any], dry_run: bool = False) -> Any:
+    def _evaluate(self, values: Iterator[Any], dry_run: bool = False) -> Any:
         if dry_run:
             return self.candidates[0]
         try:
@@ -1019,11 +1019,13 @@ class ModelParameterChoice:
         if default not in candidates:
             # could be callable
             try:
-                default = default(candidates)
+                default = cast(Callable[[List[ValueType]], ValueType], default)(candidates)
             except TypeError as e:
                 if 'not callable' in str(e):
                     raise TypeError("`default` is not in `candidates`, and it's also not callable.")
                 raise
+
+        default = cast(ValueType, default)
 
         label = generate_new_label(label)
         parameter_spec = ParameterSpec(

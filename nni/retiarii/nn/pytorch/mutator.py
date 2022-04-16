@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import inspect
-from typing import Any, List, Optional, Tuple, Dict, Iterator, cast
+from typing import Any, List, Optional, Tuple, Dict, Iterator, Iterable, cast
 
 import torch.nn as nn
 
@@ -124,7 +124,7 @@ class ParameterChoiceMutator(Mutator):
             result_value = value_choice.evaluate(leaf_node_values)
 
             # update model with graph mutation primitives
-            target = model.get_node_by_name(node.name)
+            target = cast(Node, model.get_node_by_name(node.name))
             target.update_operation(target.operation.type, {**target.operation.parameters, argname: result_value})
 
 
@@ -147,7 +147,7 @@ class RepeatMutator(Mutator):
     def mutate(self, model):
         for node in self.nodes:
             # the logic here is similar to layer choice. We find cell attached to each node.
-            target: Graph = model.graphs[node.operation.cell_name]
+            target: Graph = model.graphs[cast(Cell, node.operation).cell_name]
             chain = self._retrieve_chain_from_graph(target)
             # and we get the chosen depth (by value choice)
             node_in_model = cast(Node, model.get_node_by_name(node.name))
@@ -161,8 +161,11 @@ class RepeatMutator(Mutator):
                 for edge in rm_node.outgoing_edges:
                     edge.remove()
                 rm_node.remove()
+
             # to delete the unused parameters.
-            cast(Node, model.get_node_by_name(node.name)).update_operation(Cell(node.operation.cell_name))
+            target_node = cast(Node, model.get_node_by_name(node.name))
+            cell_operation = cast(Cell, node.operation)
+            target_node.update_operation(Cell(cell_operation.cell_name))
 
 
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
@@ -287,7 +290,7 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         model.python_init_params = {}
 
     # hyper-parameter choice
-    namespace: ModelNamespace = pytorch_model._model_namespace
+    namespace: ModelNamespace = cast(ModelNamespace, pytorch_model._model_namespace)
     for param_spec in namespace.parameter_specs:
         assert param_spec.categorical and param_spec.type == 'choice'
         node = graph.add_node(f'param_spec_{param_spec.name}', 'ModelParameterChoice', {'candidates': param_spec.values})
@@ -446,7 +449,7 @@ def _is_all_equal(lst):
     return True
 
 
-def _group_by_label_and_type(nodes: List[Node]) -> List[List[Node]]:
+def _group_by_label_and_type(nodes: Iterable[Node]) -> List[List[Node]]:
     result = {}
     for node in nodes:
         key = (node.label, node.operation.type)
@@ -456,7 +459,7 @@ def _group_by_label_and_type(nodes: List[Node]) -> List[List[Node]]:
     return list(result.values())
 
 
-def _group_by_label(nodes: List[Node]) -> List[List[Node]]:
+def _group_by_label(nodes: Iterable[Node]) -> List[List[Node]]:
     result = {}
     for node in nodes:
         label = node.operation.parameters['label']

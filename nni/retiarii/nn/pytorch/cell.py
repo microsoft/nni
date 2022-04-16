@@ -3,7 +3,7 @@
 
 import copy
 import warnings
-from typing import Callable, Dict, List, Union, Optional, Tuple
+from typing import Callable, Dict, List, Union, Optional, Tuple, Sequence, cast
 try:
     from typing import Literal
 except ImportError:
@@ -247,8 +247,8 @@ class Cell(nn.Module):
                 ops = self._convert_op_candidates(op_candidates, i, k, chosen)
 
                 # though it's layer choice and input choice here, in fixed mode, the chosen module will be created.
-                self.ops[-1].append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
-                self.inputs[-1].append(inp)
+                cast(ModuleList, self.ops[-1]).append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
+                cast(ModuleList, self.inputs[-1]).append(inp)
 
     @property
     def label(self):
@@ -274,10 +274,13 @@ class Cell(nn.Module):
         if len(inputs) == 1 and isinstance(inputs[0], list):
             states = inputs[0]
         else:
-            states = list(inputs)
+            states = cast(List[torch.Tensor], list(inputs))
         assert len(states) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
         states = self.preprocessor(states)
-        for ops, inps in zip(self.ops, self.inputs):
+        for ops, inps in zip(
+            cast(Sequence[Sequence[LayerChoice]], self.ops),
+            cast(Sequence[Sequence[InputChoice]], self.inputs)
+        ):
             current_state = []
             for op, inp in zip(ops, inps):
                 current_state.append(op(inp(states)))

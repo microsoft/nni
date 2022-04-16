@@ -48,7 +48,7 @@ def serialize_cls(cls):
     return trace(cls)
 
 
-def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
+def basic_unit(cls: T, basic_unit_tag: bool = True) -> T:
     """
     To wrap a module as a basic unit, is to make it a primitive and stop the engine from digging deeper into it.
 
@@ -85,7 +85,7 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
     return cls
 
 
-def model_wrapper(cls: T) -> Union[T, Traceable]:
+def model_wrapper(cls: T) -> T:
     """
     Wrap the base model (search space). For example,
 

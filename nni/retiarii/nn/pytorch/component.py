@@ -4,7 +4,7 @@
 import copy
 import warnings
 from collections import OrderedDict
-from typing import Callable, List, Union, Tuple, Optional
+from typing import Callable, List, Union, Tuple, Optional, Sequence, cast
 
 import torch
 import torch.nn as nn
@@ -223,7 +223,7 @@ class NasBench201Cell(nn.Module):
         It shouldn't be called directly by users in most cases.
         """
         tensors = [inputs]
-        for layer in self.layers:
+        for layer in cast(Sequence[Sequence[nn.Module]], self.layers):
             current_tensor = []
             for i, op in enumerate(layer):
                 current_tensor.append(op(tensors[i]))
