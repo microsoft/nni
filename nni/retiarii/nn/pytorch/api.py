@@ -130,23 +130,13 @@ class LayerChoice(Mutable):
                 self.names.append(str(i))
         else:
             raise TypeError("Unsupported candidates type: {}".format(type(candidates)))
-        self._first_module = self._modules[self.names[0]]  # to make the dummy forward meaningful
-
-    @property
-    def key(self):
-        return self._key()
-
-    @torch.jit.ignore
-    def _key(self):
-        warnings.warn('Using key to access the identifier of LayerChoice is deprecated. Please use label instead.',
-                      category=DeprecationWarning)
-        return self._label
+        self._first_module = cast(nn.Module, self._modules[self.names[0]])  # to make the dummy forward meaningful
 
     @property
     def label(self):
         return self._label
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: Union[int, str]) -> nn.Module:
         if isinstance(idx, str):
             return self._modules[idx]
         return list(self)[idx]
@@ -172,15 +162,6 @@ class LayerChoice(Mutable):
 
     def __iter__(self):
         return map(lambda name: self._modules[name], self.names)
-
-    @property
-    def choices(self):
-        return self._choices()
-
-    @torch.jit.ignore
-    def _choices(self):
-        warnings.warn("layer_choice.choices is deprecated. Use `list(layer_choice)` instead.", category=DeprecationWarning)
-        return list(self)
 
     def forward(self, x):
         """
@@ -265,16 +246,6 @@ class InputChoice(Mutable):
         self.prior = prior or [1 / n_candidates for _ in range(n_candidates)]
         assert self.reduction in ['mean', 'concat', 'sum', 'none']
         self._label = generate_new_label(label)
-
-    @property
-    def key(self):
-        return self._key()
-
-    @torch.jit.ignore
-    def _key(self):
-        warnings.warn('Using key to access the identifier of InputChoice is deprecated. Please use label instead.',
-                      category=DeprecationWarning)
-        return self._label
 
     @property
     def label(self):
@@ -377,14 +348,17 @@ def _valuechoice_codegen(*, _internal: bool = False):
                 print(binary_r_template.format(op=op, opt=opt, sym=sym) + '\n')
 
 
-def _valuechoice_staticmethod_helper(orig_func):
-    orig_func.__doc__ += """
-        Notes
-        -----
-        This function performs lazy evaluation.
-        Only the expression will be recorded when the function is called.
-        The real evaluation happens when the inner value choice has determined its final decision.
-        If no value choice is contained in the parameter list, the evaluation will be intermediate."""
+Func = TypeVar('Func')
+
+def _valuechoice_staticmethod_helper(orig_func: Func) -> Func:
+    if orig_func.__doc__ is not None:
+        orig_func.__doc__ += """
+            Notes
+            -----
+            This function performs lazy evaluation.
+            Only the expression will be recorded when the function is called.
+            The real evaluation happens when the inner value choice has determined its final decision.
+            If no value choice is contained in the parameter list, the evaluation will be intermediate."""
     return orig_func
 
 
@@ -432,7 +406,7 @@ class ValueChoiceX(Translatable, nn.Module):
     def forward(self) -> None:
         raise RuntimeError('You should never call forward of the composition of a value-choice.')
 
-    def inner_choices(self) -> Iterator['ValueChoice']:
+    def inner_choices(self) -> Iterable['ValueChoice']:
         """
         Return a generator of all leaf value choices.
         Useful for composition of value choices.
@@ -449,7 +423,7 @@ class ValueChoiceX(Translatable, nn.Module):
         # values are not used
         return self._evaluate(iter([]), True)
 
-    def all_options(self) -> Iterator[Any]:
+    def all_options(self) -> Iterable[Any]:
         """Explore all possibilities of a value choice.
         """
         # Record all inner choices: label -> candidates, no duplicates.
@@ -473,7 +447,7 @@ class ValueChoiceX(Translatable, nn.Module):
             chosen = dict(zip(dedup_labels, chosen))
             yield self.evaluate([chosen[label] for label in all_labels])
 
-    def evaluate(self, values: Iterator[Any]) -> Any:
+    def evaluate(self, values: Iterable[Any]) -> Any:
         """
         Evaluate the result of this group.
         ``values`` should in the same order of ``inner_choices()``.
@@ -561,9 +535,10 @@ class ValueChoiceX(Translatable, nn.Module):
         """
         if not args:
             return ValueChoiceX.max(*list(arg0))
-        lst = [arg0] + list(args)
+        lst = list(arg0) if isinstance(arg0, Iterable) else [arg0] + list(args)
         if any(isinstance(obj, ValueChoiceX) for obj in lst):
             return ValueChoiceX(max, 'max({})', lst)
+        lst = cast(List[Any], lst)
         return max(lst)
 
     @staticmethod
@@ -577,9 +552,10 @@ class ValueChoiceX(Translatable, nn.Module):
         """
         if not args:
             return ValueChoiceX.min(*list(arg0))
-        lst = [arg0] + list(args)
+        lst = list(arg0) if isinstance(arg0, Iterable) else [arg0] + list(args)
         if any(isinstance(obj, ValueChoiceX) for obj in lst):
             return ValueChoiceX(min, 'min({})', lst)
+        lst = cast(List[Any], lst)
         return min(lst)
 
     def __hash__(self):
@@ -747,7 +723,7 @@ class ValueChoiceX(Translatable, nn.Module):
         return ValueChoiceX(abs, 'abs({})', [self])
 
 
-ValueChoiceOrAny = TypeVar('ValueChoiceOrAny', ValueChoiceX, Any)
+ValueChoiceOrAny = Union[ValueChoiceX, Any]
 
 
 class ValueChoice(ValueChoiceX, Mutable):
@@ -875,7 +851,7 @@ class ValueChoice(ValueChoiceX, Mutable):
         return value
 
     def __init__(self, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
-        super().__init__(None, None, None)
+        super().__init__()
         self.candidates = candidates
         self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
         assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
@@ -893,7 +869,7 @@ class ValueChoice(ValueChoiceX, Mutable):
         warnings.warn('You should not run forward of this module directly.')
         return self.candidates[0]
 
-    def inner_choices(self) -> Iterator['ValueChoice']:
+    def inner_choices(self) -> Iterable['ValueChoice']:
         # yield self because self is the only value choice here
         yield self
 

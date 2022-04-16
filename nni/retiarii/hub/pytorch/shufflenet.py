@@ -154,7 +154,7 @@ class ShuffleNetSpace(nn.Module):
             nn.ReLU(inplace=True),
         )
 
-        self.features = []
+        feature_blocks = []
 
         global_block_idx = 0
         for stage_idx, num_repeat in enumerate(self.stage_repeats):
@@ -181,9 +181,9 @@ class ShuffleNetSpace(nn.Module):
                     ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=7, stride=stride, affine=affine),
                     ShuffleXceptionBlock(in_channels, out_channels, mid_channels=mid_channels, stride=stride, affine=affine)
                 ], label=f'layer_{global_block_idx}')
-                self.features.append(choice_block)
+                feature_blocks.append(choice_block)
 
-        self.features = nn.Sequential(*self.features)
+        self.features = nn.Sequential(*feature_blocks)
 
         # final layers
         last_conv_channels = self.stage_out_channels[-1]
@@ -226,13 +226,15 @@ class ShuffleNetSpace(nn.Module):
                     torch.nn.init.constant_(m.weight, 1)
                 if m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0.0001)
-                torch.nn.init.constant_(m.running_mean, 0)
+                if m.running_mean is not None:
+                    torch.nn.init.constant_(m.running_mean, 0)
             elif isinstance(m, nn.BatchNorm1d):
                 if m.weight is not None:
                     torch.nn.init.constant_(m.weight, 1)
                 if m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0.0001)
-                torch.nn.init.constant_(m.running_mean, 0)
+                if m.running_mean is not None:
+                    torch.nn.init.constant_(m.running_mean, 0)
             elif isinstance(m, nn.Linear):
                 torch.nn.init.normal_(m.weight, 0, 0.01)
                 if m.bias is not None:
