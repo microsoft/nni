@@ -1,5 +1,6 @@
 source ~/anaconda/etc/profile.d/conda.sh
 conda activate artifact
+pip install sortedcontainers
 # get the latest nnfusion
 pushd /root/nnfusion
 git pull origin hubert_antares
