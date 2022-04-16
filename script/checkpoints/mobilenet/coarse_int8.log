@@ -1,0 +1,320 @@
+[2022-04-15 22:48:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) start to speed up the model
+[2022-04-15 22:48:58] INFO (FixMaskConflict/MainThread) {'conv1.0': 1, 'features.0.0': 1, 'features.0.3': 1, 'features.1.0': 1, 'features.1.3': 1, 'features.2.0': 1, 'features.2.3': 1, 'features.3.0': 1, 'features.3.3': 1, 'features.4.0': 1, 'features.4.3': 1, 'features.5.0': 1, 'features.5.3': 1, 'features.6.0': 1, 'features.6.3': 1, 'features.7.0': 1, 'features.7.3': 1, 'features.8.0': 1, 'features.8.3': 1, 'features.9.0': 1, 'features.9.3': 1, 'features.10.0': 1, 'features.10.3': 1, 'features.11.0': 1, 'features.11.3': 1, 'features.12.0': 1, 'features.12.3': 1}
+[2022-04-15 22:48:58] INFO (FixMaskConflict/MainThread) dim0 sparsity: 0.599050
+[2022-04-15 22:48:58] INFO (FixMaskConflict/MainThread) dim1 sparsity: 0.000000
+[2022-04-15 22:48:58] INFO (FixMaskConflict/MainThread) Dectected conv prune dim" 0
+[2022-04-15 22:48:58] INFO (nni.compression.pytorch.speedup.compressor/MainThread) infer module masks...
+[2022-04-15 22:48:58] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for conv1.0
+[2022-04-15 22:48:58] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for conv1.1
+[2022-04-15 22:48:58] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for conv1.2
+[2022-04-15 22:48:58] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.0.0
+[2022-04-15 22:48:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.0.1
+[2022-04-15 22:48:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.0.2
+[2022-04-15 22:48:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.0.3
+[2022-04-15 22:48:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.0.4
+[2022-04-15 22:49:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.0.5
+[2022-04-15 22:49:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.1.0
+[2022-04-15 22:49:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.1.1
+[2022-04-15 22:49:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.1.2
+[2022-04-15 22:49:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.1.3
+[2022-04-15 22:49:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.1.4
+[2022-04-15 22:49:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.1.5
+[2022-04-15 22:49:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.2.0
+[2022-04-15 22:49:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.2.1
+[2022-04-15 22:49:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.2.2
+[2022-04-15 22:49:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.2.3
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.2.4
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.2.5
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.3.0
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.3.1
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.3.2
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.3.3
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.3.4
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.3.5
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.4.0
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.4.1
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.4.2
+[2022-04-15 22:49:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.4.3
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.4.4
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.4.5
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.5.0
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.5.1
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.5.2
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.5.3
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.5.4
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.5.5
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.6.0
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.6.1
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.6.2
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.6.3
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.6.4
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.6.5
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.7.0
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.7.1
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.7.2
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.7.3
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.7.4
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.7.5
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.8.0
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.8.1
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.8.2
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.8.3
+[2022-04-15 22:49:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.8.4
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.8.5
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.9.0
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.9.1
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.9.2
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.9.3
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.9.4
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.9.5
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.10.0
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.10.1
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.10.2
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.10.3
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.10.4
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.10.5
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.11.0
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.11.1
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.11.2
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.11.3
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.11.4
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.11.5
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.12.0
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.12.1
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.12.2
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.12.3
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.12.4
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for features.12.5
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::mean.82
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for classifier.0
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::return.83
+[2022-04-15 22:49:04] ERROR (nni.compression.pytorch.speedup.jit_translate/MainThread) aten::return is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
+[2022-04-15 22:49:04] WARNING (nni.compression.pytorch.speedup.compressor/MainThread) Note: .aten::return.83 does not have corresponding mask inference object
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the classifier.0
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the .aten::mean.82
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.12.5
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.12.4
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.12.3
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.12.2
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.12.1
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.12.0
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.11.5
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.11.4
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.11.3
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.11.2
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.11.1
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.11.0
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.10.5
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.10.4
+[2022-04-15 22:49:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.10.3
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.10.2
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.10.1
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.10.0
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.9.5
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.9.4
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.9.3
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.9.2
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.9.1
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.9.0
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.8.5
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.8.4
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.8.3
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.8.2
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.8.1
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.8.0
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.7.5
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.7.4
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.7.3
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.7.2
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.7.1
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.7.0
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.6.5
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.6.4
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.6.3
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.6.2
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.6.1
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.6.0
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.5.5
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.5.4
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.5.3
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.5.2
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.5.1
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.5.0
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.4.5
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.4.4
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.4.3
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.4.2
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.4.1
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.4.0
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.3.5
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.3.4
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.3.3
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.3.2
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.3.1
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.3.0
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.2.5
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.2.4
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.2.3
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.2.2
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.2.1
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.2.0
+[2022-04-15 22:49:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.1.5
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.1.4
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.1.3
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.1.2
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.1.1
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.1.0
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.0.5
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.0.4
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.0.3
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.0.2
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.0.1
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the features.0.0
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the conv1.2
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the conv1.1
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the conv1.0
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) resolve the mask conflict
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace compressed modules...
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: conv1.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: conv1.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 10
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: conv1.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.0.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.0.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 10
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.0.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.0.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.0.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 23
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.0.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.1.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.1.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 23
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.1.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.1.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.1.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 41
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.1.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.2.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.2.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 41
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.2.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.2.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.2.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 48
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.2.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.3.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.3.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 48
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.3.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.3.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.3.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 86
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.3.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.4.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.4.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 86
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.4.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.4.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.4.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 97
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.4.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.5.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.5.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 97
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.5.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.5.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.5.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 179
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.5.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.6.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.6.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 179
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.6.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.6.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.6.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 186
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.6.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.7.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.7.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 186
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.7.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.7.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.7.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 191
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.7.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.8.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.8.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 191
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.8.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.8.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.8.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 196
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.8.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.9.0, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.9.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 196
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.9.2, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.9.3, op_type: Conv2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.9.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 192
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.9.5, op_type: ReLU)
+[2022-04-15 22:49:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.10.0, op_type: Conv2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.10.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 192
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.10.2, op_type: ReLU)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.10.3, op_type: Conv2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.10.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 200
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.10.5, op_type: ReLU)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.11.0, op_type: Conv2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.11.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 200
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.11.2, op_type: ReLU)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.11.3, op_type: Conv2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.11.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 392
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.11.5, op_type: ReLU)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.12.0, op_type: Conv2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.12.1, op_type: BatchNorm2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 392
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.12.2, op_type: ReLU)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.12.3, op_type: Conv2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.12.4, op_type: BatchNorm2d)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace batchnorm2d with num_features: 410
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: features.12.5, op_type: ReLU)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) replace module (name: classifier.0, op_type: Linear)
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compress_modules/MainThread) replace linear with new in_features: 410, out_features: 120
+[2022-04-15 22:49:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) speedup done
+conv1.0 In Channel:3 -> 3  Out Channel:10->16
+features.0.0 In Channel:10 -> 16  Out Channel:10->16
+features.0.3 In Channel:10 -> 16  Out Channel:23->32
+features.1.0 In Channel:23 -> 32  Out Channel:23->32
+features.1.3 In Channel:23 -> 32  Out Channel:41->48
+features.2.0 In Channel:41 -> 48  Out Channel:41->48
+features.2.3 In Channel:41 -> 48  Out Channel:48->64
+features.3.0 In Channel:48 -> 64  Out Channel:48->64
+features.3.3 In Channel:48 -> 64  Out Channel:86->96
+features.4.0 In Channel:86 -> 96  Out Channel:86->96
+features.4.3 In Channel:86 -> 96  Out Channel:97->112
+features.5.0 In Channel:97 -> 112  Out Channel:97->112
+features.5.3 In Channel:97 -> 112  Out Channel:179->192
+features.6.0 In Channel:179 -> 192  Out Channel:179->192
+features.6.3 In Channel:179 -> 192  Out Channel:186->192
+features.7.0 In Channel:186 -> 192  Out Channel:186->192
+features.7.3 In Channel:186 -> 192  Out Channel:191->192
+features.8.0 In Channel:191 -> 192  Out Channel:191->192
+features.8.3 In Channel:191 -> 192  Out Channel:196->208
+features.9.0 In Channel:196 -> 208  Out Channel:196->208
+features.9.3 In Channel:196 -> 208  Out Channel:192->208
+features.10.0 In Channel:192 -> 208  Out Channel:192->208
+features.10.3 In Channel:192 -> 208  Out Channel:200->208
+features.11.0 In Channel:200 -> 208  Out Channel:200->208
+features.11.3 In Channel:200 -> 208  Out Channel:392->400
+features.12.0 In Channel:392 -> 400  Out Channel:392->400
+features.12.3 In Channel:392 -> 400  Out Channel:410->416
+(0.9338799126196972, 0.7526719330855018)
+Propagation done
+Loss: -2.4382422610318466  accuracy: 74.20745920745921%)
+
+Accuracy:74.20745920745921

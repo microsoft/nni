@@ -1,0 +1,1083 @@
+[2022-04-15 22:36:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) start to propagate the mask
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) infer module masks...
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.word_embeddings
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.token_type_embeddings
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.aten::slice.180
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Slice dim:0, Slice obj:slice(0, 9223372036854775807, 1)
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([32, 128]), Slice object:(slice(0, 9223372036854775807, 1),)
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([32, 128]), Slice object:(slice(0, 9223372036854775807, 1),)
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.aten::size.187
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.aten::slice.188
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Slice dim:0, Slice obj:slice(0, 9223372036854775807, 1)
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Get attribute: bert
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Get attribute: embeddings
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Get attribute: position_ids
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.aten::unsqueeze.181
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.aten::slice.189
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Slice dim:1, Slice obj:slice(0, tensor([128]), 1)
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([1, 512]), Slice object:(slice(None, None, None), slice(0, tensor([128]), 1))
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([1, 512]), Slice object:(slice(None, None, None), slice(0, tensor([128]), 1))
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.aten::unsqueeze.182
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.position_embeddings
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.aten::slice.183
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Slice dim:3, Slice obj:slice(0, 9223372036854775807, 1)
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([32, 1, 1, 128]), Slice object:(slice(None, None, None), slice(None, None, None), slice(None, None, None), slice(0, 9223372036854775807, 1))
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([32, 1, 1, 128]), Slice object:(slice(None, None, None), slice(None, None, None), slice(None, None, None), slice(0, 9223372036854775807, 1))
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.aten::add.190
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.aten::to.184
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.aten::add.191
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.aten::rsub.185
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.LayerNorm
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.aten::mul.186
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.embeddings.dropout
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.query
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.key
+[2022-04-15 22:36:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.value
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::size.192
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::size.193
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::size.196
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::size.197
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::size.200
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::size.201
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::view.194
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::view.198
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::view.202
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::permute.195
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::permute.199
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::permute.203
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::transpose.204
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::matmul.205
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::div.206
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::add.207
+[2022-04-15 22:36:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::softmax.208
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.dropout
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::matmul.209
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::permute.210
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::contiguous.211
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::size.212
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::size.213
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.self.aten::view.214
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.output.dense
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.output.dropout
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.output.aten::add.215
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.attention.output.LayerNorm
+[2022-04-15 22:36:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.intermediate.dense
+[2022-04-15 22:36:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.intermediate.aten::gelu.216
+[2022-04-15 22:36:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.output.dense
+[2022-04-15 22:36:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.output.dropout
+[2022-04-15 22:36:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.output.aten::add.217
+[2022-04-15 22:36:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.0.output.LayerNorm
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.query
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.key
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.value
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::size.218
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::size.219
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::size.222
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::size.223
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::size.226
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::size.227
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::view.220
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::view.224
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::view.228
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::permute.221
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::permute.225
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::permute.229
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::transpose.230
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::matmul.231
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::div.232
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::add.233
+[2022-04-15 22:36:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::softmax.234
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.dropout
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::matmul.235
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::permute.236
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::contiguous.237
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::size.238
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::size.239
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.self.aten::view.240
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.output.dense
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.output.dropout
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.output.aten::add.241
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.attention.output.LayerNorm
+[2022-04-15 22:36:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.intermediate.dense
+[2022-04-15 22:36:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.intermediate.aten::gelu.242
+[2022-04-15 22:36:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.output.dense
+[2022-04-15 22:36:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.output.dropout
+[2022-04-15 22:36:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.output.aten::add.243
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.1.output.LayerNorm
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.query
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.key
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.value
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::size.244
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::size.245
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::size.248
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::size.249
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::size.252
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::size.253
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::view.246
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::view.250
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::view.254
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::permute.247
+[2022-04-15 22:36:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::permute.251
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::permute.255
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::transpose.256
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::matmul.257
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::div.258
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::add.259
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::softmax.260
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.dropout
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::matmul.261
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::permute.262
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::contiguous.263
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::size.264
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::size.265
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.self.aten::view.266
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.output.dense
+[2022-04-15 22:36:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.output.dropout
+[2022-04-15 22:36:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.output.aten::add.267
+[2022-04-15 22:36:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.attention.output.LayerNorm
+[2022-04-15 22:36:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.intermediate.dense
+[2022-04-15 22:36:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.intermediate.aten::gelu.268
+[2022-04-15 22:36:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.output.dense
+[2022-04-15 22:36:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.output.dropout
+[2022-04-15 22:36:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.output.aten::add.269
+[2022-04-15 22:36:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.2.output.LayerNorm
+[2022-04-15 22:36:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.query
+[2022-04-15 22:36:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.key
+[2022-04-15 22:36:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.value
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::size.270
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::size.271
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::size.274
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::size.275
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::size.278
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::size.279
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::view.272
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::view.276
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::view.280
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::permute.273
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::permute.277
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::permute.281
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::transpose.282
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::matmul.283
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::div.284
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::add.285
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::softmax.286
+[2022-04-15 22:36:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.dropout
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::matmul.287
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::permute.288
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::contiguous.289
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::size.290
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::size.291
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.self.aten::view.292
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.output.dense
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.output.dropout
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.output.aten::add.293
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.attention.output.LayerNorm
+[2022-04-15 22:36:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.intermediate.dense
+[2022-04-15 22:36:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.intermediate.aten::gelu.294
+[2022-04-15 22:36:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.output.dense
+[2022-04-15 22:36:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.output.dropout
+[2022-04-15 22:36:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.output.aten::add.295
+[2022-04-15 22:36:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.3.output.LayerNorm
+[2022-04-15 22:36:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.query
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.key
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.value
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::size.296
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::size.297
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::size.300
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::size.301
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::size.304
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::size.305
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::view.298
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::view.302
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::view.306
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::permute.299
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::permute.303
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::permute.307
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::transpose.308
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::matmul.309
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::div.310
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::add.311
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::softmax.312
+[2022-04-15 22:36:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.dropout
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::matmul.313
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::permute.314
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::contiguous.315
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::size.316
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::size.317
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.self.aten::view.318
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.output.dense
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.output.dropout
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.output.aten::add.319
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.attention.output.LayerNorm
+[2022-04-15 22:36:33] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.intermediate.dense
+[2022-04-15 22:36:34] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.intermediate.aten::gelu.320
+[2022-04-15 22:36:34] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.output.dense
+[2022-04-15 22:36:34] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.output.dropout
+[2022-04-15 22:36:34] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.output.aten::add.321
+[2022-04-15 22:36:34] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.4.output.LayerNorm
+[2022-04-15 22:36:34] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.query
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.key
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.value
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::size.322
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::size.323
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::size.326
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::size.327
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::size.330
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::size.331
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::view.324
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::view.328
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::view.332
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::permute.325
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::permute.329
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::permute.333
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::transpose.334
+[2022-04-15 22:36:35] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::matmul.335
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::div.336
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::add.337
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::softmax.338
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.dropout
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::matmul.339
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::permute.340
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::contiguous.341
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::size.342
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::size.343
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.self.aten::view.344
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.output.dense
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.output.dropout
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.output.aten::add.345
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.attention.output.LayerNorm
+[2022-04-15 22:36:36] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.intermediate.dense
+[2022-04-15 22:36:37] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.intermediate.aten::gelu.346
+[2022-04-15 22:36:37] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.output.dense
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.output.dropout
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.output.aten::add.347
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.5.output.LayerNorm
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.query
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.key
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.value
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::size.348
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::size.349
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::size.352
+[2022-04-15 22:36:38] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::size.353
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::size.356
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::size.357
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::view.350
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::view.354
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::view.358
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::permute.351
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::permute.355
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::permute.359
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::transpose.360
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::matmul.361
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::div.362
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::add.363
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::softmax.364
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.dropout
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::matmul.365
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::permute.366
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::contiguous.367
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::size.368
+[2022-04-15 22:36:39] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::size.369
+[2022-04-15 22:36:40] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.self.aten::view.370
+[2022-04-15 22:36:40] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:40] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.output.dense
+[2022-04-15 22:36:40] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.output.dropout
+[2022-04-15 22:36:40] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.output.aten::add.371
+[2022-04-15 22:36:40] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.attention.output.LayerNorm
+[2022-04-15 22:36:40] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.intermediate.dense
+[2022-04-15 22:36:41] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.intermediate.aten::gelu.372
+[2022-04-15 22:36:41] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.output.dense
+[2022-04-15 22:36:41] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.output.dropout
+[2022-04-15 22:36:41] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.output.aten::add.373
+[2022-04-15 22:36:41] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.6.output.LayerNorm
+[2022-04-15 22:36:41] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.query
+[2022-04-15 22:36:41] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.key
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.value
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::size.374
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::size.375
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::size.378
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::size.379
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::size.382
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::size.383
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::view.376
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::view.380
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::view.384
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::permute.377
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::permute.381
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::permute.385
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::transpose.386
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::matmul.387
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::div.388
+[2022-04-15 22:36:42] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::add.389
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::softmax.390
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.dropout
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::matmul.391
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::permute.392
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::contiguous.393
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::size.394
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::size.395
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.self.aten::view.396
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.output.dense
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.output.dropout
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.output.aten::add.397
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.attention.output.LayerNorm
+[2022-04-15 22:36:43] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.intermediate.dense
+[2022-04-15 22:36:44] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.intermediate.aten::gelu.398
+[2022-04-15 22:36:44] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.output.dense
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.output.dropout
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.output.aten::add.399
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.7.output.LayerNorm
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.query
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.key
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.value
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::size.400
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::size.401
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::size.404
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::size.405
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::size.408
+[2022-04-15 22:36:45] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::size.409
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::view.402
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::view.406
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::view.410
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::permute.403
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::permute.407
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::permute.411
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::transpose.412
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::matmul.413
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::div.414
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::add.415
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::softmax.416
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.dropout
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::matmul.417
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::permute.418
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::contiguous.419
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::size.420
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::size.421
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.self.aten::view.422
+[2022-04-15 22:36:46] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:47] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.output.dense
+[2022-04-15 22:36:47] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.output.dropout
+[2022-04-15 22:36:47] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.output.aten::add.423
+[2022-04-15 22:36:47] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.attention.output.LayerNorm
+[2022-04-15 22:36:47] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.intermediate.dense
+[2022-04-15 22:36:48] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.intermediate.aten::gelu.424
+[2022-04-15 22:36:48] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.output.dense
+[2022-04-15 22:36:48] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.output.dropout
+[2022-04-15 22:36:48] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.output.aten::add.425
+[2022-04-15 22:36:48] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.8.output.LayerNorm
+[2022-04-15 22:36:48] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.query
+[2022-04-15 22:36:48] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.key
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.value
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::size.426
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::size.427
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::size.430
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::size.431
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::size.434
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::size.435
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::view.428
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::view.432
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::view.436
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::permute.429
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::permute.433
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::permute.437
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::transpose.438
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::matmul.439
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::div.440
+[2022-04-15 22:36:49] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::add.441
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::softmax.442
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.dropout
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::matmul.443
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::permute.444
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::contiguous.445
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::size.446
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::size.447
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.self.aten::view.448
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.output.dense
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.output.dropout
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.output.aten::add.449
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.attention.output.LayerNorm
+[2022-04-15 22:36:50] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.intermediate.dense
+[2022-04-15 22:36:51] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.intermediate.aten::gelu.450
+[2022-04-15 22:36:51] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.output.dense
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.output.dropout
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.output.aten::add.451
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.9.output.LayerNorm
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.query
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.key
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.value
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::size.452
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::size.453
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::size.456
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::size.457
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::size.460
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::size.461
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::view.454
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::view.458
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:52] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::view.462
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::permute.455
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::permute.459
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::permute.463
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::transpose.464
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::matmul.465
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::div.466
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::add.467
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::softmax.468
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.dropout
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::matmul.469
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::permute.470
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::contiguous.471
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::size.472
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::size.473
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.self.aten::view.474
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:53] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.output.dense
+[2022-04-15 22:36:54] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.output.dropout
+[2022-04-15 22:36:54] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.output.aten::add.475
+[2022-04-15 22:36:54] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.attention.output.LayerNorm
+[2022-04-15 22:36:54] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.intermediate.dense
+[2022-04-15 22:36:54] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.intermediate.aten::gelu.476
+[2022-04-15 22:36:55] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.output.dense
+[2022-04-15 22:36:55] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.output.dropout
+[2022-04-15 22:36:55] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.output.aten::add.477
+[2022-04-15 22:36:55] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.10.output.LayerNorm
+[2022-04-15 22:36:55] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.query
+[2022-04-15 22:36:55] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.key
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.value
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::size.478
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::size.479
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::size.482
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::size.483
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::size.486
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::size.487
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::view.480
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::view.484
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::view.488
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 12, 64]
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::permute.481
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::permute.485
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::permute.489
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::transpose.490
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::matmul.491
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::div.492
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::add.493
+[2022-04-15 22:36:56] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::softmax.494
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.dropout
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::matmul.495
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::permute.496
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::contiguous.497
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::size.498
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::size.499
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.self.aten::view.500
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) View Module output size: [32, 128, 768]
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.output.dense
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.output.dropout
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.output.aten::add.501
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.attention.output.LayerNorm
+[2022-04-15 22:36:57] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.intermediate.dense
+[2022-04-15 22:36:58] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.intermediate.aten::gelu.502
+[2022-04-15 22:36:58] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.output.dense
+[2022-04-15 22:36:58] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.output.dropout
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.output.aten::add.503
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.encoder.layer.11.output.LayerNorm
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.pooler.aten::slice.504
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Slice dim:0, Slice obj:slice(0, 9223372036854775807, 1)
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([32, 128, 768]), Slice object:(slice(0, 9223372036854775807, 1),)
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([32, 128, 768]), Slice object:(slice(0, 9223372036854775807, 1),)
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.pooler.aten::select.505
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.pooler.dense
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for bert.pooler.activation
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for dropout
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for classifier
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update mask for .aten::return.179
+[2022-04-15 22:36:59] ERROR (nni.compression.pytorch.speedup.jit_translate/MainThread) aten::return is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
+[2022-04-15 22:36:59] WARNING (nni.compression.pytorch.speedup.compressor/MainThread) Note: .aten::return.179 does not have corresponding mask inference object
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the classifier
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the dropout
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.pooler.activation
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.pooler.dense
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.pooler.aten::select.505
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.pooler.aten::slice.504
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([32, 128, 768]), Slice object:(slice(0, 9223372036854775807, 1),)
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.output.LayerNorm
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.output.aten::add.503
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.output.dropout
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.output.dense
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.intermediate.aten::gelu.502
+[2022-04-15 22:36:59] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.intermediate.dense
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.output.LayerNorm
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.output.aten::add.501
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.output.dropout
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.output.dense
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::view.500
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::size.498
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::size.499
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::contiguous.497
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::permute.496
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::matmul.495
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.dropout
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::permute.489
+[2022-04-15 22:37:00] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::softmax.494
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::view.488
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::add.493
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::size.486
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::size.487
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::div.492
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.value
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::matmul.491
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::permute.481
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::transpose.490
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::view.480
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::permute.485
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::size.478
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::size.479
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::view.484
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.query
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::size.482
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.aten::size.483
+[2022-04-15 22:37:01] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.11.attention.self.key
+[2022-04-15 22:37:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.output.LayerNorm
+[2022-04-15 22:37:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.output.aten::add.477
+[2022-04-15 22:37:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.output.dropout
+[2022-04-15 22:37:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.output.dense
+[2022-04-15 22:37:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.intermediate.aten::gelu.476
+[2022-04-15 22:37:02] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.intermediate.dense
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.output.LayerNorm
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.output.aten::add.475
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.output.dropout
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.output.dense
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::view.474
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::size.472
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::size.473
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::contiguous.471
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::permute.470
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::matmul.469
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.dropout
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::permute.463
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::softmax.468
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::view.462
+[2022-04-15 22:37:03] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::add.467
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::size.460
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::size.461
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::div.466
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.value
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::matmul.465
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::permute.455
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::transpose.464
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::view.454
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::permute.459
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::size.452
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::size.453
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::view.458
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.query
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::size.456
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.aten::size.457
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.10.attention.self.key
+[2022-04-15 22:37:04] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.output.LayerNorm
+[2022-04-15 22:37:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.output.aten::add.451
+[2022-04-15 22:37:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.output.dropout
+[2022-04-15 22:37:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.output.dense
+[2022-04-15 22:37:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.intermediate.aten::gelu.450
+[2022-04-15 22:37:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.intermediate.dense
+[2022-04-15 22:37:05] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.output.LayerNorm
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.output.aten::add.449
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.output.dropout
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.output.dense
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::view.448
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::size.446
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::size.447
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::contiguous.445
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::permute.444
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::matmul.443
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.dropout
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::permute.437
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::softmax.442
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::view.436
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::add.441
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::size.434
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::size.435
+[2022-04-15 22:37:06] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::div.440
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.value
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::matmul.439
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::permute.429
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::transpose.438
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::view.428
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::permute.433
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::size.426
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::size.427
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::view.432
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.query
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::size.430
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.aten::size.431
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.9.attention.self.key
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.output.LayerNorm
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.output.aten::add.425
+[2022-04-15 22:37:07] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.output.dropout
+[2022-04-15 22:37:08] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.output.dense
+[2022-04-15 22:37:08] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.intermediate.aten::gelu.424
+[2022-04-15 22:37:08] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.intermediate.dense
+[2022-04-15 22:37:08] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.output.LayerNorm
+[2022-04-15 22:37:08] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.output.aten::add.423
+[2022-04-15 22:37:08] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.output.dropout
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.output.dense
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::view.422
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::size.420
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::size.421
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::contiguous.419
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::permute.418
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::matmul.417
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.dropout
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::permute.411
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::softmax.416
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::view.410
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::add.415
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::size.408
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::size.409
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::div.414
+[2022-04-15 22:37:09] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.value
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::matmul.413
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::permute.403
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::transpose.412
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::view.402
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::permute.407
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::size.400
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::size.401
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::view.406
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.query
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::size.404
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.aten::size.405
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.8.attention.self.key
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.output.LayerNorm
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.output.aten::add.399
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.output.dropout
+[2022-04-15 22:37:10] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.output.dense
+[2022-04-15 22:37:11] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.intermediate.aten::gelu.398
+[2022-04-15 22:37:11] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.intermediate.dense
+[2022-04-15 22:37:11] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.output.LayerNorm
+[2022-04-15 22:37:11] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.output.aten::add.397
+[2022-04-15 22:37:11] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.output.dropout
+[2022-04-15 22:37:11] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.output.dense
+[2022-04-15 22:37:11] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::view.396
+[2022-04-15 22:37:11] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::size.394
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::size.395
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::contiguous.393
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::permute.392
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::matmul.391
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.dropout
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::permute.385
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::softmax.390
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::view.384
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::add.389
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::size.382
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::size.383
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::div.388
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.value
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::matmul.387
+[2022-04-15 22:37:12] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::permute.377
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::transpose.386
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::view.376
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::permute.381
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::size.374
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::size.375
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::view.380
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.query
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::size.378
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.aten::size.379
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.7.attention.self.key
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.output.LayerNorm
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.output.aten::add.373
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.output.dropout
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.output.dense
+[2022-04-15 22:37:13] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.intermediate.aten::gelu.372
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.intermediate.dense
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.output.LayerNorm
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.output.aten::add.371
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.output.dropout
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.output.dense
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::view.370
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::size.368
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::size.369
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::contiguous.367
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::permute.366
+[2022-04-15 22:37:14] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::matmul.365
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.dropout
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::permute.359
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::softmax.364
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::view.358
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::add.363
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::size.356
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::size.357
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::div.362
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.value
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::matmul.361
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::permute.351
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::transpose.360
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::view.350
+[2022-04-15 22:37:15] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::permute.355
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::size.348
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::size.349
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::view.354
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.query
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::size.352
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.aten::size.353
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.6.attention.self.key
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.output.LayerNorm
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.output.aten::add.347
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.output.dropout
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.output.dense
+[2022-04-15 22:37:16] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.intermediate.aten::gelu.346
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.intermediate.dense
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.output.LayerNorm
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.output.aten::add.345
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.output.dropout
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.output.dense
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::view.344
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::size.342
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::size.343
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::contiguous.341
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::permute.340
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::matmul.339
+[2022-04-15 22:37:17] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.dropout
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::permute.333
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::softmax.338
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::view.332
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::add.337
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::size.330
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::size.331
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::div.336
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.value
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::matmul.335
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::permute.325
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::transpose.334
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::view.324
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::permute.329
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::size.322
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::size.323
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::view.328
+[2022-04-15 22:37:18] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.query
+[2022-04-15 22:37:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::size.326
+[2022-04-15 22:37:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.aten::size.327
+[2022-04-15 22:37:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.5.attention.self.key
+[2022-04-15 22:37:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.output.LayerNorm
+[2022-04-15 22:37:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.output.aten::add.321
+[2022-04-15 22:37:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.output.dropout
+[2022-04-15 22:37:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.output.dense
+[2022-04-15 22:37:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.intermediate.aten::gelu.320
+[2022-04-15 22:37:19] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.intermediate.dense
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.output.LayerNorm
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.output.aten::add.319
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.output.dropout
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.output.dense
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::view.318
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::size.316
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::size.317
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::contiguous.315
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::permute.314
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::matmul.313
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.dropout
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::permute.307
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::softmax.312
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::view.306
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::add.311
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::size.304
+[2022-04-15 22:37:20] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::size.305
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::div.310
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.value
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::matmul.309
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::permute.299
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::transpose.308
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::view.298
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::permute.303
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::size.296
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::size.297
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::view.302
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.query
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::size.300
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.aten::size.301
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.4.attention.self.key
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.output.LayerNorm
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.output.aten::add.295
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.output.dropout
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.output.dense
+[2022-04-15 22:37:21] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.intermediate.aten::gelu.294
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.intermediate.dense
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.output.LayerNorm
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.output.aten::add.293
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.output.dropout
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.output.dense
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::view.292
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::size.290
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::size.291
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::contiguous.289
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::permute.288
+[2022-04-15 22:37:22] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::matmul.287
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.dropout
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::permute.281
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::softmax.286
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::view.280
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::add.285
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::size.278
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::size.279
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::div.284
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.value
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::matmul.283
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::permute.273
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::transpose.282
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::view.272
+[2022-04-15 22:37:23] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::permute.277
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::size.270
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::size.271
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::view.276
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.query
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::size.274
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.aten::size.275
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.3.attention.self.key
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.output.LayerNorm
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.output.aten::add.269
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.output.dropout
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.output.dense
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.intermediate.aten::gelu.268
+[2022-04-15 22:37:24] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.intermediate.dense
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.output.LayerNorm
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.output.aten::add.267
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.output.dropout
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.output.dense
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::view.266
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::size.264
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::size.265
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::contiguous.263
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::permute.262
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::matmul.261
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.dropout
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::permute.255
+[2022-04-15 22:37:25] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::softmax.260
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::view.254
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::add.259
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::size.252
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::size.253
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::div.258
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.value
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::matmul.257
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::permute.247
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::transpose.256
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::view.246
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::permute.251
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::size.244
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::size.245
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::view.250
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.query
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::size.248
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.aten::size.249
+[2022-04-15 22:37:26] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.2.attention.self.key
+[2022-04-15 22:37:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.output.LayerNorm
+[2022-04-15 22:37:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.output.aten::add.243
+[2022-04-15 22:37:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.output.dropout
+[2022-04-15 22:37:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.output.dense
+[2022-04-15 22:37:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.intermediate.aten::gelu.242
+[2022-04-15 22:37:27] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.intermediate.dense
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.output.LayerNorm
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.output.aten::add.241
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.output.dropout
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.output.dense
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::view.240
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::size.238
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::size.239
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::contiguous.237
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::permute.236
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::matmul.235
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.dropout
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::permute.229
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::softmax.234
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::view.228
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::add.233
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::size.226
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::size.227
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::div.232
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.value
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::matmul.231
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::permute.221
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::transpose.230
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::view.220
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::permute.225
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::size.218
+[2022-04-15 22:37:28] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::size.219
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::view.224
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.query
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::size.222
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.aten::size.223
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.1.attention.self.key
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.output.LayerNorm
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.output.aten::add.217
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.output.dropout
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.output.dense
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.intermediate.aten::gelu.216
+[2022-04-15 22:37:29] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.intermediate.dense
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.output.LayerNorm
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.output.aten::add.215
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.output.dropout
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.output.dense
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::view.214
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::size.212
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::size.213
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::contiguous.211
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::permute.210
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::matmul.209
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.dropout
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::permute.203
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::softmax.208
+[2022-04-15 22:37:30] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::view.202
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::add.207
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::size.200
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::size.201
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::div.206
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.aten::mul.186
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.value
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::matmul.205
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.aten::rsub.185
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::permute.195
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::transpose.204
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.aten::to.184
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::view.194
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::permute.199
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.aten::slice.183
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([32, 1, 1, 128]), Slice object:(slice(None, None, None), slice(None, None, None), slice(None, None, None), slice(0, 9223372036854775807, 1))
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::size.192
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::size.193
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::view.198
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.aten::unsqueeze.182
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.query
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::size.196
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.aten::size.197
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.aten::unsqueeze.181
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.encoder.layer.0.attention.self.key
+[2022-04-15 22:37:31] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.aten::slice.180
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([32, 128]), Slice object:(slice(0, 9223372036854775807, 1),)
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.dropout
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.LayerNorm
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.aten::add.191
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.aten::add.190
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.token_type_embeddings
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.word_embeddings
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.position_embeddings
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.aten::slice.189
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.jit_translate/MainThread) Model has Slice operation, and the operand size=torch.Size([1, 512]), Slice object:(slice(None, None, None), slice(0, tensor([128]), 1))
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.aten::slice.188
+[2022-04-15 22:37:32] INFO (nni.compression.pytorch.speedup.compressor/MainThread) Update the indirect sparsity for the bert.embeddings.aten::size.187
+New Sparsity  bert.encoder.layer.0.attention.self.query tensor(0.9167) tensor(0.9167)
+New Sparsity  bert.encoder.layer.0.attention.self.key tensor(0.9167) tensor(0.9167)
+New Sparsity  bert.encoder.layer.0.attention.self.value tensor(0.9167) tensor(0.9167)
+New Sparsity  bert.encoder.layer.0.attention.output.dense tensor(0.9236) tensor(0.9236)
+New Sparsity  bert.encoder.layer.0.intermediate.dense tensor(1.) tensor(0.9062)
+New Sparsity  bert.encoder.layer.0.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.1.attention.self.query tensor(0.) tensor(0.)
+New Sparsity  bert.encoder.layer.1.attention.self.key tensor(0.) tensor(0.)
+New Sparsity  bert.encoder.layer.1.attention.self.value tensor(0.) tensor(0.)
+New Sparsity  bert.encoder.layer.1.attention.output.dense tensor(0.9583) tensor(0.9583)
+New Sparsity  bert.encoder.layer.1.intermediate.dense tensor(1.) tensor(0.9792)
+New Sparsity  bert.encoder.layer.1.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.2.attention.self.query tensor(1.) tensor(0.9983)
+New Sparsity  bert.encoder.layer.2.attention.self.key tensor(1.) tensor(0.9983)
+New Sparsity  bert.encoder.layer.2.attention.self.value tensor(1.) tensor(0.9983)
+New Sparsity  bert.encoder.layer.2.attention.output.dense tensor(1.) tensor(0.9983)
+New Sparsity  bert.encoder.layer.2.intermediate.dense tensor(1.) tensor(0.9996)
+New Sparsity  bert.encoder.layer.2.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.3.attention.self.query tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.3.attention.self.key tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.3.attention.self.value tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.3.attention.output.dense tensor(0.9983) tensor(0.9965)
+New Sparsity  bert.encoder.layer.3.intermediate.dense tensor(1.) tensor(0.9987)
+New Sparsity  bert.encoder.layer.3.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.4.attention.self.query tensor(0.) tensor(0.)
+New Sparsity  bert.encoder.layer.4.attention.self.key tensor(0.) tensor(0.)
+New Sparsity  bert.encoder.layer.4.attention.self.value tensor(0.) tensor(0.)
+New Sparsity  bert.encoder.layer.4.attention.output.dense tensor(0.) tensor(0.)
+New Sparsity  bert.encoder.layer.4.intermediate.dense tensor(1.) tensor(0.9896)
+New Sparsity  bert.encoder.layer.4.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.5.attention.self.query tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.5.attention.self.key tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.5.attention.self.value tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.5.attention.output.dense tensor(0.9983) tensor(0.9965)
+New Sparsity  bert.encoder.layer.5.intermediate.dense tensor(1.) tensor(0.9896)
+New Sparsity  bert.encoder.layer.5.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.6.attention.self.query tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.6.attention.self.key tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.6.attention.self.value tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.6.attention.output.dense tensor(0.9983) tensor(0.9965)
+New Sparsity  bert.encoder.layer.6.intermediate.dense tensor(1.) tensor(0.9896)
+New Sparsity  bert.encoder.layer.6.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.7.attention.self.query tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.7.attention.self.key tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.7.attention.self.value tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.7.attention.output.dense tensor(0.9983) tensor(0.9965)
+New Sparsity  bert.encoder.layer.7.intermediate.dense tensor(1.) tensor(0.9996)
+New Sparsity  bert.encoder.layer.7.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.8.attention.self.query tensor(0.9965) tensor(0.9965)
+New Sparsity  bert.encoder.layer.8.attention.self.key tensor(0.9965) tensor(0.9965)
+New Sparsity  bert.encoder.layer.8.attention.self.value tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.8.attention.output.dense tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.8.intermediate.dense tensor(1.) tensor(0.9996)
+New Sparsity  bert.encoder.layer.8.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.9.attention.self.query tensor(1.) tensor(0.9983)
+New Sparsity  bert.encoder.layer.9.attention.self.key tensor(1.) tensor(0.9983)
+New Sparsity  bert.encoder.layer.9.attention.self.value tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.9.attention.output.dense tensor(0.9983) tensor(0.9583)
+New Sparsity  bert.encoder.layer.9.intermediate.dense tensor(1.) tensor(0.9896)
+New Sparsity  bert.encoder.layer.9.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.10.attention.self.query tensor(1.) tensor(0.9983)
+New Sparsity  bert.encoder.layer.10.attention.self.key tensor(1.) tensor(0.9983)
+New Sparsity  bert.encoder.layer.10.attention.self.value tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.10.attention.output.dense tensor(0.9983) tensor(0.9983)
+New Sparsity  bert.encoder.layer.10.intermediate.dense tensor(1.) tensor(0.9996)
+New Sparsity  bert.encoder.layer.10.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.encoder.layer.11.attention.self.query tensor(0.9965) tensor(0.9965)
+New Sparsity  bert.encoder.layer.11.attention.self.key tensor(0.9931) tensor(0.9931)
+New Sparsity  bert.encoder.layer.11.attention.self.value tensor(0.9965) tensor(0.9965)
+New Sparsity  bert.encoder.layer.11.attention.output.dense tensor(0.9965) tensor(0.9965)
+New Sparsity  bert.encoder.layer.11.intermediate.dense tensor(1.) tensor(0.9896)
+New Sparsity  bert.encoder.layer.11.output.dense tensor(1.) tensor(1.)
+New Sparsity  bert.pooler.dense tensor(0.) tensor(0.)
+New Sparsity  classifier tensor(0.) tensor(0.)
+Propagate done
+Accuracy:{'qqp': 0.8802621815483552}

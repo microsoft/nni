@@ -10,7 +10,7 @@ def get_acc(fpath):
 if __name__ == '__main__':
     prefix =  '../checkpoints'
     models = ['bert', 'mobilenet', 'hubert']
-    patterns = ['coarse', 'finegrained']
+    patterns = ['coarse', 'finegrained', 'coarse_int8', 'mixed']
     
     for m in models:
         for p in patterns:
