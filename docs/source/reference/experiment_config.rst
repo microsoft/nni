@@ -208,9 +208,9 @@ ExperimentConfig
 
     * - tunerGpuIndices
       - ``list[int]`` or ``str`` or ``int``, optional
-      - Limit the GPUs visible to tuner, assessor, and advisor.
+      - Limit the GPUs visible to tuner and assessor.
         This will be the ``CUDA_VISIBLE_DEVICES`` environment variable of tuner process.
-        Because tuner, assessor, and advisor run in the same process, this option will affect them all.
+        Because tuner and assessor run in the same process, this option will affect both of them.
 
     * - tuner
       - ``AlgorithmConfig``, optional
@@ -224,8 +224,7 @@ ExperimentConfig
 
     * - advisor
       - ``AlgorithmConfig``, optional
-      - Specify the advisor.
-        NNI provides two built-in advisors: `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial <../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor.
+      - Deprecated, use ``tuner`` instead.
 
     * - trainingService
       - ``TrainingServiceConfig``

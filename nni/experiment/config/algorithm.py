@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 """
-Config classes for tuner/assessor/advisor algorithms.
+Config classes for tuner and assessor algorithms.
 
 Use ``AlgorithmConfig`` to specify a built-in algorithm;
 use ``CustomAlgorithmConfig`` to specify a custom algorithm.
