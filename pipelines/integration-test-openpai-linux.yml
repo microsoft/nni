@@ -53,24 +53,24 @@ jobs:
     condition: eq(variables['build_docker_image'], 'true')
     displayName: Build and upload docker image
 
-  # - script: |
-  #     set -e
-  #     cd test
-  #     python3 nni_test/nnitest/generate_ts_config.py \
-  #         --ts pai \
-  #         --pai_reuse false \
-  #         --pai_host https://ne.openpai.org \
-  #         --pai_user $(pai_user) \
-  #         --nni_docker_image nnidev/nni-nightly \
-  #         --pai_storage_config_name confignfs-data \
-  #         --pai_token $(pai_token) \
-  #         --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) \
-  #         --container_nfs_mount_path $(container_nfs_mount_path) \
-  #         --nni_manager_ip $(manager_ip) \
-  #         --vc nni \
-  #         --debug true
-  #     python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts pai
-  #   displayName: Integration test
+  - script: |
+      set -e
+      cd test
+      python3 nni_test/nnitest/generate_ts_config.py \
+          --ts pai \
+          --pai_reuse false \
+          --pai_host https://ne.openpai.org \
+          --pai_user $(pai_user) \
+          --nni_docker_image nnidev/nni-nightly \
+          --pai_storage_config_name confignfs-data \
+          --pai_token $(pai_token) \
+          --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) \
+          --container_nfs_mount_path $(container_nfs_mount_path) \
+          --nni_manager_ip $(manager_ip) \
+          --vc nni \
+          --debug true
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts pai
+    displayName: Integration test
 
   - script: |
       set -e
