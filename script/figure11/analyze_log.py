@@ -28,7 +28,7 @@ def rammer_parse_log(fpath):
 
 scenarios = ["Structured Sparsity", 'Unstructured Sparsity', 'Structured+8bit', 'Mixed Sparsity']
 
-patterns = ["bert_coarse", "bert_coarse_int8", "bert_finegrained", "bert_mixed"]
+patterns = ["bert_coarse", "bert_finegrained", "bert_coarse_int8", "bert_mixed"]
 
 optimizations = ["sparse_kernel", "propagation", "transformation", "specialization"]
 
@@ -97,7 +97,7 @@ ax.set_yticklabels([10,45], fontsize=14)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
-ax2.set_ylim(69, 80)
+ax2.set_ylim(60, 80)
 ax2.set_yticks([70,80])
 ax2.set_yticklabels([70,80], fontsize=14)
 ax2.tick_params(bottom=False, labelbottom=False)
