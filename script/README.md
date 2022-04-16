@@ -62,3 +62,7 @@ can also run the experiment with one script.
 ```
 bash run_all_a100.sh # current directory should be $SPARTA_HOME/script
 ```
+
+
+### Note
+If you need 2080Ti device during the artifact, please feel free to contact us.
