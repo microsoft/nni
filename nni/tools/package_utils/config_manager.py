@@ -3,19 +3,19 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-
-import yaml
-
-from nni.runtime.config import get_builtin_config_file, get_config_file
-from .common import AlgoMeta
-
 __all__ = [
     'get_algo_meta',
     'get_all_algo_meta',
     'register_algo_meta',
     'unregister_algo_meta',
 ]
+
+from collections import defaultdict
+
+import yaml
+
+from nni.runtime.config import get_builtin_config_file, get_config_file
+from .common import AlgoMeta
 
 def get_algo_meta(name: str) -> AlgoMeta | None:
     """

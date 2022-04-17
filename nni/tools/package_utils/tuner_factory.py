@@ -3,6 +3,11 @@
 
 from __future__ import annotations
 
+__all__ = [
+    'create_builtin_class_instance',
+    'create_customized_class_instance',
+]
+
 import importlib
 import os
 import sys
@@ -10,11 +15,6 @@ from typing import Any
 
 from nni.typehint import Literal
 from . import config_manager
-
-__all__ = [
-    'create_builtin_class_instance',
-    'create_customized_class_instance',
-]
 
 ALGO_TYPES = ['tuners', 'assessors']
 
