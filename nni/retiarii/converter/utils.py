@@ -3,6 +3,8 @@
 
 from typing import Optional
 
+from nni.typehint import TypeGuard
+
 from ..operation import Cell
 from ..graph import Model, Graph, Node, Edge
 
@@ -79,7 +81,7 @@ def _extract_info_from_trace_node(trace_node):
         return shape_parameters, None
 
 
-def is_layerchoice_node(ir_node: Optional[Node]):
+def is_layerchoice_node(ir_node: Optional[Node]) -> TypeGuard[Node]:
     if ir_node is not None and isinstance(ir_node.operation, Cell) and ir_node.operation.parameters.get('mutation') == 'layerchoice':
         return True
     else:

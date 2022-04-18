@@ -75,10 +75,10 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> T:
         return cls
 
     import torch.nn as nn
-    assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
+    assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'  # type: ignore
 
     cls = trace(cls)
-    cls._nni_basic_unit = basic_unit_tag
+    cls._nni_basic_unit = basic_unit_tag  # type: ignore
 
     _torchscript_patch(cls)
 
@@ -113,7 +113,7 @@ def model_wrapper(cls: T) -> T:
         return cls
 
     import torch.nn as nn
-    assert issubclass(cls, nn.Module)
+    assert issubclass(cls, nn.Module)  # type: ignore
 
     # subclass can still use trace info
     wrapper = trace(cls, inheritable=True)

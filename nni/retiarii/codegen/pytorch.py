@@ -5,6 +5,7 @@ import logging
 import re
 from typing import Dict, List, Tuple, Any, cast
 
+from nni.retiarii.operation import PyTorchOperation
 from nni.retiarii.operation_def.torch_op_def import ToDevice
 from nni.retiarii.utils import STATE_DICT_PY_MAPPING
 from nni.common.device import Device, GPUDevice
@@ -34,7 +35,7 @@ def _sorted_incoming_edges(node: Node) -> List[Edge]:
     if all(edge.tail_slot is None for edge in edges):
         return edges
     if all(isinstance(edge.tail_slot, int) for edge in edges):
-        edges = sorted(edges, key=(lambda edge: edge.tail_slot))
+        edges = sorted(edges, key=(lambda edge: cast(int, edge.tail_slot)))
         if [edge.tail_slot for edge in edges] == list(range(len(edges))):
             return edges
     raise IllegalGraphError(node.graph, 'Node {} has bad inputs'.format(node.name))
@@ -149,7 +150,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> Tup
 
             if node.operation.type == 'shared':
                 continue
-            pkg_name = node.operation.get_import_pkg()
+            pkg_name = cast(PyTorchOperation, node.operation).get_import_pkg()
             if pkg_name is not None:
                 import_pkgs.add(pkg_name)
 
@@ -158,6 +159,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> Tup
             if node_code is not None:
                 if placement and node in placement and len(node_code) > 0:
                     if isinstance(placement[node], GPUDevice):
+                        assert cuda_remapped_id is not None
                         device_repr = "cuda:%d" % cuda_remapped_id[placement[node]]
                     else:
                         device_repr = placement[node].device_repr()

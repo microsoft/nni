@@ -746,6 +746,7 @@ class GraphConverterWithShape(GraphConverter):
             if isinstance(submodule, LayerChoice):
                 full_name = get_full_name_by_scope_name(ir_model, name.split('.'), module_name)
                 lc_node = ir_model.get_node_by_name(full_name)
+                assert lc_node is not None, f'Cannot find a node with name {full_name}'
 
                 for cand_name in submodule.names:
                     cand = submodule[cand_name]

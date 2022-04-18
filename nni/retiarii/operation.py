@@ -121,7 +121,7 @@ class PyTorchOperation(Operation):
     def is_functional(cls, type_name) -> bool:
         return type_name.startswith('Function.')
 
-    def _to_class_name(self) -> str:
+    def _to_class_name(self) -> Optional[str]:
         if self.type.startswith('__torch__.'):
             return self.type[len('__torch__.'):]
         elif self.type.startswith('__mutated__.'):
@@ -137,7 +137,7 @@ class PyTorchOperation(Operation):
         else:
             return None
 
-    def to_init_code(self, field: str) -> str:
+    def to_init_code(self, field: str) -> Optional[str]:
         if self._to_class_name() is not None:
             assert 'positional_args' not in self.parameters
             kw_params = ', '.join(f'{key}={repr(value)}' for key, value in self.parameters.items())

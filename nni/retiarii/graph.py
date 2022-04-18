@@ -10,7 +10,8 @@ from __future__ import annotations
 import abc
 import json
 from enum import Enum
-from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union, TYPE_CHECKING, overload, cast)
+from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
+                    Optional, Set, Tuple, Type, Union, cast, overload)
 
 if TYPE_CHECKING:
     from .mutator import Mutator
@@ -342,7 +343,7 @@ class Graph:
     @overload
     def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
 
-    def add_node(self, name, operation_or_type, parameters=None):
+    def add_node(self, name, operation_or_type, parameters=None):  # type: ignore
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
@@ -354,7 +355,7 @@ class Graph:
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
 
-    def insert_node_on_edge(self, edge, name, operation_or_type, parameters=None) -> 'Node':
+    def insert_node_on_edge(self, edge, name, operation_or_type, parameters=None) -> 'Node':  # type: ignore
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
@@ -407,7 +408,7 @@ class Graph:
     def get_nodes_by_name(self, name: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.name == name]
 
-    def get_nodes_by_python_name(self, python_name: str) -> Optional['Node']:
+    def get_nodes_by_python_name(self, python_name: str) -> List['Node']:
         return [node for node in self.nodes if node.python_name == python_name]
 
     def topo_sort(self) -> List['Node']:
@@ -596,7 +597,7 @@ class Node:
         return sorted(set(edge.tail for edge in self.outgoing_edges), key=(lambda node: node.id))
 
     @property
-    def successor_slots(self) -> List[Tuple['Node', Union[int, None]]]:
+    def successor_slots(self) -> Set[Tuple['Node', Union[int, None]]]:
         return set((edge.tail, edge.tail_slot) for edge in self.outgoing_edges)
 
     @property
@@ -620,11 +621,11 @@ class Node:
     @overload
     def update_operation(self, type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> None: ...
 
-    def update_operation(self, operation_or_type, parameters=None):
+    def update_operation(self, operation_or_type, parameters=None):  # type: ignore
         if isinstance(operation_or_type, Operation):
             self.operation = operation_or_type
         else:
-            self.operation = Operation.new(operation_or_type, parameters)
+            self.operation = Operation.new(operation_or_type, cast(dict, parameters))
 
     # mutation
     def remove(self) -> None:
@@ -665,7 +666,13 @@ class Node:
         return node
 
     def _dump(self) -> Any:
-        ret = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters, 'attributes': self.operation.attributes}}
+        ret: Dict[str, Any] = {
+            'operation': {
+                'type': self.operation.type,
+                'parameters': self.operation.parameters,
+                'attributes': self.operation.attributes
+            }
+        }
         if isinstance(self.operation, Cell):
             ret['operation']['cell_name'] = self.operation.cell_name
         if self.label is not None:

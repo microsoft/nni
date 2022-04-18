@@ -13,7 +13,7 @@ import sys
 import types
 import warnings
 from io import IOBase
-from typing import Any, Dict, List, Optional, TypeVar, Union, cast, Generic
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union, cast, Generic
 
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
@@ -147,7 +147,7 @@ class SerializableObject(Generic[T], Traceable):
             # Reinitialize
             return trace(self.trace_symbol)(*self.trace_args, **self.trace_kwargs)
 
-        return self
+        return cast(T, self)
 
     @property
     def trace_symbol(self) -> Any:
@@ -187,7 +187,7 @@ class SerializableObject(Generic[T], Traceable):
             ')'
 
 
-def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, Any]) -> Any:
+def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, Any]) -> T:
     # If an object is already created, this can be a fix so that the necessary info are re-injected into the object.
     # Make obj complying with the interface of traceable, though we cannot change its base class.
     obj.__dict__.update(_nni_symbol=symbol, _nni_args=args, _nni_kwargs=kwargs)
@@ -233,11 +233,11 @@ def _make_class_traceable(cls: T, create_wrapper: bool = False) -> T:
     else:
         # sometimes create_wrapper is mandatory, e.g., for built-in types like list/int.
         # but I don't want to check here because it's unreliable.
-        wrapper = type('wrapper', (Traceable, cls), attributes)
-        return wrapper
+        wrapper = type('wrapper', (Traceable, cast(Type, cls)), attributes)
+        return cast(T, wrapper)
 
 
-def trace(cls_or_func: T = None, *, kw_only: bool = True, inheritable: bool = False) -> T:
+def trace(cls_or_func: T = cast(T, None), *, kw_only: bool = True, inheritable: bool = False) -> T:
     """
     Annotate a function or a class if you want to preserve where it comes from.
     This is usually used in the following scenarios:
@@ -283,7 +283,7 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True, inheritable: bool = Fa
     # Might be changed in future.
     nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
     if nni_trace_flag.lower() == 'disable':
-        return cls_or_func
+        return cast(T, cls_or_func)
 
     def wrap(cls_or_func):
         # already annotated, do nothing
@@ -301,10 +301,10 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True, inheritable: bool = Fa
 
     # if we're being called as @trace()
     if cls_or_func is None:
-        return wrap
+        return wrap  # type: ignore
 
     # if we are called without parentheses
-    return wrap(cls_or_func)
+    return wrap(cls_or_func)  # type: ignore
 
 
 def dump(obj: Any, fp: Optional[Any] = None, *, use_trace: bool = True, pickle_size_limit: int = 4096,
@@ -491,7 +491,7 @@ def _trace_cls(base, kw_only, call_super=True, inheritable=False):
             raise TypeError(f"{base} has a superclass already decorated with trace, and it's using a customized metaclass {type(base)}. "
                             "Please either use the default metaclass, or remove trace from the super-class.")
 
-    class wrapper(SerializableObject, base, metaclass=metaclass):
+    class wrapper(SerializableObject, base, metaclass=metaclass):  # type: ignore
         def __init__(self, *args, **kwargs):
             # store a copy of initial parameters
             args, kwargs = _formulate_arguments(base.__init__, args, kwargs, kw_only, is_class_init=True)
@@ -786,7 +786,7 @@ def import_cls_or_func_from_hybrid_name(s: str) -> Any:
     return _import_cls_or_func_from_name(s)
 
 
-def _json_tricks_func_or_cls_encode(cls_or_func: Any, primitives: bool = False, pickle_size_limit: int = 4096) -> str:
+def _json_tricks_func_or_cls_encode(cls_or_func: Any, primitives: bool = False, pickle_size_limit: int = 4096) -> Dict[str, str]:
     if not isinstance(cls_or_func, type) and not _is_function(cls_or_func):
         # not a function or class, continue
         return cls_or_func
@@ -798,8 +798,7 @@ def _json_tricks_func_or_cls_encode(cls_or_func: Any, primitives: bool = False, 
 
 def _json_tricks_func_or_cls_decode(s: Dict[str, Any]) -> Any:
     if isinstance(s, dict) and '__nni_type__' in s:
-        s = s['__nni_type__']
-        return import_cls_or_func_from_hybrid_name(s)
+        return import_cls_or_func_from_hybrid_name(s['__nni_type__'])
     return s
 
 
@@ -851,8 +850,7 @@ def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_si
 
 def _json_tricks_any_object_decode(obj: Dict[str, Any]) -> Any:
     if isinstance(obj, dict) and '__nni_obj__' in obj:
-        obj = obj['__nni_obj__']
-        b = base64.b64decode(obj)
+        b = base64.b64decode(obj['__nni_obj__'])
         return _wrapped_cloudpickle_loads(b)
     return obj
 
