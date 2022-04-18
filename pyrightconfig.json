@@ -9,7 +9,6 @@
         "nni/retiarii/execution/cgo_engine.py",
         "nni/retiarii/execution/logical_optimizer",
         "nni/retiarii/evaluator/pytorch/cgo",
-        "nni/retiarii/hub",
         "nni/retiarii/oneshot",
         "nni/smartparam.py",
         "nni/tools"

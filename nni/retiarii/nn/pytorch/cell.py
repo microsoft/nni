@@ -189,8 +189,10 @@ class Cell(nn.Module):
     def __init__(self,
                  op_candidates: Union[
                      Callable[[], List[nn.Module]],
-                     List[Union[nn.Module, _cell_op_factory_type]],
-                     Dict[str, Union[nn.Module, _cell_op_factory_type]]
+                     List[nn.Module],
+                     List[_cell_op_factory_type],
+                     Dict[str, nn.Module],
+                     Dict[str, _cell_op_factory_type]
                  ],
                  num_nodes: int,
                  num_ops_per_node: int = 1,

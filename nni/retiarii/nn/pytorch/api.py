@@ -1,21 +1,23 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import math
 import itertools
+import math
 import operator
 import warnings
-from typing import Any, List, Union, Dict, Optional, Callable, Iterator, Iterable, NoReturn, TypeVar, Type, Sequence, SupportsRound, Generic, cast
+from typing import (Any, Callable, Dict, Generic, Iterable, Iterator, List,
+                    NoReturn, Optional, Sequence, SupportsRound, TypeVar,
+                    Union, cast)
 
 import torch
 import torch.nn as nn
-
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import Translatable
 from nni.retiarii.serializer import basic_unit
-from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace, NoContextError
-from .mutation_utils import Mutable, generate_new_label, get_fixed_value
+from nni.retiarii.utils import (STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace,
+                                NoContextError)
 
+from .mutation_utils import Mutable, generate_new_label, get_fixed_value
 
 __all__ = [
     # APIs
@@ -31,6 +33,7 @@ __all__ = [
     # Type utils
     'ReductionType',
     'MaybeChoice',
+    'ChoiceOf',
 ]
 
 
@@ -592,10 +595,11 @@ class ValueChoiceX(Generic[_cand], Translatable, nn.Module):
     # region implement int, float, round, trunc, floor, ceil
     # because I believe sometimes we need them to calculate #channels
     # `__int__` and `__float__` are not supported because `__int__` is required to return int.
-    def __round__(self: 'ChoiceOf[SupportsRound[_value]]', ndigits: Optional['MaybeChoice[int]'] = None) -> 'ChoiceOf[SupportsRound[_value]]':
+    def __round__(self: 'ChoiceOf[SupportsRound[_value]]',
+                  ndigits: Optional['MaybeChoice[int]'] = None) -> 'ChoiceOf[Union[int, SupportsRound[_value]]]':
         if ndigits is not None:
-            return cast(ChoiceOf[SupportsRound[_value]], ValueChoiceX(round, 'round({}, {})', [self, ndigits]))
-        return cast(ChoiceOf[SupportsRound[_value]], ValueChoiceX(round, 'round({})', [self]))
+            return cast(ChoiceOf[Union[int, SupportsRound[_value]]], ValueChoiceX(round, 'round({}, {})', [self, ndigits]))
+        return cast(ChoiceOf[Union[int, SupportsRound[_value]]], ValueChoiceX(round, 'round({})', [self]))
 
     def __trunc__(self) -> NoReturn:
         raise RuntimeError("Try to use `ValueChoice.to_int()` instead of `math.trunc()` on value choices.")

@@ -4,14 +4,14 @@
 import copy
 import warnings
 from collections import OrderedDict
-from typing import Callable, List, Union, Tuple, Optional, Sequence, cast
+from typing import Callable, List, Dict, Union, Tuple, Optional, Sequence, cast
 
 import torch
 import torch.nn as nn
 
 from nni.retiarii.utils import NoContextError, STATE_DICT_PY_MAPPING_PARTIAL
 
-from .api import LayerChoice, ValueChoice, ValueChoiceX
+from .api import LayerChoice, ValueChoice, ValueChoiceX, ChoiceOf
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
 from .mutation_utils import Mutable, generate_new_label, get_fixed_value
@@ -67,7 +67,7 @@ class Repeat(Mutable):
                                           List[Callable[[int], nn.Module]],
                                           nn.Module,
                                           List[nn.Module]],
-                            depth: Union[int, Tuple[int, int], ValueChoice], *, label: Optional[str] = None):
+                            depth: Union[int, Tuple[int, int], ChoiceOf[int]], *, label: Optional[str] = None):
         if isinstance(depth, tuple):
             # we can't create a value choice here,
             # otherwise we will have two value choices, one created here, another in init.
@@ -93,7 +93,7 @@ class Repeat(Mutable):
                                List[Callable[[int], nn.Module]],
                                nn.Module,
                                List[nn.Module]],
-                 depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
+                 depth: Union[int, Tuple[int, int], ChoiceOf[int]], *, label: Optional[str] = None):
         super().__init__()
 
         self._label = None  # by default, no label
@@ -195,7 +195,7 @@ class NasBench201Cell(nn.Module):
             return OrderedDict([(str(i), t) for i, t in enumerate(x)])
         return OrderedDict(x)
 
-    def __init__(self, op_candidates: List[Callable[[int, int], nn.Module]],
+    def __init__(self, op_candidates: Union[Dict[str, Callable[[int, int], nn.Module]], List[Callable[[int, int], nn.Module]]],
                  in_features: int, out_features: int, num_tensors: int = 4,
                  label: Optional[str] = None):
         super().__init__()
