@@ -81,7 +81,6 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
 
         const frameworkcontrollerJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
         const command = this.generateCommandScript(this.config.taskRoles, environment.command);
-        const command = environment.command;
         await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), command, { encoding: 'utf8' });
 
         //upload script files to sotrage
@@ -205,10 +204,6 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             },
             spec: {
                 executionType: 'Start',
-                // retryPolicy: {
-                //     fancyRetryPolicy: true,
-                //     maxRetryCount: 2
-                // },
                 taskRoles: taskRoles
             }
         });

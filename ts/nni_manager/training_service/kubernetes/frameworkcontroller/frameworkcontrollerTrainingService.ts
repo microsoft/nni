@@ -348,7 +348,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             const runScriptContent: string =
                 await this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder,
                     this.generateCommandScript(configTaskRoles, taskRole.command),
-                    taskRole.command, 
                     form.sequenceId.toString(), taskRole.name, taskRole.gpuNum ? taskRole.gpuNum : 0);
             await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, {encoding: 'utf8'});
         }
@@ -450,10 +449,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             },
             spec: {
                 executionType: 'Start',
-                // retryPolicy: {
-                //     fancyRetryPolicy: true,
-                //     maxRetryCount: 2
-                // },
                 taskRoles: taskRoles
             }
         });
