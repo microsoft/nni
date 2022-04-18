@@ -21,7 +21,8 @@ ALGO_TYPES = ['tuners', 'assessors']
 def _get_all_builtin_names(algo_type: Literal['tuners', 'assessors']) -> list[str]:
     algos = config_manager.get_all_algo_meta()
     algos = [meta for meta in algos if meta.algo_type == algo_type]
-    return [meta.name for meta in algos] + [meta.alias for meta in algos if meta.alias is not None]
+    names = [meta.name for meta in algos] + [meta.alias for meta in algos if meta.alias is not None]
+    return [name.lower() for name in names]
 
 def _get_registered_algo_meta(builtin_name: str) -> dict | None:
     """ Get meta information of registered algorithms.
@@ -115,6 +116,7 @@ def create_builtin_class_instance(
         Returns builtin class instance.
     """
     assert algo_type in ALGO_TYPES
+    builtin_name = builtin_name.lower()
     if builtin_name not in _get_all_builtin_names(algo_type):
         raise RuntimeError('Builtin name is not found: {}'.format(builtin_name))
 
