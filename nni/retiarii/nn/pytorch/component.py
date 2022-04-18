@@ -4,7 +4,7 @@
 import copy
 import warnings
 from collections import OrderedDict
-from typing import Callable, List, Dict, Union, Tuple, Optional, Sequence, cast
+from typing import Callable, List, Dict, Union, Tuple, Optional
 
 import torch
 import torch.nn as nn
@@ -227,6 +227,5 @@ class NasBench201Cell(nn.Module):
             current_tensor: List[torch.Tensor] = []
             for i, op in enumerate(layer):  # type: ignore
                 current_tensor.append(op(tensors[i]))  # type: ignore
-            current_tensor = torch.sum(torch.stack(current_tensor), 0)
-            tensors.append(current_tensor)
+            tensors.append(torch.sum(torch.stack(current_tensor), 0))
         return tensors[-1]
