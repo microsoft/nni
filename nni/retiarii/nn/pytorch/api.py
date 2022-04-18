@@ -373,12 +373,12 @@ _value = TypeVar('_value')
 def _valuechoice_staticmethod_helper(orig_func: _func) -> _func:
     if orig_func.__doc__ is not None:
         orig_func.__doc__ += """
-            Notes
-            -----
-            This function performs lazy evaluation.
-            Only the expression will be recorded when the function is called.
-            The real evaluation happens when the inner value choice has determined its final decision.
-            If no value choice is contained in the parameter list, the evaluation will be intermediate."""
+        Notes
+        -----
+        This function performs lazy evaluation.
+        Only the expression will be recorded when the function is called.
+        The real evaluation happens when the inner value choice has determined its final decision.
+        If no value choice is contained in the parameter list, the evaluation will be intermediate."""
     return orig_func
 
 
