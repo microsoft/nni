@@ -21,7 +21,7 @@ function KillJobIndex(props): any {
 
     // kill trial
     const killJob = (id: string): void => {
-        closeTimer(); // 关闭全局刷新，以防刷掉提示结果框
+        closeTimer(); // close auto refresh to confirm show the kill model
         axios(`${MANAGER_IP}/trial-jobs/${id}`, {
             method: 'DELETE',
             headers: {
@@ -30,19 +30,19 @@ function KillJobIndex(props): any {
         })
             .then(res => {
                 if (res.status === 200) {
-                    setKillDialogVisible(true); // 显示成功消息框
+                    setKillDialogVisible(true);
                     setError({ isError: false, message: '' });
                 } else {
-                    setKillDialogVisible(true); // 显示成功消息框
+                    setKillDialogVisible(true);
                     setError({ isError: false, message: 'fail to cancel the job' });
                 }
             })
             .catch(error => {
                 if (error.response) {
-                    setKillDialogVisible(true); // 显示成功消息框
+                    setKillDialogVisible(true);
                     setError({ isError: false, message: error.response.data.error || 'Fail to cancel the job' });
                 } else {
-                    setKillDialogVisible(true); // 显示成功消息框
+                    setKillDialogVisible(true);
                     setError({
                         isError: false,
                         message: error.response.data.error || '500 error, fail to cancel the job'
@@ -53,11 +53,8 @@ function KillJobIndex(props): any {
 
     const onDismissKillJobMessageDialog = async (): Promise<void> => {
         setKillDialogVisible(false);
-        // kill 成功之后，重新拉取的数据如果有 endtime 字段，会马上render出user_cancel
-        // 的状态，反之，没有这个字段，table依然是部分刷新，只刷新duration，不会
-        // 刷新 status
-        await refreshDetailTable(); // 刷新页面
-        startTimer(); // 开启轮询
+        await refreshDetailTable();
+        startTimer(); // start refresh
     };
 
     const onDismiss = (): void => {
@@ -67,10 +64,6 @@ function KillJobIndex(props): any {
     const onKill = (): void => {
         setCalloutVisible(false);
         killJob(props.trialId);
-        // this.setState({ isCalloutVisible: false }, () => {
-        //     const { trial } = this.props;
-        //     this.killJob(trial.id);
-        // });
     };
 
     const openPromot = (event: React.SyntheticEvent<EventTarget>): void => {
