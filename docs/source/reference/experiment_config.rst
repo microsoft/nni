@@ -255,7 +255,7 @@ For customized algorithms, there are two ways to describe them:
     
     * - name
       - ``str`` or ``None``, optional
-      - Default: None. Name of the built-in or registered algorithm.
+      - Default: None. Name of the built-in or registered algorithm, case insensitive.
         ``str`` for the built-in and registered algorithm, ``None`` for other customized algorithms.
 
     * - className
