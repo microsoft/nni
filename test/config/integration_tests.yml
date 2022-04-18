@@ -50,7 +50,6 @@ testCases:
       rootpath: /tmp/nnimount/testlocalrootpath
 
 - name: sklearn-regression
-  launchCommand: nnictl create --config $configFile --debug
   configFile: test/config/examples/sklearn-regression.yml
 
 # mount point in local may late to umount when stop experiment in shared-storage-remote-azureblob,

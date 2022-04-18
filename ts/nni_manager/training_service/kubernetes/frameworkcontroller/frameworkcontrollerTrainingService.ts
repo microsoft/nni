@@ -347,7 +347,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         for (const taskRole of configTaskRoles) {
             const runScriptContent: string =
                 await this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder,
-                    // comment this line for disable the frameworkbarrier
+                    // comment this line to disable the frameworkbarrier
                     // this.generateCommandScript(configTaskRoles, taskRole.command),
                     taskRole.command, 
                     form.sequenceId.toString(), taskRole.name, taskRole.gpuNum ? taskRole.gpuNum : 0);
@@ -480,6 +480,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         shareName: `${this.azureStorageShare}`,
                         readonly: false
                     }
+                // comment these lines to disable the frameworkbarrier
                 // }, {
                 //     name: 'frameworkbarrier-volume',
                 //     emptyDir: {}
@@ -494,6 +495,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         server: `${frameworkcontrollerClusterConfigNFS.nfs.server}`,
                         path: `${frameworkcontrollerClusterConfigNFS.nfs.path}`
                     }
+                // comment these lines to disable the frameworkbarrier
                 // }, {
                 //     name: 'frameworkbarrier-volume',
                 //     emptyDir: {}
@@ -510,6 +512,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         name: 'nni-vol',
                         mountPath: this.CONTAINER_MOUNT_PATH
                     }],
+                    // comment these lines to disable the frameworkbarrier
                     // }, {
                     //     name: 'frameworkbarrier-volume',
                     //     mountPath: '/mnt/frameworkbarrier'
@@ -533,6 +536,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
 
         const spec: any = {
             containers: containers,
+            // comment this line to disable the frameworkbarrier
             // initContainers: initContainers,
             restartPolicy: 'OnFailure',
             volumes: volumeSpecMap.get('nniVolumes'),

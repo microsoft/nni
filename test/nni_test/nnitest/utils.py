@@ -123,6 +123,9 @@ def print_file_content(filepath):
 
 def print_trial_job_log(training_service, trial_jobs_url):
     trial_log_root = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials')
+    if not os.path.exists(trial_log_root):
+        print('trial log folder does not exist: {}'.format(trial_log_root), flush=True)
+        return
     folders = os.listdir(trial_log_root)
     for name in folders:
         trial_log_dir = os.path.join(trial_log_root, name)
@@ -131,13 +134,6 @@ def print_trial_job_log(training_service, trial_jobs_url):
             log_file_path = os.path.join(trial_log_dir, log_file)
             if os.path.exists(log_file_path):
                 print_file_content(log_file_path)
-
-    # trial_jobs = get_trial_jobs(trial_jobs_url)
-    # for trial_job in trial_jobs:
-    #     trial_log_dir = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials', trial_job['trialJobId'])
-    #     log_files = ['stderr', 'trial.log'] if training_service == 'local' else ['stdout_log_collection.log']
-    #     for log_file in log_files:
-    #         print_file_content(os.path.join(trial_log_dir, log_file))
 
 def print_experiment_log(experiment_id):
     log_dir = get_nni_log_dir(experiment_id=experiment_id)
