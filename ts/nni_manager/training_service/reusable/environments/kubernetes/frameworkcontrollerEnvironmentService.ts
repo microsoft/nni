@@ -80,8 +80,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         environment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         const frameworkcontrollerJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
-        // comment this line to disable the frameworkbarrier
-        // const command = this.generateCommandScript(this.config.taskRoles, environment.command);
+        const command = this.generateCommandScript(this.config.taskRoles, environment.command);
         const command = environment.command;
         await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), command, { encoding: 'utf8' });
 
@@ -228,10 +227,9 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                         shareName: `${this.azureStorageShare}`,
                         readonly: false
                     }
-                // comment these lines to disable the frameworkbarrier
-                // }, {
-                //     name: 'frameworkbarrier-volume',
-                //     emptyDir: {}
+                }, {
+                    name: 'frameworkbarrier-volume',
+                    emptyDir: {}
                 }]);
         } else {
             volumeSpecMap.set('nniVolumes', [
@@ -241,10 +239,9 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                         server: `${this.config.storage.server}`,
                         path: `${this.config.storage.path}`
                     }
-                // comment these lines to disable the frameworkbarrier
-                // }, {
-                //     name: 'frameworkbarrier-volume',
-                //     emptyDir: {}
+                }, {
+                    name: 'frameworkbarrier-volume',
+                    emptyDir: {}
                 }]);
         }
 
@@ -257,10 +254,9 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                     {
                         name: 'nni-vol',
                         mountPath: this.CONTAINER_MOUNT_PATH
-                    // comment these lines to disable the frameworkbarrier
-                    // }, {
-                    //     name: 'frameworkbarrier-volume',
-                    //     mountPath: '/mnt/frameworkbarrier'
+                    }, {
+                        name: 'frameworkbarrier-volume',
+                        mountPath: '/mnt/frameworkbarrier'
                     }],
                 resources: podResources,
                 ports: [{
@@ -281,8 +277,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
 
         const spec: any = {
             containers: containers,
-            // comment this line to disable the frameworkbarrier
-            // initContainers: initContainers,
+            initContainers: initContainers,
             restartPolicy: 'OnFailure',
             volumes: volumeSpecMap.get('nniVolumes'),
             hostNetwork: false
