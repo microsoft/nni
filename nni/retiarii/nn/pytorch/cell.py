@@ -272,13 +272,13 @@ class Cell(nn.Module):
             By default, it's the output of ``merge_op``, which is a contenation (on ``concat_dim``)
             of some of (possibly all) the nodes' outputs in the cell.
         """
-        states: List[torch.Tensor]
+        processed_inputs: List[torch.Tensor]
         if len(inputs) == 1 and isinstance(inputs[0], list):
-            states = list(inputs[0])  # shallow copy
+            processed_inputs = list(inputs[0])  # shallow copy
         else:
-            states = cast(List[torch.Tensor], list(inputs))
-        assert len(states) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
-        states = self.preprocessor(states)
+            processed_inputs = cast(List[torch.Tensor], list(inputs))
+        assert len(processed_inputs) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
+        states: List[torch.Tensor] = self.preprocessor(processed_inputs)
         for ops, inps in zip(
             cast(Sequence[Sequence[LayerChoice]], self.ops),
             cast(Sequence[Sequence[InputChoice]], self.inputs)
@@ -293,7 +293,7 @@ class Cell(nn.Module):
             this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)
         else:
             this_cell = torch.cat([states[k] for k in self.output_node_indices], self.concat_dim)
-        return self.postprocessor(this_cell, states[:self.num_predecessors])
+        return self.postprocessor(this_cell, processed_inputs)
 
     @staticmethod
     def _convert_op_candidates(op_candidates, node_index, op_index, chosen) -> Union[Dict[str, nn.Module], List[nn.Module]]:
