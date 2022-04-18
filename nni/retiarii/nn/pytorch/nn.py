@@ -12,24 +12,31 @@ cache_version = 1
 def validate_cache() -> bool:
     import torch
 
-    cache_valid = True
+    cache_valid = []
 
     if nn_cache_file_path.exists():
-        from . import _nn  # pylint: disable=no-name-in-module
-        if _nn._torch_version != torch.__version__:
-            cache_valid = False
-        elif getattr(_nn, '_torch_nn_cache_version', -1) != cache_version:
-            cache_valid = False
+        lines = nn_cache_file_path.read_text().splitlines()
+        for line in lines:
+            if line.startswith('# _torch_version'):
+                _cached_torch_version = line[line.find('=') + 1:].strip()
+                if _cached_torch_version == torch.__version__:
+                    cache_valid.append(True)
+            if line.startswith('# _torch_nn_cache_version'):
+                _cached_cache_version = int(line[line.find('=') + 1:].strip())
+                if _cached_cache_version == cache_version:
+                    cache_valid.append(True)
 
-    return cache_valid
+    return len(cache_valid) >= 2 and all(cache_valid)
 
 
-def write_cache() -> None:
+def generate_stub_file() -> str:
     import inspect
     import warnings
 
     import torch
     import torch.nn as nn
+
+    from nni.retiarii import basic_unit
 
     _NO_WRAP_CLASSES = [
         # not an nn.Module
@@ -58,8 +65,8 @@ def write_cache() -> None:
         '# When pytorch version does not match, it will get automatically updated.',
         '# pylint: skip-file',
         '# pyright: reportGeneralTypeIssues=false',
-        f'_torch_version = "{torch.__version__}"',
-        f'_torch_nn_cache_version = {cache_version}',
+        f'# _torch_version = {torch.__version__}',
+        f'# _torch_nn_cache_version = {cache_version}',
         'import typing',
         'import torch.nn as nn',
         'from nni.retiarii.serializer import basic_unit',
@@ -85,21 +92,20 @@ def write_cache() -> None:
 
             all_names.append(name)
 
-        elif inspect.isfunction(obj) or inspect.ismodule(obj):
-            code.append(f'{name} = nn.{name}')  # no modification
-            all_names.append(name)
+    return '\n'.join(code)
 
-    code.append(f'__all__ = {all_names}')
 
+def write_cache(code: str) -> None:
     with nn_cache_file_path.open('w') as fp:
-        fp.write('\n'.join(code))
+        fp.write(code)
+
+
+code = generate_stub_file()
 
 if not validate_cache():
-    write_cache()
+    write_cache(code)
 
-del Path, validate_cache, write_cache, nn_cache_file_path
-
-# Import all modules from generated _nn.py
+del Path, validate_cache, write_cache, cache_version, nn_cache_file_path, code
 
 from . import _nn  # pylint: disable=no-name-in-module
 from ._nn import *  # pylint: disable=import-error, wildcard-import

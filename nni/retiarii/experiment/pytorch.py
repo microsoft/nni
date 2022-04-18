@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
 from threading import Thread
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Union, cast
 
 import colorama
 import psutil
@@ -23,6 +23,7 @@ from nni.experiment import Experiment, launcher, management, rest
 from nni.experiment.config import utils
 from nni.experiment.config.base import ConfigBase
 from nni.experiment.config.training_service import TrainingServiceConfig
+from nni.experiment.config.training_services import RemoteConfig
 from nni.experiment.pipe import Pipe
 from nni.tools.nnictl.command_utils import kill_command
 
@@ -177,9 +178,9 @@ def debug_mutated_model(base_model, trainer, applied_mutators):
 
 class RetiariiExperiment(Experiment):
     def __init__(self, base_model: nn.Module, trainer: Union[Evaluator, BaseOneShotTrainer],
-                 applied_mutators: List[Mutator] = None, strategy: BaseStrategy = None):
+                 applied_mutators: List[Mutator] = cast(List[Mutator], None), strategy: BaseStrategy = cast(BaseStrategy, None)):
         # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
-        self.config: RetiariiExeConfig = None
+        self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
         self.port: Optional[int] = None
 
         self.base_model = base_model
@@ -187,7 +188,7 @@ class RetiariiExperiment(Experiment):
         self.applied_mutators = applied_mutators
         self.strategy = strategy
 
-        self._dispatcher = RetiariiAdvisor()
+        self._dispatcher: RetiariiAdvisor = RetiariiAdvisor()
         self._dispatcher_thread: Optional[Thread] = None
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
@@ -241,7 +242,7 @@ class RetiariiExperiment(Experiment):
 
             assert self.config.training_service.platform == 'remote', \
                 "CGO execution engine currently only supports remote training service"
-            assert self.config.batch_waiting_time is not None
+            assert self.config.batch_waiting_time is not None and self.config.max_concurrency_cgo is not None
             devices = self._construct_devices()
             engine = CGOExecutionEngine(devices,
                                         max_concurrency=self.config.max_concurrency_cgo,
@@ -251,7 +252,10 @@ class RetiariiExperiment(Experiment):
             engine = PurePythonExecutionEngine()
         elif self.config.execution_engine == 'benchmark':
             from ..execution.benchmark import BenchmarkExecutionEngine
+            assert self.config.benchmark is not None, '"benchmark" must be set when benchmark execution engine is used.'
             engine = BenchmarkExecutionEngine(self.config.benchmark)
+        else:
+            raise ValueError(f'Unsupported engine type: {self.config.execution_engine}')
         set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()
@@ -293,7 +297,7 @@ class RetiariiExperiment(Experiment):
     def _construct_devices(self):
         devices = []
         if hasattr(self.config.training_service, 'machine_list'):
-            for machine in self.config.training_service.machine_list:
+            for machine in cast(RemoteConfig, self.config.training_service).machine_list:
                 assert machine.gpu_indices is not None, \
                     'gpu_indices must be set in RemoteMachineConfig for CGO execution engine'
                 for gpu_idx in machine.gpu_indices:
@@ -303,7 +307,7 @@ class RetiariiExperiment(Experiment):
     def _create_dispatcher(self):
         return self._dispatcher
 
-    def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
+    def run(self, config: Optional[RetiariiExeConfig] = None, port: int = 8080, debug: bool = False) -> None:
         """
         Run the experiment.
         This function will block until experiment finish or error.
@@ -321,6 +325,7 @@ class RetiariiExperiment(Experiment):
         This function will block until experiment finish or error.
         Return `True` when experiment done; or return `False` when experiment failed.
         """
+        assert self._proc is not None
         try:
             while True:
                 time.sleep(10)
@@ -367,11 +372,11 @@ class RetiariiExperiment(Experiment):
         if self._pipe is not None:
             self._pipe.close()
 
-        self.id = None
-        self.port = None
+        self.id = cast(str, None)
+        self.port = cast(int, None)
         self._proc = None
         self._pipe = None
-        self._dispatcher = None
+        self._dispatcher = cast(RetiariiAdvisor, None)
         self._dispatcher_thread = None
         _logger.info('Experiment stopped')
 

@@ -524,8 +524,8 @@ class NASNet(NDS):
     ]
 
     def __init__(self,
-                 width: Union[Tuple[int], int] = (16, 24, 32),
-                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 width: Union[Tuple[int, ...], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
                  auxiliary_loss: bool = False):
         super().__init__(self.NASNET_OPS,

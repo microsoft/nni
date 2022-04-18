@@ -609,7 +609,7 @@ class Node:
         assert isinstance(self.operation, Cell)
         return self.graph.model.graphs[self.operation.parameters['cell']]
 
-    def update_label(self, label: str) -> None:
+    def update_label(self, label: Optional[str]) -> None:
         self.label = label
 
     @overload

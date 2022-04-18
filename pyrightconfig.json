@@ -6,6 +6,8 @@
         "nni/compression",
         "nni/nas/tensorflow",
         "nni/nas/pytorch",
+        "nni/retiarii/execution/logical_optimizer",
+        "nni/retiarii/hub",
         "nni/retiarii/oneshot",
         "nni/smartparam.py",
         "nni/tools"

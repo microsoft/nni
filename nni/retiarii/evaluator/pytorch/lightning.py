@@ -124,12 +124,12 @@ class Lightning(Evaluator):
         if other is None:
             return False
         if hasattr(self, "function") and hasattr(other, "function"):
-            eq_func = (self.function == other.function)
+            eq_func = getattr(self, "function") == getattr(other, "function")
         elif not (hasattr(self, "function") or hasattr(other, "function")):
             eq_func = True
 
         if hasattr(self, "arguments") and hasattr(other, "arguments"):
-            eq_args = (self.arguments == other.arguments)
+            eq_args = getattr(self, "arguments") == getattr(other, "arguments")
         elif not (hasattr(self, "arguments") or hasattr(other, "arguments")):
             eq_args = True
 

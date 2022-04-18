@@ -13,7 +13,7 @@ import sys
 import types
 import warnings
 from io import IOBase
-from typing import Any, Dict, List, Optional, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, TypeVar, Union, cast, Generic
 
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
@@ -115,7 +115,7 @@ def is_wrapped_with_trace(cls_or_func: Any) -> bool:
     )
 
 
-class SerializableObject(Traceable):
+class SerializableObject(Generic[T], Traceable):
     """
     Serializable object is a wrapper of existing python objects, that supports dump and load easily.
     Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
@@ -563,7 +563,8 @@ def _trace_func(func, kw_only):
             # and thus not possible to restore the trace parameters after dump and reload.
             # this is a known limitation.
             new_type = _make_class_traceable(type(res), True)
-            res = new_type(res)  # re-creating the object
+            # re-creating the object
+            res = new_type(res)  # type: ignore
             res = inject_trace_info(res, func, args, kwargs)
         else:
             raise TypeError(f'Try to add trace info to {res}, but the type "{type(res)}" is unknown. '
