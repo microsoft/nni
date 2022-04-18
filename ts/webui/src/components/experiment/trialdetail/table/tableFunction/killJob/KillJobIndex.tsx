@@ -11,7 +11,7 @@ import { AppContext } from '@/App';
 
 function KillJobIndex(props): any {
     const menuButtonElement = useRef(null);
-    const { startTimer, closeTimer, lastRefresh } = useContext(AppContext);
+    const { startTimer, closeTimer, refreshDetailTable } = useContext(AppContext);
     const { trialId } = props;
     const [isCalloutVisible, setCalloutVisible] = useState(false);
     const [isVisibleKillDialog, setKillDialogVisible] = useState(false);
@@ -56,7 +56,7 @@ function KillJobIndex(props): any {
         // kill 成功之后，重新拉取的数据如果有 endtime 字段，会马上render出user_cancel
         // 的状态，反之，没有这个字段，table依然是部分刷新，只刷新duration，不会
         // 刷新 status
-        await lastRefresh(); // 刷新页面
+        await refreshDetailTable(); // 刷新页面
         startTimer(); // 开启轮询
     };
 

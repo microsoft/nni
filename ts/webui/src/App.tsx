@@ -43,7 +43,7 @@ export const AppContext = React.createContext({
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     closeTimer: (): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    lastRefresh: (): void => {}
+    refreshDetailTable: (): void => {}
 });
 
 interface AppState {
@@ -155,17 +155,17 @@ class App extends React.Component<{}, AppState> {
                                         trialsUpdateBroadcast,
                                         metricGraphMode,
                                         maxDurationUnit,
+                                        bestTrialEntries,
                                         changeMaxDurationUnit: this.changeMaxDurationUnit,
                                         changeMetricGraphMode: this.changeMetricGraphMode,
-                                        bestTrialEntries,
                                         changeEntries: this.changeEntries,
-                                        updateOverviewPage: this.updateOverviewPage,
-                                        updateDetailPage: this.updateDetailPage,
-                                        closeTimer: this.closeTimer,
-                                        startTimer: this.startTimer,
-                                        lastRefresh: this.testRefreshTable,
                                         expandRowIDs,
-                                        changeExpandRowIDs: this.changeExpandRowIDs
+                                        changeExpandRowIDs: this.changeExpandRowIDs,
+                                        updateOverviewPage: this.updateOverviewPage,
+                                        updateDetailPage: this.updateDetailPage, // update current record without fetch api
+                                        refreshDetailTable: this.refreshDetailTable, // update record with fetch api
+                                        startTimer: this.startTimer,
+                                        closeTimer: this.closeTimer
                                     }}
                                 >
                                     {this.props.children}
@@ -203,13 +203,6 @@ class App extends React.Component<{}, AppState> {
         await TRIALS.update(true);
         this.setState(state => ({
             experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
-            trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
-        }));
-    };
-
-    public testRefreshTable = async (): Promise<void> => {
-        await TRIALS.update(true);
-        this.setState(state => ({
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
         }));
     };
@@ -263,6 +256,14 @@ class App extends React.Component<{}, AppState> {
     };
 
     public updateDetailPage = async (): Promise<void> => {
+        this.setState(state => ({
+            trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
+        }));
+    };
+
+    // fetch api to update table record data
+    public refreshDetailTable = async (): Promise<void> => {
+        await TRIALS.update(true);
         this.setState(state => ({
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
         }));
