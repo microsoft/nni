@@ -10,18 +10,22 @@ Release 2.7 - 4/18/2022
 
 Documentation
 ^^^^^^^^^^^^^
+
 A full-size upgrade of the documentation, with the following significant improvements in the reading experience, practical tutorials, and examples:
 
 * Reorganized the document structure with a new document template. (`Upgraded doc entry <https://nni.readthedocs.io/en/v2.7>`__)
-* Add more friendly tutorials with jupyter notebook.(`New Quick Starts <https://nni.readthedocs.io/en/v2.7/quickstart.html>`__)
+* Add more friendly tutorials with jupyter notebook. (`New Quick Starts <https://nni.readthedocs.io/en/v2.7/quickstart.html>`__)
+* New model pruning demo available. (`Youtube entry <https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw>`__, `Bilibili entry <https://space.bilibili.com/1649051673>`__)
 
 Hyper-Parameter Optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 * [Improvement] TPE and random tuners will not generate duplicate hyperparameters anymore.
 * [Improvement] Most Python APIs now have type annotations.
 
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 * Jointly search for architecture and hyper-parameters: ValueChoice in evaluator. (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#valuechoice>`__)
 * Support composition (transformation) of one or several value choices. (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#valuechoice>`__)
 * Enhanced Cell API (``merge_op``, preprocessor, postprocessor). (`doc <https://nni.readthedocs.io/en/v2.7/reference/nas/search_space.html#cell>`__)
@@ -34,6 +38,7 @@ Neural Architecture Search
 
 Model Compression
 ^^^^^^^^^^^^^^^^^
+
 * Pruning V2 is promoted as default pruning framework, old pruning is legacy and keeps for a few releases.(`doc <https://nni.readthedocs.io/en/v2.7/reference/compression/pruner.html>`__)
 * A new pruning mode ``balance`` is supported in ``LevelPruner``.(`doc <https://nni.readthedocs.io/en/v2.7/reference/compression/pruner.html#level-pruner>`__)
 * Support coarse-grained pruning in ``ADMMPruner``.(`doc <https://nni.readthedocs.io/en/v2.7/reference/compression/pruner.html#admm-pruner>`__)
@@ -42,10 +47,12 @@ Model Compression
 
 Experiment
 ^^^^^^^^^^
+
 * [Improvement] Experiment.run() no longer stops web portal on return.
 
 Notable Bugfixes
 ^^^^^^^^^^^^^^^^
+
 * Fixed: experiment list could not open experiment with prefix.
 * Fixed: serializer for complex kinds of arguments.
 * Fixed: some typos in code. (thanks @a1trl9 @mrshu)
