@@ -209,7 +209,9 @@ class Cell(PyTorchOperation):
         No real usage. Exists for compatibility with base class.
     """
 
-    def __init__(self, cell_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None), attributes: Dict[str, Any] = cast(Dict[str, Any], None)):
+    def __init__(self, cell_name: str,
+                 parameters: Dict[str, Any] = cast(Dict[str, Any], None),
+                 attributes: Dict[str, Any] = cast(Dict[str, Any], None)):
         self.type = '_cell'
         self.cell_name = cell_name
         self.parameters = parameters or {}

@@ -353,7 +353,8 @@ class Graph:
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, operation: Operation) -> 'Node': ...
     @overload
-    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
+    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str,
+                            parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
 
     def insert_node_on_edge(self, edge, name, operation_or_type, parameters=None) -> 'Node':  # type: ignore
         if isinstance(operation_or_type, Operation):

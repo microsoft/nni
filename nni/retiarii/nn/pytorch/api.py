@@ -26,7 +26,7 @@ __all__ = [
     'ValueChoice',
     'ModelParameterChoice',
     'Placeholder',
-    
+
     # Fixed module
     'ChosenInputs',
 
@@ -368,6 +368,7 @@ def _valuechoice_codegen(*, _internal: bool = False):
 _func = TypeVar('_func')
 _cand = TypeVar('_cand')
 _value = TypeVar('_value')
+
 
 def _valuechoice_staticmethod_helper(orig_func: _func) -> _func:
     if orig_func.__doc__ is not None:

@@ -36,8 +36,6 @@ def generate_stub_file() -> str:
     import torch
     import torch.nn as nn
 
-    from nni.retiarii import basic_unit
-
     _NO_WRAP_CLASSES = [
         # not an nn.Module
         'Parameter',
@@ -107,5 +105,4 @@ if not validate_cache():
 
 del Path, validate_cache, write_cache, cache_version, nn_cache_file_path, code
 
-from . import _nn  # pylint: disable=no-name-in-module
-from ._nn import *  # pylint: disable=import-error, wildcard-import
+from ._nn import *  # pylint: disable=import-error, wildcard-import, unused-wildcard-import

@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import math
-from typing import Optional, Callable, List, Tuple, cast, Union
+from typing import Optional, Callable, List, Tuple, cast
 
 import torch
 import nni.retiarii.nn.pytorch as nn
