@@ -73,7 +73,7 @@ detailed_canon = {
         'name': 'assess',
     },
     'tuner': {
-        'className': 'tuner',
+        'className': 'Tuner',
         'codeDirectory': expand_path('assets'),
         'classArgs': {'random_seed': 0},
     },
