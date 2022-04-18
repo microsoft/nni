@@ -15,7 +15,7 @@ A full-size upgrade of the documentation, with the following significant improve
 
 * Reorganized the document structure with a new document template. (`Upgraded doc entry <https://nni.readthedocs.io/en/v2.7>`__)
 * Add more friendly tutorials with jupyter notebook. (`New Quick Starts <https://nni.readthedocs.io/en/v2.7/quickstart.html>`__)
-* New demo available. (`Youtube entry <https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw>`__, `Bilibili entry <https://space.bilibili.com/1649051673>`__)
+* New model pruning demo available. (`Youtube entry <https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw>`__, `Bilibili entry <https://space.bilibili.com/1649051673>`__)
 
 Hyper-Parameter Optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
