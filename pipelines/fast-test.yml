@@ -55,6 +55,9 @@ stages:
         python -m pip install "typing-extensions>=3.10"
       displayName: Resolve dependency version
 
+    - script: python test/vso_tools/trigger_import.py
+      displayName: Trigger import
+
     - script: |
         python -m pylint --rcfile pylintrc nni
       displayName: pylint
