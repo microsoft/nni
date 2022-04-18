@@ -3,11 +3,11 @@
 
 from __future__ import annotations
 
+__all__ = ['AlgoMeta']
+
 from typing import NamedTuple
 
 from nni.typehint import Literal
-
-__all__ = ['AlgoMeta']
 
 class AlgoMeta(NamedTuple):
     name: str
