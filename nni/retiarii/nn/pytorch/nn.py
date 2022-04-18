@@ -7,7 +7,7 @@ from pathlib import Path
 nn_cache_file_path = Path(__file__).parent / '_nn.py'
 
 # Update this when cache format changes, to enforce an update.
-cache_version = 1
+cache_version = 2
 
 def validate_cache() -> bool:
     import torch
@@ -88,7 +88,11 @@ def generate_stub_file() -> str:
             else:
                 code.append(f'{name} = typing.cast(typing.Type[nn.{name}], basic_unit(nn.{name}))')
 
-            all_names.append(name)
+        elif inspect.isfunction(obj) or inspect.ismodule(obj):
+             code.append(f'{name} = nn.{name}')  # no modification
+             all_names.append(name)
+
+        all_names.append(name)
 
     return '\n'.join(code)
 

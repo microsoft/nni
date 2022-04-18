@@ -274,7 +274,7 @@ class Cell(nn.Module):
         """
         states: List[torch.Tensor]
         if len(inputs) == 1 and isinstance(inputs[0], list):
-            states = inputs[0]
+            states = list(inputs[0])  # shallow copy
         else:
             states = cast(List[torch.Tensor], list(inputs))
         assert len(states) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'

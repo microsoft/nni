@@ -217,16 +217,16 @@ class NasBench201Cell(nn.Module):
                 node_ops.append(LayerChoice(op_choices, label=f'{self._label}__{j}_{tid}'))  # put __ here to be compatible with base engine
             self.layers.append(node_ops)
 
-    def forward(self, inputs):
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """
         The forward of input choice is simply selecting first on all choices.
         It shouldn't be called directly by users in most cases.
         """
-        tensors = [inputs]
-        for layer in cast(Sequence[Sequence[nn.Module]], self.layers):
-            current_tensor = []
-            for i, op in enumerate(layer):
-                current_tensor.append(op(tensors[i]))
+        tensors: List[torch.Tensor] = [inputs]
+        for layer in self.layers:
+            current_tensor: List[torch.Tensor] = []
+            for i, op in enumerate(layer):  # type: ignore
+                current_tensor.append(op(tensors[i]))  # type: ignore
             current_tensor = torch.sum(torch.stack(current_tensor), 0)
             tensors.append(current_tensor)
         return tensors[-1]

@@ -36,7 +36,7 @@ def _replace_module_with_type(root_module, replace_dict, modules):
             child_type = type(child)
             if child_type in replace_dict.keys():
                 setattr(m, name, replace_dict[child_type](child))
-                modules.append((child.key, getattr(m, name)))
+                modules.append((child.label, getattr(m, name)))
             else:
                 apply(child)
 
