@@ -300,6 +300,7 @@ class RetiariiExperiment(Experiment):
             for machine in cast(RemoteConfig, self.config.training_service).machine_list:
                 assert machine.gpu_indices is not None, \
                     'gpu_indices must be set in RemoteMachineConfig for CGO execution engine'
+                assert isinstance(machine.gpu_indices, list), 'gpu_indices must be a list'
                 for gpu_idx in machine.gpu_indices:
                     devices.append(GPUDevice(machine.host, gpu_idx))
         return devices
@@ -343,6 +344,7 @@ class RetiariiExperiment(Experiment):
             _logger.warning('KeyboardInterrupt detected')
         finally:
             self.stop()
+        raise RuntimeError('Check experiment status failed.')
 
     def stop(self) -> None:
         """

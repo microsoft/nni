@@ -4,9 +4,9 @@
 import inspect
 import os
 import warnings
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar, Type
 
-from nni.common.serializer import Traceable, is_traceable, is_wrapped_with_trace, trace, _copy_class_wrapper_attributes
+from nni.common.serializer import is_traceable, is_wrapped_with_trace, trace, _copy_class_wrapper_attributes
 from .utils import ModelNamespace
 
 __all__ = ['get_init_parameters_or_fail', 'serialize', 'serialize_cls', 'basic_unit', 'model_wrapper',
@@ -146,7 +146,7 @@ def is_model_wrapped(cls_or_instance) -> bool:
     return getattr(cls_or_instance, '_nni_model_wrapper', False)
 
 
-def _check_wrapped(cls: T, rewrap: str) -> bool:
+def _check_wrapped(cls: Type, rewrap: str) -> bool:
     wrapped = None
     if is_model_wrapped(cls):
         wrapped = 'model_wrapper'

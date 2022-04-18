@@ -10,7 +10,10 @@ from __future__ import annotations
 import abc
 import json
 from enum import Enum
-from typing import (Any, Dict, Iterable, List, Optional, Tuple, Type, Union, overload)
+from typing import (Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union, TYPE_CHECKING, overload, cast)
+
+if TYPE_CHECKING:
+    from .mutator import Mutator
 
 from .operation import Cell, Operation, _IOPseudoOperation
 from .utils import uid
@@ -65,7 +68,7 @@ class Evaluator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _execute(self, model_cls: type) -> Any:
+    def _execute(self, model_cls: Union[Callable[[], Any], Any]) -> Any:
         pass
 
     @abc.abstractmethod
@@ -216,7 +219,7 @@ class Model:
         else:
             return None
 
-    def get_node_by_python_name(self, python_name: str) -> 'Node':
+    def get_node_by_python_name(self, python_name: str) -> Optional['Node']:
         """
         Traverse all the nodes to find the matched node with the given python_name.
         """
@@ -296,7 +299,7 @@ class Graph:
         The name of torch.nn.Module, should have one-to-one mapping with items in python model.
     """
 
-    def __init__(self, model: Model, graph_id: int, name: str = None, _internal: bool = False):
+    def __init__(self, model: Model, graph_id: int, name: str = cast(str, None), _internal: bool = False):
         assert _internal, '`Graph()` is private'
 
         self.model: Model = model
@@ -337,7 +340,7 @@ class Graph:
     @overload
     def add_node(self, name: str, operation: Operation) -> 'Node': ...
     @overload
-    def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = None) -> 'Node': ...
+    def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
 
     def add_node(self, name, operation_or_type, parameters=None):
         if isinstance(operation_or_type, Operation):
@@ -349,7 +352,7 @@ class Graph:
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, operation: Operation) -> 'Node': ...
     @overload
-    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = None) -> 'Node': ...
+    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
 
     def insert_node_on_edge(self, edge, name, operation_or_type, parameters=None) -> 'Node':
         if isinstance(operation_or_type, Operation):
@@ -615,7 +618,7 @@ class Node:
     @overload
     def update_operation(self, operation: Operation) -> None: ...
     @overload
-    def update_operation(self, type_name: str, parameters: Dict[str, Any] = None) -> None: ...
+    def update_operation(self, type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> None: ...
 
     def update_operation(self, operation_or_type, parameters=None):
         if isinstance(operation_or_type, Operation):

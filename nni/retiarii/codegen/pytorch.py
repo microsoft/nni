@@ -3,7 +3,7 @@
 
 import logging
 import re
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, cast
 
 from nni.retiarii.operation_def.torch_op_def import ToDevice
 from nni.retiarii.utils import STATE_DICT_PY_MAPPING
@@ -98,7 +98,7 @@ def _format_variable_name(name: str, graph_name: str) -> str:
     name = name.replace('/', '__')
 
     # https://stackoverflow.com/questions/3303312/how-do-i-convert-a-string-to-a-valid-variable-name-in-python
-    name = re.sub('\W|^(?=\d)','_', name)
+    name = re.sub(r'\W|^(?=\d)','_', name)
 
     if name.startswith('__') and (len(name) > 2 and name[2] != '_'):
         # name can't start with double underscore
@@ -130,7 +130,7 @@ def generate_cuda_mapping(placement: Dict[Node, Device]) -> Dict[Device, int]:
     return cuda_remapped_id
 
 
-def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str:
+def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> Tuple[set, str]:
     nodes = graph.topo_sort()
 
     # handle module node and function node differently
@@ -144,6 +144,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     for node in nodes:
         if node.operation:
             if placement and isinstance(node.operation, ToDevice):
+                cuda_remapped_id = cast(dict, cuda_remapped_id)
                 node.operation.override_device_repr("cuda:%d" % cuda_remapped_id[node.operation.device])
 
             if node.operation.type == 'shared':
