@@ -150,6 +150,7 @@ abstract class KubernetesCRDClient {
     protected readonly client: any;
     protected readonly log: Logger = getLogger('KubernetesCRDClient');
     protected crdSchema: any;
+    public namespace: string = 'default';
 
     constructor() {
         this.client = new Client1_10({config: getKubernetesConfig()});

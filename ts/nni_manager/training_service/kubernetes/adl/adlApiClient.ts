@@ -11,7 +11,7 @@ class AdlClientV1 extends KubernetesCRDClient {
     /**
      * constructor, to initialize adl CRD definition
      */
-    protected readonly namespace: string;
+    public readonly namespace: string;
 
     public constructor(namespace: string) {
         super();

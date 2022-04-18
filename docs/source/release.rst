@@ -5,7 +5,7 @@
 Change Log
 ==========
 
-Release 2.7 - 4/14/2022
+Release 2.7 - 4/18/2022
 -----------------------
 
 Documentation
