@@ -58,7 +58,7 @@ def main():
         tuner._on_exit()
         if assessor is not None:
             assessor._on_exit()
-    except Exception as exception:
+    except Exception:
         tuner._on_error()
         if assessor is not None:
             assessor._on_error()
