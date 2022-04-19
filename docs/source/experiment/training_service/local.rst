@@ -3,6 +3,8 @@ Local Training Service
 
 With local training service, the whole experiment (e.g., tuning algorithms, trials) runs on a single machine, i.e., user's dev machine. The generated trials run on this machine following ``trialConcurrency`` set in the configuration yaml file. If GPUs are used by trial, local training service will allocate required number of GPUs for each trial, like a resource scheduler.
 
+.. note:: Currently, :ref:`reuse mode <training-service-reuse>` remains disabled by default in local training service.
+
 Prerequisite
 ------------
 

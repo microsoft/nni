@@ -466,6 +466,27 @@ Launch the experiment. The experiment should take several minutes to finish on a
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    INFO:nni.experiment:Creating experiment, Experiment ID: z8ns5fv7
+    INFO:nni.experiment:Connecting IPC pipe...
+    INFO:nni.experiment:Starting web server...
+    INFO:nni.experiment:Setting up...
+    INFO:nni.runtime.msg_dispatcher_base:Dispatcher started
+    INFO:nni.retiarii.experiment.pytorch:Web UI URLs: http://127.0.0.1:8081 http://10.190.172.35:8081 http://192.168.49.1:8081 http://172.17.0.1:8081
+    INFO:nni.retiarii.experiment.pytorch:Start strategy...
+    INFO:root:Successfully update searchSpace.
+    INFO:nni.retiarii.strategy.bruteforce:Random search running in fixed size mode. Dedup: on.
+    INFO:nni.retiarii.experiment.pytorch:Stopping experiment, please wait...
+    INFO:nni.retiarii.experiment.pytorch:Strategy exit
+    INFO:nni.retiarii.experiment.pytorch:Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...
+    INFO:nni.runtime.msg_dispatcher_base:Dispatcher exiting...
+    INFO:nni.retiarii.experiment.pytorch:Experiment stopped
+
 
 
 
@@ -526,7 +547,7 @@ Export Top Models
 
 Users can export top models after the exploration is done using ``export_top_models``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 353-365
+.. GENERATED FROM PYTHON SOURCE LINES 353-357
 
 .. code-block:: default
 
@@ -534,14 +555,6 @@ Users can export top models after the exploration is done using ``export_top_mod
     for model_dict in exp.export_top_models(formatter='dict'):
         print(model_dict)
 
-    # The output is `json` object which records the mutation actions of the top model.
-    # If users want to output source code of the top model, they can use graph-based execution engine for the experiment,
-    # by simply adding the following two lines.
-    #
-    # .. code-block:: python
-    #
-    #   exp_config.execution_engine = 'base'
-    #   export_formatter = 'code'
 
 
 
@@ -552,7 +565,28 @@ Users can export top models after the exploration is done using ``export_top_mod
 
  .. code-block:: none
 
-    {'model_1': '0', 'model_2': 0.75, 'model_3': 128}
+    {'model_1': '0', 'model_2': 0.25, 'model_3': 64}
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 358-362
+
+The output is ``json`` object which records the mutation actions of the top model.
+If users want to output source code of the top model,
+they can use :ref:`graph-based execution engine <graph-based-execution-engine>` for the experiment,
+by simply adding the following two lines.
+
+.. GENERATED FROM PYTHON SOURCE LINES 362-365
+
+.. code-block:: default
+
+
+    exp_config.execution_engine = 'base'
+    export_formatter = 'code'
+
+
+
 
 
 
@@ -560,7 +594,7 @@ Users can export top models after the exploration is done using ``export_top_mod
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  15.810 seconds)
+   **Total running time of the script:** ( 2 minutes  4.499 seconds)
 
 
 .. _sphx_glr_download_tutorials_hello_nas.py:

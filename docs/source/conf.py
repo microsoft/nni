@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v2.6'
+release = 'v2.7'
 
 # -- General configuration ---------------------------------------------------
 
@@ -94,6 +94,16 @@ autodoc_inherit_docstrings = False
 
 # Sphinx will warn about all references where the target cannot be found.
 nitpicky = False  # disabled for now
+
+# A list of regular expressions that match URIs that should not be checked.
+linkcheck_ignore = [
+    r'http://localhost:\d+',
+    r'.*://.*/#/',                          # Modern websites that has URLs like xxx.com/#/guide
+    r'https://github.com/JSong-Jia/Pic/',   # Community links can't be found any more
+]
+
+# Ignore all links located in release.rst
+linkcheck_exclude_documents = ['^release']
 
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']

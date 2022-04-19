@@ -20,6 +20,7 @@ kubeflow:
   trainingService:
     reuseMode: true
     platform: kubeflow
+    namespace: kubeflow
     worker:
       command:
       code_directory:
@@ -44,6 +45,7 @@ frameworkcontroller:
   trainingService:
     reuseMode: true
     platform: frameworkcontroller
+    namespace: kubeflow
     serviceAccountName: frameworkcontroller
     taskRoles:
       - name: worker
