@@ -463,7 +463,7 @@ class TaskGenerator:
         If keeping the intermediate result, including intermediate model and masks during each iteration.
     """
     def __init__(self, origin_model: Optional[Module], origin_masks: Optional[Dict[str, Dict[str, Tensor]]] = {},
-                 origin_config_list: Optional[List[Dict]] = [], log_dir: str = '.', keep_intermediate_result: bool = False):
+                 origin_config_list: Optional[List[Dict]] = [], log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False):
         self._log_dir = log_dir
         self._keep_intermediate_result = keep_intermediate_result
 

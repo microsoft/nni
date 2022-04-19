@@ -37,7 +37,7 @@ class PruningScheduler(BasePruningScheduler):
         If set True, the model weight will reset to the origin model weight at the end of each iteration step.
     """
     def __init__(self, pruner: Pruner, task_generator: TaskGenerator, finetuner: Callable[[Module], None] = None,
-                 speedup: bool = False, dummy_input: Tensor = None, evaluator: Optional[Callable[[Module], float]] = None,
+                 speedup: bool = False, dummy_input: Optional[Tensor] = None, evaluator: Optional[Callable[[Module], float]] = None,
                  reset_weight: bool = False):
         self.pruner = pruner
         self.task_generator = task_generator

@@ -6,7 +6,8 @@ from typing import Dict, List, Optional, Tuple
 
 import torch
 from torch import Tensor
-from torch.nn import Module, Parameter
+from torch.nn import Module
+from torch.nn.parameter import Parameter
 
 from .compressor import Compressor, LayerInfo, _setattr
 
@@ -37,15 +38,15 @@ class PrunerModuleWrapper(Module):
         # config information
         self.config = config
 
-        self.weight = Parameter(torch.empty(self.module.weight.size()))
-
-        # register buffer for mask
-        self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
-        if hasattr(self.module, 'bias') and self.module.bias is not None:
-            self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
-            self.bias = Parameter(torch.empty(self.module.bias.size()))
-        else:
-            self.register_buffer("bias_mask", None)
+        pruning_target_names = ['weight', 'bias']
+        for pruning_target_name in pruning_target_names:
+            pruning_target_mask_name = '{}_mask'.format(pruning_target_name)
+            if hasattr(self.module, pruning_target_name):
+                pruning_target = getattr(self.module, pruning_target_name)
+                setattr(self, pruning_target_name, Parameter(torch.empty(pruning_target.shape)))
+                self.register_buffer(pruning_target_mask_name, torch.ones(pruning_target.shape))
+            else:
+                self.register_buffer(pruning_target_mask_name, None)
 
     def _weight2buffer(self):
         """
@@ -89,7 +90,7 @@ class Pruner(Compressor):
     def reset(self, model: Optional[Module] = None, config_list: Optional[List[Dict]] = None):
         super().reset(model=model, config_list=config_list)
 
-    def _wrap_modules(self, layer: LayerInfo, config: Dict):
+    def _wrap_modules(self, layer: LayerInfo, config: Dict) -> PrunerModuleWrapper:
         """
         Create a wrapper module to replace the original one.
 
@@ -99,6 +100,11 @@ class Pruner(Compressor):
             The layer to instrument the mask.
         config
             The configuration for generating the mask.
+
+        Returns
+        -------
+        PrunerModuleWrapper
+            The wrapper of the module in layerinfo.
         """
         _logger.debug("Module detected to compress : %s.", layer.name)
         wrapper = PrunerModuleWrapper(layer.module, layer.name, config)

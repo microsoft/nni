@@ -4,7 +4,7 @@
 from copy import deepcopy
 import logging
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 import json_tricks
 
 import numpy as np
@@ -150,9 +150,9 @@ class LotteryTicketTaskGenerator(FunctionBasedTaskGenerator):
 
 
 class SimulatedAnnealingTaskGenerator(TaskGenerator):
-    def __init__(self, origin_model: Module, origin_config_list: List[Dict], origin_masks: Dict[str, Dict[str, Tensor]] = {},
+    def __init__(self, origin_model: Optional[Module], origin_config_list: Optional[List[Dict]], origin_masks: Dict[str, Dict[str, Tensor]] = {},
                  start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
-                 perturbation_magnitude: float = 0.35, log_dir: str = '.', keep_intermediate_result: bool = False):
+                 perturbation_magnitude: float = 0.35, log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False):
         """
         Parameters
         ----------

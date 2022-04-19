@@ -5,7 +5,7 @@ import gc
 import logging
 import os
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Union
 
 import json_tricks
 import torch
@@ -111,7 +111,7 @@ class Task:
 
 
 class TaskResult:
-    def __init__(self, task_id: int, compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
+    def __init__(self, task_id: Union[int, str], compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
                  pruner_generated_masks: Dict[str, Dict[str, Tensor]], score: Optional[float]) -> None:
         """
         Parameters

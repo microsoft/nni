@@ -82,7 +82,7 @@ class AMCTaskGenerator(TaskGenerator):
 
     def generate_tasks(self, task_result: TaskResult) -> List[Task]:
         # append experience & update agent policy
-        if task_result.task_id != 'origin':
+        if self.action is not None:
             action, reward, observation, done = self.env.step(self.action, task_result.compact_model)
             self.T.append([reward, self.observation, observation, self.action, done])
             self.observation = observation.copy()

@@ -1,6 +1,10 @@
 {
     "ignore": [
-        "nni/algorithms",
+        "nni/algorithms/compression/pytorch",
+        "nni/algorithms/compression/tensorflow",
+        "nni/algorithms/feature_engineering",
+        "nni/algorithms/hpo",
+        "nni/algorithms/nas",
         "nni/common/device.py",
         "nni/common/graph_utils.py",
         "nni/common/serializer.py",
