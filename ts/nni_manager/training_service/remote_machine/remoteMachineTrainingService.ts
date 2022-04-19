@@ -467,7 +467,7 @@ class RemoteMachineTrainingService implements TrainingService {
             throw new Error(`Can not get trial job detail for job: ${trialJobId}`);
         }
 
-        const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
+        const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
 
         await executor.createFolder(executor.joinPath(trialJobDetail.workingDirectory, '.nni'));
 
@@ -582,7 +582,7 @@ class RemoteMachineTrainingService implements TrainingService {
         const executor = await this.getExecutor(trialJobId);
 
         const trialWorkingFolder: string = executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 'trials', trialJobId);
-        const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
+        const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
 
         const fileName: string = generateParamFileName(hyperParameters);
         const localFilepath: string = path.join(trialLocalTempFolder, fileName);

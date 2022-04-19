@@ -2,11 +2,8 @@
 # Licensed under the MIT license.
 
 import pytorch_lightning as pl
-import nni
 from .accelerator import BypassAccelerator
 
-
-@nni.trace
 class Trainer(pl.Trainer):
     """
     Trainer for cross-graph optimization.

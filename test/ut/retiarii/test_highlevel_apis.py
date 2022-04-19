@@ -1229,6 +1229,11 @@ class Shared(unittest.TestCase):
 
         assert len(set(values)) == 3
 
+    @unittest.skipIf(pytorch_lightning.__version__ < '1.0', 'Legacy PyTorch-lightning not supported')
+    def test_valuechoice_classification(self):
+        evaluator = pl.Classification(criterion=nn.CrossEntropyLoss)
+        process_evaluator_mutations(evaluator, [])
+
     def test_retiarii_nn_import(self):
         dummy = torch.zeros(1, 16, 32, 24)
         nn.init.uniform_(dummy)

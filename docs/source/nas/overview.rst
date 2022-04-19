@@ -22,7 +22,7 @@ In this figure:
 * *Exploration strategy* is the algorithm that is used to explore a model search space. Sometimes we also call it *search strategy*.
 * *Model evaluator* is responsible for training a model and evaluating its performance.
 
-The process is similar to :doc:`Hyperparameter Optimization </hpo/index>`, except that the target is the best architecture rather than hyperparameter. Concretely, an exploration strategy selects an architecture from a predefined search space. The architecture is passed to a performance evaluation to get a score, which represents how well this architecture performs on a particular task. This process is repeated until the search process is able to find the best architecture.
+The process is similar to :doc:`Hyperparameter Optimization </hpo/overview>`, except that the target is the best architecture rather than hyperparameter. Concretely, an exploration strategy selects an architecture from a predefined search space. The architecture is passed to a performance evaluation to get a score, which represents how well this architecture performs on a particular task. This process is repeated until the search process is able to find the best architecture.
 
 Key Features
 ------------
@@ -43,7 +43,7 @@ Search Space Design
 
 The search space defines which architectures can be represented in principle. Incorporating prior knowledge about typical properties of architectures well-suited for a task can reduce the size of the search space and simplify the search. However, this also introduces a human bias, which may prevent finding novel architectural building blocks that go beyond the current human knowledge. Search space design can be very challenging for beginners, who might not possess the experience to balance the richness and simplicity.
 
-In NNI, we provide a wide range of APIs to build the search space. There are :doc:`high-level APIs <construct_space>`, that enables incorporating human knowledge about what makes a good architecture or search space. There are also :doc:`low-level APIs <mutator>`, that is a list of primitives to construct a network from operator to operator.
+In NNI, we provide a wide range of APIs to build the search space. There are :doc:`high-level APIs <construct_space>`, that enables the possibility to incorporate human knowledge about what makes a good architecture or search space. There are also :doc:`low-level APIs <mutator>`, that is a list of primitives to construct a network from operation to operation.
 
 Exploration strategy
 ^^^^^^^^^^^^^^^^^^^^
@@ -57,7 +57,7 @@ Performance estimation
 
 The objective of NAS is typically to find architectures that achieve high predictive performance on unseen data. Performance estimation refers to the process of estimating this performance. The problem with performance estimation is mostly its scalability, i.e., how can I run and manage multiple trials simultaneously.
 
-In NNI, we standardize this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. The choices of evaluators also range from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations. Evaluators are run in *trials*, where trials can be spawn onto distributed platforms with our powerful :doc:`training service </experiment/training_service/overview>`.
+In NNI, we standardize this process is implemented with :doc:`evaluator <evaluator>`, which is responsible of estimating a model's performance. NNI has quite a few built-in supports of evaluators, ranging from the simplest option, e.g., to perform a standard training and validation of the architecture on data, to complex configurations and implementations. Evaluators are run in *trials*, where trials can be spawn onto distributed platforms with our powerful :doc:`training service </experiment/training_service/overview>`.
 
 Tutorials
 ---------

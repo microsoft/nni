@@ -6,7 +6,7 @@ An experiment can be created with command line tool ``nnictl`` or python APIs. N
 Management with ``nnictl``
 --------------------------
 
-The ability of ``nnictl`` on experiment management is almost equivalent to :doc:`web_portal/web_portal`. Users can refer to :doc:`../reference/nnictl` for detailed usage. It is highly suggested when visualization is not well supported in your environment (e.g., no GUI on your machine).
+The ability of ``nnictl`` on experiment management is almost equivalent to :doc:`web_portal/web_portal`. Users can refer to :doc:`../reference/nnictl` for detailed usage. It is highly suggested when visualization is not well supported in your environment (e.g., web browser is not supported in your environment).
 
 Management with web portal
 --------------------------
