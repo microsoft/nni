@@ -49,7 +49,7 @@ model to generate inference engine.
 
 
 Quantization aware training combines NNI quantization algorithm 'QAT' and NNI quantization speedup tool.
-Users should set config to train quantized model using QAT algorithm(please refer to `NNI Quantization Algorithms <https://nni.readthedocs.io/en/stable/Compression/Quantizer.html>`__\  ).
+Users should set config to train quantized model using QAT algorithm(please refer to `NNI Quantization Algorithms <https://nni.readthedocs.io/en/stable/compression/quantizer.html>`__\  ).
 After quantization aware training, users can get new config with calibration parameters and model with quantized weight. By passing new config and model to quantization speedup tool, users can get real mixed precision speedup engine to do inference.
 
 
@@ -174,9 +174,9 @@ finetuning the model by using QAT
 
  .. code-block:: none
 
-    Average test loss: 0.3444, Accuracy: 9141/10000 (91%)
-    Average test loss: 0.1325, Accuracy: 9599/10000 (96%)
-    Average test loss: 0.0980, Accuracy: 9700/10000 (97%)
+    Average test loss: 0.3539, Accuracy: 8973/10000 (90%)
+    Average test loss: 0.1483, Accuracy: 9556/10000 (96%)
+    Average test loss: 0.0963, Accuracy: 9711/10000 (97%)
 
 
 
@@ -207,7 +207,7 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0029], device='cuda:0'), 'weight_zero_point': tensor([121.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0015], device='cuda:0'), 'weight_zero_point': tensor([109.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 7.498777389526367}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0009], device='cuda:0'), 'weight_zero_point': tensor([125.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 13.905810356140137}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([118.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 12.378301620483398}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 7.626255035400391}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 14.335213661193848}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 12.815309524536133}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 11.077027320861816}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0028], device='cuda:0'), 'weight_zero_point': tensor([103.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0016], device='cuda:0'), 'weight_zero_point': tensor([109.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.148626327514648}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0009], device='cuda:0'), 'weight_zero_point': tensor([132.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 14.972236633300781}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0013], device='cuda:0'), 'weight_zero_point': tensor([122.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 15.822068214416504}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 10.291346549987793}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 15.170324325561523}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 15.993704795837402}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 11.378242492675781}}
 
 
 
@@ -237,8 +237,8 @@ build tensorRT engine to make a real speedup
 
  .. code-block:: none
 
-    Loss: 0.09857580718994141  Accuracy: 96.96%
-    Inference elapsed_time (whole dataset): 0.044492483139038086s
+    Loss: 0.09664681930541992  Accuracy: 97.07%
+    Inference elapsed_time (whole dataset): 0.04602551460266113s
 
 
 
@@ -249,7 +249,7 @@ Note that NNI also supports post-training quantization directly, please refer to
 
 For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 
-For more parameters about the class 'TensorRTModelSpeedUp', you can refer to `Model Compression API Reference <https://nni.readthedocs.io/en/stable/Compression/CompressionReference.html#quantization-speedup>`__\.
+For more parameters about the class 'TensorRTModelSpeedUp', you can refer to `Model Compression API Reference <https://nni.readthedocs.io/en/stable/reference/compression/quantization_speedup.html>`__\.
 
 Mnist test
 ^^^^^^^^^^
@@ -300,7 +300,7 @@ input tensor: ``torch.randn(128, 3, 32, 32)``
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  59.208 seconds)
+   **Total running time of the script:** ( 1 minutes  21.137 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_speedup.py:
