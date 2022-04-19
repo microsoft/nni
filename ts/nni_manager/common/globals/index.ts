@@ -4,7 +4,7 @@
 /**
  *  Collection of global objects.
  *
- *  Although global is anit-pattern in OOP, there are two scenarios NNI uses globals.
+ *  Although global is anti-pattern in OOP, there are two scenarios NNI uses globals.
  *
  *   1. Some constant configs (like command line args) are accessed here and there with util functions.
  *      It is possible to pass parameters instead, but not worthy the refactor.
