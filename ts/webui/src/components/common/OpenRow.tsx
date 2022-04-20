@@ -11,7 +11,6 @@ import TrialLog from './TrialLog';
 import MessageInfo from './MessageInfo';
 import PanelMonacoEditor from './PanelMonacoEditor';
 import '@style/experiment/overview/overview.scss';
-import '@style/copyParameter.scss';
 import '@style/openRow.scss';
 
 /**

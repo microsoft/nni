@@ -18,11 +18,11 @@ class LogPathChild extends React.Component<LogpathChildProps, {}> {
             <div className='logpath'>
                 <span className='logName'>{logName}</span>
                 {isLink ? (
-                    <a className='logContent logHref' rel='noopener noreferrer' href={eachLogpath} target='_blank'>
+                    <a className='fontColor333 logHref' rel='noopener noreferrer' href={eachLogpath} target='_blank'>
                         {eachLogpath}
                     </a>
                 ) : (
-                    <span className='logContent'>{eachLogpath}</span>
+                    <span className='fontColor333'>{eachLogpath}</span>
                 )}
             </div>
         );

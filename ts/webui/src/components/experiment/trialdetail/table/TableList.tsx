@@ -121,7 +121,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             <div id='tableList'>
                 <Stack horizontal className='panelTitle' style={{ marginTop: 10 }}>
                     <span style={{ marginRight: 12 }}>{tableListIcon}</span>
-                    <span>Trial jobs</span>
+                    <span className='fontColor333'>Trial jobs</span>
                 </Stack>
                 <Stack horizontal className='allList'>
                     <StackItem>

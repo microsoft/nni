@@ -17,7 +17,7 @@ function KillJobIndex(props): any {
     const [isVisibleKillDialog, setKillDialogVisible] = useState(false);
     const [error, setError] = useState({ isError: false, message: '' });
 
-    const prompString = 'Are you sure to cancel this trial?';
+    const promptString = 'Are you sure to cancel this trial?';
 
     // kill trial
     const killJob = (id: string): void => {
@@ -66,7 +66,7 @@ function KillJobIndex(props): any {
         killJob(props.trialId);
     };
 
-    const openPromot = (event: React.SyntheticEvent<EventTarget>): void => {
+    const openPrompt = (event: React.SyntheticEvent<EventTarget>): void => {
         event.preventDefault();
         event.stopPropagation();
         setCalloutVisible(true);
@@ -75,7 +75,7 @@ function KillJobIndex(props): any {
     return (
         <div>
             <div className={styles.buttonArea} ref={menuButtonElement}>
-                <PrimaryButton className='detail-button-operation' onClick={openPromot} title='kill'>
+                <PrimaryButton className='detail-button-operation' onClick={openPrompt} title='kill'>
                     {blocked}
                 </PrimaryButton>
             </div>
@@ -89,16 +89,12 @@ function KillJobIndex(props): any {
                         onDismiss={onDismiss}
                         setInitialFocus={true}
                     >
-                        <div className={styles.header}>
-                            <p className={styles.title} style={{ color: '#333' }}>
-                                Kill trial
-                            </p>
+                        <div className={`${styles.header} font`}>
+                            <p className={`${styles.title} color333`}>Kill trial</p>
                         </div>
-                        <div className={styles.inner}>
+                        <div className={`${styles.inner} font`}>
                             <div>
-                                <p className={styles.subtext} style={{ color: '#333' }}>
-                                    {prompString}
-                                </p>
+                                <p className={`${styles.subtext} color333`}>{promptString}</p>
                             </div>
                         </div>
                         <FocusZone>

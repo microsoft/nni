@@ -31,7 +31,7 @@ async function main() {
     const config = configFactory('production');
     const compiler = webpack(config);
     const result = await asyncRun(compiler);
-    
+
     const { errors, warnings } = formatWebpackMessages(result);
 
     if (errors.length) {

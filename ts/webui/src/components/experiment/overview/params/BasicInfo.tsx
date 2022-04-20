@@ -53,13 +53,13 @@ export const BasicInfo = (): any => {
                                         onDismiss={onDismiss}
                                         setInitialFocus={true}
                                     >
-                                        <div className={styles.header}>
-                                            <p className={`${styles.title} color`} id={labelId}>
+                                        <div className={`${styles.header} font`}>
+                                            <p className={`${styles.title} color333`} id={labelId}>
                                                 Error
                                             </p>
                                         </div>
-                                        <div className={styles.inner}>
-                                            <p className={`${styles.subtext} color`} id={descriptionId}>
+                                        <div className={`${styles.inner} font`}>
+                                            <p className={`${styles.subtext} color333`} id={descriptionId}>
                                                 {EXPERIMENT.error}
                                             </p>
                                             <div className={styles.actions}>
