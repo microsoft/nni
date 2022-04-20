@@ -119,7 +119,7 @@ test_trt(engine)
 #
 # For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 #
-# For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :doc:`Model Compression API Reference <../compression/quantization_speedup>`.
+# For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :doc:`Model Compression API Reference <../reference/compression/quantization_speedup>`.
 #
 # Mnist test
 # ^^^^^^^^^^

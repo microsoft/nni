@@ -5,10 +5,10 @@
 
 Computation times
 =================
-**01:18.466** total execution time for **tutorials** files:
+**01:04.509** total execution time for **tutorials** files:
 
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_quantization_speedup.py` (``quantization_speedup.py``)                     | 01:18.466 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_quantization_speedup.py` (``quantization_speedup.py``)                     | 01:04.509 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_hello_nas.py` (``hello_nas.py``)                                           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
