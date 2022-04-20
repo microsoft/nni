@@ -46,7 +46,6 @@ class FrameworkControllerConfig(TrainingServiceConfig):
     service_account_name: Optional[str]
     task_roles: List[FrameworkControllerRoleConfig]
     reuse_mode: Optional[bool] = True
-    namespace: str = 'default'
 
     def _canonicalize(self, parents):
         super()._canonicalize(parents)

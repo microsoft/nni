@@ -1,0 +1,7 @@
+.. code-block:: bash
+
+   from nni.compression.pytorch.utils.counter import count_flops_params
+%%%%%%
+.. code-block:: python
+
+   from nni.compression.pytorch.utils.counter import count_flops_params

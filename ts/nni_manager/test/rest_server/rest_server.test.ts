@@ -7,7 +7,7 @@ import path from 'path';
 
 import fetch from 'node-fetch';
 
-import globals, { resetGlobals } from 'common/globals/unittest';
+import { setExperimentStartupInfo } from 'common/experimentStartupInfo';
 import { RestServer, UnitTestHelpers } from 'rest_server';
 import * as mock_netron_server from './mock_netron_server';
 
@@ -121,7 +121,6 @@ before(async () => {
 
 after(async () => {
     await restServer.shutdown();
-    resetGlobals();
 });
 
 async function configRestServer(urlPrefix?: string) {
@@ -129,10 +128,24 @@ async function configRestServer(urlPrefix?: string) {
         await restServer.shutdown();
     }
 
-    globals.paths.logDirectory = path.join(__dirname, 'log');
+    // Set port, URL prefix, and log path.
+    // There should be a better way to do this.
+    // Maybe rewire? I can't get it work with TypeScript.
+    setExperimentStartupInfo(
+        true,
+        path.basename(__dirname),  // hacking getLogDir()
+        0,  // ask for a random idle port
+        'local',
+        path.dirname(__dirname),
+        undefined,
+        undefined,
+        undefined,
+        urlPrefix
+    );
+
     UnitTestHelpers.setWebuiPath(path.join(__dirname, 'static'));
 
-    restServer = new RestServer(0, urlPrefix ?? '');
+    restServer = new RestServer();
     await restServer.start();
     const port = UnitTestHelpers.getPort(restServer);
 

@@ -29,19 +29,7 @@ class _MultiModelSupervisedLearningModule(LightningModule):
         self.criterion_cls = criterion
         self.optimizer = optimizer
         self.metrics = nn.ModuleDict({name: cls() for name, cls in metrics.items()})
-        self.metrics_args = metrics
         self.n_models = n_models
-
-    def dump_kwargs(self):
-        kwargs = {}
-        kwargs['criterion'] = self.criterion_cls
-        kwargs['metrics'] = self.metrics_args
-        kwargs['n_models'] = self.n_models
-        kwargs['learning_rate'] = self.hparams['learning_rate']
-        kwargs['weight_decay'] = self.hparams['weight_decay']
-        kwargs['optimizer'] = self.optimizer
-        return kwargs
-
 
     def forward(self, x):
         y_hat = self.model(x)
@@ -137,7 +125,8 @@ class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
         super().__init__(criterion, metrics, learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 
-class _ClassificationModule(_MultiModelSupervisedLearningModule):
+@nni.trace
+class _ClassificationModule(MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
@@ -168,7 +157,7 @@ class Classification(Lightning):
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
     trainer_kwargs : dict
         Optional keyword arguments passed to trainer. See
-        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
+        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/trainer.html>`__ for details.
     """
 
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
@@ -183,7 +172,9 @@ class Classification(Lightning):
         super().__init__(module, Trainer(use_cgo=True, **trainer_kwargs),
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
-class _RegressionModule(_MultiModelSupervisedLearningModule):
+
+@nni.trace
+class _RegressionModule(MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
@@ -214,7 +205,7 @@ class Regression(Lightning):
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
     trainer_kwargs : dict
         Optional keyword arguments passed to trainer. See
-        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
+        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/trainer.html>`__ for details.
     """
 
     def __init__(self, criterion: nn.Module = nn.MSELoss,

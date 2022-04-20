@@ -8,14 +8,11 @@ A new trial will run with this configuration.
 See :class:`Tuner`' specification and ``docs/en_US/tuners.rst`` for details.
 """
 
-from __future__ import annotations
-
 import logging
 
 import nni
 
 from .recoverable import Recoverable
-from .typehint import Parameters, SearchSpace, TrialMetric, TrialRecord
 
 __all__ = ['Tuner']
 
@@ -70,7 +67,7 @@ class Tuner(Recoverable):
     :class:`~nni.algorithms.hpo.gp_tuner.gp_tuner.GPTuner`
     """
 
-    def generate_parameters(self, parameter_id: int, **kwargs) -> Parameters:
+    def generate_parameters(self, parameter_id, **kwargs):
         """
         Abstract method which provides a set of hyper-parameters.
 
@@ -103,7 +100,7 @@ class Tuner(Recoverable):
         # we need to design a new exception for this purpose
         raise NotImplementedError('Tuner: generate_parameters not implemented')
 
-    def generate_multiple_parameters(self, parameter_id_list: list[int], **kwargs) -> list[Parameters]:
+    def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """
         Callback method which provides multiple sets of hyper-parameters.
 
@@ -138,7 +135,7 @@ class Tuner(Recoverable):
             result.append(res)
         return result
 
-    def receive_trial_result(self, parameter_id: int, parameters: Parameters, value: TrialMetric, **kwargs) -> None:
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
         Abstract method invoked when a trial reports its final result. Must override.
 
@@ -168,7 +165,7 @@ class Tuner(Recoverable):
         # pylint: disable=attribute-defined-outside-init
         self._accept_customized = accept
 
-    def trial_end(self, parameter_id: int, success: bool, **kwargs) -> None:
+    def trial_end(self, parameter_id, success, **kwargs):
         """
         Abstract method invoked when a trial is completed or terminated. Do nothing by default.
 
@@ -182,7 +179,7 @@ class Tuner(Recoverable):
             Unstable parameters which should be ignored by normal users.
         """
 
-    def update_search_space(self, search_space: SearchSpace) -> None:
+    def update_search_space(self, search_space):
         """
         Abstract method for updating the search space. Must override.
 
@@ -197,21 +194,21 @@ class Tuner(Recoverable):
         """
         raise NotImplementedError('Tuner: update_search_space not implemented')
 
-    def load_checkpoint(self) -> None:
+    def load_checkpoint(self):
         """
         Internal API under revising, not recommended for end users.
         """
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Load checkpoint ignored by tuner, checkpoint path: %s', checkpoin_path)
 
-    def save_checkpoint(self) -> None:
+    def save_checkpoint(self):
         """
         Internal API under revising, not recommended for end users.
         """
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s', checkpoin_path)
 
-    def import_data(self, data: list[TrialRecord]) -> None:
+    def import_data(self, data):
         """
         Internal API under revising, not recommended for end users.
         """
@@ -219,8 +216,8 @@ class Tuner(Recoverable):
         # data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         pass
 
-    def _on_exit(self) -> None:
+    def _on_exit(self):
         pass
 
-    def _on_error(self) -> None:
+    def _on_error(self):
         pass

@@ -1,6 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT license.
-
 from .config_validation import CompressorSchema
 from .pruning import (
     config_list_canonical,

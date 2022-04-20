@@ -1,0 +1,44 @@
+..
+
+   1.1 Declare NNI API
+       Include `import nni` in your trial code to use NNI APIs.
+
+   1.2 Get predefined parameters
+       Use the following code snippet:
+
+           RECEIVED_PARAMS = nni.get_next_parameter()
+
+       to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` is an object, for example:
+
+           {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
+
+   1.3 Report NNI results
+       Use the API:
+
+           `nni.report_intermediate_result(accuracy)`
+
+       to send `accuracy` to assessor.
+
+       Use the API:
+
+           `nni.report_final_result(accuracy)`
+
+       to send `accuracy` to tuner.
+%%%%%%
+* Declare NNI API: include ``import nni`` in your trial code to use NNI APIs.
+* Get predefined parameters
+
+Use the following code snippet:
+
+.. code-block:: python
+
+   RECEIVED_PARAMS = nni.get_next_parameter()
+
+to get hyper-parameters' values assigned by tuner. ``RECEIVED_PARAMS`` is an object, for example:
+
+.. code-block:: json
+
+   {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
+
+* Report NNI results: Use the API: ``nni.report_intermediate_result(accuracy)`` to send ``accuracy`` to assessor.
+  Use the API: ``nni.report_final_result(accuracy)`` to send `accuracy` to tuner.

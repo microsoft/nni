@@ -1,6 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT license.
-
 from torch.quantization import default_weight_observer, default_histogram_observer
 from torch.quantization import RecordingObserver as _RecordingObserver
 

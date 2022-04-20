@@ -7,7 +7,6 @@ torchvision == 0.8.2+cpu
 pytorch-lightning
 torchmetrics
 
-lightgbm
 onnx
 peewee
 graphviz

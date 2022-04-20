@@ -15,7 +15,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms
 
-from nni.compression.pytorch.utils import count_flops_params
+from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.compression.pytorch import ModelSpeedup
 
 from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
@@ -277,7 +277,7 @@ if __name__ == '__main__':
     parser.add_argument('--sparsity', type=float, default=0.5,
                         help='target overall target sparsity')
     parser.add_argument('--dependency-aware', action='store_true', default=False,
-                        help='toggle dependency-aware mode')
+                        help='toggle dependency aware mode')
 
     # finetuning
     parser.add_argument('--finetune-epochs', type=int, default=5,
@@ -290,8 +290,8 @@ if __name__ == '__main__':
     #                     help='learning rate to finetune the model')
 
     # speedup
-    # parser.add_argument('--speedup', action='store_true', default=False,
-    #                     help='whether to speedup the pruned model')
+    # parser.add_argument('--speed-up', action='store_true', default=False,
+    #                     help='whether to speed-up the pruned model')
 
     # parser.add_argument('--nni', action='store_true', default=False,
     #                     help="whether to tune the pruners using NNi tuners")

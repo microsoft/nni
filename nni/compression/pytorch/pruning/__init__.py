@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from nni.algorithms.compression.v2.pytorch.pruning import *
+from .apply_compression import apply_compression_results

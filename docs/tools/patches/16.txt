@@ -1,0 +1,9 @@
+.. code-block:: bash
+
+   1.1 Declare NNI API
+       Include `import nni` in your trial code to use NNI APIs.
+%%%%%%
+..
+
+   1.1 Declare NNI API
+       Include `import nni` in your trial code to use NNI APIs.

@@ -1,10 +1,6 @@
 """
-Create a zip archive named sys.argv[1], containing python-packages and node_modules.
+Create an archive in sys.argv[1], containing python-packages and node_modules.
 Use unpack_dependencies.py to extract the archive.
-
-Example usage:
-
-    python test/vso_tools/pack_dependencies.py dependencies.zip
 """
 
 import json
@@ -22,7 +18,7 @@ def main() -> None:
     shutil.move('ts/nni_manager/node_modules', 'cache/nni-manager-dependencies')
     shutil.move('ts/webui/node_modules', 'cache/webui-dependencies')
 
-    archive = ZipFile(sys.argv[1], 'w', ZIP_DEFLATED, compresslevel=9)
+    archive = ZipFile('cache.zip', 'w', ZIP_DEFLATED, compresslevel=9)
     symlinks = {}
     empty_dirs = set()
     for file in sorted(cache.rglob('*')):
@@ -39,6 +35,9 @@ def main() -> None:
     archive.writestr('symlinks.json', json.dumps(symlinks, indent=4))
     archive.writestr('directories.json', json.dumps(list(empty_dirs), indent=4))
     archive.close()
+
+    assert Path(sys.argv[1]).is_dir()
+    shutil.move('cache.zip', sys.argv[1])
 
 if __name__ == '__main__':
     main()

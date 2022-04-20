@@ -27,14 +27,7 @@ const config = {
     },
     optimization: { minimize: false },
     resolve: {
-        modules: [ 'node_modules', 'src' ],
-        alias: { 
-            '@': paths.appSrc,
-            '@components': `${paths.appSrc}/components`,
-            '@static': `${paths.appSrc}/static`,
-            '@style': `${paths.appSrc}/static/style`,
-            '@model': `${paths.appSrc}/static/model`
-        },
+        modules: [ 'node_modules' ],
         extensions: paths.moduleFileExtensions.map(ext => `.${ext}`),
     },
     module: {

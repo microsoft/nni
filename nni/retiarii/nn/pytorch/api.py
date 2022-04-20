@@ -2,31 +2,26 @@
 # Licensed under the MIT license.
 
 import math
-import itertools
 import operator
 import warnings
-from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar, Sequence
+from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar
 
 import torch
 import torch.nn as nn
 
-from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import Translatable
 from nni.retiarii.serializer import basic_unit
-from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace, NoContextError
-from .mutation_utils import Mutable, generate_new_label, get_fixed_value
+from .utils import Mutable, generate_new_label, get_fixed_value
 
 
-__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'ModelParameterChoice', 'Placeholder', 'ChosenInputs']
+__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
 
 
 class LayerChoice(Mutable):
     """
     Layer choice selects one of the ``candidates``, then apply it on inputs and return results.
 
-    It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model.
-
-    *New in v2.2:* Layer choice can be nested.
+    Layer choice does not allow itself to be nested.
 
     Parameters
     ----------
@@ -46,21 +41,6 @@ class LayerChoice(Mutable):
     choices : list of Module
         Deprecated. A list of all candidate modules in the layer choice module.
         ``list(layer_choice)`` is recommended, which will serve the same purpose.
-
-    Examples
-    --------
-
-    ::
-
-        # import nni.retiarii.nn.pytorch as nn
-        # declared in `__init__` method
-        self.layer = nn.LayerChoice([
-            ops.PoolBN('max', channels, 3, stride, 1),
-            ops.SepConv(channels, channels, 3, stride, 1),
-            nn.Identity()
-        ])
-        # invoked in `forward` method
-        out = self.layer(x)
 
     Notes
     -----
@@ -85,22 +65,9 @@ class LayerChoice(Mutable):
                             label: Optional[str] = None, **kwargs):
         chosen = get_fixed_value(label)
         if isinstance(candidates, list):
-            result = candidates[int(chosen)]
+            return candidates[int(chosen)]
         else:
-            result = candidates[chosen]
-
-        # map the named hierarchies to support weight inheritance for python engine
-        if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
-            # handle cases where layer choices are nested
-            # already has a mapping, will merge with it
-            prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
-            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'{chosen}.{v}' for k, v in prev_mapping.items()})
-        else:
-            # "result" needs to know where to map itself.
-            # Ideally, we should put a _mapping_ in the module where "result" is located,
-            # but it's impossible to put mapping into parent module here.
-            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': str(chosen)})
-        return result
+            return candidates[chosen]
 
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
                  prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
@@ -183,10 +150,6 @@ class LayerChoice(Mutable):
         return list(self)
 
     def forward(self, x):
-        """
-        The forward of layer choice is simply running the first candidate module.
-        It shouldn't be called directly by users in most cases.
-        """
         warnings.warn('You should not run forward of this module directly.')
         return self._first_module(x)
 
@@ -205,10 +168,6 @@ ReductionType = Literal['mean', 'concat', 'sum', 'none']
 class InputChoice(Mutable):
     """
     Input choice selects ``n_chosen`` inputs from ``choose_from`` (contains ``n_candidates`` keys).
-
-    It is mainly for choosing (or trying) different connections. It takes several tensors and chooses ``n_chosen`` tensors from them.
-    When specific inputs are chosen, ``InputChoice`` will become :class:`ChosenInputs`.
-
     Use ``reduction`` to specify how chosen inputs are reduced into one output. A few options are:
 
     * ``none``: do nothing and return the list directly.
@@ -230,16 +189,6 @@ class InputChoice(Mutable):
         Prior distribution used in random sampling.
     label : str
         Identifier of the input choice.
-
-    Examples
-    --------
-    ::
-
-        # import nni.retiarii.nn.pytorch as nn
-        # declared in `__init__` method
-        self.input_switch = nn.InputChoice(n_chosen=1)
-        # invoked in `forward` method, choose one from the three
-        out = self.input_switch([tensor1, tensor2, tensor3])
     """
 
     @classmethod
@@ -281,10 +230,6 @@ class InputChoice(Mutable):
         return self._label
 
     def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
-        """
-        The forward of input choice is simply the first item of ``candidate_inputs``.
-        It shouldn't be called directly by users in most cases.
-        """
         warnings.warn('You should not run forward of this module directly.')
         return candidate_inputs[0]
 
@@ -315,9 +260,6 @@ class ChosenInputs(nn.Module):
         self.reduction = reduction
 
     def forward(self, candidate_inputs):
-        """
-        Compute the reduced input based on ``chosen`` and ``reduction``.
-        """
         return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
 
     def _tensor_reduction(self, reduction_type, tensor_list):
@@ -388,7 +330,7 @@ def _valuechoice_staticmethod_helper(orig_func):
     return orig_func
 
 
-class ValueChoiceX(Translatable, nn.Module):
+class ValueChoiceX(Translatable):
     """Internal API. Implementation note:
 
     The transformed (X) version of value choice.
@@ -404,8 +346,6 @@ class ValueChoiceX(Translatable, nn.Module):
     2. For graph-engine, it uses evaluate to calculate the result.
 
     Potentially, we have to implement the evaluation logic in oneshot algorithms. I believe we can postpone the discussion till then.
-
-    This class is implemented as a ``nn.Module`` so that it can be scanned by python engine / torchscript.
     """
 
     def __init__(self, function: Callable[..., Any], repr_template: str, arguments: List[Any], dry_run: bool = True):
@@ -426,9 +366,6 @@ class ValueChoiceX(Translatable, nn.Module):
             # for sanity check
             self.dry_run()
 
-    def forward(self) -> None:
-        raise RuntimeError('You should never call forward of the composition of a value-choice.')
-
     def inner_choices(self) -> Iterable['ValueChoice']:
         """
         Return an iterable of all leaf value choices.
@@ -445,30 +382,6 @@ class ValueChoiceX(Translatable, nn.Module):
         """
         # values are not used
         return self._evaluate(iter([]), True)
-
-    def all_options(self) -> Iterable[Any]:
-        """Explore all possibilities of a value choice.
-        """
-        # Record all inner choices: label -> candidates, no duplicates.
-        dedup_inner_choices: Dict[str, List[Any]] = {}
-        # All labels of leaf nodes on tree, possibly duplicates.
-        all_labels: List[str] = []
-
-        for choice in self.inner_choices():
-            all_labels.append(choice.label)
-            if choice.label in dedup_inner_choices:
-                if choice.candidates != dedup_inner_choices[choice.label]:
-                    # check for choice with the same label
-                    raise ValueError(f'"{choice.candidates}" is not equal to "{dedup_inner_choices[choice.label]}", '
-                                     f'but they share the same label: {choice.label}')
-            else:
-                dedup_inner_choices[choice.label] = choice.candidates
-
-        dedup_labels, dedup_candidates = list(dedup_inner_choices.keys()), list(dedup_inner_choices.values())
-
-        for chosen in itertools.product(*dedup_candidates):
-            chosen = dict(zip(dedup_labels, chosen))
-            yield self.evaluate([chosen[label] for label in all_labels])
 
     def evaluate(self, values: Iterable[Any]) -> Any:
         """
@@ -612,8 +525,7 @@ class ValueChoiceX(Translatable, nn.Module):
     def __index__(self) -> NoReturn:
         # https://docs.python.org/3/reference/datamodel.html#object.__index__
         raise RuntimeError("`__index__` is not allowed on ValueChoice, which means you can't "
-                           "use int(), float(), complex(), range() on a ValueChoice. "
-                           "To cast the type of ValueChoice, please try `ValueChoice.to_int()` or `ValueChoice.to_float()`.")
+                           "use int(), float(), complex(), range() on a ValueChoice.")
 
     def __bool__(self) -> NoReturn:
         raise RuntimeError('Cannot use bool() on ValueChoice. That means, using ValueChoice in a if-clause is illegal. '
@@ -749,13 +661,11 @@ ValueChoiceOrAny = TypeVar('ValueChoiceOrAny', ValueChoiceX, Any)
 
 class ValueChoice(ValueChoiceX, Mutable):
     """
-    ValueChoice is to choose one from ``candidates``. The most common use cases are:
+    ValueChoice is to choose one from ``candidates``.
 
-    * Used as input arguments of :class:`~nni.retiarii.basic_unit`
-      (i.e., modules in ``nni.retiarii.nn.pytorch`` and user-defined modules decorated with ``@basic_unit``).
-    * Used as input arguments of evaluator (*new in v2.7*).
+    In most use scenarios, ValueChoice should be passed to the init parameters of a serializable module. For example,
 
-    It can be used in parameters of operators (i.e., a sub-module of the model): ::
+    .. code-block:: python
 
         class Net(nn.Module):
             def __init__(self):
@@ -765,84 +675,37 @@ class ValueChoice(ValueChoiceX, Mutable):
             def forward(self, x):
                 return self.conv(x)
 
-    Or evaluator (only if the evaluator is :doc:`traceable </nas/serialization>`, e.g.,
-    :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`): ::
+    In case, you want to search a parameter that is used repeatedly, this is also possible by sharing the same value choice instance.
+    (Sharing the label should have the same effect.) For example,
 
-        def train_and_evaluate(model_cls, learning_rate):
-            ...
+    .. code-block:: python
 
-        self.evaluator = FunctionalEvaluator(train_and_evaluate, learning_rate=nn.ValueChoice([1e-3, 1e-2, 1e-1]))
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                hidden_dim = nn.ValueChoice([128, 512])
+                self.fc = nn.Sequential(
+                    nn.Linear(64, hidden_dim),
+                    nn.Linear(hidden_dim, 10)
+                )
 
-    Value choices supports arithmetic operators, which is particularly useful when searching for a network width multiplier: ::
+                # the following code has the same effect.
+                # self.fc = nn.Sequential(
+                #     nn.Linear(64, nn.ValueChoice([128, 512], label='dim')),
+                #     nn.Linear(nn.ValueChoice([128, 512], label='dim'), 10)
+                # )
 
-        # init
-        scale = nn.ValueChoice([1.0, 1.5, 2.0])
-        self.conv1 = nn.Conv2d(3, round(scale * 16))
-        self.conv2 = nn.Conv2d(round(scale * 16), round(scale * 64))
-        self.conv3 = nn.Conv2d(round(scale * 64), round(scale * 256))
+            def forward(self, x):
+                return self.fc(x)
 
-        # forward
-        return self.conv3(self.conv2(self.conv1(x)))
+    Note that ValueChoice should be used directly. Transformations like ``nn.Linear(32, nn.ValueChoice([64, 128]) * 2)``
+    are not supported.
 
-    Or when kernel size and padding are coupled so as to keep the output size constant: ::
-
-        # init
-        ks = nn.ValueChoice([3, 5, 7])
-        self.conv = nn.Conv2d(3, 16, kernel_size=ks, padding=(ks - 1) // 2)
-
-        # forward
-        return self.conv(x)
-
-    Or when several layers are concatenated for a final layer. ::
-
-        # init
-        self.linear1 = nn.Linear(3, nn.ValueChoice([1, 2, 3], label='a'))
-        self.linear2 = nn.Linear(3, nn.ValueChoice([4, 5, 6], label='b'))
-        self.final = nn.Linear(nn.ValueChoice([1, 2, 3], label='a') + nn.ValueChoice([4, 5, 6], label='b'), 2)
-
-        # forward
-        return self.final(torch.cat([self.linear1(x), self.linear2(x)], 1))
-
-    Some advanced operators are also provided, such as :meth:`ValueChoice.max` and :meth:`ValueChoice.cond`.
-
-    .. tip::
-
-        All the APIs have an optional argument called ``label``,
-        mutations with the same label will share the same choice. A typical example is, ::
-
-            self.net = nn.Sequential(
-                nn.Linear(10, nn.ValueChoice([32, 64, 128], label='hidden_dim')),
-                nn.Linear(nn.ValueChoice([32, 64, 128], label='hidden_dim'), 3)
-            )
-
-        Sharing the same value choice instance has the similar effect. ::
-
-            class Net(nn.Module):
-                def __init__(self):
-                    super().__init__()
-                    hidden_dim = nn.ValueChoice([128, 512])
-                    self.fc = nn.Sequential(
-                        nn.Linear(64, hidden_dim),
-                        nn.Linear(hidden_dim, 10)
-                    )
-
-    .. warning::
-
-        It looks as if a specific candidate has been chosen (e.g., how it looks like when you can put ``ValueChoice``
-        as a parameter of ``nn.Conv2d``), but in fact it's a syntax sugar as because the basic units and evaluators
-        do all the underlying works. That means, you cannot assume that ``ValueChoice`` can be used in the same way
-        as its candidates. For example, the following usage will NOT work: ::
-
-            self.blocks = []
-            for i in range(nn.ValueChoice([1, 2, 3])):
-                self.blocks.append(Block())
-
-            # NOTE: instead you should probably write
-            # self.blocks = nn.Repeat(Block(), (1, 3))
-
-    Another use case is to initialize the values to choose from in init and call the module in forward to get the chosen value.
+    Another common use case is to initialize the values to choose from in init and call the module in forward to get the chosen value.
     Usually, this is used to pass a mutable value to a functional API like ``torch.xxx`` or ``nn.functional.xxx```.
-    For example, ::
+    For example,
+
+    .. code-block:: python
 
         class Net(nn.Module):
             def __init__(self):
@@ -877,16 +740,13 @@ class ValueChoice(ValueChoiceX, Mutable):
         self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
         assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
         self._label = generate_new_label(label)
+        self._accessor = []
 
     @property
     def label(self):
         return self._label
 
     def forward(self):
-        """
-        The forward of input choice is simply the first value of ``candidates``.
-        It shouldn't be called directly by users in most cases.
-        """
         warnings.warn('You should not run forward of this module directly.')
         return self.candidates[0]
 
@@ -912,149 +772,6 @@ class ValueChoice(ValueChoiceX, Mutable):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
 
 
-ValueType = TypeVar('ValueType')
-
-
-class ModelParameterChoice:
-    """ModelParameterChoice chooses one hyper-parameter from ``candidates``.
-
-    .. attention::
-
-       This API is internal, and does not guarantee forward-compatibility.
-
-    It's quite similar to :class:`ValueChoice`, but unlike :class:`ValueChoice`,
-    it always returns a fixed value, even at the construction of base model.
-
-    This makes it highly flexible (e.g., can be used in for-loop, if-condition, as argument of any function). For example: ::
-
-        self.has_auxiliary_head = ModelParameterChoice([False, True])
-        # this will raise error if you use `ValueChoice`
-        if self.has_auxiliary_head is True:  # or self.has_auxiliary_head
-            self.auxiliary_head = Head()
-        else:
-            self.auxiliary_head = None
-        print(type(self.has_auxiliary_head))  # <class 'bool'>
-
-    The working mechanism of :class:`ModelParameterChoice` is that, it registers itself
-    in the ``model_wrapper``, as a hyper-parameter of the model, and then returns the value specified with ``default``.
-    At base model construction, the default value will be used (as a mocked hyper-parameter).
-    In trial, the hyper-parameter selected by strategy will be used.
-
-    Although flexible, we still recommend using :class:`ValueChoice` in favor of :class:`ModelParameterChoice`,
-    because information are lost when using :class:`ModelParameterChoice` in exchange of its flexibility,
-    making it incompatible with one-shot strategies and non-python execution engines.
-
-    .. warning::
-
-        :class:`ModelParameterChoice` can NOT be nested.
-
-    .. tip::
-
-        Although called :class:`ModelParameterChoice`, it's meant to tune hyper-parameter of architecture.
-        It's NOT used to tune model-training hyper-parameters like ``learning_rate``.
-        If you need to tune ``learning_rate``, please use :class:`ValueChoice` on arguments of :class:`nni.retiarii.Evaluator`.
-
-    Parameters
-    ----------
-    candidates : list of any
-        List of values to choose from.
-    prior : list of float
-        Prior distribution to sample from. Currently has no effect.
-    default : Callable[[List[Any]], Any] or Any
-        Function that selects one from ``candidates``, or a candidate.
-        Use :meth:`ModelParameterChoice.FIRST` or :meth:`ModelParameterChoice.LAST` to take the first or last item.
-        Default: :meth:`ModelParameterChoice.FIRST`
-    label : str
-        Identifier of the value choice.
-
-    Warnings
-    --------
-    :class:`ModelParameterChoice` is incompatible with one-shot strategies and non-python execution engines.
-
-    Sometimes, the same search space implemented **without** :class:`ModelParameterChoice` can be simpler, and explored
-    with more types of search strategies. For example, the following usages are equivalent: ::
-
-        # with ModelParameterChoice
-        depth = nn.ModelParameterChoice(list(range(3, 10)))
-        blocks = []
-        for i in range(depth):
-            blocks.append(Block())
-
-        # w/o HyperParmaeterChoice
-        blocks = Repeat(Block(), (3, 9))
-
-    Examples
-    --------
-    Get a dynamic-shaped parameter. Because ``torch.zeros`` is not a basic unit, we can't use :class:`ValueChoice` on it.
-    >>> parameter_dim = nn.ModelParameterChoice([64, 128, 256])
-    >>> self.token = nn.Parameter(torch.zeros(1, parameter_dim, 32, 32))
-    """
-
-    # FIXME: fix signature in docs
-
-    # FIXME: prior is designed but not supported yet
-
-    def __new__(cls, candidates: List[ValueType], *,
-                prior: Optional[List[float]] = None,
-                default: Union[Callable[[List[ValueType]], ValueType], ValueType] = None,
-                label: Optional[str] = None) -> ValueType:
-        # Actually, creating a `ModelParameterChoice` never creates one.
-        # It always return a fixed value, and register a ParameterSpec
-
-        if default is None:
-            default = cls.FIRST
-
-        try:
-            return cls.create_fixed_module(candidates, label=label)
-        except NoContextError:
-            return cls.create_default(candidates, default, label)
-
-    @staticmethod
-    def create_default(candidates: List[ValueType],
-                       default: Union[Callable[[List[ValueType]], ValueType], ValueType],
-                       label: Optional[str]) -> ValueType:
-        if default not in candidates:
-            # could be callable
-            try:
-                default = default(candidates)
-            except TypeError as e:
-                if 'not callable' in str(e):
-                    raise TypeError("`default` is not in `candidates`, and it's also not callable.")
-                raise
-
-        label = generate_new_label(label)
-        parameter_spec = ParameterSpec(
-            label,          # name
-            'choice',       # TODO: support more types
-            candidates,     # value
-            (label,),       # we don't have nested now
-            True,           # yes, categorical
-        )
-
-        # there could be duplicates. Dedup is done in mutator
-        ModelNamespace.current_context().parameter_specs.append(parameter_spec)
-
-        return default
-
-    @classmethod
-    def create_fixed_module(cls, candidates: List[ValueType], *, label: Optional[str] = None, **kwargs) -> ValueType:
-        # same as ValueChoice
-        value = get_fixed_value(label)
-        if value not in candidates:
-            raise ValueError(f'Value {value} does not belong to the candidates: {candidates}.')
-        return value
-
-    @staticmethod
-    def FIRST(sequence: Sequence[ValueType]) -> ValueType:
-        """Get the first item of sequence. Useful in ``default`` argument."""
-        return sequence[0]
-
-    @staticmethod
-    def LAST(sequence: Sequence[ValueType]) -> ValueType:
-        """Get the last item of sequence. Useful in ``default`` argument."""
-        return sequence[-1]
-
-
 @basic_unit
 class Placeholder(nn.Module):
     """
@@ -1068,8 +785,4 @@ class Placeholder(nn.Module):
         super().__init__()
 
     def forward(self, x):
-        """
-        Forward of placeholder is not meaningful.
-        It returns input directly.
-        """
         return x

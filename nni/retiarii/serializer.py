@@ -2,11 +2,10 @@
 # Licensed under the MIT license.
 
 import inspect
-import os
 import warnings
 from typing import Any, TypeVar, Union
 
-from nni.common.serializer import Traceable, is_traceable, is_wrapped_with_trace, trace, _copy_class_wrapper_attributes
+from nni.common.serializer import Traceable, is_traceable, trace, _copy_class_wrapper_attributes
 from .utils import ModelNamespace
 
 __all__ = ['get_init_parameters_or_fail', 'serialize', 'serialize_cls', 'basic_unit', 'model_wrapper',
@@ -65,14 +64,7 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
         class PrimitiveOp(nn.Module):
             ...
     """
-
-    # Internal flag. See nni.trace
-    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
-    if nni_trace_flag.lower() == 'disable':
-        return cls
-
-    if _check_wrapped(cls, 'basic_unit'):
-        return cls
+    _check_wrapped(cls)
 
     import torch.nn as nn
     assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
@@ -80,7 +72,15 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
     cls = trace(cls)
     cls._nni_basic_unit = basic_unit_tag
 
-    _torchscript_patch(cls)
+    # HACK: for torch script
+    # https://github.com/pytorch/pytorch/pull/45261
+    # https://github.com/pytorch/pytorch/issues/54688
+    # I'm not sure whether there will be potential issues
+    import torch
+    cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
+    cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
+    cls.trace_args = torch.jit.unused(cls.trace_args)
+    cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
 
     return cls
 
@@ -97,40 +97,27 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
 
     The wrapper serves two purposes:
 
-    1. Capture the init parameters of python class so that it can be re-instantiated in another process.
-    2. Reset uid in namespace so that the auto label counting in each model stably starts from zero.
+        1. Capture the init parameters of python class so that it can be re-instantiated in another process.
+        2. Reset uid in namespace so that the auto label counting in each model stably starts from zero.
 
     Currently, NNI might not complain in simple cases where ``@model_wrapper`` is actually not needed.
     But in future, we might enforce ``@model_wrapper`` to be required for base model.
     """
-
-    # Internal flag. See nni.trace
-    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
-    if nni_trace_flag.lower() == 'disable':
-        return cls
-
-    if _check_wrapped(cls, 'model_wrapper'):
-        return cls
+    _check_wrapped(cls)
 
     import torch.nn as nn
     assert issubclass(cls, nn.Module)
 
-    # subclass can still use trace info
-    wrapper = trace(cls, inheritable=True)
+    wrapper = trace(cls)
 
     class reset_wrapper(wrapper):
         def __init__(self, *args, **kwargs):
-            self._model_namespace = ModelNamespace()
-            with self._model_namespace:
+            with ModelNamespace():
                 super().__init__(*args, **kwargs)
 
     _copy_class_wrapper_attributes(wrapper, reset_wrapper)
-    reset_wrapper.__wrapped__ = getattr(wrapper, '__wrapped__', wrapper)
+    reset_wrapper.__wrapped__ = wrapper.__wrapped__
     reset_wrapper._nni_model_wrapper = True
-    reset_wrapper._traced = True
-
-    _torchscript_patch(cls)
-
     return reset_wrapper
 
 
@@ -146,38 +133,6 @@ def is_model_wrapped(cls_or_instance) -> bool:
     return getattr(cls_or_instance, '_nni_model_wrapper', False)
 
 
-def _check_wrapped(cls: T, rewrap: str) -> bool:
-    wrapped = None
-    if is_model_wrapped(cls):
-        wrapped = 'model_wrapper'
-    elif is_basic_unit(cls):
-        wrapped = 'basic_unit'
-    elif is_wrapped_with_trace(cls):
-        wrapped = 'nni.trace'
-    if wrapped:
-        if wrapped != rewrap:
-            raise TypeError(f'{cls} is already wrapped with {wrapped}. Cannot rewrap with {rewrap}.')
-        return True
-    return False
-
-
-def _torchscript_patch(cls) -> None:
-    # HACK: for torch script
-    # https://github.com/pytorch/pytorch/pull/45261
-    # https://github.com/pytorch/pytorch/issues/54688
-    # I'm not sure whether there will be potential issues
-    import torch
-    if hasattr(cls, '_get_nni_attr'):  # could not exist on non-linux
-        cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
-    if hasattr(cls, 'trace_symbol'):
-        # these must all exist or all non-exist
-        try:
-            cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
-            cls.trace_args = torch.jit.unused(cls.trace_args)
-            cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
-            cls.trace_copy = torch.jit.ignore(cls.trace_copy)
-        except AttributeError as e:
-            if 'property' in str(e):
-                raise RuntimeError('Trace on PyTorch module failed. Your PyTorch version might be outdated. '
-                                   'Please try to upgrade PyTorch.')
-            raise
+def _check_wrapped(cls: T) -> bool:
+    if getattr(cls, '_traced', False) or getattr(cls, '_nni_model_wrapper', False):
+        raise TypeError(f'{cls} is already wrapped with trace wrapper (basic_unit / model_wrapper / trace). Cannot wrap again.')

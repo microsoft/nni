@@ -1,6 +1,3 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT license.
-
 from typing import Any, Optional
 
 from .literal import QuantDtype, QuantType, QuantScheme

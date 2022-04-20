@@ -1,4 +1,6 @@
-trigger: none
+trigger:
+  branches:
+    exclude: [ l10n_master ]
 
 stages:
 - stage: lint
@@ -10,6 +12,7 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
+        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         sudo apt-get install -y pandoc
@@ -17,39 +20,23 @@ stages:
 
     - script: |
         cd docs
-        rstcheck -r source \
-          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs \
-          --ignore-roles githublink --ignore-substitutions release \
-          --report warning
-      displayName: rstcheck
+        # rstcheck -r source
+      displayName: rstcheck (disabled for now)  # TODO: rstcheck
 
     - script: |
         cd docs
-        make -e SPHINXOPTS="-W --keep-going -T -q" html
+        make -e SPHINXOPTS="-W --keep-going -T" html
       displayName: Sphinx sanity check
 
     - script: |
-        set -e
         cd docs
-        rm -rf build
-        sudo apt-get install -y gettext
-        python tools/translation_patch.py
-        make -e SPHINXOPTS="-W --keep-going -T -q -D language='zh'" html
+        make -e SPHINXOPTS="-W --keep-going -T -D language='zh'" html
       displayName: Sphinx sanity check (Chinese)
 
     - script: |
-        set -e
         cd docs
-        rm -rf build
-        make i18n
-        git diff --exit-code source/locales
+        python tools/chineselink.py check
       displayName: Translation up-to-date
-
-    - script: |
-        cd docs
-        rm -rf build
-        make -e SPHINXOPTS="-W -T -b linkcheck -q --keep-going" html
-      displayName: External links integrity check
 
   - job: python
     pool:
@@ -58,6 +45,7 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
+        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         # pylint requires newer typing extension. Override requirements in tensorflow
@@ -75,10 +63,6 @@ stages:
         python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
       displayName: flake8
 
-    - script: |
-        python -m pyright nni
-      displayName: Type Check
-
   - job: typescript
     pool:
       vmImage: ubuntu-latest
@@ -86,6 +70,7 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
+        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         set -e
@@ -112,6 +97,7 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
+        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop
@@ -165,6 +151,7 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-legacy
+        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop
@@ -190,12 +177,13 @@ stages:
   - job: windows
     pool:
       vmImage: windows-latest
-    timeoutInMinutes: 75
+    timeoutInMinutes: 70
 
     steps:
     - template: templates/install-dependencies.yml
       parameters:
         platform: windows
+        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop --no-user
@@ -223,6 +211,7 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: macos
+        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         python setup.py develop

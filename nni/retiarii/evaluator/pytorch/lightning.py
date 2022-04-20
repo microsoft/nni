@@ -4,7 +4,7 @@
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, Union, Optional, List, Callable
+from typing import Dict, Union, Optional, List, Type
 
 import pytorch_lightning as pl
 import torch.nn as nn
@@ -29,20 +29,11 @@ __all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classificat
 class LightningModule(pl.LightningModule):
     """
     Basic wrapper of generated model.
-    Lightning modules used in NNI should inherit this class.
 
-    It's a subclass of ``pytorch_lightning.LightningModule``.
-    See https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html
+    Lightning modules used in NNI should inherit this class.
     """
 
-    def set_model(self, model: Union[Callable[[], nn.Module], nn.Module]) -> None:
-        """Set the inner model (architecture) to train / evaluate.
-
-        Parameters
-        ----------
-        model : callable or nn.Module
-            Can be a callable returning nn.Module or nn.Module.
-        """
+    def set_model(self, model: Union[Type[nn.Module], nn.Module]) -> None:
         if isinstance(model, nn.Module):
             self.model = model
         else:
@@ -50,13 +41,7 @@ class LightningModule(pl.LightningModule):
 
 
 Trainer = nni.trace(pl.Trainer)
-Trainer.__doc__ = """
-Traced version of ``pytorch_lightning.Trainer``. See https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html
-"""
 DataLoader = nni.trace(torch_data.DataLoader)
-DataLoader.__doc__ = """
-Traced version of ``torch.utils.data.DataLoader``. See https://pytorch.org/docs/stable/data.html
-"""
 
 @nni.trace
 class Lightning(Evaluator):
@@ -177,6 +162,7 @@ class _SupervisedLearningModule(LightningModule):
             self.export_onnx = Path(export_onnx)
         else:
             self.export_onnx = None
+        self._already_exported = False
 
     def forward(self, x):
         y_hat = self.model(x)
@@ -195,12 +181,12 @@ class _SupervisedLearningModule(LightningModule):
         x, y = batch
         y_hat = self(x)
 
-        if self.export_onnx is not None:
+        if not self._already_exported:
             try:
                 self.to_onnx(self.export_onnx, x, export_params=True)
             except RuntimeError as e:
                 warnings.warn(f'ONNX conversion failed. As a result, you might not be able to use visualization. Error message: {e}')
-            self.export_onnx = None
+            self._already_exported = True
 
         self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)
         for name, metric in self.metrics.items():
@@ -250,7 +236,7 @@ class _ClassificationModule(_SupervisedLearningModule):
 
 class Classification(Lightning):
     """
-    Evaluator that is used for classification.
+    Trainer that is used for classification.
 
     Parameters
     ----------
@@ -303,7 +289,7 @@ class _RegressionModule(_SupervisedLearningModule):
 
 class Regression(Lightning):
     """
-    Evaluator that is used for regression.
+    Trainer that is used for regression.
 
     Parameters
     ----------

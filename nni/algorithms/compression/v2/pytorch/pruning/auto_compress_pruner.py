@@ -51,16 +51,7 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
 
 
 class AutoCompressPruner(IterativePruner):
-    r"""
-    For total iteration number :math:`N`, AutoCompressPruner prune the model that survive the previous iteration for a fixed sparsity ratio (e.g., :math:`1-{(1-0.8)}^{(1/N)}`) to achieve the overall sparsity (e.g., :math:`0.8`):
-
-    .. code-block:: bash
-
-        1. Generate sparsities distribution using SimulatedAnnealingPruner
-        2. Perform ADMM-based pruning to generate pruning result for the next iteration.
-
-    For more details, please refer to `AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates <https://arxiv.org/abs/1907.03141>`__.
-
+    """
     Parameters
     ----------
     model : Module
@@ -79,7 +70,7 @@ class AutoCompressPruner(IterativePruner):
             The model will be trained or inferenced `training_epochs` epochs.
         - traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
             The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-            E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
+            E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
         - criterion : Callable[[Tensor, Tensor], Tensor].
             The criterion function used in trainer. Take model output and target value as input, and return the loss.
         - iterations : int.
@@ -112,43 +103,15 @@ class AutoCompressPruner(IterativePruner):
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handles all finetune logic, takes a pytorch module as input.
         It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
-    speedup : bool
-        If set True, speedup the model at the end of each iteration to make the pruned model compact.
+    speed_up : bool
+        If set True, speed up the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speedup` is True, `dummy_input` is required for tracing the model in speedup.
-
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import AutoCompressPruner
-        >>> model = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> evaluator = ...
-        >>> finetuner = ...
-        >>> admm_params = {
-        >>>     'trainer': trainer,
-        >>>     'traced_optimizer': traced_optimizer,
-        >>>     'criterion': criterion,
-        >>>     'iterations': 10,
-        >>>     'training_epochs': 1
-        >>> }
-        >>> sa_params = {
-        >>>     'evaluator': evaluator
-        >>> }
-        >>> pruner = AutoCompressPruner(model, config_list, 10, admm_params, sa_params, finetuner=finetuner)
-        >>> pruner.compress()
-        >>> _, model, masks, _, _ = pruner.get_best_result()
-
-    The full script can be found :githublink:`here <examples/model_compress/pruning/auto_compress_pruner.py>`.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False,
+                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False,
                  dummy_input: Optional[Tensor] = None, evaluator: Callable[[Module], float] = None):
         task_generator = AutoCompressTaskGenerator(total_iteration=total_iteration,
                                                    origin_model=model,
@@ -158,21 +121,6 @@ class AutoCompressPruner(IterativePruner):
                                                    keep_intermediate_result=keep_intermediate_result)
         if 'traced_optimizer' in admm_params:
             admm_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, admm_params['traced_optimizer'])
-        # granularity in ADMM stage will align with SA stage, if 'granularity' is not specify
-        if 'granularity' not in admm_params:
-            # only if level pruning and fine-grained admm pruning used in SA, fine-grained admm pruning will used in auto-compress
-            if 'pruning_algorithm' in sa_params:
-                sa_algo = sa_params['pruning_algorithm']
-                sa_algo_params = sa_params.get('pruning_params')
-                if sa_algo in ['level']:
-                    admm_params['granularity'] = 'fine-grained'
-                elif sa_algo in ['admm'] and (sa_algo_params is not None) and not (sa_algo_params.get('granularity') == 'coarse-grained'):
-                    admm_params['granularity'] = 'fine-grained'
-                else:
-                    admm_params['granularity'] = 'coarse-grained'
-            else:
-                admm_params['granularity'] = 'fine-grained'
-
         pruner = ADMMPruner(None, None, **admm_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
+        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)

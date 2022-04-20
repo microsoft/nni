@@ -631,7 +631,6 @@ class Quantizer(Compressor):
         """
         quantize should overload this method to quantize weight.
         This method is effectively hooked to :meth:`forward` of the model.
-
         Parameters
         ----------
         wrapper : QuantizerModuleWrapper
@@ -643,7 +642,6 @@ class Quantizer(Compressor):
         """
         quantize should overload this method to quantize output.
         This method is effectively hooked to :meth:`forward` of the model.
-
         Parameters
         ----------
         output : Tensor
@@ -657,7 +655,6 @@ class Quantizer(Compressor):
         """
         quantize should overload this method to quantize input.
         This method is effectively hooked to :meth:`forward` of the model.
-
         Parameters
         ----------
         inputs : Tensor
@@ -911,7 +908,6 @@ class QuantGrad(torch.autograd.Function):
     def _quantize(cls, x, scale, zero_point):
         """
         Reference function for quantizing x -- non-clamped.
-
         Parameters
         ----------
         x : Tensor
@@ -920,7 +916,6 @@ class QuantGrad(torch.autograd.Function):
             scale for quantizing x
         zero_point : Tensor
             zero_point for quantizing x
-
         Returns
         -------
         tensor
@@ -932,14 +927,12 @@ class QuantGrad(torch.autograd.Function):
     def get_bits_length(cls, config, quant_type):
         """
         Get bits for quantize config
-
         Parameters
         ----------
         config : Dict
             the configuration for quantization
         quant_type : str
             quant type
-
         Returns
         -------
         int
@@ -955,7 +948,6 @@ class QuantGrad(torch.autograd.Function):
         """
         This method should be overrided by subclass to provide customized backward function,
         default implementation is Straight-Through Estimator
-
         Parameters
         ----------
         tensor : Tensor
@@ -971,7 +963,6 @@ class QuantGrad(torch.autograd.Function):
             quant_min for quantizing tensor
         qmax : Tensor
             quant_max for quantizng tensor
-
         Returns
         -------
         tensor

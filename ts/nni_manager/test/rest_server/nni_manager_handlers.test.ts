@@ -21,8 +21,6 @@ import { testExperimentManagerProvider } from '../mock/experimentManager';
 import { TensorboardManager } from '../../common/tensorboardManager';
 import { NNITensorboardManager } from '../../core/nniTensorboardManager';
 
-let restServer: RestServer;
-
 describe('Unit test for rest server', () => {
 
     let ROOT_URL: string;
@@ -34,7 +32,7 @@ describe('Unit test for rest server', () => {
         Container.bind(TrainingService).to(MockedTrainingService);
         Container.bind(ExperimentManager).provider(testExperimentManagerProvider);
         Container.bind(TensorboardManager).to(NNITensorboardManager);
-        restServer = new RestServer(8080, '');
+        const restServer: RestServer = component.get(RestServer);
         restServer.start().then(() => {
             ROOT_URL = `http://localhost:8080/api/v1/nni`;
             done();
@@ -44,7 +42,7 @@ describe('Unit test for rest server', () => {
     });
 
     after(() => {
-        restServer.shutdown();
+        component.get<RestServer>(RestServer).shutdown();
         cleanupUnitTest();
     });
 

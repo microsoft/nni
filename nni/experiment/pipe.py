@@ -1,6 +1,4 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT license.
-
+from io import BufferedIOBase
 import logging
 import os
 import sys
@@ -27,7 +25,7 @@ if sys.platform == 'win32':
                 _winapi.NULL
             )
 
-        def connect(self):
+        def connect(self) -> BufferedIOBase:
             _winapi.ConnectNamedPipe(self._handle, _winapi.NULL)
             fd = msvcrt.open_osfhandle(self._handle, 0)
             self.file = os.fdopen(fd, 'w+b')
@@ -57,7 +55,7 @@ else:
             self._socket.bind(self.path)
             self._socket.listen(1)  # only accepts one connection
 
-        def connect(self):
+        def connect(self) -> BufferedIOBase:
             conn, _ = self._socket.accept()
             self.file = conn.makefile('rwb')
             return self.file

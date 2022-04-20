@@ -18,22 +18,21 @@ import { Container } from 'typescript-ioc';
 import glob from 'glob';
 
 import { Database, DataStore } from './datastore';
-import globals from './globals';
-import { resetGlobals } from './globals/unittest';  // TODO: this file should not contain unittest helpers
+import { getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { ExperimentConfig, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
-    return globals.paths.experimentRoot;
+    return getExperimentStartupInfo().logDir;
 }
 
 function getLogDir(): string {
-    return globals.paths.logDirectory;
+    return path.join(getExperimentRootDir(), 'log');
 }
 
 function getLogLevel(): string {
-    return globals.args.logLevel;
+    return getExperimentStartupInfo().logLevel;
 }
 
 function getDefaultDatabaseDir(): string {
@@ -105,6 +104,18 @@ function randomSelect<T>(a: T[]): T {
     return a[Math.floor(Math.random() * a.length)];
 }
 
+function parseArg(names: string[]): string {
+    if (process.argv.length >= 4) {
+        for (let i: number = 2; i < process.argv.length - 1; i++) {
+            if (names.includes(process.argv[i])) {
+                return process.argv[i + 1];
+            }
+        }
+    }
+
+    return '';
+}
+
 function getCmdPy(): string {
     let cmd = 'python3';
     if (process.platform === 'win32') {
@@ -154,7 +165,10 @@ function prepareUnitTest(): void {
     Container.snapshot(Manager);
     Container.snapshot(ExperimentManager);
 
-    resetGlobals();
+    const logLevel: string = parseArg(['--log_level', '-ll']);
+
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
+    mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');
     try {
@@ -174,6 +188,8 @@ function cleanupUnitTest(): void {
     Container.restore(DataStore);
     Container.restore(Database);
     Container.restore(ExperimentManager);
+    const logLevel: string = parseArg(['--log_level', '-ll']);
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
 }
 
 let cachedIpv4Address: string | null = null;
@@ -418,5 +434,5 @@ export function importModule(modulePath: string): any {
 export {
     countFilesRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync, getFreePort, isPortOpen,
-    mkDirP, mkDirPSync, delay, prepareUnitTest, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
+    mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };

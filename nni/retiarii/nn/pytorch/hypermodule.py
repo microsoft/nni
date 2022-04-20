@@ -1,14 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from packaging.version import Version
 import torch
 import torch.nn as nn
 
 from nni.retiarii.serializer import basic_unit
 
 from .api import LayerChoice
-from .mutation_utils import generate_new_label
+from .utils import generate_new_label
+from ...utils import version_larger_equal
 
 __all__ = ['AutoActivation']
 
@@ -99,7 +99,7 @@ class UnaryTanh(nn.Module):
     def forward(self, x):
         return torch.tanh(x)
 
-if not Version(torch.__version__) >= Version(TorchVersion):
+if not version_larger_equal(torch.__version__, TorchVersion):
     @basic_unit
     class UnaryAsinh(nn.Module):
         def forward(self, x):
@@ -110,7 +110,7 @@ class UnaryAtan(nn.Module):
     def forward(self, x):
         return torch.atan(x)
 
-if not Version(torch.__version__) >= Version(TorchVersion):
+if not version_larger_equal(torch.__version__, TorchVersion):
     @basic_unit
     class UnarySinc(nn.Module):
         def forward(self, x):
@@ -151,7 +151,7 @@ unary_modules = ['UnaryIdentity', 'UnaryNegative', 'UnaryAbs', 'UnarySquare', 'U
     'UnarySinh', 'UnaryCosh', 'UnaryTanh', 'UnaryAtan', 'UnaryMax',
     'UnaryMin', 'UnarySigmoid', 'UnaryLogExp', 'UnaryExpSquare', 'UnaryErf']
 
-if not Version(torch.__version__) >= Version(TorchVersion):
+if not version_larger_equal(torch.__version__, TorchVersion):
     unary_modules.append('UnaryAsinh')
     unary_modules.append('UnarySinc')
 
@@ -222,16 +222,14 @@ binary_modules = ['BinaryAdd', 'BinaryMul', 'BinaryMinus', 'BinaryDivide', 'Bina
 
 class AutoActivation(nn.Module):
     """
-    This module is an implementation of the paper `Searching for Activation Functions <https://arxiv.org/abs/1710.05941>`__.
+    This module is an implementation of the paper "Searching for Activation Functions"
+    (https://arxiv.org/abs/1710.05941).
+    NOTE: current `beta` is not per-channel parameter
 
     Parameters
     ----------
     unit_num : int
         the number of core units
-
-    Notes
-    -----
-    Current `beta` is not per-channel parameter.
     """
     def __init__(self, unit_num: int = 1, label: str = None):
         super().__init__()

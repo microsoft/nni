@@ -1,0 +1,46 @@
+   * - 
+     - Recommended
+     - Minimum
+   * - **Operating System**
+     - macOS 10.14.1 or above
+   * - **CPU**
+     - Intel® Core™ i7-4770 or better
+     - Intel® Core™ i5-760 or better
+   * - **GPU**
+     - AMD Radeon™ R9 M395X or better
+     - NVIDIA® GeForce® GT 750M or AMD Radeon™ R9 M290 or better
+   * - **Memory**
+     - 8 GB RAM
+     - 4 GB RAM
+   * - **Storage**
+     - 70GB available space SSD
+     - 70GB available space 7200 RPM HDD
+   * - **Internet**
+     - Boardband internet connection
+   * - **Resolution**
+     - 1024 x 768 minimum display resolution
+%%%%%%
+   * -
+     - Recommended
+     - Minimum
+   * - **Operating System**
+     - macOS 10.14.1 or above
+     - 
+   * - **CPU**
+     - Intel® Core™ i7-4770 or better
+     - Intel® Core™ i5-760 or better
+   * - **GPU**
+     - AMD Radeon™ R9 M395X or better
+     - NVIDIA® GeForce® GT 750M or AMD Radeon™ R9 M290 or better
+   * - **Memory**
+     - 8 GB RAM
+     - 4 GB RAM
+   * - **Storage**
+     - 70GB available space SSD
+     - 70GB available space 7200 RPM HDD
+   * - **Internet**
+     - Boardband internet connection
+     - 
+   * - **Resolution**
+     - 1024 x 768 minimum display resolution
+     - 
