@@ -22,7 +22,7 @@ import Customize from './tableFunction/CustomizedTrial';
 import TensorboardUI from './tableFunction/tensorboard/TensorboardUI';
 import Search from './tableFunction/search/Search';
 import KillJob from './tableFunction/killTrial/Killjob';
-import ExpandableDetails from '@components/common/ExpandableDetails';
+import ExpandableDetails from '@/components/common/ExpandableDetails/ExpandableIndex';
 import PaginationTable from '@components/common/PaginationTable';
 import CopyButton from '@components/common/CopyButton';
 import { Trial } from '@model/trial';

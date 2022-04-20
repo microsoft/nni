@@ -8,8 +8,8 @@ import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { reformatRetiariiParameter } from '@static/function';
 import PaiTrialLog from './PaiTrialLog';
 import TrialLog from './TrialLog';
-import MessageInfo from './MessageInfo';
-import PanelMonacoEditor from './PanelMonacoEditor';
+import MessageInfo from '../MessageInfo';
+import PanelMonacoEditor from '../PanelMonacoEditor';
 import '@style/experiment/overview/overview.scss';
 import '@style/copyParameter.scss';
 import '@style/openRow.scss';
@@ -137,15 +137,14 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                         <PivotItem headerText='Log' key='2' itemIcon='M365InvoicingLogo'>
                             {
                                 // FIXME: this should not be handled in web UI side
-                                EXPERIMENT.trainingServicePlatform !== 'local' ? (
+                                EXPERIMENT.trainingServicePlatform === 'local' ? (
                                     <PaiTrialLog
-                                        logStr={logPathRow}
-                                        id={trialId}
-                                        logCollection={EXPERIMENT.logCollectionEnabled}
+                                        logStr={'path1,http://path2'}
+                                        // logStr={logPathRow}
                                     />
                                 ) : (
                                     <div>
-                                        <TrialLog logStr={logPathRow} id={trialId} />
+                                        <TrialLog logStr={logPathRow} logName='LogPath:' />
                                         {/* view each trial log in drawer*/}
                                         <div id='trialog'>
                                             <div className='copy' style={{ marginTop: 15 }}>
