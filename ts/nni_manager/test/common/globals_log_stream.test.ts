@@ -45,6 +45,8 @@ async function testClose(): Promise<void> {
 /* register test cases */
 
 describe('## globals.log_stream ##', () => {
+    before(beforeHook);
+
     it('background', () => testWrite());
     it('background close', () => testClose());
 
@@ -52,6 +54,8 @@ describe('## globals.log_stream ##', () => {
 
     it('foreground', () => testWrite());
     it('foreground close', () => testClose());
+
+    after(afterHook);
 });
 
 /* configure test environment */
@@ -59,12 +63,12 @@ describe('## globals.log_stream ##', () => {
 const origConsoleLog = console.log;
 const tempDir = fs.mkdtempSync('nni-ut-');
 
-before(() => {
+function beforeHook() {
     console.log = (line => { consoleContent += line + '\n'; });
     globals.paths.nniManagerLog = path.join(tempDir, 'nnimanager.log');
     globals.args.foreground = false;
     logStream = initLogStream(globals.args, globals.paths);
-});
+}
 
 function switchForeground() {
     logStream.close();
@@ -75,8 +79,8 @@ function switchForeground() {
     logStream = initLogStream(globals.args, globals.paths);
 }
 
-after(() => {
+function afterHook() {
     console.log = origConsoleLog;
     fs.rmSync(tempDir, { force: true, recursive: true });
     globals.reset();
-});
+}

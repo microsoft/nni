@@ -90,7 +90,6 @@ async function testOutsidePrefix(): Promise<void> {
 
 describe('## rest_server ##', () => {
     before(beforeHook);
-    after(afterHook);
 
     it('logs', () => testLogs());
     it('netron get', () => testNetronGet());
@@ -110,6 +109,8 @@ describe('## rest_server ##', () => {
     it('prefix webui resource', () => testWebuiResource());
     it('prefix webui routing', () => testWebuiRouting());
     it('outside prefix', () => testOutsidePrefix());
+
+    after(afterHook);
 });
 
 /* Configure test environment */

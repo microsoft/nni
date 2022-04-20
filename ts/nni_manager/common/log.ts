@@ -29,7 +29,7 @@ export function getLogger(name: string): Logger {
 
 /**
  *  A special logger prints to stderr when the logging system has problems.
- *  For modules that are hard to debug.
+ *  For modules that are responsible for handling logger errors.
  **/
 export function getRobustLogger(name: string): Logger {
     if (loggers[name] === undefined || !(loggers[name] as RobustLogger).robust) {
