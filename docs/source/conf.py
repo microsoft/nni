@@ -115,9 +115,6 @@ bibtex_footbibliography_header = '.. rubric:: Bibliography'
 # Set bibliography style
 bibtex_default_style = 'plain'
 
-# Bibliography files
-bibtex_bibfiles = ['refs.bib']
-
 # Sphinx gallery examples
 sphinx_gallery_conf = {
     'examples_dirs': '../../examples/tutorials',   # path to your example scripts
