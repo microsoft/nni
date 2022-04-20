@@ -1,0 +1,63 @@
+// GLOBALS: input0:float32[32, 512, 49] -> output0:float32[32, 49, 512]
+// BACKEND: c-cuda (default)
+// CONFIG: {"Foutput0:D0": [-1, 2, 1, 1], "Foutput0:D1": [-1, 1, 7, 1], "Foutput0:D2": [-1, 2, 16, 1], "Foutput0:O": [2, 0, 1], "Foutput0:S": 4, "Foutput0:R": 1}
+// COMPUTE_V1: - einstein_v2("mediate0[N0, N1, N2] = input0[N0, N1, N2] * input0[N0, N1, N2].call(`normcdf`); output0[N0, N2, N1] = mediate0[N0, N1, N2] ; ", input_dict={ "input0" : { "dtype" : "float32", "shape" : [32, 512, 49]} }) ## @:
+
+
+// ---------------------------------------------------------------------------
+// LOCAL: template_op_kernel0 -- input0:float32[32, 512, 49] -> output0:float32[32, 49, 512]
+
+#include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <mma.h>
+
+#ifndef __CUDA_COMMON_MACRO__
+#define __CUDA_COMMON_MACRO__
+
+#define __ITEM_0_OF__(v) (v).x
+#define __ITEM_1_OF__(v) (v).y
+#define __ITEM_2_OF__(v) (v).z
+#define __ITEM_3_OF__(v) (v).w
+
+#define __STORE_ITEM_0__(t, out, ido, in, idi) *(t*)(out + ido) = *(t*)(in + idi)
+#define __STORE_ITEM_1__(t, out, ido, in, idi)
+#define __STORE_ITEM_2__(t, out, ido, in, idi)
+#define __STORE_ITEM_3__(t, out, ido, in, idi)
+
+#define MAKE_VEC4_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y, l.z + r.z, l.w + r.w); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y, l.z - r.z, l.w - r.w); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y, l.z * r.z, l.w * r.w); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y, l.z / r.z, l.w / r.w); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y, l.z % r.z, l.w % r.w); }
+#define MAKE_VEC2_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y); }
+
+MAKE_VEC4_OP(int4)
+MAKE_VEC2_OP(int2)
+
+__forceinline__ __device__ __half max(const __half a, const __half b) { return a > b ? a : b; }
+__forceinline__ __device__ __half min(const __half a, const __half b) { return a < b ? a : b; }
+
+#endif
+
+
+extern "C" __global__ __launch_bounds__(112) void template_op_kernel0(float* __restrict__ input0, float* __restrict__ output0) {
+  // [thread_extent] blockIdx.x = 16
+  // [thread_extent] threadIdx.x = 1
+  // [thread_extent] blockIdx.y = 7
+  // [thread_extent] threadIdx.y = 7
+  // [thread_extent] blockIdx.z = 16
+  // [thread_extent] threadIdx.z = 16
+  output0[((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.y) * 3584)) + (((int)threadIdx.y) * 512)) + (((int)blockIdx.z) * 32)) + ((int)threadIdx.z)))] = (input0[((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.z) * 1568)) + (((int)threadIdx.z) * 49)) + (((int)blockIdx.y) * 7)) + ((int)threadIdx.y)))] * normcdf(input0[((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.z) * 1568)) + (((int)threadIdx.z) * 49)) + (((int)blockIdx.y) * 7)) + ((int)threadIdx.y)))]));
+  output0[(((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.y) * 3584)) + (((int)threadIdx.y) * 512)) + (((int)blockIdx.z) * 32)) + ((int)threadIdx.z)) + 16))] = (input0[(((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.z) * 1568)) + (((int)threadIdx.z) * 49)) + (((int)blockIdx.y) * 7)) + ((int)threadIdx.y)) + 784))] * normcdf(input0[(((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.z) * 1568)) + (((int)threadIdx.z) * 49)) + (((int)blockIdx.y) * 7)) + ((int)threadIdx.y)) + 784))]));
+  output0[(((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.y) * 3584)) + (((int)threadIdx.y) * 512)) + (((int)blockIdx.z) * 32)) + ((int)threadIdx.z)) + 25088))] = (input0[(((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.z) * 1568)) + (((int)threadIdx.z) * 49)) + (((int)blockIdx.y) * 7)) + ((int)threadIdx.y)) + 25088))] * normcdf(input0[(((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.z) * 1568)) + (((int)threadIdx.z) * 49)) + (((int)blockIdx.y) * 7)) + ((int)threadIdx.y)) + 25088))]));
+  output0[(((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.y) * 3584)) + (((int)threadIdx.y) * 512)) + (((int)blockIdx.z) * 32)) + ((int)threadIdx.z)) + 25104))] = (input0[(((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.z) * 1568)) + (((int)threadIdx.z) * 49)) + (((int)blockIdx.y) * 7)) + ((int)threadIdx.y)) + 25872))] * normcdf(input0[(((((((((int)blockIdx.x) * 50176) + (((int)blockIdx.z) * 1568)) + (((int)threadIdx.z) * 49)) + (((int)blockIdx.y) * 7)) + ((int)threadIdx.y)) + 25872))]));
+}
+
+// Saved Perf = 1.208750e-05 sec / run; Step Produced = 588; Planned Steps = 1000;
+// Antares Tuning Completed in 1000 steps.

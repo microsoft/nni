@@ -1,0 +1,83 @@
+// GLOBALS: input0:float32[768, 48, 128] -> output0:float32[48, 48, 128]
+// BACKEND: c-cuda (default)
+// CONFIG: {"Foutput0:D0": [-1, 2, 2, 3], "Foutput0:D1": [-1, 2, 1, 2], "Foutput0:D2": [-1, 1, 16, 1], "Foutput0:O": [2, 0, 1], "Foutput0:S": 4, "Foutput0:R": 0}
+// COMPUTE_V1: - einstein_v2(" output0[N0, N1, N2] = input0[N0 + 144, N1 + 0, N2 + 0] where N0 in 48 , N1 in 48 , N2 in 128; ", input_dict={ "input0" : { "dtype" : "float32", "shape" : [768, 48, 128]} })
+
+
+// ---------------------------------------------------------------------------
+// LOCAL: template_op_kernel0 -- input0:float32[768, 48, 128] -> output0:float32[48, 48, 128]
+
+#include <cuda_runtime.h>
+#include <cuda_fp16.h>
+#include <mma.h>
+
+#ifndef __CUDA_COMMON_MACRO__
+#define __CUDA_COMMON_MACRO__
+
+#define __ITEM_0_OF__(v) (v).x
+#define __ITEM_1_OF__(v) (v).y
+#define __ITEM_2_OF__(v) (v).z
+#define __ITEM_3_OF__(v) (v).w
+
+#define __STORE_ITEM_0__(t, out, ido, in, idi) *(t*)(out + ido) = *(t*)(in + idi)
+#define __STORE_ITEM_1__(t, out, ido, in, idi)
+#define __STORE_ITEM_2__(t, out, ido, in, idi)
+#define __STORE_ITEM_3__(t, out, ido, in, idi)
+
+#define MAKE_VEC4_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y, l.z + r.z, l.w + r.w); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y, l.z - r.z, l.w - r.w); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y, l.z * r.z, l.w * r.w); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y, l.z / r.z, l.w / r.w); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y, l.z % r.z, l.w % r.w); }
+#define MAKE_VEC2_OP(type) \
+  __forceinline__ __device__ type operator+(const type &l, const type &r) { return make_##type(l.x + r.x, l.y + r.y); } \
+  __forceinline__ __device__ type operator-(const type &l, const type &r) { return make_##type(l.x - r.x, l.y - r.y); } \
+  __forceinline__ __device__ type operator*(const type &l, const type &r) { return make_##type(l.x * r.x, l.y * r.y); } \
+  __forceinline__ __device__ type operator/(const type &l, const type &r) { return make_##type(l.x / r.x, l.y / r.y); } \
+  __forceinline__ __device__ type operator%(const type &l, const type &r) { return make_##type(l.x % r.x, l.y % r.y); }
+
+MAKE_VEC4_OP(int4)
+MAKE_VEC2_OP(int2)
+
+__forceinline__ __device__ __half max(const __half a, const __half b) { return a > b ? a : b; }
+__forceinline__ __device__ __half min(const __half a, const __half b) { return a < b ? a : b; }
+
+#endif
+
+
+extern "C" __global__ __launch_bounds__(32) void template_op_kernel0(float* __restrict__ input0, float* __restrict__ output0) {
+  // [thread_extent] blockIdx.x = 4
+  // [thread_extent] threadIdx.x = 2
+  // [thread_extent] blockIdx.y = 12
+  // [thread_extent] threadIdx.y = 1
+  // [thread_extent] blockIdx.z = 8
+  // [thread_extent] threadIdx.z = 16
+  output0[((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 884736))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 6144))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 890880))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 12288))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 897024))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 36864))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 921600))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 43008))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 927744))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 49152))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 933888))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 128))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 884864))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 6272))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 891008))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 12416))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 897152))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 36992))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 921728))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 43136))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 927872))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 49280))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 934016))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 256))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 884992))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 6400))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 891136))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 12544))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 897280))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 37120))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 921856))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 43264))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 928000))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 49408))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 934144))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 384))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 885120))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 6528))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 891264))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 12672))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 897408))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 37248))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 921984))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 43392))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 928128))];
+  output0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 49536))] = input0[(((((((((int)blockIdx.x) * 73728) + (((int)threadIdx.x) * 18432)) + (((int)blockIdx.y) * 512)) + (((int)blockIdx.z) * 16)) + ((int)threadIdx.z)) + 934272))];
+}
+
+// Saved Perf = 3.375640e-06 sec / run; Step Produced = 409; Planned Steps = 1000;
+// Antares Tuning Completed in 1000 steps.

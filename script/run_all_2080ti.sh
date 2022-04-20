@@ -44,6 +44,12 @@ pushd figure19
 bash run.sh
 popd
 
+echo "reproducing figure11"
+pushd figure11
+bash run.sh
+popd
+
+
 echo "reproduing acc in table3"
 push table3
 bash run.sh
