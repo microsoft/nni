@@ -47,6 +47,7 @@ stages:
 
     - script: |
         cd docs
+        rm -rf build
         make -e SPHINXOPTS="-W -T -b linkcheck -q --keep-going" html
       displayName: External links integrity check
 

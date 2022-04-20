@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: NNI \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-12 17:35+0000\n"
+"POT-Creation-Date: 2022-04-20 05:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,10 +19,6 @@ msgstr ""
 
 #: ../../source/index.rst:4 ../../source/index.rst:52
 msgid "Get Started"
-msgstr ""
-
-#: ../../source/index.rst:12
-msgid "Hyperparameter Optimization"
 msgstr ""
 
 #: ../../source/index.rst:12
@@ -85,36 +81,32 @@ msgstr ""
 msgid "Try your first NNI experiment"
 msgstr ""
 
-#: ../../source/index.rst:65
-msgid "To run your first NNI experiment:"
-msgstr ""
-
-#: ../../source/index.rst:71
+#: ../../source/index.rst:69
 msgid ""
-"you need to have `PyTorch <https://pytorch.org/>`_ (as well as "
+"You need to have `PyTorch <https://pytorch.org/>`_ (as well as "
 "`torchvision <https://pytorch.org/vision/stable/index.html>`_) installed "
 "to run this experiment."
 msgstr ""
 
-#: ../../source/index.rst:73
+#: ../../source/index.rst:71
 msgid ""
 "To start your journey now, please follow the :doc:`absolute quickstart of"
 " NNI <quickstart>`!"
 msgstr ""
 
-#: ../../source/index.rst:76
+#: ../../source/index.rst:74
 msgid "Why choose NNI?"
 msgstr ""
 
-#: ../../source/index.rst:79
+#: ../../source/index.rst:77
 msgid "NNI makes AutoML techniques plug-and-play"
 msgstr ""
 
-#: ../../source/index.rst:223
+#: ../../source/index.rst:221
 msgid "NNI eases the effort to scale and manage AutoML experiments"
 msgstr ""
 
-#: ../../source/index.rst:231
+#: ../../source/index.rst:229
 msgid ""
 "An AutoML experiment requires many trials to explore feasible and "
 "potentially good-performing models. **Training service** aims to make the"
@@ -124,13 +116,13 @@ msgid ""
 "kinds of training services."
 msgstr ""
 
-#: ../../source/index.rst:242
+#: ../../source/index.rst:240
 msgid ""
 "Web portal visualizes the tuning process, exposing the ability to "
 "inspect, monitor and control the experiment."
 msgstr ""
 
-#: ../../source/index.rst:253
+#: ../../source/index.rst:251
 msgid ""
 "The DNN model tuning often requires more than one experiment. Users might"
 " try different tuning algorithms, fine-tune their search space, or switch"
@@ -139,68 +131,89 @@ msgid ""
 "so that the tuning workflow becomes clean and organized."
 msgstr ""
 
-#: ../../source/index.rst:259
+#: ../../source/index.rst:257
 msgid "Get Support and Contribute Back"
 msgstr ""
 
-#: ../../source/index.rst:261
+#: ../../source/index.rst:259
 msgid ""
 "NNI is maintained on the `NNI GitHub repository "
 "<https://github.com/microsoft/nni>`_. We collect feedbacks and new "
 "proposals/ideas on GitHub. You can:"
 msgstr ""
 
-#: ../../source/index.rst:263
+#: ../../source/index.rst:261
 msgid ""
 "Open a `GitHub issue <https://github.com/microsoft/nni/issues>`_ for bugs"
 " and feature requests."
 msgstr ""
 
-#: ../../source/index.rst:264
+#: ../../source/index.rst:262
 msgid ""
 "Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to "
-"contribute code (make sure to read the `contribution guide "
-"</contribution>` before doing this)."
+"contribute code (make sure to read the :doc:`contribution guide "
+"<notes/contributing>` before doing this)."
 msgstr ""
 
-#: ../../source/index.rst:265
+#: ../../source/index.rst:263
 msgid ""
 "Participate in `NNI Discussion "
 "<https://github.com/microsoft/nni/discussions>`_ for general questions "
 "and new ideas."
 msgstr ""
 
-#: ../../source/index.rst:266
+#: ../../source/index.rst:264
 msgid "Join the following IM groups."
 msgstr ""
 
-#: ../../source/index.rst:272
+#: ../../source/index.rst:270
 msgid "Gitter"
 msgstr ""
 
-#: ../../source/index.rst:273
+#: ../../source/index.rst:271
 msgid "WeChat"
 msgstr ""
 
-#: ../../source/index.rst:280
+#: ../../source/index.rst:278
 msgid "Citing NNI"
 msgstr ""
 
-#: ../../source/index.rst:282
+#: ../../source/index.rst:280
 msgid ""
 "If you use NNI in a scientific publication, please consider citing NNI in"
 " your references."
 msgstr ""
 
-#: ../../source/index.rst:284
+#: ../../source/index.rst:282
 msgid ""
 "Microsoft. Neural Network Intelligence (version |release|). "
 "https://github.com/microsoft/nni"
 msgstr ""
 
-#: ../../source/index.rst:286
+#: ../../source/index.rst:284
 msgid ""
 "Bibtex entry (please replace the version with the particular version you "
 "are using): ::"
 msgstr ""
+
+#~ msgid "Hyperparameter Optimization"
+#~ msgstr ""
+
+#~ msgid "To run your first NNI experiment:"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "you need to have `PyTorch "
+#~ "<https://pytorch.org/>`_ (as well as "
+#~ "`torchvision <https://pytorch.org/vision/stable/index.html>`_)"
+#~ " installed to run this experiment."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Open a `pull request "
+#~ "<https://github.com/microsoft/nni/pulls>`_ to contribute"
+#~ " code (make sure to read the "
+#~ "`contribution guide </contribution>` before "
+#~ "doing this)."
+#~ msgstr ""
 

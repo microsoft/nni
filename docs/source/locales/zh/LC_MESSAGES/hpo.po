@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: NNI \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-13 03:14+0000\n"
+"POT-Creation-Date: 2022-04-20 05:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -189,19 +189,23 @@ msgid ""
 "</reference/nnictl>`"
 msgstr ""
 
-#: ../../source/hpo/overview.rst:109
-msgid ":doc:`Early stop non-optimal models (assessor) <assessors>`"
-msgstr ""
-
 #: ../../source/hpo/overview.rst:110
-msgid ":doc:`TensorBoard integration </experiment/web_portal/tensorboard>`"
-msgstr ""
-
-#: ../../source/hpo/overview.rst:111
-msgid ":doc:`Implement your own algorithm <custom_algorithm>`"
+msgid ":doc:`nnictl example </tutorials/hpo_nnictl/nnictl>`"
 msgstr ""
 
 #: ../../source/hpo/overview.rst:112
+msgid ":doc:`Early stop non-optimal models (assessor) <assessors>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:113
+msgid ":doc:`TensorBoard integration </experiment/web_portal/tensorboard>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:114
+msgid ":doc:`Implement your own algorithm <custom_algorithm>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:115
 msgid ":doc:`Benchmark tuners <hpo_benchmark>`"
 msgstr ""
 
