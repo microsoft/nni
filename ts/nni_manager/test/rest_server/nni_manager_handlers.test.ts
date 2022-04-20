@@ -18,6 +18,8 @@ import { MockedTrainingService } from '../mock/trainingService';
 import { RestServer, UnitTestHelpers } from 'rest_server';
 import { testManagerProvider } from '../mock/nniManager';
 import { testExperimentManagerProvider } from '../mock/experimentManager';
+import { TensorboardManager } from '../../common/tensorboardManager';
+import { MockTensorboardManager } from '../mock/mockTensorboardManager';
 
 let restServer: RestServer;
 
@@ -31,6 +33,7 @@ describe('Unit test for rest handler', () => {
         Container.bind(DataStore).to(MockedDataStore);
         Container.bind(TrainingService).to(MockedTrainingService);
         Container.bind(ExperimentManager).provider(testExperimentManagerProvider);
+        Container.bind(TensorboardManager).to(MockTensorboardManager);
         restServer = new RestServer(0, '');
         await restServer.start();
         const port = UnitTestHelpers.getPort(restServer);
