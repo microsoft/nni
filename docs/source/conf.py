@@ -61,6 +61,7 @@ extensions = [
 
     # Custom extensions in extension/ folder.
     'tutorial_links',  # this has to be after sphinx-gallery
+    'getpartialtext',
     'inplace_translation',
     'cardlinkitem',
     'codesnippetcard',
@@ -188,6 +189,18 @@ master_doc = 'index'
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
 language = None
+
+# Translation related settings
+locale_dir = ['locales']
+
+# Documents that requires translation: https://github.com/microsoft/nni/issues/4298
+gettext_documents = [
+    r'^index$',
+    r'^quickstart$',
+    r'^installation$',
+    r'^(nas|hpo|compression)/overview$',
+    r'^tutorials/(hello_nas|pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
+]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

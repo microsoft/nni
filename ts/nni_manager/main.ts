@@ -28,7 +28,7 @@ import { Container, Scope } from 'typescript-ioc';
 import * as component from 'common/component';
 import { Database, DataStore } from 'common/datastore';
 import { ExperimentManager } from 'common/experimentManager';
-import { NniManagerArgs, parseArgs } from 'common/globals/arguments';
+import globals, { initGlobals } from 'common/globals';
 import { getLogger, setLogLevel, startLogging } from 'common/log';
 import { Manager } from 'common/manager';
 import { TensorboardManager } from 'common/tensorboardManager';
@@ -40,10 +40,6 @@ import { SqlDB } from 'core/sqlDatabase';
 import { RestServer } from 'rest_server';
 
 import path from 'path';
-import { setExperimentStartupInfo } from 'common/experimentStartupInfo';
-
-// TODO: this line should be inside initGlobals()
-const args: NniManagerArgs = parseArgs(process.argv.slice(2));
 
 async function start(): Promise<void> {
     getLogger('main').info('Start NNI manager');
@@ -57,7 +53,7 @@ async function start(): Promise<void> {
     const ds: DataStore = component.get(DataStore);
     await ds.init();
 
-    const restServer = new RestServer(args.port, args.urlPrefix);
+    const restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
     await restServer.start();
 }
 
@@ -74,12 +70,11 @@ process.on('SIGINT', shutdown);
 
 /* main */
 
+initGlobals();
+
 // TODO: these should be handled inside globals module
-setExperimentStartupInfo(args);
-const logDirectory = path.join(args.experimentsDirectory, args.experimentId, 'log');
-fs.mkdirSync(logDirectory, { recursive: true });
-startLogging(path.join(logDirectory, 'nnimanager.log'));
-setLogLevel(args.logLevel);
+startLogging(globals.paths.nniManagerLog);
+setLogLevel(globals.args.logLevel);
 
 start().then(() => {
     getLogger('main').debug('start() returned.');

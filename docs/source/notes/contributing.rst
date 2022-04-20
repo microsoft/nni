@@ -305,16 +305,31 @@ To contribute a new tutorial, here are the steps to follow:
    * `How to add images to notebooks <https://sphinx-gallery.github.io/stable/configuration.html#adding-images-to-notebooks>`_.
    * `How to reference a tutorial in documentation <https://sphinx-gallery.github.io/stable/advanced.html#cross-referencing>`_.
 
-Chinese translation
-^^^^^^^^^^^^^^^^^^^
+Translation (i18n)
+^^^^^^^^^^^^^^^^^^
 
-We only maintain `a partial set of documents <https://github.com/microsoft/nni/issues/4298>`_ with Chinese translation. If you intend to contribute more, follow the steps:
+We only maintain `a partial set of documents <https://github.com/microsoft/nni/issues/4298>`_ with translation. Currently, translation is provided in Simplified Chinese only.
 
-1. Add a ``xxx_zh.rst`` in the same folder where ``xxx.rst`` exists. 
-2. Run ``python tools/chineselink.py`` under ``docs`` folder, to generate a hash string in your created ``xxx_zh.rst``.
-3. Don't delete the hash string, add your translation after it.
+* If you want to update the translation of an existing document, please update messages in ``docs/source/locales``.
+* If you have updated a translated English document, we require that the corresponding translated documents to be updated (at least the update should be triggered). Please follow these steps:
 
-In case you modify an English document with Chinese translation already exists, you also need to run ``python tools/chineselink.py`` first to update the hash string, and update the Chinese translation contents accordingly.
+  1. Run ``make i18n`` under ``docs`` folder.
+  2. Verify that there are new messages in ``docs/source/locales``.
+  3. Translate the messages.
+
+* If you intend to translate a new document:
+
+  1. Update ``docs/source/conf.py`` to make ``gettext_documents`` include your document (probably adding a new regular expression).
+  2. See the steps above.
+
+
+To build the translated documentation (for example Chinese documentation), please run:
+
+.. code-block:: bash
+
+   make -e SPHINXOPTS="-D language='zh'" html
+
+If you ever encountered problems for translation builds, try to remove the previous build via ``rm -r docs/build/``.
 
 .. _code-of-conduct:
 
