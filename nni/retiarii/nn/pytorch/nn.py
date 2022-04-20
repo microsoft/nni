@@ -94,6 +94,8 @@ def generate_stub_file() -> str:
 
         all_names.append(name)
 
+    code.append(f'__all__ = {all_names}')
+
     return '\n'.join(code)
 
 
