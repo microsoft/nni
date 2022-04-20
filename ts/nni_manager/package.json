@@ -86,7 +86,7 @@
     "http-signature": ">=1.3.6"
   },
   "engines": {
-    "node": "^16.13.2"
+    "node": ">=16.13.2"
   },
   "nyc": {
     "include": [
