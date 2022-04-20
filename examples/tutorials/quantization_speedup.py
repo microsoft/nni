@@ -30,7 +30,7 @@ model to generate inference engine.
 
 
 Quantization aware training combines NNI quantization algorithm 'QAT' and NNI quantization speedup tool.
-Users should set config to train quantized model using QAT algorithm(please refer to `NNI Quantization Algorithms <https://nni.readthedocs.io/en/stable/Compression/Quantizer.html>`__\  ).
+Users should set config to train quantized model using QAT algorithm(please refer to :doc:`NNI Quantization Algorithms <../compression/quantizer>`  ).
 After quantization aware training, users can get new config with calibration parameters and model with quantized weight. By passing new config and model to quantization speedup tool, users can get real mixed precision speedup engine to do inference.
 
 
@@ -119,7 +119,7 @@ test_trt(engine)
 #
 # For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 #
-# For more parameters about the class 'TensorRTModelSpeedUp', you can refer to `Model Compression API Reference <https://nni.readthedocs.io/en/stable/Compression/CompressionReference.html#quantization-speedup>`__\.
+# For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :doc:`Model Compression API Reference <../reference/compression/quantization_speedup>`.
 #
 # Mnist test
 # ^^^^^^^^^^

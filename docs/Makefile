@@ -11,6 +11,11 @@ BUILDDIR      = build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+# Build message catelogs for translation
+i18n:
+	@$(SPHINXBUILD) -M getpartialtext "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	sphinx-intl update -p "$(BUILDDIR)/getpartialtext" -d "$(SOURCEDIR)/locales" -l zh
+
 .PHONY: help Makefile
 
 # Catch-all target: route all unknown targets to Sphinx using the new

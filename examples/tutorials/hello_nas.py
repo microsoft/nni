@@ -354,11 +354,11 @@ def evaluate_model_with_visualization(model_cls):
 for model_dict in exp.export_top_models(formatter='dict'):
     print(model_dict)
 
-# The output is `json` object which records the mutation actions of the top model.
-# If users want to output source code of the top model, they can use graph-based execution engine for the experiment,
+# %%
+# The output is ``json`` object which records the mutation actions of the top model.
+# If users want to output source code of the top model,
+# they can use :ref:`graph-based execution engine <graph-based-execution-engine>` for the experiment,
 # by simply adding the following two lines.
-#
-# .. code-block:: python
-#
-#   exp_config.execution_engine = 'base'
-#   export_formatter = 'code'
+
+exp_config.execution_engine = 'base'
+export_formatter = 'code'

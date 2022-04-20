@@ -38,9 +38,18 @@ stages:
       displayName: Sphinx sanity check (Chinese)
 
     - script: |
+        set -e
         cd docs
-        python tools/chineselink.py check
+        rm -rf build
+        make i18n
+        git diff --exit-code source/locales
       displayName: Translation up-to-date
+
+    - script: |
+        cd docs
+        rm -rf build
+        make -e SPHINXOPTS="-W -T -b linkcheck -q --keep-going" html
+      displayName: External links integrity check
 
   - job: python
     pool:

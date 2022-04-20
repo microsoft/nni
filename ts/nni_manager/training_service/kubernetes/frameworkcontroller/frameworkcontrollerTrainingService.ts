@@ -118,7 +118,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         } else {
             configTaskRoles = this.parseCustomTaskRoles(this.fcTemplate.spec.taskRoles)
         }
-        const namespace = this.fcClusterConfig.namespace ? this.fcClusterConfig.namespace : "default";
+        const namespace = this.fcClusterConfig.namespace ?? "default";
         this.genericK8sClient.setNamespace = namespace;
 
         if (this.kubernetesRestServerPort === undefined) {
@@ -134,7 +134,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         const trialJobId: string = uniqueString(5);
         // Set trial's NFS working folder
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
-        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
+        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials', trialJobId);
         let frameworkcontrollerJobName: string = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
 
         let frameworkcontrollerJobConfig: any;
@@ -204,6 +204,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 let namespace: string | undefined;
                 this.fcClusterConfig = FrameworkControllerClusterConfigFactory
                     .generateFrameworkControllerClusterConfig(frameworkcontrollerClusterJsonObject);
+                this.genericK8sClient.setNamespace = this.fcClusterConfig.namespace ?? "default";
                 if (this.fcClusterConfig.storageType === 'azureStorage') {
                     const azureFrameworkControllerClusterConfig: FrameworkControllerClusterConfigAzure =
                         <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
@@ -346,8 +347,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         for (const taskRole of configTaskRoles) {
             const runScriptContent: string =
                 await this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder,
-                    this.generateCommandScript(configTaskRoles, taskRole.command), form.sequenceId.toString(),
-                    taskRole.name, taskRole.gpuNum ? taskRole.gpuNum : 0);
+                    this.generateCommandScript(configTaskRoles, taskRole.command),
+                    form.sequenceId.toString(), taskRole.name, taskRole.gpuNum ? taskRole.gpuNum : 0);
             await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, {encoding: 'utf8'});
         }
 
@@ -439,7 +440,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             kind: 'Framework',
             metadata: {
                 name: frameworkcontrollerJobName,
-                namespace: this.fcClusterConfig.namespace ? this.fcClusterConfig.namespace : "default",
+                namespace: this.fcClusterConfig.namespace ?? "default",
                 labels: {
                     app: this.NNI_KUBERNETES_TRIAL_LABEL,
                     expId: getExperimentId(),

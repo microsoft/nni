@@ -352,6 +352,7 @@ kubeflow_config_schema = {
             'path': setType('path', str)
         },
         Optional('reuse'): setType('reuse', bool),
+        Optional('namespace'): setType('namespace', str),
     }, {
         'operator': setChoice('operator', 'tf-operator', 'pytorch-operator'),
         'apiVersion': setType('apiVersion', str),
@@ -370,6 +371,7 @@ kubeflow_config_schema = {
         },
         Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
         Optional('reuse'): setType('reuse', bool),
+        Optional('namespace'): setType('namespace', str),
     })
 }
 
