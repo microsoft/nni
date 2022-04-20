@@ -8,3 +8,4 @@ _generated_model_*.py
 _generated_model
 generated
 lightning_logs
+model.onnx

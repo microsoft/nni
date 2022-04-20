@@ -4,8 +4,8 @@ import warnings
 
 import torch
 import torch.nn as torch_nn
-from torchvision.models.utils import load_state_dict_from_url
 import torch.nn.functional as F
+from nni.retiarii import model_wrapper
 
 import sys
 from pathlib import Path
@@ -111,7 +111,7 @@ def _get_depths(depths, alpha):
     rather than down. """
     return [_round_to_multiple_of(depth * alpha, 8) for depth in depths]
 
-
+@model_wrapper
 class MNASNet(nn.Module):
     """ MNASNet, as described in https://arxiv.org/pdf/1807.11626.pdf. This
     implements the B1 variant of the model.
@@ -180,7 +180,7 @@ class MNASNet(nn.Module):
             nn.ReLU(inplace=True),
         ]
         self.layers = nn.Sequential(*layers)
-        self.classifier = nn.Sequential(nn.Dropout(p=dropout, inplace=True),
+        self.classifier = nn.Sequential(nn.Dropout(p=dropout),
                                         nn.Linear(1280, num_classes))
         self._initialize_weights()
         #self.for_test = 10

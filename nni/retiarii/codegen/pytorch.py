@@ -6,6 +6,7 @@ import re
 from typing import Dict, List, Tuple, Any
 
 from nni.retiarii.operation_def.torch_op_def import ToDevice
+from nni.retiarii.utils import STATE_DICT_PY_MAPPING
 from nni.common.device import Device, GPUDevice
 
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
@@ -97,7 +98,18 @@ def _format_variable_name(name: str, graph_name: str) -> str:
     name = name.replace('/', '__')
 
     # https://stackoverflow.com/questions/3303312/how-do-i-convert-a-string-to-a-valid-variable-name-in-python
-    return re.sub('\W|^(?=\d)','_', name)
+    name = re.sub('\W|^(?=\d)','_', name)
+
+    if name.startswith('__') and (len(name) > 2 and name[2] != '_'):
+        # name can't start with double underscore
+        # it's reserved in Python: https://stackoverflow.com/a/1301409/6837658
+        # but it's actually very common in our generated code
+        name = name[1:]
+    elif name.startswith('_'):
+        # to avoid conflicts between '_' and '__'
+        name = 'i' + name
+
+    return name
 
 
 def generate_cuda_mapping(placement: Dict[Node, Device]) -> Dict[Device, int]:
@@ -125,6 +137,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     # only need to generate code for module here
     import_pkgs = set()
     node_codes = []
+    node_python_mappings = {}
     cuda_remapped_id = None
     if placement:
         cuda_remapped_id = generate_cuda_mapping(placement)
@@ -138,7 +151,9 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
             pkg_name = node.operation.get_import_pkg()
             if pkg_name is not None:
                 import_pkgs.add(pkg_name)
-            node_code = node.operation.to_init_code(_format_variable_name(node.name, graph_name))
+
+            py_variable_name = _format_variable_name(node.name, graph_name)
+            node_code = node.operation.to_init_code(py_variable_name)
             if node_code is not None:
                 if placement and node in placement and len(node_code) > 0:
                     if isinstance(placement[node], GPUDevice):
@@ -148,6 +163,11 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
                     node_codes.append(f"{node_code}.to('{device_repr}')")
                 else:
                     node_codes.append(node_code)
+
+                # Map to module hierarchies in original search space python code
+                node_python_mappings[py_variable_name] = node.python_name
+
+    node_codes.append(f'self.{STATE_DICT_PY_MAPPING} = {node_python_mappings}')
 
     if graph.input_node.operation.io_names is None:
         input_code = '*_inputs'

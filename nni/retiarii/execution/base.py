@@ -17,6 +17,8 @@ _logger = logging.getLogger(__name__)
 
 class BaseGraphData:
     """
+    Data sent between strategy and trial, in graph-based execution engine.
+
     Attributes
     ----------
     model_script

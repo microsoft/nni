@@ -20,27 +20,64 @@ LOGGER = logging.getLogger('batch_tuner_AutoML')
 
 class BatchTuner(Tuner):
     """
-    BatchTuner is tuner will running all the configure that user want to run batchly.
+    Batch tuner is a special tuner that allows users to simply provide several hyperparameter sets,
+    and it will evaluate each set.
+
+    Batch tuner does **not** support standard search space.
+
+    Search space of batch tuner looks like a single ``choice`` in standard search space,
+    but it has different meaning.
+
+    Consider following search space:
+
+    .. code-block::
+
+        'combine_params': {
+            '_type': 'choice',
+            '_value': [
+                {'x': 0, 'y': 1},
+                {'x': 1, 'y': 2},
+                {'x': 1, 'y': 3},
+            ]
+        }
+
+    Batch tuner will generate following 4 hyperparameter sets:
+
+    1. {'x': 0, 'y': 1}
+    2. {'x': 1, 'y': 2}
+    3. {'x': 1, 'y': 3}
+
+    If this search space was used with grid search tuner, it would instead generate:
+
+    1. {'combine_params': {'x': 0, 'y': 1 }}
+    2. {'combine_params': {'x': 1, 'y': 2 }}
+    3. {'combine_params': {'x': 1, 'y': 3 }}
 
     Examples
     --------
-    The search space only be accepted like:
 
-        ::
+    .. code-block::
 
-            {'combine_params':
-                { '_type': 'choice',
-                            '_value': '[{...}, {...}, {...}]',
-                }
+        config.search_space = {
+            'combine_params': {
+                '_type': 'choice',
+                '_value': [
+                    {'optimizer': 'Adam', 'learning_rate': 0.001},
+                    {'optimizer': 'Adam', 'learning_rate': 0.0001},
+                    {'optimizer': 'Adam', 'learning_rate': 0.00001},
+                    {'optimizer': 'SGD', 'learning_rate': 0.01},
+                    {'optimizer': 'SGD', 'learning_rate': 0.005},
+                ]
             }
-
+        }
+        config.tuner.name = 'BatchTuner'
     """
 
     def __init__(self):
         self._count = -1
         self._values = []
 
-    def is_valid(self, search_space):
+    def _is_valid(self, search_space):
         """
         Check the search space is valid: only contains 'choice' type
 
@@ -70,27 +107,10 @@ class BatchTuner(Tuner):
         return None
 
     def update_search_space(self, search_space):
-        """Update the search space
-
-        Parameters
-        ----------
-        search_space : dict
-        """
         validate_search_space(search_space, ['choice'])
-        self._values = self.is_valid(search_space)
+        self._values = self._is_valid(search_space)
 
     def generate_parameters(self, parameter_id, **kwargs):
-        """Returns a dict of trial (hyper-)parameters, as a serializable object.
-
-        Parameters
-        ----------
-        parameter_id : int
-
-        Returns
-        -------
-        dict
-            A candidate parameter group.
-        """
         self._count += 1
         if self._count > len(self._values) - 1:
             raise nni.NoMoreTrialError('no more parameters now.')
@@ -100,13 +120,6 @@ class BatchTuner(Tuner):
         pass
 
     def import_data(self, data):
-        """Import additional data for tuning
-
-        Parameters
-        ----------
-        data:
-            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
-        """
         if not self._values:
             LOGGER.info("Search space has not been initialized, skip this data import")
             return

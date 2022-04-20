@@ -20,11 +20,6 @@ A config file is needed when creating an experiment. This document describes the
 
     4. Setting a field to ``None`` or ``null`` is equivalent to not setting the field.
 
-.. contents:: Contents
-   :local:
-   :depth: 3
- 
-
 Examples
 ========
 
@@ -120,13 +115,13 @@ ExperimentConfig
     * - searchSpaceFile
       - ``str``, optional
       - Path_ to the JSON file containing the search space.
-        Search space format is determined by tuner. The common format for built-in tuners is documented  `here <../Tutorial/SearchSpaceSpec.rst>`__.
+        Search space format is determined by tuner. The common format for built-in tuners is documented :doc:`here </hpo/search_space>`.
         Mutually exclusive to ``searchSpace``.
 
     * - searchSpace
       - ``JSON``, optional
       - Search space object.
-        The format is determined by tuner. Common format for built-in tuners is documented `here <../Tutorial/SearchSpaceSpec.rst>`__.
+        The format is determined by tuner. Common format for built-in tuners is documented :doc:`here </hpo/search_space>`.
         Note that ``None`` means "no such field" so empty search space should be written as ``{}``.
         Mutually exclusive to ``searchSpaceFile``.
 
@@ -151,7 +146,7 @@ ExperimentConfig
       - ``int`` or ``None``, optional
       - Default: None. This field might have slightly different meanings for various training services,
         especially when set to ``0`` or ``None``.
-        See `training service's document <../training_services.rst>`__ for details.
+        See :doc:`training service's document </experiment/training_service/overview>` for details.
 
         In local mode, setting the field to ``0`` will prevent trials from accessing GPU (by empty ``CUDA_VISIBLE_DEVICES``).
         And when set to ``None``, trials will be created and scheduled as if they did not use GPU,
@@ -183,7 +178,7 @@ ExperimentConfig
 
     * - useAnnotation
       - ``bool``, optional
-      - Default: ``False``. Enable `annotation <../Tutorial/AnnotationSpec.rst>`__.
+      - Default: ``False``. Enable :doc:`annotation </hpo/nni_annotation>`.
         When using annotation, ``searchSpace`` and ``searchSpaceFile`` should not be specified manually.
 
     * - debug
@@ -215,25 +210,25 @@ ExperimentConfig
     * - tuner
       - ``AlgorithmConfig``, optional
       - Specify the tuner.
-        The built-in tuners can be found `here <../builtin_tuner.rst>`__ and you can follow `this tutorial <../Tuner/CustomizeTuner.rst>`__ to customize a new tuner.
+        The built-in tuners can be found :doc:`here </hpo/tuners>` and you can follow :doc:`this tutorial </hpo/custom_algorithm>` to customize a new tuner.
 
     * - assessor
       - ``AlgorithmConfig``, optional
       - Specify the assessor.
-        The built-in assessors can be found `here <../builtin_assessor.rst>`__ and you can follow `this tutorial <../Assessor/CustomizeAssessor.rst>`__ to customize a new assessor.
+        The built-in assessors can be found :doc:`here </hpo/assessors>` and you can follow :doc:`this tutorial </hpo/custom_algorithm>` to customize a new assessor.
 
     * - advisor
       - ``AlgorithmConfig``, optional
       - Specify the advisor.
-        NNI provides two built-in advisors: `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial <../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor.
+        NNI provides two built-in advisors: :class:`BOHB <nni.algorithms.hpo.bohb_advisor.BOHB>` and :class:`Hyperband <nni.algorithms.hpo.hyperband_advisor.Hyperband>`.
 
     * - trainingService
       - ``TrainingServiceConfig``
-      - Specify the `training service <../TrainingService/Overview.rst>`__.
+      - Specify the :doc:`training service </experiment/training_service/overview>`.
 
     * - sharedStorage
       - ``SharedStorageConfig``, optional
-      - Configure the shared storage, detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+      - Configure the shared storage, detailed usage can be found :doc:`here </experiment/training_service/shared_storage>`.
 
 AlgorithmConfig
 ^^^^^^^^^^^^^^^
@@ -242,9 +237,9 @@ AlgorithmConfig
 
 For customized algorithms, there are two ways to describe them:
 
-  1. `Register the algorithm <../Tutorial/InstallCustomizedAlgos.rst>`__ to use it like built-in. (preferred)
+1. :doc:`Register the algorithm </hpo/custom_algorithm_installation>` to use it like built-in. (preferred)
 
-  2. Specify code directory and class name directly.
+2. Specify code directory and class name directly.
 
 .. list-table::
     :widths: 10 10 80
@@ -286,13 +281,15 @@ One of the following:
 - `AmlConfig`_
 - `DlcConfig`_
 - `HybridConfig`_
+- :doc:`FrameworkControllerConfig </experiment/training_service/frameworkcontroller>`
+- :doc:`KubeflowConfig </experiment/training_service/kubeflow>`
 
-For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platforms, it is suggested to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
+.. _reference-local-config-label:
 
 LocalConfig
 -----------
 
-Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
+Introduction of the corresponding local training service can be found :doc:`/experiment/training_service/local`.
 
 .. list-table::
     :widths: 10 10 80
@@ -330,10 +327,12 @@ Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
         If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
         This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
+.. _reference-remote-config-label:
+
 RemoteConfig
 ------------
 
-Detailed usage can be found `here <../TrainingService/RemoteMachineMode.rst>`__.
+Detailed usage can be found :doc:`/experiment/training_service/remote`.
 
 .. list-table::
     :widths: 10 10 80
@@ -353,7 +352,7 @@ Detailed usage can be found `here <../TrainingService/RemoteMachineMode.rst>`__.
 
     * - reuseMode
       - ``bool``, optional
-      - Default: ``True``. Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
+      - Default: ``True``. Enable :ref:`reuse mode <training-service-reuse>`.
 
 RemoteMachineConfig
 """""""""""""""""""
@@ -433,7 +432,7 @@ RemoteMachineConfig
 OpenpaiConfig
 -------------
 
-Detailed usage can be found `here <../TrainingService/PaiMode.rst>`__.
+Detailed usage can be found :doc:`here </experiment/training_service/openpai>`.
 
 .. list-table::
     :widths: 10 10 80
@@ -491,7 +490,7 @@ Detailed usage can be found `here <../TrainingService/PaiMode.rst>`__.
 
     * - reuseMode
       - ``bool``, optional
-      - Default: ``True``. Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
+      - Default: ``True``. Enable :ref:`reuse mode <training-service-reuse>`.
 
     * - openpaiConfig
       - ``JSON``, optional
@@ -505,7 +504,7 @@ Detailed usage can be found `here <../TrainingService/PaiMode.rst>`__.
 AmlConfig
 ---------
 
-Detailed usage can be found `here <../TrainingService/AMLMode.rst>`__.
+Detailed usage can be found :doc:`here </experiment/training_service/aml>`.
 
 .. list-table::
     :widths: 10 10 80
@@ -542,7 +541,7 @@ Detailed usage can be found `here <../TrainingService/AMLMode.rst>`__.
 DlcConfig
 ---------
 
-Detailed usage can be found `here <../TrainingService/DlcMode.rst>`__.
+Detailed usage can be found :doc:`here </experiment/training_service/paidlc>`.
 
 .. list-table::
     :widths: 10 10 80
@@ -607,14 +606,16 @@ Detailed usage can be found `here <../TrainingService/DlcMode.rst>`__.
 HybridConfig
 ------------
 
-Currently only support `LocalConfig`_, `RemoteConfig`_, `OpenpaiConfig`_ and `AmlConfig`_ . Detailed usage can be found `here <../TrainingService/HybridMode.rst>`__.
+Currently only support `LocalConfig`_, `RemoteConfig`_, `OpenpaiConfig`_ and `AmlConfig`_ . Detailed usage can be found :doc:`here </experiment/training_service/hybrid>`.
+
+.. _reference-sharedstorage-config-label:
 
 SharedStorageConfig
 ^^^^^^^^^^^^^^^^^^^
 
-Detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+Detailed usage can be found :doc:`here </experiment/training_service/shared_storage>`.
 
-nfsConfig
+NfsConfig
 ---------
 
 .. list-table::
@@ -653,7 +654,7 @@ nfsConfig
       - ``str``
       - Exported directory of NFS server, detailed `here <https://www.ibm.com/docs/en/aix/7.2?topic=system-nfs-exporting-mounting>`_.
 
-azureBlobConfig
+AzureBlobConfig
 ---------------
 
 .. list-table::

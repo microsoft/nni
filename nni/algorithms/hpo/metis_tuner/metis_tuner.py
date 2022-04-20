@@ -46,39 +46,74 @@ class MetisClassArgsValidator(ClassArgsValidator):
 
 class MetisTuner(Tuner):
     """
-    Metis Tuner
+    `Metis tuner <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__ offers
+    several benefits over other tuning algorithms.
+    While most tools only predict the optimal configuration, Metis gives you two outputs,
+    a prediction for the optimal configuration and a suggestion for the next trial.
+    No more guess work!
 
-    More algorithm information you could reference here:
-    https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
+    While most tools assume training datasets do not have noisy data,
+    Metis actually tells you if you need to resample a particular hyper-parameter.
 
-    Attributes
+    While most tools have problems of being exploitation-heavy,
+    Metis' search strategy balances exploration, exploitation, and (optional) resampling.
+
+    Metis belongs to the class of sequential model-based optimization (SMBO) algorithms
+    and it is based on the Bayesian Optimization framework. To model the parameter-vs-performance space,
+    Metis uses both a Gaussian Process and GMM. Since each trial can impose a high time cost,
+    Metis heavily trades inference computations with naive trials.
+    At each iteration, Metis does two tasks (refer to :footcite:t:`li2018metis` for details):
+
+
+    1. It finds the global optimal point in the Gaussian Process space.
+       This point represents the optimal configuration.
+
+    2. It identifies the next hyper-parameter candidate.
+       This is achieved by inferring the potential information gain of
+       exploration, exploitation, and resampling.
+
+    Note that the only acceptable types in the :doc:`search space </hpo/search_space>` are
+    ``quniform``, ``uniform``, ``randint``, and numerical ``choice``.
+
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.tuner.name = 'MetisTuner'
+        config.tuner.class_args = {
+            'optimize_mode': 'maximize'
+        }
+
+    Parameters
     ----------
-        optimize_mode : str
-            optimize_mode is a string that including two mode "maximize" and "minimize"
+    optimize_mode : str
+        optimize_mode is a string that including two mode "maximize" and "minimize"
 
-        no_resampling : bool
-            True or False.
-            Should Metis consider re-sampling as part of the search strategy?
-            If you are confident that the training dataset is noise-free,
-            then you do not need re-sampling.
+    no_resampling : bool
+        True or False.
+        Should Metis consider re-sampling as part of the search strategy?
+        If you are confident that the training dataset is noise-free,
+        then you do not need re-sampling.
 
-        no_candidates : bool
-            True or False.
-            Should Metis suggest parameters for the next benchmark?
-            If you do not plan to do more benchmarks,
-            Metis can skip this step.
+    no_candidates : bool
+        True or False.
+        Should Metis suggest parameters for the next benchmark?
+        If you do not plan to do more benchmarks,
+        Metis can skip this step.
 
-        selection_num_starting_points : int
-            How many times Metis should try to find the global optimal in the search space?
-            The higher the number, the longer it takes to output the solution.
+    selection_num_starting_points : int
+        How many times Metis should try to find the global optimal in the search space?
+        The higher the number, the longer it takes to output the solution.
 
-        cold_start_num : int
-            Metis need some trial result to get cold start.
-            when the number of trial result is less than
-            cold_start_num, Metis will randomly sample hyper-parameter for trial.
+    cold_start_num : int
+        Metis need some trial result to get cold start.
+        when the number of trial result is less than
+        cold_start_num, Metis will randomly sample hyper-parameter for trial.
 
-        exploration_probability: float
-            The probability of Metis to select parameter from exploration instead of exploitation.
+    exploration_probability: float
+        The probability of Metis to select parameter from exploration instead of exploitation.
     """
 
     def __init__(
@@ -89,43 +124,6 @@ class MetisTuner(Tuner):
             selection_num_starting_points=600,
             cold_start_num=10,
             exploration_probability=0.9):
-        """
-        Parameters
-        ----------
-        optimize_mode : str
-            optimize_mode is a string that including two mode "maximize" and "minimize"
-
-        no_resampling : bool
-            True or False.
-            Should Metis consider re-sampling as part of the search strategy?
-            If you are confident that the training dataset is noise-free,
-            then you do not need re-sampling.
-
-        no_candidates : bool
-            True or False.
-            Should Metis suggest parameters for the next benchmark?
-            If you do not plan to do more benchmarks,
-            Metis can skip this step.
-
-        selection_num_starting_points : int
-            How many times Metis should try to find the global optimal in the search space?
-            The higher the number, the longer it takes to output the solution.
-
-        cold_start_num : int
-            Metis need some trial result to get cold start.
-            when the number of trial result is less than
-            cold_start_num, Metis will randomly sample hyper-parameter for trial.
-
-        exploration_probability : float
-            The probability of Metis to select parameter from exploration instead of exploitation.
-
-        x_bounds : list
-            The constration of parameters.
-
-        x_types : list
-            The type of parameters.
-        """
-
         self.samples_x = []
         self.samples_y = []
         self.samples_y_aggregation = []
@@ -141,7 +139,9 @@ class MetisTuner(Tuner):
         self.minimize_constraints_fun = None
         self.minimize_starting_points = None
         self.supplement_data_num = 0
+        # The constration of parameters
         self.x_bounds = []
+        # The type of parameters
         self.x_types = []
 
 

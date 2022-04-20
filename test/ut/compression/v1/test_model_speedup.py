@@ -512,6 +512,46 @@ class SpeedupTestCase(TestCase):
         print("Fine-grained speeduped model")
         print(model)
 
+    def test_multiplication_speedup(self):
+        """
+        Model from issue 4540.
+        """
+        class Net(torch.nn.Module):
+            def __init__(self,):
+                super(Net, self).__init__()
+                self.avgpool = torch.nn.AdaptiveAvgPool2d(1)
+                self.input = torch.nn.Conv2d(3, 8, 3)
+                self.bn = torch.nn.BatchNorm2d(8)
+                self.fc1 = torch.nn.Conv2d(8, 16, 1)
+                self.fc2 = torch.nn.Conv2d(16, 8, 1)
+                self.activation = torch.nn.ReLU()
+                self.scale_activation = torch.nn.Hardsigmoid()
+                self.out = torch.nn.Conv2d(8, 12, 1)
+
+            def forward(self, input):
+                input = self.activation(self.bn(self.input(input)))
+                scale = self.avgpool(input)
+                out1 = self.activation(self.fc1(scale))
+                out1 = self.scale_activation(self.fc2(out1))
+                return self.out(out1 * input)
+
+        model = Net().to(device)
+        model.eval()
+        im = torch.ones(1, 3, 512, 512).to(device)
+        model(im)
+        cfg_list = []
+
+        for name, module in model.named_modules():
+            if isinstance(module, torch.nn.Conv2d):
+                cfg_list.append({'op_types':['Conv2d'], 'sparsity':0.3, 'op_names':[name]})
+
+        pruner = L1FilterPruner(model, cfg_list)
+        pruner.compress()
+        pruner.export_model(MODEL_FILE, MASK_FILE)
+        pruner._unwrap_model()
+        ms=ModelSpeedup(model, im, MASK_FILE)
+        ms.speedup_model()
+
     def tearDown(self):
         if os.path.exists(MODEL_FILE):
             os.remove(MODEL_FILE)

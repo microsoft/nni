@@ -7,6 +7,7 @@ from typing import Any, Callable
 
 import nni
 from nni.common.serializer import PayloadTooLarge
+from nni.common.version import version_dump
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
@@ -120,7 +121,8 @@ class RetiariiAdvisor(MsgDispatcherBase):
             'parameter_id': self.parameters_count,
             'parameters': parameters,
             'parameter_source': 'algorithm',
-            'placement_constraint': placement_constraint
+            'placement_constraint': placement_constraint,
+            'version_info': version_dump()
         }
         _logger.debug('New trial sent: %s', new_trial)
 

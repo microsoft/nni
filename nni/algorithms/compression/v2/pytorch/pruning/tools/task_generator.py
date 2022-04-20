@@ -239,7 +239,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
 
         low_limit = 0
         while True:
-            # This is to speed up finding the legal sparsity.
+            # This is to speedup finding the legal sparsity.
             low_limit = (1 - low_limit) * 0.05 + low_limit
             random_sparsity = sorted(np.random.uniform(low_limit, 1, len(op_names)))
             rescaled_sparsity = self._rescale_sparsity(random_sparsity, target_sparsity, op_names)
