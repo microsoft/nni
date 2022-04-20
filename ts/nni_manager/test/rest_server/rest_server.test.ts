@@ -7,7 +7,7 @@ import path from 'path';
 
 import fetch from 'node-fetch';
 
-import { setExperimentStartupInfo } from 'common/experimentStartupInfo';
+import globals, { resetGlobals } from 'common/globals/unittest';
 import { RestServer, UnitTestHelpers } from 'rest_server';
 import * as mock_netron_server from './mock_netron_server';
 
@@ -121,6 +121,7 @@ before(async () => {
 
 after(async () => {
     await restServer.shutdown();
+    resetGlobals();
 });
 
 async function configRestServer(urlPrefix?: string) {
@@ -128,7 +129,7 @@ async function configRestServer(urlPrefix?: string) {
         await restServer.shutdown();
     }
 
-    UnitTestHelpers.setLogDirectory(path.join(__dirname, 'log'));
+    globals.paths.logDirectory = path.join(__dirname, 'log');
     UnitTestHelpers.setWebuiPath(path.join(__dirname, 'static'));
 
     restServer = new RestServer(0, urlPrefix ?? '');
