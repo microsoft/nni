@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from nni.typehint import TypeGuard
+from typing_extensions import TypeGuard
 
 from ..operation import Cell
 from ..graph import Model, Graph, Node, Edge

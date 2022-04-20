@@ -6,7 +6,7 @@ Types for static checking.
 """
 
 __all__ = [
-    'Literal', 'TypeGuard', 'TypedDict',
+    'Literal', 'TypedDict',
     'Parameters', 'SearchSpace', 'TrialMetric', 'TrialRecord',
 ]
 
@@ -17,8 +17,6 @@ if TYPE_CHECKING or sys.version_info >= (3, 8):
     from typing import Literal, TypedDict
 else:
     from typing_extensions import Literal, TypedDict
-
-from typing_extensions import TypeGuard
 
 Parameters = Dict[str, Any]
 """
