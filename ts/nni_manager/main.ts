@@ -78,8 +78,8 @@ start().then(() => {
     try {
         getLogger('main').error('Failed to start:', error);
     } catch (loggerError) {
-        console.log('Failed to start:', error);
-        console.log('Seems logger is faulty:', loggerError);
+        console.error('Failed to start:', error);
+        console.error('Seems logger is faulty:', loggerError);
     }
     process.exit(1);
 });

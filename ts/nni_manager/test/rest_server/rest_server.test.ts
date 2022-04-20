@@ -89,6 +89,9 @@ async function testOutsidePrefix(): Promise<void> {
 /* Register test cases */
 
 describe('## rest_server ##', () => {
+    before(beforeHook);
+    after(afterHook);
+
     it('logs', () => testLogs());
     it('netron get', () => testNetronGet());
     it('netron post', () => testNetronPost());
@@ -111,26 +114,28 @@ describe('## rest_server ##', () => {
 
 /* Configure test environment */
 
-before(async () => {
+async function beforeHook() {
     await configRestServer();
 
     const netronPort = await mock_netron_server.start();
     netronHost = `localhost:${netronPort}`;
     UnitTestHelpers.setNetronUrl('http://' + netronHost);
-});
+}
 
-after(async () => {
+async function afterHook() {
     await restServer.shutdown();
     globals.reset();
-});
+    UnitTestHelpers.reset();
+}
 
-async function configRestServer(urlPrefix?: string) {
+async function configRestServer(urlPrefix?: string): Promise<void> {
     if (restServer !== undefined) {
         await restServer.shutdown();
     }
 
     globals.paths.logDirectory = path.join(__dirname, 'log');
     UnitTestHelpers.setWebuiPath(path.join(__dirname, 'static'));
+    UnitTestHelpers.disableNniManager();
 
     restServer = new RestServer(0, urlPrefix ?? '');
     await restServer.start();

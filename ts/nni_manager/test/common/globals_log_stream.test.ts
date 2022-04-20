@@ -11,32 +11,38 @@ import globals from 'common/globals/unittest';
 
 const lines = [ 'hello', '你好' ];
 let logStream: LogStream;
-const consoleLoggedLines: string[] = []
+let consoleContent: string = '';
 
+/* test cases */
+
+// Test cases will be run twice, the first time in background mode (write to log file only),
+// and the second time in foreground mode (write to log file + stdout).
+
+// Write 2 lines and wait 10 ms for it to flush.
 async function testWrite(): Promise<void> {
     logStream.writeLine(lines[0]);
     logStream.writeLine(lines[1]);
     await setTimeout(10);
-    expectLineNumbers([0, 1]);
+
+    const expected = [ lines[0], lines[1] ].join('\n') + '\n';
+    const fileContent = fs.readFileSync(globals.paths.nniManagerLog, { encoding: 'utf8' });
+    assert.equal(fileContent, expected);
+    assert.equal(consoleContent, globals.args.foreground ? expected : '');
 }
 
+// Write 2 lines and close stream. It should guarantee to flush.
 async function testClose(): Promise<void> {
     logStream.writeLine(lines[1]);
     logStream.writeLine(lines[0]);
     await logStream.close();
-    expectLineNumbers([0, 1, 1, 0]);
+
+    const expected = [ lines[0], lines[1], lines[1], lines[0] ].join('\n') + '\n';
+    const fileContent = fs.readFileSync(globals.paths.nniManagerLog, { encoding: 'utf8' });
+    assert.equal(fileContent, expected);
+    assert.equal(consoleContent, globals.args.foreground ? expected : '');
 }
 
-// Assert specified lines are logged to correct place.
-function expectLineNumbers(lineNumbers: number[]) {
-    const expectConsole = globals.args.foreground ? lineNumbers.map(n => lines[n]) : [];
-    const expectFile = lineNumbers.map(n => lines[n]).join('\n') + '\n';
-
-    const file = fs.readFileSync(globals.paths.nniManagerLog, { encoding: 'utf8' });
-
-    assert.deepEqual(consoleLoggedLines.join('\n'), expectConsole.join('\n'));
-    assert.equal(file, expectFile);
-}
+/* register test cases */
 
 describe('## globals.log_stream ##', () => {
     it('background', () => testWrite());
@@ -48,11 +54,13 @@ describe('## globals.log_stream ##', () => {
     it('foreground close', () => testClose());
 });
 
+/* configure test environment */
+
 const origConsoleLog = console.log;
 const tempDir = fs.mkdtempSync('nni-ut-');
 
 before(() => {
-    console.log = (line => { consoleLoggedLines.push(line); });
+    console.log = (line => { consoleContent += line + '\n'; });
     globals.paths.nniManagerLog = path.join(tempDir, 'nnimanager.log');
     globals.args.foreground = false;
     logStream = initLogStream(globals.args, globals.paths);
@@ -60,7 +68,7 @@ before(() => {
 
 function switchForeground() {
     logStream.close();
-    consoleLoggedLines.length = 0;
+    consoleContent = '';
     fs.rmSync(globals.paths.nniManagerLog);
 
     globals.args.foreground = true;
