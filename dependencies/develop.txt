@@ -15,6 +15,7 @@ sphinx >= 4.5
 sphinx-argparse-nni >= 0.4.0
 sphinx-copybutton
 sphinx-gallery
+sphinx-intl
 sphinx-tabs
 sphinxcontrib-bibtex
 git+https://github.com/bashtage/sphinx-material@6e0ef82#egg=sphinx_material
