@@ -160,6 +160,8 @@ If the output shape of the pruned conv layer is not divisible by 1024(for exampl
 
    not_safe = not_safe_to_prune(model, dummy_input)
 
+.. _flops-counter:
+
 Model FLOPs/Parameters Counter
 ------------------------------
 

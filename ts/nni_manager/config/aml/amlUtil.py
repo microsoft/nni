@@ -52,7 +52,8 @@ if __name__ == "__main__":
                     print('stop_result:failed')
                     exit(0)
                 loop_count += 1
-                time.sleep(500)
+                time.sleep(5)
+                status = run.get_status()
             print('stop_result:success')
             exit(0)
         elif line == 'receive':

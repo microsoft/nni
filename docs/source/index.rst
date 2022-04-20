@@ -14,7 +14,7 @@ NNI Documentation
    :caption: User Guide
    :hidden:
 
-   Hyperparameter Optimization <hpo/index>
+   hpo/toctree
    nas/toctree
    Model Compression <compression/toctree>
    feature_engineering/toctree
@@ -62,13 +62,11 @@ See the :doc:`installation guide </installation>` if you need additional help on
 Try your first NNI experiment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To run your first NNI experiment:
-
 .. code-block:: shell
 
    $ nnictl hello
 
-.. note:: you need to have `PyTorch <https://pytorch.org/>`_ (as well as `torchvision <https://pytorch.org/vision/stable/index.html>`_) installed to run this experiment.
+.. note:: You need to have `PyTorch <https://pytorch.org/>`_ (as well as `torchvision <https://pytorch.org/vision/stable/index.html>`_) installed to run this experiment.
 
 To start your journey now, please follow the :doc:`absolute quickstart of NNI <quickstart>`!
 
@@ -84,7 +82,7 @@ NNI makes AutoML techniques plug-and-play
 
 .. codesnippetcard::
    :icon: ../img/thumbnails/hpo-small.svg
-   :title: Hyper-parameter Tuning
+   :title: Hyperparameter Tuning
    :link: tutorials/hpo_quickstart_pytorch/main
 
    .. code-block::
@@ -130,7 +128,7 @@ NNI makes AutoML techniques plug-and-play
 .. codesnippetcard::
    :icon: ../img/thumbnails/quantization-small.svg
    :title: Quantization
-   :link: tutorials/quantization_speedup
+   :link: tutorials/quantization_quick_start_mnist
 
    .. code-block::
 
@@ -261,7 +259,7 @@ Get Support and Contribute Back
 NNI is maintained on the `NNI GitHub repository <https://github.com/microsoft/nni>`_. We collect feedbacks and new proposals/ideas on GitHub. You can:
 
 * Open a `GitHub issue <https://github.com/microsoft/nni/issues>`_ for bugs and feature requests.
-* Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to contribute code (make sure to read the `contribution guide </contribution>` before doing this).
+* Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to contribute code (make sure to read the :doc:`contribution guide <notes/contributing>` before doing this).
 * Participate in `NNI Discussion <https://github.com/microsoft/nni/discussions>`_ for general questions and new ideas.
 * Join the following IM groups.
 

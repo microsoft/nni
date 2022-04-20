@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v2.6'
+release = 'v2.7'
 
 # -- General configuration ---------------------------------------------------
 
@@ -61,6 +61,7 @@ extensions = [
 
     # Custom extensions in extension/ folder.
     'tutorial_links',  # this has to be after sphinx-gallery
+    'getpartialtext',
     'inplace_translation',
     'cardlinkitem',
     'codesnippetcard',
@@ -94,6 +95,16 @@ autodoc_inherit_docstrings = False
 
 # Sphinx will warn about all references where the target cannot be found.
 nitpicky = False  # disabled for now
+
+# A list of regular expressions that match URIs that should not be checked.
+linkcheck_ignore = [
+    r'http://localhost:\d+',
+    r'.*://.*/#/',                          # Modern websites that has URLs like xxx.com/#/guide
+    r'https://github.com/JSong-Jia/Pic/',   # Community links can't be found any more
+]
+
+# Ignore all links located in release.rst
+linkcheck_exclude_documents = ['^release']
 
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']
@@ -175,6 +186,18 @@ master_doc = 'index'
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
 language = None
+
+# Translation related settings
+locale_dir = ['locales']
+
+# Documents that requires translation: https://github.com/microsoft/nni/issues/4298
+gettext_documents = [
+    r'^index$',
+    r'^quickstart$',
+    r'^installation$',
+    r'^(nas|hpo|compression)/overview$',
+    r'^tutorials/(hello_nas|pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
+]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

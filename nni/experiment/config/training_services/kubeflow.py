@@ -43,6 +43,7 @@ class KubeflowConfig(TrainingServiceConfig):
     ps: Optional[KubeflowRoleConfig] = None
     master: Optional[KubeflowRoleConfig] = None
     reuse_mode: Optional[bool] = True #set reuse mode as true for v2 config
+    namespace: str = 'default'
 
     def _canonicalize(self, parents):
         super()._canonicalize(parents)

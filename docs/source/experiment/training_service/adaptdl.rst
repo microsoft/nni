@@ -4,6 +4,8 @@ AdaptDL Training Service
 Now NNI supports running experiment on `AdaptDL <https://github.com/petuum/adaptdl>`__, which is a resource-adaptive deep learning training and scheduling framework. With AdaptDL training service, your trial program will run as AdaptDL job in Kubernetes cluster.
 AdaptDL aims to make distributed deep learning easy and efficient in dynamic-resource environments such as shared clusters and the cloud.
 
+.. note:: AdaptDL doesn't support :ref:`reuse mode <training-service-reuse>`.
+
 Prerequisite
 ------------
 
@@ -37,7 +39,7 @@ Verify the Prerequisites
 Usage
 -----
 
-We have a CIFAR10 example that fully leverages the AdaptDL scheduler under :githublink:`examples/trials/cifar10_pytorch` folder. (:githublink:`main_adl.py <examples/trials/cifar10_pytorch/main_adl.py>` and :githublink:`config_adl.yaml <examples/trials/cifar10_pytorch/config_adl.yaml>`)
+We have a CIFAR10 example that fully leverages the AdaptDL scheduler under :githublink:`examples/trials/cifar10_pytorch` folder. (:githublink:`main_adl.py <examples/trials/cifar10_pytorch/main_adl.py>` and :githublink:`config_adl.yaml <examples/trials/cifar10_pytorch/config_adl.yml>`)
 
 Here is a template configuration specification to use AdaptDL as a training service.
 

@@ -290,7 +290,7 @@ class NasBench101Cell(Mutable):
 
     Warnings
     --------
-    :class:`NasBench101Cell` is not supported in :ref:`graph-based execution engine <graph-based-exeuction-engine>`.
+    :class:`NasBench101Cell` is not supported in :ref:`graph-based execution engine <graph-based-execution-engine>`.
     """
 
     @staticmethod

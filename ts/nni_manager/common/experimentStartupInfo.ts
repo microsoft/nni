@@ -1,71 +1,48 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import assert from 'assert/strict';
-import path from 'path';
-
-import type { NniManagerArgs } from 'common/globals/arguments';
-
-let singleton: ExperimentStartupInfo | null = null;
+import globals from 'common/globals';
 
 export class ExperimentStartupInfo {
-
-    public experimentId: string;
-    public newExperiment: boolean;
-    public basePort: number;
-    public logDir: string = '';
-    public logLevel: string;
-    public readonly: boolean;
-    public dispatcherPipe: string | null;
-    public platform: string;
-    public urlprefix: string;
-
-    constructor(args: NniManagerArgs) {
-        this.experimentId = args.experimentId;
-        this.newExperiment = (args.action === 'create');
-        this.basePort = args.port;
-        this.logDir = path.join(args.experimentsDirectory, args.experimentId);  // TODO: handle in globals
-        this.logLevel = args.logLevel;
-        this.readonly = (args.action === 'view');
-        this.dispatcherPipe = args.dispatcherPipe ?? null;
-        this.platform = args.mode as string;
-        this.urlprefix = args.urlPrefix;
-    }
+    public experimentId: string = globals.args.experimentId;
+    public newExperiment: boolean = (globals.args.action === 'create');
+    public basePort: number = globals.args.port;
+    public logDir: string = globals.paths.experimentRoot;
+    public logLevel: string = globals.args.logLevel;
+    public readonly: boolean = (globals.args.action === 'view');
+    public dispatcherPipe: string | null = globals.args.dispatcherPipe ?? null;
+    public platform: string = globals.args.mode as string;
+    public urlprefix: string = globals.args.urlPrefix;
 
     public static getInstance(): ExperimentStartupInfo {
-        assert.notEqual(singleton, null);
-        return singleton!;
+        return new ExperimentStartupInfo();
     }
 }
 
 export function getExperimentStartupInfo(): ExperimentStartupInfo {
-    return ExperimentStartupInfo.getInstance();
-}
-
-export function setExperimentStartupInfo(args: NniManagerArgs): void {
-    singleton = new ExperimentStartupInfo(args);
+    return new ExperimentStartupInfo();
 }
 
 export function getExperimentId(): string {
-    return getExperimentStartupInfo().experimentId;
+    return globals.args.experimentId;
 }
 
 export function getBasePort(): number {
-    return getExperimentStartupInfo().basePort;
+    return globals.args.port;
 }
 
 export function isNewExperiment(): boolean {
-    return getExperimentStartupInfo().newExperiment;
+    return globals.args.action === 'create';
 }
 
 export function getPlatform(): string {
-    return getExperimentStartupInfo().platform;
+    return globals.args.mode as string;
 }
 
 export function isReadonly(): boolean {
-    return getExperimentStartupInfo().readonly;
+    return globals.args.action === 'view';
 }
 
 export function getDispatcherPipe(): string | null {
-    return getExperimentStartupInfo().dispatcherPipe;
+    return globals.args.dispatcherPipe ?? null;
 }

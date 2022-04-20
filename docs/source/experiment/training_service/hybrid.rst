@@ -8,6 +8,8 @@ Prerequisite
 
 NNI has supported :doc:`./local`, :doc:`./remote`, :doc:`./openpai`, :doc:`./aml`, :doc:`./kubeflow`, :doc:`./frameworkcontroller`, for hybrid training service. Before starting an experiment using using hybrid training service, users should first setup their chosen (sub) training services (e.g., remote training service) according to each training service's own document page.
 
+.. note:: Reuse mode is disabled by default for local training service. But if you are using local training service in hybrid, :ref:`reuse mode <training-service-reuse>` is enabled by default.
+
 Usage
 -----
 

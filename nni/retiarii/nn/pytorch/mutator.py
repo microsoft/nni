@@ -6,7 +6,7 @@ from typing import Any, List, Optional, Tuple, Dict, Iterator, Iterable, cast
 
 import torch.nn as nn
 
-from nni.common.serializer import is_traceable
+from nni.common.serializer import is_traceable, is_wrapped_with_trace
 from nni.retiarii.graph import Cell, Graph, Model, ModelStatus, Node, Evaluator
 from nni.retiarii.mutator import Mutator
 from nni.retiarii.serializer import is_basic_unit, is_model_wrapped
@@ -370,7 +370,7 @@ class EvaluatorValueChoiceMutator(Mutator):
     # we only need one such mutator for one model/evaluator
 
     def _mutate_traceable_object(self, obj: Any, value_choice_decisions: Dict[str, Any]) -> Any:
-        if not is_traceable(obj):
+        if not _is_traceable_object(obj):
             return obj
 
         updates = {}
@@ -409,7 +409,7 @@ class EvaluatorValueChoiceMutator(Mutator):
 def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mutator]) -> List[Mutator]:
     # take all the value choice in the kwargs of evaluaator into a list
     # `existing_mutators` can mutators generated from `model`
-    if not is_traceable(evaluator):
+    if not _is_traceable_object(evaluator):
         return []
     mutator_candidates = {}
     for param in _expand_nested_trace_kwargs(evaluator):
@@ -473,9 +473,12 @@ def _expand_nested_trace_kwargs(obj: Any) -> Iterator[Any]:
     # Get items from `trace_kwargs`.
     # If some item is traceable itself, get items recursively.
 
-    if not is_traceable(obj):
-        return
+    if _is_traceable_object(obj):
+        for param in obj.trace_kwargs.values():
+            yield param
+            yield from _expand_nested_trace_kwargs(param)
 
-    for param in obj.trace_kwargs.values():
-        yield param
-        yield from _expand_nested_trace_kwargs(param)
+
+def _is_traceable_object(obj: Any) -> bool:
+    # Is it a traceable "object" (not class)?
+    return is_traceable(obj) and not is_wrapped_with_trace(obj)

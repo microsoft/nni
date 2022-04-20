@@ -1,12 +1,12 @@
 Hyperparameter Optimization
 ===========================
 
-..  toctree::
-    :maxdepth: 2
+.. toctree::
+    :hidden:
 
     Overview <overview>
-    Tutorial </tutorials/hpo_quickstart_pytorch/main>
+    quickstart
     Search Space <search_space>
     Tuners <tuners>
     Assessors <assessors>
-    Advanced Usage <advanced_toctree.rst>
+    advanced_usage

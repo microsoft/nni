@@ -93,6 +93,13 @@ class Cell(nn.Module):
             (e.g., the next cell wants to have the outputs of both this cell and previous cell as its input).
             By default, directly use this cell's output.
 
+    .. tip::
+
+        It's highly recommended to make the candidate operators have an output of the same shape as input.
+        This is because, there can be dynamic connections within cell. If there's shape change within operations,
+        the input shape of the subsequent operation becomes unknown.
+        In addition, the final concatenation could have shape mismatch issues.
+
     Parameters
     ----------
     op_candidates : list of module or function, or dict
@@ -134,7 +141,7 @@ class Cell(nn.Module):
     Choose between conv2d and maxpool2d.
     The cell have 4 nodes, 1 op per node, and 2 predecessors.
 
-    >>> cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2)
+    >>> cell = nn.Cell([nn.Conv2d(32, 32, 3, padding=1), nn.MaxPool2d(3, padding=1)], 4, 1, 2)
 
     In forward:
 
@@ -172,7 +179,7 @@ class Cell(nn.Module):
 
     Warnings
     --------
-    :class:`Cell` is not supported in :ref:`graph-based execution engine <graph-based-exeuction-engine>`.
+    :class:`Cell` is not supported in :ref:`graph-based execution engine <graph-based-execution-engine>`.
 
     Attributes
     ----------

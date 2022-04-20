@@ -8,7 +8,7 @@ PAI-DSW server performs the role to submit a job while PAI-DLC is where the trai
 Prerequisite
 ------------
 
-Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart.rst>`__.
+Step 1. Install NNI, follow the :doc:`install guide </installation>`.
 
 Step 2. Create PAI-DSW server following this `link <https://help.aliyun.com/document_detail/163684.html?section-2cw-lsi-es9#title-ji9-re9-88x>`__. Note as the training service will be run on PAI-DLC, it won't cost many resources to run and you may just need a PAI-DSW server with CPU.
 
@@ -60,7 +60,7 @@ Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML file's 
 
 Note: You should set ``platform: dlc`` in NNI config YAML file if you want to start experiment in dlc mode.
 
-Compared with `LocalMode <LocalMode.rst>`__ training service configuration in dlc mode have these additional keys like ``type/image/jobType/podCount/ecsSpec/region/nasDataSourceId/accessKeyId/accessKeySecret``, for detailed explanation ref to this `link <https://help.aliyun.com/document_detail/203111.html#h2-url-3>`__.
+Compared with :doc:`local`, training service configuration in dlc mode have these additional keys like ``type/image/jobType/podCount/ecsSpec/region/nasDataSourceId/accessKeyId/accessKeySecret``, for detailed explanation ref to this `link <https://help.aliyun.com/document_detail/203111.html#h2-url-3>`__.
 
 Also, as dlc mode requires DSW/DLC to mount the same NAS disk to share information, there are two extra keys related to this: ``localStorageMountPoint`` and ``containerStorageMountPoint``.
 
