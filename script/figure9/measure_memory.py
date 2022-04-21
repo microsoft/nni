@@ -58,11 +58,11 @@ for pattern in patterns:
             sleep(3) # wait the memory to be steady
             monitor_process = subprocess.Popen('bash 2080_mem.sh 0 > run.log', shell=True)
             try:
-                target_process.wait(timeout=300)
+                target_process.wait(timeout=1800)
             except Exception as err:
                 try:
                     target_process.terminate()
-                    time.sleep(60)
+                    time.sleep(10)
                 except Exception as err:
                     print(err)
             monitor_process.terminate()
