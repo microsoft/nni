@@ -437,6 +437,20 @@ def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mu
     return mutators
 
 
+# the following are written for one-shot mode
+# they shouldn't technically belong here, but all other engines are written here
+# let's refactor later
+
+def process_oneshot_mutations(base_model: nn.Module, evaluator: Evaluator):
+    # It's not intuitive, at all, (actually very hacky) to wrap a `base_model` and `evaluator` into a graph.Model.
+    # But unfortunately, this is the required interface of strategy.
+    model = Model(_internal=True)
+    model.python_object = base_model
+    # no need to set evaluator here because it will be set after this method is called
+
+    return model, []
+
+
 # utility functions
 
 
