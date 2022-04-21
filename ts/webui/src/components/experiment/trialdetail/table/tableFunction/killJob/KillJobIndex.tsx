@@ -11,7 +11,7 @@ import { AppContext } from '@/App';
 
 function KillJobIndex(props): any {
     const menuButtonElement = useRef(null);
-    const { startTimer, closeTimer, refreshDetailTable } = useContext(AppContext);
+    const { startTimer, closeTimer, interval, refreshDetailTable } = useContext(AppContext);
     const { trialId } = props;
     const [isCalloutVisible, setCalloutVisible] = useState(false);
     const [isVisibleKillDialog, setKillDialogVisible] = useState(false);
@@ -21,7 +21,9 @@ function KillJobIndex(props): any {
 
     // kill trial
     const killJob = (id: string): void => {
-        closeTimer(); // close auto refresh to confirm show the kill model
+        if (interval !== 0) {
+            closeTimer(); // close auto refresh to confirm show the kill model
+        }
         axios(`${MANAGER_IP}/trial-jobs/${id}`, {
             method: 'DELETE',
             headers: {
@@ -54,7 +56,9 @@ function KillJobIndex(props): any {
     const onDismissKillJobMessageDialog = async (): Promise<void> => {
         setKillDialogVisible(false);
         await refreshDetailTable();
-        startTimer(); // start refresh
+        if (interval !== 0) {
+            startTimer(); // start refresh
+        }
     };
 
     const onDismiss = (): void => {

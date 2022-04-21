@@ -56,7 +56,6 @@ interface AppState {
     isillegalFinal: boolean;
     expWarningMessage: string;
     bestTrialEntries: string; // for overview page: best trial entreis
-    isUpdate: boolean;
     expandRowIDs: Set<string>;
     timerIdList: number[];
 }
@@ -76,7 +75,6 @@ class App extends React.Component<{}, AppState> {
             isillegalFinal: false,
             expWarningMessage: '',
             bestTrialEntries: '10',
-            isUpdate: true,
             expandRowIDs: new Set(),
             timerIdList: []
         };
@@ -208,13 +206,11 @@ class App extends React.Component<{}, AppState> {
     };
 
     public changeInterval = (interval: number): void => {
+        this.setState(() => ({ interval: interval })); // reset interval val
         this.closeTimer(); // close page auto refresh
-        if (interval === 0) {
-            return;
-        }
-        this.setState({ interval }, () => {
+        if (interval !== 0) {
             this.refresh();
-        });
+        }
     };
 
     public changeColumn = (columnList: string[]): void => {
