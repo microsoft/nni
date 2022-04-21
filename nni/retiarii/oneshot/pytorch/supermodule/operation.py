@@ -8,11 +8,12 @@ which is commonly known as super-kernel (as in channel search), or weight entang
 
 import inspect
 import itertools
-from typing import Union, Tuple, Dict, List, Any, Type, Optional, TypeVar
+from typing import Union, Tuple, Dict, List, Any, Type, Optional, TypeVar, cast
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 import nni.retiarii.nn.pytorch as retiarii_nn
 from nni.common.hpo_utils import ParameterSpec
@@ -46,11 +47,11 @@ class MixedOperationSamplingPolicy:
         """
         pass
 
-    def resample(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def resample(self, operation: 'MixedOperation', memo: Dict[str, Any]) -> Dict[str, Any]:
         """The handler of :meth:`MixedOperation.resample`."""
         raise NotImplementedError()
 
-    def export(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def export(self, operation: 'MixedOperation', memo: Dict[str, Any]) -> Dict[str, Any]:
         """The handler of :meth:`MixedOperation.export`."""
         raise NotImplementedError()
 
@@ -513,43 +514,42 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
         embed_dim = _W(embed_dim)
 
         # in projection weights & biases has q, k, v weights concatenated together
-        in_proj_bias = in_proj_weight = None
+        in_proj_bias: Optional[Tensor] = None
+        in_proj_weight: Optional[Tensor] = None
         if self.in_proj_bias is not None:
-            in_proj_bias = _S(self.in_proj_bias)[self._to_proj_slice(embed_dim)]
+            in_proj_bias = _S(cast(Tensor, self.in_proj_bias))[self._to_proj_slice(embed_dim)]
         if self.in_proj_weight is not None:
-            in_proj_weight = _S(self.in_proj_weight)[self._to_proj_slice(embed_dim), :embed_dim]
+            in_proj_weight = _S(cast(Tensor, self.in_proj_weight))[self._to_proj_slice(embed_dim), :embed_dim]
 
-        bias_k = _S(self.bias_k)[:, :, :embed_dim] if self.bias_k is not None else None
-        bias_v = _S(self.bias_v)[:, :, :embed_dim] if self.bias_v is not None else None
-        out_proj_weight = _S(self.out_proj.weight)[:embed_dim, :embed_dim]
-        out_proj_bias = _S(self.out_proj.bias)[:embed_dim] if self.out_proj.bias is not None else None
+        bias_k = _S(cast(Tensor, self.bias_k))[:, :, :embed_dim] if self.bias_k is not None else None
+        bias_v = _S(cast(Tensor, self.bias_v))[:, :, :embed_dim] if self.bias_v is not None else None
+        out_proj_weight = _S(cast(Tensor, self.out_proj.weight))[:embed_dim, :embed_dim]
+        out_proj_bias = _S(cast(Tensor, self.out_proj.bias))[:embed_dim] if self.out_proj.bias is not None else None
 
         if not qkv_same_embed_dim:
-            kdim = _W(kdim)
-            vdim = _W(vdim)
-
-            q_proj = _S(self.q_proj_weight)[:embed_dim, :embed_dim]
-            k_proj = _S(self.k_proj_weight)[:embed_dim]
-            k_proj = _S(k_proj)[:, :kdim]
-            v_proj = _S(self.v_proj_weight)[:embed_dim]
-            v_proj = _S(v_proj)[:, :vdim]
+            q_proj = _S(cast(Tensor, self.q_proj_weight))[:embed_dim, :embed_dim]
+            k_proj = _S(cast(Tensor, self.k_proj_weight))[:embed_dim]
+            k_proj = _S(k_proj)[:, :_W(kdim)]
+            v_proj = _S(cast(Tensor, self.v_proj_weight))[:embed_dim]
+            v_proj = _S(v_proj)[:, :_W(vdim)]
 
             # The rest part is basically same as pytorch
             attn_output, attn_output_weights = F.multi_head_attention_forward(
                 query, key, value, used_embed_dim, num_heads,
-                in_proj_weight, in_proj_bias,
+                cast(Tensor, in_proj_weight), cast(Tensor, in_proj_bias),
                 bias_k, bias_v, self.add_zero_attn,
-                dropout, out_proj_weight, out_proj_bias,
+                dropout, out_proj_weight, cast(Tensor, out_proj_bias),
                 training=self.training,
                 key_padding_mask=key_padding_mask, need_weights=need_weights,
                 attn_mask=attn_mask, use_separate_proj_weight=True,
                 q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
         else:
+            # Cast tensor here because of a bug in pytorch stub
             attn_output, attn_output_weights = F.multi_head_attention_forward(
                 query, key, value, used_embed_dim, num_heads,
-                in_proj_weight, in_proj_bias,
+                cast(Tensor, in_proj_weight), cast(Tensor, in_proj_bias),
                 bias_k, bias_v, self.add_zero_attn,
-                dropout, out_proj_weight, out_proj_bias,
+                dropout, out_proj_weight, cast(Tensor, out_proj_bias),
                 training=self.training,
                 key_padding_mask=key_padding_mask, need_weights=need_weights,
                 attn_mask=attn_mask)

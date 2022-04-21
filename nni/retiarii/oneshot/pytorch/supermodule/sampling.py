@@ -129,6 +129,8 @@ class PathSamplingInput(BaseSuperNetModule):
         if isinstance(module, InputChoice):
             if module.reduction not in ['sum', 'mean', 'concat']:
                 raise ValueError('Only input choice of sum/mean/concat reduction is supported.')
+            if module.n_chosen is None:
+                raise ValueError('n_chosen is None is not supported yet.')
             return cls(module.n_candidates, module.n_chosen, module.reduction, module.label)
 
     def forward(self, input_tensors):
@@ -161,7 +163,7 @@ class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
         # Sampling arguments. This should have the same keys with `operation.mutable_arguments`
         self._sampled: Optional[Dict[str, Any]] = None
 
-    def resample(self, operation: MixedOperation, memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def resample(self, operation: MixedOperation, memo: Dict[str, Any]) -> Dict[str, Any]:
         """Random sample for each leaf value choice."""
         result = {}
         space_spec = operation.search_space_spec()
@@ -179,7 +181,7 @@ class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
 
         return result
 
-    def export(self, operation: MixedOperation, memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def export(self, operation: MixedOperation, memo: Dict[str, Any]) -> Dict[str, Any]:
         """Export is also random for each leaf value choice."""
         result = {}
         space_spec = operation.search_space_spec()

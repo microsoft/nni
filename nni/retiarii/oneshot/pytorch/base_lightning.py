@@ -20,7 +20,7 @@ from .supermodule.base import BaseSuperNetModule
 __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
 
 
-MutationHook = Callable[[nn.Module, str, Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
+MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
 
 
 def traverse_and_mutate_submodules(
@@ -149,11 +149,12 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         The hook list will be appended by ``default_mutation_hooks`` in each one-shot module.
 
-        To be more specific, the input arguments are three arguments:
+        To be more specific, the input arguments are four arguments:
 
         #. a module that might be processed,
         #. name of the module in its parent module,
         #. a memo dict whose usage depends on the particular algorithm.
+        #. keyword arguments (configurations).
 
         Note that the memo should be read/written by hooks.
         There won't be any hooks called on root module.
@@ -401,7 +402,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             apply(lr_schedulers)
 
-    def call_user_optimizers(self, method):
+    def call_weight_optimizers(self, method):
         """
         Function that imitates lightning trainer's behavior of calling user's optimizers. Since auto_optimization is turned off by this
         class, you can use this function to make user optimizers behave as they were automatically handled by the lightning trainer.
@@ -417,7 +418,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             elif method == 'zero_grad':
                 optimizer.zero_grad()
 
-        optimizers = self.user_optimizers
+        optimizers = self.weight_optimizers
         if optimizers is None:
             return
 

@@ -24,7 +24,7 @@ class BaseSuperNetModule(nn.Module):
     rather than their compositions.
     """
 
-    def resample(self, memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def resample(self, memo: Dict[str, Any]) -> Dict[str, Any]:
         """
         Resample the super-net module.
 
@@ -40,7 +40,7 @@ class BaseSuperNetModule(nn.Module):
         """
         raise NotImplementedError()
 
-    def export(self, memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def export(self, memo: Dict[str, Any]) -> Dict[str, Any]:
         """
         Export the final architecture within this module.
         It should have the same keys as ``search_space_spec()``.

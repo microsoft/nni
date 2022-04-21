@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# type: ignore
+
 import copy
 import logging
 from collections import OrderedDict
