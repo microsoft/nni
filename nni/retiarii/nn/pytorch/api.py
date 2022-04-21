@@ -989,6 +989,7 @@ class ModelParameterChoice:
     Examples
     --------
     Get a dynamic-shaped parameter. Because ``torch.zeros`` is not a basic unit, we can't use :class:`ValueChoice` on it.
+
     >>> parameter_dim = nn.ModelParameterChoice([64, 128, 256])
     >>> self.token = nn.Parameter(torch.zeros(1, parameter_dim, 32, 32))
     """
