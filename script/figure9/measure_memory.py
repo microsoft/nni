@@ -8,6 +8,7 @@ import re
 import json
 import argparse
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, required=True)
 args = parser.parse_args()
@@ -56,7 +57,14 @@ for pattern in patterns:
                 target_process = subprocess.Popen('bash run_mem.sh', shell=True)
             sleep(3) # wait the memory to be steady
             monitor_process = subprocess.Popen('bash 2080_mem.sh 0 > run.log', shell=True)
-            target_process.wait()
+            try:
+                target_process.wait(timeout=300)
+            except Exception as err:
+                try:
+                    target_process.terminate()
+                    time.sleep(60)
+                except Exception as err:
+                    print(err)
             monitor_process.terminate()
             memory_usage = analyze_log('run.log')
         data['{}_{}_{}'.format(model, pattern, framework)] = memory_usage

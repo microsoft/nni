@@ -34,6 +34,7 @@ First we also need get the source code and initialize the environment
 ```
 
 # install the sparta
+mkdir workspace && cd workspace
 git clone https://github.com/microsoft/nni && cd nni && git checkout sparta_artifact
 conda activate artifact
 python setup.py develop
