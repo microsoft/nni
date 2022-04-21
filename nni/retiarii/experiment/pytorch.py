@@ -254,7 +254,7 @@ class RetiariiExperiment(Experiment):
 
     def __init__(self, base_model: nn.Module, evaluator: Union[BaseOneShotTrainer, Evaluator] = cast(Evaluator, None),
                  applied_mutators: List[Mutator] = cast(List[Mutator], None), strategy: BaseStrategy = cast(BaseStrategy, None),
-                 trainer: BaseOneShotTrainer = None):
+                 trainer: BaseOneShotTrainer = cast(BaseOneShotTrainer, None)):
         if trainer is not None:
             warnings.warn('Usage of `trainer` in RetiariiExperiment is deprecated and will be removed soon. '
                           'Please consider specifying it as a positional argument, or use `evaluator`.', DeprecationWarning)
@@ -268,7 +268,7 @@ class RetiariiExperiment(Experiment):
         self.port: Optional[int] = None
 
         self.base_model = base_model
-        self.evaluator: Evaluator = evaluator
+        self.evaluator: Union[Evaluator, BaseOneShotTrainer] = evaluator
         self.applied_mutators = applied_mutators
         self.strategy = strategy
 
