@@ -30,13 +30,24 @@ async function testWrite(): Promise<void> {
     assert.equal(consoleContent, globals.args.foreground ? expected : '');
 }
 
+// Write 2 lines synchronously. It should not need to flush.
+async function testWriteSync(): Promise<void> {
+    logStream.writeLineSync(lines[0]);
+    logStream.writeLineSync(lines[1]);
+
+    const expected = [ lines[0], lines[1], lines[0], lines[1] ].join('\n') + '\n';
+    const fileContent = fs.readFileSync(globals.paths.nniManagerLog, { encoding: 'utf8' });
+    assert.equal(fileContent, expected);
+    assert.equal(consoleContent, globals.args.foreground ? expected : '');
+}
+
 // Write 2 lines and close stream. It should guarantee to flush.
 async function testClose(): Promise<void> {
     logStream.writeLine(lines[1]);
     logStream.writeLine(lines[0]);
     await logStream.close();
 
-    const expected = [ lines[0], lines[1], lines[1], lines[0] ].join('\n') + '\n';
+    const expected = [ lines[0], lines[1], lines[0], lines[1], lines[1], lines[0] ].join('\n') + '\n';
     const fileContent = fs.readFileSync(globals.paths.nniManagerLog, { encoding: 'utf8' });
     assert.equal(fileContent, expected);
     assert.equal(consoleContent, globals.args.foreground ? expected : '');
@@ -48,11 +59,13 @@ describe('## globals.log_stream ##', () => {
     before(beforeHook);
 
     it('background', () => testWrite());
+    it('background sync', () => testWriteSync());
     it('background close', () => testClose());
 
     it('// switch to foreground', () => { switchForeground(); });
 
     it('foreground', () => testWrite());
+    it('foreground sync', () => testWriteSync());
     it('foreground close', () => testClose());
 
     after(afterHook);

@@ -78,7 +78,7 @@ export class Logger {
 }
 
 class RobustLogger extends Logger {
-    public robust: boolean = true;
+    public readonly robust: boolean = true;
     private errorOccurred: boolean = false;
 
     protected log(levelValue: number, levelName: string, args: any[]): void {
@@ -87,7 +87,10 @@ class RobustLogger extends Logger {
             return;
         }
         try {
-            super.log(levelValue, levelName, args);
+            if (levelValue >= levelNameToValue[globals.args.logLevel]) {
+                const msg = `[${timestamp()}] ${levelName} (${this.name}) ${formatArgs(args)}`;
+                globals.logStream.writeLineSync(msg);
+            }
         } catch (error) {
             this.errorOccurred = true;
             console.error('[ERROR] Logger has stopped working:', error);

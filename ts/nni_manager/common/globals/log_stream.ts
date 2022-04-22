@@ -16,6 +16,7 @@ import type { NniPaths } from './paths';
 
 export interface LogStream {
     writeLine(line: string): void;
+    writeLineSync(line: string): void;
     close(): Promise<void>;
 }
 
@@ -35,6 +36,13 @@ class LogStreamImpl implements LogStream {
     public writeLine(line: string): void {
         this.buffer.push(line);
         this.flush();
+    }
+
+    public writeLineSync(line: string): void {
+        if (this.toConsole) {
+            console.log(line);
+        }
+        fs.writeSync(this.logFileFd, line + '\n');
     }
 
     public async close(): Promise<void> {

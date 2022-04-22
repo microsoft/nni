@@ -48,6 +48,7 @@ export function resetGlobals(): void {
     const paths = createPaths(args);
     const logStream = {
         writeLine: (_line: string): void => { /* dummy */ },
+        writeLineSync: (_line: string): void => { /* dummy */ },
         close: (): void => { /* dummy */ }
     };
 
