@@ -1,8 +1,3 @@
-// interface ExpandableDetailsProps {
-//     detailsProps: IDetailsRowBaseProps;
-//     isExpand: boolean;
-// }
-
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { DetailsRow } from '@fluentui/react';

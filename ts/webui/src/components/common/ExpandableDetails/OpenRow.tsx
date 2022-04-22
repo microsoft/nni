@@ -137,29 +137,28 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                         <PivotItem headerText='Log' key='2' itemIcon='M365InvoicingLogo'>
                             {
                                 // FIXME: this should not be handled in web UI side
-                                EXPERIMENT.trainingServicePlatform !== 'local' ? (
-                                    <PaiTrialLog logStr={logPathRow} />
+                                EXPERIMENT.trainingServicePlatform === 'local' ? (
+                                    // logStr={logPathRow}
+                                    <PaiTrialLog  logStr={'http://www.baidu.com, /mnt/ni/bi/ui/oo'}/>
                                 ) : (
                                     <div>
                                         <TrialLog logStr={logPathRow} logName='LogPath:' />
-                                        {/* view each trial log in drawer*/}
-                                        <div className='trialog'>
-                                            <div className='copy' style={{ marginTop: 4 }}>
-                                                <PrimaryButton
-                                                    onClick={this.openTrialLog.bind(this, 'trial.log')}
-                                                    text='View trial log'
-                                                />
-                                                <PrimaryButton
-                                                    onClick={this.openTrialLog.bind(this, 'stderr')}
-                                                    text='View trial error'
-                                                    styles={{ root: { marginLeft: 15 } }}
-                                                />
-                                                <PrimaryButton
-                                                    onClick={this.openTrialLog.bind(this, 'stdout')}
-                                                    text='View trial stdout'
-                                                    styles={{ root: { marginLeft: 15 } }}
-                                                />
-                                            </div>
+                                        {/* view trial log */}
+                                        <div className='copy' style={{ marginTop: 4 }}>
+                                            <PrimaryButton
+                                                onClick={this.openTrialLog.bind(this, 'trial.log')}
+                                                text='View trial log'
+                                            />
+                                            <PrimaryButton
+                                                onClick={this.openTrialLog.bind(this, 'stderr')}
+                                                text='View trial error'
+                                                styles={{ root: { marginLeft: 15 } }}
+                                            />
+                                            <PrimaryButton
+                                                onClick={this.openTrialLog.bind(this, 'stdout')}
+                                                text='View trial stdout'
+                                                styles={{ root: { marginLeft: 15 } }}
+                                            />
                                         </div>
                                     </div>
                                 )
