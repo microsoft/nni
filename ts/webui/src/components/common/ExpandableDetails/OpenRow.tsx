@@ -137,11 +137,8 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                         <PivotItem headerText='Log' key='2' itemIcon='M365InvoicingLogo'>
                             {
                                 // FIXME: this should not be handled in web UI side
-                                EXPERIMENT.trainingServicePlatform === 'local' ? (
-                                    <PaiTrialLog
-                                        logStr={'/core/nni/dev/nni/ts/webui/trial/logs,http://path2'}
-                                        // logStr={logPathRow}
-                                    />
+                                EXPERIMENT.trainingServicePlatform !== 'local' ? (
+                                    <PaiTrialLog logStr={logPathRow} />
                                 ) : (
                                     <div>
                                         <TrialLog logStr={logPathRow} logName='LogPath:' />
