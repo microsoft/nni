@@ -402,7 +402,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             apply(lr_schedulers)
 
-    def call_weight_optimizers(self, method):
+    def call_user_optimizers(self, method):
         """
         Function that imitates lightning trainer's behavior of calling user's optimizers. Since auto_optimization is turned off by this
         class, you can use this function to make user optimizers behave as they were automatically handled by the lightning trainer.
@@ -418,7 +418,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             elif method == 'zero_grad':
                 optimizer.zero_grad()
 
-        optimizers = self.weight_optimizers
+        optimizers = self.user_optimizers
         if optimizers is None:
             return
 
