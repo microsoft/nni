@@ -25,6 +25,7 @@ popd
 
 pip install transformers==4.12.3
 pushd checkpoints/hubert
+bash prepare_data.sh
 bash run_coarse.sh > coarse.log
 bash run_finegrained.sh > finegrained.log
 bash run_ori_onnx.sh

@@ -55,7 +55,7 @@ for pattern in patterns:
                 # here start the inference process at the same time and
                 # measure the memory at the same time
                 target_process = subprocess.Popen('bash run_mem.sh', shell=True)
-            sleep(3) # wait the memory to be steady
+            sleep(7) # wait the memory to be steady
             monitor_process = subprocess.Popen('bash 2080_mem.sh 0 > run.log', shell=True)
             try:
                 target_process.wait(timeout=1800)
