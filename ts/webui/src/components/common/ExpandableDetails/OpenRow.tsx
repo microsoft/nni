@@ -95,7 +95,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                     <Pivot>
                         <PivotItem headerText='Parameters' key='1' itemIcon='TestParameter'>
                             {trial.info.hyperParameters !== undefined ? (
-                                <Stack id='description'>
+                                <Stack className='description'>
                                     <Stack className='bgHyper'>
                                         <JSONTree
                                             hideRoot={true}
@@ -139,15 +139,15 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                 // FIXME: this should not be handled in web UI side
                                 EXPERIMENT.trainingServicePlatform === 'local' ? (
                                     <PaiTrialLog
-                                        logStr={'path1,http://path2'}
+                                        logStr={'/core/nni/dev/nni/ts/webui/trial/logs,http://path2'}
                                         // logStr={logPathRow}
                                     />
                                 ) : (
                                     <div>
                                         <TrialLog logStr={logPathRow} logName='LogPath:' />
                                         {/* view each trial log in drawer*/}
-                                        <div id='trialog'>
-                                            <div className='copy' style={{ marginTop: 15 }}>
+                                        <div className='trialog'>
+                                            <div className='copy' style={{ marginTop: 4 }}>
                                                 <PrimaryButton
                                                     onClick={this.openTrialLog.bind(this, 'trial.log')}
                                                     text='View trial log'

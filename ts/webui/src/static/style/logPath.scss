@@ -1,5 +1,5 @@
 .logpath {
-    margin-left: 10px;
+    margin: 0 0 10px 10px;
     font-size: 14px;
 
     .logName {
@@ -14,9 +14,4 @@
     .error {
         color: #cb4b16;
     }
-}
-
-.logHref:hover {
-    color: blue;
-    text-decoration: underline;
 }

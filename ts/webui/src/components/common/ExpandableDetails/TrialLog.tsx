@@ -1,23 +1,22 @@
-
 import * as React from 'react';
 import PropTypes from 'prop-types';
 
 const TrialLog = (props): any => {
     const { logStr, logName } = props;
-        const isHyperlink = /^http/gi.test(logStr);
+    const isHyperlink = /^http/gi.test(logStr);
 
-        return (
-            <div className='logpath'>
-                <span className='logName'>{logName}</span>
-                {isHyperlink ? (
-                    <a className='logContent logHref' rel='noopener noreferrer' href={logStr} target='_blank'>
-                        {logStr}
-                    </a>
-                ) : (
-                    <span className='logContent'>{logStr}</span>
-                )}
-            </div>
-        );
+    return (
+        <div className='logpath'>
+            <span className='logName'>{logName}</span>
+            {isHyperlink ? (
+                <a className='link' rel='noopener noreferrer' href={logStr} target='_blank'>
+                    {logStr}
+                </a>
+            ) : (
+                <span className='logContent'>{logStr}</span>
+            )}
+        </div>
+    );
 };
 
 TrialLog.propTypes = {

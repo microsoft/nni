@@ -1,7 +1,7 @@
 /* react-json-tree background */
-#description ul,
+.description ul,
 #allList ul {
-    background: none !important;
+    background: none;
 }
 
 .tabScroll {
@@ -44,11 +44,6 @@
     i {
         color: #fff;
     }
-}
-
-/* office-fabric-ui */
-.ms-DetailsRow {
-    height: 30px;
 }
 
 .detail-table {
