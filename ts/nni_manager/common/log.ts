@@ -99,6 +99,9 @@ class RobustLogger extends Logger {
     }
 
     private logAfterError(levelName: string, args: any[]): void {
+        try {
+            args = args.map(arg => util.inspect(arg));
+        } catch { /* fallback */ }
         console.error(`[${levelName}] (${this.name})`, ...args);
     }
 }
