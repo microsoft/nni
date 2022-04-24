@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 __all__ = [
     'create_builtin_class_instance',
     'create_customized_class_instance',
@@ -9,38 +11,23 @@ __all__ = [
 import importlib
 import os
 import sys
+from typing import Any
 
+from nni.typehint import Literal
 from . import config_manager
 
-ALGO_TYPES = ['tuners', 'assessors', 'advisors']
+ALGO_TYPES = ['tuners', 'assessors']
 
-def get_all_builtin_names(algo_type):
-    """Get all builtin names of registered algorithms of specified type
-
-    Parameters
-    ----------
-    algo_type: str
-        can be one of 'tuners', 'assessors' or 'advisors'
-
-    Returns: list of string
-    -------
-    All builtin names of specified type, for example, if algo_type is 'tuners', returns
-    all builtin tuner names.
-    """
+def _get_all_builtin_names(algo_type: Literal['tuners', 'assessors']) -> list[str]:
     algos = config_manager.get_all_algo_meta()
-    return [meta.name for meta in algos if meta.algo_type == algo_type.rstrip('s')]
+    algos = [meta for meta in algos if meta.algo_type + 's' == algo_type]
+    names = [meta.name for meta in algos] + [meta.alias for meta in algos if meta.alias is not None]
+    return [name.lower() for name in names]
 
-def get_registered_algo_meta(builtin_name, algo_type=None):
+def _get_registered_algo_meta(builtin_name: str) -> dict | None:
     """ Get meta information of registered algorithms.
 
-    Parameters
-    ----------
-    builtin_name: str
-        builtin name.
-    algo_type: str | None
-        can be one of 'tuners', 'assessors', 'advisors' or None
-
-    Returns: dict | None
+    Returns
     -------
         Returns meta information of speicified builtin alogorithms, for example:
         {
@@ -51,8 +38,6 @@ def get_registered_algo_meta(builtin_name, algo_type=None):
     """
     algo = config_manager.get_algo_meta(builtin_name)
     if algo is None:
-        return None
-    if algo_type is not None and algo.algo_type != algo_type.rstrip('s'):
         return None
     return algo.dump()
 
@@ -69,7 +54,7 @@ def get_builtin_module_class_name(algo_type, builtin_name):
     Parameters
     ----------
     algo_type: str
-        can be one of 'tuners', 'assessors', 'advisors'
+        can be one of 'tuners', 'assessors'
     builtin_name: str
         builtin name.
 
@@ -79,7 +64,7 @@ def get_builtin_module_class_name(algo_type, builtin_name):
     """
     assert algo_type in ALGO_TYPES
     assert builtin_name is not None
-    meta = get_registered_algo_meta(builtin_name, algo_type)
+    meta = _get_registered_algo_meta(builtin_name)
     if not meta:
         return None, None
     return parse_full_class_name(meta['className'])
@@ -90,7 +75,7 @@ def create_validator_instance(algo_type, builtin_name):
     Parameters
     ----------
     algo_type: str
-        can be one of 'tuners', 'assessors', 'advisors'
+        can be one of 'tuners', 'assessors'
     builtin_name: str
         builtin name.
 
@@ -101,16 +86,20 @@ def create_validator_instance(algo_type, builtin_name):
     """
     assert algo_type in ALGO_TYPES
     assert builtin_name is not None
-    meta = get_registered_algo_meta(builtin_name, algo_type)
+    meta = _get_registered_algo_meta(builtin_name)
     if not meta or 'classArgsValidator' not in meta:
         return None
     module_name, class_name = parse_full_class_name(meta['classArgsValidator'])
+    assert module_name is not None
     class_module = importlib.import_module(module_name)
     class_constructor = getattr(class_module, class_name)
 
     return class_constructor()
 
-def create_builtin_class_instance(builtin_name, input_class_args, algo_type):
+def create_builtin_class_instance(
+        builtin_name: str,
+        input_class_args: dict,
+        algo_type: Literal['tuners', 'assessors']) -> Any:
     """Create instance of builtin algorithms
 
     Parameters
@@ -120,14 +109,15 @@ def create_builtin_class_instance(builtin_name, input_class_args, algo_type):
     input_class_args: dict
         kwargs for builtin class constructor
     algo_type: str
-        can be one of 'tuners', 'assessors', 'advisors'
+        can be one of 'tuners', 'assessors'
 
     Returns: object
     -------
         Returns builtin class instance.
     """
     assert algo_type in ALGO_TYPES
-    if builtin_name not in get_all_builtin_names(algo_type):
+    builtin_name = builtin_name.lower()
+    if builtin_name not in _get_all_builtin_names(algo_type):
         raise RuntimeError('Builtin name is not found: {}'.format(builtin_name))
 
     def parse_algo_meta(algo_meta, input_class_args):
@@ -150,10 +140,11 @@ def create_builtin_class_instance(builtin_name, input_class_args, algo_type):
 
         return module_name, class_name, class_args
 
-    algo_meta = get_registered_algo_meta(builtin_name, algo_type)
+    algo_meta = _get_registered_algo_meta(builtin_name)
     module_name, class_name, class_args = parse_algo_meta(algo_meta, input_class_args)
+    assert module_name is not None
 
-    if importlib.util.find_spec(module_name) is None:
+    if importlib.util.find_spec(module_name) is None:  # type: ignore
         raise RuntimeError('Builtin module can not be loaded: {}'.format(module_name))
 
     class_module = importlib.import_module(module_name)
