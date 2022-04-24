@@ -83,7 +83,7 @@ async function testTimeout(): Promise<void> {
 
 describe('## globals.shutdown ##', () => {
     before(beforeHook);
-    afterEach(afterEachHook);
+    beforeEach(beforeEachHook);
 
     it('normal', testShutdown);
     it('on error', testError);
@@ -100,16 +100,12 @@ function beforeHook() {
     process.exit = ((code: number) => { exitCode = code; }) as any;
 }
 
-function afterEachHook() {
+function beforeEachHook() {
     shutdown = new ShutdownManager();
     callbackCount = [ 0, 0 ];
     exitCode = null;
 }
 
 function afterHook() {
-    process.exit = ((code?: number) => {
-        console.error('@@ process.exit');
-        console.error(new Error().stack);
-        origProcessExit(code);
-    }) as any;
+    process.exit = origProcessExit;
 }

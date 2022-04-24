@@ -100,7 +100,7 @@ export class ShutdownManager {
     }
 }
 
-let shutdownTimeout = 60_000;
+let shutdownTimeout: number = 60_000;
 
 export namespace UnitTestHelpers {
     export function setShutdownTimeout(ms: number): void {
