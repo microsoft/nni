@@ -100,7 +100,7 @@ class NNIRestHandler {
 
         // If it's a fatal error, exit process
         if (isFatal) {
-            this.log.fatal(err);
+            this.log.critical(err);
             process.exit(1);
         } else {
             this.log.error(err);

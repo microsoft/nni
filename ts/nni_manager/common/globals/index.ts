@@ -18,6 +18,7 @@ import assert from 'assert/strict';
 
 import { NniManagerArgs, parseArgs } from './arguments';
 import { NniPaths, createPaths } from './paths';
+import { LogStream, initLogStream } from './log_stream';
 
 export { NniManagerArgs, NniPaths };
 
@@ -30,6 +31,8 @@ export { NniManagerArgs, NniPaths };
 export interface NniGlobals {
     readonly args: NniManagerArgs;
     readonly paths: NniPaths;
+
+    readonly logStream: LogStream;
 }
 
 // give type hint to `global.nni` (copied from SO, dunno how it works)
@@ -53,7 +56,8 @@ export function initGlobals(): void {
 
     const args = parseArgs(process.argv.slice(2));
     const paths = createPaths(args);
+    const logStream = initLogStream(args, paths);
 
-    const globals: NniGlobals = { args, paths };
+    const globals: NniGlobals = { args, paths, logStream };
     Object.assign(global.nni, globals);
 }

@@ -114,7 +114,7 @@ function rootRouter(stopCallback: () => Promise<void>): Router {
     router.use(express.json({ limit: '50mb' }));
 
     /* NNI manager APIs */
-    router.use('/api/v1/nni', createRestHandler(stopCallback));
+    router.use('/api/v1/nni', restHandlerFactory(stopCallback));
 
     /* Download log files */
     // The REST API path "/logs" does not match file system path "/log".
@@ -149,6 +149,7 @@ function netronProxy(): Router {
 
 let webuiPath: string = path.resolve('static');
 let netronUrl: string = 'https://netron.app';
+let restHandlerFactory = createRestHandler;
 
 export namespace UnitTestHelpers {
     export function getPort(server: RestServer): number {
@@ -161,5 +162,15 @@ export namespace UnitTestHelpers {
 
     export function setNetronUrl(mockUrl: string): void {
         netronUrl = mockUrl;
+    }
+
+    export function disableNniManager(): void {
+        restHandlerFactory = (_: any): Router => Router();
+    }
+
+    export function reset(): void {
+        webuiPath = path.resolve('static');
+        netronUrl = 'https://netron.app';
+        restHandlerFactory = createRestHandler;
     }
 }

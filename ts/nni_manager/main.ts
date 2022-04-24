@@ -29,7 +29,7 @@ import * as component from 'common/component';
 import { Database, DataStore } from 'common/datastore';
 import { ExperimentManager } from 'common/experimentManager';
 import globals, { initGlobals } from 'common/globals';
-import { getLogger, setLogLevel, startLogging } from 'common/log';
+import { getLogger } from 'common/log';
 import { Manager } from 'common/manager';
 import { TensorboardManager } from 'common/tensorboardManager';
 import { NNIDataStore } from 'core/nniDataStore';
@@ -72,18 +72,14 @@ process.on('SIGINT', shutdown);
 
 initGlobals();
 
-// TODO: these should be handled inside globals module
-startLogging(globals.paths.nniManagerLog);
-setLogLevel(globals.args.logLevel);
-
 start().then(() => {
     getLogger('main').debug('start() returned.');
 }).catch((error) => {
     try {
         getLogger('main').error('Failed to start:', error);
     } catch (loggerError) {
-        console.log('Failed to start:', error);
-        console.log('Seems logger is faulty:', loggerError);
+        console.error('Failed to start:', error);
+        console.error('Seems logger is faulty:', loggerError);
     }
     process.exit(1);
 });

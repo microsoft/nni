@@ -18,6 +18,7 @@ import path from 'path';
 
 import type { NniManagerArgs } from './arguments';
 import { NniPaths, createPaths } from './paths';
+import type { LogStream } from './log_stream';
 
 // copied from https://www.typescriptlang.org/docs/handbook/2/mapped-types.html
 type Mutable<Type> = {
@@ -27,6 +28,9 @@ type Mutable<Type> = {
 export interface MutableGlobals {
     args: Mutable<NniManagerArgs>;
     paths: Mutable<NniPaths>;
+    logStream: LogStream;
+
+    reset(): void;
 }
 
 export function resetGlobals(): void {
@@ -41,14 +45,19 @@ export function resetGlobals(): void {
         mode: 'unittest',
         dispatcherPipe: undefined
     };
-
     const paths = createPaths(args);
+    const logStream = {
+        writeLine: (_line: string): void => { /* dummy */ },
+        writeLineSync: (_line: string): void => { /* dummy */ },
+        close: (): void => { /* dummy */ }
+    };
 
-    const globals = { args, paths };
-    if (global.nni === undefined) {
-        global.nni = globals;
+    const globalAsAny = global as any;
+    const utGlobals = { args, paths, logStream, reset: resetGlobals };
+    if (globalAsAny.nni === undefined) {
+        globalAsAny.nni = utGlobals;
     } else {
-        Object.assign(global.nni, globals);
+        Object.assign(globalAsAny.nni, utGlobals);
     }
 }
 
@@ -61,5 +70,5 @@ if (isUnitTest()) {
     resetGlobals();
 }
 
-const globals: MutableGlobals = global.nni;
+const globals: MutableGlobals = (global as any).nni;
 export default globals;
