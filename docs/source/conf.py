@@ -99,8 +99,12 @@ nitpicky = False  # disabled for now
 # A list of regular expressions that match URIs that should not be checked.
 linkcheck_ignore = [
     r'http://localhost:\d+',
-    r'.*://.*/#/',                          # Modern websites that has URLs like xxx.com/#/guide
-    r'https://github.com/JSong-Jia/Pic/',   # Community links can't be found any more
+    r'.*://.*/#/',                           # Modern websites that has URLs like xxx.com/#/guide
+    r'https://github\.com/JSong-Jia/Pic/',   # Community links can't be found any more
+
+    # Some URLs that often fail
+    r'https://www\.cs\.toronto\.edu/',                      # CIFAR-10
+    r'https://help\.aliyun\.com/document_detail/\d+\.html', # Aliyun
 ]
 
 # Ignore all links located in release.rst
