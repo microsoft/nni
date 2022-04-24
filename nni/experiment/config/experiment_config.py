@@ -114,7 +114,7 @@ class ExperimentConfig(ConfigBase):
                 setattr(self, algo_type, None)
 
         if self.advisor is not None:
-            assert self.tuner is None
+            assert self.tuner is None, '"advisor" is deprecated. You should only set "tuner".'
             self.tuner = self.advisor
             self.advisor = None
 

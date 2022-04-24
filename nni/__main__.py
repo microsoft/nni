@@ -43,7 +43,7 @@ def main():
     if isinstance(tuner, MsgDispatcherBase):  # is advisor
         logger.debug(f'Tuner {type(tuner).__name__} is advisor.')
         if exp_params.get('assessor') is not None:
-            logger.error('Tuner {type(tuner).__name__} does not support early stopping. Assessor is ignored.')
+            logger.error('Tuner {type(tuner).__name__} has built-in early stopping logic. Assessor is ignored.')
         tuner.run()
         return
 
