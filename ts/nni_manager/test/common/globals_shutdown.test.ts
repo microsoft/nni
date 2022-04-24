@@ -4,6 +4,8 @@
 import assert from 'assert/strict';
 import { setTimeout } from 'timers/promises';
 
+import { Deferred } from 'ts-deferred';
+
 import 'common/globals/unittest';
 import { ShutdownManager, UnitTestHelpers } from 'common/globals/shutdown';
 
@@ -61,10 +63,13 @@ async function testCallbackError(): Promise<void> {
 }
 
 async function testTimeout(): Promise<void> {
+    const deferred = new Deferred<void>();
+
     shutdown.register('ModuleA', async () => { callbackCount[0] += 1; });
     shutdown.register('ModuleB', async () => {
         await setTimeout(30);  // we have set timeout to 10 ms so this times out
         callbackCount[1] += 1;
+        deferred.resolve();
     });
 
     shutdown.initiate('unittest');
@@ -72,28 +77,39 @@ async function testTimeout(): Promise<void> {
     await setTimeout(20);
     assert.deepEqual(callbackCount, [ 1, 0 ]);
     assert.equal(exitCode, 1);
+
+    await deferred.promise;
 }
 
 describe('## globals.shutdown ##', () => {
+    before(beforeHook);
+    afterEach(afterEachHook);
+
     it('normal', testShutdown);
     it('on error', testError);
     it('on init fail', testInitError);
     it('callback raise error', testCallbackError);
     it('timeout', testTimeout);
+
+    after(afterHook);
 });
 
 const origProcessExit = process.exit;
 
-before(() => {
+function beforeHook() {
     process.exit = ((code: number) => { exitCode = code; }) as any;
-});
+}
 
-afterEach(() => {
+function afterEachHook() {
     shutdown = new ShutdownManager();
     callbackCount = [ 0, 0 ];
     exitCode = null;
-});
+}
 
-after(() => {
-    process.exit = origProcessExit;
-});
+function afterHook() {
+    process.exit = ((code?: number) => {
+        console.error('@@ process.exit');
+        console.error(new Error().stack);
+        origProcessExit(code);
+    }) as any;
+}
