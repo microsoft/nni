@@ -7,8 +7,7 @@ Types for static checking.
 
 __all__ = ['Parameters', 'SearchSpace', 'TrialMetric', 'TrialRecord']
 
-import sys
-from typing import Any, Dict, List, TYPE_CHECKING
+from typing import Any, Dict, List
 
 from typing_extensions import Literal, TypedDict
 
