@@ -8,7 +8,7 @@
  *
  *      globals.shutdown.register('MyModuleName', async () => { this.cleanUp(); });
  *
- *  And can request for shutdown when unrecoverable error occurs:
+ *  And a module can request for shutdown when unrecoverable error occurs:
  *
  *      try {
  *          this.doSomethingMustSuccess();
@@ -77,6 +77,7 @@ export class ShutdownManager {
                 logger.error(`Error during shutting down ${moduleName}:`, error);
                 this.hasError = true;
             }
+            this.modules.delete(moduleName);
         });
 
         const timeoutTimer = setTimeout(async () => {
