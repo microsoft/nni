@@ -96,7 +96,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         </div>
                         {/* trial table list */}
                         <div className='detailTable' style={{ marginTop: 10 }}>
-                            <TableList tableSource={source} updateDetailPage={this.context.updateDetailPage} />
+                            <TableList tableSource={source} />
                         </div>
                     </React.Fragment>
                 )}

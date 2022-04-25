@@ -205,13 +205,6 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
                                 </StackItem>
                             </Stack>
                         ))}
-                        {/* disable [tag] because we havn't support */}
-                        {/* <Stack key="tag" horizontal className="hyper-form tag-input">
-                            <StackItem grow={9} className="title">Tag</StackItem>
-                            <StackItem grow={15} className="inputs">
-                                <input type="text" value='Customized' />
-                            </StackItem>
-                        </Stack> */}
                     </form>
                     <DialogFooter>
                         <PrimaryButton text='Submit' onClick={this.addNewTrial} />
