@@ -4,7 +4,6 @@
 import logging
 import os
 import threading
-from enum import Enum
 
 from .command_type import CommandType
 

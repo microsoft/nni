@@ -54,7 +54,7 @@ class WebSocket:
         _logger.debug(f'Connecting to {self._url}')
         self._ws = _wait(_connect_async(self._url))
         _logger.debug(f'Connected.')
-    
+
     def disconnect(self) -> None:
         if self._ws is None:
             _logger.debug('disconnect: No connection.')
@@ -65,11 +65,11 @@ class WebSocket:
         except Exception as e:
             _logger.warning(f'Failed to close connection: {repr(e)}')
         self._ws = None
-    
+
     def send(self, message: str) -> None:
         _logger.debug(f'Sending {message}')
         _wait(self._ws.send(message))
-    
+
     def receive(self) -> str | None:
         """
         Return received message;
@@ -82,7 +82,7 @@ class WebSocket:
             _logger.debug('Connection closed by server.')
             self._ws = None
             return None
-    
+
         # seems the library will inference whether it's text or binary, so we don't have guarantee
         if isinstance(msg, bytes):
             return msg.decode()
