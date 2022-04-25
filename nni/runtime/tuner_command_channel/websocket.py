@@ -30,6 +30,8 @@ class WebSocket:
 
     Call :meth:`connect` before :meth:`send` and :meth:`receive`.
 
+    All methods are thread safe.
+
     Parameters
     ----------
     url
