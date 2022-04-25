@@ -41,8 +41,8 @@ class PrunerModuleWrapper(Module):
         pruning_target_names = ['weight', 'bias']
         for pruning_target_name in pruning_target_names:
             pruning_target_mask_name = '{}_mask'.format(pruning_target_name)
-            if hasattr(self.module, pruning_target_name):
-                pruning_target = getattr(self.module, pruning_target_name)
+            pruning_target = getattr(self.module, pruning_target_name, None)
+            if hasattr(self.module, pruning_target_name) and pruning_target is not None:
                 setattr(self, pruning_target_name, Parameter(torch.empty(pruning_target.shape)))
                 self.register_buffer(pruning_target_mask_name, torch.ones(pruning_target.shape))
             else:
