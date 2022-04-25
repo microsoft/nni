@@ -4,7 +4,6 @@
 import collections
 import logging
 from typing import Any, List, Dict, OrderedDict, Optional, Tuple
-from xmlrpc.client import Boolean
 
 import torch
 from torch.nn import Module
