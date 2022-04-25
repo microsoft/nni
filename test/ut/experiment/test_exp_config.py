@@ -72,8 +72,8 @@ detailed_canon = {
     'assessor': {
         'name': 'assess',
     },
-    'advisor': {
-        'className': 'Advisor',
+    'tuner': {
+        'className': 'Tuner',
         'codeDirectory': expand_path('assets'),
         'classArgs': {'random_seed': 0},
     },

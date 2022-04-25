@@ -21,5 +21,5 @@ steps:
   displayName: Configure Node.js version
 
 - script: |
-    python -m pip install pip==21.3.1 setuptools==60.5.0 wheel==0.37.1
+    python -m pip install pip==22.0.4 setuptools==62.1.0 wheel==0.37.1
   displayName: Install PyPA tools

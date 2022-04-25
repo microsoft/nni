@@ -8,7 +8,11 @@
         "nni/nas",
         "nni/retiarii",
         "nni/smartparam.py",
-        "nni/tools"
+        "nni/tools/annotation",
+        "nni/tools/gpu_tool",
+        "nni/tools/jupyter_extension",
+        "nni/tools/nnictl",
+        "nni/tools/trial_tool"
     ],
     "reportMissingImports": false
 }

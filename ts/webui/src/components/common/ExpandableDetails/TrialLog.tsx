@@ -13,7 +13,7 @@ const TrialLog = (props): any => {
                     {logStr}
                 </a>
             ) : (
-                <span className='logContent'>{logStr}</span>
+                <span className='fontColor333'>{logStr}</span>
             )}
         </div>
     );

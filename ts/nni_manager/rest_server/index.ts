@@ -30,9 +30,8 @@ import express, { Request, Response, Router } from 'express';
 import httpProxy from 'http-proxy';
 import { Deferred } from 'ts-deferred';
 
-import { Singleton } from 'common/component';
+import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
-import { getLogDir } from 'common/utils';
 import { createRestHandler } from './restHandler';
 
 /**
@@ -41,7 +40,6 @@ import { createRestHandler } from './restHandler';
  *  RestServer must be initialized with start() after NNI manager constructing, but not necessarily after initializing.
  *  This is because RestServer needs NNI manager instance to register API handlers.
  **/
-@Singleton
 export class RestServer {
     private port: number;
     private urlPrefix: string;
@@ -116,13 +114,13 @@ function rootRouter(stopCallback: () => Promise<void>): Router {
     router.use(express.json({ limit: '50mb' }));
 
     /* NNI manager APIs */
-    router.use('/api/v1/nni', createRestHandler(stopCallback));
+    router.use('/api/v1/nni', restHandlerFactory(stopCallback));
 
     /* Download log files */
     // The REST API path "/logs" does not match file system path "/log".
     // Here we use an additional router to workaround this problem.
     const logRouter = Router();
-    logRouter.get('*', express.static(logDirectory ?? getLogDir()));
+    logRouter.get('*', express.static(globals.paths.logDirectory));
     router.use('/logs', logRouter);
 
     /* NAS model visualization */
@@ -151,11 +149,11 @@ function netronProxy(): Router {
 
 let webuiPath: string = path.resolve('static');
 let netronUrl: string = 'https://netron.app';
-let logDirectory: string | undefined = undefined;
+let restHandlerFactory = createRestHandler;
 
 export namespace UnitTestHelpers {
     export function getPort(server: RestServer): number {
-        return (<any>server).port;
+        return (server as any).port;
     }
 
     export function setWebuiPath(mockPath: string): void {
@@ -166,7 +164,13 @@ export namespace UnitTestHelpers {
         netronUrl = mockUrl;
     }
 
-    export function setLogDirectory(path: string): void {
-        logDirectory = path;
+    export function disableNniManager(): void {
+        restHandlerFactory = (_: any): Router => Router();
+    }
+
+    export function reset(): void {
+        webuiPath = path.resolve('static');
+        netronUrl = 'https://netron.app';
+        restHandlerFactory = createRestHandler;
     }
 }

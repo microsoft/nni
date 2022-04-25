@@ -7,8 +7,8 @@ import logging
 import json
 import base64
 
-from .runtime.common import enable_multi_thread
 from .runtime.msg_dispatcher import MsgDispatcher
+from .runtime.msg_dispatcher_base import MsgDispatcherBase
 from .tools.package_utils import create_builtin_class_instance, create_customized_class_instance
 
 logger = logging.getLogger('nni.main')
@@ -29,82 +29,50 @@ def main():
     exp_params = json.loads(exp_params_decode)
     logger.debug('exp_params json obj: [%s]', json.dumps(exp_params, indent=4))
 
-    if exp_params.get('deprecated', {}).get('multiThread'):
-        enable_multi_thread()
-
     if 'trainingServicePlatform' in exp_params:  # config schema is v1
         from .experiment.config.convert import convert_algo
-        for algo_type in ['tuner', 'assessor', 'advisor']:
+        for algo_type in ['tuner', 'assessor']:
             if algo_type in exp_params:
                 exp_params[algo_type] = convert_algo(algo_type, exp_params[algo_type])
+        if 'advisor' in exp_params:
+            exp_params['tuner'] = convert_algo('advisor', exp_params['advisor'])
 
-    if exp_params.get('advisor') is not None:
-        # advisor is enabled and starts to run
-        _run_advisor(exp_params)
-    else:
-        # tuner (and assessor) is enabled and starts to run
-        assert exp_params.get('tuner') is not None
-        tuner = _create_tuner(exp_params)
+    assert exp_params.get('tuner') is not None
+    tuner = _create_algo(exp_params['tuner'], 'tuner')
+
+    if isinstance(tuner, MsgDispatcherBase):  # is advisor
+        logger.debug(f'Tuner {type(tuner).__name__} is advisor.')
         if exp_params.get('assessor') is not None:
-            assessor = _create_assessor(exp_params)
-        else:
-            assessor = None
-        dispatcher = MsgDispatcher(tuner, assessor)
+            logger.error('Tuner {type(tuner).__name__} has built-in early stopping logic. Assessor is ignored.')
+        tuner.run()
+        return
 
-        try:
-            dispatcher.run()
-            tuner._on_exit()
-            if assessor is not None:
-                assessor._on_exit()
-        except Exception as exception:
-            logger.exception(exception)
-            tuner._on_error()
-            if assessor is not None:
-                assessor._on_error()
-            raise
-
-
-def _run_advisor(exp_params):
-    if exp_params.get('advisor').get('name'):
-        dispatcher = create_builtin_class_instance(
-            exp_params['advisor']['name'],
-            exp_params['advisor'].get('classArgs'),
-            'advisors')
+    if exp_params.get('assessor') is not None:
+        assessor = _create_algo(exp_params['assessor'], 'assessor')
     else:
-        dispatcher = create_customized_class_instance(exp_params.get('advisor'))
-    if dispatcher is None:
-        raise AssertionError('Failed to create Advisor instance')
+        assessor = None
+    dispatcher = MsgDispatcher(tuner, assessor)
+
     try:
         dispatcher.run()
-    except Exception as exception:
-        logger.exception(exception)
+        tuner._on_exit()
+        if assessor is not None:
+            assessor._on_exit()
+    except Exception:
+        tuner._on_error()
+        if assessor is not None:
+            assessor._on_error()
         raise
 
 
-def _create_tuner(exp_params):
-    if exp_params['tuner'].get('name'):
-        tuner = create_builtin_class_instance(
-            exp_params['tuner']['name'],
-            exp_params['tuner'].get('classArgs'),
-            'tuners')
+def _create_algo(algo_config, algo_type):
+    if algo_config.get('name'):
+        algo = create_builtin_class_instance(algo_config['name'], algo_config.get('classArgs'), algo_type + 's')
     else:
-        tuner = create_customized_class_instance(exp_params['tuner'])
-    if tuner is None:
-        raise AssertionError('Failed to create Tuner instance')
-    return tuner
-
-
-def _create_assessor(exp_params):
-    if exp_params['assessor'].get('name'):
-        assessor = create_builtin_class_instance(
-            exp_params['assessor']['name'],
-            exp_params['assessor'].get('classArgs'),
-            'assessors')
-    else:
-        assessor = create_customized_class_instance(exp_params['assessor'])
-    if assessor is None:
-        raise AssertionError('Failed to create Assessor instance')
-    return assessor
+        algo = create_customized_class_instance(algo_config)
+    if algo is None:
+        raise AssertionError(f'Failed to create {algo_type} instance')
+    return algo
 
 
 if __name__ == '__main__':

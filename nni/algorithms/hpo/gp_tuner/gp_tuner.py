@@ -41,7 +41,7 @@ class GPClassArgsValidator(ClassArgsValidator):
 
 class GPTuner(Tuner):
     """
-    GPTuner is a Bayesian Optimization method where Gaussian Process
+    GP tuner is a Bayesian Optimization method where Gaussian Process
     is used for modeling loss functions.
 
     Bayesian optimization works by constructing a posterior distribution of functions
@@ -50,7 +50,7 @@ class GPTuner(Tuner):
     and the algorithm becomes more certain of which regions in parameter space
     are worth exploring and which are not.
 
-    GPTuner is designed to minimize/maximize the number of steps required to find
+    GP tuner is designed to minimize/maximize the number of steps required to find
     a combination of parameters that are close to the optimal combination.
     To do so, this method uses a proxy optimization problem (finding the maximum of
     the acquisition function) that, albeit still a hard problem, is cheaper
@@ -70,7 +70,7 @@ class GPTuner(Tuner):
 
     .. code-block::
 
-        config.tuner.name = 'GPTuner'
+        config.tuner.name = 'GP'
         config.tuner.class_args = {
             'optimize_mode': 'maximize',
             'utility': 'ei',

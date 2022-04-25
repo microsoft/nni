@@ -15,32 +15,29 @@ import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { MockedDataStore } from '../mock/datastore';
 import { MockedTrainingService } from '../mock/trainingService';
-import { RestServer } from '../../rest_server';
+import { RestServer, UnitTestHelpers } from 'rest_server';
 import { testManagerProvider } from '../mock/nniManager';
 import { testExperimentManagerProvider } from '../mock/experimentManager';
 import { TensorboardManager } from '../../common/tensorboardManager';
-import { NNITensorboardManager } from '../../core/nniTensorboardManager';
+import { MockTensorboardManager } from '../mock/mockTensorboardManager';
 
 let restServer: RestServer;
 
-describe('Unit test for rest server', () => {
+describe('Unit test for rest handler', () => {
 
     let ROOT_URL: string;
 
-    before((done: Mocha.Done) => {
+    before(async () => {
         prepareUnitTest();
         Container.bind(Manager).provider(testManagerProvider);
         Container.bind(DataStore).to(MockedDataStore);
         Container.bind(TrainingService).to(MockedTrainingService);
         Container.bind(ExperimentManager).provider(testExperimentManagerProvider);
-        Container.bind(TensorboardManager).to(NNITensorboardManager);
-        restServer = new RestServer(8080, '');
-        restServer.start().then(() => {
-            ROOT_URL = `http://localhost:8080/api/v1/nni`;
-            done();
-        }).catch((e: Error) => {
-            assert.fail(`Failed to start rest server: ${e.message}`);
-        });
+        Container.bind(TensorboardManager).to(MockTensorboardManager);
+        restServer = new RestServer(0, '');
+        await restServer.start();
+        const port = UnitTestHelpers.getPort(restServer);
+        ROOT_URL = `http://localhost:${port}/api/v1/nni`;
     });
 
     after(() => {
@@ -130,56 +127,4 @@ describe('Unit test for rest server', () => {
             }
         });
     });
-
-    /* FIXME
-    it('Test PUT experiment/cluster-metadata bad key', (done: Mocha.Done) => {
-        const req: request.Options = {
-            uri: `${ROOT_URL}/experiment/cluster-metadata`,
-            method: 'PUT',
-            json: true,
-            body: {
-                exception_test_key: 'test'
-            }
-        };
-        request(req, (err: Error, res: request.Response) => {
-            if (err) {
-                assert.fail(err.message);
-            } else {
-                expect(res.statusCode).to.equal(400);
-            }
-            done();
-        });
-    });
-    */
-
-    /* FIXME
-    it('Test PUT experiment/cluster-metadata', (done: Mocha.Done) => {
-        const req: request.Options = {
-            uri: `${ROOT_URL}/experiment/cluster-metadata`,
-            method: 'PUT',
-            json: true,
-            body: {
-                machine_list: [{
-                    ip: '10.10.10.101',
-                    port: 22,
-                    username: 'test',
-                    passwd: '1234'
-                }, {
-                    ip: '10.10.10.102',
-                    port: 22,
-                    username: 'test',
-                    passwd: '1234'
-                }]
-            }
-        };
-        request(req, (err: Error, res: request.Response) => {
-            if (err) {
-                assert.fail(err.message);
-            } else {
-                expect(res.statusCode).to.equal(200);
-            }
-            done();
-        });
-    });
-    */
 });

@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Stack, PrimaryButton } from '@fluentui/react';
 import { gap10 } from '@components/fluent/ChildrenGap';
+import { AppContext } from '@/App';
 import { getSearchInputValueBySearchList } from './searchFunction';
 
 // This file is for search trial ['Trial id', 'Trial No.']
 
 function GeneralSearch(props): any {
+    const { updateDetailPage } = useContext(AppContext);
     // searchName val: Trial No. | Trial id
-    const { searchName, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal, updatePage } = props;
+    const { searchName, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal } = props;
     const [firstInputVal, setFirstInputVal] = useState(getSearchNameInit());
 
     function updateFirstInputVal(ev: React.ChangeEvent<HTMLInputElement>): void {
@@ -56,7 +58,7 @@ function GeneralSearch(props): any {
         }
         setSearchInputVal(getSearchInputValueBySearchList(searchFilterConditions));
         changeSearchFilterList(searchFilterConditions);
-        updatePage();
+        updateDetailPage();
         dismiss(); // close menu
     }
 
@@ -75,8 +77,7 @@ GeneralSearch.propTypes = {
     searchFilter: PropTypes.array,
     dismiss: PropTypes.func,
     setSearchInputVal: PropTypes.func,
-    changeSearchFilterList: PropTypes.func,
-    updatePage: PropTypes.func
+    changeSearchFilterList: PropTypes.func
 };
 
 export default GeneralSearch;

@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Stack, PrimaryButton, Dropdown, IDropdownOption } from '@fluentui/react';
 import { EXPERIMENT } from '@static/datamodel';
 import { getDropdownOptions, getSearchInputValueBySearchList } from './searchFunction';
 import { gap10 } from '@components/fluent/ChildrenGap';
+import { AppContext } from '@/App';
 
 // This file is for filtering trial parameters and trial status
 
 function SearchParameterConditions(props): any {
-    const { parameter, searchFilter, dismiss, changeSearchFilterList, updatePage, setSearchInputVal } = props;
+    const { parameter, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal } = props;
+    const { updateDetailPage } = useContext(AppContext);
     const isChoiceTypeSearchFilter = parameter === 'StatusNNI' || EXPERIMENT.searchSpace[parameter]._type === 'choice';
     const operatorList = isChoiceTypeSearchFilter ? ['=', '≠'] : ['between', '>', '<', '=', '≠'];
 
@@ -125,7 +127,7 @@ function SearchParameterConditions(props): any {
 
         setSearchInputVal(getSearchInputValueBySearchList(newSearchFilters));
         changeSearchFilterList(newSearchFilters);
-        updatePage();
+        updateDetailPage();
         dismiss(); // close menu
     }
 

@@ -18,21 +18,22 @@ import { Container } from 'typescript-ioc';
 import glob from 'glob';
 
 import { Database, DataStore } from './datastore';
-import { getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
+import globals from './globals';
+import { resetGlobals } from './globals/unittest';  // TODO: this file should not contain unittest helpers
 import { ExperimentConfig, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
-    return getExperimentStartupInfo().logDir;
+    return globals.paths.experimentRoot;
 }
 
 function getLogDir(): string {
-    return path.join(getExperimentRootDir(), 'log');
+    return globals.paths.logDirectory;
 }
 
 function getLogLevel(): string {
-    return getExperimentStartupInfo().logLevel;
+    return globals.args.logLevel;
 }
 
 function getDefaultDatabaseDir(): string {
@@ -153,18 +154,7 @@ function prepareUnitTest(): void {
     Container.snapshot(Manager);
     Container.snapshot(ExperimentManager);
 
-    setExperimentStartupInfo({
-        port: 8080,
-        experimentId: 'unittest',
-        action: 'create',
-        experimentsDirectory: path.join(os.homedir(), 'nni-experiments'),
-        logLevel: 'info',
-        foreground: false,
-        urlPrefix: '',
-        mode: 'unittest',
-        dispatcherPipe: undefined,
-    });
-    mkDirPSync(getLogDir());
+    resetGlobals();
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');
     try {
