@@ -77,7 +77,7 @@ INTERNAL_SCHEMA = {
 
 
 class BasicPruner(Pruner):
-    def __init__(self, model: Module, config_list: List[Dict]):
+    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]]):
         self.data_collector: DataCollector = None
         self.metrics_calculator: MetricsCalculator = None
         self.sparsity_allocator: SparsityAllocator = None
@@ -1095,7 +1095,7 @@ class ADMMPruner(BasicPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/admm_pruning_torch.py <examples/model_compress/pruning/admm_pruning_torch.py>`
     """
 
-    def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
+    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]], trainer: Callable[[Module, Optimizer, Callable], None],
                  traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int,
                  training_epochs: int, granularity: str = 'fine-grained'):
         self.trainer = trainer

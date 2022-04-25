@@ -13,7 +13,7 @@ from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression.v2.pytorch.base import Compressor, LayerInfo, Task, TaskResult
+from nni.algorithms.compression.v2.pytorch.base import Pruner, LayerInfo, Task, TaskResult
 from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
 
 _logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class DataCollector:
         The compressor binded with this DataCollector.
     """
 
-    def __init__(self, compressor: Compressor):
+    def __init__(self, compressor: Pruner):
         self.compressor = compressor
 
     def reset(self):
@@ -76,7 +76,7 @@ class TrainerBasedDataCollector(DataCollector):
     This class includes some trainer based util functions, i.e., patch optimizer or criterion, add hooks.
     """
 
-    def __init__(self, compressor: Compressor, trainer: Callable[[Module, Optimizer, Callable], None], optimizer_helper: OptimizerConstructHelper,
+    def __init__(self, compressor: Pruner, trainer: Callable[[Module, Optimizer, Callable], None], optimizer_helper: OptimizerConstructHelper,
                  criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int,
                  opt_before_tasks: List = [], opt_after_tasks: List = [],
                  collector_infos: List[HookCollectorInfo] = [], criterion_patch: Callable[[Callable], Callable] = None):
@@ -334,7 +334,7 @@ class SparsityAllocator:
         Inherit the mask already in the wrapper if set True.
     """
 
-    def __init__(self, pruner: Compressor, dim: Optional[Union[int, List[int]]] = None,
+    def __init__(self, pruner: Pruner, dim: Optional[Union[int, List[int]]] = None,
                  block_sparse_size: Optional[Union[int, List[int]]] = None, continuous_mask: bool = True):
         self.pruner = pruner
         self.dim = dim if not isinstance(dim, int) else [dim]
@@ -486,7 +486,7 @@ class TaskGenerator:
         self._save_data('origin', model, masks, config_list)
 
         self._task_id_candidate = 0
-        self._tasks: Dict[int, Task] = {}
+        self._tasks: Dict[Union[int, str], Task] = {}
         self._pending_tasks: List[Task] = self.init_pending_tasks()
 
         self._best_score = None
@@ -560,7 +560,7 @@ class TaskGenerator:
             self._dump_tasks_info()
             return task
 
-    def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]]:
+    def get_best_result(self) -> Optional[Tuple[Union[int, str], Module, Dict[str, Dict[str, Tensor]], Optional[float], List[Dict]]]:
         """
         Returns
         -------

@@ -196,9 +196,9 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         self.target_sparsity_list = config_list_canonical(model, config_list)
         self._adjust_target_sparsity()
 
-        self._temp_config_list = None
-        self._current_sparsity_list = None
-        self._current_score = None
+        self._temp_config_list = []
+        self._current_sparsity_list = []
+        self._current_score = 0.
 
         super().reset(model, config_list=config_list, masks=masks)
 
@@ -248,7 +248,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
 
         return self._sparsity_to_config_list(rescaled_sparsity, config), rescaled_sparsity
 
-    def _rescale_sparsity(self, random_sparsity: List, target_sparsity: float, op_names: List) -> List:
+    def _rescale_sparsity(self, random_sparsity: List, target_sparsity: float, op_names: List) -> Optional[List]:
         assert len(random_sparsity) == len(op_names)
 
         num_weights = sorted([self.weights_numel[op_name] for op_name in op_names])
@@ -327,11 +327,12 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
 
     def generate_tasks(self, task_result: TaskResult) -> List[Task]:
         # initial/update temp config list
-        if self._temp_config_list is None:
+        if len(self._temp_config_list) == 0:
             self._init_temp_config_list()
         else:
             score = self._tasks[task_result.task_id].score
-            if self._current_sparsity_list is None:
+            assert score is not None, 'SimulatedAnnealingTaskGenerator need each score is not None.'
+            if len(self._current_sparsity_list) == 0:
                 self._current_sparsity_list = deepcopy(self._temp_sparsity_list)
                 self._current_score = score
             else:

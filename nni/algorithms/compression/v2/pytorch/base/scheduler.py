@@ -19,7 +19,7 @@ class Task:
     # NOTE: If we want to support multi-thread, this part need to refactor, maybe use file and lock to sync.
     _reference_counter = {}
 
-    def __init__(self, task_id: int, model_path: str, masks_path: str, config_list_path: str,
+    def __init__(self, task_id: int, model_path: Union[str, Path], masks_path: Union[str, Path], config_list_path: Union[str, Path],
                  speedup: Optional[bool] = True, finetune: Optional[bool] = True, evaluate: Optional[bool] = True):
         """
         Parameters

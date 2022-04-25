@@ -178,33 +178,22 @@ class Compressor:
         """
         Returns
         -------
-        OrderedDict[str, Module]
+        OrderedDict[str, ModuleWrapper]
             An ordered dict, key is the name of the module, value is the wrapper of the module.
         """
-        assert self.modules_wrapper is not None, 'Bound model has not be wrapped.'
-        return self.modules_wrapper
+        raise NotImplementedError
 
     def _wrap_model(self):
         """
         Wrap all modules that needed to be compressed.
         """
-        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
-
-        if not self.is_wrapped:
-            for _, wrapper in reversed(self.get_modules_wrapper().items()):
-                _setattr(self.bound_model, wrapper.name, wrapper)
-            self.is_wrapped = True
+        raise NotImplementedError
 
     def _unwrap_model(self):
         """
         Unwrap all modules that needed to be compressed.
         """
-        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
-
-        if self.is_wrapped:
-            for _, wrapper in self.get_modules_wrapper().items():
-                _setattr(self.bound_model, wrapper.name, wrapper.module)
-            self.is_wrapped = False
+        raise NotImplementedError
 
     def set_wrappers_attribute(self, name: str, value: Any):
         """

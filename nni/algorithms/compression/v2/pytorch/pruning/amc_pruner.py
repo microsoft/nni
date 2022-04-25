@@ -88,6 +88,7 @@ class AMCTaskGenerator(TaskGenerator):
             self.observation = observation.copy()
 
             if done:
+                assert task_result.task_id is not None
                 final_reward = task_result.score - 1
                 # agent observe and update policy
                 for _, s_t, s_t1, a_t, d_t in self.T:

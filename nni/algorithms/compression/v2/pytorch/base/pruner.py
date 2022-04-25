@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, OrderedDict
 
 import torch
 from torch import Tensor
@@ -90,6 +90,16 @@ class Pruner(Compressor):
     def reset(self, model: Optional[Module] = None, config_list: Optional[List[Dict]] = None):
         super().reset(model=model, config_list=config_list)
 
+    def get_modules_wrapper(self) -> OrderedDict[str, PrunerModuleWrapper]:
+        """
+        Returns
+        -------
+        OrderedDict[str, PrunerModuleWrapper]
+            An ordered dict, key is the name of the module, value is the wrapper of the module.
+        """
+        assert self.modules_wrapper is not None, 'Bound model has not be wrapped.'
+        return self.modules_wrapper
+
     def _wrap_modules(self, layer: LayerInfo, config: Dict) -> PrunerModuleWrapper:
         """
         Create a wrapper module to replace the original one.
@@ -120,6 +130,8 @@ class Pruner(Compressor):
         Wrap all modules that needed to be compressed.
         Different from the parent function, call `wrapper._weight2buffer()` after replace the origin module to wrapper.
         """
+        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+
         if not self.is_wrapped:
             for _, wrapper in reversed(self.get_modules_wrapper().items()):
                 _setattr(self.bound_model, wrapper.name, wrapper)
@@ -131,6 +143,8 @@ class Pruner(Compressor):
         Unwrap all modules that needed to be compressed.
         Different from the parent function, call `wrapper._weight2parameter()` after replace the wrapper to origin module.
         """
+        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+
         if self.is_wrapped:
             for _, wrapper in self.get_modules_wrapper().items():
                 _setattr(self.bound_model, wrapper.name, wrapper.module)
