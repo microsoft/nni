@@ -1,18 +1,25 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 # This file might cause import error for those who didn't install RL-related dependencies
 
 import logging
 import threading
 from multiprocessing.pool import ThreadPool
+from typing import Tuple
 
 import gym
 import numpy as np
 import tianshou
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from gym import spaces
 from tianshou.data import to_torch
 from tianshou.env.worker import EnvWorker
+
+from nni.typehint import TypedDict
 
 from .utils import get_targeted_model
 from ..graph import ModelStatus
@@ -76,8 +83,13 @@ class MultiThreadEnvWorker(EnvWorker):
         self.pool.terminate()
         return self.env.close()
 
+class ObservationType(TypedDict):
+    action_history: np.ndarray
+    cur_step: int
+    action_dim: int
 
-class ModelEvaluationEnv(gym.Env):
+
+class ModelEvaluationEnv(gym.Env[ObservationType, int]):
     def __init__(self, base_model, mutators, search_space):
         self.base_model = base_model
         self.mutators = mutators
@@ -98,7 +110,7 @@ class ModelEvaluationEnv(gym.Env):
     def action_space(self):
         return spaces.Discrete(self.action_dim)
 
-    def reset(self):
+    def reset(self) -> ObservationType:
         self.action_history = np.zeros(self.num_steps, dtype=np.int32)
         self.cur_step = 0
         self.sample = {}
@@ -108,14 +120,14 @@ class ModelEvaluationEnv(gym.Env):
             'action_dim': len(self.search_space[self.ss_keys[self.cur_step]])
         }
 
-    def step(self, action):
+    def step(self, action: int) -> Tuple[ObservationType, float, bool, dict]:
         cur_key = self.ss_keys[self.cur_step]
         assert action < len(self.search_space[cur_key]), \
             f'Current action {action} out of range {self.search_space[cur_key]}.'
         self.action_history[self.cur_step] = action
         self.sample[cur_key] = self.search_space[cur_key][action]
         self.cur_step += 1
-        obs = {
+        obs: ObservationType = {
             'action_history': self.action_history,
             'cur_step': self.cur_step,
             'action_dim': len(self.search_space[self.ss_keys[self.cur_step]]) \
@@ -129,7 +141,7 @@ class ModelEvaluationEnv(gym.Env):
             wait_models(model)
             if model.status == ModelStatus.Failed:
                 return self.reset(), 0., False, {}
-            rew = model.metric
+            rew = float(model.metric)
             _logger.info(f'Model metric received as reward: {rew}')
             return obs, rew, True, {}
         else:
@@ -147,7 +159,7 @@ class Preprocessor(nn.Module):
         self.rnn = nn.LSTM(hidden_dim, hidden_dim, num_layers, batch_first=True)
 
     def forward(self, obs):
-        seq = nn.functional.pad(obs['action_history'] + 1, (1, 1))  # pad the start token and end token
+        seq = F.pad(obs['action_history'] + 1, (1, 1))  # pad the start token and end token
         # end token is used to avoid out-of-range of v_s_. Will not actually affect BP.
         seq = self.embedding(seq.long())
         feature, _ = self.rnn(seq)
@@ -167,7 +179,7 @@ class Actor(nn.Module):
         # to take care of choices with different number of options
         mask = torch.arange(self.action_dim).expand(len(out), self.action_dim) >= obs['action_dim'].unsqueeze(1)
         out[mask.to(out.device)] = float('-inf')
-        return nn.functional.softmax(out, dim=-1), kwargs.get('state', None)
+        return F.softmax(out, dim=-1), kwargs.get('state', None)
 
 
 class Critic(nn.Module):

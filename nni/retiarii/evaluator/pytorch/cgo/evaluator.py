@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import warnings
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Type
 
 
 import torch.nn as nn
@@ -18,7 +18,7 @@ from .trainer import Trainer
 
 @nni.trace
 class _MultiModelSupervisedLearningModule(LightningModule):
-    def __init__(self, criterion: nn.Module, metrics: Dict[str, torchmetrics.Metric],
+    def __init__(self, criterion: Type[nn.Module], metrics: Dict[str, torchmetrics.Metric],
                  n_models: int = 0,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
@@ -171,7 +171,7 @@ class Classification(Lightning):
         `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
     """
 
-    def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
+    def __init__(self, criterion: Type[nn.Module] = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: optim.Optimizer = optim.Adam,
@@ -184,7 +184,7 @@ class Classification(Lightning):
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
 class _RegressionModule(_MultiModelSupervisedLearningModule):
-    def __init__(self, criterion: nn.Module = nn.MSELoss,
+    def __init__(self, criterion: Type[nn.Module] = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: optim.Optimizer = optim.Adam):

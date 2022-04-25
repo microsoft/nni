@@ -275,11 +275,11 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
                 if not arch:
                     yield name, p
 
-    def resample(self, operation: MixedOperation, memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def resample(self, operation: MixedOperation, memo: Dict[str, Any]) -> Dict[str, Any]:
         """Differentiable. Do nothing in resample."""
         return {}
 
-    def export(self, operation: MixedOperation, memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def export(self, operation: MixedOperation, memo: Dict[str, Any]) -> Dict[str, Any]:
         """Export is also random for each leaf value choice."""
         result = {}
         for name, spec in operation.search_space_spec().items():

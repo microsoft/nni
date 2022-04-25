@@ -20,7 +20,7 @@ from .supermodule.base import BaseSuperNetModule
 __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
 
 
-MutationHook = Callable[[nn.Module, str, Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
+MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
 
 
 def traverse_and_mutate_submodules(
@@ -149,11 +149,12 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         The hook list will be appended by ``default_mutation_hooks`` in each one-shot module.
 
-        To be more specific, the input arguments are three arguments:
+        To be more specific, the input arguments are four arguments:
 
         #. a module that might be processed,
         #. name of the module in its parent module,
         #. a memo dict whose usage depends on the particular algorithm.
+        #. keyword arguments (configurations).
 
         Note that the memo should be read/written by hooks.
         There won't be any hooks called on root module.

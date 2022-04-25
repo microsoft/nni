@@ -9,7 +9,7 @@ The support remains limited. Known limitations include:
 - The code contains duplicates. Needs refactor.
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, cast
 
 import torch
 import torch.nn as nn
@@ -94,7 +94,7 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
             self._sample_idx = self.op_names.index(self._sampled)
         else:
             probs = self._softmax(self._arch_alpha)
-            self._sample_idx = torch.multinomial(probs, 1)[0].item()
+            self._sample_idx = int(torch.multinomial(probs, 1)[0].item())
             self._sampled = self.op_names[self._sample_idx]
 
         # set binary gates
@@ -109,10 +109,11 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
         """Chose the argmax if label isn't found in memo."""
         if self.label in memo:
             return {}  # nothing new to export
-        return {self.label: self.op_names[torch.argmax(self._arch_alpha).item()]}
+        return {self.label: self.op_names[int(torch.argmax(self._arch_alpha).item())]}
 
     def finalize_grad(self):
         binary_grads = self._binary_gates.grad
+        assert binary_grads is not None
         with torch.no_grad():
             if self._arch_alpha.grad is None:
                 self._arch_alpha.grad = torch.zeros_like(self._arch_alpha.data)
@@ -164,13 +165,13 @@ class ProxylessMixedInput(DifferentiableMixedInput):
         else:
             probs = self._softmax(self._arch_alpha)
             sample = torch.multinomial(probs, 1)[0].item()
-            self._sampled = sample
+            self._sampled = int(sample)
 
         # set binary gates
         with torch.no_grad():
             self._binary_gates.zero_()
             self._binary_gates.grad = torch.zeros_like(self._binary_gates.data)
-            self._binary_gates.data[sample] = 1.0
+            self._binary_gates.data[cast(int, self._sampled)] = 1.0
 
         return {self.label: self._sampled}
 
@@ -182,6 +183,7 @@ class ProxylessMixedInput(DifferentiableMixedInput):
 
     def finalize_grad(self):
         binary_grads = self._binary_gates.grad
+        assert binary_grads is not None
         with torch.no_grad():
             if self._arch_alpha.grad is None:
                 self._arch_alpha.grad = torch.zeros_like(self._arch_alpha.data)

@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import math
-from typing import Optional, Callable, List, Tuple
+from typing import Optional, Callable, List, Tuple, cast
 
 import torch
 import nni.retiarii.nn.pytorch as nn
@@ -31,12 +31,12 @@ class ConvBNReLU(nn.Sequential):
 
     def __init__(
         self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int = 3,
+        in_channels: nn.MaybeChoice[int],
+        out_channels: nn.MaybeChoice[int],
+        kernel_size: nn.MaybeChoice[int] = 3,
         stride: int = 1,
-        groups: int = 1,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        groups: nn.MaybeChoice[int] = 1,
+        norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
         dilation: int = 1,
     ) -> None:
@@ -46,9 +46,17 @@ class ConvBNReLU(nn.Sequential):
         if activation_layer is None:
             activation_layer = nn.ReLU6
         super().__init__(
-            nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation=dilation, groups=groups,
-                      bias=False),
-            norm_layer(out_channels),
+            nn.Conv2d(
+                cast(int, in_channels),
+                cast(int, out_channels),
+                cast(int, kernel_size),
+                stride,
+                cast(int, padding),
+                dilation=dilation,
+                groups=cast(int, groups),
+                bias=False
+            ),
+            norm_layer(cast(int, out_channels)),
             activation_layer(inplace=True)
         )
         self.out_channels = out_channels
@@ -62,11 +70,11 @@ class SeparableConv(nn.Sequential):
 
     def __init__(
         self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int = 3,
+        in_channels: nn.MaybeChoice[int],
+        out_channels: nn.MaybeChoice[int],
+        kernel_size: nn.MaybeChoice[int] = 3,
         stride: int = 1,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
         super().__init__(
@@ -101,13 +109,13 @@ class InvertedResidual(nn.Sequential):
 
     def __init__(
         self,
-        in_channels: int,
-        out_channels: int,
-        expand_ratio: int,
-        kernel_size: int = 3,
+        in_channels: nn.MaybeChoice[int],
+        out_channels: nn.MaybeChoice[int],
+        expand_ratio: nn.MaybeChoice[float],
+        kernel_size: nn.MaybeChoice[int] = 3,
         stride: int = 1,
-        squeeze_and_excite: Optional[Callable[[int], nn.Module]] = None,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        squeeze_and_excite: Optional[Callable[[nn.MaybeChoice[int]], nn.Module]] = None,
+        norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
         super().__init__()
@@ -115,7 +123,7 @@ class InvertedResidual(nn.Sequential):
         self.out_channels = out_channels
         assert stride in [1, 2]
 
-        hidden_ch = nn.ValueChoice.to_int(round(in_channels * expand_ratio))
+        hidden_ch = nn.ValueChoice.to_int(round(cast(int, in_channels * expand_ratio)))
 
         # FIXME: check whether this equal works
         # Residual connection is added here stride = 1 and input channels and output channels are the same.
@@ -215,7 +223,7 @@ class ProxylessNAS(nn.Module):
 
         self.first_conv = ConvBNReLU(3, widths[0], stride=2, norm_layer=nn.BatchNorm2d)
 
-        blocks = [
+        blocks: List[nn.Module] = [
             # first stage is fixed
             SeparableConv(widths[0], widths[1], kernel_size=3, stride=1)
         ]

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import Callable, Dict
+
 import torch
 import torch.nn as nn
 
@@ -176,8 +178,10 @@ class NasBench201(nn.Module):
             if reduction:
                 cell = ResNetBasicblock(C_prev, C_curr, 2)
             else:
-                cell = NasBench201Cell({prim: lambda C_in, C_out: OPS_WITH_STRIDE[prim](C_in, C_out, 1) for prim in PRIMITIVES},
-                                       C_prev, C_curr, label='cell')
+                ops: Dict[str, Callable[[int, int], nn.Module]] = {
+                    prim: lambda C_in, C_out: OPS_WITH_STRIDE[prim](C_in, C_out, 1) for prim in PRIMITIVES
+                }
+                cell = NasBench201Cell(ops, C_prev, C_curr, label='cell')
             self.cells.append(cell)
             C_prev = C_curr
 

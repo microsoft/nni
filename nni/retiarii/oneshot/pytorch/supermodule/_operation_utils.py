@@ -27,7 +27,7 @@ which interprets the slice and apply it on a tensor.
 """
 
 import operator
-from typing import Tuple, Union, List, Dict, Callable, Optional, Iterator, TypeVar, Any, Generic
+from typing import Tuple, Union, List, Dict, Callable, Optional, Iterator, TypeVar, Any, Generic, cast
 
 import numpy as np
 import torch
@@ -128,9 +128,10 @@ class Slicable(Generic[T]):
             raise TypeError(f'Unsuppoted weight type: {type(weight)}')
         self.weight = weight
 
-    def __getitem__(self, index: multidim_slice) -> T:
+    def __getitem__(self, index: Union[slice_type, multidim_slice]) -> T:
         if not isinstance(index, tuple):
             index = (index, )
+        index = cast(multidim_slice, index)
 
         # Get the dict value in index's leafs
         # There can be at most one dict

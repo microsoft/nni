@@ -3,6 +3,7 @@
 
 import math
 
+import torch
 import torch.nn as nn
 from nni.retiarii import model_wrapper
 from nni.retiarii.nn.pytorch import NasBench101Cell
@@ -11,7 +12,7 @@ from nni.retiarii.nn.pytorch import NasBench101Cell
 __all__ = ['NasBench101']
 
 
-def truncated_normal_(tensor, mean=0, std=1):
+def truncated_normal_(tensor: torch.Tensor, mean: float = 0, std: float = 1):
     # https://discuss.pytorch.org/t/implementing-truncated-normal-initializer/4778/15
     size = tensor.shape
     tmp = tensor.new_empty(size + (4,)).normal_()
@@ -117,9 +118,3 @@ class NasBench101(nn.Module):
         out = self.gap(out).view(bs, -1)
         out = self.classifier(out)
         return out
-
-    def reset_parameters(self):
-        for module in self.modules():
-            if isinstance(module, nn.BatchNorm2d):
-                module.eps = self.config.bn_eps
-                module.momentum = self.config.bn_momentum

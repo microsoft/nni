@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Tuple, Optional, Callable
+from typing import Tuple, Optional, Callable, cast
 
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
@@ -75,10 +75,10 @@ class MobileNetV3Space(nn.Module):
                  bn_momentum: float = 0.1):
         super().__init__()
 
-        self.widths = [
+        self.widths = cast(nn.ChoiceOf[int], [
             nn.ValueChoice([make_divisible(base_width * mult, 8) for mult in width_multipliers], label=f'width_{i}')
             for i, base_width in enumerate(base_widths)
-        ]
+        ])
         self.expand_ratios = expand_ratios
 
         blocks = [
@@ -115,7 +115,7 @@ class MobileNetV3Space(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Dropout(dropout_rate),
-            nn.Linear(self.widths[7], num_labels),
+            nn.Linear(cast(int, self.widths[7]), num_labels),
         )
 
         reset_parameters(self, bn_momentum=bn_momentum, bn_eps=bn_eps)

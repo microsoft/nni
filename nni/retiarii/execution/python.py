@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Dict, Any, Type
 
 import torch.nn as nn
@@ -49,7 +52,8 @@ class PurePythonExecutionEngine(BaseExecutionEngine):
     @classmethod
     def pack_model_data(cls, model: Model) -> Any:
         mutation = get_mutation_dict(model)
-        graph_data = PythonGraphData(model.python_class, model.python_init_params, mutation, model.evaluator)
+        assert model.evaluator is not None, 'Model evaluator is not available.'
+        graph_data = PythonGraphData(model.python_class, model.python_init_params or {}, mutation, model.evaluator)
         return graph_data
 
     @classmethod

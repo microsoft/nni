@@ -6,7 +6,7 @@ Types for static checking.
 """
 
 __all__ = [
-    'Literal',
+    'Literal', 'TypedDict',
     'Parameters', 'SearchSpace', 'TrialMetric', 'TrialRecord',
 ]
 

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import cast
+
 import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
@@ -14,7 +16,7 @@ class ShuffleNetBlock(nn.Module):
     When stride = 1, the block expects an input with ``2 * input channels``. Otherwise input channels.
     """
 
-    def __init__(self, in_channels: int, out_channels: int, mid_channels: int, *,
+    def __init__(self, in_channels: int, out_channels: int, mid_channels: nn.MaybeChoice[int], *,
                  kernel_size: int, stride: int, sequence: str = "pdp", affine: bool = True):
         super().__init__()
         assert stride in [1, 2]
@@ -57,14 +59,15 @@ class ShuffleNetBlock(nn.Module):
     def _decode_point_depth_conv(self, sequence):
         result = []
         first_depth = first_point = True
-        pc = c = self.channels
+        pc: int = self.channels
+        c: int = self.channels
         for i, token in enumerate(sequence):
             # compute output channels of this conv
             if i + 1 == len(sequence):
                 assert token == "p", "Last conv must be point-wise conv."
                 c = self.oup_main
             elif token == "p" and first_point:
-                c = self.mid_channels
+                c = cast(int, self.mid_channels)
             if token == "d":
                 # depth-wise conv
                 if isinstance(pc, int) and isinstance(c, int):
@@ -101,7 +104,7 @@ class ShuffleXceptionBlock(ShuffleNetBlock):
     `Single Path One-shot <https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123610528.pdf>`__.
     """
 
-    def __init__(self, in_channels: int, out_channels: int, mid_channels: int, *, stride: int, affine: bool = True):
+    def __init__(self, in_channels: int, out_channels: int, mid_channels: nn.MaybeChoice[int], *, stride: int, affine: bool = True):
         super().__init__(in_channels, out_channels, mid_channels,
                          kernel_size=3, stride=stride, sequence="dpdpdp", affine=affine)
 
@@ -154,7 +157,7 @@ class ShuffleNetSpace(nn.Module):
             nn.ReLU(inplace=True),
         )
 
-        self.features = []
+        feature_blocks = []
 
         global_block_idx = 0
         for stage_idx, num_repeat in enumerate(self.stage_repeats):
@@ -175,15 +178,17 @@ class ShuffleNetSpace(nn.Module):
                 else:
                     mid_channels = int(base_mid_channels)
 
+                mid_channels = cast(nn.MaybeChoice[int], mid_channels)
+
                 choice_block = nn.LayerChoice([
                     ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=3, stride=stride, affine=affine),
                     ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=5, stride=stride, affine=affine),
                     ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=7, stride=stride, affine=affine),
                     ShuffleXceptionBlock(in_channels, out_channels, mid_channels=mid_channels, stride=stride, affine=affine)
                 ], label=f'layer_{global_block_idx}')
-                self.features.append(choice_block)
+                feature_blocks.append(choice_block)
 
-        self.features = nn.Sequential(*self.features)
+        self.features = nn.Sequential(*feature_blocks)
 
         # final layers
         last_conv_channels = self.stage_out_channels[-1]
@@ -226,13 +231,15 @@ class ShuffleNetSpace(nn.Module):
                     torch.nn.init.constant_(m.weight, 1)
                 if m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0.0001)
-                torch.nn.init.constant_(m.running_mean, 0)
+                if m.running_mean is not None:
+                    torch.nn.init.constant_(m.running_mean, 0)
             elif isinstance(m, nn.BatchNorm1d):
                 if m.weight is not None:
                     torch.nn.init.constant_(m.weight, 1)
                 if m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0.0001)
-                torch.nn.init.constant_(m.running_mean, 0)
+                if m.running_mean is not None:
+                    torch.nn.init.constant_(m.running_mean, 0)
             elif isinstance(m, nn.Linear):
                 torch.nn.init.normal_(m.weight, 0, 0.01)
                 if m.bias is not None:

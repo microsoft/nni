@@ -9,6 +9,7 @@ from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.execution import set_execution_engine
 from nni.retiarii.execution.base import BaseExecutionEngine
 from nni.retiarii.execution.python import PurePythonExecutionEngine
+from nni.retiarii.graph import DebugEvaluator
 from nni.retiarii.integration import RetiariiAdvisor
 
 
@@ -51,6 +52,7 @@ class EngineTest(unittest.TestCase):
                 'edges': []
             }
         })
+        model.evaluator = DebugEvaluator()
         model.python_class = object
         submit_models(model, model)
 
