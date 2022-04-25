@@ -133,7 +133,7 @@ class Pruner(Compressor):
         assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
 
         if not self.is_wrapped:
-            for _, wrapper in reversed(self.get_modules_wrapper().items()):
+            for _, wrapper in reversed(list(self.get_modules_wrapper().items())):
                 _setattr(self.bound_model, wrapper.name, wrapper)
                 wrapper._weight2buffer()
             self.is_wrapped = True
