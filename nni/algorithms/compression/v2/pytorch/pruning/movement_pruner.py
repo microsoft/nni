@@ -208,7 +208,7 @@ class MovementPruner(BasicPruner):
             if self.step_counter > self.warm_up_step:
                 self.cubic_schedule(self.step_counter)
                 data = {}
-                for _, wrapper in self.get_modules_wrapper().items():
+                for wrapper in self.get_modules_wrapper().values():
                     data[wrapper.name] = wrapper.weight_score.data
                 metrics = self.metrics_calculator.calculate_metrics(data)  # type: ignore
                 masks = self.sparsity_allocator.generate_sparsity(metrics)  # type: ignore
@@ -240,10 +240,10 @@ class MovementPruner(BasicPruner):
 
     def compress(self) -> Tuple[Module, Dict]:
         # sparsity grow from 0
-        for _, wrapper in self.get_modules_wrapper().items():
+        for wrapper in self.get_modules_wrapper().values():
             wrapper.config['total_sparsity'] = 0
         result = super().compress()
         # del weight_score
-        for _, wrapper in self.get_modules_wrapper().items():
+        for wrapper in self.get_modules_wrapper().values():
             wrapper.weight_score = None
         return result

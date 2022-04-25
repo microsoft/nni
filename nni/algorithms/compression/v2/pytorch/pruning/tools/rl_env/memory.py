@@ -31,8 +31,8 @@ def sample_batch_indexes(low, high, size):
         warnings.warn(
             'Not enough entries to sample without replacement. '
             'Consider increasing your warm-up phase to avoid oversampling!')
-        batch_idxs = [np.random.random_integers(low, high - 1, size=size)]
-    assert len(batch_idxs) == size
+        batch_idxs = np.random.random_integers(low, high - 1, size=size)
+    assert len(batch_idxs) == size  # type: ignore
     return batch_idxs
 
 
@@ -148,7 +148,7 @@ class SequentialMemory(Memory):
                 # Skip this transition because the environment was reset here. Select a new, random
                 # transition and use this instead. This may cause the batch to contain the same
                 # transition twice.
-                idx = sample_batch_indexes(1, self.nb_entries, size=1)[0]
+                idx = sample_batch_indexes(1, self.nb_entries, size=1)[0]  # type: ignore
                 terminal0 = self.terminals[idx - 2] if idx >= 2 else False
             assert 1 <= idx < self.nb_entries
 

@@ -1,9 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import collections
 import logging
-from typing import Any, List, Dict, OrderedDict, Optional, Tuple
+from typing import Any, List, Dict, Optional, Tuple
 
 import torch
 from torch.nn import Module
@@ -97,7 +96,7 @@ class Compressor:
         self._unwrap_model()
 
         self._modules_to_compress = None
-        self.modules_wrapper = collections.OrderedDict()
+        self.modules_wrapper = {}
         for layer, config in self._detect_modules_to_compress():
             wrapper = self._wrap_modules(layer, config)
             self.modules_wrapper[layer.name] = wrapper
@@ -173,12 +172,12 @@ class Compressor:
             return None
         return ret
 
-    def get_modules_wrapper(self) -> OrderedDict[str, ModuleWrapper]:
+    def get_modules_wrapper(self) -> Dict[str, ModuleWrapper]:
         """
         Returns
         -------
-        OrderedDict[str, ModuleWrapper]
-            An ordered dict, key is the name of the module, value is the wrapper of the module.
+        Dict[str, ModuleWrapper]
+            An dict, key is the name of the module, value is the wrapper of the module.
         """
         raise NotImplementedError
 
@@ -207,7 +206,7 @@ class Compressor:
         value
             Value of the variable.
         """
-        for _, wrapper in self.get_modules_wrapper().items():
+        for wrapper in self.get_modules_wrapper().values():
             if isinstance(value, torch.Tensor):
                 wrapper.register_buffer(name, value.clone())
             else:

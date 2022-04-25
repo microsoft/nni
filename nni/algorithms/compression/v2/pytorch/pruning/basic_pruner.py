@@ -555,7 +555,7 @@ class SlimPruner(BasicPruner):
     def criterion_patch(self, criterion: Callable[[Tensor, Tensor], Tensor]) -> Callable[[Tensor, Tensor], Tensor]:
         def patched_criterion(input_tensor: Tensor, target: Tensor):
             sum_l1 = 0
-            for _, wrapper in self.get_modules_wrapper().items():
+            for wrapper in self.get_modules_wrapper().values():
                 sum_l1 += torch.norm(wrapper.module.weight, p=1)  # type: ignore
             return criterion(input_tensor, target) + self._scale * sum_l1
         return patched_criterion
