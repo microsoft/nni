@@ -12,7 +12,6 @@ import TrialLog from './TrialLog';
 import MessageInfo from '../MessageInfo';
 import PanelMonacoEditor from '../PanelMonacoEditor';
 import '@style/experiment/overview/overview.scss';
-import '@style/openRow.scss';
 
 /**
  *  netron URL must be synchronized with ts/nni_manager/rest_server/index.ts`.
