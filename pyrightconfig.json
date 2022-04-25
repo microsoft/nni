@@ -2,6 +2,7 @@
     "ignore": [
         "nni/algorithms/compression/pytorch",
         "nni/algorithms/compression/tensorflow",
+        "nni/algorithms/compression/v2/pytorch/base/pruner.py",
         "nni/algorithms/feature_engineering",
         "nni/algorithms/hpo",
         "nni/algorithms/nas",

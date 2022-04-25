@@ -87,7 +87,7 @@ class Task:
             config_list = json_tricks.load(f)
         return model, masks, config_list
 
-    def referenced_paths(self) -> List[str]:
+    def referenced_paths(self) -> List[Union[str, Path]]:
         """
         Return the path list that need to count reference in this task.
         """

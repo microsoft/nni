@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
-from typing import Dict, List, Tuple, Callable, Optional
+from typing import Dict, List, Tuple, Callable, Optional, Union
 
 import torch
 from torch import Tensor
@@ -155,5 +155,5 @@ class PruningScheduler(BasePruningScheduler):
         torch.cuda.empty_cache()
         return result
 
-    def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]]:
+    def get_best_result(self) -> Optional[Tuple[Union[int, str], Module, Dict[str, Dict[str, Tensor]], Optional[float], List[Dict]]]:
         return self.task_generator.get_best_result()

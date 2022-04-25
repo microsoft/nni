@@ -149,14 +149,14 @@ def compute_sparsity_compact2origin(origin_model: Module, compact_model: Module,
                 continue
             if 'op_names' in config and module_name not in config['op_names']:
                 continue
-            total_weight_num += module.weight.data.numel()
+            total_weight_num += module.weight.data.numel()  # type: ignore
         for module_name, module in compact_model.named_modules():
             module_type = type(module).__name__
             if 'op_types' in config and module_type not in config['op_types']:
                 continue
             if 'op_names' in config and module_name not in config['op_names']:
                 continue
-            left_weight_num += module.weight.data.numel()
+            left_weight_num += module.weight.data.numel()  # type: ignore
         compact2origin_sparsity.append(deepcopy(config))
         compact2origin_sparsity[-1]['total_sparsity'] = 1 - left_weight_num / total_weight_num
     return compact2origin_sparsity
@@ -179,7 +179,7 @@ def compute_sparsity_mask2compact(compact_model: Module, compact_model_masks: Di
                 continue
             if 'op_names' in config and module_name not in config['op_names']:
                 continue
-            module_weight_num = module.weight.data.numel()
+            module_weight_num = module.weight.data.numel()  # type: ignore
             total_weight_num += module_weight_num
             if module_name in compact_model_masks:
                 weight_mask = compact_model_masks[module_name]['weight']
@@ -248,7 +248,7 @@ def get_model_weights_numel(model: Module, config_list: List[Dict], masks: Dict[
                 masked_rate[module_name] = 1 - (weight_mask.sum().item() / weight_mask.numel())
                 model_weights_numel[module_name] = round(weight_mask.sum().item())
             else:
-                model_weights_numel[module_name] = module.weight.data.numel()
+                model_weights_numel[module_name] = module.weight.data.numel()  # type: ignore
     return model_weights_numel, masked_rate
 
 

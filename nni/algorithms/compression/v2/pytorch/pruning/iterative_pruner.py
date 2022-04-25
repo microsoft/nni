@@ -351,7 +351,7 @@ class SimulatedAnnealingPruner(IterativePruner):
                                                          log_dir=log_dir,
                                                          keep_intermediate_result=keep_intermediate_result)
         if 'traced_optimizer' in pruning_params:
-            pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
+            pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])  # type: ignore
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)

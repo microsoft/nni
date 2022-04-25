@@ -79,7 +79,7 @@ class TrainerBasedDataCollector(DataCollector):
     def __init__(self, compressor: Pruner, trainer: Callable[[Module, Optimizer, Callable], None], optimizer_helper: OptimizerConstructHelper,
                  criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int,
                  opt_before_tasks: List = [], opt_after_tasks: List = [],
-                 collector_infos: List[HookCollectorInfo] = [], criterion_patch: Callable[[Callable], Callable] = None):
+                 collector_infos: List[HookCollectorInfo] = [], criterion_patch: Optional[Callable[[Callable], Callable]] = None):
         """
         Parameters
         ----------
@@ -165,6 +165,7 @@ class TrainerBasedDataCollector(DataCollector):
 
     def _reset_optimizer(self):
         parameter_name_map = self.compressor.get_origin2wrapped_parameter_name_map()
+        assert self.compressor.bound_model is not None
         self.optimizer = self.optimizer_helper.call(self.compressor.bound_model, parameter_name_map)
 
     def _patch_optimizer(self):
@@ -187,11 +188,11 @@ class TrainerBasedDataCollector(DataCollector):
         self._hook_buffer[self._hook_id] = {}
 
         if collector_info.hook_type == 'forward':
-            self._add_forward_hook(self._hook_id, collector_info.targets, collector_info.collector)
+            self._add_forward_hook(self._hook_id, collector_info.targets, collector_info.collector)  # type: ignore
         elif collector_info.hook_type == 'backward':
-            self._add_backward_hook(self._hook_id, collector_info.targets, collector_info.collector)
+            self._add_backward_hook(self._hook_id, collector_info.targets, collector_info.collector)  # type: ignore
         elif collector_info.hook_type == 'tensor':
-            self._add_tensor_hook(self._hook_id, collector_info.targets, collector_info.collector)
+            self._add_tensor_hook(self._hook_id, collector_info.targets, collector_info.collector)  # type: ignore
         else:
             _logger.warning('Skip unsupported hook type: %s', collector_info.hook_type)
 
@@ -210,7 +211,7 @@ class TrainerBasedDataCollector(DataCollector):
         assert all(isinstance(layer_info, LayerInfo) for layer_info in layers)
         for layer in layers:
             self._hook_buffer[hook_id][layer.name] = []
-            handle = layer.module.register_backward_hook(collector(self._hook_buffer[hook_id][layer.name]))
+            handle = layer.module.register_backward_hook(collector(self._hook_buffer[hook_id][layer.name]))  # type: ignore
             self._hook_handles[hook_id][layer.name] = handle
 
     def _add_tensor_hook(self, hook_id: int, tensors: Dict[str, Tensor],
@@ -286,7 +287,7 @@ class MetricsCalculator:
             self.block_sparse_size = [1] * len(self.dim)
         if self.dim is not None:
             assert all(i >= 0 for i in self.dim)
-            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))
+            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))  # type: ignore
 
     def calculate_metrics(self, data: Dict) -> Dict[str, Tensor]:
         """
@@ -345,7 +346,7 @@ class SparsityAllocator:
             self.block_sparse_size = [1] * len(self.dim)
         if self.dim is not None:
             assert all(i >= 0 for i in self.dim)
-            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))
+            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))  # type: ignore
         self.continuous_mask = continuous_mask
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
@@ -384,7 +385,7 @@ class SparsityAllocator:
             weight_mask = weight_mask.expand(expand_size).reshape(reshape_size)
 
         wrapper = self.pruner.get_modules_wrapper()[name]
-        weight_size = wrapper.weight.data.size()
+        weight_size = wrapper.weight.data.size()  # type: ignore
 
         if self.dim is None:
             assert weight_mask.size() == weight_size
@@ -401,7 +402,7 @@ class SparsityAllocator:
             expand_mask = {'weight': weight_mask.expand(weight_size).clone()}
             # NOTE: assume we only mask output, so the mask and bias have a one-to-one correspondence.
             # If we support more kind of masks, this place need refactor.
-            if wrapper.bias_mask is not None and weight_mask.size() == wrapper.bias_mask.size():
+            if wrapper.bias_mask is not None and weight_mask.size() == wrapper.bias_mask.size():  # type: ignore
                 expand_mask['bias'] = weight_mask.clone()
         return expand_mask
 
