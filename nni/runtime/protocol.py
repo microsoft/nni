@@ -7,7 +7,10 @@ from .tuner_command_channel.command_type import CommandType
 from .tuner_command_channel.legacy import send, receive
 
 # for unit test compatibility
-try:
-    from .tuner_command_channel.legacy import _in_file, _out_file
-except Exception:
-    pass
+def _set_in_file(in_file):
+    from .tuner_command_channel import legacy
+    legacy._in_file = in_file
+
+def _set_out_file(out_file):
+    from .tuner_command_channel import legacy
+    legacy._out_file = out_file
