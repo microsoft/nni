@@ -4,16 +4,22 @@
 /**
  *  Shutdown manager.
  *
- *  Each module should register its clean up method with:
+ *  Each standalone module should register its clean up method with:
  *
- *      globals.shutdown.register('MyModuleName', async () => { this.cleanUp(); });
+ *      globals.shutdown.register('MyModule', async () => { this.cleanUp(); });
  *
- *  And a module can request for shutdown when unrecoverable error occurs:
+ *  If a module is a children of another module (for example NNIDataStore is a children of NNIManager),
+ *  it should not register shutdown callback on its own,
+ *  instead the parent module should take care of its destruction.
+ *
+ *  Upon shutdown, all callbacks will be invoked *concurrently*. No guarantee on order.
+ *
+ *  A module can request for shutdown when unrecoverable error occurs:
  *
  *      try {
  *          this.doSomethingMustSuccess();
  *      } catch (error) {
- *          globals.shutdown.criticalError('MyModuleName', error);
+ *          globals.shutdown.criticalError('MyModule', error);
  *      }
  *
  *  Note that when a module invokes `criticalError()`, its own registered callback will not get called.
