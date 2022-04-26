@@ -76,7 +76,7 @@ class WebSocket:
             _event_loop_refcnt -= 1
             if _event_loop_refcnt == 0:
                 _event_loop.call_soon_threadsafe(_event_loop.stop)
-                _event_loop = None
+                _event_loop = None  # type: ignore
 
     def send(self, message: str) -> None:
         _logger.debug(f'Sending {message}')
