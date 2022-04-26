@@ -270,8 +270,8 @@ def test_proxyless():
 def test_enas():
     def strategy_fn(base_model, evaluator):
         if isinstance(base_model, MultiHeadAttentionNet):
-            return strategy.ENAS(reward_metric_name='train_mse')
-        return strategy.ENAS(reward_metric_name='train_acc')
+            return strategy.ENAS(reward_metric_name='val_mse')
+        return strategy.ENAS(reward_metric_name='val_acc')
 
     _test_strategy(strategy_fn)
 
