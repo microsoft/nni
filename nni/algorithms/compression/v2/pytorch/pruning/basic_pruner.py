@@ -3,7 +3,7 @@
 
 from copy import deepcopy
 import logging
-from typing import List, Dict, Tuple, Callable, Optional
+from typing import List, Dict, Tuple, Callable, Optional, Union
 
 from schema import And, Or, Optional as SchemaOptional, SchemaError
 import torch
@@ -196,9 +196,11 @@ class LevelPruner(BasicPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/level_pruning_torch.py <examples/model_compress/pruning/level_pruning_torch.py>`
     """
 
-    def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: Optional[List] = None):
+    def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: Optional[List] = None,
+                 block_sparse_size: Optional[Union[int, List[int]]] = None):
         self.mode = mode
         self.balance_gran = balance_gran
+        self.block_sparse_size = block_sparse_size
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -212,13 +214,13 @@ class LevelPruner(BasicPruner):
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
-            self.metrics_calculator = NormMetricsCalculator()
+            self.metrics_calculator = NormMetricsCalculator(block_sparse_size=self.block_sparse_size)
         if self.sparsity_allocator is None:
             if self.mode == "normal":
-                self.sparsity_allocator = NormalSparsityAllocator(self)
+                self.sparsity_allocator = NormalSparsityAllocator(self, block_sparse_size=self.block_sparse_size)
             elif self.mode == "balance":
                 assert self.balance_gran is not None, 'balance_gran should be passed as param in balance mode'
-                self.sparsity_allocator = BankSparsityAllocator(self, self.balance_gran)
+                self.sparsity_allocator = BankSparsityAllocator(self, self.balance_gran, block_sparse_size=self.block_sparse_size)
             else:
                 raise NotImplementedError('Only support mode `normal` and `balance`')
 

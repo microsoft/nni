@@ -387,7 +387,7 @@ class SparsityAllocator:
         weight_size = wrapper.weight.data.size()
 
         if self.dim is None:
-            assert weight_mask.size() == weight_size
+            assert weight_mask.size() == weight_size, 'weight_mask size: {} , weight size: {}'.format(weight_mask.size(), weight_size)
             expand_mask = {'weight': weight_mask}
         else:
             # expand mask to weight size with dim

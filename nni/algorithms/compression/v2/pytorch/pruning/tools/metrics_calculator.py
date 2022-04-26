@@ -30,7 +30,8 @@ class NormMetricsCalculator(MetricsCalculator):
     L1, L2, Level, Slim pruner use this to calculate metric.
     """
 
-    def __init__(self, dim: Optional[Union[int, List[int]]] = None, p: Optional[Union[int, float]] = None):
+    def __init__(self, dim: Optional[Union[int, List[int]]] = None, p: Optional[Union[int, float]] = None,
+                 block_sparse_size: Optional[Union[int, List[int]]] = None):
         """
         Parameters
         ----------
@@ -58,7 +59,7 @@ class NormMetricsCalculator(MetricsCalculator):
         p
             The order of norm. None means Frobenius norm.
         """
-        super().__init__(dim=dim)
+        super().__init__(dim=dim, block_sparse_size=block_sparse_size)
         self.p = p if p is not None else 'fro'
 
     def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
@@ -71,6 +72,16 @@ class NormMetricsCalculator(MetricsCalculator):
                 metrics[name] = tensor.abs()
             else:
                 metrics[name] = tensor.norm(p=self.p, dim=across_dim)
+        if self.block_sparse_size is not None:
+            # operation like pooling
+            lower_case_letters = 'abcdefghijklmnopqrstuvwxyz'
+            for name, metric in metrics.items():
+                ein_expression = ''
+                for i, step in enumerate(self.block_sparse_size):
+                    metric = metric.unfold(i, step, step)
+                    ein_expression += lower_case_letters[i]
+                ein_expression = '...{},{}'.format(ein_expression, ein_expression)
+                metrics[name] = torch.einsum(ein_expression, metric, torch.ones(self.block_sparse_size).to(metric.device))
         return metrics
 
 
