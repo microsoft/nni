@@ -14,3 +14,7 @@ def _set_in_file(in_file):
 def _set_out_file(out_file):
     from .tuner_command_channel import legacy
     legacy._out_file = out_file
+
+def _get_out_file():
+    from .tuner_command_channel import legacy
+    return legacy._out_file
