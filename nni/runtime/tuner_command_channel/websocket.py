@@ -23,6 +23,7 @@ _logger = logging.getLogger(__name__)
 # the singleton event loop
 _event_loop: asyncio.AbstractEventLoop = None  # type: ignore
 _event_loop_lock: Lock = Lock()
+_event_loop_refcnt: int = 0  # number of connected websockets
 
 class WebSocket:
     """
@@ -43,8 +44,9 @@ class WebSocket:
         self._ws: Any = None  # the library does not provide type hints
 
     def connect(self) -> None:
-        global _event_loop
+        global _event_loop, _event_loop_refcnt
         with _event_loop_lock:
+            _event_loop_refcnt += 1
             if _event_loop is None:
                 _logger.debug('Starting event loop.')
                 # following line must be outside _run_event_loop
@@ -61,12 +63,20 @@ class WebSocket:
         if self._ws is None:
             _logger.debug('disconnect: No connection.')
             return
+
         try:
             _wait(self._ws.close())
             _logger.debug('Connection closed by client.')
         except Exception as e:
             _logger.warning(f'Failed to close connection: {repr(e)}')
         self._ws = None
+
+        global _event_loop, _event_loop_refcnt
+        with _event_loop_lock:
+            _event_loop_refcnt -= 1
+            if _event_loop_refcnt == 0:
+                _event_loop.call_soon_threadsafe(_event_loop.stop)
+                _event_loop = None
 
     def send(self, message: str) -> None:
         _logger.debug(f'Sending {message}')
