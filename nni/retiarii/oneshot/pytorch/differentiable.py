@@ -64,7 +64,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
         }
 
     def __init__(self, inner_module: pl.LightningModule,
-                 mutation_hooks: list[MutationHook] = None,
+                 mutation_hooks: list[MutationHook] | None = None,
                  arc_learning_rate: float = 3.0E-4):
         self.arc_learning_rate = arc_learning_rate
         super().__init__(inner_module, mutation_hooks=mutation_hooks)
@@ -111,7 +111,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
         ctrl_params = []
         for m in self.nas_modules:
-            ctrl_params += list(m.parameters(arch=True))
+            ctrl_params += list(m.parameters(arch=True))  # type: ignore
         ctrl_optim = torch.optim.Adam(list(set(ctrl_params)), 3.e-4, betas=(0.5, 0.999),
                                       weight_decay=1.0E-3)
         return ctrl_optim
@@ -151,7 +151,7 @@ class ProxylessLightningModule(DartsLightningModule):
 
     def finalize_grad(self):
         for m in self.nas_modules:
-            m.finalize_grad()
+            m.finalize_grad()  # type: ignore
 
 
 class GumbelDartsLightningModule(DartsLightningModule):
@@ -199,7 +199,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
         }
 
     def __init__(self, inner_module,
-                 mutation_hooks: list[MutationHook] = None,
+                 mutation_hooks: list[MutationHook] | None = None,
                  arc_learning_rate: float = 3.0e-4,
                  gumbel_temperature: float = 1.,
                  use_temp_anneal: bool = False,
@@ -216,6 +216,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
             self.temp = max(self.temp, self.min_temp)
 
         for module in self.nas_modules:
-            module._softmax.temp = self.temp
+            if hasattr(module, '_softmax'):
+                module._softmax.temp = self.temp  # type: ignore
 
         return self.model.on_epoch_start()

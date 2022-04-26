@@ -3,6 +3,7 @@
 
 import logging
 import warnings
+from typing import cast
 
 import torch
 import torch.nn as nn
@@ -116,9 +117,9 @@ class ReinforceController(nn.Module):
         self._h = [torch.zeros((1, self.lstm_size),
                                dtype=self._inputs.dtype,
                                device=self._inputs.device) for _ in range(self.lstm_num_layers)]
-        self.sample_log_prob = 0
-        self.sample_entropy = 0
-        self.sample_skip_penalty = 0
+        self.sample_log_prob: torch.Tensor = cast(torch.Tensor, 0)
+        self.sample_entropy: torch.Tensor = cast(torch.Tensor, 0)
+        self.sample_skip_penalty: torch.Tensor = cast(torch.Tensor, 0)
 
     def _lstm_next_step(self):
         self._h, self._c = self.lstm(self._inputs, (self._h, self._c))
@@ -146,7 +147,7 @@ class ReinforceController(nn.Module):
             if sampled.sum().item():
                 self._inputs = (torch.sum(self.embedding[field.name](sampled.view(-1)), 0) / (1. + torch.sum(sampled))).unsqueeze(0)
             else:
-                self._inputs = torch.zeros(1, self.lstm_size, device=self.embedding[field.name].weight.device)
+                self._inputs = torch.zeros(1, self.lstm_size, device=self.embedding[field.name].weight.device)  # type: ignore
 
         sampled = sampled.detach().cpu().numpy().tolist()
         self.sample_log_prob += self.entropy_reduction(log_prob)
@@ -299,15 +300,15 @@ class EnasTrainer(BaseOneShotTrainer):
             metrics = self.metrics(logits, y)
             reward = self.reward_function(logits, y)
             if self.entropy_weight:
-                reward += self.entropy_weight * self.controller.sample_entropy.item()
+                reward += self.entropy_weight * self.controller.sample_entropy.item()  # type: ignore
             self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
             loss = self.controller.sample_log_prob * (reward - self.baseline)
             if self.skip_weight:
                 loss += self.skip_weight * self.controller.sample_skip_penalty
             metrics['reward'] = reward
             metrics['loss'] = loss.item()
-            metrics['ent'] = self.controller.sample_entropy.item()
-            metrics['log_prob'] = self.controller.sample_log_prob.item()
+            metrics['ent'] = self.controller.sample_entropy.item()  # type: ignore
+            metrics['log_prob'] = self.controller.sample_log_prob.item()  # type: ignore
             metrics['baseline'] = self.baseline
             metrics['skip'] = self.controller.sample_skip_penalty
 

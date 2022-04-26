@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Callable, Any, Dict, Union, Tuple
+from typing import Callable, Any, Dict, Union, Tuple, List, cast
 
 import pytorch_lightning as pl
 import torch.optim as optim
@@ -128,7 +128,7 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
     if is_traceable(module):
         # check whether there is a value-choice in its arguments
         has_valuechoice = False
-        for arg in chain(cast(list, module.trace_args), cast(list, module.trace_kwargs.values())):
+        for arg in chain(cast(list, module.trace_args), cast(dict, module.trace_kwargs)):
             if isinstance(arg, ValueChoiceX):
                 has_valuechoice = True
                 break
@@ -206,7 +206,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     trainer: pl.Trainer
 
-    automatic_optimization = False
+    @property
+    def automatic_optimization(self) -> bool:
+        return False
 
     def default_mutation_hooks(self) -> list[MutationHook]:
         """Override this to define class-default mutation hooks."""
@@ -216,7 +218,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """Extra keyword arguments passed to mutation hooks. Usually algo-specific."""
         return {}
 
-    def __init__(self, model: pl.LightningModule, mutation_hooks: list[MutationHook] = None):
+    def __init__(self, model: pl.LightningModule, mutation_hooks: list[MutationHook] | None = None):
         super().__init__()
         assert isinstance(model, pl.LightningModule)
         self.model = model
@@ -300,7 +302,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # ``len(optimizers) == len(frequency)``, and gradient backword is handled manually.
         # For data structure of variables below, please see pytorch lightning docs of ``configure_optimizers``.
         w_optimizers, lr_schedulers, self.frequencies, monitor = \
-            self.trainer._configure_optimizers(self.model.configure_optimizers())
+            self.trainer._configure_optimizers(self.model.configure_optimizers())  # type: ignore
         lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
         if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):
             raise Exception(
@@ -317,7 +319,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # redirect the access to trainer/log to this module
         # but note that we might be missing other attributes,
         # which could potentially be a problem
-        self.model.trainer = self.trainer
+        self.model.trainer = self.trainer  # type: ignore
         self.model.log = self.log
         return self.model.on_train_start()
 
@@ -381,9 +383,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         def apply(lr_scheduler):
             # single scheduler is called every epoch
-            if isinstance(lr_scheduler, _LRScheduler) and \
-                    self.trainer.is_last_batch:
-                lr_schedulers.step()
+            if isinstance(lr_scheduler, _LRScheduler):
+                if self.trainer.is_last_batch:
+                    lr_scheduler.step()
             # lr_scheduler_config is called as configured
             elif isinstance(lr_scheduler, dict):
                 interval = lr_scheduler['interval']
@@ -397,7 +399,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
                         self.trainer.is_last_batch and
                         (self.trainer.current_epoch + 1) % frequency == 0
                 ):
-                    lr_scheduler.step()
+                    lr_scheduler['scheduler'].step()
 
         lr_schedulers = self.lr_schedulers()
 
@@ -427,6 +429,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         if optimizers is None:
             return
 
+        assert isinstance(optimizers, list), 'Did you forget to set use_pl_optimizers to true?'
+
         if len(self.frequencies) > 0:
             self.cur_optimizer_step += 1
             if self.frequencies[self.cur_optimizer_index] == self.cur_optimizer_step:
@@ -454,11 +458,11 @@ class BaseOneShotLightningModule(pl.LightningModule):
             # pylint: disable=unsubscriptable-object
             arc_opts = opts[:self.arc_optim_count]
             if len(arc_opts) == 1:
-                arc_opts = arc_opts[0]
-            return arc_opts
+                return cast(Optimizer, arc_opts[0])
+            return cast(List[Optimizer], arc_opts)
         # If there is only 1 optimizer and it is the architecture optimizer
         if self.arc_optim_count == 1:
-            return opts
+            return cast(Union[List[Optimizer], Optimizer], opts)
         return None
 
     def weight_optimizers(self) -> list[Optimizer] | Optimizer | None:
@@ -470,11 +474,14 @@ class BaseOneShotLightningModule(pl.LightningModule):
         opts : list[Optimizer], Optimizer, None
             Optimizers defined by user's model. This will be None if there is no user optimizers.
         """
+        # Since use_pl_optimizer is set true (by default) here.
+        # opts always return a list
         opts = self.optimizers()
         if isinstance(opts, list):
             # pylint: disable=unsubscriptable-object
-            return opts[self.arc_optim_count:]
+            return cast(List[Optimizer], opts[self.arc_optim_count:])
+        # FIXME: this case is actually not correctly handled
         # If there is only 1 optimizer and no architecture optimizer
         if self.arc_optim_count == 0:
-            return opts
+            return cast(Union[List[Optimizer], Optimizer], opts)
         return None

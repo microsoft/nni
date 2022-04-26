@@ -34,7 +34,9 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
     )
 
     # turn on automatic optimization because nothing interesting is going on here.
-    automatic_optimization = True
+    @property
+    def automatic_optimization(self) -> bool:
+        return True
 
     def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with differentiable versions"""
@@ -63,6 +65,10 @@ class EnasLightningModule(RandomSamplingLightningModule):
     Firstly, training model parameters.
     Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
 
+    The reward is obtained from the evaluator from its logged metrics.
+    It will detect whether there's only one metric. If there are multiple, it will find the metric with key name "default".
+    Otherwise it raises an exception indicating multiple metrics are found.
+
     {{module_notes}}
 
     Parameters
@@ -88,18 +94,16 @@ class EnasLightningModule(RandomSamplingLightningModule):
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
-    automatic_optimization = False
-
     def __init__(self,
                  inner_module: pl.LightningModule,
                  *,
-                 ctrl_kwargs: dict[str, Any] = None,
+                 ctrl_kwargs: dict[str, Any] | None = None,
                  entropy_weight: float = 1e-4,
                  skip_weight: float = .8,
                  baseline_decay: float = .999,
                  ctrl_steps_aggregate: float = 20,
                  ctrl_grad_clip: float = 0,
-                 mutation_hooks: list[MutationHook] = None):
+                 mutation_hooks: list[MutationHook] | None = None):
         super().__init__(inner_module, mutation_hooks)
 
         # convert parameter spec to legacy ReinforceField
@@ -147,17 +151,17 @@ class EnasLightningModule(RandomSamplingLightningModule):
             with torch.no_grad():
                 logits = self.model(x)
             # use the default metric of self.model as reward function
-            if len(self.model.metrics) == 1:
-                _, metric = next(iter(self.model.metrics.items()))
+            if len(self.trainer.callback_metrics) == 1:
+                _, metric = next(iter(self.trainer.callback_metrics.items()))
             else:
-                if 'default' not in self.model.metrics.keys():
-                    raise KeyError('model.metrics should contain a ``default`` key when '
-                                   'there are multiple metrics')
-                metric = self.model.metrics['default']
+                if 'default' not in self.trainer.callback_metrics:
+                    raise KeyError('Model reported metrics should contain a ``default`` key but '
+                                   f'found multiple metrics without default: {self.trainer.callback_metrics.keys()}')
+                metric = self.trainer.callback_metrics['default']
+            reward: float = metric.item()
 
-            reward = metric(logits, y)
             if self.entropy_weight:
-                reward = reward + self.entropy_weight * self.controller.sample_entropy.item()
+                reward = reward + self.entropy_weight * self.controller.sample_entropy.item()  # type: ignore
             self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
             rnn_step_loss = self.controller.sample_log_prob * (reward - self.baseline)
             if self.skip_weight:
