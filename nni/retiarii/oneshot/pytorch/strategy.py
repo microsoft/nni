@@ -37,7 +37,7 @@ class OneShotStrategy(BaseStrategy):
 
         self.model: BaseOneShotLightningModule | None = None
 
-    def _get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader) \
+    def _get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader | list[DataLoader]) \
         -> DataLoader | tuple[DataLoader, DataLoader]:
         """
         One-shot strategy typically requires a customized dataloader.
@@ -53,9 +53,9 @@ class OneShotStrategy(BaseStrategy):
 
         _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
 
-        py_model: nn.Module = base_model.python_object
-        if not isinstance(py_model, nn.Module):
+        if not isinstance(base_model.python_object, nn.Module):
             raise TypeError('Model is not a nn.Module. ' + _reason)
+        py_model: nn.Module = base_model.python_object
 
         if applied_mutators:
             raise ValueError('Mutator is not empty. ' + _reason)
@@ -66,8 +66,10 @@ class OneShotStrategy(BaseStrategy):
         evaluator_module: LightningModule = base_model.evaluator.module
         evaluator_module.set_model(py_model)
 
-        self.model: BaseOneShotLightningModule = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
+        self.model = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
         evaluator: Lightning = base_model.evaluator
+        if evaluator.train_dataloader is None or evaluator.val_dataloaders is None:
+            raise TypeError('Train or val dataloader is not set.')
         dataloader = self._get_dataloader(evaluator.train_dataloader, evaluator.val_dataloaders)
         if isinstance(dataloader, tuple):
             dataloader, val_loader = dataloader

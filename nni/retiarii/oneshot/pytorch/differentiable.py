@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import pytorch_lightning as pl
 import torch
+import torch.optim as optim
 
 from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
 from .supermodule.differentiable import (
@@ -70,7 +71,9 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
     def training_step(self, batch, batch_idx):
         # grad manually
-        arc_optim = self.architecture_optimizers
+        arc_optim = self.architecture_optimizers()
+        if not isinstance(arc_optim, optim.Optimizer):
+            raise TypeError(f'Expect arc_optim to be a single Optimizer, but found: {arc_optim}')
 
         # The InterleavedTrainValDataLoader yields both train and val data in a batch
         trn_batch, val_batch = batch
@@ -89,12 +92,12 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
         # phase 2: model step
         self.resample()
-        self.call_user_optimizers('zero_grad')
+        self.call_weight_optimizers('zero_grad')
         loss_and_metrics = self.model.training_step(trn_batch, 2 * batch_idx + 1)
         w_step_loss = loss_and_metrics['loss'] \
             if isinstance(loss_and_metrics, dict) else loss_and_metrics
         self.manual_backward(w_step_loss)
-        self.call_user_optimizers('step')
+        self.call_weight_optimizers('step')
 
         self.call_lr_schedulers(batch_idx)
 

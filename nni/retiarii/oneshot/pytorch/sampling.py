@@ -128,18 +128,20 @@ class EnasLightningModule(RandomSamplingLightningModule):
         if source == 'train':
             # step 1: train model params
             self.resample()
-            self.call_user_optimizers('zero_grad')
+            self.call_weight_optimizers('zero_grad')
             loss_and_metrics = self.model.training_step(batch, batch_idx)
             w_step_loss = loss_and_metrics['loss'] \
                 if isinstance(loss_and_metrics, dict) else loss_and_metrics
             self.manual_backward(w_step_loss)
-            self.call_user_optimizers('step')
+            self.call_weight_optimizers('step')
             return loss_and_metrics
 
         if source == 'val':
             # step 2: train ENAS agent
             x, y = batch
-            arc_opt = self.architecture_optimizers
+            arc_opt = self.architecture_optimizers()
+            if not isinstance(arc_opt, optim.Optimizer):
+                raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
             arc_opt.zero_grad()
             self.resample()
             with torch.no_grad():
@@ -149,7 +151,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 _, metric = next(iter(self.model.metrics.items()))
             else:
                 if 'default' not in self.model.metrics.keys():
-                    raise KeyError('model.metrics should contain a ``default`` key when'
+                    raise KeyError('model.metrics should contain a ``default`` key when '
                                    'there are multiple metrics')
                 metric = self.model.metrics['default']
 

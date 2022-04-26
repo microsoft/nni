@@ -204,12 +204,16 @@ class InterleavedTrainValDataLoader(DataLoader):
     Example
     --------
     Fit your dataloaders into a parallel one.
+
     >>> para_loader = InterleavedTrainValDataLoader(train_dataloader, val_dataloader)
+
     Then you can use the ``para_loader`` as a normal training loader.
     """
-    def __init__(self, train_dataloader, val_dataloader):
-        self.train_loader = train_dataloader
-        self.val_loader = val_dataloader
+    def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader]):
+        if isinstance(val_dataloader, list):
+            raise TypeError('Validation dataloader of type list is not supported.')
+        self.train_loader: DataLoader = train_dataloader
+        self.val_loader: DataLoader = val_dataloader
         self.equal_len = len(train_dataloader) == len(val_dataloader)
         self.train_longer = len(train_dataloader) > len(val_dataloader)
         super().__init__(cast(Dataset, None))
@@ -272,12 +276,16 @@ class ConcatenateTrainValDataLoader(DataLoader):
     Example
     --------
     Fit your dataloaders into a concatenated one.
+
     >>> concat_loader = ConcatenateTrainValDataLoader(train_dataloader, val_datalodaer)
+
     Then you can use the ``concat_loader`` as a normal training loader.
     """
-    def __init__(self, train_dataloader, val_dataloader):
-        self.train_loader = train_dataloader
-        self.val_loader = val_dataloader
+    def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader]):
+        if isinstance(val_dataloader, list):
+            raise TypeError('Validation dataloader of type list is not supported.')
+        self.train_loader: DataLoader = train_dataloader
+        self.val_loader: DataLoader = val_dataloader
         super().__init__(cast(Dataset, None))
 
     def __iter__(self):

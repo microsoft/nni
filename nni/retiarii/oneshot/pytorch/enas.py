@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.utils.data import SubsetRandomSampler, DataLoader
 
 from ..interface import BaseOneShotTrainer
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
@@ -250,16 +251,16 @@ class EnasTrainer(BaseOneShotTrainer):
         n_train = len(self.dataset)
         split = n_train // 2
         indices = list(range(n_train))
-        train_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[:-split])
-        valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[-split:])
-        self.train_loader = torch.utils.data.DataLoader(self.dataset,
-                                                        batch_size=self.batch_size,
-                                                        sampler=train_sampler,
-                                                        num_workers=self.workers)
-        self.valid_loader = torch.utils.data.DataLoader(self.dataset,
-                                                        batch_size=self.batch_size,
-                                                        sampler=valid_sampler,
-                                                        num_workers=self.workers)
+        train_sampler = SubsetRandomSampler(indices[:-split])
+        valid_sampler = SubsetRandomSampler(indices[-split:])
+        self.train_loader = DataLoader(self.dataset,
+                                       batch_size=self.batch_size,
+                                       sampler=train_sampler,
+                                       num_workers=self.workers)
+        self.valid_loader = DataLoader(self.dataset,
+                                       batch_size=self.batch_size,
+                                       sampler=valid_sampler,
+                                       num_workers=self.workers)
 
     def _train_model(self, epoch):
         self.model.train()

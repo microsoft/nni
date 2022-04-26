@@ -5,11 +5,12 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Callable, Any
+from typing import Callable, Any, Dict, Union, Tuple
 
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
+from torch.optim import Optimizer
 
 from torch.optim.lr_scheduler import _LRScheduler
 
@@ -22,7 +23,7 @@ from .supermodule.base import BaseSuperNetModule
 __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
 
 
-MutationHook = Callable[[nn.Module, str, dict[str, Any], dict[str, Any]], nn.Module | bool | tuple[nn.Module, bool]]
+MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
 
 
 def traverse_and_mutate_submodules(
@@ -127,7 +128,7 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
     if is_traceable(module):
         # check whether there is a value-choice in its arguments
         has_valuechoice = False
-        for arg in chain(module.trace_args, module.trace_kwargs.values()):
+        for arg in chain(cast(list, module.trace_args), cast(list, module.trace_kwargs.values())):
             if isinstance(arg, ValueChoiceX):
                 has_valuechoice = True
                 break
@@ -203,6 +204,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
     ----------
     """ + _inner_module_note + _mutation_hooks_note
 
+    trainer: pl.Trainer
+
     automatic_optimization = False
 
     def default_mutation_hooks(self) -> list[MutationHook]:
@@ -213,10 +216,10 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """Extra keyword arguments passed to mutation hooks. Usually algo-specific."""
         return {}
 
-    def __init__(self, base_model: pl.LightningModule, mutation_hooks: list[MutationHook] = None):
+    def __init__(self, model: pl.LightningModule, mutation_hooks: list[MutationHook] = None):
         super().__init__()
-        assert isinstance(base_model, pl.LightningModule)
-        self.model = base_model
+        assert isinstance(model, pl.LightningModule)
+        self.model = model
 
         # append the default hooks
         mutation_hooks = (mutation_hooks or []) + self.default_mutation_hooks()
@@ -404,7 +407,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             apply(lr_schedulers)
 
-    def call_user_optimizers(self, method):
+    def call_weight_optimizers(self, method):
         """
         Function that imitates lightning trainer's behavior of calling user's optimizers. Since auto_optimization is turned off by this
         class, you can use this function to make user optimizers behave as they were automatically handled by the lightning trainer.
@@ -420,7 +423,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             elif method == 'zero_grad':
                 optimizer.zero_grad()
 
-        optimizers = self.user_optimizers
+        optimizers = self.weight_optimizers()
         if optimizers is None:
             return
 
@@ -436,8 +439,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             for optimizer in optimizers:
                 apply_method(optimizer, method)
 
-    @property
-    def architecture_optimizers(self):
+    def architecture_optimizers(self) -> list[Optimizer] | Optimizer | None:
         """
         Get architecture optimizers from all optimizers. Use this to get your architecture optimizers in ``training_step``.
 
@@ -459,8 +461,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             return opts
         return None
 
-    @property
-    def user_optimizers(self):
+    def weight_optimizers(self) -> list[Optimizer] | Optimizer | None:
         """
         Get user optimizers from all optimizers. Use this to get user optimizers in ``training_step``.
 
