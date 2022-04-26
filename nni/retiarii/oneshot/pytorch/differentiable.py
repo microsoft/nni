@@ -3,7 +3,8 @@
 
 """Experimental version of differentiable one-shot implementation."""
 
-from typing import List
+from __future__ import annotations
+
 import pytorch_lightning as pl
 import torch
 
@@ -45,7 +46,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
-    def default_mutation_hooks(self) -> List[MutationHook]:
+    def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with differentiable versions"""
         hooks = [
             DifferentiableMixedLayer.mutate,
@@ -62,7 +63,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
         }
 
     def __init__(self, inner_module: pl.LightningModule,
-                 mutation_hooks: List[MutationHook] = None,
+                 mutation_hooks: list[MutationHook] = None,
                  arc_learning_rate: float = 3.0E-4):
         self.arc_learning_rate = arc_learning_rate
         super().__init__(inner_module, mutation_hooks=mutation_hooks)
@@ -135,7 +136,7 @@ class ProxylessLightningModule(DartsLightningModule):
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
-    def default_mutation_hooks(self) -> List[MutationHook]:
+    def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with gumbel-differentiable versions"""
         hooks = [
             ProxylessMixedLayer.mutate,
@@ -177,7 +178,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
         Learning rate for architecture optimizer. Default: 3.0e-4
     """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
-    def default_mutation_hooks(self) -> List[MutationHook]:
+    def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with gumbel-differentiable versions"""
         hooks = [
             DifferentiableMixedLayer.mutate,
@@ -195,7 +196,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
         }
 
     def __init__(self, inner_module,
-                 mutation_hooks: List[MutationHook] = None,
+                 mutation_hooks: list[MutationHook] = None,
                  arc_learning_rate: float = 3.0e-4,
                  gumbel_temperature: float = 1.,
                  use_temp_anneal: bool = False,

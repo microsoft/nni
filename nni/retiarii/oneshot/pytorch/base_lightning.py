@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import warnings
 from itertools import chain
-from typing import Dict, Callable, List, Union, Any, Tuple
+from typing import Callable, Any
 
 import pytorch_lightning as pl
 import torch.optim as optim
@@ -20,12 +22,12 @@ from .supermodule.base import BaseSuperNetModule
 __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
 
 
-MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
+MutationHook = Callable[[nn.Module, str, dict[str, Any], dict[str, Any]], nn.Module | bool | tuple[nn.Module, bool]]
 
 
 def traverse_and_mutate_submodules(
-    root_module: nn.Module, hooks: List[MutationHook], mutate_kwargs: Dict[str, Any], topdown: bool = True
-) -> List[BaseSuperNetModule]:
+    root_module: nn.Module, hooks: list[MutationHook], mutate_kwargs: dict[str, Any], topdown: bool = True
+) -> list[BaseSuperNetModule]:
     """
     Traverse the module-tree of ``root_module``, and call ``hooks`` on every tree node.
 
@@ -36,7 +38,7 @@ def traverse_and_mutate_submodules(
         Since this method is called in the ``__init__`` of :class:`BaseOneShotLightningModule`,
         it's usually a ``pytorch_lightning.LightningModule``.
         The mutation will be in-place on ``root_module``.
-    hooks : List[MutationHook]
+    hooks : list[MutationHook]
         List of mutation hooks. See :class:`BaseOneShotLightningModule` for how to write hooks.
         When a hook returns an module, the module will be replaced (mutated) to the new module.
     mutate_kwargs : dict
@@ -47,7 +49,7 @@ def traverse_and_mutate_submodules(
 
     Returns
     ----------
-    modules : Dict[str, nn.Module]
+    modules : dict[str, nn.Module]
         The replace result.
     """
     memo = {}
@@ -101,7 +103,7 @@ def traverse_and_mutate_submodules(
     return module_list
 
 
-def no_default_hook(module: nn.Module, name: str, memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> bool:
+def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_kwargs: dict[str, Any]) -> bool:
     """Add this hook at the end of your hook list to raise error for unsupported mutation primitives."""
 
     # Forward IS NOT supernet
@@ -139,7 +141,7 @@ def no_default_hook(module: nn.Module, name: str, memo: Dict[str, Any], mutate_k
 
 class BaseOneShotLightningModule(pl.LightningModule):
 
-    _mutation_hooks_note = """mutation_hooks : List[MutationHook]
+    _mutation_hooks_note = """mutation_hooks : list[MutationHook]
         Mutation hooks are callable that inputs an Module and returns a :class:`BaseSuperNetModule`.
         They are invoked in :meth:`traverse_and_mutate_submodules`, on each submodules.
         For each submodule, the hook list are invoked subsequently,
@@ -194,7 +196,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     Attributes
     ----------
-    nas_modules : List[BaseSuperNetModule]
+    nas_modules : list[BaseSuperNetModule]
         Modules that have been mutated, which the search algorithms should care about.
 
     Parameters
@@ -203,15 +205,15 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     automatic_optimization = False
 
-    def default_mutation_hooks(self) -> List[MutationHook]:
+    def default_mutation_hooks(self) -> list[MutationHook]:
         """Override this to define class-default mutation hooks."""
         return [no_default_hook]
 
-    def mutate_kwargs(self) -> Dict[str, Any]:
+    def mutate_kwargs(self) -> dict[str, Any]:
         """Extra keyword arguments passed to mutation hooks. Usually algo-specific."""
         return {}
 
-    def __init__(self, base_model: pl.LightningModule, mutation_hooks: List[MutationHook] = None):
+    def __init__(self, base_model: pl.LightningModule, mutation_hooks: list[MutationHook] = None):
         super().__init__()
         assert isinstance(base_model, pl.LightningModule)
         self.model = base_model
@@ -220,10 +222,10 @@ class BaseOneShotLightningModule(pl.LightningModule):
         mutation_hooks = (mutation_hooks or []) + self.default_mutation_hooks()
 
         # traverse the model, calling hooks on every submodule
-        self.nas_modules: List[BaseSuperNetModule] = traverse_and_mutate_submodules(
+        self.nas_modules: list[BaseSuperNetModule] = traverse_and_mutate_submodules(
             self.model, mutation_hooks, self.mutate_kwargs(), topdown=True)
 
-    def search_space_spec(self) -> Dict[str, ParameterSpec]:
+    def search_space_spec(self) -> dict[str, ParameterSpec]:
         """Get the search space specification from ``nas_module``.
 
         Returns
@@ -236,7 +238,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             result.update(module.search_space_spec())
         return result
 
-    def resample(self) -> Dict[str, Any]:
+    def resample(self) -> dict[str, Any]:
         """Trigger the resample for each ``nas_module``.
         Sometimes (e.g., in differentiable cases), it does nothing.
 
@@ -250,7 +252,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             result.update(module.resample(memo=result))
         return result
 
-    def export(self) -> Dict[str, Any]:
+    def export(self) -> dict[str, Any]:
         """
         Export the NAS result, ideally the best choice of each ``nas_module``.
         You may implement an ``export`` method for your customized ``nas_module``.
@@ -359,7 +361,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         Returns
         ----------
-        arc_optimizers : List[Optimizer], Optimizer
+        arc_optimizers : list[Optimizer], Optimizer
             Optimizers used by a specific NAS algorithm. Return None if no architecture optimizers are needed.
         """
         return None
@@ -441,7 +443,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         Returns
         ----------
-        opts : List[Optimizer], Optimizer, None
+        opts : list[Optimizer], Optimizer, None
             Architecture optimizers defined in ``configure_architecture_optimizers``. This will be None if there is no
             architecture optimizers.
         """
@@ -464,7 +466,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         Returns
         ----------
-        opts : List[Optimizer], Optimizer, None
+        opts : list[Optimizer], Optimizer, None
             Optimizers defined by user's model. This will be None if there is no user optimizers.
         """
         opts = self.optimizers()

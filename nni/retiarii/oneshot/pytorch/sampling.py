@@ -3,7 +3,8 @@
 
 """Experimental version of sampling-based one-shot implementation."""
 
-from typing import Dict, Any, List
+from __future__ import annotations
+from typing import Any
 
 import pytorch_lightning as pl
 import torch
@@ -35,7 +36,7 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
     # turn on automatic optimization because nothing interesting is going on here.
     automatic_optimization = True
 
-    def default_mutation_hooks(self) -> List[MutationHook]:
+    def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with differentiable versions"""
         hooks = [
             PathSamplingLayer.mutate,
@@ -92,18 +93,18 @@ class EnasLightningModule(RandomSamplingLightningModule):
     def __init__(self,
                  inner_module: pl.LightningModule,
                  *,
-                 ctrl_kwargs: Dict[str, Any] = None,
+                 ctrl_kwargs: dict[str, Any] = None,
                  entropy_weight: float = 1e-4,
                  skip_weight: float = .8,
                  baseline_decay: float = .999,
                  ctrl_steps_aggregate: float = 20,
                  ctrl_grad_clip: float = 0,
-                 mutation_hooks: List[MutationHook] = None):
+                 mutation_hooks: list[MutationHook] = None):
         super().__init__(inner_module, mutation_hooks)
 
         # convert parameter spec to legacy ReinforceField
         # this part will be refactored
-        self.nas_fields: List[ReinforceField] = []
+        self.nas_fields: list[ReinforceField] = []
         for name, param_spec in self.search_space_spec().items():
             if param_spec.chosen_size not in (1, None):
                 raise ValueError('ENAS does not support n_chosen to be values other than 1 or None.')
@@ -183,7 +184,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
         with torch.no_grad():
             return self._interpret_controller_sampling_result(self.controller.resample())
 
-    def _interpret_controller_sampling_result(self, sample: Dict[str, int]) -> Dict[str, Any]:
+    def _interpret_controller_sampling_result(self, sample: dict[str, int]) -> dict[str, Any]:
         """Convert ``{label: index}`` to ``{label: name}``"""
         space_spec = self.search_space_spec()
         for key in list(sample.keys()):

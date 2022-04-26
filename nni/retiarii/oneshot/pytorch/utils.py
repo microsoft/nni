@@ -1,12 +1,16 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import logging
 from collections import OrderedDict
+from typing import cast
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
+
 import nni.retiarii.nn.pytorch as nn
 from nni.nas.pytorch.mutables import InputChoice, LayerChoice
 
@@ -155,7 +159,7 @@ def replace_layer_choice(root_module, init_fn, modules=None):
 
     Returns
     -------
-    List[Tuple[str, nn.Module]]
+    list[tuple[str, nn.Module]]
         A list from layer choice keys (names) and replaced modules.
     """
     return _replace_module_with_type(root_module, init_fn, (LayerChoice, nn.LayerChoice), modules)
@@ -176,7 +180,7 @@ def replace_input_choice(root_module, init_fn, modules=None):
 
     Returns
     -------
-    List[Tuple[str, nn.Module]]
+    list[tuple[str, nn.Module]]
         A list from layer choice keys (names) and replaced modules.
     """
     return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
@@ -208,7 +212,7 @@ class InterleavedTrainValDataLoader(DataLoader):
         self.val_loader = val_dataloader
         self.equal_len = len(train_dataloader) == len(val_dataloader)
         self.train_longer = len(train_dataloader) > len(val_dataloader)
-        super().__init__(None)
+        super().__init__(cast(Dataset, None))
 
     def __iter__(self):
         self.train_iter = iter(self.train_loader)
@@ -274,7 +278,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
     def __init__(self, train_dataloader, val_dataloader):
         self.train_loader = train_dataloader
         self.val_loader = val_dataloader
-        super().__init__(None)
+        super().__init__(cast(Dataset, None))
 
     def __iter__(self):
         self.cur_iter = iter(self.train_loader)

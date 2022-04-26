@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 
 import logging
+import warnings
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -205,6 +207,8 @@ class EnasTrainer(BaseOneShotTrainer):
                  batch_size=64, workers=4, device=None, log_frequency=None,
                  grad_clip=5., entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999,
                  ctrl_lr=0.00035, ctrl_steps_aggregate=20, ctrl_kwargs=None):
+        warnings.warn('EnasTrainer is deprecated. Please use strategy.ENAS instead.', DeprecationWarning)
+
         self.model = model
         self.loss = loss
         self.metrics = metrics
