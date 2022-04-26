@@ -29,7 +29,7 @@ which interprets the slice and apply it on a tensor.
 from __future__ import annotations
 
 import operator
-from typing import Callable, Iterator, TypeVar, Any, Optional, Tuple, Union, List, Dict, Generic, cast, TYPE_CHECKING
+from typing import Callable, Iterator, TypeVar, Any, Optional, Tuple, Union, List, Dict, Generic, cast
 
 import numpy as np
 import torch

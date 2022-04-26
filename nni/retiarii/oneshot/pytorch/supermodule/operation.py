@@ -165,7 +165,7 @@ class MixedOperation(BaseSuperNetModule):
         if has_valuechoice:
             if module.trace_args:
                 raise ValueError('ValueChoice on class arguments cannot appear together with ``trace_args``. '
-                                    'Please enable ``kw_only`` on nni.trace.')
+                                 'Please enable ``kw_only`` on nni.trace.')
 
             # save type and kwargs
             mixed_op = cls(cast(dict, module.trace_kwargs))
@@ -319,7 +319,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
 
         if any(isinstance(arg, dict) for arg in [stride, dilation, groups]):
             raise ValueError('stride, dilation, groups does not support weighted sampling.')
-        
+
         in_channels_ = _W(in_channels)
         out_channels_ = _W(out_channels)
 
@@ -339,9 +339,9 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         kernel_a_, kernel_b_ = _W(kernel_a), _W(kernel_b)
         max_kernel_a, max_kernel_b = self.kernel_size  # self.kernel_size must be a tuple
         kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a_) // 2, (max_kernel_b - kernel_b_) // 2
-        weight = _S(weight)[:, :, kernel_a_left:kernel_a_left + kernel_a, kernel_b_top:kernel_b_top + kernel_b]
+        weight = _S(weight)[:, :, kernel_a_left:kernel_a_left + kernel_a_, kernel_b_top:kernel_b_top + kernel_b_]
 
-        bias = _S(self.bias)[:out_channels] if self.bias is not None else None
+        bias = _S(self.bias)[:out_channels_] if self.bias is not None else None
 
         # The rest parameters only need to be converted to tuple
         stride_ = self._to_tuple(stride)

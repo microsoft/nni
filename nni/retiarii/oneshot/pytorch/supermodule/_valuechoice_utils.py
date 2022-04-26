@@ -7,7 +7,7 @@ in the way that is most convenient to one-shot algorithms."""
 from __future__ import annotations
 
 import itertools
-from typing import Any, TypeVar, List, Tuple, cast
+from typing import Any, TypeVar, List, cast
 
 import numpy as np
 import torch

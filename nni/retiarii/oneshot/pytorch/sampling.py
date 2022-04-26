@@ -65,10 +65,6 @@ class EnasLightningModule(RandomSamplingLightningModule):
     Firstly, training model parameters.
     Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
 
-    The reward is obtained from the evaluator from its logged metrics.
-    It will detect whether there's only one metric. If there are multiple, it will find the metric with key name "default".
-    Otherwise it raises an exception indicating multiple metrics are found.
-
     {{module_notes}}
 
     Parameters
@@ -87,12 +83,22 @@ class EnasLightningModule(RandomSamplingLightningModule):
         Number of steps that will be aggregated into one mini-batch for RL controller.
     ctrl_grad_clip : float
         Gradient clipping value of controller.
+    reward_metric_name : str or None
+        The name of the metric which is treated as reward.
+        This will be not effective when there's only one metric returned from evaluator.
+        If there are multiple, it will find the metric with key name ``reward_metric_name``,
+        which is "default" by default.
+        Otherwise it raises an exception indicating multiple metrics are found.
     """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
     __doc__ = _enas_note.format(
         module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
+
+    @property
+    def automatic_optimization(self) -> bool:
+        return False
 
     def __init__(self,
                  inner_module: pl.LightningModule,
@@ -103,6 +109,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
                  baseline_decay: float = .999,
                  ctrl_steps_aggregate: float = 20,
                  ctrl_grad_clip: float = 0,
+                 reward_metric_name: str | None = None,
                  mutation_hooks: list[MutationHook] | None = None):
         super().__init__(inner_module, mutation_hooks)
 
@@ -121,6 +128,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
         self.baseline = 0.
         self.ctrl_steps_aggregate = ctrl_steps_aggregate
         self.ctrl_grad_clip = ctrl_grad_clip
+        self.reward_metric_name = reward_metric_name
 
     def configure_architecture_optimizers(self):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
@@ -142,22 +150,21 @@ class EnasLightningModule(RandomSamplingLightningModule):
 
         if source == 'val':
             # step 2: train ENAS agent
-            x, y = batch
             arc_opt = self.architecture_optimizers()
             if not isinstance(arc_opt, optim.Optimizer):
                 raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
             arc_opt.zero_grad()
             self.resample()
-            with torch.no_grad():
-                logits = self.model(x)
+            self.model.validation_step(batch, batch_idx)
             # use the default metric of self.model as reward function
             if len(self.trainer.callback_metrics) == 1:
                 _, metric = next(iter(self.trainer.callback_metrics.items()))
             else:
-                if 'default' not in self.trainer.callback_metrics:
-                    raise KeyError('Model reported metrics should contain a ``default`` key but '
+                metric_name = self.reward_metric_name or 'default'
+                if metric_name not in self.trainer.callback_metrics:
+                    raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
                                    f'found multiple metrics without default: {self.trainer.callback_metrics.keys()}')
-                metric = self.trainer.callback_metrics['default']
+                metric = self.trainer.callback_metrics[metric_name]
             reward: float = metric.item()
 
             if self.entropy_weight:

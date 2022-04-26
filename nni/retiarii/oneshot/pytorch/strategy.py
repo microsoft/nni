@@ -13,7 +13,7 @@ When adding/modifying a new strategy in this file, don't forget to link it in st
 from __future__ import annotations
 
 import warnings
-from typing import Any, List, Optional, Type, Union, Tuple
+from typing import Any, Type
 
 import torch.nn as nn
 from torch.utils.data import DataLoader

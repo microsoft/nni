@@ -126,7 +126,7 @@ class SinglePathTrainer(BaseOneShotTrainer):
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  batch_size=64, workers=4, device=None, log_frequency=None):
         warnings.warn('SinglePathTrainer is deprecated. Please use strategy.RandomOneShot instead.', DeprecationWarning)
-        
+
         self.model = model
         self.loss = loss
         self.metrics = metrics

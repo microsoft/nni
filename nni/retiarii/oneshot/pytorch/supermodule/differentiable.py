@@ -258,18 +258,20 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
                 alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
             operation._arch_alpha[name] = alpha
 
-        operation.parameters = functools.partial(self.parameters, self=operation)                # bind self
-        operation.named_parameters = functools.partial(self.named_parameters, self=operation)
+        operation.parameters = functools.partial(self.parameters, module=operation)                # bind self
+        operation.named_parameters = functools.partial(self.named_parameters, module=operation)
 
         operation._softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
 
-    def parameters(self, *args, **kwargs):
-        for _, p in self.named_parameters(*args, **kwargs):
+    @staticmethod
+    def parameters(module, *args, **kwargs):
+        for _, p in module.named_parameters(*args, **kwargs):
             yield p
 
-    def named_parameters(self, *args, **kwargs):
+    @staticmethod
+    def named_parameters(module, *args, **kwargs):
         arch = kwargs.pop('arch', False)
-        for name, p in super(self.__class__, self).named_parameters(*args, **kwargs):  # pylint: disable=bad-super-call
+        for name, p in super(module.__class__, module).named_parameters(*args, **kwargs):  # pylint: disable=bad-super-call
             if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
                 if arch:
                     yield name, p

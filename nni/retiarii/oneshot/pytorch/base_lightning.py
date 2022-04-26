@@ -128,7 +128,7 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
     if is_traceable(module):
         # check whether there is a value-choice in its arguments
         has_valuechoice = False
-        for arg in chain(cast(list, module.trace_args), cast(dict, module.trace_kwargs)):
+        for arg in chain(cast(list, module.trace_args), cast(dict, module.trace_kwargs).values()):
             if isinstance(arg, ValueChoiceX):
                 has_valuechoice = True
                 break
