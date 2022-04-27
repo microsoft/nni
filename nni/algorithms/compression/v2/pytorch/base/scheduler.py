@@ -5,7 +5,7 @@ import gc
 import logging
 import os
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Union
 
 import json_tricks
 import torch
@@ -19,7 +19,7 @@ class Task:
     # NOTE: If we want to support multi-thread, this part need to refactor, maybe use file and lock to sync.
     _reference_counter = {}
 
-    def __init__(self, task_id: int, model_path: str, masks_path: str, config_list_path: str,
+    def __init__(self, task_id: int, model_path: Union[str, Path], masks_path: Union[str, Path], config_list_path: Union[str, Path],
                  speedup: Optional[bool] = True, finetune: Optional[bool] = True, evaluate: Optional[bool] = True):
         """
         Parameters
@@ -87,7 +87,7 @@ class Task:
             config_list = json_tricks.load(f)
         return model, masks, config_list
 
-    def referenced_paths(self) -> List[str]:
+    def referenced_paths(self) -> List[Union[str, Path]]:
         """
         Return the path list that need to count reference in this task.
         """
@@ -111,7 +111,7 @@ class Task:
 
 
 class TaskResult:
-    def __init__(self, task_id: int, compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
+    def __init__(self, task_id: Union[int, str], compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
                  pruner_generated_masks: Dict[str, Dict[str, Tensor]], score: Optional[float]) -> None:
         """
         Parameters

@@ -2,11 +2,12 @@
 # Licensed under the MIT license.
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, OrderedDict
 
 import torch
 from torch import Tensor
-from torch.nn import Module, Parameter
+from torch.nn import Module
+from torch.nn.parameter import Parameter
 
 from .compressor import Compressor, LayerInfo, _setattr
 
@@ -37,15 +38,15 @@ class PrunerModuleWrapper(Module):
         # config information
         self.config = config
 
-        self.weight = Parameter(torch.empty(self.module.weight.size()))
-
-        # register buffer for mask
-        self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
-        if hasattr(self.module, 'bias') and self.module.bias is not None:
-            self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
-            self.bias = Parameter(torch.empty(self.module.bias.size()))
-        else:
-            self.register_buffer("bias_mask", None)
+        pruning_target_names = ['weight', 'bias']
+        for pruning_target_name in pruning_target_names:
+            pruning_target_mask_name = '{}_mask'.format(pruning_target_name)
+            pruning_target = getattr(self.module, pruning_target_name, None)
+            if hasattr(self.module, pruning_target_name) and pruning_target is not None:
+                setattr(self, pruning_target_name, Parameter(torch.empty(pruning_target.shape)))
+                self.register_buffer(pruning_target_mask_name, torch.ones(pruning_target.shape))
+            else:
+                self.register_buffer(pruning_target_mask_name, None)
 
     def _weight2buffer(self):
         """
@@ -89,7 +90,17 @@ class Pruner(Compressor):
     def reset(self, model: Optional[Module] = None, config_list: Optional[List[Dict]] = None):
         super().reset(model=model, config_list=config_list)
 
-    def _wrap_modules(self, layer: LayerInfo, config: Dict):
+    def get_modules_wrapper(self) -> OrderedDict[str, PrunerModuleWrapper]:
+        """
+        Returns
+        -------
+        OrderedDict[str, PrunerModuleWrapper]
+            An ordered dict, key is the name of the module, value is the wrapper of the module.
+        """
+        assert self.modules_wrapper is not None, 'Bound model has not be wrapped.'
+        return self.modules_wrapper
+
+    def _wrap_modules(self, layer: LayerInfo, config: Dict) -> PrunerModuleWrapper:
         """
         Create a wrapper module to replace the original one.
 
@@ -99,6 +110,11 @@ class Pruner(Compressor):
             The layer to instrument the mask.
         config
             The configuration for generating the mask.
+
+        Returns
+        -------
+        PrunerModuleWrapper
+            The wrapper of the module in layerinfo.
         """
         _logger.debug("Module detected to compress : %s.", layer.name)
         wrapper = PrunerModuleWrapper(layer.module, layer.name, config)
@@ -114,8 +130,10 @@ class Pruner(Compressor):
         Wrap all modules that needed to be compressed.
         Different from the parent function, call `wrapper._weight2buffer()` after replace the origin module to wrapper.
         """
+        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+
         if not self.is_wrapped:
-            for _, wrapper in reversed(self.get_modules_wrapper().items()):
+            for _, wrapper in reversed(list(self.get_modules_wrapper().items())):
                 _setattr(self.bound_model, wrapper.name, wrapper)
                 wrapper._weight2buffer()
             self.is_wrapped = True
@@ -125,8 +143,10 @@ class Pruner(Compressor):
         Unwrap all modules that needed to be compressed.
         Different from the parent function, call `wrapper._weight2parameter()` after replace the wrapper to origin module.
         """
+        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+
         if self.is_wrapped:
-            for _, wrapper in self.get_modules_wrapper().items():
+            for wrapper in self.get_modules_wrapper().values():
                 _setattr(self.bound_model, wrapper.name, wrapper.module)
                 wrapper._weight2parameter()
             self.is_wrapped = False
@@ -191,7 +211,7 @@ class Pruner(Compressor):
         dim
             The pruned dim.
         """
-        for _, wrapper in self.get_modules_wrapper().items():
+        for wrapper in self.get_modules_wrapper().values():
             weight_mask = wrapper.weight_mask
             mask_size = weight_mask.size()
             if len(mask_size) == 1:
