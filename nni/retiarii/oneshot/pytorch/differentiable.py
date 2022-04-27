@@ -210,7 +210,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
         self.use_temp_anneal = use_temp_anneal
         self.min_temp = min_temp
 
-    def on_epoch_start(self):
+    def on_train_epoch_end(self):
         if self.use_temp_anneal:
             self.temp = (1 - self.trainer.current_epoch / self.trainer.max_epochs) * (self.init_temp - self.min_temp) + self.min_temp
             self.temp = max(self.temp, self.min_temp)
@@ -219,4 +219,4 @@ class GumbelDartsLightningModule(DartsLightningModule):
             if hasattr(module, '_softmax'):
                 module._softmax.temp = self.temp  # type: ignore
 
-        return self.model.on_epoch_start()
+        return self.model.on_train_epoch_end()

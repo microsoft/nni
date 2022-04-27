@@ -298,12 +298,30 @@ class BaseOneShotLightningModule(pl.LightningModule):
             arc_optimizers = [arc_optimizers]
         self.arc_optim_count = len(arc_optimizers)
 
+        # FIXME: this part uses non-official lightning API.
         # The return values ``frequency`` and ``monitor`` are ignored because lightning requires
         # ``len(optimizers) == len(frequency)``, and gradient backword is handled manually.
         # For data structure of variables below, please see pytorch lightning docs of ``configure_optimizers``.
-        w_optimizers, lr_schedulers, self.frequencies, monitor = \
-            self.trainer._configure_optimizers(self.model.configure_optimizers())  # type: ignore
-        lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
+        try:
+            # above v1.6
+            from pytorch_lightning.core.optimizer import (  # pylint: disable=import-error
+                _configure_optimizers,
+                _configure_schedulers_automatic_opt,
+                _configure_schedulers_manual_opt
+            )
+            w_optimizers, lr_schedulers, self.frequencies, monitor = \
+                _configure_optimizers(self.model.configure_optimizers())  # type: ignore
+            lr_schedulers = (
+                _configure_schedulers_automatic_opt(lr_schedulers, monitor)
+                if self.automatic_optimization
+                else _configure_schedulers_manual_opt(lr_schedulers)
+            )
+        except ImportError:
+            # under v1.5
+            w_optimizers, lr_schedulers, self.frequencies, monitor = \
+                self.trainer._configure_optimizers(self.model.configure_optimizers())  # type: ignore
+            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
+
         if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):
             raise Exception(
                 "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
