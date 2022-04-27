@@ -5,7 +5,8 @@ from nni.runtime import protocol
 from nni.runtime.protocol import CommandType, send, receive
 
 from io import BytesIO
-from unittest import TestCase, main
+import sys
+from unittest import TestCase, main, skipIf
 
 
 def _prepare_send():
@@ -17,6 +18,7 @@ def _prepare_receive(data):
     protocol._set_in_file(BytesIO(data))
 
 
+@skipIf(sys.platform =='win32', 'debug')
 class ProtocolTestCase(TestCase):
     def test_send_en(self):
         out_file = _prepare_send()

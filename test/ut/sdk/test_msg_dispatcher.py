@@ -3,7 +3,8 @@
 
 import json
 from io import BytesIO
-from unittest import TestCase, main
+import sys
+from unittest import TestCase, main, skipIf
 
 from nni.runtime import protocol
 from nni.runtime import msg_dispatcher_base
@@ -13,6 +14,7 @@ from nni.tuner import Tuner
 from nni.utils import extract_scalar_reward
 
 
+@skipIf(sys.platform =='win32', 'debug')
 class NaiveTuner(Tuner):
     def __init__(self):
         self.param = 0

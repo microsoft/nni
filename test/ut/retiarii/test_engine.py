@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import unittest
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from nni.retiarii.graph import DebugEvaluator
 from nni.retiarii.integration import RetiariiAdvisor
 
 
+@unittest.skipIf(sys.platform =='win32', 'debug')
 class EngineTest(unittest.TestCase):
     def test_codegen(self):
         with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
