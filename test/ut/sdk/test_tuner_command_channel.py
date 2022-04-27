@@ -24,14 +24,14 @@ _command2 = 'T_你好'
 
 ## test cases ##
 
-@pytest.mark.skipif(sys.platfrom == 'win32', reason='debug')
+@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_connect():
     global _client
     port = _init()
     _client = WebSocket(f'ws://localhost:{port}')
     _client.connect()
 
-@pytest.mark.skipif(sys.platfrom == 'win32', reason='debug')
+@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_send():
     # Send commands to server via channel, and get them back via server's stdout.
     _client.send(_command1)
@@ -44,7 +44,7 @@ def test_send():
     sent2 = _server.stdout.readline().strip()
     assert sent2 == _command2, sent2
 
-@pytest.mark.skipif(sys.platfrom == 'win32', reason='debug')
+@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_receive():
     # Send commands to server via stdin, and get them back via channel.
     _server.stdin.write(_command1 + '\n')
@@ -57,7 +57,7 @@ def test_receive():
     received2 = _client.receive()
     assert received2 == _command2, received2
 
-@pytest.mark.skipif(sys.platfrom == 'win32', reason='debug')
+@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_disconnect():
     _client.disconnect()
 
