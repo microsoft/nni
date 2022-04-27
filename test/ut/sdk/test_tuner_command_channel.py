@@ -79,6 +79,7 @@ def test_debug():
     sys.stderr.flush()
     with open('tmp_threads.txt', 'w') as f:
         f.write(threads)
+    exit()
 
 ## helper ##
 
