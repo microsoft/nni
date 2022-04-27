@@ -46,7 +46,7 @@ export function serveWebSocket(ws: WebSocket): void {
     channelSingleton.setWebSocket(ws);
 }
 
-class WebSocketChannelImpl {
+class WebSocketChannelImpl implements WebSocketChannel {
     private deferredInit: Deferred<void> = new Deferred<void>();
     private emitter: EventEmitter = new EventEmitter();
     private heartbeatTimer!: NodeJS.Timer;
