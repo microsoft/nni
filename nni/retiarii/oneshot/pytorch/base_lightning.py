@@ -305,9 +305,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
         try:
             # above v1.6
             from pytorch_lightning.core.optimizer import (  # pylint: disable=import-error
-                _configure_optimizers,
-                _configure_schedulers_automatic_opt,
-                _configure_schedulers_manual_opt
+                _configure_optimizers,  # type: ignore
+                _configure_schedulers_automatic_opt,  # type: ignore
+                _configure_schedulers_manual_opt  # type: ignore
             )
             w_optimizers, lr_schedulers, self.frequencies, monitor = \
                 _configure_optimizers(self.model.configure_optimizers())  # type: ignore
