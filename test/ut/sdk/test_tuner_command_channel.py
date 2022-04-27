@@ -129,4 +129,5 @@ if __name__ == '__main__':
     test_send()
     test_receive()
     test_disconnect()
+    test_debug()
     print('pass')
