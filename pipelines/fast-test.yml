@@ -206,7 +206,7 @@ stages:
 
     - script: |
         cd test
-        python -m pytest ut
+        python -m pytest ut/sdk/test_tuner_command_channel.py
       displayName: Python unit test
 
     - script: |
