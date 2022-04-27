@@ -57,7 +57,7 @@ const OpenRow = (props): any => {
         // get copy parameters
         const params = JSON.stringify(reformatRetiariiParameter(trial.description.parameters as any), null, 4);
         if (copy.default(params)) {
-            getCopyStatus('Success copy parameters to clipboard in form of python dict !', 'success');
+            getCopyStatus('Successfully copy parameters to clipboard in form of python dict !', 'success');
         } else {
             getCopyStatus('Failed !', 'error');
         }
