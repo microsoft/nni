@@ -32,6 +32,10 @@ def test_connect():
     _client = WebSocket(f'ws://localhost:{port}')
     _client.connect()
 
+    sys.stderr.write('@@ 1 @@')
+    with open('tmp_threads.txt', 'a') as f:
+        f.write('@@ 1 @@\n')
+
 #@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_send():
     # Send commands to server via channel, and get them back via server's stdout.
@@ -44,6 +48,10 @@ def test_send():
 
     sent2 = _server.stdout.readline().strip()
     assert sent2 == _command2, sent2
+
+    sys.stderr.write('@@ 2 @@')
+    with open('tmp_threads.txt', 'a') as f:
+        f.write('@@ 2 @@\n')
 
 #@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_receive():
@@ -58,6 +66,10 @@ def test_receive():
     received2 = _client.receive()
     assert received2 == _command2, received2
 
+    sys.stderr.write('@@ 3 @@')
+    with open('tmp_threads.txt', 'a') as f:
+        f.write('@@ 3 @@\n')
+
 #@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_disconnect():
     _client.disconnect()
@@ -69,6 +81,10 @@ def test_disconnect():
     _server.terminate()
     #_server = None
 
+    sys.stderr.write('@@ 4 @@')
+    with open('tmp_threads.txt', 'a') as f:
+        f.write('@@ 4 @@\n')
+
 def test_debug():
     time.sleep(10)
     threads = '|'.join([t.name for t in threading.enumerate()])
@@ -77,7 +93,7 @@ def test_debug():
     threads += f'@@@ {code} @@@\n'
     sys.stderr.write(threads)
     sys.stderr.flush()
-    with open('tmp_threads.txt', 'w') as f:
+    with open('tmp_threads.txt', 'a') as f:
         f.write(threads)
     exit()
 
