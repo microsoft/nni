@@ -207,6 +207,7 @@ stages:
     - script: |
         cd test
         python -m pytest ut/sdk/test_tuner_command_channel.py
+        cat tmp_threads.txt
       displayName: Python unit test
 
     - script: |

@@ -10,6 +10,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 import sys
 import time
+import threading
 
 import pytest
 
@@ -66,7 +67,18 @@ def test_disconnect():
     _server.stdin.write('_close_\n')
     _server.stdin.flush()
     _server.terminate()
-    _server = None
+    #_server = None
+
+def test_debug():
+    time.sleep(10)
+    threads = '|'.join([t.name for t in threading.enumerate()])
+    threads = '@@@ ' + threads + ' @@@\n'
+    code = _server.poll()
+    threads += f'@@@ {code} @@@\n'
+    sys.stderr.write(threads)
+    sys.stderr.flush()
+    with open('tmp_threads.txt', 'w') as f:
+        f.write(threads)
 
 ## helper ##
 
