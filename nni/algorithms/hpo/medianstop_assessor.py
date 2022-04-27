@@ -4,11 +4,12 @@
 from __future__ import annotations
 
 import logging
+
 from schema import Schema, Optional
+from typing_extensions import Literal
 
 from nni import ClassArgsValidator
 from nni.assessor import Assessor, AssessResult
-from nni.typehint import Literal
 from nni.utils import extract_scalar_history
 
 logger = logging.getLogger('medianstop_Assessor')
