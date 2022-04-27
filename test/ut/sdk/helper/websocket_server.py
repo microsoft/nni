@@ -28,6 +28,7 @@ async def read_stdin():
         line = line.decode().strip()
         _debug(f'read from stdin: {line}')
         if line == '_close_':
+            sys.stderr.write(f'@@@ close @@@')
             exit()
         await _ws.send(line)
 
