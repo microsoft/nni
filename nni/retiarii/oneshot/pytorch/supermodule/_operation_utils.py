@@ -26,8 +26,10 @@ The fixed/weighted slice is fed into ``_slice_weight``,
 which interprets the slice and apply it on a tensor.
 """
 
+from __future__ import annotations
+
 import operator
-from typing import Tuple, Union, List, Dict, Callable, Optional, Iterator, TypeVar, Any, Generic, cast
+from typing import Callable, Iterator, TypeVar, Any, Optional, Tuple, Union, List, Dict, Generic, cast
 
 import numpy as np
 import torch
@@ -58,8 +60,8 @@ def _eliminate_list_slice(shape: tuple, slice_: multidim_slice) -> multidim_slic
     for i in range(len(slice_)):
         if isinstance(slice_[i], list):
             # convert list of slices to mask
-            mask = np.zeros(shape[i], dtype=np.bool)
-            for sl in slice_[i]:
+            mask = np.zeros(shape[i], dtype=np.bool)  # type: ignore
+            for sl in cast(List[slice], slice_[i]):
                 mask[sl] = 1
             result.append(mask)
         else:
@@ -67,7 +69,7 @@ def _eliminate_list_slice(shape: tuple, slice_: multidim_slice) -> multidim_slic
     return tuple(result)
 
 
-def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_slice, float]]]) -> T:
+def _slice_weight(weight: T, slice_: multidim_slice | list[tuple[multidim_slice, float]]) -> T:
     # slice_ can be a tuple of slice, e.g., ([3:6], [2:4])
     # or tuple of slice -> float, e.g. {([3:6],): 0.6, ([2:4],): 0.3}
 
@@ -84,27 +86,27 @@ def _slice_weight(weight: T, slice_: Union[multidim_slice, List[Tuple[multidim_s
             # create a mask with weight w
             with torch.no_grad():
                 mask = zeros_like(weight)
-                mask[_eliminate_list_slice(weight.shape, sl)] = 1
+                mask[_eliminate_list_slice(weight.shape, sl)] = 1  # type: ignore
 
             # track gradients here
-            masks.append((mask * wt))
+            masks.append(mask * wt)  # type: ignore
 
         masks = sum(masks)
 
-        return masks * weight
+        return masks * weight  # type: ignore
 
     else:
         # for unweighted case, we slice it directly.
 
         def _do_slice(arr, slice_):
-            return arr[_eliminate_list_slice(arr.shape, slice_)]
+            return arr[_eliminate_list_slice(arr.shape, slice_)]  # type: ignore
 
         # sometimes, we don't need slice.
         # this saves an op on computational graph, which will hopefully make training faster
 
         # Use a dummy array to check this. Otherwise it would be too complex.
-        dummy_arr = np.zeros(weight.shape, dtype=np.bool)
-        no_effect = _do_slice(dummy_arr, slice_).shape == dummy_arr.shape
+        dummy_arr = np.zeros(weight.shape, dtype=np.bool)  # type: ignore
+        no_effect = cast(Any, _do_slice(dummy_arr, slice_)).shape == dummy_arr.shape
 
         if no_effect:
             return weight
@@ -128,14 +130,14 @@ class Slicable(Generic[T]):
             raise TypeError(f'Unsuppoted weight type: {type(weight)}')
         self.weight = weight
 
-    def __getitem__(self, index: Union[slice_type, multidim_slice]) -> T:
+    def __getitem__(self, index: slice_type | multidim_slice) -> T:
         if not isinstance(index, tuple):
             index = (index, )
         index = cast(multidim_slice, index)
 
         # Get the dict value in index's leafs
         # There can be at most one dict
-        leaf_dict: Optional[Dict[int, float]] = None
+        leaf_dict: dict[int, float] | None = None
         for maybe_weighted in _iterate_over_multidim_slice(index):
             for d in maybe_weighted.leaf_values():
                 if isinstance(d, dict):
@@ -166,10 +168,10 @@ class MaybeWeighted:
     """
 
     def __init__(self,
-                 value: Optional[int_or_int_dict] = None, *,
-                 lhs: Optional[Union['MaybeWeighted', int]] = None,
-                 rhs: Optional[Union['MaybeWeighted', int]] = None,
-                 operation: Optional[Callable[[int, int], int]] = None):
+                 value: int_or_int_dict | None = None, *,
+                 lhs: 'MaybeWeighted' | int | None = None,
+                 rhs: 'MaybeWeighted' | int | None = None,
+                 operation: Callable[[int_or_int_dict, int_or_int_dict], int_or_int_dict] | None = None):
         if operation is None:
             if not isinstance(value, (int, dict)):
                 raise TypeError(f'Unsupported value type: {type(value)}')
@@ -178,7 +180,7 @@ class MaybeWeighted:
         self.rhs = rhs
         self.operation = operation
 
-    def leaf_values(self) -> Iterator[Dict[int, float]]:
+    def leaf_values(self) -> Iterator[int_or_int_dict]:
         """Iterate over values on leaf nodes."""
         if self.value is not None:
             yield self.value
@@ -188,7 +190,7 @@ class MaybeWeighted:
             if isinstance(self.rhs, MaybeWeighted):
                 yield from self.rhs.leaf_values()
 
-    def evaluate(self, value_fn: _value_fn_type = None) -> int:
+    def evaluate(self, value_fn: _value_fn_type = None) -> int_or_int_dict:
         """Evaluate the value on root node, after replacing every value on leaf node with ``value_fn``.
         If ``value_fn`` is none, no replacement will happen and the raw value will be used.
         """
@@ -200,11 +202,12 @@ class MaybeWeighted:
             if isinstance(self.lhs, MaybeWeighted):
                 eval_lhs = self.lhs.evaluate(value_fn)
             else:
-                eval_lhs = self.lhs
+                eval_lhs = cast(int, self.lhs)
             if isinstance(self.rhs, MaybeWeighted):
                 eval_rhs = self.rhs.evaluate(value_fn)
             else:
-                eval_rhs = self.rhs
+                eval_rhs = cast(int, self.rhs)
+            assert self.operation is not None
             return self.operation(eval_lhs, eval_rhs)
 
     def __repr__(self):

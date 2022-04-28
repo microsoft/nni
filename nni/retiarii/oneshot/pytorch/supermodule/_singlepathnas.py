@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 # pylint: skip-file
+# type: ignore
 
 """This file is an incomplete implementation of `Single-path NAS <https://arxiv.org/abs/1904.02877>`__.
 These are merely some components of the algorithm. The complete support is an undergoing work item.
@@ -96,9 +97,9 @@ class DifferentiableSuperConv2d(nn.Conv2d):
             ----------
             input_weight : Tensor
                 the weight to be weighted summed
-            masks : List[Tensor]
+            masks : list[Tensor]
                 weight masks.
-            thresholds : List[float]
+            thresholds : list[float]
                 thresholds, should have a length of ``len(masks) - 1``
             indicator : Callable[[Tensor, float], float]
                 take a tensor and a threshold as input, and output the weight

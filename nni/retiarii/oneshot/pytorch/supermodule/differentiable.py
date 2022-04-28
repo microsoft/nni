@@ -1,10 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import functools
 import warnings
 
-from typing import List, Tuple, Optional, Dict, Any, Union
+from typing import Any, cast
 
 import torch
 import torch.nn as nn
@@ -21,7 +23,9 @@ from ._valuechoice_utils import traverse_all_options
 class GumbelSoftmax(nn.Softmax):
     """Wrapper of ``F.gumbel_softmax``. dim = -1 by default."""
 
-    def __init__(self, dim: Optional[int] = -1) -> None:
+    dim: int
+
+    def __init__(self, dim: int = -1) -> None:
         super().__init__(dim)
         self.tau = 1
         self.hard = False
@@ -42,7 +46,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
 
     Parameters
     ----------
-    paths : List[Tuple[str, nn.Module]]
+    paths : list[tuple[str, nn.Module]]
         Layers to choose from. Each is a tuple of name, and its module.
     alpha : Tensor
         Tensor that stores the "learnable" weights.
@@ -59,9 +63,9 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
         Name of the choice.
     """
 
-    _arch_parameter_names: List[str] = ['_arch_alpha']
+    _arch_parameter_names: list[str] = ['_arch_alpha']
 
-    def __init__(self, paths: List[Tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
+    def __init__(self, paths: list[tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__()
         self.op_names = []
         if len(alpha) != len(paths):
@@ -82,7 +86,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
         """Choose the operator with the maximum logit."""
         if self.label in memo:
             return {}  # nothing new to export
-        return {self.label: self.op_names[torch.argmax(self._arch_alpha).item()]}
+        return {self.label: self.op_names[int(torch.argmax(self._arch_alpha).item())]}
 
     def search_space_spec(self):
         return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ),
@@ -149,9 +153,9 @@ class DifferentiableMixedInput(BaseSuperNetModule):
         Name of the choice.
     """
 
-    _arch_parameter_names: List[str] = ['_arch_alpha']
+    _arch_parameter_names: list[str] = ['_arch_alpha']
 
-    def __init__(self, n_candidates: int, n_chosen: Optional[int], alpha: torch.Tensor, softmax: nn.Module, label: str):
+    def __init__(self, n_candidates: int, n_chosen: int | None, alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__()
         self.n_candidates = n_candidates
         if len(alpha) != n_candidates:
@@ -240,9 +244,9 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
     won't be optimized.
     """
 
-    _arch_parameter_names: List[str] = ['_arch_alpha']
+    _arch_parameter_names: list[str] = ['_arch_alpha']
 
-    def __init__(self, operation: MixedOperation, memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> None:
+    def __init__(self, operation: MixedOperation, memo: dict[str, Any], mutate_kwargs: dict[str, Any]) -> None:
         # Sampling arguments. This should have the same keys with `operation.mutable_arguments`
         operation._arch_alpha = nn.ParameterDict()
         for name, spec in operation.search_space_spec().items():
@@ -254,20 +258,20 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
                 alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
             operation._arch_alpha[name] = alpha
 
-        operation.parameters = functools.partial(self.parameters, self=operation)                # bind self
-        operation.named_parameters = functools.partial(self.named_parameters, self=operation)
+        operation.parameters = functools.partial(self.parameters, module=operation)                # bind self
+        operation.named_parameters = functools.partial(self.named_parameters, module=operation)
 
         operation._softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
 
     @staticmethod
-    def parameters(self, *args, **kwargs):
-        for _, p in self.named_parameters(*args, **kwargs):
+    def parameters(module, *args, **kwargs):
+        for _, p in module.named_parameters(*args, **kwargs):
             yield p
 
     @staticmethod
-    def named_parameters(self, *args, **kwargs):
+    def named_parameters(module, *args, **kwargs):
         arch = kwargs.pop('arch', False)
-        for name, p in super(self.__class__, self).named_parameters(*args, **kwargs):  # pylint: disable=bad-super-call
+        for name, p in super(module.__class__, module).named_parameters(*args, **kwargs):  # pylint: disable=bad-super-call
             if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
                 if arch:
                     yield name, p
@@ -275,22 +279,24 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
                 if not arch:
                     yield name, p
 
-    def resample(self, operation: MixedOperation, memo: Dict[str, Any]) -> Dict[str, Any]:
+    def resample(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
         """Differentiable. Do nothing in resample."""
         return {}
 
-    def export(self, operation: MixedOperation, memo: Dict[str, Any]) -> Dict[str, Any]:
+    def export(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
         """Export is also random for each leaf value choice."""
         result = {}
         for name, spec in operation.search_space_spec().items():
             if name in result:
                 continue
-            chosen_index = torch.argmax(operation._arch_alpha[name]).item()
+            chosen_index = int(torch.argmax(cast(dict, operation._arch_alpha)[name]).item())
             result[name] = spec.values[chosen_index]
         return result
 
-    def forward_argument(self, operation: MixedOperation, name: str) -> Union[Dict[Any, float], Any]:
+    def forward_argument(self, operation: MixedOperation, name: str) -> dict[Any, float] | Any:
         if name in operation.mutable_arguments:
-            weights = {label: operation._softmax(alpha) for label, alpha in operation._arch_alpha.items()}
+            weights: dict[str, torch.Tensor] = {
+                label: cast(nn.Module, operation._softmax)(alpha) for label, alpha in cast(dict, operation._arch_alpha).items()
+            }
             return dict(traverse_all_options(operation.mutable_arguments[name], weights=weights))
         return operation.init_arguments[name]
