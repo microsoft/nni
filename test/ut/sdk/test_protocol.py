@@ -5,7 +5,6 @@ from nni.runtime import protocol
 from nni.runtime.protocol import CommandType, send, receive
 
 from io import BytesIO
-import sys
 from unittest import TestCase, main
 
 

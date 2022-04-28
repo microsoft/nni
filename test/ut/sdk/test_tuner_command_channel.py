@@ -10,9 +10,6 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 import sys
 import time
-import threading
-
-import pytest
 
 from nni.runtime.tuner_command_channel.websocket import WebSocket
 

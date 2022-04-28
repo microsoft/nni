@@ -3,7 +3,6 @@
 
 from io import BytesIO
 import json
-import sys
 from unittest import TestCase, main
 
 from nni.assessor import Assessor, AssessResult

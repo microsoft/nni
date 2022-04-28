@@ -3,7 +3,6 @@
 
 import json
 from io import BytesIO
-import sys
 from unittest import TestCase, main
 
 from nni.runtime import protocol
