@@ -70,13 +70,7 @@ class WebSocket:
         except Exception as e:
             _logger.warning(f'Failed to close connection: {repr(e)}')
         self._ws = None
-
-        global _event_loop, _event_loop_refcnt
-        with _event_loop_lock:
-            _event_loop_refcnt -= 1
-            if _event_loop_refcnt == 0:
-                _event_loop.call_soon_threadsafe(_event_loop.stop)
-                _event_loop = None  # type: ignore
+        _decrease_refcnt()
 
     def send(self, message: str) -> None:
         _logger.debug(f'Sending {message}')
@@ -93,11 +87,12 @@ class WebSocket:
         except websockets.ConnectionClosed:  # type: ignore
             _logger.debug('Connection closed by server.')
             self._ws = None
+            _decrease_refcnt()
             return None
 
         # seems the library will inference whether it's text or binary, so we don't have guarantee
         if isinstance(msg, bytes):
-            return msg.decode('utf_8')
+            return msg.decode()
         else:
             return msg
 
@@ -119,3 +114,11 @@ async def _connect_async(url):
     # but it will not work, raising "TypeError: A coroutine object is required".
     # Seems a design flaw in websockets library.
     return await websockets.connect(url, max_size=None)  # type: ignore
+
+def _decrease_refcnt() -> None:
+    global _event_loop, _event_loop_refcnt
+    with _event_loop_lock:
+        _event_loop_refcnt -= 1
+        if _event_loop_refcnt == 0:
+            _event_loop.call_soon_threadsafe(_event_loop.stop)
+            _event_loop = None  # type: ignore
