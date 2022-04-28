@@ -26,11 +26,13 @@ import type { AddressInfo } from 'net';
 import path from 'path';
 
 import express, { Request, Response, Router } from 'express';
+import expressWs from 'express-ws';
 import httpProxy from 'http-proxy';
 import { Deferred } from 'ts-deferred';
 
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
+import * as tunerCommandChannel from 'core/tuner_command_channel';
 import { createRestHandler } from './restHandler';
 
 const logger: Logger = getLogger('RestServer');
@@ -60,6 +62,8 @@ export class RestServer {
         logger.info(`Starting REST server at port ${this.port}, URL prefix: "/${this.urlPrefix}"`);
 
         const app = express();
+        expressWs(app, undefined, { wsOptions: { maxPayload: 4 * 1024 * 1024 * 1024 }});
+
         app.use('/' + this.urlPrefix, rootRouter());
         app.all('*', (_req: Request, res: Response) => { res.status(404).send(`Outside prefix "/${this.urlPrefix}"`); });
         this.server = app.listen(this.port);
@@ -100,11 +104,14 @@ export class RestServer {
  *  In fact experiments management should have a separate prefix and module.
  **/
 function rootRouter(): Router {
-    const router = Router();
+    const router = Router() as expressWs.Router;
     router.use(express.json({ limit: '50mb' }));
 
     /* NNI manager APIs */
     router.use('/api/v1/nni', restHandlerFactory());
+
+    /* WebSocket APIs */
+    router.ws('/tuner', (ws, _req, _next) => { tunerCommandChannel.serveWebSocket(ws); });
 
     /* Download log files */
     // The REST API path "/logs" does not match file system path "/log".

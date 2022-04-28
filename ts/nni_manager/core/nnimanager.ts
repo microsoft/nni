@@ -188,7 +188,7 @@ class NNIManager implements Manager {
         const dispatcherCommand: string = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
-        this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
+        await this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
         this.setStatus('RUNNING');
         await this.storeExperimentProfile();
         this.run().catch((err: Error) => {
@@ -221,7 +221,7 @@ class NNIManager implements Manager {
         const dispatcherCommand: string = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
-        this.setupTuner(dispatcherCommand, undefined, 'resume', checkpointDir);
+        await this.setupTuner(dispatcherCommand, undefined, 'resume', checkpointDir);
 
         const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
 
@@ -462,7 +462,7 @@ class NNIManager implements Manager {
         }
     }
 
-    private setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): void {
+    private async setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): Promise<void> {
         if (this.dispatcher !== undefined) {
             return;
         }
@@ -488,7 +488,7 @@ class NNIManager implements Manager {
         const newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command, stdio, newCwd, newEnv);
         this.dispatcherPid = tunerProc.pid!;
-        this.dispatcher = createDispatcherInterface(tunerProc);
+        this.dispatcher = await createDispatcherInterface(tunerProc);
 
         return;
     }
