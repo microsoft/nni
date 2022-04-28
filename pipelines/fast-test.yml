@@ -196,9 +196,9 @@ stages:
     timeoutInMinutes: 75
 
     steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: windows
+    #- template: templates/install-dependencies.yml
+    #  parameters:
+    #    platform: windows
 
     - script: |
         python setup.py develop --no-user

@@ -155,7 +155,7 @@ def _find_python_packages():
     for dirpath, dirnames, filenames in os.walk('nni'):
         if '/__pycache__' not in dirpath and '/.mypy_cache' not in dirpath and '/default_config' not in dirpath:
             packages.append(dirpath.replace('/', '.'))
-    return sorted(packages) + ['nni_assets', 'nni_node']
+    return sorted(packages) #+ ['nni_assets', 'nni_node']
 
 def _find_requirements_txt():
     requirement_files = []
@@ -257,8 +257,8 @@ class Develop(develop):
 
     def run(self):
         open('nni/version.py', 'w').write("__version__ = '999.dev0'")
-        if not self.skip_ts:
-            setup_ts.build(release=None)
+        #if not self.skip_ts:
+        #    setup_ts.build(release=None)
         super().run()
 
 class Clean(clean):
