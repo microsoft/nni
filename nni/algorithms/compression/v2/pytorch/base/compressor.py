@@ -1,9 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import collections
 import logging
-from typing import List, Dict, Optional, Tuple, Any
+from typing import Any, List, Dict, Optional, Tuple
 
 import torch
 from torch.nn import Module
@@ -29,7 +28,33 @@ def _setattr(model: Module, name: str, module: Module):
         name_list = name.split(".")
         setattr(parent_module, name_list[-1], module)
     else:
-        raise '{} not exist.'.format(name)
+        raise Exception('{} not exist.'.format(name))
+
+
+class ModuleWrapper(Module):
+    """
+    Wrap a module to enable data parallel, forward method customization and buffer registeration.
+
+    Parameters
+    ----------
+    module
+        The module user wants to compress.
+    config
+        The configurations that users specify for compression.
+    module_name
+        The name of the module to compress, wrapper module shares same name.
+    """
+
+    def __init__(self, module: Module, module_name: str, config: Dict):
+        super().__init__()
+        # origin layer information
+        self.module = module
+        self.name = module_name
+        # config information
+        self.config = config
+
+    def forward(self, *inputs):
+        raise NotImplementedError
 
 
 class Compressor:
@@ -46,7 +71,7 @@ class Compressor:
 
     def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]]):
         self.is_wrapped = False
-        if model is not None:
+        if model is not None and config_list is not None:
             self.reset(model=model, config_list=config_list)
         else:
             _logger.warning('This compressor is not set model and config_list, waiting for reset() or pass this to scheduler.')
@@ -63,6 +88,7 @@ class Compressor:
             The config list used by compressor, usually specifies the 'op_types' or 'op_names' that want to compress.
         """
         assert isinstance(model, Module), 'Only support compressing pytorch Module, but the type of model is {}.'.format(type(model))
+
         self.bound_model = model
         self.config_list = config_list
         self.validate_config(model=model, config_list=config_list)
@@ -70,7 +96,7 @@ class Compressor:
         self._unwrap_model()
 
         self._modules_to_compress = None
-        self.modules_wrapper = collections.OrderedDict()
+        self.modules_wrapper = {}
         for layer, config in self._detect_modules_to_compress():
             wrapper = self._wrap_modules(layer, config)
             self.modules_wrapper[layer.name] = wrapper
@@ -93,6 +119,8 @@ class Compressor:
         Detect all modules should be compressed, and save the result in `self._modules_to_compress`.
         The model will be instrumented and user should never edit it after calling this method.
         """
+        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+
         if self._modules_to_compress is None:
             self._modules_to_compress = []
             for name, module in self.bound_model.named_modules():
@@ -118,6 +146,8 @@ class Compressor:
         Optional[Dict]
             The retrieved configuration for this layer, if None, this layer should not be compressed.
         """
+        assert self.config_list is not None, 'No config_list set in this compressor, please use Compressor.reset(model, config_list) to set it.'
+
         ret = None
         for config in self.config_list:
             config = config.copy()
@@ -142,32 +172,26 @@ class Compressor:
             return None
         return ret
 
-    def get_modules_wrapper(self) -> Dict[str, Module]:
+    def get_modules_wrapper(self) -> Dict[str, ModuleWrapper]:
         """
         Returns
         -------
-        OrderedDict[str, Module]
-            An ordered dict, key is the name of the module, value is the wrapper of the module.
+        Dict[str, ModuleWrapper]
+            An dict, key is the name of the module, value is the wrapper of the module.
         """
-        return self.modules_wrapper
+        raise NotImplementedError
 
     def _wrap_model(self):
         """
         Wrap all modules that needed to be compressed.
         """
-        if not self.is_wrapped:
-            for _, wrapper in reversed(self.get_modules_wrapper().items()):
-                _setattr(self.bound_model, wrapper.name, wrapper)
-            self.is_wrapped = True
+        raise NotImplementedError
 
     def _unwrap_model(self):
         """
         Unwrap all modules that needed to be compressed.
         """
-        if self.is_wrapped:
-            for _, wrapper in self.get_modules_wrapper().items():
-                _setattr(self.bound_model, wrapper.name, wrapper.module)
-            self.is_wrapped = False
+        raise NotImplementedError
 
     def set_wrappers_attribute(self, name: str, value: Any):
         """
@@ -182,7 +206,7 @@ class Compressor:
         value
             Value of the variable.
         """
-        for wrapper in self.get_modules_wrapper():
+        for wrapper in self.get_modules_wrapper().values():
             if isinstance(value, torch.Tensor):
                 wrapper.register_buffer(name, value.clone())
             else:
@@ -216,8 +240,10 @@ class Compressor:
         Dict[int, List[str]]
             A dict. The key is the config idx in config_list, the value is the module name list. i.e., {1: ['layer.0', 'layer.2']}.
         """
-        self._unwrap_model()
+        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.config_list is not None, 'No config_list set in this compressor, please use Compressor.reset(model, config_list) to set it.'
 
+        self._unwrap_model()
         module_groups = {}
         for name, module in self.bound_model.named_modules():
             if module == self.bound_model:
@@ -259,7 +285,7 @@ class Compressor:
         """
         raise NotImplementedError()
 
-    def _wrap_modules(self, layer: LayerInfo, config: Dict):
+    def _wrap_modules(self, layer: LayerInfo, config: Dict) -> ModuleWrapper:
         """
         This method is implemented in the subclasses, i.e., `Pruner` and `Quantizer`
 
@@ -297,4 +323,6 @@ class Compressor:
         torch.nn.Module
             model with specified modules compressed.
         """
+        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.config_list is not None, 'No config_list set in this compressor, please use Compressor.reset(model, config_list) to set it.'
         return self.bound_model

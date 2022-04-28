@@ -58,10 +58,8 @@ if __name__ == '__main__':
     exp_config.trial_concurrency = 3
     exp_config.max_trial_number = 10
     exp_config.trial_gpu_number = 1
-    exp_config.training_service.use_active_gpu = True
     exp_config.training_service.reuse_mode = True
-    exp_config.training_service.gpu_indices = [0, 1, 2]
-    exp_config.max_concurrency_cgo = 1
+    exp_config.max_concurrency_cgo = 3
     exp_config.batch_waiting_time = 0
 
     rm_conf = RemoteMachineConfig()

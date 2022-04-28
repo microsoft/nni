@@ -1,0 +1,211 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-20 05:50+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/hpo/overview.rst:2
+msgid "Hyperparameter Optimization Overview"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:4
+msgid ""
+"Auto hyperparameter optimization (HPO), or auto tuning, is one of the key"
+" features of NNI."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:7
+msgid "Introduction to HPO"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:9
+msgid ""
+"In machine learning, a hyperparameter is a parameter whose value is used "
+"to control learning process, and HPO is the problem of choosing a set of "
+"optimal hyperparameters for a learning algorithm. (`From "
+"<https://en.wikipedia.org/wiki/Hyperparameter_(machine_learning)>`__ "
+"`Wikipedia "
+"<https://en.wikipedia.org/wiki/Hyperparameter_optimization>`__)"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:14
+msgid "Following code snippet demonstrates a naive HPO process:"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:34
+msgid ""
+"You may have noticed, the example will train 4×10×3=120 models in total. "
+"Since it consumes so much computing resources, you may want to:"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:37
+msgid ""
+":ref:`Find the best hyperparameter set with less iterations. <hpo-"
+"overview-tuners>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:38
+msgid ":ref:`Train the models on distributed platforms. <hpo-overview-platforms>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:39
+msgid ""
+":ref:`Have a portal to monitor and control the process. <hpo-overview-"
+"portal>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:41
+msgid "NNI will do them for you."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:44
+msgid "Key Features of NNI HPO"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:49
+msgid "Tuning Algorithms"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:51
+msgid ""
+"NNI provides *tuners* to speed up the process of finding best "
+"hyperparameter set."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:53
+msgid ""
+"A tuner, or a tuning algorithm, decides the order in which hyperparameter"
+" sets are evaluated. Based on the results of historical hyperparameter "
+"sets, an efficient tuner can predict where the best hyperparameters "
+"locates around, and finds them in much fewer attempts."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:57
+msgid ""
+"The naive example above evaluates all possible hyperparameter sets in "
+"constant order, ignoring the historical results. This is the brute-force "
+"tuning algorithm called *grid search*."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:60
+msgid ""
+"NNI has out-of-the-box support for a variety of popular tuners. It "
+"includes naive algorithms like random search and grid search, Bayesian-"
+"based algorithms like TPE and SMAC, RL based algorithms like PPO, and "
+"much more."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:64
+msgid "Main article: :doc:`tuners`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:69
+msgid "Training Platforms"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:71
+msgid ""
+"If you are not interested in distributed platforms, you can simply run "
+"NNI HPO with current computer, just like any ordinary Python library."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:74
+msgid ""
+"And when you want to leverage more computing resources, NNI provides "
+"built-in integration for training platforms from simple on-premise "
+"servers to scalable commercial clouds."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:77
+msgid ""
+"With NNI you can write one piece of model code, and concurrently evaluate"
+" hyperparameter sets on local machine, SSH servers, Kubernetes-based "
+"clusters, AzureML service, and much more."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:80
+msgid "Main article: :doc:`/experiment/training_service/overview`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:85
+msgid "Web Portal"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:87
+msgid ""
+"NNI provides a web portal to monitor training progress, to visualize "
+"hyperparameter performance, to manually customize hyperparameters, and to"
+" manage multiple HPO experiments."
+msgstr ""
+
+#: ../../source/hpo/overview.rst:90
+msgid "Main article: :doc:`/experiment/web_portal/web_portal`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:96
+msgid "Tutorials"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:98
+msgid ""
+"To start using NNI HPO, choose the quickstart tutorial of your favorite "
+"framework:"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:100
+msgid ":doc:`PyTorch tutorial </tutorials/hpo_quickstart_pytorch/main>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:101
+msgid ":doc:`TensorFlow tutorial </tutorials/hpo_quickstart_tensorflow/main>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:104
+msgid "Extra Features"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:106
+msgid ""
+"After you are familiar with basic usage, you can explore more HPO "
+"features:"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:108
+msgid ""
+":doc:`Use command line tool to create and manage experiments (nnictl) "
+"</reference/nnictl>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:110
+msgid ":doc:`nnictl example </tutorials/hpo_nnictl/nnictl>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:112
+msgid ":doc:`Early stop non-optimal models (assessor) <assessors>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:113
+msgid ":doc:`TensorBoard integration </experiment/web_portal/tensorboard>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:114
+msgid ":doc:`Implement your own algorithm <custom_algorithm>`"
+msgstr ""
+
+#: ../../source/hpo/overview.rst:115
+msgid ":doc:`Benchmark tuners <hpo_benchmark>`"
+msgstr ""
+

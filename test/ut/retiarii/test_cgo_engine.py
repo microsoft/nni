@@ -10,6 +10,7 @@ from pathlib import Path
 
 import nni
 import nni.runtime.platform.test
+import json
 
 try:
     from nni.common.device import GPUDevice
@@ -147,7 +148,7 @@ def _new_trainer():
     train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
 
-    multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits})
+    multi_module = _MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits})
 
     lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
                                                                max_epochs=1,

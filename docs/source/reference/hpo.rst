@@ -14,43 +14,73 @@ Trial APIs
 Tuners
 ------
 
+Batch Tuner
+^^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.batch_tuner.BatchTuner
-    :members:
+
+BOHB Tuner
+^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.bohb_advisor.BOHB
-    :members:
+
+DNGO Tuner
+^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.dngo_tuner.DNGOTuner
-    :members:
+
+Evolution Tuner
+^^^^^^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.evolution_tuner.EvolutionTuner
-    :members:
+
+GP Tuner
+^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.gp_tuner.GPTuner
-    :members:
+
+Grid Search Tuner
+^^^^^^^^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner
-    :members:
+
+Hyperband Tuner
+^^^^^^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.hyperband_advisor.Hyperband
-    :members:
+
+Hyperopt Tuner
+^^^^^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner
-    :members:
+
+Metis Tuner
+^^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.metis_tuner.MetisTuner
-    :members:
+
+PBT Tuner
+^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.pbt_tuner.PBTTuner
-    :members:
+
+PPO Tuner
+^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.ppo_tuner.PPOTuner
-    :members:
+
+Random Tuner
+^^^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.random_tuner.RandomTuner
-    :members:
+
+SMAC Tuner
+^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.smac_tuner.SMACTuner
-    :members:
+
+TPE Tuner
+^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.tpe_tuner.TpeTuner
-    :members:
 .. autoclass:: nni.algorithms.hpo.tpe_tuner.TpeArguments
 
 Assessors
 ---------
 
+Curve Fitting Assessor
+^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.curvefitting_assessor.CurvefittingAssessor
-    :members:
+
+Median Stop Assessor
+^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: nni.algorithms.hpo.medianstop_assessor.MedianstopAssessor
-    :members:
 
 Customization
 -------------

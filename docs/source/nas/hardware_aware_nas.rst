@@ -18,17 +18,21 @@ Then run multi-trail SPOS demo:
 
 .. code-block:: bash
 
-  python ${NNI_ROOT}/examples/nas/oneshot/spos/multi_trial.py
+  cd ${NNI_ROOT}/examples/nas/oneshot/spos/
+  python search.py --latency-filter cortexA76cpu_tflite21
 
 
 How the demo works
 ^^^^^^^^^^^^^^^^^^
 
-To support hardware-aware NAS, you first need a ``Strategy`` that supports filtering the models by latency. We provide such a filter named ``LatencyFilter`` in NNI and initialize a ``Random`` strategy with the filter:
+To support hardware-aware NAS, you first need a ``Strategy`` that supports filtering the models by latency. We provide such a filter named ``LatencyFilter`` in NNI and initialize a ``RegularizedEvolution`` strategy with the filter:
 
 .. code-block:: python
 
-  simple_strategy = strategy.Random(model_filter=LatencyFilter(threshold=100, predictor=base_predictor))
+  evolution_strategy = strategy.RegularizedEvolution(
+        model_filter=latency_filter,
+        sample_size=args.evolution_sample_size, population_size=args.evolution_population_size, cycles=args.evolution_cycles
+        )
 
 ``LatencyFilter`` will predict the models\' latency by using nn-Meter and filter out the models whose latency are larger than the threshold (i.e., ``100`` in this example).
 You can also build your own strategies and filters to support more flexible NAS such as sorting the models according to latency.
@@ -37,21 +41,21 @@ Then, pass this strategy to ``RetiariiExperiment``:
 
 .. code-block:: python
 
-  exp = RetiariiExperiment(base_model, trainer, strategy=simple_strategy)
+  exp = RetiariiExperiment(base_model, evaluator, strategy=evolution_strategy)
 
   exp_config = RetiariiExeConfig('local')
   ...
-  exp_config.dummy_input = [1, 3, 32, 32]
+  exp_config.dummy_input = [1, 3, 224, 224]
 
-  exp.run(exp_config, port)
+  exp.run(exp_config, args.port)
 
-In ``exp_config``, ``dummy_input`` is required for tracing shape info.
+In ``exp_config``, ``dummy_input`` is required for tracing shape info in latency predictor.
 
 
 End-to-end ProxylessNAS with Latency Constraints
 ------------------------------------------------
 
-`ProxylessNAS <https://arxiv.org/pdf/1812.00332.pdf>`__ is a hardware-aware one-shot NAS algorithm. ProxylessNAS applies the expected latency of the model to build a differentiable metric and design efficient neural network architectures for hardware. The latency loss is added as a regularization term for architecture parameter optimization. In this example, nn-Meter provides a latency estimator to predict expected latency for the mixed operation on other types of mobile and edge hardware. 
+`ProxylessNAS <https://arxiv.org/abs/1812.00332>`__ is a hardware-aware one-shot NAS algorithm. ProxylessNAS applies the expected latency of the model to build a differentiable metric and design efficient neural network architectures for hardware. The latency loss is added as a regularization term for architecture parameter optimization. In this example, nn-Meter provides a latency estimator to predict expected latency for the mixed operation on other types of mobile and edge hardware. 
 
 To run the one-shot ProxylessNAS demo, first install nn-Meter by running:
 
@@ -63,7 +67,7 @@ Then run one-shot ProxylessNAS demo:
 
 .. code-block:: bash
 
-   python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware <hardware> --reference_latency <reference latency (ms)>
+   python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware HARDWARE --reference_latency REFERENCE_LATENCY_MS
 
 How the demo works
 ^^^^^^^^^^^^^^^^^^

@@ -1,6 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import os
 import random
-from typing import Dict, Any, List, Optional, Union, Tuple, Callable, Iterable
+from typing import Dict, Any, List, Optional, Union, Tuple, Callable, Iterable, cast
 
 from ..graph import Model
 from ..integration_api import receive_trial_parameters
@@ -39,6 +42,9 @@ class BenchmarkGraphData:
     def load(data) -> 'BenchmarkGraphData':
         return BenchmarkGraphData(data['mutation'], data['benchmark'], data['metric_name'], data['db_path'])
 
+    def __repr__(self) -> str:
+        return f"BenchmarkGraphData({self.mutation}, {self.benchmark}, {self.db_path})"
+
 
 class BenchmarkExecutionEngine(BaseExecutionEngine):
     """
@@ -67,6 +73,7 @@ class BenchmarkExecutionEngine(BaseExecutionEngine):
     @classmethod
     def trial_execute_graph(cls) -> None:
         graph_data = BenchmarkGraphData.load(receive_trial_parameters())
+        assert graph_data.db_path is not None, f'Invalid graph data because db_path is None: {graph_data}'
         os.environ['NASBENCHMARK_DIR'] = graph_data.db_path
         final, intermediates = cls.query_in_benchmark(graph_data)
 
@@ -89,7 +96,6 @@ class BenchmarkExecutionEngine(BaseExecutionEngine):
                     arch = t
             if arch is None:
                 raise ValueError(f'Cannot identify architecture from mutation dict: {graph_data.mutation}')
-            print(arch)
             return _convert_to_final_and_intermediates(
                 query_nb101_trial_stats(arch, 108, include_intermediates=True),
                 'valid_acc'
@@ -146,4 +152,5 @@ def _convert_to_final_and_intermediates(benchmark_result: Iterable[Any], metric_
         benchmark_result = random.choice(benchmark_result)
     else:
         benchmark_result = benchmark_result[0]
+    benchmark_result = cast(dict, benchmark_result)
     return benchmark_result[metric_name], [i[metric_name] for i in benchmark_result['intermediates'] if i[metric_name] is not None]

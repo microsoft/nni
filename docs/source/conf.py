@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v2.6'
+release = 'v2.7'
 
 # -- General configuration ---------------------------------------------------
 
@@ -56,14 +56,17 @@ extensions = [
     # 'nbsphinx',  # nbsphinx has conflicts with sphinx-gallery.
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
+    'sphinx_tabs.tabs',
+    'sphinx_copybutton',
 
     # Custom extensions in extension/ folder.
     'tutorial_links',  # this has to be after sphinx-gallery
+    'getpartialtext',
     'inplace_translation',
     'cardlinkitem',
     'codesnippetcard',
-    'patch_docutils',
     'patch_autodoc',
+    'toctree_check',
 ]
 
 # Autosummary related settings
@@ -89,6 +92,24 @@ autosummary_mock_imports = [
 autodoc_typehints = 'description'
 autodoc_typehints_description_target = 'documented'
 autodoc_inherit_docstrings = False
+
+# Sphinx will warn about all references where the target cannot be found.
+nitpicky = False  # disabled for now
+
+# A list of regular expressions that match URIs that should not be checked.
+linkcheck_ignore = [
+    r'http://localhost:\d+',
+    r'.*://.*/#/',                           # Modern websites that has URLs like xxx.com/#/guide
+    r'https://github\.com/JSong-Jia/Pic/',   # Community links can't be found any more
+
+    # Some URLs that often fail
+    r'https://www\.cs\.toronto\.edu/',                      # CIFAR-10
+    r'https://help\.aliyun\.com/document_detail/\d+\.html', # Aliyun
+    r'http://www\.image-net\.org/',                         # ImageNet
+]
+
+# Ignore all links located in release.rst
+linkcheck_exclude_documents = ['^release']
 
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']
@@ -119,23 +140,39 @@ sphinx_gallery_conf = {
     'default_thumb_file': os.path.join(os.path.dirname(__file__), '../img/thumbnails/nni_icon_blue.png'),
 }
 
+# Copybutton: strip and configure input prompts for code cells.
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
+
+# Copybutton: customize selector to exclude gallery outputs.
+copybutton_selector = ":not(div.sphx-glr-script-out) > div.highlight pre"
+
+# Allow additional builders to be considered compatible.
+sphinx_tabs_valid_builders = ['linkcheck']
+
+# Disallow the sphinx tabs css from loading.
+sphinx_tabs_disable_css_loading = True
+
 # Some tutorials might need to appear more than once in toc.
 # In this list, we make source/target tutorial pairs.
 # Each "source" tutorial rst will be copied to "target" tutorials.
 # The anchors will be replaced to avoid dupilcate labels.
 # Target should start with ``cp_`` to be properly ignored in git.
 tutorials_copy_list = [
-    # The global quickstart
-    ('tutorials/hpo_quickstart_pytorch/main.rst', 'tutorials/hpo_quickstart_pytorch/cp_global_quickstart_hpo.rst'),
-    ('tutorials/hello_nas.rst', 'tutorials/cp_global_quickstart_nas.rst'),
-    ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_global_quickstart_compression.rst'),
+    # Seems that we don't need it for now.
+    # Add tuples back if we need it in future.
+]
 
-    # Others in full-scale materials
-    ('tutorials/hello_nas.rst', 'tutorials/cp_hello_nas_quickstart.rst'),
-    ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
-    ('tutorials/pruning_speed_up.rst', 'tutorials/cp_pruning_speed_up.rst'),
-    ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
-    ('tutorials/quantization_speed_up.rst', 'tutorials/cp_quantization_speed_up.rst'),
+# Toctree ensures that toctree docs do not contain any other contents.
+# Home page should be an exception.
+toctree_check_whitelist = [
+    'index',
+
+    # FIXME: Other exceptions should be correctly handled.
+    'compression/index',
+    'compression/pruning',
+    'compression/quantization',
+    'hpo/hpo_benchmark',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -155,6 +192,18 @@ master_doc = 'index'
 # Usually you set "language" from the command line for these cases.
 language = None
 
+# Translation related settings
+locale_dir = ['locales']
+
+# Documents that requires translation: https://github.com/microsoft/nni/issues/4298
+gettext_documents = [
+    r'^index$',
+    r'^quickstart$',
+    r'^installation$',
+    r'^(nas|hpo|compression)/overview$',
+    r'^tutorials/(hello_nas|pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
+]
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
@@ -162,7 +211,6 @@ exclude_patterns = [
     '_build',
     'Thumbs.db',
     '.DS_Store',
-    'Release_v1.0.md',
     '**.ipynb_checkpoints',
     # Exclude translations. They will be added back via replacement later if language is set.
     '**_zh.rst',
@@ -203,17 +251,20 @@ html_theme_options = {
     'base_url': 'https://nni.readthedocs.io/',
 
     # Set the color and the accent color
-    # We can't have our customized themes currently
     # Remember to update static/css/material_custom.css when this is updated.
-    'color_primary': 'indigo',
-    'color_accent': 'pink',
+    # Set those colors in layout.html.
+    'color_primary': 'custom',
+    'color_accent': 'custom',
 
     # Set the repo location to get a badge with stats
     'repo_url': 'https://github.com/microsoft/nni/',
-    'repo_name': 'nni',
+    'repo_name': 'GitHub',
 
     # Visible levels of the global TOC; -1 means unlimited
-    'globaltoc_depth': 3,
+    'globaltoc_depth': 5,
+
+    # Expand all toc so that they can be dynamically collapsed
+    'globaltoc_collapse': False,
 
     'version_dropdown': True,
     # This is a placeholder, which should be replaced later.
@@ -223,8 +274,8 @@ html_theme_options = {
 
     # Text to appear at the top of the home page in a "hero" div.
     'heroes': {
-        # We can have heroes for the home pages of HPO, NAS, Compression in future.
-        'index': 'An open source AutoML toolkit for neural architecture search, model compression and hyper-parameter tuning.'
+        'index': 'An open source AutoML toolkit for hyperparameter optimization, neural architecture search, '
+                 'model compression and feature engineering.'
     }
 }
 
@@ -252,6 +303,7 @@ html_title = 'Neural Network Intelligence'
 
 # Add extra css files and js files
 html_css_files = [
+    'css/material_theme.css',
     'css/material_custom.css',
     'css/material_dropdown.css',
     'css/sphinx_gallery.css',
@@ -261,6 +313,7 @@ html_js_files = [
     'js/version.js',
     'js/github.js',
     'js/sphinx_gallery.js',
+    'js/misc.js'
 ]
 
 # HTML context that can be used in jinja templates

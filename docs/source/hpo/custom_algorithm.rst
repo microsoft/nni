@@ -1,5 +1,8 @@
+Customizing Algorithms
+======================
+
 Customize Tuner
-===============
+---------------
 
 NNI provides state-of-the-art tuning algorithm in builtin-tuners. NNI supports to build a tuner by yourself for tuning demand.
 
@@ -19,7 +22,7 @@ Here is an example:
    from nni.tuner import Tuner
 
    class CustomizedTuner(Tuner):
-       def __init__(self, ...):
+       def __init__(self, *args, **kwargs):
            ...
 
 **2. Implement receive_trial_result, generate_parameter and update_search_space function**
@@ -29,7 +32,7 @@ Here is an example:
    from nni.tuner import Tuner
 
    class CustomizedTuner(Tuner):
-       def __init__(self, ...):
+       def __init__(self, *args, **kwargs):
            ...
 
        def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
@@ -122,10 +125,10 @@ More detail example you could see:
 Write a more advanced automl algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The methods above are usually enough to write a general tuner. However, users may also want more methods, for example, intermediate results, trials' state (e.g., the methods in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called ``advisor`` which directly inherits from ``MsgDispatcherBase`` in :githublink:`msg_dispatcher_base.py <nni/runtime/msg_dispatcher_base.py>`. Please refer to `here <CustomizeAdvisor.rst>`__ for how to write a customized advisor.
+The methods above are usually enough to write a general tuner. However, users may also want more methods, for example, intermediate results, trials' state (e.g., the methods in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called ``advisor`` which directly inherits from ``MsgDispatcherBase`` in :githublink:`msg_dispatcher_base.py <nni/runtime/msg_dispatcher_base.py>`.
 
 Customize Assessor
-==================
+------------------
 
 NNI supports to build an assessor by yourself for tuning demand.
 
@@ -143,7 +146,7 @@ If you want to implement a customized Assessor, there are three things to do:
    from nni.assessor import Assessor
 
    class CustomizedAssessor(Assessor):
-       def __init__(self, ...):
+       def __init__(self, *args, **kwargs):
            ...
 
 **2. Implement assess trial function**
@@ -153,7 +156,7 @@ If you want to implement a customized Assessor, there are three things to do:
    from nni.assessor import Assessor, AssessResult
 
    class CustomizedAssessor(Assessor):
-       def __init__(self, ...):
+       def __init__(self, *args, **kwargs):
            ...
 
        def assess_trial(self, trial_history):

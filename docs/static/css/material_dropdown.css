@@ -1,8 +1,24 @@
 /* https://codepen.io/mildrenben/pen/RPwQEY */
 
+@media only screen and (max-width:44.9375em) {
+    .drop {
+        display: none;
+    }
+}
+
 .drop {
-    width: 125px;
+    width: 5.3rem;
     vertical-align: middle;
+}
+
+@media only screen and (min-width:60em) and (max-width:70em) {
+    .drop {
+        width: 4.7rem;
+    }
+    /* also narrow nav source width */
+    .md-header-nav__source {
+        width: 10rem;
+    }
 }
 
 .drop button {

@@ -70,7 +70,7 @@ class BatchTuner(Tuner):
                 ]
             }
         }
-        config.tuner.name = 'BatchTuner'
+        config.tuner.name = 'Batch'
     """
 
     def __init__(self):

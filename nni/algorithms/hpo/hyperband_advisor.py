@@ -284,8 +284,8 @@ class Hyperband(MsgDispatcherBase):
 
     .. code-block::
 
-        config.advisor.name = 'Hyperband'
-        config.advisor.class_args = {
+        config.tuner.name = 'Hyperband'
+        config.tuner.class_args = {
             'optimize_mode': 'maximize',
             'R': 60,
             'eta': 3

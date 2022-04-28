@@ -22,10 +22,10 @@ from typing import Any, NamedTuple
 
 import numpy as np
 from scipy.special import erf  # pylint: disable=no-name-in-module
+from typing_extensions import Literal
 
 from nni.common.hpo_utils import Deduplicator, OptimizeMode, format_search_space, deformat_parameters, format_parameters
 from nni.tuner import Tuner
-from nni.typehint import Literal
 from nni.utils import extract_scalar_reward
 from . import random_tuner
 
@@ -49,7 +49,7 @@ class TpeArguments(NamedTuple):
 
         How each liar works is explained in paper's section 6.1.
         In general "best" suit for small trial number and "worst" suit for large trial number.
-        (:doc:`experiment result </misc/parallelizing_tpe_search>`)
+        (:doc:`experiment result </sharings/parallelizing_tpe_search>`)
 
     n_startup_jobs
         The first N hyperparameters are generated fully randomly for warming up.

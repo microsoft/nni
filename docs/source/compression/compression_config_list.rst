@@ -4,8 +4,8 @@ Compression Config Specification
 Each sub-config in the config list is a dict, and the scope of each setting (key) is only internal to each sub-config.
 If multiple sub-configs are configured for the same layer, the later ones will overwrite the previous ones.
 
-Shared Keys in both Pruning & Quantization Config
--------------------------------------------------
+Common Keys in Config
+---------------------
 
 op_types
 ^^^^^^^^
@@ -26,8 +26,8 @@ exclude
 The ``exclude`` and ``sparsity`` keyword are mutually exclusive and cannot exist in the same sub-config.
 If ``exclude`` is set in sub-config, the layers selected by this config will not be compressed.
 
-The Keys in Pruning Config
---------------------------
+Special Keys for Pruning
+------------------------
 
 op_partial_names
 ^^^^^^^^^^^^^^^^
@@ -71,8 +71,8 @@ In ``total_sparsity`` example, there are 1200 parameters that need to be masked 
 To avoid this situation, ``max_sparsity_per_layer`` can be set as 0.9, this means up to 450 parameters can be masked in ``layer_1``,
 and 900 parameters can be masked in ``layer_2``.
 
-The Keys in Quantization Config List
-------------------------------------
+Special Keys for Quantization
+-----------------------------
 
 quant_types
 ^^^^^^^^^^^

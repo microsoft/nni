@@ -22,21 +22,21 @@ Pruning Quickstart
 ==================
 
 Model pruning is a technique to reduce the model size and computation by reducing model weight size or intermediate state size.
-It usually has following paths:
+There are three common practices for pruning a DNN model:
 
-#. Pre-training a model -> Pruning the model -> Fine-tuning the model
-#. Pruning the model aware training -> Fine-tuning the model
-#. Pruning the model -> Pre-training the compact model
+#. Pre-training a model -> Pruning the model -> Fine-tuning the pruned model
+#. Pruning a model during training (i.e., pruning aware training) -> Fine-tuning the pruned model
+#. Pruning a model -> Training the pruned model from scratch
 
-NNI supports the above three modes and mainly focuses on the pruning stage.
-Follow this tutorial for a quick look at how to use NNI to prune a model in a common practice.
+NNI supports all of the above pruning practices by working on the key pruning stage.
+Following this tutorial for a quick look at how to use NNI to prune a model in a common practice.
 
 .. GENERATED FROM PYTHON SOURCE LINES 17-22
 
 Preparation
 -----------
 
-In this tutorial, we use a simple model and pre-train on MNIST dataset.
+In this tutorial, we use a simple model and pre-trained on MNIST dataset.
 If you are familiar with defining a model and training in pytorch, you can skip directly to `Pruning Model`_.
 
 .. GENERATED FROM PYTHON SOURCE LINES 22-35
@@ -72,6 +72,12 @@ If you are familiar with defining a model and training in pytorch, you can skip 
       (fc1): Linear(in_features=256, out_features=120, bias=True)
       (fc2): Linear(in_features=120, out_features=84, bias=True)
       (fc3): Linear(in_features=84, out_features=10, bias=True)
+      (relu1): ReLU()
+      (relu2): ReLU()
+      (relu3): ReLU()
+      (relu4): ReLU()
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
@@ -102,9 +108,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.5876, Accuracy: 8158/10000 (82%)
-    Average test loss: 0.2501, Accuracy: 9217/10000 (92%)
-    Average test loss: 0.1786, Accuracy: 9486/10000 (95%)
+    Average test loss: 0.5368, Accuracy: 8321/10000 (83%)
+    Average test loss: 0.3092, Accuracy: 9104/10000 (91%)
+    Average test loss: 0.2070, Accuracy: 9380/10000 (94%)
 
 
 
@@ -114,11 +120,11 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 Pruning Model
 -------------
 
-Using L1NormPruner pruning the model and generating the masks.
-Usually, pruners require original model and ``config_list`` as parameters.
+Using L1NormPruner to prune the model and generate the masks.
+Usually, a pruner requires original model and ``config_list`` as its inputs.
 Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
 
-This `config_list` means all layers whose type is `Linear` or `Conv2d` will be pruned,
+The following `config_list` means all layers whose type is `Linear` or `Conv2d` will be pruned,
 except the layer named `fc3`, because `fc3` is `exclude`.
 The final sparsity ratio for each layer is 50%. The layer named `fc3` will not be pruned.
 
@@ -151,7 +157,7 @@ Pruners usually require `model` and `config_list` as input arguments.
 .. code-block:: default
 
 
-    from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
+    from nni.compression.pytorch.pruning import L1NormPruner
     pruner = L1NormPruner(model, config_list)
 
     # show the wrapped model structure, `PrunerModuleWrapper` have wrapped the layers that configured in the config_list.
@@ -181,6 +187,12 @@ Pruners usually require `model` and `config_list` as input arguments.
         (module): Linear(in_features=120, out_features=84, bias=True)
       )
       (fc3): Linear(in_features=84, out_features=10, bias=True)
+      (relu1): ReLU()
+      (relu2): ReLU()
+      (relu3): ReLU()
+      (relu4): ReLU()
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
@@ -217,8 +229,8 @@ Pruners usually require `model` and `config_list` as input arguments.
 
 .. GENERATED FROM PYTHON SOURCE LINES 85-88
 
-Speed up the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
-The model becomes smaller after speed-up,
+Speedup the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
+The model becomes smaller after speedup,
 and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the masks across layers.
 
 .. GENERATED FROM PYTHON SOURCE LINES 88-97
@@ -226,10 +238,10 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 .. code-block:: default
 
 
-    # need to unwrap the model, if the model is wrapped before speed up
+    # need to unwrap the model, if the model is wrapped before speedup
     pruner._unwrap_model()
 
-    # speed up the model
+    # speedup the model, for more information about speedup, please refer :doc:`pruning_speedup`.
     from nni.compression.pytorch.speedup import ModelSpeedup
 
     ModelSpeedup(model, torch.rand(3, 1, 28, 28).to(device), masks).speedup_model()
@@ -246,7 +258,7 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 
     aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
     Note: .aten::log_softmax.12 does not have corresponding mask inference object
-    /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
+    /home/nishang/anaconda3/envs/MCM/lib/python3.9/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  /opt/conda/conda-bld/pytorch_1640811803361/work/build/aten/src/ATen/core/TensorBody.h:417.)
       return self._grad
 
 
@@ -254,7 +266,7 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 
 .. GENERATED FROM PYTHON SOURCE LINES 98-99
 
-the model will become real smaller after speed up
+the model will become real smaller after speedup
 
 .. GENERATED FROM PYTHON SOURCE LINES 99-101
 
@@ -278,6 +290,12 @@ the model will become real smaller after speed up
       (fc1): Linear(in_features=128, out_features=60, bias=True)
       (fc2): Linear(in_features=60, out_features=42, bias=True)
       (fc3): Linear(in_features=42, out_features=10, bias=True)
+      (relu1): ReLU()
+      (relu2): ReLU()
+      (relu3): ReLU()
+      (relu4): ReLU()
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
@@ -288,7 +306,7 @@ the model will become real smaller after speed up
 Fine-tuning Compacted Model
 ---------------------------
 Note that if the model has been sped up, you need to re-initialize a new optimizer for fine-tuning.
-Because speed up will replace the masked big layers with dense small ones.
+Because speedup will replace the masked big layers with dense small ones.
 
 .. GENERATED FROM PYTHON SOURCE LINES 106-110
 
@@ -308,7 +326,7 @@ Because speed up will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  33.096 seconds)
+   **Total running time of the script:** ( 0 minutes  58.337 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:

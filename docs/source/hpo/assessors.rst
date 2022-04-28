@@ -38,11 +38,8 @@ Built-in Assessors
     * - Assessor
       - Brief Introduction of Algorithm
  
-    * - :class:`Medianstop <nni.algorithms.hpo.medianstop_assessor.MedianstopAssessor>`
-      - It stops a pending trial X at step S if
-        the trial’s best objective value by step S is strictly worse than the median value of
-        the running averages of all completed trials’ objectives reported up to step S.
+    * - :class:`Median Stop <nni.algorithms.hpo.medianstop_assessor.MedianstopAssessor>`
+      - Stop if the hyperparameter set performs worse than median at any step.
 
-    * - :class:`Curvefitting <nni.algorithms.hpo.curvefitting_assessor.CurvefittingAssessor>`
-      - It stops a pending trial X at step S if
-        the trial’s forecast result at target step is convergence and lower than the best performance in the history.
+    * - :class:`Curve Fitting <nni.algorithms.hpo.curvefitting_assessor.CurvefittingAssessor>`
+      - Stop if the learning curve will likely converge to suboptimal result.

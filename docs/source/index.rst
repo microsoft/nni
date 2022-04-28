@@ -1,60 +1,55 @@
-Neural Network Intelligence
-===========================
+NNI Documentation
+=================
 
-..  toctree::
-    :maxdepth: 2
-    :caption: Get Started
-    :hidden:
+.. toctree::
+   :maxdepth: 2
+   :caption: Get Started
+   :hidden:
 
-    installation
-    quickstart
-    Learning NNI <tutorials>
+   installation
+   quickstart
 
-..  toctree::
-    :maxdepth: 2
-    :caption: Full-scale Materials
-    :hidden:
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
+   :hidden:
 
-    Hyperparameter Optimization <hpo/index>
-    Neural Architecture Search <nas/index>
-    Model Compression <compression/index>
-    Feature Engineering <feature_engineering>
-    Experiment <experiment/overview>
+   hpo/toctree
+   nas/toctree
+   Model Compression <compression/toctree>
+   feature_engineering/toctree
+   experiment/toctree
 
-..  toctree::
-    :maxdepth: 2
-    :caption: References
-    :hidden:
+.. toctree::
+   :maxdepth: 2
+   :caption: References
+   :hidden:
 
-    nnictl Commands <reference/nnictl>
-    Experiment Configuration <reference/experiment_config>
-    Python API <reference/_modules/nni>
-    API Reference <reference/python_api_ref>
+   Python API <reference/python_api>
+   reference/experiment_config
+   reference/nnictl
 
-..  toctree::
-    :maxdepth: 2
-    :caption: Misc
-    :hidden:
+.. toctree::
+   :maxdepth: 2
+   :caption: Misc
+   :hidden:
 
-    Use Cases and Solutions <misc/community_sharings>
-    Research and Publications <misc/research_publications>
-    FAQ <misc/faq>
-    notes/build_from_source
-    Contribution Guide <notes/contributing>
-    Change Log <Release>
+   examples
+   sharings/community_sharings
+   notes/research_publications
+   notes/build_from_source
+   notes/contributing
+   release
 
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
 
-* :doc:`Hyperparameter Tuning </hpo/overview>`,
-* :doc:`Neural Architecture Search </nas/index>`,
-* :doc:`Model Compression </compression/index>`,
-* :doc:`Feature Engineering </FeatureEngineering/Overview>`.
+* :doc:`Hyperparameter Optimization </hpo/overview>`
+* :doc:`Neural Architecture Search </nas/overview>`
+* :doc:`Model Compression </compression/overview>`
+* :doc:`Feature Engineering </feature_engineering/overview>`
 
-.. Can't use section title here due to the limitation of toc
-
-.. raw:: html
-   
-   <h2>Get Started Now</h2>
+Get Started
+-----------
 
 To install the current release:
 
@@ -64,38 +59,30 @@ To install the current release:
 
 See the :doc:`installation guide </installation>` if you need additional help on installation.
 
-Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey with NNI!
+Try your first NNI experiment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. Please keep this part sync with readme
+.. code-block:: shell
 
-.. raw:: html
+   $ nnictl hello
 
-   <h2>Latest Updates
+.. note:: You need to have `PyTorch <https://pytorch.org/>`_ (as well as `torchvision <https://pytorch.org/vision/stable/index.html>`_) installed to run this experiment.
 
-.. image:: ../img/release_icon.png
-   :class: release-icon
+To start your journey now, please follow the :doc:`absolute quickstart of NNI <quickstart>`!
 
-.. raw:: html
+Why choose NNI?
+---------------
 
-   </h2>
-
-* **New release**: `v2.6 is available <https://github.com/microsoft/nni/releases/tag/v2.6>`_ - *released on Jan-19-2022*
-* **New demo available**: `Youtube entry <https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw>`_ | `Bilibili 入口 <https://space.bilibili.com/1649051673>`_ - *last updated on May-26-2021*
-* **New webinar**: `Introducing Retiarii, A deep learning exploratory-training framework on NNI <https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html>`_ - *scheduled on June-24-2021*
-* **New community channel**: `Discussions <https://github.com/microsoft/nni/discussions>`_
-* **New emoticons release**: :doc:`nnSpider <nnSpider>`
+NNI makes AutoML techniques plug-and-play
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. raw:: html
-
-   <h2>Why choose NNI?</h2>
-
-   <h3>NNI makes AutoML techniques plug-and-play.</h3>
 
    <div class="codesnippet-card-container">
 
 .. codesnippetcard::
    :icon: ../img/thumbnails/hpo-small.svg
-   :title: Hyper-parameter Tuning
+   :title: Hyperparameter Tuning
    :link: tutorials/hpo_quickstart_pytorch/main
 
    .. code-block::
@@ -134,14 +121,14 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
           L1NormPruner(model, config). \
           compress()
 
-      # apply the masks for real speed up
+      # apply the masks for real speedup
       ModelSpeedup(unwrapped_model, input, masks). \
           speedup_model()
 
 .. codesnippetcard::
    :icon: ../img/thumbnails/quantization-small.svg
    :title: Quantization
-   :link: tutorials/quantization_speed_up
+   :link: tutorials/quantization_quick_start_mnist
 
    .. code-block::
 
@@ -158,7 +145,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
       # Training...
 
       # export calibration config and
-      # generate TensorRT engine for real speed up
+      # generate TensorRT engine for real speedup
       calibration_config = quantizer.export_model(
           model_path, calibration_path)
       engine = ModelSpeedupTensorRT(
@@ -170,14 +157,15 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
    :title: Neural Architecture Search
    :link: tutorials/hello_nas
 
-   .. code-block:: diff
+   .. code-block:: python
 
       # define model space
-      -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
-      +   self.conv2 = nn.LayerChoice([
-      +       nn.Conv2d(32, 64, 3, 1),
-      +       DepthwiseSeparableConv(32, 64)
-      +   ])
+      class Model(nn.Module):
+          self.conv2 = nn.LayerChoice([
+              nn.Conv2d(32, 64, 3, 1),
+              DepthwiseSeparableConv(32, 64)
+          ])
+      model_space = Model()
       # search strategy + evaluator
       strategy = RegularizedEvolution()
       evaluator = FunctionalEvaluator(
@@ -190,7 +178,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 .. codesnippetcard::
    :icon: ../img/thumbnails/one-shot-nas-small.svg
    :title: One-shot NAS
-   :link: nas/index
+   :link: nas/exploration_strategy
 
    .. code-block::
 
@@ -207,7 +195,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 .. codesnippetcard::
    :icon: ../img/thumbnails/feature-engineering-small.svg
    :title: Feature Engineering
-   :link: FeatureEngineering/Overview
+   :link: feature_engineering/overview
 
    .. code-block::
 
@@ -229,12 +217,13 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 
    </div>
 
-   <h3>NNI eases the effort to scale and manage AutoML experiments.</h3>
+NNI eases the effort to scale and manage AutoML experiments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. codesnippetcard::
    :icon: ../img/thumbnails/training-service-small.svg
    :title: Training Service
-   :link: experiment/training_service
+   :link: experiment/training_service/overview
    :seemore: See more here.
 
    An AutoML experiment requires many trials to explore feasible and potentially good-performing models.
@@ -245,7 +234,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 .. codesnippetcard::
    :icon: ../img/thumbnails/web-portal-small.svg
    :title: Web Portal
-   :link: experiment/web_portal
+   :link: experiment/web_portal/web_portal
    :seemore: See more here.
 
    Web portal visualizes the tuning process, exposing the ability to inspect, monitor and control the experiment.
@@ -256,7 +245,7 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
 .. codesnippetcard::
    :icon: ../img/thumbnails/experiment-management-small.svg
    :title: Experiment Management
-   :link: experiment/exp_management
+   :link: experiment/experiment_management
    :seemore: See more here.
 
    The DNN model tuning often requires more than one experiment.
@@ -264,14 +253,13 @@ Then, please read :doc:`quickstart` and :doc:`tutorials` to start your journey w
    **Experiment management** provides the power to aggregate and compare tuning results from multiple experiments,
    so that the tuning workflow becomes clean and organized.
 
-.. raw:: html
-
-   <h2>Get Support and Contribute Back</h2>
+Get Support and Contribute Back
+-------------------------------
 
 NNI is maintained on the `NNI GitHub repository <https://github.com/microsoft/nni>`_. We collect feedbacks and new proposals/ideas on GitHub. You can:
 
 * Open a `GitHub issue <https://github.com/microsoft/nni/issues>`_ for bugs and feature requests.
-* Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to contribute code (make sure to read the `contribution guide </contribution>` before doing this).
+* Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to contribute code (make sure to read the :doc:`contribution guide <notes/contributing>` before doing this).
 * Participate in `NNI Discussion <https://github.com/microsoft/nni/discussions>`_ for general questions and new ideas.
 * Join the following IM groups.
 
@@ -286,9 +274,8 @@ NNI is maintained on the `NNI GitHub repository <https://github.com/microsoft/nn
      -
        .. image:: https://github.com/scarlett2018/nniutil/raw/master/wechat.png
 
-.. raw:: html
-
-   <h2>Citing NNI</h2>
+Citing NNI
+----------
 
 If you use NNI in a scientific publication, please consider citing NNI in your references.
 

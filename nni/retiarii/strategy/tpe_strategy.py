@@ -3,6 +3,7 @@
 
 import logging
 import time
+from typing import Optional
 
 from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
 
@@ -15,8 +16,8 @@ _logger = logging.getLogger(__name__)
 class TPESampler(Sampler):
     def __init__(self, optimize_mode='minimize'):
         self.tpe_tuner = HyperoptTuner('tpe', optimize_mode)
-        self.cur_sample = None
-        self.index = None
+        self.cur_sample: Optional[dict] = None
+        self.index: Optional[int] = None
         self.total_parameters = {}
 
     def update_sample_space(self, sample_space):
@@ -34,6 +35,7 @@ class TPESampler(Sampler):
         self.tpe_tuner.receive_trial_result(model_id, self.total_parameters[model_id], result)
 
     def choice(self, candidates, mutator, model, index):
+        assert isinstance(self.index, int) and isinstance(self.cur_sample, dict)
         chosen = self.cur_sample[str(self.index)]
         self.index += 1
         return chosen
@@ -43,7 +45,8 @@ class TPE(BaseStrategy):
     """
     The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach.
 
-    Refer to :footcite:t:`bergstra2011algorithms` for details.
+    Find the details in
+    `Algorithms for Hyper-Parameter Optimization <https://papers.nips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__.
 
     SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements,
     and then subsequently choose new hyperparameters to test based on this model.

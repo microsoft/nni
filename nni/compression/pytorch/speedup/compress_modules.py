@@ -16,6 +16,7 @@ replace_module = {
     'MaxPool2d': lambda module, masks: no_replace(module, masks),
     'AvgPool2d': lambda module, masks: no_replace(module, masks),
     'AdaptiveAvgPool2d': lambda module, masks: no_replace(module, masks),
+    'ZeroPad2d': lambda module, masks: no_replace(module, masks),
     'ReLU': lambda module, masks: no_replace(module, masks),
     'ReLU6': lambda module, masks: no_replace(module, masks),
     'LeakyReLU': lambda module, masks: no_replace(module, masks),

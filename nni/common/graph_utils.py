@@ -47,7 +47,7 @@ class TorchGraph:
         Parameters
         ----------
         model : pytorch model
-            The model user wants to speed up
+            The model user wants to speedup
         dummy_input : pytorch tensor
             The dummy input for ```jit.trace```, users should put it on right device before pass in
         traced_model : torch._C.torch.jit.TopLevelTracedModule

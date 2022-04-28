@@ -1,87 +1,89 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import 'app-module-path/register';
+/**
+ *  Entry point of NNI manager.
+ *
+ *  NNI manager is normally started by "nni/experiment/launcher.py".
+ *  It requires command line arguments defined as NniManagerArgs in "common/globals/arguments.ts".
+ *
+ *  Example usage:
+ *
+ *      node main.js \
+ *          --port 8080 \
+ *          --experiment-id ID \
+ *          --action create \
+ *          --experiments-directory /home/USER/nni-experiments \
+ *          --log-level info \
+ *          --foreground false \  (optional)
+ *          --mode local  (required for now, will be removed later)
+ **/
+
+import 'app-module-path/register';  // so we can use absolute path to import
+
+import fs from 'fs';
+
 import { Container, Scope } from 'typescript-ioc';
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from './common/component';
-import { Database, DataStore } from './common/datastore';
-import { setExperimentStartupInfo } from './common/experimentStartupInfo';
-import { getLogger, setLogLevel, startLogging } from './common/log';
-import { Manager, ExperimentStartUpMode } from './common/manager';
-import { ExperimentManager } from './common/experimentManager';
-import { TensorboardManager } from './common/tensorboardManager';
-import { getLogDir, mkDirP, parseArg } from './common/utils';
-import { NNIDataStore } from './core/nniDataStore';
-import { NNIManager } from './core/nnimanager';
-import { SqlDB } from './core/sqlDatabase';
-import { NNIExperimentsManager } from './core/nniExperimentsManager';
-import { NNITensorboardManager } from './core/nniTensorboardManager';
-import { RestServer } from './rest_server';
-import { parseArgs } from 'common/globals/arguments';
+import * as component from 'common/component';
+import { Database, DataStore } from 'common/datastore';
+import { ExperimentManager } from 'common/experimentManager';
+import globals, { initGlobals } from 'common/globals';
+import { Logger, getLogger } from 'common/log';
+import { Manager } from 'common/manager';
+import { TensorboardManager } from 'common/tensorboardManager';
+import { NNIDataStore } from 'core/nniDataStore';
+import { NNIExperimentsManager } from 'core/nniExperimentsManager';
+import { NNITensorboardManager } from 'core/nniTensorboardManager';
+import { NNIManager } from 'core/nnimanager';
+import { SqlDB } from 'core/sqlDatabase';
+import { RestServer } from 'rest_server';
 
-const args = parseArgs(process.argv.slice(2));
+import path from 'path';
 
-async function initContainer(): Promise<void> {
-    Container.bind(Manager)
-        .to(NNIManager)
-        .scope(Scope.Singleton);
-    Container.bind(Database)
-        .to(SqlDB)
-        .scope(Scope.Singleton);
-    Container.bind(DataStore)
-        .to(NNIDataStore)
-        .scope(Scope.Singleton);
-    Container.bind(ExperimentManager)
-        .to(NNIExperimentsManager)
-        .scope(Scope.Singleton);
-    Container.bind(TensorboardManager)
-        .to(NNITensorboardManager)
-        .scope(Scope.Singleton);
-    const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
-    if (!args.foreground) {
-        startLogging(DEFAULT_LOGFILE);
-    }
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    setLogLevel(args.logLevel);
+const logger: Logger = getLogger('main');
+
+async function start(): Promise<void> {
+    logger.info('Start NNI manager');
+
+    Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
+    Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
+    Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
+    Container.bind(ExperimentManager).to(NNIExperimentsManager).scope(Scope.Singleton);
+    Container.bind(TensorboardManager).to(NNITensorboardManager).scope(Scope.Singleton);
+
     const ds: DataStore = component.get(DataStore);
-
     await ds.init();
+
+    const restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
+    await restServer.start();
+
+    globals.shutdown.notifyInitializeComplete();
 }
 
-setExperimentStartupInfo(
-    args.action === 'create',
-    args.experimentId,
-    args.port,
-    args.mode,
-    args.experimentsDirectory,
-    args.logLevel,
-    args.action === 'view',
-    args.dispatcherPipe ?? '',
-    args.urlPrefix
-);
+// Register callbacks to free training service resources on unexpected shutdown.
+// A graceful stop should use REST API,
+// because interrupts can cause strange behaviors in children processes.
+process.on('SIGTERM', () => { globals.shutdown.initiate('SIGTERM'); });
+process.on('SIGBREAK', () => { globals.shutdown.initiate('SIGBREAK'); });
+process.on('SIGINT', () => { globals.shutdown.initiate('SIGINT'); });
 
-mkDirP(getLogDir())
-    .then(async () => {
-        try {
-            await initContainer();
-            const restServer: RestServer = component.get(RestServer);
-            await restServer.start();
-        } catch (err) {
-            getLogger('main').error(`${err.stack}`);
-            throw err;
-        }
-    })
-    .catch((err: Error) => {
-        console.error(`Failed to create log dir: ${err.stack}`);
-    });
+/* main */
 
-function cleanUp(): void {
-    (component.get(Manager) as Manager).stopExperiment();
-}
+initGlobals();
 
-process.on('SIGTERM', cleanUp);
-process.on('SIGBREAK', cleanUp);
-process.on('SIGINT', cleanUp);
+start().then(() => {
+    logger.debug('start() returned.');
+}).catch((error) => {
+    try {
+        logger.error('Failed to start:', error);
+    } catch (loggerError) {
+        console.error('Failed to start:', error);
+        console.error('Seems logger is faulty:', loggerError);
+    }
+    process.exit(1);
+});
+
+// Node.js exits when there is no active handler,
+// and we have registered a lot of handlers which are never cleaned up.
+// So it runs forever until NNIManager calls `process.exit()`.

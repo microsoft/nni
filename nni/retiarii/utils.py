@@ -6,12 +6,12 @@ import itertools
 import warnings
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import Any, List, Dict
+from typing import Any, List, Dict, cast
 from pathlib import Path
 
 from nni.common.hpo_utils import ParameterSpec
 
-__all__ = ['NoContextError', 'ContextStack', 'ModelNamespace']
+__all__ = ['NoContextError', 'ContextStack', 'ModelNamespace', 'original_state_dict_hooks']
 
 
 def import_(target: str, allow_none: bool = False) -> Any:
@@ -41,9 +41,10 @@ def get_module_name(cls_or_func):
     if module_name == '__main__':
         # infer the module name with inspect
         for frm in inspect.stack():
-            if inspect.getmodule(frm[0]).__name__ == '__main__':
+            module = inspect.getmodule(frm[0])
+            if module is not None and module.__name__ == '__main__':
                 # main module found
-                main_file_path = Path(inspect.getsourcefile(frm[0]))
+                main_file_path = Path(cast(str, inspect.getsourcefile(frm[0])))
                 if not Path().samefile(main_file_path.parent):
                     raise RuntimeError(f'You are using "{main_file_path}" to launch your experiment, '
                                        f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
@@ -227,6 +228,7 @@ def original_state_dict_hooks(model: Any):
             supernet_style_state_dict = model.state_dict()
     """
 
+    import torch.utils.hooks
     import torch.nn as nn
     assert isinstance(model, nn.Module), 'PyTorch is the only supported framework for now.'
 
@@ -297,8 +299,8 @@ def original_state_dict_hooks(model: Any):
                 raise KeyError(f'"{src}" not in state dict, but found in mapping.')
         destination.update(result)
 
+    hooks: List[torch.utils.hooks.RemovableHandle] = []
     try:
-        hooks = []
         hooks.append(model._register_load_state_dict_pre_hook(load_state_dict_hook))
         hooks.append(model._register_state_dict_hook(state_dict_hook))
         yield

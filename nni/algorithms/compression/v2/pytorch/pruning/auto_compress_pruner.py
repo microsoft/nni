@@ -46,7 +46,9 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
     def allocate_sparsity(self, new_config_list: List[Dict], model: Module, masks: Dict[str, Dict[str, Tensor]]):
         self._iterative_pruner_reset(model, new_config_list, masks)
         self.iterative_pruner.compress()
-        _, _, _, _, config_list = self.iterative_pruner.get_best_result()
+        best_result = self.iterative_pruner.get_best_result()
+        assert best_result is not None, 'Best result does not exist, iterative pruner may not start pruning.'
+        _, _, _, _, config_list = best_result
         return config_list
 
 
@@ -112,15 +114,15 @@ class AutoCompressPruner(IterativePruner):
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handles all finetune logic, takes a pytorch module as input.
         It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
-    speed_up : bool
-        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+    speedup : bool
+        If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+        If `speedup` is True, `dummy_input` is required for tracing the model in speedup.
 
     Examples
     --------
         >>> import nni
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
+        >>> from nni.compression.pytorch.pruning import AutoCompressPruner
         >>> model = ...
         >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
         >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
@@ -143,13 +145,13 @@ class AutoCompressPruner(IterativePruner):
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    The full script can be found :githublink:`here <examples/model_compress/pruning/v2/auto_compress_pruner.py>`.
+    The full script can be found :githublink:`here <examples/model_compress/pruning/auto_compress_pruner.py>`.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False,
-                 dummy_input: Optional[Tensor] = None, evaluator: Callable[[Module], float] = None):
+                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False,
+                 dummy_input: Optional[Tensor] = None, evaluator: Optional[Callable[[Module], float]] = None):
         task_generator = AutoCompressTaskGenerator(total_iteration=total_iteration,
                                                    origin_model=model,
                                                    origin_config_list=config_list,
@@ -158,6 +160,21 @@ class AutoCompressPruner(IterativePruner):
                                                    keep_intermediate_result=keep_intermediate_result)
         if 'traced_optimizer' in admm_params:
             admm_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, admm_params['traced_optimizer'])
+        # granularity in ADMM stage will align with SA stage, if 'granularity' is not specify
+        if 'granularity' not in admm_params:
+            # only if level pruning and fine-grained admm pruning used in SA, fine-grained admm pruning will used in auto-compress
+            if 'pruning_algorithm' in sa_params:
+                sa_algo = sa_params['pruning_algorithm']
+                sa_algo_params = sa_params.get('pruning_params')
+                if sa_algo in ['level']:
+                    admm_params['granularity'] = 'fine-grained'
+                elif sa_algo in ['admm'] and (sa_algo_params is not None) and not (sa_algo_params.get('granularity') == 'coarse-grained'):
+                    admm_params['granularity'] = 'fine-grained'
+                else:
+                    admm_params['granularity'] = 'coarse-grained'
+            else:
+                admm_params['granularity'] = 'fine-grained'
+
         pruner = ADMMPruner(None, None, **admm_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
+        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)

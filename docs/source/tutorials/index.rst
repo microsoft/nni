@@ -15,10 +15,10 @@ Tutorials
 
 .. only:: html
 
- .. figure:: /tutorials/images/thumb/sphx_glr_pruning_speed_up_thumb.png
-     :alt: Speed Up Model with Mask
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_speedup_thumb.png
+     :alt: Speedup Model with Mask
 
-     :ref:`sphx_glr_tutorials_pruning_speed_up.py`
+     :ref:`sphx_glr_tutorials_pruning_speedup.py`
 
 .. raw:: html
 
@@ -28,18 +28,18 @@ Tutorials
 .. toctree::
    :hidden:
 
-   /tutorials/pruning_speed_up
+   /tutorials/pruning_speedup
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Start and Manage a New Experiment">
+    <div class="sphx-glr-thumbcontainer" tooltip=" Introduction ------------">
 
 .. only:: html
 
- .. figure:: /tutorials/images/thumb/sphx_glr_nni_experiment_thumb.png
-     :alt: Start and Manage a New Experiment
+ .. figure:: /tutorials/images/thumb/sphx_glr_quantization_speedup_thumb.png
+     :alt: SpeedUp Model with Calibration Config
 
-     :ref:`sphx_glr_tutorials_nni_experiment.py`
+     :ref:`sphx_glr_tutorials_quantization_speedup.py`
 
 .. raw:: html
 
@@ -49,7 +49,7 @@ Tutorials
 .. toctree::
    :hidden:
 
-   /tutorials/nni_experiment
+   /tutorials/quantization_speedup
 
 .. raw:: html
 
@@ -71,27 +71,6 @@ Tutorials
    :hidden:
 
    /tutorials/quantization_quick_start_mnist
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip=" Introduction ------------">
-
-.. only:: html
-
- .. figure:: /tutorials/images/thumb/sphx_glr_quantization_speed_up_thumb.png
-     :alt: Speed Up Model with Calibration Config
-
-     :ref:`sphx_glr_tutorials_quantization_speed_up.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /tutorials/quantization_speed_up
 
 .. raw:: html
 
@@ -210,12 +189,12 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="There is also a TensorFlow version&lt;../hpo_quickstart_tensorflow/main&gt; if you prefer it.">
+    <div class="sphx-glr-thumbcontainer" tooltip="The tutorial consists of 4 steps: ">
 
 .. only:: html
 
  .. figure:: /tutorials/hpo_quickstart_pytorch/images/thumb/sphx_glr_main_thumb.png
-     :alt: NNI HPO Quickstart with PyTorch
+     :alt: HPO Quickstart with PyTorch
 
      :ref:`sphx_glr_tutorials_hpo_quickstart_pytorch_main.py`
 
@@ -267,7 +246,7 @@ Tutorials
 .. only:: html
 
  .. figure:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_main_thumb.png
-     :alt: NNI HPO Quickstart with TensorFlow
+     :alt: HPO Quickstart with TensorFlow
 
      :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_main.py`
 

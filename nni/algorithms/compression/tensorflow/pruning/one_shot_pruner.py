@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import tensorflow as tf
 
 from nni.compression.tensorflow import Pruner

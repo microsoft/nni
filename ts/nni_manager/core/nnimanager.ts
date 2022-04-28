@@ -8,14 +8,15 @@ import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
 import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
-import { Logger, getLogger, stopLogging } from '../common/log';
+import globals from 'common/globals';
+import { Logger, getLogger } from '../common/log';
 import {
     ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
 import { ExperimentConfig, LocalConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
 import { ExperimentManager } from '../common/experimentManager';
-import { getBasePort, getPrefixUrl } from 'common/experimentStartupInfo';
+import { getBasePort } from 'common/experimentStartupInfo';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, TrialCommandContent, PlacementConstraint
@@ -26,7 +27,6 @@ import {
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, IpcInterface, DummyDispatcherInterface } from './ipcInterface';
-import { RestServer } from '../rest_server';
 
 /**
  * NNIManager which implements Manager interface
@@ -71,6 +71,7 @@ class NNIManager implements Manager {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
         };
+        globals.shutdown.register('NniManager', this.stopExperiment.bind(this));
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
@@ -300,12 +301,12 @@ class NNIManager implements Manager {
         return this.dataStore.getTrialJobStatistics();
     }
 
-    public async stopExperiment(): Promise<void> {
+    private async stopExperiment(): Promise<void> {
         await this.stopExperimentTopHalf();
         await this.stopExperimentBottomHalf();
     }
 
-    public async stopExperimentTopHalf(): Promise<void> {
+    private async stopExperimentTopHalf(): Promise<void> {
         this.setStatus('STOPPING');
         this.log.info('Stopping experiment, cleaning up ...');
 
@@ -329,7 +330,7 @@ class NNIManager implements Manager {
         this.dispatcher = undefined;
     }
 
-    public async stopExperimentBottomHalf(): Promise<void> {
+    private async stopExperimentBottomHalf(): Promise<void> {
         try {
             const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
 
@@ -357,19 +358,9 @@ class NNIManager implements Manager {
         this.setStatus('STOPPED');
         this.log.info('Experiment stopped.');
 
-        let hasError: boolean = false;
-        try {
-            await this.experimentManager.stop();
-            await component.get<TensorboardManager>(TensorboardManager).stop();
-            await this.dataStore.close();
-            await component.get<RestServer>(RestServer).shutdown();
-        } catch (err) {
-            hasError = true;
-            this.log.error(`${err.stack}`);
-        } finally {
-            stopLogging();
-            process.exit(hasError ? 1 : 0);
-        }
+        await this.experimentManager.stop();
+        await component.get<TensorboardManager>(TensorboardManager).stop();
+        await this.dataStore.close();
     }
 
     public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
@@ -504,7 +495,7 @@ class NNIManager implements Manager {
             NNI_LOG_DIRECTORY: getLogDir(),
             NNI_LOG_LEVEL: getLogLevel(),
             NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv,
-            NNI_TUNER_COMMAND_CHANNEL: `ws://localhost:${getBasePort()}${getPrefixUrl()}/tuner`,
+            NNI_TUNER_COMMAND_CHANNEL: `ws://localhost:${getBasePort()}/tuner`,  // FIXME: url prefix
             CUDA_VISIBLE_DEVICES: toCudaVisibleDevices(this.experimentProfile.params.tunerGpuIndices)
         };
         const newEnv = Object.assign({}, process.env, nniEnv);

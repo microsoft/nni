@@ -1,12 +1,3 @@
-advisors:
-- builtinName: Hyperband
-  classArgsValidator: nni.algorithms.hpo.hyperband_advisor.HyperbandClassArgsValidator
-  className: nni.algorithms.hpo.hyperband_advisor.Hyperband
-  source: nni
-- builtinName: BOHB
-  classArgsValidator: nni.algorithms.hpo.bohb_advisor.BOHBClassArgsValidator
-  className: nni.algorithms.hpo.bohb_advisor.BOHB
-  source: nni
 assessors:
 - builtinName: Medianstop
   classArgsValidator: nni.algorithms.hpo.medianstop_assessor.MedianstopClassArgsValidator
@@ -17,7 +8,8 @@ assessors:
   className: nni.algorithms.hpo.curvefitting_assessor.CurvefittingAssessor
   source: nni
 tuners:
-- builtinName: PPOTuner
+- alias: PPOTuner
+  builtinName: PPO
   classArgsValidator: nni.algorithms.hpo.ppo_tuner.PPOClassArgsValidator
   className: nni.algorithms.hpo.ppo_tuner.PPOTuner
   source: nni
@@ -49,7 +41,8 @@ tuners:
   className: nni.algorithms.hpo.evolution_tuner.EvolutionTuner
   source: nni
 - acceptClassArgs: false
-  builtinName: BatchTuner
+  alias: BatchTuner
+  builtinName: Batch
   className: nni.algorithms.hpo.batch_tuner.BatchTuner
   source: nni
 - acceptClassArgs: false
@@ -60,15 +53,18 @@ tuners:
   classArgsValidator: nni.algorithms.hpo.networkmorphism_tuner.NetworkMorphismClassArgsValidator
   className: nni.algorithms.hpo.networkmorphism_tuner.NetworkMorphismTuner
   source: nni
-- builtinName: MetisTuner
+- alias: MetisTuner
+  builtinName: Metis
   classArgsValidator: nni.algorithms.hpo.metis_tuner.MetisClassArgsValidator
   className: nni.algorithms.hpo.metis_tuner.MetisTuner
   source: nni
-- builtinName: GPTuner
+- alias: GPTuner
+  builtinName: GP
   classArgsValidator: nni.algorithms.hpo.gp_tuner.GPClassArgsValidator
   className: nni.algorithms.hpo.gp_tuner.GPTuner
   source: nni
-- builtinName: PBTTuner
+- alias: PBTTuner
+  builtinName: PBT
   classArgsValidator: nni.algorithms.hpo.pbt_tuner.PBTClassArgsValidator
   className: nni.algorithms.hpo.pbt_tuner.PBTTuner
   source: nni
@@ -76,7 +72,18 @@ tuners:
   classArgsValidator: nni.algorithms.hpo.regularized_evolution_tuner.EvolutionClassArgsValidator
   className: nni.algorithms.hpo.regularized_evolution_tuner.RegularizedEvolutionTuner
   source: nni
-- builtinName: DNGOTuner
+- alias: DNGOTuner
+  builtinName: DNGO
   classArgsValidator: nni.algorithms.hpo.dngo_tuner.DNGOClassArgsValidator
   className: nni.algorithms.hpo.dngo_tuner.DNGOTuner
+  source: nni
+- builtinName: Hyperband
+  classArgsValidator: nni.algorithms.hpo.hyperband_advisor.HyperbandClassArgsValidator
+  className: nni.algorithms.hpo.hyperband_advisor.Hyperband
+  isAdvisor: true
+  source: nni
+- builtinName: BOHB
+  classArgsValidator: nni.algorithms.hpo.bohb_advisor.BOHBClassArgsValidator
+  className: nni.algorithms.hpo.bohb_advisor.BOHB
+  isAdvisor: true
   source: nni

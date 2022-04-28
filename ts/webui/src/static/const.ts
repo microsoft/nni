@@ -16,7 +16,7 @@ const RESTAPI = '/api/v1/nni';
 const MANAGER_IP = prefix === undefined ? RESTAPI : `${prefix}${RESTAPI}`;
 const DOWNLOAD_IP = `/logs`;
 
-const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
+const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/experiment/webui.html';
 
 const trialJobStatus = [
     'UNKNOWN',

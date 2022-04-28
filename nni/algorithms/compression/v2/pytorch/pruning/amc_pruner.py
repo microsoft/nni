@@ -12,7 +12,7 @@ from torch.nn import Module
 
 from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
 from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity, config_list_canonical
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils import count_flops_params
 
 from .iterative_pruner import IterativePruner, PRUNER_DICT
 from .tools import TaskGenerator
@@ -82,12 +82,13 @@ class AMCTaskGenerator(TaskGenerator):
 
     def generate_tasks(self, task_result: TaskResult) -> List[Task]:
         # append experience & update agent policy
-        if task_result.task_id != 'origin':
+        if self.action is not None:
             action, reward, observation, done = self.env.step(self.action, task_result.compact_model)
             self.T.append([reward, self.observation, observation, self.action, done])
             self.observation = observation.copy()
 
             if done:
+                assert task_result.score is not None, 'task_result.score should not be None if environment is done.'
                 final_reward = task_result.score - 1
                 # agent observe and update policy
                 for _, s_t, s_t1, a_t, d_t in self.T:
@@ -185,7 +186,7 @@ class AMCPruner(IterativePruner):
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude  : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     dummy_input : torch.Tensor
-        `dummy_input` is required for speed-up and tracing the model in RL environment.
+        `dummy_input` is required for speedup and tracing the model in RL environment.
     evaluator : Callable[[Module], float]
         Evaluate the pruned model and give a score.
     pruning_algorithm : str
@@ -223,7 +224,7 @@ class AMCPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import AMCPruner
+        >>> from nni.compression.pytorch.pruning import AMCPruner
         >>> config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
         >>> dummy_input = torch.rand(...).to(device)
         >>> evaluator = ...
@@ -231,7 +232,7 @@ class AMCPruner(IterativePruner):
         >>> pruner = AMCPruner(400, model, config_list, dummy_input, evaluator, finetuner=finetuner)
         >>> pruner.compress()
 
-    The full script can be found :githublink:`here <examples/model_compress/pruning/v2/amc_pruning_torch.py>`.
+    The full script can be found :githublink:`here <examples/model_compress/pruning/amc_pruning_torch.py>`.
     """
 
     def __init__(self, total_episode: int, model: Module, config_list: List[Dict], dummy_input: Tensor,
@@ -249,5 +250,5 @@ class AMCPruner(IterativePruner):
                                           ddpg_params=ddpg_params,
                                           target=target)
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input,
+        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
