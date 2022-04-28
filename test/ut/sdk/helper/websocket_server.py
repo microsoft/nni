@@ -48,7 +48,7 @@ async def on_connect(ws):
     _ws = ws
     async for msg in ws:
         _debug(f'received from websocket: {msg}')
-        print(repr(msg), flush=True)
+        print(msg, flush=True)
 
 def _debug(msg):
     sys.stderr.write(f'[server-debug] {msg}\n')
