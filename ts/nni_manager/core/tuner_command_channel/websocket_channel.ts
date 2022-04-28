@@ -3,6 +3,11 @@
 
 /**
  *  The IPC channel between NNI manager and tuner.
+ *
+ *  TODO:
+ *   1. Merge with environment service's WebSocket channel.
+ *   2. Split import data command to avoid extremely long message.
+ *   3. Refactor message format.
  **/
 
 import assert from 'assert/strict';
@@ -12,6 +17,16 @@ import { Deferred } from 'ts-deferred';
 import type WebSocket from 'ws';
 
 import { Logger, getLogger } from 'common/log';
+
+const logger: Logger = getLogger('tuner_command_channel.WebSocketChannel');
+
+export interface WebSocketChannel {
+    init(): Promise<void>;
+    shutdown(): Promise<void>;
+    sendCommand(command: string): void;  // maybe this should return Promise<void>
+    onCommand(callback: (command: string) => void): void;
+    onError(callback: (error: Error) => void): void;
+}
 
 /**
  *  Get the singleton tuner command channel.
@@ -25,30 +40,28 @@ export function getWebSocketChannel(): WebSocketChannel {
  *  The callback to serve WebSocket connection request. Used by REST server module.
  *  It should only be invoked once, or an error will be raised.
  *
- *  Typed of express-ws is somewhat problematic. Don't want to waste time on it so use `any`.
+ *  Type hint of express-ws is somewhat problematic. Don't want to waste time on it so use `any`.
  **/
-export function serveWebSocket(ws: any, _req: any, _next: any): void {
+export function serveWebSocket(ws: WebSocket): void {
     channelSingleton.setWebSocket(ws);
 }
 
-// TODO: this class should not be fully exported (export an interface instead)
-export class WebSocketChannel {
+class WebSocketChannelImpl implements WebSocketChannel {
     private deferredInit: Deferred<void> = new Deferred<void>();
     private emitter: EventEmitter = new EventEmitter();
     private heartbeatTimer!: NodeJS.Timer;
-    private logger: Logger = getLogger('tuner_command_channel.WebSocketChannel');
     private serving: boolean = false;
     private waitingPong: boolean = false;
     private ws!: WebSocket;
 
     public setWebSocket(ws: WebSocket): void {
         if (this.ws !== undefined) {
-            this.logger.error('A second client is trying to connect');
+            logger.error('A second client is trying to connect');
             ws.close(4030, 'Already serving a tuner.');
             return;
         }
 
-        this.logger.debug('Connected.');
+        logger.debug('Connected.');
         this.serving = true;
 
         this.ws = ws;
@@ -62,7 +75,7 @@ export class WebSocketChannel {
     }
 
     public init(): Promise<void> {
-        this.logger.debug(this.ws === undefined ? 'Waiting connection...' : 'Initialized.');
+        logger.debug(this.ws === undefined ? 'Waiting connection...' : 'Initialized.');
         return this.deferredInit.promise;
     }
 
@@ -78,11 +91,11 @@ export class WebSocketChannel {
     public sendCommand(command: string): void {
         assert.ok(this.ws !== undefined);
 
-        this.logger.debug('Sending', command);
+        logger.debug('Sending', command);
         this.ws.send(command);
 
         if (this.ws.bufferedAmount > command.length + 1000) {
-            this.logger.warning('Sending too fast! Try to reduce the frequency of intermediate results.');
+            logger.warning('Sending too fast! Try to reduce the frequency of intermediate results.');
         }
     }
 
@@ -105,16 +118,16 @@ export class WebSocketChannel {
     }
 
     private receive(data: Buffer, _isBinary: boolean): void {
-        this.logger.debug('Received', data);
+        logger.debug('Received', data);
         this.emitter.emit('command', data.toString());
     }
 
     private handleError(error: Error): void {
         if (!this.serving) {
-            this.logger.debug('Silent error:', error);
+            logger.debug('Silent error:', error);
             return;
         }
-        this.logger.error('Error:', error);
+        logger.error('Error:', error);
 
         clearInterval(this.heartbeatTimer);
         this.emitter.emit('error', error);
@@ -122,7 +135,7 @@ export class WebSocketChannel {
     }
 }
 
-const channelSingleton: WebSocketChannel = new WebSocketChannel();
+const channelSingleton: WebSocketChannelImpl = new WebSocketChannelImpl();
 
 let heartbeatInterval: number = 5000;
 

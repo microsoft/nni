@@ -111,7 +111,7 @@ function rootRouter(): Router {
     router.use('/api/v1/nni', restHandlerFactory());
 
     /* WebSocket APIs */
-    router.ws('/tuner', tunerCommandChannel.serveWebSocket);
+    router.ws('/tuner', (ws, _req, _next) => { tunerCommandChannel.serveWebSocket(ws); });
 
     /* Download log files */
     // The REST API path "/logs" does not match file system path "/log".

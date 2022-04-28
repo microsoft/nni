@@ -7,18 +7,20 @@ import { setTimeout } from 'timers/promises';
 import WebSocket from 'ws';
 
 import { getWebSocketChannel, serveWebSocket } from 'core/tuner_command_channel';
-import { UnitTestHelpers } from 'core/tuner_command_channel/web_socket_channel';
+import { UnitTestHelpers } from 'core/tuner_command_channel/websocket_channel';
 
 UnitTestHelpers.setHeartbeatInterval(10);  // for testError, must be set before serveWebSocket()
 
-/** Test 1: start serving and let a client connect **/
+/* test cases */
+
+// Start serving and let a client connect.
 async function testInit(): Promise<void> {
     server.on('connection', serveWebSocket);
     startClient();
     await getWebSocketChannel().init();
 }
 
-/** Test 2: send commands from server to client **/
+// Send commands from server to client.
 async function testSend(): Promise<void> {
     const channel = getWebSocketChannel();
 
@@ -31,7 +33,7 @@ async function testSend(): Promise<void> {
     assert.equal(clientReceived[1], command2);
 }
 
-/** Test 3: send commands from client to server **/
+// Send commands from client to server.
 async function testReceive(): Promise<void> {
     const channel = getWebSocketChannel();
     channel.onCommand(command => { serverReceived.push(command); });
@@ -45,7 +47,7 @@ async function testReceive(): Promise<void> {
     assert.deepEqual(serverReceived[1], command2);
 }
 
-/** Test 4: simulate client side crash */
+// Simulate client side crash.
 async function testError(): Promise<void> {
     const channel = getWebSocketChannel();
 
@@ -66,24 +68,27 @@ async function testError(): Promise<void> {
     client.resume();
 }
 
+// Clean up.
+async function testShutdown(): Promise<void> {
+    const channel = getWebSocketChannel();
+    await channel.shutdown();
+
+    client.close();
+    server.close();
+}
+
+/* register */
 describe('## tuner_command_channel ##', () => {
-    it('init', async function () {
-        this.timeout(1000);  // if it takes more than 1s, likely something wrong with the connection
-        await testInit();
-    });
+    it('init', testInit);
     it('send', testSend);
     it('receive', testReceive);
     it('catch error', testError);
+    it('shutdown', testShutdown);
 });
 
-after(() => {
-    client.close();
-    server.close();
-});
+/** helpers **/
 
-/** utilities **/
-
-const command1 = 'T_hello';
+const command1 = 'T_hello world';
 const command2 = 'T_你好';
 const commandPing = 'PI';
 

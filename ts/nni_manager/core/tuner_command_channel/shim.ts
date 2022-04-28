@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { WebSocketChannel, getWebSocketChannel } from './web_socket_channel';
-
-export interface IpcInterface {
-    sendCommand(commandType: string, content?: string): void;
-    onCommand(listener: (commandType: string, content: string) => void): void;
-    onError(listener: (error: Error) => void): void;
-}
+import type { IpcInterface } from './common';
+import { WebSocketChannel, getWebSocketChannel } from './websocket_channel';
 
 export async function createDispatcherInterface(): Promise<IpcInterface> {
     const ipcInterface = new WsIpcInterface();
@@ -32,7 +27,7 @@ class WsIpcInterface implements IpcInterface {
     }
 
     public onCommand(listener: (commandType: string, content: string) => void): void {
-        this.channel.onCommand(command => {
+        this.channel.onCommand((command: string) => {
             listener(command.slice(0, 2), command.slice(2));
         });
     }

@@ -26,7 +26,7 @@ import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
-import { createDispatcherInterface, IpcInterface, DummyDispatcherInterface } from './ipcInterface';
+import { createDispatcherInterface, IpcInterface, DummyIpcInterface } from './ipcInterface';
 
 /**
  * NNIManager which implements Manager interface
@@ -474,7 +474,7 @@ class NNIManager implements Manager {
         }
 
         if (getDispatcherPipe() === '_unittest_') {  // FIXME
-            this.dispatcher = new DummyDispatcherInterface();
+            this.dispatcher = new DummyIpcInterface();
             return;
         }
 
