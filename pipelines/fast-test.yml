@@ -196,13 +196,13 @@ stages:
     timeoutInMinutes: 75
 
     steps:
-    #- template: templates/install-dependencies.yml
-    #  parameters:
-    #    platform: windows
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: windows
 
     - script: |
-        python -m pip install --prefer-binary pytest aioconsole
-        python -m pip install --prefer-binary -r dependencies/required.txt
+        #python -m pip install --prefer-binary pytest aioconsole
+        #python -m pip install --prefer-binary -r dependencies/required.txt
         python setup.py develop --no-user
       displayName: Install NNI
 
