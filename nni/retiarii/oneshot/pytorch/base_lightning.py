@@ -320,9 +320,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
             # under v1.5
             w_optimizers, lr_schedulers, self.frequencies, monitor = \
                 self.trainer._configure_optimizers(self.model.configure_optimizers())  # type: ignore
-            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
+            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization) # type: ignore
 
-        if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):
+        if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers): # type: ignore
             raise Exception(
                 "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
             )
