@@ -34,6 +34,7 @@ class WeightTrainerBasedDataCollector(TrainerBasedDataCollector):
     """
 
     def collect(self) -> Dict[str, Tensor]:
+        assert self.compressor.bound_model is not None
         for _ in range(self.training_epochs):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
 
@@ -50,6 +51,7 @@ class SingleHookTrainerBasedDataCollector(TrainerBasedDataCollector):
     """
 
     def collect(self) -> Dict[str, List[Tensor]]:
+        assert self.compressor.bound_model is not None
         for _ in range(self.training_epochs):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
 

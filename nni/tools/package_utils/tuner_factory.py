@@ -13,7 +13,8 @@ import os
 import sys
 from typing import Any
 
-from nni.typehint import Literal
+from typing_extensions import Literal
+
 from . import config_manager
 
 ALGO_TYPES = ['tuners', 'assessors']

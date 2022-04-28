@@ -19,7 +19,7 @@ from gym import spaces
 from tianshou.data import to_torch
 from tianshou.env.worker import EnvWorker
 
-from nni.typehint import TypedDict
+from typing_extensions import TypedDict
 
 from .utils import get_targeted_model
 from ..graph import ModelStatus

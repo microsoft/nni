@@ -5,6 +5,7 @@
 
 import copy
 import logging
+import warnings
 from collections import OrderedDict
 
 import torch
@@ -111,6 +112,8 @@ class DartsTrainer(BaseOneShotTrainer):
                  learning_rate=2.5E-3, batch_size=64, workers=4,
                  device=None, log_frequency=None,
                  arc_learning_rate=3.0E-4, unrolled=False):
+        warnings.warn('DartsTrainer is deprecated. Please use strategy.DARTS instead.', DeprecationWarning)
+
         self.model = model
         self.loss = loss
         self.metrics = metrics

@@ -46,7 +46,9 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
     def allocate_sparsity(self, new_config_list: List[Dict], model: Module, masks: Dict[str, Dict[str, Tensor]]):
         self._iterative_pruner_reset(model, new_config_list, masks)
         self.iterative_pruner.compress()
-        _, _, _, _, config_list = self.iterative_pruner.get_best_result()
+        best_result = self.iterative_pruner.get_best_result()
+        assert best_result is not None, 'Best result does not exist, iterative pruner may not start pruning.'
+        _, _, _, _, config_list = best_result
         return config_list
 
 
@@ -149,7 +151,7 @@ class AutoCompressPruner(IterativePruner):
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False,
-                 dummy_input: Optional[Tensor] = None, evaluator: Callable[[Module], float] = None):
+                 dummy_input: Optional[Tensor] = None, evaluator: Optional[Callable[[Module], float]] = None):
         task_generator = AutoCompressTaskGenerator(total_iteration=total_iteration,
                                                    origin_model=model,
                                                    origin_config_list=config_list,

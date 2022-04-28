@@ -3,9 +3,11 @@
 
 """Experimental version of differentiable one-shot implementation."""
 
-from typing import List
+from __future__ import annotations
+
 import pytorch_lightning as pl
 import torch
+import torch.optim as optim
 
 from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
 from .supermodule.differentiable import (
@@ -45,7 +47,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
-    def default_mutation_hooks(self) -> List[MutationHook]:
+    def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with differentiable versions"""
         hooks = [
             DifferentiableMixedLayer.mutate,
@@ -62,14 +64,16 @@ class DartsLightningModule(BaseOneShotLightningModule):
         }
 
     def __init__(self, inner_module: pl.LightningModule,
-                 mutation_hooks: List[MutationHook] = None,
+                 mutation_hooks: list[MutationHook] | None = None,
                  arc_learning_rate: float = 3.0E-4):
         self.arc_learning_rate = arc_learning_rate
         super().__init__(inner_module, mutation_hooks=mutation_hooks)
 
     def training_step(self, batch, batch_idx):
         # grad manually
-        arc_optim = self.architecture_optimizers
+        arc_optim = self.architecture_optimizers()
+        if not isinstance(arc_optim, optim.Optimizer):
+            raise TypeError(f'Expect arc_optim to be a single Optimizer, but found: {arc_optim}')
 
         # The InterleavedTrainValDataLoader yields both train and val data in a batch
         trn_batch, val_batch = batch
@@ -88,12 +92,12 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
         # phase 2: model step
         self.resample()
-        self.call_user_optimizers('zero_grad')
+        self.call_weight_optimizers('zero_grad')
         loss_and_metrics = self.model.training_step(trn_batch, 2 * batch_idx + 1)
         w_step_loss = loss_and_metrics['loss'] \
             if isinstance(loss_and_metrics, dict) else loss_and_metrics
         self.manual_backward(w_step_loss)
-        self.call_user_optimizers('step')
+        self.call_weight_optimizers('step')
 
         self.call_lr_schedulers(batch_idx)
 
@@ -107,7 +111,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
         ctrl_params = []
         for m in self.nas_modules:
-            ctrl_params += list(m.parameters(arch=True))
+            ctrl_params += list(m.parameters(arch=True))  # type: ignore
         ctrl_optim = torch.optim.Adam(list(set(ctrl_params)), 3.e-4, betas=(0.5, 0.999),
                                       weight_decay=1.0E-3)
         return ctrl_optim
@@ -135,7 +139,7 @@ class ProxylessLightningModule(DartsLightningModule):
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
-    def default_mutation_hooks(self) -> List[MutationHook]:
+    def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with gumbel-differentiable versions"""
         hooks = [
             ProxylessMixedLayer.mutate,
@@ -147,7 +151,7 @@ class ProxylessLightningModule(DartsLightningModule):
 
     def finalize_grad(self):
         for m in self.nas_modules:
-            m.finalize_grad()
+            m.finalize_grad()  # type: ignore
 
 
 class GumbelDartsLightningModule(DartsLightningModule):
@@ -177,7 +181,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
         Learning rate for architecture optimizer. Default: 3.0e-4
     """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
-    def default_mutation_hooks(self) -> List[MutationHook]:
+    def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with gumbel-differentiable versions"""
         hooks = [
             DifferentiableMixedLayer.mutate,
@@ -195,7 +199,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
         }
 
     def __init__(self, inner_module,
-                 mutation_hooks: List[MutationHook] = None,
+                 mutation_hooks: list[MutationHook] | None = None,
                  arc_learning_rate: float = 3.0e-4,
                  gumbel_temperature: float = 1.,
                  use_temp_anneal: bool = False,
@@ -206,12 +210,13 @@ class GumbelDartsLightningModule(DartsLightningModule):
         self.use_temp_anneal = use_temp_anneal
         self.min_temp = min_temp
 
-    def on_epoch_start(self):
+    def on_train_epoch_end(self):
         if self.use_temp_anneal:
             self.temp = (1 - self.trainer.current_epoch / self.trainer.max_epochs) * (self.init_temp - self.min_temp) + self.min_temp
             self.temp = max(self.temp, self.min_temp)
 
         for module in self.nas_modules:
-            module._softmax.temp = self.temp
+            if hasattr(module, '_softmax'):
+                module._softmax.temp = self.temp  # type: ignore
 
-        return self.model.on_epoch_start()
+        return self.model.on_train_epoch_end()
