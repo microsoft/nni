@@ -76,7 +76,7 @@ function Search(props): any {
                 ]
             }
         });
-        
+
         const filterMenu: IContextualMenuProps = {
             shouldFocusOnMount: true,
             directionalHint: DirectionalHint.bottomLeftEdge,
