@@ -53,6 +53,8 @@ def test_send():
 
     sent1 = _server.stdout.readline().strip()
     _debug('2e')
+    _debug(repr(_command1))
+    _debug(repr(sent1))
     assert sent1 == _command1, sent1
 
     sent2 = _server.stdout.readline().strip()
