@@ -87,6 +87,7 @@ def test_disconnect():
     global _server
     _server.stdin.write('_close_\n')
     _server.stdin.flush()
+    time.sleep(0.1)
     _server.terminate()
     #_server = None
 
@@ -107,7 +108,6 @@ def test_debug():
     sys.stderr.flush()
     with open('tmp_threads.txt', 'a') as f:
         f.write(threads)
-    exit()
 
 ## helper ##
 
