@@ -13,7 +13,7 @@ import { Database, DataStore } from '../../common/datastore';
 import { Manager, ExperimentProfile} from '../../common/manager';
 import { ExperimentManager } from '../../common/experimentManager';
 import { TrainingService } from '../../common/trainingService';
-import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
+import { cleanupUnitTest, prepareUnitTest, killPid } from '../../common/utils';
 import { NNIExperimentsManager } from '../../core/nniExperimentsManager';
 import { NNIManager } from '../../core/nnimanager';
 import { SqlDB } from '../../core/sqlDatabase';
@@ -22,9 +22,11 @@ import { MockedDataStore } from '../mock/datastore';
 import { TensorboardManager } from '../../common/tensorboardManager';
 import { NNITensorboardManager } from '../../core/nniTensorboardManager';
 import * as path from 'path';
+import { UnitTestHelpers } from 'core/ipcInterface';
 
 async function initContainer(): Promise<void> {
     prepareUnitTest();
+    UnitTestHelpers.disableTuner();
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(MockedDataStore).scope(Scope.Singleton);
@@ -135,7 +137,10 @@ describe('Unit test for nnimanager', function () {
 
     after(async () => {
         // FIXME
-        await (nniManager as any).stopExperimentTopHalf();
+        const manager: any = nniManager;
+        await killPid(manager.dispatcherPid);
+        manager.dispatcherPid = 0;
+        await manager.stopExperimentTopHalf();
         cleanupUnitTest();
     })
 
