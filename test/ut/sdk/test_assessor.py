@@ -4,7 +4,7 @@
 from io import BytesIO
 import json
 import sys
-from unittest import TestCase, main, skipIf
+from unittest import TestCase, main
 
 from nni.assessor import Assessor, AssessResult
 from nni.runtime import msg_dispatcher_base as msg_dispatcher_base
@@ -46,7 +46,6 @@ def _restore_io():
     protocol._set_out_file(_out_buf)
 
 
-@skipIf(sys.platform =='win32', 'debug')
 class AssessorTestCase(TestCase):
     def test_assessor(self):
         pass

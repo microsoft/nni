@@ -25,43 +25,24 @@ _command2 = 'T_你好'
 
 ## test cases ##
 
-def _debug(msg):
-    sys.stderr.write(f'@@ {msg} @@\n')
-    sys.stderr.flush()
-    with open('tmp_threads.txt', 'a') as f:
-        f.write(f'@@ {msg} @@\n')
-
-#@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_connect():
     global _client
     port = _init()
     _client = WebSocket(f'ws://localhost:{port}')
     _client.connect()
 
-    _debug(1)
-
-#@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_send():
-    _debug('2a')
     # Send commands to server via channel, and get them back via server's stdout.
     _client.send(_command1)
-    _debug('2b')
     _client.send(_command2)
-    _debug('2c')
     time.sleep(0.01)
-    _debug('2d')
 
     sent1 = _server.stdout.readline().strip()
-    _debug('2e')
     assert sent1 == _command1, sent1
 
     sent2 = _server.stdout.readline().strip()
-    _debug('2f')
     assert sent2 == _command2, sent2
 
-    _debug('2')
-
-#@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_receive():
     # Send commands to server via stdin, and get them back via channel.
     _server.stdin.write(_command1 + '\n')
@@ -74,12 +55,6 @@ def test_receive():
     received2 = _client.receive()
     assert received2 == _command2, received2
 
-    sys.stderr.write('@@ 3 @@\n')
-    sys.stderr.flush()
-    with open('tmp_threads.txt', 'a') as f:
-        f.write('@@ 3 @@\n')
-
-#@pytest.mark.skipif(sys.platform == 'win32', reason='debug')
 def test_disconnect():
     _client.disconnect()
 
@@ -89,25 +64,7 @@ def test_disconnect():
     _server.stdin.flush()
     time.sleep(0.1)
     _server.terminate()
-    #_server = None
-
-    sys.stderr.write('@@ 4 @@\n')
-    sys.stderr.flush()
-    with open('tmp_threads.txt', 'a') as f:
-        f.write('@@ 4 @@\n')
-
-def test_debug():
-    sys.stderr.write('@@ 5* @@\n')
-    sys.stderr.flush()
-    time.sleep(10)
-    threads = '|'.join([t.name for t in threading.enumerate()])
-    threads = '@@@ ' + threads + ' @@@\n'
-    code = _server.poll()
-    threads += f'@@@ {code} @@@\n'
-    sys.stderr.write(threads)
-    sys.stderr.flush()
-    with open('tmp_threads.txt', 'a') as f:
-        f.write(threads)
+    _server = None
 
 ## helper ##
 
@@ -129,5 +86,4 @@ if __name__ == '__main__':
     test_send()
     test_receive()
     test_disconnect()
-    test_debug()
     print('pass')

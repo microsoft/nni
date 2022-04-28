@@ -32,7 +32,6 @@ async def read_stdin():
         line = line.decode().strip()
         _debug(f'read from stdin: {line}')
         if line == '_close_':
-            sys.stderr.write(f'@@@ close @@@')
             exit()
         await _ws.send(line)
 
@@ -52,7 +51,7 @@ async def on_connect(ws):
         print(msg, flush=True)
 
 def _debug(msg):
-    sys.stderr.write(f'[server-debug] {msg}\n')
+    #sys.stderr.write(f'[server-debug] {msg}\n')
     pass
 
 if __name__ == '__main__':
