@@ -201,8 +201,8 @@ stages:
     #    platform: windows
 
     - script: |
-        python -m pip install --update wheel
-        python -m pip install pytest
+        python -m pip install --prefer-binary pytest aioconsole
+        python -m pip install --prefer-binary -r dependencies/required.txt
         python setup.py develop --no-user
       displayName: Install NNI
 
