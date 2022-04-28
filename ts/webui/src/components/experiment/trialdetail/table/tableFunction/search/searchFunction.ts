@@ -1,7 +1,7 @@
 import { mergeStyleSets } from '@fluentui/react';
 import { trialJobStatus } from '@static/const';
 import { EXPERIMENT } from '@static/datamodel';
-import { TableObj, SearchItems } from '@static/interface';
+import { TableRecord, SearchItems } from '@static/interface';
 
 const classNames = mergeStyleSets({
     menu: {
@@ -77,10 +77,10 @@ const convertParametersValue = (searchItems: SearchItems[], relation: Map<string
 };
 // relation: trial parameter -> type {conv_size -> number}
 const getTrialsBySearchFilters = (
-    arr: TableObj[],
+    arr: TableRecord[],
     searchItems: SearchItems[],
     relation: Map<string, string>
-): TableObj[] => {
+): TableRecord[] => {
     const que = convertParametersValue(searchItems, relation);
     // start to filter data by ['Trial id', 'Trial No.', 'Status'] [...parameters]...
     que.forEach(element => {
@@ -90,6 +90,20 @@ const getTrialsBySearchFilters = (
             arr = arr.filter(trial => trial.sequenceId.toString() === element.value1);
         } else if (element.name === 'StatusNNI') {
             arr = searchChoiceFilter(arr, element, 'status');
+        } else if (element.name === 'Default metric') {
+            if (element.operator === '=') {
+                arr = arr.filter(trial => trial.latestAccuracy! === JSON.parse(element.value1));
+            } else if (element.operator === '>') {
+                arr = arr.filter(trial => trial.latestAccuracy! > JSON.parse(element.value1));
+            } else if (element.operator === '<') {
+                arr = arr.filter(trial => trial.latestAccuracy! < JSON.parse(element.value1));
+            } else if (element.operator === 'between') {
+                arr = arr.filter(
+                    trial =>
+                        trial.latestAccuracy! > JSON.parse(element.value1) &&
+                        trial.latestAccuracy! < JSON.parse(element.value2)
+                );
+            }
         } else {
             const parameter = `space/${element.name}`;
 
@@ -116,8 +130,8 @@ const getTrialsBySearchFilters = (
 };
 
 // isChoice = true: status and trial parameters
-function findTrials(arr: TableObj[], choice: string[], filed: string): TableObj[] {
-    const newResult: TableObj[] = [];
+function findTrials(arr: TableRecord[], choice: string[], filed: string): TableRecord[] {
+    const newResult: TableRecord[] = [];
     const parameter = filed === 'status' ? 'status' : `space/${filed}`;
     arr.forEach(trial => {
         choice.forEach(item => {
@@ -130,7 +144,7 @@ function findTrials(arr: TableObj[], choice: string[], filed: string): TableObj[
     return newResult;
 }
 
-function searchChoiceFilter(arr: TableObj[], element: SearchItems, field: string): TableObj[] {
+function searchChoiceFilter(arr: TableRecord[], element: SearchItems, field: string): TableRecord[] {
     if (element.operator === '=') {
         return findTrials(arr, element.choice, field);
     } else {

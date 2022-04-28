@@ -12,6 +12,7 @@ import { EXPERIMENT } from '@static/datamodel';
 import { SearchItems } from '@static/interface';
 import SearchParameterConditions from './SearchParameterConditions';
 import GeneralSearch from './GeneralSearch';
+import SearchDefaultMetric from './SearchDefaultMetric';
 import { classNames, isChoiceType } from './searchFunction';
 import { AppContext } from '@/App';
 
@@ -61,6 +62,21 @@ function Search(props): any {
             });
         });
 
+        menu.push({
+            key: 'Default metric',
+            text: 'Default metric',
+            subMenuProps: {
+                items: [
+                    {
+                        key: 'Default metric',
+                        text: 'Default metric',
+                        // component: SearchParameterConditions.tsx
+                        onRender: renderDefaultMetricSearchComponent.bind('Default metric')
+                    }
+                ]
+            }
+        });
+        
         const filterMenu: IContextualMenuProps = {
             shouldFocusOnMount: true,
             directionalHint: DirectionalHint.bottomLeftEdge,
@@ -79,6 +95,19 @@ function Search(props): any {
     function renderParametersSearchComponent(item: IContextualMenuItem, dismissMenu: () => void): JSX.Element {
         return (
             <SearchParameterConditions
+                parameter={item.text}
+                searchFilter={searchFilter} // search filter list
+                changeSearchFilterList={changeSearchFilterList}
+                updatePage={updateDetailPage}
+                setSearchInputVal={setSearchInputVal}
+                dismiss={dismissMenu} // close menu
+            />
+        );
+    }
+
+    function renderDefaultMetricSearchComponent(item: IContextualMenuItem, dismissMenu: () => void): JSX.Element {
+        return (
+            <SearchDefaultMetric
                 parameter={item.text}
                 searchFilter={searchFilter} // search filter list
                 changeSearchFilterList={changeSearchFilterList}
