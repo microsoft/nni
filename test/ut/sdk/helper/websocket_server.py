@@ -14,6 +14,9 @@ import sys
 import aioconsole
 import websockets
 
+sys.stdout.reconfigure(encoding='utf_8')
+sys.stderr.reconfigure(encoding='utf_8')
+
 _ws = None
 
 async def main():

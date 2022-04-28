@@ -97,7 +97,7 @@ class WebSocket:
 
         # seems the library will inference whether it's text or binary, so we don't have guarantee
         if isinstance(msg, bytes):
-            return msg.decode()
+            return msg.decode('utf_8')
         else:
             return msg
 
