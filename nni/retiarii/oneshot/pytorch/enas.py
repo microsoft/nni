@@ -2,10 +2,14 @@
 # Licensed under the MIT license.
 
 import logging
+import warnings
+from typing import cast
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.utils.data import SubsetRandomSampler, DataLoader
 
 from ..interface import BaseOneShotTrainer
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
@@ -113,9 +117,9 @@ class ReinforceController(nn.Module):
         self._h = [torch.zeros((1, self.lstm_size),
                                dtype=self._inputs.dtype,
                                device=self._inputs.device) for _ in range(self.lstm_num_layers)]
-        self.sample_log_prob = 0
-        self.sample_entropy = 0
-        self.sample_skip_penalty = 0
+        self.sample_log_prob: torch.Tensor = cast(torch.Tensor, 0)
+        self.sample_entropy: torch.Tensor = cast(torch.Tensor, 0)
+        self.sample_skip_penalty: torch.Tensor = cast(torch.Tensor, 0)
 
     def _lstm_next_step(self):
         self._h, self._c = self.lstm(self._inputs, (self._h, self._c))
@@ -143,7 +147,7 @@ class ReinforceController(nn.Module):
             if sampled.sum().item():
                 self._inputs = (torch.sum(self.embedding[field.name](sampled.view(-1)), 0) / (1. + torch.sum(sampled))).unsqueeze(0)
             else:
-                self._inputs = torch.zeros(1, self.lstm_size, device=self.embedding[field.name].weight.device)
+                self._inputs = torch.zeros(1, self.lstm_size, device=self.embedding[field.name].weight.device)  # type: ignore
 
         sampled = sampled.detach().cpu().numpy().tolist()
         self.sample_log_prob += self.entropy_reduction(log_prob)
@@ -205,6 +209,8 @@ class EnasTrainer(BaseOneShotTrainer):
                  batch_size=64, workers=4, device=None, log_frequency=None,
                  grad_clip=5., entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999,
                  ctrl_lr=0.00035, ctrl_steps_aggregate=20, ctrl_kwargs=None):
+        warnings.warn('EnasTrainer is deprecated. Please use strategy.ENAS instead.', DeprecationWarning)
+
         self.model = model
         self.loss = loss
         self.metrics = metrics
@@ -246,16 +252,16 @@ class EnasTrainer(BaseOneShotTrainer):
         n_train = len(self.dataset)
         split = n_train // 2
         indices = list(range(n_train))
-        train_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[:-split])
-        valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[-split:])
-        self.train_loader = torch.utils.data.DataLoader(self.dataset,
-                                                        batch_size=self.batch_size,
-                                                        sampler=train_sampler,
-                                                        num_workers=self.workers)
-        self.valid_loader = torch.utils.data.DataLoader(self.dataset,
-                                                        batch_size=self.batch_size,
-                                                        sampler=valid_sampler,
-                                                        num_workers=self.workers)
+        train_sampler = SubsetRandomSampler(indices[:-split])
+        valid_sampler = SubsetRandomSampler(indices[-split:])
+        self.train_loader = DataLoader(self.dataset,
+                                       batch_size=self.batch_size,
+                                       sampler=train_sampler,
+                                       num_workers=self.workers)
+        self.valid_loader = DataLoader(self.dataset,
+                                       batch_size=self.batch_size,
+                                       sampler=valid_sampler,
+                                       num_workers=self.workers)
 
     def _train_model(self, epoch):
         self.model.train()
@@ -294,15 +300,15 @@ class EnasTrainer(BaseOneShotTrainer):
             metrics = self.metrics(logits, y)
             reward = self.reward_function(logits, y)
             if self.entropy_weight:
-                reward += self.entropy_weight * self.controller.sample_entropy.item()
+                reward += self.entropy_weight * self.controller.sample_entropy.item()  # type: ignore
             self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
             loss = self.controller.sample_log_prob * (reward - self.baseline)
             if self.skip_weight:
                 loss += self.skip_weight * self.controller.sample_skip_penalty
             metrics['reward'] = reward
             metrics['loss'] = loss.item()
-            metrics['ent'] = self.controller.sample_entropy.item()
-            metrics['log_prob'] = self.controller.sample_log_prob.item()
+            metrics['ent'] = self.controller.sample_entropy.item()  # type: ignore
+            metrics['log_prob'] = self.controller.sample_log_prob.item()  # type: ignore
             metrics['baseline'] = self.baseline
             metrics['skip'] = self.controller.sample_skip_penalty
 

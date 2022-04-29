@@ -2,11 +2,8 @@
 # Licensed under the MIT license.
 
 import pytorch_lightning as pl
-import nni
 from .accelerator import BypassAccelerator
 
-
-@nni.trace
 class Trainer(pl.Trainer):
     """
     Trainer for cross-graph optimization.
@@ -20,7 +17,7 @@ class Trainer(pl.Trainer):
         default: False
     trainer_kwargs : dict
         Optional keyword arguments passed to trainer. See
-        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/trainer.html>`__ for details.
+        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
     """
 
     def __init__(self, use_cgo=False, **trainer_kwargs):

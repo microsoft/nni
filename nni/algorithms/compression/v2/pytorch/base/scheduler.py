@@ -5,7 +5,7 @@ import gc
 import logging
 import os
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Union
 
 import json_tricks
 import torch
@@ -19,8 +19,8 @@ class Task:
     # NOTE: If we want to support multi-thread, this part need to refactor, maybe use file and lock to sync.
     _reference_counter = {}
 
-    def __init__(self, task_id: int, model_path: str, masks_path: str, config_list_path: str,
-                 speed_up: Optional[bool] = True, finetune: Optional[bool] = True, evaluate: Optional[bool] = True):
+    def __init__(self, task_id: int, model_path: Union[str, Path], masks_path: Union[str, Path], config_list_path: Union[str, Path],
+                 speedup: Optional[bool] = True, finetune: Optional[bool] = True, evaluate: Optional[bool] = True):
         """
         Parameters
         ----------
@@ -32,8 +32,8 @@ class Task:
             The path of the masks that applied on the model before pruning.
         config_list_path
             The path of the config list that used in this task.
-        speed_up
-            Control if this task needs speed up, True means use scheduler default value, False means no speed up.
+        speedup
+            Control if this task needs speedup, True means use scheduler default value, False means no speedup.
         finetune
             Control if this task needs finetune, True means use scheduler default value, False means no finetune.
         evaluate
@@ -44,7 +44,7 @@ class Task:
         self.masks_path = masks_path
         self.config_list_path = config_list_path
 
-        self.speed_up = speed_up
+        self.speedup = speedup
         self.finetune = finetune
         self.evaluate = evaluate
 
@@ -65,7 +65,7 @@ class Task:
             'model_path': str(self.model_path),
             'masks_path': str(self.masks_path),
             'config_list_path': str(self.config_list_path),
-            'speed_up': self.speed_up,
+            'speedup': self.speedup,
             'finetune': self.finetune,
             'evaluate': self.evaluate,
             'status': self.status,
@@ -87,7 +87,7 @@ class Task:
             config_list = json_tricks.load(f)
         return model, masks, config_list
 
-    def referenced_paths(self) -> List[str]:
+    def referenced_paths(self) -> List[Union[str, Path]]:
         """
         Return the path list that need to count reference in this task.
         """
@@ -111,7 +111,7 @@ class Task:
 
 
 class TaskResult:
-    def __init__(self, task_id: int, compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
+    def __init__(self, task_id: Union[int, str], compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
                  pruner_generated_masks: Dict[str, Dict[str, Tensor]], score: Optional[float]) -> None:
         """
         Parameters

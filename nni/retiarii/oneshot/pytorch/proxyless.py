@@ -1,7 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# type: ignore
+
 import logging
+import warnings
 
 import torch
 import torch.nn as nn
@@ -228,6 +231,8 @@ class ProxylessTrainer(BaseOneShotTrainer):
                  grad_reg_loss_type=None, grad_reg_loss_params=None,
                  applied_hardware=None, dummy_input=(1, 3, 224, 224),
                  ref_latency=65.0):
+        warnings.warn('ProxylessTrainer is deprecated. Please use strategy.Proxyless instead.', DeprecationWarning)
+
         self.model = model
         self.loss = loss
         self.metrics = metrics

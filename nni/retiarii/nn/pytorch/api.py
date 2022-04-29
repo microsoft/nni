@@ -1,28 +1,49 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import itertools
 import math
 import operator
 import warnings
-from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar
+from typing import (Any, Callable, Dict, Generic, Iterable, Iterator, List,
+                    NoReturn, Optional, Sequence, SupportsRound, TypeVar,
+                    Union, cast)
 
 import torch
 import torch.nn as nn
-
+from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import Translatable
 from nni.retiarii.serializer import basic_unit
-from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
-from .utils import Mutable, generate_new_label, get_fixed_value
+from nni.retiarii.utils import (STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace,
+                                NoContextError)
 
+from .mutation_utils import Mutable, generate_new_label, get_fixed_value
 
-__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
+__all__ = [
+    # APIs
+    'LayerChoice',
+    'InputChoice',
+    'ValueChoice',
+    'ModelParameterChoice',
+    'Placeholder',
+
+    # Fixed module
+    'ChosenInputs',
+
+    # Type utils
+    'ReductionType',
+    'MaybeChoice',
+    'ChoiceOf',
+]
 
 
 class LayerChoice(Mutable):
     """
     Layer choice selects one of the ``candidates``, then apply it on inputs and return results.
 
-    Layer choice does not allow itself to be nested.
+    It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model.
+
+    *New in v2.2:* Layer choice can be nested.
 
     Parameters
     ----------
@@ -42,6 +63,21 @@ class LayerChoice(Mutable):
     choices : list of Module
         Deprecated. A list of all candidate modules in the layer choice module.
         ``list(layer_choice)`` is recommended, which will serve the same purpose.
+
+    Examples
+    --------
+
+    ::
+
+        # import nni.retiarii.nn.pytorch as nn
+        # declared in `__init__` method
+        self.layer = nn.LayerChoice([
+            ops.PoolBN('max', channels, 3, stride, 1),
+            ops.SepConv(channels, channels, 3, stride, 1),
+            nn.Identity()
+        ])
+        # invoked in `forward` method
+        out = self.layer(x)
 
     Notes
     -----
@@ -111,26 +147,16 @@ class LayerChoice(Mutable):
                 self.names.append(str(i))
         else:
             raise TypeError("Unsupported candidates type: {}".format(type(candidates)))
-        self._first_module = self._modules[self.names[0]]  # to make the dummy forward meaningful
-
-    @property
-    def key(self):
-        return self._key()
-
-    @torch.jit.ignore
-    def _key(self):
-        warnings.warn('Using key to access the identifier of LayerChoice is deprecated. Please use label instead.',
-                      category=DeprecationWarning)
-        return self._label
+        self._first_module = cast(nn.Module, self._modules[self.names[0]])  # to make the dummy forward meaningful
 
     @property
     def label(self):
         return self._label
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: Union[int, str]) -> nn.Module:
         if isinstance(idx, str):
-            return self._modules[idx]
-        return list(self)[idx]
+            return cast(nn.Module, self._modules[idx])
+        return cast(nn.Module, list(self)[idx])
 
     def __setitem__(self, idx, module):
         key = idx if isinstance(idx, str) else self.names[idx]
@@ -154,16 +180,11 @@ class LayerChoice(Mutable):
     def __iter__(self):
         return map(lambda name: self._modules[name], self.names)
 
-    @property
-    def choices(self):
-        return self._choices()
-
-    @torch.jit.ignore
-    def _choices(self):
-        warnings.warn("layer_choice.choices is deprecated. Use `list(layer_choice)` instead.", category=DeprecationWarning)
-        return list(self)
-
     def forward(self, x):
+        """
+        The forward of layer choice is simply running the first candidate module.
+        It shouldn't be called directly by users in most cases.
+        """
         warnings.warn('You should not run forward of this module directly.')
         return self._first_module(x)
 
@@ -182,6 +203,10 @@ ReductionType = Literal['mean', 'concat', 'sum', 'none']
 class InputChoice(Mutable):
     """
     Input choice selects ``n_chosen`` inputs from ``choose_from`` (contains ``n_candidates`` keys).
+
+    It is mainly for choosing (or trying) different connections. It takes several tensors and chooses ``n_chosen`` tensors from them.
+    When specific inputs are chosen, ``InputChoice`` will become :class:`ChosenInputs`.
+
     Use ``reduction`` to specify how chosen inputs are reduced into one output. A few options are:
 
     * ``none``: do nothing and return the list directly.
@@ -203,6 +228,16 @@ class InputChoice(Mutable):
         Prior distribution used in random sampling.
     label : str
         Identifier of the input choice.
+
+    Examples
+    --------
+    ::
+
+        # import nni.retiarii.nn.pytorch as nn
+        # declared in `__init__` method
+        self.input_switch = nn.InputChoice(n_chosen=1)
+        # invoked in `forward` method, choose one from the three
+        out = self.input_switch([tensor1, tensor2, tensor3])
     """
 
     @classmethod
@@ -230,20 +265,14 @@ class InputChoice(Mutable):
         self._label = generate_new_label(label)
 
     @property
-    def key(self):
-        return self._key()
-
-    @torch.jit.ignore
-    def _key(self):
-        warnings.warn('Using key to access the identifier of InputChoice is deprecated. Please use label instead.',
-                      category=DeprecationWarning)
-        return self._label
-
-    @property
     def label(self):
         return self._label
 
     def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
+        """
+        The forward of input choice is simply the first item of ``candidate_inputs``.
+        It shouldn't be called directly by users in most cases.
+        """
         warnings.warn('You should not run forward of this module directly.')
         return candidate_inputs[0]
 
@@ -274,6 +303,9 @@ class ChosenInputs(nn.Module):
         self.reduction = reduction
 
     def forward(self, candidate_inputs):
+        """
+        Compute the reduced input based on ``chosen`` and ``reduction``.
+        """
         return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
 
     def _tensor_reduction(self, reduction_type, tensor_list):
@@ -306,7 +338,7 @@ def _valuechoice_codegen(*, _internal: bool = False):
         'truediv': '//', 'floordiv': '/', 'mod': '%',
         'lshift': '<<', 'rshift': '>>',
         'and': '&', 'xor': '^', 'or': '|',
-        # no reflection
+        # no reverse
         'lt': '<', 'le': '<=', 'eq': '==',
         'ne': '!=', 'ge': '>=', 'gt': '>',
         # NOTE
@@ -314,14 +346,14 @@ def _valuechoice_codegen(*, _internal: bool = False):
         # Might support them in future when we actually need them.
     }
 
-    binary_template = """    def __{op}__(self, other: Any) -> 'ValueChoiceX':
+    binary_template = """    def __{op}__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.{opt}, '{{}} {sym} {{}}', [self, other])"""
 
-    binary_r_template = """    def __r{op}__(self, other: Any) -> 'ValueChoiceX':
+    binary_r_template = """    def __r{op}__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.{opt}, '{{}} {sym} {{}}', [other, self])"""
 
-    unary_template = """    def __{op}__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(operator.{op}, '{sym}{{}}', [self])"""
+    unary_template = """    def __{op}__(self: 'ChoiceOf[_value]') -> 'ChoiceOf[_value]':
+        return cast(ChoiceOf[_value], ValueChoiceX(operator.{op}, '{sym}{{}}', [self]))"""
 
     for op, sym in MAPPING.items():
         if op in ['neg', 'pos', 'invert']:
@@ -333,8 +365,14 @@ def _valuechoice_codegen(*, _internal: bool = False):
                 print(binary_r_template.format(op=op, opt=opt, sym=sym) + '\n')
 
 
-def _valuechoice_staticmethod_helper(orig_func):
-    orig_func.__doc__ += """
+_func = TypeVar('_func')
+_cand = TypeVar('_cand')
+_value = TypeVar('_value')
+
+
+def _valuechoice_staticmethod_helper(orig_func: _func) -> _func:
+    if orig_func.__doc__ is not None:
+        orig_func.__doc__ += """
         Notes
         -----
         This function performs lazy evaluation.
@@ -344,7 +382,7 @@ def _valuechoice_staticmethod_helper(orig_func):
     return orig_func
 
 
-class ValueChoiceX(Translatable):
+class ValueChoiceX(Generic[_cand], Translatable, nn.Module):
     """Internal API. Implementation note:
 
     The transformed (X) version of value choice.
@@ -360,9 +398,14 @@ class ValueChoiceX(Translatable):
     2. For graph-engine, it uses evaluate to calculate the result.
 
     Potentially, we have to implement the evaluation logic in oneshot algorithms. I believe we can postpone the discussion till then.
+
+    This class is implemented as a ``nn.Module`` so that it can be scanned by python engine / torchscript.
     """
 
-    def __init__(self, function: Callable[..., Any], repr_template: str, arguments: List[Any], dry_run: bool = True):
+    def __init__(self, function: Callable[..., _cand] = cast(Callable[..., _cand], None),
+                 repr_template: str = cast(str, None),
+                 arguments: List[Any] = cast('List[MaybeChoice[_cand]]', None),
+                 dry_run: bool = True):
         super().__init__()
 
         if function is None:
@@ -380,9 +423,12 @@ class ValueChoiceX(Translatable):
             # for sanity check
             self.dry_run()
 
+    def forward(self) -> None:
+        raise RuntimeError('You should never call forward of the composition of a value-choice.')
+
     def inner_choices(self) -> Iterable['ValueChoice']:
         """
-        Return an iterable of all leaf value choices.
+        Return a generator of all leaf value choices.
         Useful for composition of value choices.
         No deduplication on labels. Mutators should take care.
         """
@@ -390,21 +436,45 @@ class ValueChoiceX(Translatable):
             if isinstance(arg, ValueChoiceX):
                 yield from arg.inner_choices()
 
-    def dry_run(self) -> Any:
+    def dry_run(self) -> _cand:
         """
         Dry run the value choice to get one of its possible evaluation results.
         """
         # values are not used
         return self._evaluate(iter([]), True)
 
-    def evaluate(self, values: Iterable[Any]) -> Any:
+    def all_options(self) -> Iterable[_cand]:
+        """Explore all possibilities of a value choice.
+        """
+        # Record all inner choices: label -> candidates, no duplicates.
+        dedup_inner_choices: Dict[str, List[_cand]] = {}
+        # All labels of leaf nodes on tree, possibly duplicates.
+        all_labels: List[str] = []
+
+        for choice in self.inner_choices():
+            all_labels.append(choice.label)
+            if choice.label in dedup_inner_choices:
+                if choice.candidates != dedup_inner_choices[choice.label]:
+                    # check for choice with the same label
+                    raise ValueError(f'"{choice.candidates}" is not equal to "{dedup_inner_choices[choice.label]}", '
+                                     f'but they share the same label: {choice.label}')
+            else:
+                dedup_inner_choices[choice.label] = choice.candidates
+
+        dedup_labels, dedup_candidates = list(dedup_inner_choices.keys()), list(dedup_inner_choices.values())
+
+        for chosen in itertools.product(*dedup_candidates):
+            chosen = dict(zip(dedup_labels, chosen))
+            yield self.evaluate([chosen[label] for label in all_labels])
+
+    def evaluate(self, values: Iterable[_cand]) -> _cand:
         """
         Evaluate the result of this group.
         ``values`` should in the same order of ``inner_choices()``.
         """
         return self._evaluate(iter(values), False)
 
-    def _evaluate(self, values: Iterable[Any], dry_run: bool = False) -> Any:
+    def _evaluate(self, values: Iterator[_cand], dry_run: bool = False) -> _cand:
         # "values" iterates in the recursion
         eval_args = []
         for arg in self.arguments:
@@ -424,7 +494,7 @@ class ValueChoiceX(Translatable):
         """
         return self.dry_run()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         reprs = []
         for arg in self.arguments:
             if isinstance(arg, ValueChoiceX) and not isinstance(arg, ValueChoice):
@@ -440,7 +510,7 @@ class ValueChoiceX(Translatable):
     # Special operators that can be useful in place of built-in conditional operators.
     @staticmethod
     @_valuechoice_staticmethod_helper
-    def to_int(obj: 'ValueChoiceOrAny') -> Union['ValueChoiceX', int]:
+    def to_int(obj: 'MaybeChoice[Any]') -> 'MaybeChoice[int]':
         """
         Convert a ``ValueChoice`` to an integer.
         """
@@ -450,7 +520,7 @@ class ValueChoiceX(Translatable):
 
     @staticmethod
     @_valuechoice_staticmethod_helper
-    def to_float(obj: 'ValueChoiceOrAny') -> Union['ValueChoiceX', float]:
+    def to_float(obj: 'MaybeChoice[Any]') -> 'MaybeChoice[float]':
         """
         Convert a ``ValueChoice`` to a float.
         """
@@ -460,9 +530,9 @@ class ValueChoiceX(Translatable):
 
     @staticmethod
     @_valuechoice_staticmethod_helper
-    def condition(pred: 'ValueChoiceOrAny',
-                  true: 'ValueChoiceOrAny',
-                  false: 'ValueChoiceOrAny') -> 'ValueChoiceOrAny':
+    def condition(pred: 'MaybeChoice[bool]',
+                  true: 'MaybeChoice[_value]',
+                  false: 'MaybeChoice[_value]') -> 'MaybeChoice[_value]':
         """
         Return ``true`` if the predicate ``pred`` is true else ``false``.
 
@@ -476,35 +546,39 @@ class ValueChoiceX(Translatable):
 
     @staticmethod
     @_valuechoice_staticmethod_helper
-    def max(arg0: Union[Iterable['ValueChoiceOrAny'], 'ValueChoiceOrAny'],
-            *args: List['ValueChoiceOrAny']) -> 'ValueChoiceOrAny':
+    def max(arg0: Union[Iterable['MaybeChoice[_value]'], 'MaybeChoice[_value]'],
+            *args: 'MaybeChoice[_value]') -> 'MaybeChoice[_value]':
         """
         Returns the maximum value from a list of value choices.
         The usage should be similar to Python's built-in value choices,
         where the parameters could be an iterable, or at least two arguments.
         """
         if not args:
-            return ValueChoiceX.max(*list(arg0))
-        lst = [arg0] + list(args)
+            if not isinstance(arg0, Iterable):
+                raise TypeError('Expect more than one items to compare max')
+            return cast(MaybeChoice[_value], ValueChoiceX.max(*list(arg0)))
+        lst = list(arg0) if isinstance(arg0, Iterable) else [arg0] + list(args)
         if any(isinstance(obj, ValueChoiceX) for obj in lst):
             return ValueChoiceX(max, 'max({})', lst)
-        return max(lst)
+        return max(cast(Any, lst))
 
     @staticmethod
     @_valuechoice_staticmethod_helper
-    def min(arg0: Union[Iterable['ValueChoiceOrAny'], 'ValueChoiceOrAny'],
-            *args: List['ValueChoiceOrAny']) -> 'ValueChoiceOrAny':
+    def min(arg0: Union[Iterable['MaybeChoice[_value]'], 'MaybeChoice[_value]'],
+            *args: 'MaybeChoice[_value]') -> 'MaybeChoice[_value]':
         """
         Returns the minunum value from a list of value choices.
         The usage should be similar to Python's built-in value choices,
         where the parameters could be an iterable, or at least two arguments.
         """
         if not args:
-            return ValueChoiceX.min(*list(arg0))
-        lst = [arg0] + list(args)
+            if not isinstance(arg0, Iterable):
+                raise TypeError('Expect more than one items to compare min')
+            return cast(MaybeChoice[_value], ValueChoiceX.min(*list(arg0)))
+        lst = list(arg0) if isinstance(arg0, Iterable) else [arg0] + list(args)
         if any(isinstance(obj, ValueChoiceX) for obj in lst):
             return ValueChoiceX(min, 'min({})', lst)
-        return min(lst)
+        return min(cast(Any, lst))
 
     def __hash__(self):
         # this is required because we have implemented ``__eq__``
@@ -516,30 +590,32 @@ class ValueChoiceX(Translatable):
     # - Implementation effort is too huge.
     # As a result, inplace operators like +=, *=, magic methods like `__getattr__` are not included in this list.
 
-    def __getitem__(self, key: Any) -> 'ValueChoiceX':
+    def __getitem__(self: 'ChoiceOf[Any]', key: Any) -> 'ChoiceOf[Any]':
         return ValueChoiceX(lambda x, y: x[y], '{}[{}]', [self, key])
 
     # region implement int, float, round, trunc, floor, ceil
     # because I believe sometimes we need them to calculate #channels
     # `__int__` and `__float__` are not supported because `__int__` is required to return int.
-    def __round__(self, ndigits: Optional[Any] = None) -> 'ValueChoiceX':
+    def __round__(self: 'ChoiceOf[SupportsRound[_value]]',
+                  ndigits: Optional['MaybeChoice[int]'] = None) -> 'ChoiceOf[Union[int, SupportsRound[_value]]]':
         if ndigits is not None:
-            return ValueChoiceX(round, 'round({}, {})', [self, ndigits])
-        return ValueChoiceX(round, 'round({})', [self])
+            return cast(ChoiceOf[Union[int, SupportsRound[_value]]], ValueChoiceX(round, 'round({}, {})', [self, ndigits]))
+        return cast(ChoiceOf[Union[int, SupportsRound[_value]]], ValueChoiceX(round, 'round({})', [self]))
 
-    def __trunc__(self) -> 'ValueChoiceX':
+    def __trunc__(self) -> NoReturn:
         raise RuntimeError("Try to use `ValueChoice.to_int()` instead of `math.trunc()` on value choices.")
 
-    def __floor__(self) -> 'ValueChoiceX':
+    def __floor__(self: 'ChoiceOf[Any]') -> 'ChoiceOf[int]':
         return ValueChoiceX(math.floor, 'math.floor({})', [self])
 
-    def __ceil__(self) -> 'ValueChoiceX':
+    def __ceil__(self: 'ChoiceOf[Any]') -> 'ChoiceOf[int]':
         return ValueChoiceX(math.ceil, 'math.ceil({})', [self])
 
     def __index__(self) -> NoReturn:
         # https://docs.python.org/3/reference/datamodel.html#object.__index__
         raise RuntimeError("`__index__` is not allowed on ValueChoice, which means you can't "
-                           "use int(), float(), complex(), range() on a ValueChoice.")
+                           "use int(), float(), complex(), range() on a ValueChoice. "
+                           "To cast the type of ValueChoice, please try `ValueChoice.to_int()` or `ValueChoice.to_float()`.")
 
     def __bool__(self) -> NoReturn:
         raise RuntimeError('Cannot use bool() on ValueChoice. That means, using ValueChoice in a if-clause is illegal. '
@@ -548,138 +624,141 @@ class ValueChoiceX(Translatable):
 
     # region the following code is generated with codegen (see above)
     # Annotated with "region" because I want to collapse them in vscode
-    def __neg__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(operator.neg, '-{}', [self])
+    def __neg__(self: 'ChoiceOf[_value]') -> 'ChoiceOf[_value]':
+        return cast(ChoiceOf[_value], ValueChoiceX(operator.neg, '-{}', [self]))
 
-    def __pos__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(operator.pos, '+{}', [self])
+    def __pos__(self: 'ChoiceOf[_value]') -> 'ChoiceOf[_value]':
+        return cast(ChoiceOf[_value], ValueChoiceX(operator.pos, '+{}', [self]))
 
-    def __invert__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(operator.invert, '~{}', [self])
+    def __invert__(self: 'ChoiceOf[_value]') -> 'ChoiceOf[_value]':
+        return cast(ChoiceOf[_value], ValueChoiceX(operator.invert, '~{}', [self]))
 
-    def __add__(self, other: Any) -> 'ValueChoiceX':
+    def __add__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.add, '{} + {}', [self, other])
 
-    def __radd__(self, other: Any) -> 'ValueChoiceX':
+    def __radd__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.add, '{} + {}', [other, self])
 
-    def __sub__(self, other: Any) -> 'ValueChoiceX':
+    def __sub__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.sub, '{} - {}', [self, other])
 
-    def __rsub__(self, other: Any) -> 'ValueChoiceX':
+    def __rsub__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.sub, '{} - {}', [other, self])
 
-    def __mul__(self, other: Any) -> 'ValueChoiceX':
+    def __mul__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.mul, '{} * {}', [self, other])
 
-    def __rmul__(self, other: Any) -> 'ValueChoiceX':
+    def __rmul__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.mul, '{} * {}', [other, self])
 
-    def __matmul__(self, other: Any) -> 'ValueChoiceX':
+    def __matmul__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.matmul, '{} @ {}', [self, other])
 
-    def __rmatmul__(self, other: Any) -> 'ValueChoiceX':
+    def __rmatmul__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.matmul, '{} @ {}', [other, self])
 
-    def __truediv__(self, other: Any) -> 'ValueChoiceX':
+    def __truediv__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.truediv, '{} // {}', [self, other])
 
-    def __rtruediv__(self, other: Any) -> 'ValueChoiceX':
+    def __rtruediv__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.truediv, '{} // {}', [other, self])
 
-    def __floordiv__(self, other: Any) -> 'ValueChoiceX':
+    def __floordiv__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.floordiv, '{} / {}', [self, other])
 
-    def __rfloordiv__(self, other: Any) -> 'ValueChoiceX':
+    def __rfloordiv__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.floordiv, '{} / {}', [other, self])
 
-    def __mod__(self, other: Any) -> 'ValueChoiceX':
+    def __mod__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.mod, '{} % {}', [self, other])
 
-    def __rmod__(self, other: Any) -> 'ValueChoiceX':
+    def __rmod__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.mod, '{} % {}', [other, self])
 
-    def __lshift__(self, other: Any) -> 'ValueChoiceX':
+    def __lshift__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.lshift, '{} << {}', [self, other])
 
-    def __rlshift__(self, other: Any) -> 'ValueChoiceX':
+    def __rlshift__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.lshift, '{} << {}', [other, self])
 
-    def __rshift__(self, other: Any) -> 'ValueChoiceX':
+    def __rshift__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.rshift, '{} >> {}', [self, other])
 
-    def __rrshift__(self, other: Any) -> 'ValueChoiceX':
+    def __rrshift__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.rshift, '{} >> {}', [other, self])
 
-    def __and__(self, other: Any) -> 'ValueChoiceX':
+    def __and__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.and_, '{} & {}', [self, other])
 
-    def __rand__(self, other: Any) -> 'ValueChoiceX':
+    def __rand__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.and_, '{} & {}', [other, self])
 
-    def __xor__(self, other: Any) -> 'ValueChoiceX':
+    def __xor__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.xor, '{} ^ {}', [self, other])
 
-    def __rxor__(self, other: Any) -> 'ValueChoiceX':
+    def __rxor__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.xor, '{} ^ {}', [other, self])
 
-    def __or__(self, other: Any) -> 'ValueChoiceX':
+    def __or__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.or_, '{} | {}', [self, other])
 
-    def __ror__(self, other: Any) -> 'ValueChoiceX':
+    def __ror__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.or_, '{} | {}', [other, self])
 
-    def __lt__(self, other: Any) -> 'ValueChoiceX':
+    def __lt__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.lt, '{} < {}', [self, other])
 
-    def __le__(self, other: Any) -> 'ValueChoiceX':
+    def __le__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.le, '{} <= {}', [self, other])
 
-    def __eq__(self, other: Any) -> 'ValueChoiceX':
+    def __eq__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.eq, '{} == {}', [self, other])
 
-    def __ne__(self, other: Any) -> 'ValueChoiceX':
+    def __ne__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.ne, '{} != {}', [self, other])
 
-    def __ge__(self, other: Any) -> 'ValueChoiceX':
+    def __ge__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.ge, '{} >= {}', [self, other])
 
-    def __gt__(self, other: Any) -> 'ValueChoiceX':
+    def __gt__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(operator.gt, '{} > {}', [self, other])
     # endregion
 
     # __pow__, __divmod__, __abs__ are special ones.
     # Not easy to cover those cases with codegen.
-    def __pow__(self, other: Any, modulo: Optional[Any] = None) -> 'ValueChoiceX':
+    def __pow__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]', modulo: Optional['MaybeChoice[Any]'] = None) -> 'ChoiceOf[Any]':
         if modulo is not None:
             return ValueChoiceX(pow, 'pow({}, {}, {})', [self, other, modulo])
         return ValueChoiceX(lambda a, b: a ** b, '{} ** {}', [self, other])
 
-    def __rpow__(self, other: Any, modulo: Optional[Any] = None) -> 'ValueChoiceX':
+    def __rpow__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]', modulo: Optional['MaybeChoice[Any]'] = None) -> 'ChoiceOf[Any]':
         if modulo is not None:
             return ValueChoiceX(pow, 'pow({}, {}, {})', [other, self, modulo])
         return ValueChoiceX(lambda a, b: a ** b, '{} ** {}', [other, self])
 
-    def __divmod__(self, other: Any) -> 'ValueChoiceX':
+    def __divmod__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(divmod, 'divmod({}, {})', [self, other])
 
-    def __rdivmod__(self, other: Any) -> 'ValueChoiceX':
+    def __rdivmod__(self: 'ChoiceOf[Any]', other: 'MaybeChoice[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(divmod, 'divmod({}, {})', [other, self])
 
-    def __abs__(self) -> 'ValueChoiceX':
+    def __abs__(self: 'ChoiceOf[Any]') -> 'ChoiceOf[Any]':
         return ValueChoiceX(abs, 'abs({})', [self])
 
 
-ValueChoiceOrAny = TypeVar('ValueChoiceOrAny', ValueChoiceX, Any)
+ChoiceOf = ValueChoiceX
+MaybeChoice = Union[ValueChoiceX[_cand], _cand]
 
 
-class ValueChoice(ValueChoiceX, Mutable):
+class ValueChoice(ValueChoiceX[_cand], Mutable):
     """
-    ValueChoice is to choose one from ``candidates``.
+    ValueChoice is to choose one from ``candidates``. The most common use cases are:
 
-    In most use scenarios, ValueChoice should be passed to the init parameters of a serializable module. For example,
+    * Used as input arguments of :class:`~nni.retiarii.basic_unit`
+      (i.e., modules in ``nni.retiarii.nn.pytorch`` and user-defined modules decorated with ``@basic_unit``).
+    * Used as input arguments of evaluator (*new in v2.7*).
 
-    .. code-block:: python
+    It can be used in parameters of operators (i.e., a sub-module of the model): ::
 
         class Net(nn.Module):
             def __init__(self):
@@ -689,37 +768,84 @@ class ValueChoice(ValueChoiceX, Mutable):
             def forward(self, x):
                 return self.conv(x)
 
-    In case, you want to search a parameter that is used repeatedly, this is also possible by sharing the same value choice instance.
-    (Sharing the label should have the same effect.) For example,
+    Or evaluator (only if the evaluator is :doc:`traceable </nas/serialization>`, e.g.,
+    :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`): ::
 
-    .. code-block:: python
+        def train_and_evaluate(model_cls, learning_rate):
+            ...
 
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                hidden_dim = nn.ValueChoice([128, 512])
-                self.fc = nn.Sequential(
-                    nn.Linear(64, hidden_dim),
-                    nn.Linear(hidden_dim, 10)
-                )
+        self.evaluator = FunctionalEvaluator(train_and_evaluate, learning_rate=nn.ValueChoice([1e-3, 1e-2, 1e-1]))
 
-                # the following code has the same effect.
-                # self.fc = nn.Sequential(
-                #     nn.Linear(64, nn.ValueChoice([128, 512], label='dim')),
-                #     nn.Linear(nn.ValueChoice([128, 512], label='dim'), 10)
-                # )
+    Value choices supports arithmetic operators, which is particularly useful when searching for a network width multiplier: ::
 
-            def forward(self, x):
-                return self.fc(x)
+        # init
+        scale = nn.ValueChoice([1.0, 1.5, 2.0])
+        self.conv1 = nn.Conv2d(3, round(scale * 16))
+        self.conv2 = nn.Conv2d(round(scale * 16), round(scale * 64))
+        self.conv3 = nn.Conv2d(round(scale * 64), round(scale * 256))
 
-    Note that ValueChoice should be used directly. Transformations like ``nn.Linear(32, nn.ValueChoice([64, 128]) * 2)``
-    are not supported.
+        # forward
+        return self.conv3(self.conv2(self.conv1(x)))
 
-    Another common use case is to initialize the values to choose from in init and call the module in forward to get the chosen value.
+    Or when kernel size and padding are coupled so as to keep the output size constant: ::
+
+        # init
+        ks = nn.ValueChoice([3, 5, 7])
+        self.conv = nn.Conv2d(3, 16, kernel_size=ks, padding=(ks - 1) // 2)
+
+        # forward
+        return self.conv(x)
+
+    Or when several layers are concatenated for a final layer. ::
+
+        # init
+        self.linear1 = nn.Linear(3, nn.ValueChoice([1, 2, 3], label='a'))
+        self.linear2 = nn.Linear(3, nn.ValueChoice([4, 5, 6], label='b'))
+        self.final = nn.Linear(nn.ValueChoice([1, 2, 3], label='a') + nn.ValueChoice([4, 5, 6], label='b'), 2)
+
+        # forward
+        return self.final(torch.cat([self.linear1(x), self.linear2(x)], 1))
+
+    Some advanced operators are also provided, such as :meth:`ValueChoice.max` and :meth:`ValueChoice.cond`.
+
+    .. tip::
+
+        All the APIs have an optional argument called ``label``,
+        mutations with the same label will share the same choice. A typical example is, ::
+
+            self.net = nn.Sequential(
+                nn.Linear(10, nn.ValueChoice([32, 64, 128], label='hidden_dim')),
+                nn.Linear(nn.ValueChoice([32, 64, 128], label='hidden_dim'), 3)
+            )
+
+        Sharing the same value choice instance has the similar effect. ::
+
+            class Net(nn.Module):
+                def __init__(self):
+                    super().__init__()
+                    hidden_dim = nn.ValueChoice([128, 512])
+                    self.fc = nn.Sequential(
+                        nn.Linear(64, hidden_dim),
+                        nn.Linear(hidden_dim, 10)
+                    )
+
+    .. warning::
+
+        It looks as if a specific candidate has been chosen (e.g., how it looks like when you can put ``ValueChoice``
+        as a parameter of ``nn.Conv2d``), but in fact it's a syntax sugar as because the basic units and evaluators
+        do all the underlying works. That means, you cannot assume that ``ValueChoice`` can be used in the same way
+        as its candidates. For example, the following usage will NOT work: ::
+
+            self.blocks = []
+            for i in range(nn.ValueChoice([1, 2, 3])):
+                self.blocks.append(Block())
+
+            # NOTE: instead you should probably write
+            # self.blocks = nn.Repeat(Block(), (1, 3))
+
+    Another use case is to initialize the values to choose from in init and call the module in forward to get the chosen value.
     Usually, this is used to pass a mutable value to a functional API like ``torch.xxx`` or ``nn.functional.xxx```.
-    For example,
-
-    .. code-block:: python
+    For example, ::
 
         class Net(nn.Module):
             def __init__(self):
@@ -742,25 +868,28 @@ class ValueChoice(ValueChoiceX, Mutable):
     # FIXME: prior is designed but not supported yet
 
     @classmethod
-    def create_fixed_module(cls, candidates: List[Any], *, label: Optional[str] = None, **kwargs):
+    def create_fixed_module(cls, candidates: List[_cand], *, label: Optional[str] = None, **kwargs):
         value = get_fixed_value(label)
         if value not in candidates:
             raise ValueError(f'Value {value} does not belong to the candidates: {candidates}.')
         return value
 
-    def __init__(self, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
-        super().__init__(None, None, None)
+    def __init__(self, candidates: List[_cand], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
+        super().__init__()
         self.candidates = candidates
         self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
         assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
         self._label = generate_new_label(label)
-        self._accessor = []
 
     @property
     def label(self):
         return self._label
 
     def forward(self):
+        """
+        The forward of input choice is simply the first value of ``candidates``.
+        It shouldn't be called directly by users in most cases.
+        """
         warnings.warn('You should not run forward of this module directly.')
         return self.candidates[0]
 
@@ -768,10 +897,10 @@ class ValueChoice(ValueChoiceX, Mutable):
         # yield self because self is the only value choice here
         yield self
 
-    def dry_run(self) -> Any:
+    def dry_run(self) -> _cand:
         return self.candidates[0]
 
-    def _evaluate(self, values: Iterable[Any], dry_run: bool = False) -> Any:
+    def _evaluate(self, values: Iterator[_cand], dry_run: bool = False) -> _cand:
         if dry_run:
             return self.candidates[0]
         try:
@@ -784,6 +913,152 @@ class ValueChoice(ValueChoiceX, Mutable):
 
     def __repr__(self):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
+
+
+ValueType = TypeVar('ValueType')
+
+
+class ModelParameterChoice:
+    """ModelParameterChoice chooses one hyper-parameter from ``candidates``.
+
+    .. attention::
+
+       This API is internal, and does not guarantee forward-compatibility.
+
+    It's quite similar to :class:`ValueChoice`, but unlike :class:`ValueChoice`,
+    it always returns a fixed value, even at the construction of base model.
+
+    This makes it highly flexible (e.g., can be used in for-loop, if-condition, as argument of any function). For example: ::
+
+        self.has_auxiliary_head = ModelParameterChoice([False, True])
+        # this will raise error if you use `ValueChoice`
+        if self.has_auxiliary_head is True:  # or self.has_auxiliary_head
+            self.auxiliary_head = Head()
+        else:
+            self.auxiliary_head = None
+        print(type(self.has_auxiliary_head))  # <class 'bool'>
+
+    The working mechanism of :class:`ModelParameterChoice` is that, it registers itself
+    in the ``model_wrapper``, as a hyper-parameter of the model, and then returns the value specified with ``default``.
+    At base model construction, the default value will be used (as a mocked hyper-parameter).
+    In trial, the hyper-parameter selected by strategy will be used.
+
+    Although flexible, we still recommend using :class:`ValueChoice` in favor of :class:`ModelParameterChoice`,
+    because information are lost when using :class:`ModelParameterChoice` in exchange of its flexibility,
+    making it incompatible with one-shot strategies and non-python execution engines.
+
+    .. warning::
+
+        :class:`ModelParameterChoice` can NOT be nested.
+
+    .. tip::
+
+        Although called :class:`ModelParameterChoice`, it's meant to tune hyper-parameter of architecture.
+        It's NOT used to tune model-training hyper-parameters like ``learning_rate``.
+        If you need to tune ``learning_rate``, please use :class:`ValueChoice` on arguments of :class:`nni.retiarii.Evaluator`.
+
+    Parameters
+    ----------
+    candidates : list of any
+        List of values to choose from.
+    prior : list of float
+        Prior distribution to sample from. Currently has no effect.
+    default : Callable[[List[Any]], Any] or Any
+        Function that selects one from ``candidates``, or a candidate.
+        Use :meth:`ModelParameterChoice.FIRST` or :meth:`ModelParameterChoice.LAST` to take the first or last item.
+        Default: :meth:`ModelParameterChoice.FIRST`
+    label : str
+        Identifier of the value choice.
+
+    Warnings
+    --------
+    :class:`ModelParameterChoice` is incompatible with one-shot strategies and non-python execution engines.
+
+    Sometimes, the same search space implemented **without** :class:`ModelParameterChoice` can be simpler, and explored
+    with more types of search strategies. For example, the following usages are equivalent: ::
+
+        # with ModelParameterChoice
+        depth = nn.ModelParameterChoice(list(range(3, 10)))
+        blocks = []
+        for i in range(depth):
+            blocks.append(Block())
+
+        # w/o HyperParmaeterChoice
+        blocks = Repeat(Block(), (3, 9))
+
+    Examples
+    --------
+    Get a dynamic-shaped parameter. Because ``torch.zeros`` is not a basic unit, we can't use :class:`ValueChoice` on it.
+
+    >>> parameter_dim = nn.ModelParameterChoice([64, 128, 256])
+    >>> self.token = nn.Parameter(torch.zeros(1, parameter_dim, 32, 32))
+    """
+
+    # FIXME: fix signature in docs
+
+    # FIXME: prior is designed but not supported yet
+
+    def __new__(cls, candidates: List[ValueType], *,
+                prior: Optional[List[float]] = None,
+                default: Union[Callable[[List[ValueType]], ValueType], ValueType] = None,
+                label: Optional[str] = None) -> ValueType:
+        # Actually, creating a `ModelParameterChoice` never creates one.
+        # It always return a fixed value, and register a ParameterSpec
+
+        if default is None:
+            default = cls.FIRST
+
+        try:
+            return cls.create_fixed_module(candidates, label=label)
+        except NoContextError:
+            return cls.create_default(candidates, default, label)
+
+    @staticmethod
+    def create_default(candidates: List[ValueType],
+                       default: Union[Callable[[List[ValueType]], ValueType], ValueType],
+                       label: Optional[str]) -> ValueType:
+        if default not in candidates:
+            # could be callable
+            try:
+                default = cast(Callable[[List[ValueType]], ValueType], default)(candidates)
+            except TypeError as e:
+                if 'not callable' in str(e):
+                    raise TypeError("`default` is not in `candidates`, and it's also not callable.")
+                raise
+
+        default = cast(ValueType, default)
+
+        label = generate_new_label(label)
+        parameter_spec = ParameterSpec(
+            label,          # name
+            'choice',       # TODO: support more types
+            candidates,     # value
+            (label,),       # we don't have nested now
+            True,           # yes, categorical
+        )
+
+        # there could be duplicates. Dedup is done in mutator
+        ModelNamespace.current_context().parameter_specs.append(parameter_spec)
+
+        return default
+
+    @classmethod
+    def create_fixed_module(cls, candidates: List[ValueType], *, label: Optional[str] = None, **kwargs) -> ValueType:
+        # same as ValueChoice
+        value = get_fixed_value(label)
+        if value not in candidates:
+            raise ValueError(f'Value {value} does not belong to the candidates: {candidates}.')
+        return value
+
+    @staticmethod
+    def FIRST(sequence: Sequence[ValueType]) -> ValueType:
+        """Get the first item of sequence. Useful in ``default`` argument."""
+        return sequence[0]
+
+    @staticmethod
+    def LAST(sequence: Sequence[ValueType]) -> ValueType:
+        """Get the last item of sequence. Useful in ``default`` argument."""
+        return sequence[-1]
 
 
 @basic_unit
@@ -799,4 +1074,8 @@ class Placeholder(nn.Module):
         super().__init__()
 
     def forward(self, x):
+        """
+        Forward of placeholder is not meaningful.
+        It returns input directly.
+        """
         return x

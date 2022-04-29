@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import functools
 import hashlib
 import json
@@ -6,6 +9,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Optional
 
 import requests
 import tqdm
@@ -49,8 +53,9 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
 
             f = tempfile.NamedTemporaryFile(delete=False, dir=dst_dir)
             r = requests.get(download_url, stream=True)
-            total_length = int(r.headers.get('content-length'))
-            with tqdm.tqdm(total=total_length, disable=not progress,
+            total_length: Optional[str] = r.headers.get('content-length')
+            assert total_length is not None, f'Content length is not found in the response of {download_url}'
+            with tqdm.tqdm(total=int(total_length), disable=not progress,
                            unit='B', unit_scale=True, unit_divisor=1024) as pbar:
                 for chunk in r.iter_content(8192):
                     f.write(chunk)

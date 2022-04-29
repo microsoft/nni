@@ -107,36 +107,151 @@ def update_ema(biased_ema, value, decay):
 
 
 class QAT_Quantizer(Quantizer):
-    """Quantizer defined in:
-    Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
-    http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
+    r"""
+    Quantizer defined in:
+    `Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
+    <http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf>`__
+
+    Authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
+
+    ..
+
+        We propose an approach that simulates quantization effects in the forward pass of training.
+        Backpropagation still happens as usual, and all weights and biases are stored in floating point
+        so that they can be easily nudged by small amounts.
+        The forward propagation pass however simulates quantized inference as it will happen in the inference engine,
+        by implementing in floating-point arithmetic the rounding behavior of the quantization scheme:
+
+        * Weights are quantized before they are convolved with the input. If batch normalization (see [17]) is used for the layer,
+          the batch normalization parameters are “folded into” the weights before quantization.
+
+        * Activations are quantized at points where they would be during inference,
+          e.g. after the activation function is applied to a convolutional or fully connected layer’s output,
+          or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be quantized.
+    config_list : List[Dict]
+        List of configurations for quantization. Supported keys for dict:
+            - quant_types : List[str]
+                Type of quantization you want to apply, currently support 'weight', 'input', 'output'.
+            - quant_bits : Union[int, Dict[str, int]]
+                Bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
+                When the type is int, all quantization types share same bits length.
+            - quant_start_step : int
+                Disable quantization until model are run by certain number of steps, this allows the network to enter a more stable.
+                State where output quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0.
+            - op_types : List[str]
+                Types of nn.module you want to apply quantization, eg. 'Conv2d'.
+            - op_names : List[str]
+                Names of nn.module you want to apply quantization, eg. 'conv1'.
+            - exclude : bool
+                Set True then the layers setting by op_types and op_names will be excluded from quantization.
+    optimizer : torch.optim.Optimizer
+        Optimizer is required in `QAT_Quantizer`, NNI will patch the optimizer and count the optimize step number.
+    dummy_input : Tuple[torch.Tensor]
+        Inputs to the model, which are used to get the graph of the module. The graph is used to find Conv-Bn patterns.
+        And then the batch normalization folding would be enabled. If dummy_input is not given,
+        the batch normalization folding would be disabled.
+
+    Examples
+    --------
+        >>> from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+        >>> model = ...
+        >>> config_list = [{'quant_types': ['weight', 'input'], 'quant_bits': {'weight': 8, 'input': 8}, 'op_types': ['Conv2d']}]
+        >>> optimizer = ...
+        >>> dummy_input = torch.rand(...)
+        >>> quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input=dummy_input)
+        >>> quantizer.compress()
+        >>> # Training Process...
+
+    For detailed example please refer to
+    :githublink:`examples/model_compress/quantization/QAT_torch_quantizer.py <examples/model_compress/quantization/QAT_torch_quantizer.py>`.
+
+    Notes
+    -----
+
+    **Batch normalization folding**
+
+    Batch normalization folding is supported in QAT quantizer. It can be easily enabled by passing an argument `dummy_input` to
+    the quantizer, like:
+
+    .. code-block:: python
+
+        # assume your model takes an input of shape (1, 1, 28, 28)
+        # and dummy_input must be on the same device as the model
+        dummy_input = torch.randn(1, 1, 28, 28)
+
+        # pass the dummy_input to the quantizer
+        quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input=dummy_input)
+
+
+    The quantizer will automatically detect Conv-BN patterns and simulate batch normalization folding process in the training
+    graph. Note that when the quantization aware training process is finished, the folded weight/bias would be restored after calling
+    `quantizer.export_model`.
+
+    **Quantization dtype and scheme customization**
+
+    Different backends on different devices use different quantization strategies (i.e. dtype (int or uint) and
+    scheme (per-tensor or per-channel and symmetric or affine)). QAT quantizer supports customization of mainstream dtypes and schemes.
+    There are two ways to set them. One way is setting them globally through a function named `set_quant_scheme_dtype` like:
+
+    .. code-block:: python
+
+        from nni.compression.pytorch.quantization.settings import set_quant_scheme_dtype
+
+        # This will set all the quantization of 'input' in 'per_tensor_affine' and 'uint' manner
+        set_quant_scheme_dtype('input', 'per_tensor_affine', 'uint)
+        # This will set all the quantization of 'output' in 'per_tensor_symmetric' and 'int' manner
+        set_quant_scheme_dtype('output', 'per_tensor_symmetric', 'int')
+        # This will set all the quantization of 'weight' in 'per_channel_symmetric' and 'int' manner
+        set_quant_scheme_dtype('weight', 'per_channel_symmetric', 'int')
+
+
+    The other way is more detailed. You can customize the dtype and scheme in each quantization config list like:
+
+    .. code-block:: python
+
+        config_list = [{
+            'quant_types': ['weight'],
+            'quant_bits':  8,
+            'op_types':['Conv2d', 'Linear'],
+            'quant_dtype': 'int',
+            'quant_scheme': 'per_channel_symmetric'
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': 8,
+            'quant_start_step': 7000,
+            'op_types':['ReLU6'],
+            'quant_dtype': 'uint',
+            'quant_scheme': 'per_tensor_affine'
+        }]
+
+    **Multi-GPU training**
+
+    QAT quantizer natively supports multi-gpu training (DataParallel and DistributedDataParallel). Note that the quantizer
+    instantiation should happen before you wrap your model with DataParallel or DistributedDataParallel. For example:
+
+    .. code-block:: python
+
+        from torch.nn.parallel import DistributedDataParallel as DDP
+        from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+
+        model = define_your_model()
+
+        model = QAT_Quantizer(model, **other_params)  # <--- QAT_Quantizer instantiation
+
+        model = DDP(model)
+
+        for i in range(epochs):
+            train(model)
+            eval(model)
+
     """
 
     def __init__(self, model, config_list, optimizer, dummy_input=None):
-        """
-        Parameters
-        ----------
-        layer : LayerInfo
-            the layer to quantize
-        config_list : list of dict
-            list of configurations for quantization
-            supported keys for dict:
-                - quant_types : list of string
-                    type of quantization you want to apply, currently support 'weight', 'input', 'output'
-                - quant_bits : int or dict of {str : int}
-                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8},
-                    when the type is int, all quantization types share same bits length
-                - quant_start_step : int
-                    disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
-                    state where output quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
-                - op_types : list of string
-                    types of nn.module you want to apply quantization, eg. 'Conv2d'
-                - dummy_input : tuple of tensor
-                    inputs to the model, which are used to get the graph of the module. The graph is used to find
-                    Conv-Bn patterns. And then the batch normalization folding would be enabled. If dummy_input is not
-                    given, the batch normalization folding would be disabled.
-        """
-
         assert isinstance(optimizer, torch.optim.Optimizer), "unrecognized optimizer type"
         super().__init__(model, config_list, optimizer, dummy_input)
         self.quant_grad = QATGrad.apply

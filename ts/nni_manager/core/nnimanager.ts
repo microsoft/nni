@@ -8,7 +8,8 @@ import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
 import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
-import { Logger, getLogger, stopLogging } from '../common/log';
+import globals from 'common/globals';
+import { Logger, getLogger } from '../common/log';
 import {
     ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
@@ -25,7 +26,6 @@ import {
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
-import { RestServer } from '../rest_server';
 
 /**
  * NNIManager which implements Manager interface
@@ -75,6 +75,8 @@ class NNIManager implements Manager {
         if (pipe !== null) {
             this.dispatcher = createDispatcherPipeInterface(pipe);
         }
+
+        globals.shutdown.register('NniManager', this.stopExperiment.bind(this));
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
@@ -186,7 +188,7 @@ class NNIManager implements Manager {
         const dispatcherCommand: string = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
-        this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
+        await this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
         this.setStatus('RUNNING');
         await this.storeExperimentProfile();
         this.run().catch((err: Error) => {
@@ -219,7 +221,7 @@ class NNIManager implements Manager {
         const dispatcherCommand: string = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
-        this.setupTuner(dispatcherCommand, undefined, 'resume', checkpointDir);
+        await this.setupTuner(dispatcherCommand, undefined, 'resume', checkpointDir);
 
         const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
 
@@ -293,12 +295,12 @@ class NNIManager implements Manager {
         return this.dataStore.getTrialJobStatistics();
     }
 
-    public async stopExperiment(): Promise<void> {
+    private async stopExperiment(): Promise<void> {
         await this.stopExperimentTopHalf();
         await this.stopExperimentBottomHalf();
     }
 
-    public async stopExperimentTopHalf(): Promise<void> {
+    private async stopExperimentTopHalf(): Promise<void> {
         this.setStatus('STOPPING');
         this.log.info('Stopping experiment, cleaning up ...');
 
@@ -322,7 +324,7 @@ class NNIManager implements Manager {
         this.dispatcher = undefined;
     }
 
-    public async stopExperimentBottomHalf(): Promise<void> {
+    private async stopExperimentBottomHalf(): Promise<void> {
         try {
             const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
 
@@ -350,19 +352,9 @@ class NNIManager implements Manager {
         this.setStatus('STOPPED');
         this.log.info('Experiment stopped.');
 
-        let hasError: boolean = false;
-        try {
-            await this.experimentManager.stop();
-            await component.get<TensorboardManager>(TensorboardManager).stop();
-            await this.dataStore.close();
-            await component.get<RestServer>(RestServer).shutdown();
-        } catch (err) {
-            hasError = true;
-            this.log.error(`${err.stack}`);
-        } finally {
-            stopLogging();
-            process.exit(hasError ? 1 : 0);
-        }
+        await this.experimentManager.stop();
+        await component.get<TensorboardManager>(TensorboardManager).stop();
+        await this.dataStore.close();
     }
 
     public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
@@ -470,7 +462,7 @@ class NNIManager implements Manager {
         }
     }
 
-    private setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): void {
+    private async setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): Promise<void> {
         if (this.dispatcher !== undefined) {
             return;
         }
@@ -496,7 +488,7 @@ class NNIManager implements Manager {
         const newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command, stdio, newCwd, newEnv);
         this.dispatcherPid = tunerProc.pid!;
-        this.dispatcher = createDispatcherInterface(tunerProc);
+        this.dispatcher = await createDispatcherInterface(tunerProc);
 
         return;
     }
