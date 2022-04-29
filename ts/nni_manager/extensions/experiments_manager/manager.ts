@@ -1,15 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import assert from 'assert/strict';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import assert from 'assert';
+import * as timersPromises from 'timers/promises';
+
+import { Deferred } from 'ts-deferred';
 
 import { getLogger, Logger } from 'common/log';
-import { isAlive, withLockSync, getExperimentsInfoPath, delay } from 'common/utils';
-import { ExperimentManager } from 'common/experimentManager';
-import { Deferred } from 'ts-deferred';
+import globals from 'common/globals';
+import { isAlive } from 'common/utils';
+import { withLock, withLockNoWait } from './utils';
+
+const logger: Logger = getLogger('experiments_manager');
 
 interface CrashedInfo {
     experimentId: string;
@@ -21,19 +26,15 @@ interface FileInfo {
     mtime: number;
 }
 
-class NNIExperimentsManager implements ExperimentManager {
-    private experimentsPath: string;
-    private log: Logger;
-    private profileUpdateTimer: {[key: string]: any};
+export class ExperimentsManager {
+    private profileUpdateTimer: Record<string, NodeJS.Timeout | undefined> = {};
 
     constructor() {
-        this.experimentsPath = getExperimentsInfoPath();
-        this.log = getLogger('NNIExperimentsManager');
-        this.profileUpdateTimer = {};
+        globals.shutdown.register('experiments_manager', this.cleanUp.bind(this));
     }
 
     public async getExperimentsInfo(): Promise<JSON> {
-        const fileInfo: FileInfo = await this.withLockIterated(this.readExperimentsInfo, 100);
+        const fileInfo: FileInfo = await withLock(globals.paths.experimentsList, () => this.readExperimentsInfo());
         const experimentsInformation = JSON.parse(fileInfo.buffer.toString());
         const expIdList: Array<string> = Object.keys(experimentsInformation).filter((expId) => {
             return experimentsInformation[expId]['status'] !== 'STOPPED';
@@ -42,11 +43,13 @@ class NNIExperimentsManager implements ExperimentManager {
             return this.checkCrashed(expId, experimentsInformation[expId]['pid']);
         }))).filter(crashedInfo => crashedInfo.isCrashed);
         if (updateList.length > 0){
-            const result = await this.withLockIterated(this.updateAllStatus, 100, updateList.map(crashedInfo => crashedInfo.experimentId), fileInfo.mtime);
+            const result = await withLock(globals.paths.experimentsList, () => {
+                return this.updateAllStatus(updateList.map(crashedInfo => crashedInfo.experimentId), fileInfo.mtime)
+            });
             if (result !== undefined) {
                 return JSON.parse(JSON.stringify(Object.keys(result).map(key=>result[key])));
             } else {
-                await delay(500);
+                await timersPromises.setTimeout(500);
                 return await this.getExperimentsInfo();
             }
         } else {
@@ -54,66 +57,35 @@ class NNIExperimentsManager implements ExperimentManager {
         }
     }
 
-    public setExperimentPath(newPath: string): void {
-        if (newPath[0] === '~') {
-            newPath = path.join(os.homedir(), newPath.slice(1));
-        }
-        if (!path.isAbsolute(newPath)) {
-            newPath = path.resolve(newPath);
-        }
-        this.log.info(`Set new experiment information path: ${newPath}`);
-        this.experimentsPath = newPath;
-    }
-
     public setExperimentInfo(experimentId: string, key: string, value: any): void {
         try {
             if (this.profileUpdateTimer[key] !== undefined) {
                 // if a new call with the same timerId occurs, destroy the unfinished old one
-                clearTimeout(this.profileUpdateTimer[key]);
+                clearTimeout(this.profileUpdateTimer[key]!);
                 this.profileUpdateTimer[key] = undefined;
             }
-            this.withLockSync(() => {
-                const experimentsInformation = JSON.parse(fs.readFileSync(this.experimentsPath).toString());
+            withLockNoWait(globals.paths.experimentsList, () => {
+                const experimentsInformation = JSON.parse(fs.readFileSync(globals.paths.experimentsList).toString());
                 assert(experimentId in experimentsInformation, `Experiment Manager: Experiment Id ${experimentId} not found, this should not happen`);
                 if (value !== undefined) {
                     experimentsInformation[experimentId][key] = value;
                 } else {
                     delete experimentsInformation[experimentId][key];
                 }
-                fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation, null, 4));
+                fs.writeFileSync(globals.paths.experimentsList, JSON.stringify(experimentsInformation, null, 4));
             });
         } catch (err) {
-            this.log.error(err);
-            this.log.debug(`Experiment Manager: Retry set key value: ${experimentId} {${key}: ${value}}`);
+            logger.error(err);
+            logger.debug(`Experiment Manager: Retry set key value: ${experimentId} {${key}: ${value}}`);
             if (err.code === 'EEXIST' || err.message === 'File has been locked.') {
-                this.profileUpdateTimer[key] = setTimeout(this.setExperimentInfo.bind(this), 100, experimentId, key, value);
+                this.profileUpdateTimer[key] = setTimeout(() => this.setExperimentInfo(experimentId, key, value), 100);
             }
         }
-    }
-
-    private async withLockIterated (func: Function, retry: number, ...args: any): Promise<any> {
-        if (retry < 0) {
-            throw new Error('Lock file out of retries.');
-        }
-        try {
-            return this.withLockSync(func, ...args);
-        } catch(err) {
-            if (err.code === 'EEXIST' || err.message === 'File has been locked.') {
-                // retry wait is 50ms
-                await delay(50);
-                return await this.withLockIterated(func, retry - 1, ...args);
-            }
-            throw err;
-        }
-    }
-
-    private withLockSync (func: Function, ...args: any): any {
-        return withLockSync(func.bind(this), this.experimentsPath, {stale: 2 * 1000}, ...args);
     }
 
     private readExperimentsInfo(): FileInfo {
-        const buffer: Buffer = fs.readFileSync(this.experimentsPath);
-        const mtime: number = fs.statSync(this.experimentsPath).mtimeMs;
+        const buffer: Buffer = fs.readFileSync(globals.paths.experimentsList);
+        const mtime: number = fs.statSync(globals.paths.experimentsList).mtimeMs;
         return {buffer: buffer, mtime: mtime};
     }
 
@@ -123,33 +95,27 @@ class NNIExperimentsManager implements ExperimentManager {
     }
 
     private updateAllStatus(updateList: Array<string>, timestamp: number): {[key: string]: any} | undefined {
-        if (timestamp !== fs.statSync(this.experimentsPath).mtimeMs) {
+        if (timestamp !== fs.statSync(globals.paths.experimentsList).mtimeMs) {
             return;
         } else {
-            const experimentsInformation = JSON.parse(fs.readFileSync(this.experimentsPath).toString());
+            const experimentsInformation = JSON.parse(fs.readFileSync(globals.paths.experimentsList).toString());
             updateList.forEach((expId: string) => {
                 if (experimentsInformation[expId]) {
                     experimentsInformation[expId]['status'] = 'STOPPED';
                     delete experimentsInformation[expId]['port'];
                 } else {
-                    this.log.error(`Experiment Manager: Experiment Id ${expId} not found, this should not happen`);
+                    logger.error(`Experiment Manager: Experiment Id ${expId} not found, this should not happen`);
                 }
             });
-            fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation, null, 4));
+            fs.writeFileSync(globals.paths.experimentsList, JSON.stringify(experimentsInformation, null, 4));
             return experimentsInformation;
         }
-    }
-
-    public async stop(): Promise<void> {
-        this.log.debug('Stopping experiment manager.');
-        await this.cleanUp().catch(err=>this.log.error(err.message));
-        this.log.debug('Experiment manager stopped.');
     }
 
     private async cleanUp(): Promise<void> {
         const deferred = new Deferred<void>();
         if (this.isUndone()) {
-            this.log.debug('Experiment manager: something undone');
+            logger.debug('Experiment manager: something undone');
             setTimeout(((deferred: Deferred<void>): void => {
                 if (this.isUndone()) {
                     deferred.reject(new Error('Still has undone after 5s, forced stop.'));
@@ -158,7 +124,7 @@ class NNIExperimentsManager implements ExperimentManager {
                 }
             }).bind(this), 5 * 1000, deferred);
         } else {
-            this.log.debug('Experiment manager: all clean up');
+            logger.debug('Experiment manager: all clean up');
             deferred.resolve();
         }
         return deferred.promise;
@@ -170,5 +136,3 @@ class NNIExperimentsManager implements ExperimentManager {
         }).length > 0;
     }
 }
-
-export { NNIExperimentsManager };
