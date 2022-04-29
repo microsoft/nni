@@ -38,8 +38,8 @@ class NniManagerArgs:
     experiments_directory: str  # renamed "config.nni_experiments_directory", must be absolute
     log_level: str
     foreground: bool = False
-    url_prefix: Optional[str] = None  # leading and trailing "/" must be stripped
-    dispatcher_pipe: Optional[str] = None
+    url_prefix: str | None = None  # leading and trailing "/" must be stripped
+    dispatcher_pipe: str | None = None
 
     def __init__(self, action, exp_id, config, port, debug, foreground, url_prefix):
         self.port = port
@@ -85,6 +85,15 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
     if action != 'view' and nni_manager_args.mode in websocket_platforms:
         _ensure_port_idle(port + 1, f'{nni_manager_args.mode} requires an additional port')
 
+    link = Path(config.experiment_working_directory, '_latest')
+    try:
+        if link.exists():
+            link.unlink()
+        link.symlink_to(exp_id, target_is_directory=True)
+    except Exception:
+        if sys.platform != 'win32':
+            _logger.warning(f'Failed to create link {link}')
+
     proc = None
     try:
         _logger.info(
@@ -117,18 +126,6 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
             with contextlib.suppress(Exception):
                 proc.kill()
         raise e
-
-    link = Path(config.experiment_working_directory, '_latest')
-    try:
-        if sys.version_info >= (3, 8):
-            link.unlink(missing_ok=True)
-        else:
-            if link.exists():
-                link.unlink()
-        link.symlink_to(exp_id, target_is_directory=True)
-    except Exception:
-        if sys.platform != 'win32':
-            _logger.warning(f'Failed to create link {link}')
 
     return proc
 
