@@ -8,11 +8,18 @@ copyright_headers = [
     '# Copyright (c) Microsoft Corporation. All rights reserved.\n#\n# MIT License',
 ]
 
+whitelist = [
+    'nni/version.py',
+    'nni/algorithms/hpo/bohb_advisor/config_generator.py',
+]
+
 for root, dirs, files in os.walk('nni'):
     for file in files:
         if not file.endswith('.py'):
             continue
         full_path = os.path.join(root, file)
+        if full_path in whitelist:
+            continue
         content = open(full_path).read()
         if not content.strip():
             # empty file
