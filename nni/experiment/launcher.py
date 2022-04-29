@@ -177,8 +177,8 @@ def start_experiment_retiarii(exp_id, config, port, debug):
         start_time, proc = _start_rest_server_retiarii(config, port, debug, exp_id, pipe.path)
         _logger.info('Connecting IPC pipe...')
         pipe_file = pipe.connect()
-        nni.runtime.protocol._in_file = pipe_file
-        nni.runtime.protocol._out_file = pipe_file
+        nni.runtime.protocol._set_in_file(pipe_file)
+        nni.runtime.protocol._set_out_file(pipe_file)
         _logger.info('Starting web server...')
         _check_rest_server(port)
         platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
