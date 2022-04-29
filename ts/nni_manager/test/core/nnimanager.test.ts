@@ -14,7 +14,7 @@ import { Manager, ExperimentProfile} from '../../common/manager';
 import { ExperimentManager } from '../../common/experimentManager';
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { NNIExperimentsManager } from 'extensions/nniExperimentsManager';
+import { NNIExperimentsManager } from 'extensions/experiments_manager';
 import { NNIManager } from '../../core/nnimanager';
 import { SqlDB } from '../../core/sqlDatabase';
 import { MockedTrainingService } from '../mock/trainingService';

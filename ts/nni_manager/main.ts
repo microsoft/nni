@@ -35,7 +35,7 @@ import { TensorboardManager } from 'common/tensorboardManager';
 import { NNIDataStore } from 'core/nniDataStore';
 import { NNIManager } from 'core/nnimanager';
 import { SqlDB } from 'core/sqlDatabase';
-import { NNIExperimentsManager } from 'extensions/nniExperimentsManager';
+import { NNIExperimentsManager } from 'extensions/experiments_manager';
 import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
 import { RestServer } from 'rest_server';
 
