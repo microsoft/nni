@@ -14,13 +14,13 @@ import { Manager, ExperimentProfile} from '../../common/manager';
 import { ExperimentManager } from '../../common/experimentManager';
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { NNIExperimentsManager } from '../../core/nniExperimentsManager';
+import { NNIExperimentsManager } from 'extensions/nniExperimentsManager';
 import { NNIManager } from '../../core/nnimanager';
 import { SqlDB } from '../../core/sqlDatabase';
 import { MockedTrainingService } from '../mock/trainingService';
 import { MockedDataStore } from '../mock/datastore';
 import { TensorboardManager } from '../../common/tensorboardManager';
-import { NNITensorboardManager } from '../../core/nniTensorboardManager';
+import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
 import * as path from 'path';
 
 async function initContainer(): Promise<void> {

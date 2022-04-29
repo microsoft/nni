@@ -33,10 +33,10 @@ import { Logger, getLogger } from 'common/log';
 import { Manager } from 'common/manager';
 import { TensorboardManager } from 'common/tensorboardManager';
 import { NNIDataStore } from 'core/nniDataStore';
-import { NNIExperimentsManager } from 'core/nniExperimentsManager';
-import { NNITensorboardManager } from 'core/nniTensorboardManager';
 import { NNIManager } from 'core/nnimanager';
 import { SqlDB } from 'core/sqlDatabase';
+import { NNIExperimentsManager } from 'extensions/nniExperimentsManager';
+import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
 import { RestServer } from 'rest_server';
 
 import path from 'path';
