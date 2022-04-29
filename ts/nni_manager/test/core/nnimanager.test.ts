@@ -14,13 +14,13 @@ import { Manager, ExperimentProfile} from '../../common/manager';
 import { ExperimentManager } from '../../common/experimentManager';
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest, killPid } from '../../common/utils';
-import { NNIExperimentsManager } from '../../core/nniExperimentsManager';
+import { NNIExperimentsManager } from 'extensions/experiments_manager';
 import { NNIManager } from '../../core/nnimanager';
 import { SqlDB } from '../../core/sqlDatabase';
 import { MockedTrainingService } from '../mock/trainingService';
 import { MockedDataStore } from '../mock/datastore';
 import { TensorboardManager } from '../../common/tensorboardManager';
-import { NNITensorboardManager } from '../../core/nniTensorboardManager';
+import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
 import * as path from 'path';
 import { UnitTestHelpers } from 'core/ipcInterface';
 
@@ -136,7 +136,7 @@ describe('Unit test for nnimanager', function () {
     })
 
     after(async () => {
-        // FIXME
+        // FIXME: more proper clean up
         const manager: any = nniManager;
         await killPid(manager.dispatcherPid);
         manager.dispatcherPid = 0;
