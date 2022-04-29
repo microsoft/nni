@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from functools import partial
 from typing import Tuple, Optional, Callable, cast
 
 import nni.retiarii.nn.pytorch as nn
@@ -52,6 +53,13 @@ class SELayer(nn.Module):
         return x * y
 
 
+def _se_or_skip(hidden_ch: int, label: str) -> nn.LayerChoice:
+    return nn.LayerChoice({
+        'identity': nn.Identity(),
+        'se': SELayer(hidden_ch)
+    }, label=label)
+
+
 @model_wrapper
 class MobileNetV3Space(nn.Module):
     """
@@ -69,14 +77,17 @@ class MobileNetV3Space(nn.Module):
     def __init__(self, num_labels: int = 1000,
                  base_widths: Tuple[int, ...] = (16, 16, 32, 64, 128, 256, 512, 1024),
                  width_multipliers: Tuple[float, ...] = (0.5, 0.625, 0.75, 1.0, 1.25, 1.5, 2.0),
-                 expand_ratios: Tuple[int, ...] = (1, 2, 3, 4, 5, 6),
+                 expand_ratios: Tuple[float, ...] = (1., 2., 3., 4., 5., 6.),
                  dropout_rate: float = 0.2,
                  bn_eps: float = 1e-3,
                  bn_momentum: float = 0.1):
         super().__init__()
 
+        assert len(base_widths) == 8
+        assert len(width_multipliers) == 7
+
         self.widths = cast(nn.ChoiceOf[int], [
-            nn.ValueChoice([make_divisible(base_width * mult, 8) for mult in width_multipliers], label=f'width_{i}')
+            nn.ValueChoice([make_divisible(base_width * mult, 8) for mult in width_multipliers], label=f's{i}_width')
             for i, base_width in enumerate(base_widths)
         ])
         self.expand_ratios = expand_ratios
@@ -85,22 +96,19 @@ class MobileNetV3Space(nn.Module):
             # Stem
             ConvBNReLU(
                 3, self.widths[0],
-                nn.ValueChoice([3, 5], label='ks_0'),
+                nn.ValueChoice([3, 5], label=f's0_i0_ks'),
                 stride=2, activation_layer=h_swish
             ),
             SeparableConv(self.widths[0], self.widths[0], activation_layer=nn.ReLU),
         ]
 
-        # counting for kernel sizes and expand ratios
-        self.layer_count = 2
-
         blocks += [
             # Body
             self._make_stage(1, self.widths[0], self.widths[1], False, 2, nn.ReLU),
             self._make_stage(2, self.widths[1], self.widths[2], True, 2, nn.ReLU),
-            self._make_stage(1, self.widths[2], self.widths[3], False, 2, h_swish),
-            self._make_stage(1, self.widths[3], self.widths[4], True, 1, h_swish),
-            self._make_stage(1, self.widths[4], self.widths[5], True, 2, h_swish),
+            self._make_stage(3, self.widths[2], self.widths[3], False, 2, h_swish),
+            self._make_stage(4, self.widths[3], self.widths[4], True, 1, h_swish),
+            self._make_stage(5, self.widths[4], self.widths[5], True, 2, h_swish),
         ]
 
         # Head
@@ -129,17 +137,14 @@ class MobileNetV3Space(nn.Module):
     def _make_stage(self, stage_idx, inp, oup, se, stride, act):
         # initialize them first because they are related to layer_count.
         exp, ks, se_blocks = [], [], []
-        for _ in range(4):
-            exp.append(nn.ValueChoice(list(self.expand_ratios), label=f'exp_{self.layer_count}'))
-            ks.append(nn.ValueChoice([3, 5, 7], label=f'ks_{self.layer_count}'))
+        for idx in range(4):
+            exp.append(nn.ValueChoice(list(self.expand_ratios), label=f's{stage_idx}_i{idx}_exp'))
+            ks.append(nn.ValueChoice([3, 5, 7], label=f's{stage_idx}_i{idx}_ks'))
             if se:
                 # if SE is true, assign a layer choice to SE
-                se_blocks.append(
-                    lambda hidden_ch: nn.LayerChoice([nn.Identity(), SELayer(hidden_ch)], label=f'se_{self.layer_count}')
-                )
+                se_blocks.append(partial(_se_or_skip, label=f's{stage_idx}_i{idx}_se'))
             else:
                 se_blocks.append(None)
-            self.layer_count += 1
 
         blocks = [
             # stride = 2
@@ -152,4 +157,4 @@ class MobileNetV3Space(nn.Module):
         ]
 
         # mutable depth
-        return nn.Repeat(blocks, depth=(1, 4), label=f'depth_{stage_idx}')
+        return nn.Repeat(blocks, depth=(1, 4), label=f's{stage_idx}_depth')
