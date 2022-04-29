@@ -234,7 +234,7 @@ class ProxylessNAS(nn.Module):
             # we return a builder that dynamically creates module for different `repeat_idx`.
             builder = inverted_residual_choice_builder(
                 [3, 6], [3, 5, 7], downsamples[stage], widths[stage - 1], widths[stage], f's{stage}')
-            if stage < 6:
+            if stage < 7:
                 blocks.append(nn.Repeat(builder, (1, 4), label=f's{stage}_depth'))
             else:
                 # No mutation for depth in the last stage.
