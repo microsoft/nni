@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 const TrialLog = (props): any => {
     const { logStr, logName } = props;
-    const isHyperlink = /^http/gi.test(logStr);
+    const isHyperlink = logStr.toLowerCase().startsWith('http');
 
     return (
         <div className='logpath'>

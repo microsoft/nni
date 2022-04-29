@@ -82,8 +82,8 @@ const OpenRow = (props): any => {
                                 <Stack className='bgHyper'>
                                     <JSONTree
                                         hideRoot={true}
-                                        shouldExpandNode={(): boolean => true} // default expandNode
-                                        getItemString={(): null => null} // remove the {} items
+                                        shouldExpandNode={() => true} // default expandNode
+                                        getItemString={() => null} // remove the {} items
                                         data={reformatRetiariiParameter(originParameters as any)}
                                     />
                                 </Stack>
