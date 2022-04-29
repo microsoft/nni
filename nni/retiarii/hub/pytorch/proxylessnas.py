@@ -39,13 +39,19 @@ class ConvBNReLU(nn.Sequential):
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
         dilation: int = 1,
+        squeeze_and_excite: Optional[Callable[[nn.MaybeChoice[int]], nn.Module]] = None,
+        se_before_activation: bool = False,
     ) -> None:
         padding = (kernel_size - 1) // 2 * dilation
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         if activation_layer is None:
             activation_layer = nn.ReLU6
-        super().__init__(
+        # If no normalization is used, set bias to True
+        # https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L194
+        norm = norm_layer(cast(int, out_channels))
+        no_normalization = isinstance(norm, nn.Identity)
+        blocks: List[nn.Module] = [
             nn.Conv2d(
                 cast(int, in_channels),
                 cast(int, out_channels),
@@ -54,11 +60,23 @@ class ConvBNReLU(nn.Sequential):
                 cast(int, padding),
                 dilation=dilation,
                 groups=cast(int, groups),
-                bias=False
-            ),
-            norm_layer(cast(int, out_channels)),
-            activation_layer(inplace=True)
-        )
+                bias=no_normalization
+            )
+        ]
+
+        if not no_normalization:
+            # not an identity
+            blocks.append(norm)
+
+        if squeeze_and_excite is not None and se_before_activation:
+            # Pytorch implementation: https://github.com/d-li14/mobilenetv3.pytorch/issues/18
+            blocks.append(squeeze_and_excite(out_channels))
+        blocks.append(activation_layer(inplace=True))
+        if squeeze_and_excite is not None and not se_before_activation:
+            # Tf implementation: https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L481
+            blocks.append(squeeze_and_excite(out_channels))
+
+        super().__init__(*blocks)
         self.out_channels = out_channels
 
 
@@ -117,6 +135,7 @@ class InvertedResidual(nn.Sequential):
         squeeze_and_excite: Optional[Callable[[nn.MaybeChoice[int]], nn.Module]] = None,
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
+        se_before_activation: bool = False,
     ) -> None:
         super().__init__()
         self.stride = stride
@@ -138,11 +157,9 @@ class InvertedResidual(nn.Sequential):
                        norm_layer=norm_layer, activation_layer=activation_layer),
             # depth-wise
             ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch,
-                       norm_layer=norm_layer, activation_layer=activation_layer)
+                       norm_layer=norm_layer, activation_layer=activation_layer,
+                       squeeze_and_excite=squeeze_and_excite, se_before_activation=se_before_activation)
         ]
-
-        if squeeze_and_excite:
-            layers.append(squeeze_and_excite(hidden_ch))
 
         layers += [
             # pw-linear

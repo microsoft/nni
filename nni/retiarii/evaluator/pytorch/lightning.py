@@ -237,7 +237,7 @@ class _SupervisedLearningModule(LightningModule):
 
 class _AccuracyWithLogits(torchmetrics.Accuracy):
     def update(self, pred, target):
-        return super().update(nn_functional.softmax(pred), target)
+        return super().update(nn_functional.softmax(pred, dim=-1), target)
 
 
 @nni.trace

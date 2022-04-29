@@ -28,6 +28,11 @@ class h_swish(nn.Module):
         return x * self.sigmoid(x)
 
 
+SE_DEFAULT_GATING_ACTIVATION = h_sigmoid
+"""This can also be ``nn.Sigmoid``, according to
+`tensorflow implementation <https://github.com/google-research/google-research/blob/20736344/tunas/mobile_search_space_v3.py#L90>`__."""
+
+
 class SELayer(nn.Module):
     """Squeeze-and-excite layer."""
 
@@ -37,7 +42,7 @@ class SELayer(nn.Module):
                  activation_layer: Optional[Callable[..., nn.Module]] = None):
         super().__init__()
         if activation_layer is None:
-            activation_layer = nn.Sigmoid
+            activation_layer = SE_DEFAULT_GATING_ACTIVATION
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
             nn.Linear(channels, make_divisible(channels // reduction, 8)),
@@ -80,7 +85,8 @@ class MobileNetV3Space(nn.Module):
                  expand_ratios: Tuple[float, ...] = (1., 2., 3., 4., 5., 6.),
                  dropout_rate: float = 0.2,
                  bn_eps: float = 1e-3,
-                 bn_momentum: float = 0.1):
+                 bn_momentum: float = 0.1,
+                 se_before_activation: bool = False):
         super().__init__()
 
         assert len(base_widths) == 8
@@ -91,6 +97,9 @@ class MobileNetV3Space(nn.Module):
             for i, base_width in enumerate(base_widths)
         ])
         self.expand_ratios = expand_ratios
+
+        # See the debate here: https://github.com/d-li14/mobilenetv3.pytorch/issues/18
+        self.se_before_activation = se_before_activation
 
         blocks = [
             # Stem
@@ -135,26 +144,19 @@ class MobileNetV3Space(nn.Module):
         return x
 
     def _make_stage(self, stage_idx, inp, oup, se, stride, act):
-        # initialize them first because they are related to layer_count.
-        exp, ks, se_blocks = [], [], []
-        for idx in range(4):
-            exp.append(nn.ValueChoice(list(self.expand_ratios), label=f's{stage_idx}_i{idx}_exp'))
-            ks.append(nn.ValueChoice([3, 5, 7], label=f's{stage_idx}_i{idx}_ks'))
-            if se:
-                # if SE is true, assign a layer choice to SE
-                se_blocks.append(partial(_se_or_skip, label=f's{stage_idx}_i{idx}_se'))
-            else:
-                se_blocks.append(None)
-
-        blocks = [
-            # stride = 2
-            InvertedResidual(inp, oup, exp[0], ks[0],
-                             stride, squeeze_and_excite=se_blocks[0], activation_layer=act),
-            # stride = 1, residual connection should be automatically enabled
-            InvertedResidual(oup, oup, exp[1], ks[1], squeeze_and_excite=se_blocks[1], activation_layer=act),
-            InvertedResidual(oup, oup, exp[2], ks[2], squeeze_and_excite=se_blocks[2], activation_layer=act),
-            InvertedResidual(oup, oup, exp[3], ks[3], squeeze_and_excite=se_blocks[3], activation_layer=act)
-        ]
+        def layer_builder(idx):
+            exp = nn.ValueChoice(list(self.expand_ratios), label=f's{stage_idx}_i{idx}_exp')
+            ks = nn.ValueChoice([3, 5, 7], label=f's{stage_idx}_i{idx}_ks')
+            # if SE is true, assign a layer choice to SE
+            se_block = partial(_se_or_skip, label=f's{stage_idx}_i{idx}_se') if se else None
+            return InvertedResidual(
+                inp if idx == 0 else oup,
+                oup, exp, ks,
+                stride=stride if idx == 0 else 1,  # only the first layer in each stage can have stride > 1
+                squeeze_and_excite=se_block,
+                activation_layer=act,
+                se_before_activation=self.se_before_activation
+            )
 
         # mutable depth
-        return nn.Repeat(blocks, depth=(1, 4), label=f's{stage_idx}_depth')
+        return nn.Repeat(layer_builder, depth=(1, 4), label=f's{stage_idx}_depth')
