@@ -10,7 +10,6 @@ export class ExperimentStartupInfo {
     public logDir: string = globals.paths.experimentRoot;
     public logLevel: string = globals.args.logLevel;
     public readonly: boolean = (globals.args.action === 'view');
-    public dispatcherPipe: string | null = globals.args.dispatcherPipe ?? null;
     public platform: string = globals.args.mode as string;
     public urlprefix: string = globals.args.urlPrefix;
 
@@ -41,8 +40,4 @@ export function getPlatform(): string {
 
 export function isReadonly(): boolean {
     return globals.args.action === 'view';
-}
-
-export function getDispatcherPipe(): string | null {
-    return globals.args.dispatcherPipe ?? null;
 }
