@@ -6,7 +6,7 @@ import { getSearchInputValueBySearchList } from './searchFunction';
 import { gap10 } from '@components/fluent/ChildrenGap';
 import { AppContext } from '@/App';
 
-// This file is for filtering trial parameters and trial status
+// This file is for filtering trial default metric column including intermediate results
 
 function SearchDefaultMetric(props): any {
     const { parameter, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal } = props;
@@ -95,7 +95,6 @@ function SearchDefaultMetric(props): any {
     }
 
     return (
-        // for trial parameters & Status
         <Stack horizontal className='filterConditions' tokens={gap10}>
             <Dropdown
                 selectedKey={operatorVal}
