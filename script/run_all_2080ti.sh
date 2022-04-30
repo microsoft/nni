@@ -51,6 +51,6 @@ popd
 
 
 echo "reproduing acc in table3"
-push table3
+pushd table3
 bash run.sh
 popd
