@@ -10,7 +10,7 @@ For further motivations and plans, please see https://github.com/microsoft/nni/i
 
 1. Runnable
 2. Load checkpoint of searched architecture and evaluate
-3. Reproduce searched architecture
+3. Reproduce "retrain" (i.e., training from scratch of searched architecture)
 4. Runnable with built-in algos
 5. Reproduce result with at least one algo
 

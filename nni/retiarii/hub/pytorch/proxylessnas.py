@@ -144,9 +144,8 @@ class InvertedResidual(nn.Sequential):
 
         hidden_ch = nn.ValueChoice.to_int(round(cast(int, in_channels * expand_ratio)))
 
-        # FIXME: check whether this equal works
-        # Residual connection is added here stride = 1 and input channels and output channels are the same.
-        self.residual_connection = stride == 1 and in_channels == out_channels
+        # NOTE: this equivalence check should also work for ValueChoice
+        self.skip_connect = stride == 1 and in_channels == out_channels
 
         layers: List[nn.Module] = [
             # point-wise convolution
@@ -169,7 +168,7 @@ class InvertedResidual(nn.Sequential):
         super().__init__(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.residual_connection:
+        if self.skip_connect:
             return x + super().forward(x)
         else:
             return super().forward(x)
