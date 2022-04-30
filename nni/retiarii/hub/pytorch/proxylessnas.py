@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import math
-from typing import Optional, Callable, List, Tuple, cast
+from typing import Optional, Callable, List, Tuple, Iterator, cast
 
 import torch
 import nni.retiarii.nn.pytorch as nn
@@ -24,6 +24,17 @@ def make_divisible(v, divisor, min_val=None):
     return nn.ValueChoice.condition(new_v < 0.9 * v, new_v + divisor, new_v)
 
 
+def flatten_sequentials(sequentials: List[nn.Module]) -> Iterator[nn.Module]:
+    """
+    Flatten the sequential blocks so that the hierarchy looks better.
+    """
+    for module in sequentials:
+        if isinstance(module, nn.Sequential):
+            yield from module.children()
+        else:
+            yield module
+
+
 class ConvBNReLU(nn.Sequential):
     """
     The template for a conv-bn-relu block.
@@ -39,8 +50,6 @@ class ConvBNReLU(nn.Sequential):
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
         dilation: int = 1,
-        squeeze_and_excite: Optional[Callable[[nn.MaybeChoice[int]], nn.Module]] = None,
-        se_before_activation: bool = False,
     ) -> None:
         padding = (kernel_size - 1) // 2 * dilation
         if norm_layer is None:
@@ -68,13 +77,12 @@ class ConvBNReLU(nn.Sequential):
             # not an identity
             blocks.append(norm)
 
-        if squeeze_and_excite is not None and se_before_activation:
-            # Pytorch implementation: https://github.com/d-li14/mobilenetv3.pytorch/issues/18
-            blocks.append(squeeze_and_excite(out_channels))
-        blocks.append(activation_layer(inplace=True))
-        if squeeze_and_excite is not None and not se_before_activation:
-            # Tf implementation: https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L481
-            blocks.append(squeeze_and_excite(out_channels))
+        # One pytorch implementation as an SE here, to faithfully reproduce paper
+        # We follow a more accepted approach to put SE outside
+        # Reference: https://github.com/d-li14/mobilenetv3.pytorch/issues/18
+        activation = activation_layer(inplace=True)
+        if not isinstance(activation, nn.Identity):
+            blocks.append(activation)
 
         super().__init__(*blocks)
         self.out_channels = out_channels
@@ -95,17 +103,18 @@ class SeparableConv(nn.Sequential):
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
-        super().__init__(
+        blocks = [
             # dw
             ConvBNReLU(in_channels, in_channels, stride=stride, kernel_size=kernel_size, groups=in_channels,
                        norm_layer=norm_layer, activation_layer=activation_layer),
             # pw-linear
             ConvBNReLU(in_channels, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
-        )
-        self.residual_connection = stride == 1 and in_channels == out_channels
+        ]
+        super().__init__(*flatten_sequentials(blocks))
+        self.skip_connect = stride == 1 and in_channels == out_channels
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.residual_connection:
+        if self.skip_connect:
             return x + super().forward(x)
         else:
             return super().forward(x)
@@ -115,14 +124,17 @@ class InvertedResidual(nn.Sequential):
     """
     An Inverted Residual Block, sometimes called an MBConv Block, is a type of residual block used for image models
     that uses an inverted structure for efficiency reasons.
+
     It was originally proposed for the `MobileNetV2 <https://arxiv.org/abs/1801.04381>`__ CNN architecture.
     It has since been reused for several mobile-optimized CNNs.
     It follows a narrow -> wide -> narrow approach, hence the inversion.
     It first widens with a 1x1 convolution, then uses a 3x3 depthwise convolution (which greatly reduces the number of parameters),
     then a 1x1 convolution is used to reduce the number of channels so input and output can be added.
 
-    Follow implementation of:
-    https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/rematlib/mobile_model_v3.py#L453
+    This implementation is somewhat a mixture of:
+
+    - https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L453
+    - https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/efficientnet_blocks.py#L134
     """
 
     def __init__(
@@ -132,10 +144,9 @@ class InvertedResidual(nn.Sequential):
         expand_ratio: nn.MaybeChoice[float],
         kernel_size: nn.MaybeChoice[int] = 3,
         stride: int = 1,
-        squeeze_and_excite: Optional[Callable[[nn.MaybeChoice[int]], nn.Module]] = None,
+        squeeze_and_excite: Optional[Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module]] = None,
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
-        se_before_activation: bool = False,
     ) -> None:
         super().__init__()
         self.stride = stride
@@ -156,16 +167,21 @@ class InvertedResidual(nn.Sequential):
                        norm_layer=norm_layer, activation_layer=activation_layer),
             # depth-wise
             ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch,
-                       norm_layer=norm_layer, activation_layer=activation_layer,
-                       squeeze_and_excite=squeeze_and_excite, se_before_activation=se_before_activation)
+                       norm_layer=norm_layer, activation_layer=activation_layer),
         ]
+
+        if squeeze_and_excite is not None:
+            layers.append(squeeze_and_excite(
+                cast(int, hidden_ch),
+                cast(int, in_channels)
+            ))
 
         layers += [
             # pw-linear
             ConvBNReLU(hidden_ch, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
         ]
 
-        super().__init__(*layers)
+        super().__init__(*flatten_sequentials(layers))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.skip_connect:
