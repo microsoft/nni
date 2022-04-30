@@ -42,10 +42,14 @@ class ModelSpeedup:
         the index of batch dimension in the dummy_input
     confidence: the confidence coefficient of the sparsity inference. This value is
         actually used as the batchsize of the dummy_input.
+    customized_replace_func: None/Dict
+        If the parameter is not None, then we will use the given function to replace the
+        corresponding modules. The `key` of the dict is the opertor types and the `value`
+        is the replace function of corresponding opertor.
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
-                 batch_dim=0, confidence=8):
+                 batch_dim=0, confidence=8, customized_replace_func=None):
         assert confidence > 1
         # The auto inference will change the values of the parameters in the model
         # so we need make a copy before the mask inference
@@ -53,7 +57,8 @@ class ModelSpeedup:
         self.bound_model = model
         self.inferred_masks = dict()  # key: module_name, value: ModuleMasks
         self.batch_dim = batch_dim
-        self.dummy_input, self.device = self._random_model_input(dummy_input, confidence, batch_dim)
+        self.dummy_input, self.device = self._random_model_input(
+            dummy_input, confidence, batch_dim)
         self.torch_graph = build_module_graph(model, self.dummy_input)
         # dict object to save the auto inferences objects of the submodules
         self.auto_inferences = {}
@@ -71,10 +76,12 @@ class ModelSpeedup:
         elif isinstance(masks_file, dict):
             self.masks = masks_file
         else:
-            raise Exception('Please provide the mask or the path of the mask file')
+            raise Exception(
+                'Please provide the mask or the path of the mask file')
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
+        self.customized_replace_func = customized_replace_func
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         """
@@ -284,7 +291,8 @@ class ModelSpeedup:
                 else:
                     last_output.grad = tin.grad
         else:
-            _logger.warning('Note: %s does not have corresponding mask inference object', node.name)
+            _logger.warning(
+                'Note: %s does not have corresponding mask inference object', node.name)
 
     def _vnode_to_value(self, c_node):
         """
@@ -408,6 +416,7 @@ class ModelSpeedup:
             method is shutdown, in the future, we will merge these two methods into a graph
             pass which is used to resolve the mask conflict.
             """
+
             def __init__(self, ori_module, reindex_dim, reindex):
                 super(ReindexModule, self).__init__()
                 self.ori_module = ori_module
@@ -441,12 +450,15 @@ class ModelSpeedup:
             super_module, leaf_module = get_module_by_name(
                 self.bound_model, g_node.name)
             m_type = g_node.op_type
-            if not m_type in replace_module:
+            if not m_type in replace_module and (self.customized_replace_func is not None and m_type not in self.customized_replace_func):
                 raise RuntimeError(
                     "Has not supported replacing the module: `{}`".format(m_type))
             _logger.info("replace module (name: %s, op_type: %s)",
                          g_node.name, m_type)
-            compressed_module = replace_module[m_type](
+            replace_function = replace_module[m_type]
+            if self.customized_replace_func is not None and m_type in self.customized_replace_func:
+                replace_function = self.customized_replace_func[m_type]
+            compressed_module = replace_function(
                 leaf_module, auto_infer.get_masks())
             new_submodule = compressed_module
             if reindex_dim is None:
