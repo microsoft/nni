@@ -18,12 +18,15 @@ For further motivations and plans, please see https://github.com/microsoft/nni/i
 |------------------------|--------|--------|--------|--------|--------|
 | NasBench101            | Y      |        |        |        |        |
 | NasBench201            | Y      |        |        |        |        |
-| NASNet                 | Y      |        |        |        |        |
-| ENAS                   | Y      |        |        |        |        |
-| AmoebaNet              | Y      |        |        |        |        |
-| PNAS                   | Y      |        |        |        |        |
-| DARTS                  | Y      |        |        |        |        |
-| ProxylessNAS           | Y      |        |        |        |        |
-| MobileNetV3Space       | Y      |        |        |        |        |
+| NASNet                 | Y      | -      |        |        |        |
+| ENAS                   | Y      | -      |        |        |        |
+| AmoebaNet              | Y      | -      |        |        |        |
+| PNAS                   | Y      | -      |        |        |        |
+| DARTS                  | Y      | Y      |        |        |        |
+| ProxylessNAS           | Y      | Y      |        |        |        |
+| MobileNetV3Space       | Y      | Y      |        |        |        |
 | ShuffleNetSpace        | Y      |        |        |        |        |
 | ShuffleNetSpace (ch)   | Y      |        |        |        |        |
+
+* `-`: Result unavailable, because lacking published checkpoints / architectures.
+* NASNet, ENAS, AmoebaNet, PNAS, DARTS are based on the same implementation, with configuration differences.

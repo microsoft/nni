@@ -8,6 +8,7 @@ It's called ``nasnet.py`` simply because NASNet is the first to propose such str
 """
 
 from collections import OrderedDict
+from functools import partial
 from typing import Tuple, List, Union, Iterable, Dict, Callable, Optional, cast
 
 try:
@@ -300,15 +301,26 @@ class CellBuilder:
         self.last_cell_reduce = last_cell_reduce
         self._expect_idx = 0
 
+        # It takes an index that is the index in the repeat.
+        # Number of predecessors for each cell is fixed to 2.
+        self.num_predecessors = 2
+
+        # Number of ops per node is fixed to 2.
+        self.num_ops_per_node = 2
+
+    def op_factory(self, node_index: int, op_index: int, input_index: Optional[int], *,
+                   op: str, channels: int, is_reduction_cell: bool):
+        if is_reduction_cell and (
+            input_index is None or input_index < self.num_predecessors
+        ):  # could be none when constructing search sapce
+            stride = 2
+        else:
+            stride = 1
+        return OPS[op](channels, stride, True)
+
     def __call__(self, repeat_idx: int):
         if self._expect_idx != repeat_idx:
             raise ValueError(f'Expect index {self._expect_idx}, found {repeat_idx}')
-
-        # It takes an index that is the index in the repeat.
-        # Number of predecessors for each cell is fixed to 2.
-        num_predecessors = 2
-        # Number of ops per node is fixed to 2.
-        num_ops_per_node = 2
 
         # Reduction cell means stride = 2 and channel multiplied by 2.
         is_reduction_cell = repeat_idx == 0 and self.first_cell_reduce
@@ -316,16 +328,11 @@ class CellBuilder:
         # self.C_prev_in, self.C_in, self.last_cell_reduce are updated after each cell is built.
         preprocessor = CellPreprocessor(self.C_prev_in, self.C_in, self.C, self.last_cell_reduce)
 
-        ops_factory: Dict[str, Callable[[int, int, Optional[int]], nn.Module]] = {
-            op:  # make final chosen ops named with their aliases
-            lambda node_index, op_index, input_index:
-            OPS[op](self.C, 2 if is_reduction_cell and (
-                    input_index is None or input_index < num_predecessors  # could be none when constructing search sapce
-                    ) else 1, True)
-            for op in self.op_candidates
-        }
+        ops_factory: Dict[str, Callable[[int, int, Optional[int]], nn.Module]] = {}
+        for op in self.op_candidates:
+            ops_factory[op] = partial(self.op_factory, op=op, channels=self.C, is_reduction_cell=is_reduction_cell)
 
-        cell = nn.Cell(ops_factory, self.num_nodes, num_ops_per_node, num_predecessors, self.merge_op,
+        cell = nn.Cell(ops_factory, self.num_nodes, self.num_ops_per_node, self.num_predecessors, self.merge_op,
                        preprocessor=preprocessor, postprocessor=CellPostprocessor(),
                        label='reduce' if is_reduction_cell else 'normal')
 
@@ -401,7 +408,7 @@ class NDS(nn.Module):
         self.num_cells: nn.MaybeChoice[int] = cast(int, num_cells)
         if isinstance(num_cells, Iterable):
             self.num_cells = nn.ValueChoice(list(num_cells), label='depth')
-        num_cells_per_stage = [i * self.num_cells // 3 - (i - 1) * self.num_cells // 3 for i in range(3)]
+        num_cells_per_stage = [(i + 1) * self.num_cells // 3 - i * self.num_cells // 3 for i in range(3)]
 
         # auxiliary head is different for network targetted at different datasets
         if dataset == 'imagenet':
