@@ -25,8 +25,8 @@ For further motivations and plans, please see https://github.com/microsoft/nni/i
 | DARTS                  | Y      | Y      |        |        |        |
 | ProxylessNAS           | Y      | Y      |        |        |        |
 | MobileNetV3Space       | Y      | Y      |        |        |        |
-| ShuffleNetSpace        | Y      |        |        |        |        |
-| ShuffleNetSpace (ch)   | Y      |        |        |        |        |
+| ShuffleNetSpace        | Y      | Y      |        |        |        |
+| ShuffleNetSpace (ch)   | Y      | -      |        |        |        |
 
 * `-`: Result unavailable, because lacking published checkpoints / architectures.
 * NASNet, ENAS, AmoebaNet, PNAS, DARTS are based on the same implementation, with configuration differences.

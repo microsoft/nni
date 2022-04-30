@@ -180,12 +180,12 @@ class ShuffleNetSpace(nn.Module):
 
                 mid_channels = cast(nn.MaybeChoice[int], mid_channels)
 
-                choice_block = nn.LayerChoice([
-                    ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=3, stride=stride, affine=affine),
-                    ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=5, stride=stride, affine=affine),
-                    ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=7, stride=stride, affine=affine),
-                    ShuffleXceptionBlock(in_channels, out_channels, mid_channels=mid_channels, stride=stride, affine=affine)
-                ], label=f'layer_{global_block_idx}')
+                choice_block = nn.LayerChoice(dict(
+                    k3=ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=3, stride=stride, affine=affine),
+                    k5=ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=5, stride=stride, affine=affine),
+                    k7=ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=7, stride=stride, affine=affine),
+                    xcep=ShuffleXceptionBlock(in_channels, out_channels, mid_channels=mid_channels, stride=stride, affine=affine)
+                ), label=f'layer_{global_block_idx}')
                 feature_blocks.append(choice_block)
 
         self.features = nn.Sequential(*feature_blocks)
