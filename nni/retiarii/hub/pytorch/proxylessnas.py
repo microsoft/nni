@@ -24,15 +24,20 @@ def make_divisible(v, divisor, min_val=None):
     return nn.ValueChoice.condition(new_v < 0.9 * v, new_v + divisor, new_v)
 
 
-def flatten_sequentials(sequentials: List[nn.Module]) -> Iterator[nn.Module]:
+def simplify_sequential(sequentials: List[nn.Module]) -> Iterator[nn.Module]:
     """
     Flatten the sequential blocks so that the hierarchy looks better.
+    Eliminate identity modules automatically.
     """
     for module in sequentials:
         if isinstance(module, nn.Sequential):
-            yield from module.children()
+            for submodule in module.children():
+                # no recursive expansion
+                if not isinstance(submodule, nn.Identity):
+                    yield submodule
         else:
-            yield module
+            if not isinstance(module, nn.Identity):
+                yield module
 
 
 class ConvBNReLU(nn.Sequential):
@@ -70,28 +75,29 @@ class ConvBNReLU(nn.Sequential):
                 dilation=dilation,
                 groups=cast(int, groups),
                 bias=no_normalization
-            )
+            ),
+            # Normalization, regardless of batchnorm or identity
+            norm,
+            # One pytorch implementation as an SE here, to faithfully reproduce paper
+            # We follow a more accepted approach to put SE outside
+            # Reference: https://github.com/d-li14/mobilenetv3.pytorch/issues/18
+            activation_layer(inplace=True)
         ]
 
-        if not no_normalization:
-            # not an identity
-            blocks.append(norm)
-
-        # One pytorch implementation as an SE here, to faithfully reproduce paper
-        # We follow a more accepted approach to put SE outside
-        # Reference: https://github.com/d-li14/mobilenetv3.pytorch/issues/18
-        activation = activation_layer(inplace=True)
-        if not isinstance(activation, nn.Identity):
-            blocks.append(activation)
-
-        super().__init__(*blocks)
+        super().__init__(*simplify_sequential(blocks))
         self.out_channels = out_channels
 
 
-class SeparableConv(nn.Sequential):
+class DepthwiseSeparableConv(nn.Sequential):
     """
     In the original MobileNetV2 implementation, this is InvertedResidual when expand ratio = 1.
     Residual connection is added if input and output shape are the same.
+
+    References:
+    
+    - https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/efficientnet_blocks.py#L90
+    - https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L433
+    - https://github.com/ultmaster/AceNAS/blob/46c8895f/searchspace/proxylessnas/utils.py#L100
     """
 
     def __init__(
@@ -100,6 +106,7 @@ class SeparableConv(nn.Sequential):
         out_channels: nn.MaybeChoice[int],
         kernel_size: nn.MaybeChoice[int] = 3,
         stride: int = 1,
+        squeeze_excite: Optional[Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module]] = None,
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
@@ -107,14 +114,16 @@ class SeparableConv(nn.Sequential):
             # dw
             ConvBNReLU(in_channels, in_channels, stride=stride, kernel_size=kernel_size, groups=in_channels,
                        norm_layer=norm_layer, activation_layer=activation_layer),
+            # optional se
+            squeeze_excite(in_channels, in_channels) if squeeze_excite else nn.Identity(),
             # pw-linear
             ConvBNReLU(in_channels, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
         ]
-        super().__init__(*flatten_sequentials(blocks))
-        self.skip_connect = stride == 1 and in_channels == out_channels
+        super().__init__(*simplify_sequential(blocks))
+        self.has_skip = stride == 1 and in_channels == out_channels
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.skip_connect:
+        if self.has_skip:
             return x + super().forward(x)
         else:
             return super().forward(x)
@@ -131,7 +140,7 @@ class InvertedResidual(nn.Sequential):
     It first widens with a 1x1 convolution, then uses a 3x3 depthwise convolution (which greatly reduces the number of parameters),
     then a 1x1 convolution is used to reduce the number of channels so input and output can be added.
 
-    This implementation is somewhat a mixture of:
+    This implementation is sort of a mixture between:
 
     - https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L453
     - https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/efficientnet_blocks.py#L134
@@ -144,7 +153,7 @@ class InvertedResidual(nn.Sequential):
         expand_ratio: nn.MaybeChoice[float],
         kernel_size: nn.MaybeChoice[int] = 3,
         stride: int = 1,
-        squeeze_and_excite: Optional[Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module]] = None,
+        squeeze_excite: Optional[Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module]] = None,
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
@@ -153,10 +162,10 @@ class InvertedResidual(nn.Sequential):
         self.out_channels = out_channels
         assert stride in [1, 2]
 
-        hidden_ch = nn.ValueChoice.to_int(round(cast(int, in_channels * expand_ratio)))
+        hidden_ch = cast(int, make_divisible(in_channels * expand_ratio, 8))
 
         # NOTE: this equivalence check should also work for ValueChoice
-        self.skip_connect = stride == 1 and in_channels == out_channels
+        self.has_skip = stride == 1 and in_channels == out_channels
 
         layers: List[nn.Module] = [
             # point-wise convolution
@@ -168,23 +177,19 @@ class InvertedResidual(nn.Sequential):
             # depth-wise
             ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch,
                        norm_layer=norm_layer, activation_layer=activation_layer),
-        ]
-
-        if squeeze_and_excite is not None:
-            layers.append(squeeze_and_excite(
+            # SE
+            squeeze_excite(
                 cast(int, hidden_ch),
                 cast(int, in_channels)
-            ))
-
-        layers += [
+            ) if squeeze_excite is not None else nn.Identity(),
             # pw-linear
-            ConvBNReLU(hidden_ch, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
+            ConvBNReLU(hidden_ch, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity),
         ]
 
-        super().__init__(*flatten_sequentials(layers))
+        super().__init__(*simplify_sequential(layers))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.skip_connect:
+        if self.has_skip:
             return x + super().forward(x)
         else:
             return super().forward(x)
@@ -253,11 +258,11 @@ class ProxylessNAS(nn.Module):
         self.bn_eps = bn_eps
         self.bn_momentum = bn_momentum
 
-        self.first_conv = ConvBNReLU(3, widths[0], stride=2, norm_layer=nn.BatchNorm2d)
+        self.stem = ConvBNReLU(3, widths[0], stride=2, norm_layer=nn.BatchNorm2d)
 
         blocks: List[nn.Module] = [
             # first stage is fixed
-            SeparableConv(widths[0], widths[1], kernel_size=3, stride=1)
+            DepthwiseSeparableConv(widths[0], widths[1], kernel_size=3, stride=1)
         ]
 
         # https://github.com/ultmaster/AceNAS/blob/46c8895fd8a05ffbc61a6b44f1e813f64b4f66b7/searchspace/proxylessnas/__init__.py#L21
@@ -284,7 +289,7 @@ class ProxylessNAS(nn.Module):
         reset_parameters(self, bn_momentum=bn_momentum, bn_eps=bn_eps)
 
     def forward(self, x):
-        x = self.first_conv(x)
+        x = self.stem(x)
         x = self.blocks(x)
         x = self.feature_mix_layer(x)
         x = self.global_avg_pooling(x)
