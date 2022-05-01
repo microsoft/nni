@@ -7,13 +7,14 @@ from typing import Tuple, Optional, Callable, Union, List, cast
 import torch.nn.functional as F
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
+from nni.typehint import Literal
 
 from .proxylessnas import ConvBNReLU, InvertedResidual, DepthwiseSeparableConv, make_divisible, reset_parameters
 
 
 class SqueezeExcite(nn.Module):
     """Squeeze-and-excite layer.
-    
+
     We can't use the op from ``torchvision.ops`` because it's not (yet) properly wrapped,
     and ValueChoice couldn't be processed.
 
@@ -46,11 +47,21 @@ class SqueezeExcite(nn.Module):
         return x * self.gate(x_se)
 
 
-def _se_or_skip(hidden_ch: int, input_ch: int, label: str) -> nn.LayerChoice:
-    return nn.LayerChoice({
-        'identity': nn.Identity(),
-        'se': SqueezeExcite(hidden_ch)
-    }, label=label)
+def _se_or_skip(hidden_ch: int, input_ch: int, optional: bool, label: str) -> nn.Module:
+    if optional:
+        return nn.LayerChoice({
+            'identity': nn.Identity(),
+            'se': SqueezeExcite(hidden_ch)
+        }, label=label)
+    else:
+        return SqueezeExcite(hidden_ch)
+
+
+def _act_fn(act_alias: Literal['hswish', 'relu']) -> nn.Module:
+    if act_alias == 'hswish':
+        return nn.Hardswish
+    else:
+        return nn.ReLU
 
 
 @model_wrapper
@@ -80,11 +91,15 @@ class MobileNetV3Space(nn.Module):
         A list of expand ratios to choose from. Independent for every **block**.
     squeeze_excite
         Indicating whether the current stage can have an optional SE layer.
-        Expect boolean array of length 6 for stage 0 to 5.
+        Expect array of length 6 for stage 0 to 5. Each element can be one of "force", "optional", "none".
     depth_range
         A range (e.g., ``(1, 4)``),
         or a list of range (e.g., ``[(1, 3), (1, 4), (1, 4), (1, 3), (0, 2)]``).
         If a list, the length should be 5. The depth are specified for stage 1 to 5.
+    stride
+        Stride for all stages (including stem and head).
+    activation
+        Activation (class) for all stages.
     dropout_rate
         Dropout rate at classification head.
     bn_eps
@@ -96,20 +111,28 @@ class MobileNetV3Space(nn.Module):
     widths: List[Union[nn.ChoiceOf[int], int]]
     depth_range: List[Tuple[int, int]]
 
-    def __init__(self, num_labels: int = 1000,
-                 base_widths: Tuple[int, ...] = (16, 16, 16, 32, 64, 128, 256, 512, 1024),
-                 width_multipliers: Union[Tuple[float, ...], float] = (0.5, 0.625, 0.75, 1.0, 1.25, 1.5, 2.0),
-                 expand_ratios: Tuple[float, ...] = (1., 2., 3., 4., 5., 6.),
-                 squeeze_excite: Tuple[bool, ...] = (False, False, True, False, True, True),
-                 depth_range: Union[List[Tuple[int, int]], Tuple[int, int]] = (1, 4),
-                 dropout_rate: float = 0.2,
-                 bn_eps: float = 1e-3,
-                 bn_momentum: float = 0.1):
+    def __init__(
+        self, num_labels: int = 1000,
+        base_widths: Tuple[int, ...] = (16, 16, 16, 32, 64, 128, 256, 512, 1024),
+        width_multipliers: Union[Tuple[float, ...], float] = (0.5, 0.625, 0.75, 1.0, 1.25, 1.5, 2.0),
+        expand_ratios: Tuple[float, ...] = (1., 2., 3., 4., 5., 6.),
+        squeeze_excite: Tuple[Literal['force', 'optional', 'none'], ...] = (
+            'none', 'none', 'optional', 'none', 'optional', 'optional'
+        ),
+        depth_range: Union[List[Tuple[int, int]], Tuple[int, int]] = (1, 4),
+        stride: Tuple[int, ...] = (2, 1, 2, 2, 2, 1, 2, 1, 1),
+        activation: Tuple[Literal['hswish', 'relu'], ...] = (
+            'hswish', 'relu', 'relu', 'relu', 'hswish', 'hswish', 'hswish', 'hswish', 'hswish'
+        ),
+        dropout_rate: float = 0.2,
+        bn_eps: float = 1e-3,
+        bn_momentum: float = 0.1
+    ):
         super().__init__()
 
-        assert len(base_widths) == 9
+        assert len(base_widths) == len(stride) == len(activation) == 9
         assert len(width_multipliers) == 7
-        assert len(squeeze_excite) == 6
+        assert len(squeeze_excite) == 6 and all(se in ['force', 'optional', 'none'] for se in squeeze_excite)
         if isinstance(depth_range[0], int):
             assert len(depth_range) == 2 and depth_range[1] >= depth_range[0] >= 0 and depth_range[1] >= 1
             self.depth_range = [depth_range] * 5
@@ -141,7 +164,7 @@ class MobileNetV3Space(nn.Module):
         self.stem = ConvBNReLU(
             3, self.widths[0],
             nn.ValueChoice([3, 5], label=f'stem_ks'),
-            stride=2, activation_layer=nn.Hardswish
+            stride=stride[0], activation_layer=_act_fn(activation[0])
         )
 
         blocks = [
@@ -151,29 +174,28 @@ class MobileNetV3Space(nn.Module):
             DepthwiseSeparableConv(
                 self.widths[0], self.widths[1],
                 nn.ValueChoice([3, 5, 7], label=f's0_i0_ks'),
-                stride=1,
-                squeeze_excite=partial(_se_or_skip, label=f's0_i0_se') if squeeze_excite[0] else None,
-                activation_layer=nn.ReLU,
+                stride=stride[1],
+                squeeze_excite=partial(
+                    _se_or_skip, optional=squeeze_excite[0] == 'optional', label=f's0_i0_se'
+                ) if squeeze_excite[0] != 'none' else None,
+                activation_layer=_act_fn(activation[1])
             ),
         ]
 
         blocks += [
             # Stage 1-5
-            self._make_stage(1, self.widths[1], self.widths[2], squeeze_excite[1], 2, nn.ReLU),
-            self._make_stage(2, self.widths[2], self.widths[3], squeeze_excite[2], 2, nn.ReLU),
-            self._make_stage(3, self.widths[3], self.widths[4], squeeze_excite[3], 2, nn.Hardswish),
-            self._make_stage(4, self.widths[4], self.widths[5], squeeze_excite[4], 1, nn.Hardswish),
-            self._make_stage(5, self.widths[5], self.widths[6], squeeze_excite[5], 2, nn.Hardswish),
+            self._make_stage(i, self.widths[i], self.widths[i + 1], squeeze_excite[i], stride[i + 1], _act_fn(activation[i + 1]))
+            for i in range(1, 6)
         ]
 
         # Head
         blocks += [
-            ConvBNReLU(self.widths[6], self.widths[7], 1, 1, activation_layer=nn.Hardswish),
+            ConvBNReLU(self.widths[6], self.widths[7], 1, stride[7], activation_layer=_act_fn(activation[7])),
             nn.AdaptiveAvgPool2d(1),
 
             # In some implementation, this is a linear instead.
             # Should be equivalent.
-            ConvBNReLU(self.widths[7], self.widths[8], 1, 1, norm_layer=nn.Identity, activation_layer=nn.Hardswish),
+            ConvBNReLU(self.widths[7], self.widths[8], 1, stride[8], norm_layer=nn.Identity, activation_layer=_act_fn(activation[8]))
         ]
 
         self.blocks = nn.Sequential(*blocks)
@@ -197,7 +219,7 @@ class MobileNetV3Space(nn.Module):
             exp = nn.ValueChoice(list(self.expand_ratios), label=f's{stage_idx}_i{idx}_exp')
             ks = nn.ValueChoice([3, 5, 7], label=f's{stage_idx}_i{idx}_ks')
             # if SE is true, assign a layer choice to SE
-            se_or_skip = partial(_se_or_skip, label=f's{stage_idx}_i{idx}_se') if se else None
+            se_or_skip = partial(_se_or_skip, optional=se == 'optional', label=f's{stage_idx}_i{idx}_se') if se != 'none' else None
             return InvertedResidual(
                 inp if idx == 0 else oup,
                 oup, exp, ks,
