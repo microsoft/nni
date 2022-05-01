@@ -4,12 +4,15 @@
 from functools import partial
 from typing import Tuple, Optional, Callable, Union, List, cast
 
+import torch
 import torch.nn.functional as F
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 from nni.typehint import Literal
 
 from .proxylessnas import ConvBNReLU, InvertedResidual, DepthwiseSeparableConv, make_divisible, reset_parameters
+from .utils.fixed import FixedFactory
+from .utils.pretrained import load_pretrained_weight
 
 
 class SqueezeExcite(nn.Module):
@@ -97,7 +100,7 @@ class MobileNetV3Space(nn.Module):
         A list of expand ratios to choose from. Independent for every **block**.
     squeeze_excite
         Indicating whether the current stage can have an optional SE layer.
-        Expect array of length 6 for stage 0 to 5. Each element can be one of "force", "optional", "none".
+        Expect array of length 6 for stage 0 to 5. Each element can be one of ``force``, ``optional``, ``none``.
     depth_range
         A range (e.g., ``(1, 4)``),
         or a list of range (e.g., ``[(1, 3), (1, 4), (1, 4), (1, 3), (0, 2)]``).
@@ -153,7 +156,7 @@ class MobileNetV3Space(nn.Module):
             self.depth_range = depth_range
             for d in self.depth_range:
                 # pylint: disable=unsubscriptable-object
-                assert len(d) == 2 and d[1] >= d[0] >= 1, f"{d} does not satisfy depth constraints"
+                assert len(d) == 2 and d[1] >= d[0] >= 1, f'{d} does not satisfy depth constraints'
 
         self.widths = []
         for i, base_width in enumerate(base_widths):
@@ -259,3 +262,80 @@ class MobileNetV3Space(nn.Module):
         if stride != 1:
             min_depth = max(min_depth, 1)
         return nn.Repeat(layer_builder, depth=(min_depth, max_depth), label=f's{stage_idx}_depth')
+
+
+    @classmethod
+    def fixed_arch(cls, arch: dict) -> FixedFactory:
+        return FixedFactory(cls, arch)
+
+    @classmethod
+    def load_searched_model(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+
+        init_kwargs = {}  # all default
+
+        if name == 'mobilenetv3-large-100':
+            # top-1: 75.768
+            # NOTE: Use bicubic interpolation to evaluate this
+            # With default interpolation, it yields top-1 75.722
+            arch = {
+                'stem_ks': 3,
+                's0_i0_ks': 3,
+                's1_depth': 2,
+                's1_i0_exp': 4,
+                's1_i0_ks': 3,
+                's1_i1_exp': 3,
+                's1_i1_ks': 3,
+                's2_depth': 3,
+                's2_i0_exp': 3,
+                's2_i0_ks': 5,
+                's2_i1_exp': 3,
+                's2_i1_ks': 5,
+                's2_i2_exp': 3,
+                's2_i2_ks': 5,
+                's3_depth': 4,
+                's3_i0_exp': 6,
+                's3_i0_ks': 3,
+                's3_i1_exp': 2.5,
+                's3_i1_ks': 3,
+                's3_i2_exp': 2.3,
+                's3_i2_ks': 3,
+                's3_i3_exp': 2.3,
+                's3_i3_ks': 3,
+                's4_depth': 2,
+                's4_i0_exp': 6,
+                's4_i0_ks': 3,
+                's4_i1_exp': 6,
+                's4_i1_ks': 3,
+                's5_depth': 3,
+                's5_i0_exp': 6,
+                's5_i0_ks': 5,
+                's5_i1_exp': 6,
+                's5_i1_ks': 5,
+                's5_i2_exp': 6,
+                's5_i2_ks': 5,
+            }
+
+            init_kwargs.update(
+                base_widths=[16, 16, 24, 40, 80, 112, 160, 960, 1280],
+                expand_ratios=[1.0, 2.0, 2.3, 2.5, 3.0, 4.0, 6.0],
+                bn_eps=1e-5,
+                bn_momentum=0.1,
+                width_multipliers=1.0,
+                squeeze_excite=['none', 'none', 'force', 'none', 'force', 'force']
+            )
+
+        else:
+            raise ValueError(f'Unsupported architecture with name: {name}')
+
+        model_factory = cls.fixed_arch(arch)
+        model = model_factory(**init_kwargs)
+
+        if pretrained:
+            weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
+            model.load_state_dict(pretrained_weights)
+
+        return model
