@@ -152,6 +152,7 @@ class MobileNetV3Space(nn.Module):
             assert len(depth_range) == self.num_blocks - 3
             self.depth_range = depth_range
             for d in self.depth_range:
+                # pylint: disable=unsubscriptable-object
                 assert len(d) == 2 and d[1] >= d[0] >= 1, f"{d} does not satisfy depth constraints"
 
         self.widths = []
