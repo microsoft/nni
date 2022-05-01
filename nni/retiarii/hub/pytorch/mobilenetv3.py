@@ -77,12 +77,18 @@ class MobileNetV3Space(nn.Module):
     We use the following snipppet as reference.
     https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728
 
+    We have ``num_blocks`` which equals to the length of ``self.blocks`` (the main body of the network).
+    For simplicity, the following parameter specification assumes ``num_blocks`` equals 8 (body + head).
+    If a shallower body is intended, arrays including ``base_widths``, ``squeeze_excite``, ``depth_range``,
+    ``stride``, ``activation`` should also be shortened accordingly.
+
     Parameters
     ----------
     num_labels
         Dimensions for classification head.
     base_widths
         Widths of each stage, from stem, to body, to head.
+        Length should be 9, i.e., ``num_blocks + 1`` (because there is a stem width in front).
     width_multipliers
         A range of widths multiplier to choose from. The choice is independent for each stage.
         Or it can be a fixed float. This will be applied on ``base_widths``,
@@ -97,9 +103,9 @@ class MobileNetV3Space(nn.Module):
         or a list of range (e.g., ``[(1, 3), (1, 4), (1, 4), (1, 3), (0, 2)]``).
         If a list, the length should be 5. The depth are specified for stage 1 to 5.
     stride
-        Stride for all stages (including stem and head).
+        Stride for all stages (including stem and head). Length should be same as ``base_widths``.
     activation
-        Activation (class) for all stages.
+        Activation (class) for all stages. Length is same as ``base_widths``.
     dropout_rate
         Dropout rate at classification head.
     bn_eps
@@ -130,17 +136,23 @@ class MobileNetV3Space(nn.Module):
     ):
         super().__init__()
 
-        assert len(base_widths) == len(stride) == len(activation) == 9
-        assert len(width_multipliers) == 7
-        assert len(squeeze_excite) == 6 and all(se in ['force', 'optional', 'none'] for se in squeeze_excite)
+        self.num_blocks = len(base_widths) - 1  # without stem, equal to len(self.blocks)
+        assert self.num_blocks >= 4
+
+        assert len(base_widths) == len(stride) == len(activation) == self.num_blocks + 1
+
+        # The final two blocks can't have SE
+        assert len(squeeze_excite) == self.num_blocks - 2 and all(se in ['force', 'optional', 'none'] for se in squeeze_excite)
+
+        # The first and final two blocks can't have variational depth
         if isinstance(depth_range[0], int):
-            assert len(depth_range) == 2 and depth_range[1] >= depth_range[0] >= 0 and depth_range[1] >= 1
-            self.depth_range = [depth_range] * 5
+            assert len(depth_range) == 2 and depth_range[1] >= depth_range[0] >= 1
+            self.depth_range = [depth_range] * (self.num_blocks - 3)
         else:
-            assert len(depth_range) == 5
+            assert len(depth_range) == self.num_blocks - 3
             self.depth_range = depth_range
             for d in self.depth_range:
-                assert len(d) == 2 and d[1] >= d[0] >= 0 and d[1] >= 1, f"{d} does not satisfy depth constraints"
+                assert len(d) == 2 and d[1] >= d[0] >= 1, f"{d} does not satisfy depth constraints"
 
         self.widths = []
         for i, base_width in enumerate(base_widths):
@@ -183,26 +195,39 @@ class MobileNetV3Space(nn.Module):
         ]
 
         blocks += [
-            # Stage 1-5
+            # Stage 1-5 (by default)
             self._make_stage(i, self.widths[i], self.widths[i + 1], squeeze_excite[i], stride[i + 1], _act_fn(activation[i + 1]))
-            for i in range(1, 6)
+            for i in range(1, self.num_blocks - 2)
         ]
 
         # Head
         blocks += [
-            ConvBNReLU(self.widths[6], self.widths[7], 1, stride[7], activation_layer=_act_fn(activation[7])),
+            ConvBNReLU(
+                self.widths[self.num_blocks - 2],
+                self.widths[self.num_blocks - 1],
+                kernel_size=1,
+                stride=stride[self.num_blocks - 1],
+                activation_layer=_act_fn(activation[self.num_blocks - 1])
+            ),
             nn.AdaptiveAvgPool2d(1),
 
             # In some implementation, this is a linear instead.
             # Should be equivalent.
-            ConvBNReLU(self.widths[7], self.widths[8], 1, stride[8], norm_layer=nn.Identity, activation_layer=_act_fn(activation[8]))
+            ConvBNReLU(
+                self.widths[self.num_blocks - 1],
+                self.widths[self.num_blocks],
+                kernel_size=1,
+                stride=stride[self.num_blocks],
+                norm_layer=nn.Identity,
+                activation_layer=_act_fn(activation[self.num_blocks])
+            )
         ]
 
         self.blocks = nn.Sequential(*blocks)
 
         self.classifier = nn.Sequential(
             nn.Dropout(dropout_rate),
-            nn.Linear(cast(int, self.widths[8]), num_labels),
+            nn.Linear(cast(int, self.widths[self.num_blocks]), num_labels),
         )
 
         reset_parameters(self, bn_momentum=bn_momentum, bn_eps=bn_eps)
