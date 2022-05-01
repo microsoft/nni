@@ -47,21 +47,26 @@ class SqueezeExcite(nn.Module):
         return x * self.gate(x_se)
 
 
-def _se_or_skip(hidden_ch: int, input_ch: int, optional: bool, label: str) -> nn.Module:
+def _se_or_skip(hidden_ch: int, input_ch: int, optional: bool, se_from_exp: bool, label: str) -> nn.Module:
+    ch = hidden_ch if se_from_exp else input_ch
     if optional:
         return nn.LayerChoice({
             'identity': nn.Identity(),
-            'se': SqueezeExcite(hidden_ch)
+            'se': SqueezeExcite(ch)
         }, label=label)
     else:
-        return SqueezeExcite(hidden_ch)
+        return SqueezeExcite(ch)
 
 
-def _act_fn(act_alias: Literal['hswish', 'relu']) -> nn.Module:
+def _act_fn(act_alias: Literal['hswish', 'swish', 'relu']) -> nn.Module:
     if act_alias == 'hswish':
         return nn.Hardswish
-    else:
+    elif act_alias == 'swish':
+        return nn.SiLU
+    elif act_alias == 'relu':
         return nn.ReLU
+    else:
+        raise ValueError(f'Unsupported act alias: {act_alias}')
 
 
 @model_wrapper
@@ -106,6 +111,8 @@ class MobileNetV3Space(nn.Module):
         Stride for all stages (including stem and head). Length should be same as ``base_widths``.
     activation
         Activation (class) for all stages. Length is same as ``base_widths``.
+    se_from_exp
+        Calculate SE channel reduction from expanded (mid) channels.
     dropout_rate
         Dropout rate at classification head.
     bn_eps
@@ -127,9 +134,10 @@ class MobileNetV3Space(nn.Module):
         ),
         depth_range: Union[List[Tuple[int, int]], Tuple[int, int]] = (1, 4),
         stride: Tuple[int, ...] = (2, 1, 2, 2, 2, 1, 2, 1, 1),
-        activation: Tuple[Literal['hswish', 'relu'], ...] = (
+        activation: Tuple[Literal['hswish', 'swish', 'relu'], ...] = (
             'hswish', 'relu', 'relu', 'relu', 'hswish', 'hswish', 'hswish', 'hswish', 'hswish'
         ),
+        se_from_exp: bool = True,
         dropout_rate: float = 0.2,
         bn_eps: float = 1e-3,
         bn_momentum: float = 0.1
@@ -168,6 +176,7 @@ class MobileNetV3Space(nn.Module):
                 )
 
         self.expand_ratios = expand_ratios
+        self.se_from_exp = se_from_exp
 
         # NOTE: The built-in hardswish produces slightly different output from 3rd-party implementation
         # But I guess it doesn't really matter.
@@ -188,7 +197,7 @@ class MobileNetV3Space(nn.Module):
                 nn.ValueChoice([3, 5, 7], label=f's0_i0_ks'),
                 stride=stride[1],
                 squeeze_excite=partial(
-                    _se_or_skip, optional=squeeze_excite[0] == 'optional', label=f's0_i0_se'
+                    _se_or_skip, optional=squeeze_excite[0] == 'optional', se_from_exp=self.se_from_exp, label=f's0_i0_se'
                 ) if squeeze_excite[0] != 'none' else None,
                 activation_layer=_act_fn(activation[1])
             ),
@@ -244,7 +253,9 @@ class MobileNetV3Space(nn.Module):
             exp = nn.ValueChoice(list(self.expand_ratios), label=f's{stage_idx}_i{idx}_exp')
             ks = nn.ValueChoice([3, 5, 7], label=f's{stage_idx}_i{idx}_ks')
             # if SE is true, assign a layer choice to SE
-            se_or_skip = partial(_se_or_skip, optional=se == 'optional', label=f's{stage_idx}_i{idx}_se') if se != 'none' else None
+            se_or_skip = partial(
+                _se_or_skip, optional=se == 'optional', se_from_exp=self.se_from_exp, label=f's{stage_idx}_i{idx}_se'
+            ) if se != 'none' else None
             return InvertedResidual(
                 inp if idx == 0 else oup,
                 oup, exp, ks,
