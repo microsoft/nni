@@ -8,6 +8,9 @@ import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
+from .utils.fixed import FixedFactory
+from .utils.pretrained import load_pretrained_weight
+
 
 def make_divisible(v, divisor, min_val=None):
     """
@@ -304,6 +307,104 @@ class ProxylessNAS(nn.Module):
         if hasattr(self, 'classifier'):
             return {'classifier.weight', 'classifier.bias'}
         return set()
+
+    @classmethod
+    def fixed_arch(cls, arch: dict) -> FixedFactory:
+        return FixedFactory(cls, arch)
+
+    @classmethod
+    def load_searched_model(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+        if name == 'acenas-m1':
+            # top-1: 75.176
+            model_factory = cls.fixed_arch({
+                's2_depth': 2,
+                's2_i0': 'k3e6',
+                's2_i1': 'k3e3',
+                's3_depth': 3,
+                's3_i0': 'k5e3',
+                's3_i1': 'k3e3',
+                's3_i2': 'k5e3',
+                's4_depth': 2,
+                's4_i0': 'k3e6',
+                's4_i1': 'k5e3',
+                's5_depth': 4,
+                's5_i0': 'k7e6',
+                's5_i1': 'k3e6',
+                's5_i2': 'k3e6',
+                's5_i3': 'k7e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e6',
+                's6_i2': 'k7e3',
+                's6_i3': 'k7e3',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            })
+
+        elif name == 'acenas-m2':
+            # top-1: 75.0
+            model_factory = cls.fixed_arch({
+                's2_depth': 1,
+                's2_i0': 'k5e3',
+                's3_depth': 3,
+                's3_i0': 'k3e6',
+                's3_i1': 'k3e3',
+                's3_i2': 'k5e3',
+                's4_depth': 2,
+                's4_i0': 'k7e6',
+                's4_i1': 'k5e6',
+                's5_depth': 4,
+                's5_i0': 'k5e6',
+                's5_i1': 'k5e3',
+                's5_i2': 'k5e6',
+                's5_i3': 'k3e6',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k5e6',
+                's6_i2': 'k5e3',
+                's6_i3': 'k5e6',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            })
+
+        elif name == 'acenas-m3':
+            # top-1: 75.118
+            model_factory = cls.fixed_arch({
+                's2_depth': 2,
+                's2_i0': 'k3e3',
+                's2_i1': 'k3e6',
+                's3_depth': 2,
+                's3_i0': 'k5e3',
+                's3_i1': 'k3e3',
+                's4_depth': 3,
+                's4_i0': 'k5e6',
+                's4_i1': 'k7e6',
+                's4_i2': 'k3e6',
+                's5_depth': 4,
+                's5_i0': 'k7e6',
+                's5_i1': 'k7e3',
+                's5_i2': 'k7e3',
+                's5_i3': 'k5e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e3',
+                's6_i2': 'k7e6',
+                's6_i3': 'k3e3',
+                's7_depth': 1,
+                's7_i0': 'k5e6'
+            })
+
+        model = model_factory()
+
+        if pretrained:
+            weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
+            model.load_state_dict(pretrained_weights)
+
+        return model
 
 
 def reset_parameters(model, model_init='he_fout', init_div_groups=False,

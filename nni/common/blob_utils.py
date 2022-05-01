@@ -17,7 +17,7 @@ __all__ = ['NNI_BLOB', 'load_or_download_file', 'upload_file', 'nni_cache_home']
 
 
 # Blob that contains some downloadable files.
-NNI_BLOB = 'https://nni.blob.core.windows.net/'
+NNI_BLOB = 'https://nni.blob.core.windows.net'
 
 # Override these environment vars to move your cache.
 ENV_NNI_HOME = 'NNI_HOME'
@@ -75,7 +75,9 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
                     pbar.update(len(chunk))
                     f.flush()
         else:
-            raise FileNotFoundError('Download is not enabled, but file still does not exist: {}'.format(local_path))
+            raise FileNotFoundError(
+                'Download is not enabled, and file does not exist: {}. Please set download=True.'.format(local_path)
+            )
 
         digest = sha256.hexdigest()
         if not digest.startswith(hash_prefix):
@@ -97,7 +99,7 @@ def upload_file(local_path: str, destination_path: str, sas_token: str) -> str:
     ``https://xxx.com/myfile-da5f43b7.zip``.
 
     Need to have `azcopy installed <https://docs.microsoft.com/en-us/azure/storage/common/storage-ref-azcopy>`_,
-    and a SAS token for the destination storage.
+    and a SAS token for the destination storage (``?`` should be included as prefix of token).
 
     Returns a string which is the uploaded path.
     """
@@ -121,6 +123,6 @@ def upload_file(local_path: str, destination_path: str, sas_token: str) -> str:
     if not stem.endswith('-' + hash_prefix):
         destination_path = stem + '-' + hash_prefix + '.' + suffix
 
-    subprocess.run(['azcopy', local_path, destination_path + '?' + sas_token], check=True)
+    subprocess.run(['azcopy', 'copy', local_path, destination_path + sas_token], check=True)
 
     return destination_path
