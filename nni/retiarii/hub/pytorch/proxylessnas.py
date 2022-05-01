@@ -8,6 +8,9 @@ import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
+from .utils.fixed import FixedFactory
+from .utils.pretrained import load_pretrained_weight
+
 
 def make_divisible(v, divisor, min_val=None):
     """
@@ -94,7 +97,7 @@ class DepthwiseSeparableConv(nn.Sequential):
     Residual connection is added if input and output shape are the same.
 
     References:
-    
+
     - https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/efficientnet_blocks.py#L90
     - https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L433
     - https://github.com/ultmaster/AceNAS/blob/46c8895f/searchspace/proxylessnas/utils.py#L100
@@ -304,6 +307,199 @@ class ProxylessNAS(nn.Module):
         if hasattr(self, 'classifier'):
             return {'classifier.weight', 'classifier.bias'}
         return set()
+
+    @classmethod
+    def fixed_arch(cls, arch: dict) -> FixedFactory:
+        return FixedFactory(cls, arch)
+
+    @classmethod
+    def load_searched_model(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+
+        init_kwargs = {}  # all default
+
+        if name == 'acenas-m1':
+            # top-1: 75.176
+            arch = {
+                's2_depth': 2,
+                's2_i0': 'k3e6',
+                's2_i1': 'k3e3',
+                's3_depth': 3,
+                's3_i0': 'k5e3',
+                's3_i1': 'k3e3',
+                's3_i2': 'k5e3',
+                's4_depth': 2,
+                's4_i0': 'k3e6',
+                's4_i1': 'k5e3',
+                's5_depth': 4,
+                's5_i0': 'k7e6',
+                's5_i1': 'k3e6',
+                's5_i2': 'k3e6',
+                's5_i3': 'k7e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e6',
+                's6_i2': 'k7e3',
+                's6_i3': 'k7e3',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            }
+
+        elif name == 'acenas-m2':
+            # top-1: 75.0
+            arch = {
+                's2_depth': 1,
+                's2_i0': 'k5e3',
+                's3_depth': 3,
+                's3_i0': 'k3e6',
+                's3_i1': 'k3e3',
+                's3_i2': 'k5e3',
+                's4_depth': 2,
+                's4_i0': 'k7e6',
+                's4_i1': 'k5e6',
+                's5_depth': 4,
+                's5_i0': 'k5e6',
+                's5_i1': 'k5e3',
+                's5_i2': 'k5e6',
+                's5_i3': 'k3e6',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k5e6',
+                's6_i2': 'k5e3',
+                's6_i3': 'k5e6',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            }
+
+        elif name == 'acenas-m3':
+            # top-1: 75.118
+            arch = {
+                's2_depth': 2,
+                's2_i0': 'k3e3',
+                's2_i1': 'k3e6',
+                's3_depth': 2,
+                's3_i0': 'k5e3',
+                's3_i1': 'k3e3',
+                's4_depth': 3,
+                's4_i0': 'k5e6',
+                's4_i1': 'k7e6',
+                's4_i2': 'k3e6',
+                's5_depth': 4,
+                's5_i0': 'k7e6',
+                's5_i1': 'k7e3',
+                's5_i2': 'k7e3',
+                's5_i3': 'k5e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e3',
+                's6_i2': 'k7e6',
+                's6_i3': 'k3e3',
+                's7_depth': 1,
+                's7_i0': 'k5e6'
+            }
+
+        elif name == 'proxyless-cpu':
+            # top-1: 75.29
+            arch = {
+                's2_depth': 4,
+                's2_i0': 'k3e6',
+                's2_i1': 'k3e3',
+                's2_i2': 'k3e3',
+                's2_i3': 'k3e3',
+                's3_depth': 4,
+                's3_i0': 'k3e6',
+                's3_i1': 'k3e3',
+                's3_i2': 'k3e3',
+                's3_i3': 'k5e3',
+                's4_depth': 2,
+                's4_i0': 'k3e6',
+                's4_i1': 'k3e3',
+                's5_depth': 4,
+                's5_i0': 'k5e6',
+                's5_i1': 'k3e3',
+                's5_i2': 'k3e3',
+                's5_i3': 'k3e3',
+                's6_depth': 4,
+                's6_i0': 'k5e6',
+                's6_i1': 'k5e3',
+                's6_i2': 'k5e3',
+                's6_i3': 'k3e3',
+                's7_depth': 1,
+                's7_i0': 'k5e6'
+            }
+
+            init_kwargs['base_widths'] = [40, 24, 32, 48, 88, 104, 216, 360, 1432]
+
+        elif name == 'proxyless-gpu':
+            # top-1: 75.084
+            arch = {
+                's2_depth': 1,
+                's2_i0': 'k5e3',
+                's3_depth': 2,
+                's3_i0': 'k7e3',
+                's3_i1': 'k3e3',
+                's4_depth': 2,
+                's4_i0': 'k7e6',
+                's4_i1': 'k5e3',
+                's5_depth': 3,
+                's5_i0': 'k5e6',
+                's5_i1': 'k3e3',
+                's5_i2': 'k5e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e6',
+                's6_i2': 'k7e6',
+                's6_i3': 'k5e6',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            }
+
+            init_kwargs['base_widths'] = [40, 24, 32, 56, 112, 128, 256, 432, 1728]
+
+        elif name == 'proxyless-mobile':
+            # top-1: 74.594
+            arch = {
+                's2_depth': 2,
+                's2_i0': 'k5e3',
+                's2_i1': 'k3e3',
+                's3_depth': 4,
+                's3_i0': 'k7e3',
+                's3_i1': 'k3e3',
+                's3_i2': 'k5e3',
+                's3_i3': 'k5e3',
+                's4_depth': 4,
+                's4_i0': 'k7e6',
+                's4_i1': 'k5e3',
+                's4_i2': 'k5e3',
+                's4_i3': 'k5e3',
+                's5_depth': 4,
+                's5_i0': 'k5e6',
+                's5_i1': 'k5e3',
+                's5_i2': 'k5e3',
+                's5_i3': 'k5e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e6',
+                's6_i2': 'k7e3',
+                's6_i3': 'k7e3',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            }
+
+        else:
+            raise ValueError(f'Unsupported architecture with name: {name}')
+
+        model_factory = cls.fixed_arch(arch)
+        model = model_factory(**init_kwargs)
+
+        if pretrained:
+            weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
+            model.load_state_dict(pretrained_weights)
+
+        return model
 
 
 def reset_parameters(model, model_init='he_fout', init_div_groups=False,
