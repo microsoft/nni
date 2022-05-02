@@ -333,7 +333,7 @@ class CellBuilder:
 
         ops_factory: Dict[str, Callable[[int, int, Optional[int]], nn.Module]] = {}
         for op in self.op_candidates:
-            ops_factory[op] = partial(self.op_factory, op=op, channels=self.C, is_reduction_cell=is_reduction_cell)
+            ops_factory[op] = partial(self.op_factory, op=op, channels=cast(int, self.C), is_reduction_cell=is_reduction_cell)
 
         cell = nn.Cell(ops_factory, self.num_nodes, self.num_ops_per_node, self.num_predecessors, self.merge_op,
                        preprocessor=preprocessor, postprocessor=CellPostprocessor(),

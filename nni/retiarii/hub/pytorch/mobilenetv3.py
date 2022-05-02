@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from functools import partial
-from typing import Tuple, Optional, Callable, Union, List, cast
+from typing import Tuple, Optional, Callable, Union, List, Type, cast
 
 import torch
 import nni.retiarii.nn.pytorch as nn
@@ -60,7 +60,7 @@ def _se_or_skip(hidden_ch: int, input_ch: int, optional: bool, se_from_exp: bool
         return SqueezeExcite(ch)
 
 
-def _act_fn(act_alias: Literal['hswish', 'swish', 'relu']) -> nn.Module:
+def _act_fn(act_alias: Literal['hswish', 'swish', 'relu']) -> Type[nn.Module]:
     if act_alias == 'hswish':
         return nn.Hardswish
     elif act_alias == 'swish':
@@ -156,12 +156,14 @@ class MobileNetV3Space(nn.Module):
 
         # The first and final two blocks can't have variational depth
         if isinstance(depth_range[0], int):
+            depth_range = cast(Tuple[int, int], depth_range)
             assert len(depth_range) == 2 and depth_range[1] >= depth_range[0] >= 1
             self.depth_range = [depth_range] * (self.num_blocks - 3)
         else:
             assert len(depth_range) == self.num_blocks - 3
-            self.depth_range = depth_range
+            self.depth_range = cast(List[Tuple[int, int]], depth_range)
             for d in self.depth_range:
+                d = cast(Tuple[int, int], d)
                 # pylint: disable=unsubscriptable-object
                 assert len(d) == 2 and d[1] >= d[0] >= 1, f'{d} does not satisfy depth constraints'
 
@@ -174,7 +176,7 @@ class MobileNetV3Space(nn.Module):
                     # According to tunas, stem and stage 0 share one width multiplier
                     # https://github.com/google-research/google-research/blob/20736344/tunas/mobile_search_space_v3.py#L791
                     make_divisible(
-                        nn.ValueChoice(width_multipliers, label=f's{max(i - 1, 0)}_width_mult') * base_width, 8
+                        nn.ValueChoice(list(width_multipliers), label=f's{max(i - 1, 0)}_width_mult') * base_width, 8
                     )
                 )
 
@@ -191,7 +193,7 @@ class MobileNetV3Space(nn.Module):
             stride=stride[0], activation_layer=_act_fn(activation[0])
         )
 
-        blocks = [
+        blocks: List[nn.Module] = [
             # Stage 0
             # FIXME: this should be an optional layer.
             # https://github.com/google-research/google-research/blob/20736344/tunas/mobile_search_space_v3.py#L791
@@ -199,9 +201,9 @@ class MobileNetV3Space(nn.Module):
                 self.widths[0], self.widths[1],
                 nn.ValueChoice([3, 5, 7], label=f's0_i0_ks'),
                 stride=stride[1],
-                squeeze_excite=partial(
+                squeeze_excite=cast(Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module], partial(
                     _se_or_skip, optional=squeeze_excite[0] == 'optional', se_from_exp=self.se_from_exp, label=f's0_i0_se'
-                ) if squeeze_excite[0] != 'none' else None,
+                )) if squeeze_excite[0] != 'none' else None,
                 activation_layer=_act_fn(activation[1])
             ),
         ]
@@ -256,9 +258,9 @@ class MobileNetV3Space(nn.Module):
             exp = nn.ValueChoice(list(self.expand_ratios), label=f's{stage_idx}_i{idx}_exp')
             ks = nn.ValueChoice([3, 5, 7], label=f's{stage_idx}_i{idx}_ks')
             # if SE is true, assign a layer choice to SE
-            se_or_skip = partial(
+            se_or_skip = cast(Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module], partial(
                 _se_or_skip, optional=se == 'optional', se_from_exp=self.se_from_exp, label=f's{stage_idx}_i{idx}_se'
-            ) if se != 'none' else None
+            )) if se != 'none' else None
             return InvertedResidual(
                 inp if idx == 0 else oup,
                 oup, exp, ks,
@@ -343,7 +345,7 @@ class MobileNetV3Space(nn.Module):
                 if i > 0 or multiplier >= 0.75:
                     # fix_stem = True when multiplier < 0.75
                     # https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/mobilenetv3.py#L421
-                    widths[i] *= multiplier
+                    widths[i] = make_divisible(widths[i] * multiplier, 8)
             init_kwargs.update(
                 base_widths=widths,
                 width_multipliers=1.0,
