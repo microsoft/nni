@@ -337,7 +337,8 @@ class MobileNetV3Space(nn.Module):
                 squeeze_excite=['none', 'none', 'force', 'none', 'force', 'force']
             )
 
-        if name.startswith('mobilenetv3-small-'):
+        elif name.startswith('mobilenetv3-small-'):
+            # Bicubic interpolation
             # mul 0.5, top-1: 57.906
             # mul 0.75, top-1: 65.24
             # mul 1.0, top-1: 67.652
@@ -390,8 +391,271 @@ class MobileNetV3Space(nn.Module):
                 's4_i2_ks': 5
             }
 
-        if name.startswith('cream'):
+        elif name.startswith('cream'):
+            # bilinear interpolation
+            # 014: top-1 = 53.74 (test image size = 64)
+            # 043: top-1 = 66.256 (test image size = 96)
+            # 114: top-1 = 72.514 (test image size = 160)
+            # 287: top-1 = 77.52
+            # 481: top-1 = 79.078
+            # 604: top-1 = 79.92
 
+            level = name.split('-')[-1]
+
+            # region cream arch specification
+            if level == '014':
+                arch = {
+                    'stem_ks': 3,
+                    's0_depth': 1,
+                    's0_i0_ks': 3,
+                    's1_depth': 1,
+                    's1_i0_exp': 4.0,
+                    's1_i0_ks': 3,
+                    's2_depth': 2,
+                    's2_i0_exp': 6.0,
+                    's2_i0_ks': 5,
+                    's2_i1_exp': 6.0,
+                    's2_i1_ks': 5,
+                    's3_depth': 2,
+                    's3_i0_exp': 6.0,
+                    's3_i0_ks': 5,
+                    's3_i1_exp': 6.0,
+                    's3_i1_ks': 5,
+                    's4_depth': 1,
+                    's4_i0_exp': 6.0,
+                    's4_i0_ks': 3,
+                    's5_depth': 1,
+                    's5_i0_exp': 6.0,
+                    's5_i0_ks': 5
+                }
+            elif level == '043':
+                arch = {
+                    'stem_ks': 3,
+                    's0_depth': 1,
+                    's0_i0_ks': 3,
+                    's1_depth': 1,
+                    's1_i0_exp': 4.0,
+                    's1_i0_ks': 3,
+                    's2_depth': 2,
+                    's2_i0_exp': 6.0,
+                    's2_i0_ks': 5,
+                    's2_i1_exp': 6.0,
+                    's2_i1_ks': 3,
+                    's3_depth': 2,
+                    's3_i0_exp': 6.0,
+                    's3_i0_ks': 5,
+                    's3_i1_exp': 6.0,
+                    's3_i1_ks': 3,
+                    's4_depth': 3,
+                    's4_i0_exp': 6.0,
+                    's4_i0_ks': 5,
+                    's4_i1_exp': 6.0,
+                    's4_i1_ks': 5,
+                    's4_i2_exp': 6.0,
+                    's4_i2_ks': 5,
+                    's5_depth': 2,
+                    's5_i0_exp': 6.0,
+                    's5_i0_ks': 5,
+                    's5_i1_exp': 6.0,
+                    's5_i1_ks': 5
+                }
+            elif level == '114':
+                arch = {
+                    'stem_ks': 3,
+                    's0_depth': 1,
+                    's0_i0_ks': 3,
+                    's1_depth': 1,
+                    's1_i0_exp': 4.0,
+                    's1_i0_ks': 3,
+                    's2_depth': 2,
+                    's2_i0_exp': 6.0,
+                    's2_i0_ks': 5,
+                    's2_i1_exp': 6.0,
+                    's2_i1_ks': 5,
+                    's3_depth': 2,
+                    's3_i0_exp': 6.0,
+                    's3_i0_ks': 5,
+                    's3_i1_exp': 6.0,
+                    's3_i1_ks': 5,
+                    's4_depth': 3,
+                    's4_i0_exp': 6.0,
+                    's4_i0_ks': 5,
+                    's4_i1_exp': 6.0,
+                    's4_i1_ks': 5,
+                    's4_i2_exp': 6.0,
+                    's4_i2_ks': 5,
+                    's5_depth': 2,
+                    's5_i0_exp': 6.0,
+                    's5_i0_ks': 5,
+                    's5_i1_exp': 6.0,
+                    's5_i1_ks': 5
+                }
+            elif level == '287':
+                arch = {
+                    'stem_ks': 3,
+                    's0_depth': 1,
+                    's0_i0_ks': 3,
+                    's1_depth': 1,
+                    's1_i0_exp': 4.0,
+                    's1_i0_ks': 3,
+                    's2_depth': 2,
+                    's2_i0_exp': 6.0,
+                    's2_i0_ks': 5,
+                    's2_i1_exp': 6.0,
+                    's2_i1_ks': 5,
+                    's3_depth': 3,
+                    's3_i0_exp': 6.0,
+                    's3_i0_ks': 5,
+                    's3_i1_exp': 6.0,
+                    's3_i1_ks': 3,
+                    's3_i2_exp': 6.0,
+                    's3_i2_ks': 5,
+                    's4_depth': 4,
+                    's4_i0_exp': 6.0,
+                    's4_i0_ks': 5,
+                    's4_i1_exp': 6.0,
+                    's4_i1_ks': 5,
+                    's4_i2_exp': 6.0,
+                    's4_i2_ks': 5,
+                    's4_i3_exp': 6.0,
+                    's4_i3_ks': 5,
+                    's5_depth': 3,
+                    's5_i0_exp': 6.0,
+                    's5_i0_ks': 5,
+                    's5_i1_exp': 6.0,
+                    's5_i1_ks': 5,
+                    's5_i2_exp': 6.0,
+                    's5_i2_ks': 5
+                }
+            elif level == '481':
+                arch = {
+                    'stem_ks': 3,
+                    's0_depth': 1,
+                    's0_i0_ks': 3,
+                    's1_depth': 4,
+                    's1_i0_exp': 6.0,
+                    's1_i0_ks': 5,
+                    's1_i1_exp': 4.0,
+                    's1_i1_ks': 7,
+                    's1_i2_exp': 6.0,
+                    's1_i2_ks': 5,
+                    's1_i3_exp': 6.0,
+                    's1_i3_ks': 3,
+                    's2_depth': 4,
+                    's2_i0_exp': 6.0,
+                    's2_i0_ks': 5,
+                    's2_i1_exp': 4.0,
+                    's2_i1_ks': 5,
+                    's2_i2_exp': 6.0,
+                    's2_i2_ks': 5,
+                    's2_i3_exp': 4.0,
+                    's2_i3_ks': 3,
+                    's3_depth': 5,
+                    's3_i0_exp': 6.0,
+                    's3_i0_ks': 5,
+                    's3_i1_exp': 6.0,
+                    's3_i1_ks': 5,
+                    's3_i2_exp': 6.0,
+                    's3_i2_ks': 5,
+                    's3_i3_exp': 6.0,
+                    's3_i3_ks': 3,
+                    's3_i4_exp': 6.0,
+                    's3_i4_ks': 3,
+                    's4_depth': 4,
+                    's4_i0_exp': 6.0,
+                    's4_i0_ks': 5,
+                    's4_i1_exp': 6.0,
+                    's4_i1_ks': 5,
+                    's4_i2_exp': 6.0,
+                    's4_i2_ks': 5,
+                    's4_i3_exp': 6.0,
+                    's4_i3_ks': 5,
+                    's5_depth': 4,
+                    's5_i0_exp': 6.0,
+                    's5_i0_ks': 5,
+                    's5_i1_exp': 6.0,
+                    's5_i1_ks': 5,
+                    's5_i2_exp': 6.0,
+                    's5_i2_ks': 5,
+                    's5_i3_exp': 6.0,
+                    's5_i3_ks': 5
+                }
+            elif level == '604':
+                arch = {
+                    'stem_ks': 3,
+                    's0_depth': 1,
+                    's0_i0_ks': 3,
+                    's1_depth': 5,
+                    's1_i0_exp': 6.0,
+                    's1_i0_ks': 5,
+                    's1_i1_exp': 6.0,
+                    's1_i1_ks': 5,
+                    's1_i2_exp': 4.0,
+                    's1_i2_ks': 5,
+                    's1_i3_exp': 6.0,
+                    's1_i3_ks': 5,
+                    's1_i4_exp': 6.0,
+                    's1_i4_ks': 5,
+                    's2_depth': 5,
+                    's2_i0_exp': 6.0,
+                    's2_i0_ks': 5,
+                    's2_i1_exp': 4.0,
+                    's2_i1_ks': 5,
+                    's2_i2_exp': 6.0,
+                    's2_i2_ks': 5,
+                    's2_i3_exp': 4.0,
+                    's2_i3_ks': 5,
+                    's2_i4_exp': 6.0,
+                    's2_i4_ks': 5,
+                    's3_depth': 5,
+                    's3_i0_exp': 6.0,
+                    's3_i0_ks': 5,
+                    's3_i1_exp': 4.0,
+                    's3_i1_ks': 5,
+                    's3_i2_exp': 6.0,
+                    's3_i2_ks': 5,
+                    's3_i3_exp': 4.0,
+                    's3_i3_ks': 5,
+                    's3_i4_exp': 6.0,
+                    's3_i4_ks': 5,
+                    's4_depth': 6,
+                    's4_i0_exp': 6.0,
+                    's4_i0_ks': 5,
+                    's4_i1_exp': 6.0,
+                    's4_i1_ks': 5,
+                    's4_i2_exp': 4.0,
+                    's4_i2_ks': 5,
+                    's4_i3_exp': 4.0,
+                    's4_i3_ks': 5,
+                    's4_i4_exp': 6.0,
+                    's4_i4_ks': 5,
+                    's4_i5_exp': 6.0,
+                    's4_i5_ks': 5,
+                    's5_depth': 6,
+                    's5_i0_exp': 6.0,
+                    's5_i0_ks': 5,
+                    's5_i1_exp': 6.0,
+                    's5_i1_ks': 5,
+                    's5_i2_exp': 4.0,
+                    's5_i2_ks': 5,
+                    's5_i3_exp': 6.0,
+                    's5_i3_ks': 5,
+                    's5_i4_exp': 6.0,
+                    's5_i4_ks': 5,
+                    's5_i5_exp': 6.0,
+                    's5_i5_ks': 5
+                }
+            # endregion
+
+            init_kwargs.update(
+                base_widths=[16, 16, 24, 40, 80, 96, 192, 320, 1280],
+                width_multipliers=1.0,
+                expand_ratios=[4.0, 6.0],
+                bn_eps=1e-5,
+                bn_momentum=0.1,
+                squeeze_excite=['force'] * 6,
+                activation=['swish'] * 9
+            )
 
         else:
             raise ValueError(f'Unsupported architecture with name: {name}')

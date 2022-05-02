@@ -20,6 +20,12 @@ PRETRAINED_WEIGHT_URLS = {
     'mobilenetv3-small-050': f'{NNI_BLOB}/nashub/mobilenetv3-small-050-05cb7a80.pth',
     'mobilenetv3-small-075': f'{NNI_BLOB}/nashub/mobilenetv3-small-075-c87d8acb.pth',
     'mobilenetv3-small-100': f'{NNI_BLOB}/nashub/mobilenetv3-small-100-8332faac.pth',
+    'cream-014': f'{NNI_BLOB}/nashub/cream-014-060aea24.pth',
+    'cream-043': f'{NNI_BLOB}/nashub/cream-043-bec949e1.pth',
+    'cream-114': f'{NNI_BLOB}/nashub/cream-114-fc272590.pth',
+    'cream-287': f'{NNI_BLOB}/nashub/cream-287-a0fcba33.pth',
+    'cream-481': f'{NNI_BLOB}/nashub/cream-481-d85779b6.pth',
+    'cream-604': f'{NNI_BLOB}/nashub/cream-604-9ee425f7.pth',
 }
 
 
