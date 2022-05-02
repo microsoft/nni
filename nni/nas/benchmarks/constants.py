@@ -10,7 +10,7 @@ ENV_NASBENCHMARK_DIR = 'NASBENCHMARK_DIR'
 
 
 def _get_nasbenchmark_dir():
-    nni_home = nni_cache_home
+    nni_home = nni_cache_home()
     return os.getenv(ENV_NASBENCHMARK_DIR, os.path.join(nni_home, 'nasbenchmark'))
 
 

@@ -5,7 +5,6 @@ from functools import partial
 from typing import Tuple, Optional, Callable, Union, List, cast
 
 import torch
-import torch.nn.functional as F
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 from nni.typehint import Literal

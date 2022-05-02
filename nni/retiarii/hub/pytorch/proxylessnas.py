@@ -241,7 +241,7 @@ class ProxylessNAS(nn.Module):
     when used in weight sharing, these candidates will be treated as separate layers, and won't be fine-grained shared.
     We note that :class:`MobileNetV3Space` is different in this perspective.
 
-    This space can be implemented as part of :class:`MobileNetV3Space`, but we separate those following conventions. 
+    This space can be implemented as part of :class:`MobileNetV3Space`, but we separate those following conventions.
     """
 
     def __init__(self, num_labels: int = 1000,
