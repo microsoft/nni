@@ -10,10 +10,10 @@ import torch
 import torch.nn as nn
 
 from nni.common.hpo_utils import ParameterSpec
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Repeat, ValueChoiceX, ChoiceOf
 
 from .base import BaseSuperNetModule
-from ._valuechoice_utils import evaluate_value_choice_with_dict
+from ._valuechoice_utils import evaluate_value_choice_with_dict, dedup_inner_choices
 from .operation import MixedOperationSamplingPolicy, MixedOperation
 
 
@@ -151,6 +151,70 @@ class PathSamplingInput(BaseSuperNetModule):
                 return sum(res) / len(res)
             elif self.reduction == 'concat':
                 return torch.cat(res, 1)
+
+
+class PathSamplingRepeat(BaseSuperNetModule):
+    """
+    Implementaion of Repeat in a path-sampling supernet.
+    Samples one / some of the prefixes of the repeated blocks.
+
+    Attributes
+    ----------
+    _sampled : int or list of int
+        Sampled depth.
+    """
+
+    def __init__(self, blocks: list[nn.Module], depth: ChoiceOf[int]):
+        super().__init__()
+        self.blocks = blocks
+        self.depth = depth
+        self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices([depth])
+        self._sampled: list[int] | int | None = None
+
+    def resample(self, memo):
+        """Since depth is based on ValueChoice, we only need to randomly sample every leaf value choices."""
+        result = {}
+        for label in self._space_spec:
+            if label in memo:
+                result[label] = memo[label]
+            else:
+                result[label] = random.choice(self._space_spec[label].values)
+        
+        self._sampled = evaluate_value_choice_with_dict(self.depth, result)
+
+        return result
+
+    def export(self, memo):
+        """Random choose one if every choice not in memo."""
+        result = {}
+        for label in self._space_spec:
+            if label not in memo:
+                result[label] = random.choice(self._space_spec[label].values)
+        return result
+
+    def search_space_spec(self):
+        return self._space_spec
+
+    @classmethod
+    def mutate(cls, module, name, memo, mutate_kwargs):
+        if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
+            # Only interesting when depth is mutable
+            return cls(module.blocks, module.depth_choice)
+
+    def forward(self, x):
+        if self._sampled is None:
+            raise RuntimeError('At least one depth needs to be sampled before fprop.')
+        if isinstance(self._sampled, list):
+            res = []
+            for i, block in enumerate(self.blocks):
+                x = block(x)
+                if i in self._sampled:
+                    res.append(x)
+                return sum(res)
+        else:
+            for block in self.blocks[:self._sampled]:
+                x = block(x)
+            return x
 
 
 class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):

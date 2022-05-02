@@ -61,6 +61,8 @@ class Repeat(Mutable):
         self.blocks = nn.Repeat(Block(), nn.ValueChoice([1, 3, 5]))
     """
 
+    depth_choice: Union[int, ChoiceOf[int]]
+
     @classmethod
     def create_fixed_module(cls,
                             blocks: Union[Callable[[int], nn.Module],
