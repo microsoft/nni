@@ -1,6 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""
+Weights available in this file are processed with scripts in https://github.com/ultmaster/spacehub-conversion,
+and uploaded with :func:`nni.common.blob_utils.upload_file`.
+"""
+
 import os
 
 from nni.common.blob_utils import NNI_BLOB, nni_cache_home, load_or_download_file
@@ -29,6 +34,9 @@ PRETRAINED_WEIGHT_URLS = {
 
     # nasnet
     'darts-v2': f'{NNI_BLOB}/nashub/darts-v2-5465b0d2.pth',
+
+    # spos
+    'spos': f'{NNI_BLOB}/nashub/spos-0b17f6fc.pth',
 }
 
 
