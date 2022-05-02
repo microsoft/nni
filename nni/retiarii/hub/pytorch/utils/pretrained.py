@@ -26,6 +26,9 @@ PRETRAINED_WEIGHT_URLS = {
     'cream-287': f'{NNI_BLOB}/nashub/cream-287-a0fcba33.pth',
     'cream-481': f'{NNI_BLOB}/nashub/cream-481-d85779b6.pth',
     'cream-604': f'{NNI_BLOB}/nashub/cream-604-9ee425f7.pth',
+
+    # nasnet
+    'darts-v2': f'{NNI_BLOB}/nashub/darts-v2-5465b0d2.pth',
 }
 
 

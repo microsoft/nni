@@ -645,6 +645,8 @@ class MobileNetV3Space(nn.Module):
                     's5_i5_exp': 6.0,
                     's5_i5_ks': 5
                 }
+            else:
+                raise ValueError(f'Unsupported cream model level: {level}')
             # endregion
 
             init_kwargs.update(

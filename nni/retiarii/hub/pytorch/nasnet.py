@@ -21,6 +21,9 @@ import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
+from .utils.fixed import FixedFactory
+from .utils.pretrained import load_pretrained_weight
+
 
 # the following are NAS operations from
 # https://github.com/facebookresearch/unnas/blob/main/pycls/models/nas/operations.py
@@ -508,6 +511,10 @@ class NDS(nn.Module):
             if isinstance(module, DropPath_):
                 module.drop_prob = drop_prob
 
+    @classmethod
+    def fixed_arch(cls, arch: dict) -> FixedFactory:
+        return FixedFactory(cls, arch)
+
 
 @model_wrapper
 class NASNet(NDS):
@@ -683,3 +690,65 @@ class DARTS(NDS):
                          num_cells=num_cells,
                          dataset=dataset,
                          auxiliary_loss=auxiliary_loss)
+
+    @classmethod
+    def load_searched_model(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+
+        init_kwargs = {}  # all default
+
+        if name == 'darts-v2':
+            # top-1: 97.37
+            init_kwargs.update(
+                num_cells=20,
+                width=36,
+            )
+            arch = {
+                'normal/op_2_0': 'sep_conv_3x3',
+                'normal/op_2_1': 'sep_conv_3x3',
+                'normal/input_2_0': 0,
+                'normal/input_2_1': 1,
+                'normal/op_3_0': 'sep_conv_3x3',
+                'normal/op_3_1': 'sep_conv_3x3',
+                'normal/input_3_0': 0,
+                'normal/input_3_1': 1,
+                'normal/op_4_0': 'sep_conv_3x3',
+                'normal/op_4_1': 'skip_connect',
+                'normal/input_4_0': 1,
+                'normal/input_4_1': 0,
+                'normal/op_5_0': 'skip_connect',
+                'normal/op_5_1': 'dil_conv_3x3',
+                'normal/input_5_0': 0,
+                'normal/input_5_1': 2,
+                'reduce/op_2_0': 'max_pool_3x3',
+                'reduce/op_2_1': 'max_pool_3x3',
+                'reduce/input_2_0': 0,
+                'reduce/input_2_1': 1,
+                'reduce/op_3_0': 'skip_connect',
+                'reduce/op_3_1': 'max_pool_3x3',
+                'reduce/input_3_0': 2,
+                'reduce/input_3_1': 1,
+                'reduce/op_4_0': 'max_pool_3x3',
+                'reduce/op_4_1': 'skip_connect',
+                'reduce/input_4_0': 0,
+                'reduce/input_4_1': 2,
+                'reduce/op_5_0': 'skip_connect',
+                'reduce/op_5_1': 'max_pool_3x3',
+                'reduce/input_5_0': 2,
+                'reduce/input_5_1': 1
+            }
+
+        else:
+            raise ValueError(f'Unsupported architecture with name: {name}')
+
+        model_factory = cls.fixed_arch(arch)
+        model = model_factory(**init_kwargs)
+
+        if pretrained:
+            weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
+            model.load_state_dict(pretrained_weights)
+
+        return model
