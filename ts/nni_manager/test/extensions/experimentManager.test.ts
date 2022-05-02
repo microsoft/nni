@@ -10,7 +10,7 @@ import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { ExperimentManager } from '../../common/experimentManager';
-import { NNIExperimentsManager } from '../../core/nniExperimentsManager';
+import { NNIExperimentsManager } from 'extensions/experiments_manager';
 
 
 describe('Unit test for experiment manager', function () {

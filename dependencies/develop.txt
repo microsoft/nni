@@ -1,3 +1,4 @@
+aioconsole
 coverage
 cython
 flake8

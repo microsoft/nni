@@ -42,7 +42,7 @@ async function runProcess(): Promise<Error | null> {
     });
 
     // create IPC interface
-    const dispatcher: IpcInterface = await createDispatcherInterface(proc);
+    const dispatcher: IpcInterface = await createDispatcherInterface();
     dispatcher.onCommand((commandType: string, content: string): void => {
         receivedCommands.push({ commandType, content });
     });
