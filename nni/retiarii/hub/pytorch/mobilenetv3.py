@@ -287,8 +287,7 @@ class MobileNetV3Space(nn.Module):
         init_kwargs = {}  # all default
 
         if name == 'mobilenetv3-large-100':
-            # top-1: 75.768
-            # NOTE: Use bicubic interpolation to evaluate this
+            # NOTE: Use bicsubic interpolation to evaluate this
             # With default interpolation, it yields top-1 75.722
             arch = {
                 'stem_ks': 3,
@@ -338,11 +337,7 @@ class MobileNetV3Space(nn.Module):
             )
 
         elif name.startswith('mobilenetv3-small-'):
-            # Bicubic interpolation
-            # mul 0.5, top-1: 57.906
-            # mul 0.75, top-1: 65.24
-            # mul 1.0, top-1: 67.652
-
+            # Evaluate with bicubic interpolation
             multiplier = int(name.split('-')[-1]) / 100
             widths = [16, 16, 24, 40, 48, 96, 576, 1024]
             for i in range(7):
@@ -392,13 +387,8 @@ class MobileNetV3Space(nn.Module):
             }
 
         elif name.startswith('cream'):
+            # https://github.com/microsoft/Cream/tree/main/Cream
             # bilinear interpolation
-            # 014: top-1 = 53.74 (test image size = 64)
-            # 043: top-1 = 66.256 (test image size = 96)
-            # 114: top-1 = 72.514 (test image size = 160)
-            # 287: top-1 = 77.52
-            # 481: top-1 = 79.078
-            # 604: top-1 = 79.92
 
             level = name.split('-')[-1]
 

@@ -239,7 +239,9 @@ class ProxylessNAS(nn.Module):
     Following the official implementation, the inverted residual with kernel size / expand ratio variations in each layer
     is implemented with a :class:`nn.LayerChoice` with all-combination candidates. That means,
     when used in weight sharing, these candidates will be treated as separate layers, and won't be fine-grained shared.
-    We note that ``MobileNetV3Space`` is different in this perspective.
+    We note that :class:`MobileNetV3Space` is different in this perspective.
+
+    This space can be implemented as part of :class:`MobileNetV3Space`, but we separate those following conventions. 
     """
 
     def __init__(self, num_labels: int = 1000,
@@ -321,7 +323,6 @@ class ProxylessNAS(nn.Module):
         init_kwargs = {}  # all default
 
         if name == 'acenas-m1':
-            # top-1: 75.176
             arch = {
                 's2_depth': 2,
                 's2_i0': 'k3e6',
@@ -348,7 +349,6 @@ class ProxylessNAS(nn.Module):
             }
 
         elif name == 'acenas-m2':
-            # top-1: 75.0
             arch = {
                 's2_depth': 1,
                 's2_i0': 'k5e3',
@@ -374,7 +374,6 @@ class ProxylessNAS(nn.Module):
             }
 
         elif name == 'acenas-m3':
-            # top-1: 75.118
             arch = {
                 's2_depth': 2,
                 's2_i0': 'k3e3',
@@ -401,7 +400,6 @@ class ProxylessNAS(nn.Module):
             }
 
         elif name == 'proxyless-cpu':
-            # top-1: 75.29
             arch = {
                 's2_depth': 4,
                 's2_i0': 'k3e6',
@@ -433,7 +431,6 @@ class ProxylessNAS(nn.Module):
             init_kwargs['base_widths'] = [40, 24, 32, 48, 88, 104, 216, 360, 1432]
 
         elif name == 'proxyless-gpu':
-            # top-1: 75.084
             arch = {
                 's2_depth': 1,
                 's2_i0': 'k5e3',
@@ -459,7 +456,6 @@ class ProxylessNAS(nn.Module):
             init_kwargs['base_widths'] = [40, 24, 32, 56, 112, 128, 256, 432, 1728]
 
         elif name == 'proxyless-mobile':
-            # top-1: 74.594
             arch = {
                 's2_depth': 2,
                 's2_i0': 'k5e3',

@@ -258,7 +258,6 @@ class ShuffleNetSpace(nn.Module):
         pretrained: bool = False, download: bool = False, progress: bool = True
     ) -> nn.Module:
         if name == 'spos':
-            # top-1: 74.14
             # NOTE: Need BGR tensor, with no normalization
             # https://github.com/ultmaster/spacehub-conversion/blob/371a4fd6646b4e11eda3f61187f7c9a1d484b1ca/cutils.py#L63
             arch = {

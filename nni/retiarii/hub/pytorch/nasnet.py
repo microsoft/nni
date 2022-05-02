@@ -700,7 +700,6 @@ class DARTS(NDS):
         init_kwargs = {}  # all default
 
         if name == 'darts-v2':
-            # top-1: 97.37
             init_kwargs.update(
                 num_cells=20,
                 width=36,
