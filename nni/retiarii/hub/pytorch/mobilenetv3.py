@@ -263,7 +263,6 @@ class MobileNetV3Space(nn.Module):
             min_depth = max(min_depth, 1)
         return nn.Repeat(layer_builder, depth=(min_depth, max_depth), label=f's{stage_idx}_depth')
 
-
     @classmethod
     def fixed_arch(cls, arch: dict) -> FixedFactory:
         return FixedFactory(cls, arch)
@@ -326,6 +325,62 @@ class MobileNetV3Space(nn.Module):
                 width_multipliers=1.0,
                 squeeze_excite=['none', 'none', 'force', 'none', 'force', 'force']
             )
+
+        if name.startswith('mobilenetv3-small-'):
+            # mul 0.5, top-1: 57.906
+            # mul 0.75, top-1: 65.24
+            # mul 1.0, top-1: 67.652
+
+            multiplier = int(name.split('-')[-1]) / 100
+            widths = [16, 16, 24, 40, 48, 96, 576, 1024]
+            for i in range(7):
+                if i > 0 or multiplier >= 0.75:
+                    # fix_stem = True when multiplier < 0.75
+                    # https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/mobilenetv3.py#L421
+                    widths[i] *= multiplier
+            init_kwargs.update(
+                base_widths=widths,
+                width_multipliers=1.0,
+                expand_ratios=[3.0, 3.67, 4.0, 4.5, 6.0],
+                bn_eps=1e-05,
+                bn_momentum=0.1,
+                squeeze_excite=['force', 'none', 'force', 'force', 'force'],
+                activation=['hswish', 'relu', 'relu', 'hswish', 'hswish', 'hswish', 'hswish', 'hswish'],
+                stride=[2, 2, 2, 2, 1, 2, 1, 1],
+                depth_range=(1, 2),
+            )
+
+            arch = {
+                'stem_ks': 3,
+                's0_i0_ks': 3,
+                's1_depth': 2,
+                's1_i0_exp': 4.5,
+                's1_i0_ks': 3,
+                's1_i1_exp': 3.67,
+                's1_i1_ks': 3,
+                's2_depth': 3,
+                's2_i0_exp': 4.0,
+                's2_i0_ks': 5,
+                's2_i1_exp': 6.0,
+                's2_i1_ks': 5,
+                's2_i2_exp': 6.0,
+                's2_i2_ks': 5,
+                's3_depth': 2,
+                's3_i0_exp': 3.0,
+                's3_i0_ks': 5,
+                's3_i1_exp': 3.0,
+                's3_i1_ks': 5,
+                's4_depth': 3,
+                's4_i0_exp': 6.0,
+                's4_i0_ks': 5,
+                's4_i1_exp': 6.0,
+                's4_i1_ks': 5,
+                's4_i2_exp': 6.0,
+                's4_i2_ks': 5
+            }
+
+        if name.startswith('cream'):
+
 
         else:
             raise ValueError(f'Unsupported architecture with name: {name}')

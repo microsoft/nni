@@ -16,7 +16,10 @@ PRETRAINED_WEIGHT_URLS = {
     'proxyless-mobile': f'{NNI_BLOB}/nashub/proxyless-mobile-8668a978.pth',
 
     # mobilenetv3
-    'mobilenetv3-large-100': f'{NNI_BLOB}/nashub/mobilenetv3-large-100-420e040a.pth'
+    'mobilenetv3-large-100': f'{NNI_BLOB}/nashub/mobilenetv3-large-100-420e040a.pth',
+    'mobilenetv3-small-050': f'{NNI_BLOB}/nashub/mobilenetv3-small-050-05cb7a80.pth',
+    'mobilenetv3-small-075': f'{NNI_BLOB}/nashub/mobilenetv3-small-075-c87d8acb.pth',
+    'mobilenetv3-small-100': f'{NNI_BLOB}/nashub/mobilenetv3-small-100-8332faac.pth',
 }
 
 
