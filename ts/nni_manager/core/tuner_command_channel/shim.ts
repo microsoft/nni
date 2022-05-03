@@ -5,9 +5,7 @@ import type { IpcInterface } from './common';
 import { WebSocketChannel, getWebSocketChannel } from './websocket_channel';
 
 export async function createDispatcherInterface(): Promise<IpcInterface> {
-    const ipcInterface = new WsIpcInterface();
-    await ipcInterface.init();
-    return ipcInterface;
+    return new WsIpcInterface();
 }
 
 class WsIpcInterface implements IpcInterface {

@@ -14,9 +14,9 @@ const expected = {
     logLevel: 'error',
     foreground: false,
     urlPrefix: '',
+    tunerCommandChannel: null,
 
     mode: '',
-    dispatcherPipe: undefined,
 };
 
 function testGoodShort(): void {

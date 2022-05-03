@@ -28,10 +28,10 @@ export interface NniManagerArgs {
     readonly logLevel: 'critical' | 'error' | 'warning' | 'info' | 'debug';
     readonly foreground: boolean;
     readonly urlPrefix: string;  // leading and trailing "/" must be stripped
+    readonly tunerCommandChannel: string | null;
 
     // these are planned to be removed
     readonly mode: string;
-    readonly dispatcherPipe: string | undefined;
 }
 
 export function parseArgs(rawArgs: string[]): NniManagerArgs {
@@ -43,9 +43,6 @@ export function parseArgs(rawArgs: string[]): NniManagerArgs {
     for (const key in yargsOptions) {
         argsAsAny[key] = (parsedArgs as any)[key];
         assert(!Number.isNaN(argsAsAny[key]), `Command line arg --${key} is not a number`);
-    }
-    if (argsAsAny.dispatcherPipe === '') {
-        argsAsAny.dispatcherPipe = undefined;
     }
     const args: NniManagerArgs = argsAsAny;
 
@@ -84,12 +81,12 @@ const yargsOptions = {
         default: '',
         type: 'string'
     },
-
-    mode: {
-        default: '',
+    tunerCommandChannel: {
+        default: null,
         type: 'string'
     },
-    dispatcherPipe: {
+
+    mode: {
         default: '',
         type: 'string'
     }

@@ -14,6 +14,7 @@ from typing import Any
 
 import colorama
 import psutil
+from typing_extensions import Literal
 
 import nni.runtime.log
 
@@ -78,7 +79,7 @@ class Experiment:
         self.id: str = management.generate_experiment_id()
         self.port: int | None = None
         self._proc: Popen | psutil.Process | None = None
-        self._action = 'create'
+        self._action: Literal['create', 'resume', 'view'] = 'create'
         self.url_prefix: str | None = None
 
         if isinstance(config_or_platform, (str, list)):

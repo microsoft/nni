@@ -7,7 +7,7 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
+import { getExperimentId } from '../common/experimentStartupInfo';
 import globals from 'common/globals';
 import { Logger, getLogger } from '../common/log';
 import {
@@ -25,7 +25,7 @@ import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
-import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
+import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 
 /**
  * NNIManager which implements Manager interface
@@ -70,11 +70,6 @@ class NNIManager implements Manager {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
         };
-
-        const pipe = getDispatcherPipe();
-        if (pipe !== null) {
-            this.dispatcher = createDispatcherPipeInterface(pipe);
-        }
 
         globals.shutdown.register('NniManager', this.stopExperiment.bind(this));
     }
@@ -466,7 +461,22 @@ class NNIManager implements Manager {
         if (this.dispatcher !== undefined) {
             return;
         }
-        const stdio: StdioOptions = ['ignore', process.stdout, process.stderr, 'pipe', 'pipe'];
+
+        let tunerWs: string;
+        if (globals.args.urlPrefix) {
+            tunerWs = `ws://localhost:${globals.args.port}/${globals.args.urlPrefix}/tuner`;
+        } else {
+            tunerWs = `ws://localhost:${globals.args.port}/tuner`;
+        }
+
+        if (globals.args.tunerCommandChannel) {
+            // TODO: this will become configurable after refactoring rest handler interface
+            assert.equal(tunerWs, globals.args.tunerCommandChannel);
+            this.dispatcher = await createDispatcherInterface();
+            return;
+        }
+
+        const stdio: StdioOptions = ['ignore', process.stdout, process.stderr];
         let newCwd: string;
         if (cwd === undefined || cwd === '') {
             newCwd = getLogDir();
@@ -475,13 +485,6 @@ class NNIManager implements Manager {
         }
         // TO DO: add CUDA_VISIBLE_DEVICES
         const includeIntermediateResultsEnv = !!(this.config.deprecated && this.config.deprecated.includeIntermediateResults);
-
-        let tunerWs: string;
-        if (globals.args.urlPrefix) {
-            tunerWs = `ws://localhost:${globals.args.port}/${globals.args.urlPrefix}/tuner`;
-        } else {
-            tunerWs = `ws://localhost:${globals.args.port}/tuner`;
-        }
 
         const nniEnv = {
             SDK_PROCESS: 'dispatcher',
@@ -713,6 +716,7 @@ class NNIManager implements Manager {
 
     private async run(): Promise<void> {
         assert(this.dispatcher !== undefined);
+        await this.dispatcher.init();
 
         this.addEventListeners();
 
