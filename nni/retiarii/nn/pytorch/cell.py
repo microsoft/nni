@@ -191,6 +191,10 @@ class Cell(nn.Module):
 
         When ``merge_op`` is ``loose_end``, ``output_node_indices`` is useful to compute the shape of this cell's output,
         because the output shape depends on the connection in the cell, and which nodes are "loose ends" depends on mutation.
+
+    op_candidates_factory : bool
+        An indicator of whether ``op_candidates`` contains a callable.
+        If there is, one-shot algorithms will make each node a cartesian product of operations and inputs.
     """
 
     def __init__(self,
@@ -231,6 +235,8 @@ class Cell(nn.Module):
         self.output_node_indices = list(range(num_predecessors, num_predecessors + num_nodes))
 
         self.concat_dim = concat_dim
+
+        self.op_candidates_factory: Union[List[_cell_op_factory_type], Dict[str, _cell_op_factory_type], None] = None  # set later
 
         # fill-in the missing modules
         self._create_modules(op_candidates)
@@ -302,14 +308,14 @@ class Cell(nn.Module):
             this_cell = torch.cat([states[k] for k in self.output_node_indices], self.concat_dim)
         return self.postprocessor(this_cell, processed_inputs)
 
-    @staticmethod
-    def _convert_op_candidates(op_candidates, node_index, op_index, chosen) -> Union[Dict[str, nn.Module], List[nn.Module]]:
+    def _convert_op_candidates(self, op_candidates, node_index, op_index, chosen) -> Union[Dict[str, nn.Module], List[nn.Module]]:
         # convert the complex type into the type that is acceptable to LayerChoice
         def convert_single_op(op):
             if isinstance(op, nn.Module):
                 return copy.deepcopy(op)
             elif callable(op):
                 # FIXME: I don't know how to check whether we are in graph engine.
+                self.factory_used = True
                 return op(node_index, op_index, chosen)
             else:
                 raise TypeError(f'Unrecognized type {type(op)} for op {op}')
