@@ -228,12 +228,12 @@ def _multihead_attention_net():
 
 def _test_strategy(strategy_, support_value_choice=True):
     to_test = [
-        # (model, evaluator), support_or_net
+        # (model, evaluator), support_or_not
         (_mnist_net('simple'), True),
         (_mnist_net('simple_value_choice'), support_value_choice),
         (_mnist_net('value_choice'), support_value_choice),
-        (_mnist_net('repeat'), False),      # no strategy supports repeat currently
-        (_mnist_net('custom_op'), False),   # this is definitely a NO
+        (_mnist_net('repeat'), support_value_choice),   # no strategy supports repeat currently
+        (_mnist_net('custom_op'), False),               # this is definitely a NO
         (_multihead_attention_net(), support_value_choice),
     ]
 

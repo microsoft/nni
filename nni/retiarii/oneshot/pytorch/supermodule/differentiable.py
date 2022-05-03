@@ -360,7 +360,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
 
     def named_parameters(self, *args, **kwargs):
         arch = kwargs.pop('arch', False)
-        for name, p in self.named_parameters(*args, **kwargs):  # pylint: disable=bad-super-call
+        for name, p in super().named_parameters(*args, **kwargs):
             if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
                 if arch:
                     yield name, p
@@ -480,3 +480,17 @@ class DifferentiableMixedCell(PathSamplingCell):
         # Always merge all
         this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)
         return self.postprocessor(this_cell, processed_inputs)
+
+    def parameters(self, *args, **kwargs):
+        for _, p in self.named_parameters(*args, **kwargs):
+            yield p
+
+    def named_parameters(self, *args, **kwargs):
+        arch = kwargs.pop('arch', False)
+        for name, p in super().named_parameters(*args, **kwargs):
+            if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
+                if arch:
+                    yield name, p
+            else:
+                if not arch:
+                    yield name, p
