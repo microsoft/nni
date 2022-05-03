@@ -476,6 +476,13 @@ class NNIManager implements Manager {
         // TO DO: add CUDA_VISIBLE_DEVICES
         const includeIntermediateResultsEnv = !!(this.config.deprecated && this.config.deprecated.includeIntermediateResults);
 
+        let tunerWs: string;
+        if (globals.args.urlPrefix) {
+            tunerWs = `ws://localhost:${globals.args.port}/${globals.args.urlPrefix}/tuner`;
+        } else {
+            tunerWs = `ws://localhost:${globals.args.port}/tuner`;
+        }
+
         const nniEnv = {
             SDK_PROCESS: 'dispatcher',
             NNI_MODE: mode,
@@ -483,12 +490,13 @@ class NNIManager implements Manager {
             NNI_LOG_DIRECTORY: getLogDir(),
             NNI_LOG_LEVEL: getLogLevel(),
             NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv,
+            NNI_TUNER_COMMAND_CHANNEL: tunerWs,
             CUDA_VISIBLE_DEVICES: toCudaVisibleDevices(this.experimentProfile.params.tunerGpuIndices)
         };
         const newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command, stdio, newCwd, newEnv);
         this.dispatcherPid = tunerProc.pid!;
-        this.dispatcher = await createDispatcherInterface(tunerProc);
+        this.dispatcher = await createDispatcherInterface();
 
         return;
     }
