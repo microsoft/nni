@@ -10,7 +10,8 @@ import torch
 import torch.nn as nn
 
 from nni.common.hpo_utils import ParameterSpec
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Repeat, ValueChoiceX, ChoiceOf
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, Repeat, ChoiceOf
+from nni.retiarii.nn.pytorch.api import ValueChoiceX
 
 from .base import BaseSuperNetModule
 from ._valuechoice_utils import evaluate_value_choice_with_dict, dedup_inner_choices

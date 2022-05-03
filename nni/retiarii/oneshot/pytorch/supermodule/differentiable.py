@@ -13,11 +13,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from nni.common.hpo_utils import ParameterSpec
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, ChoiceOf, Repeat
+from nni.retiarii.nn.pytorch.api import ValueChoiceX
 
 from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingPolicy
-from ._valuechoice_utils import traverse_all_options
+from ._valuechoice_utils import traverse_all_options, dedup_inner_choices
 
 
 class GumbelSoftmax(nn.Softmax):
@@ -228,6 +229,70 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                     yield name, p
 
 
+class DifferentiableMixedRepeat(BaseSuperNetModule):
+    """
+    Implementaion of Repeat in a differentiable supernet.
+    Result is a weighted sum of possible prefixes, sliced by possible depths.
+    """
+
+    def __init__(self, blocks: list[nn.Module], depth: ChoiceOf[int], softmax: nn.Module, memo: dict[str, Any]):
+        super().__init__()
+        self.blocks = blocks
+        self.depth = depth
+        self._softmax = softmax
+        self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices([depth])
+        self._arch_alpha = nn.ParameterDict()
+
+        for name, spec in self._space_spec.items():
+            if name in memo:
+                alpha = memo[name]
+                if len(alpha) != spec.size:
+                    raise ValueError(f'Architecture parameter size of same label {name} conflict: {len(alpha)} vs. {spec.size}')
+            else:
+                alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
+            self._arch_alpha[name] = alpha
+
+    def resample(self, memo):
+        """Do nothing."""
+        return {}
+
+    def export(self, memo):
+        """Choose argmax for each leaf value choice."""
+        result = {}
+        for name, spec in self._space_spec.items():
+            if name in memo:
+                continue
+            chosen_index = int(torch.argmax(self._arch_alpha[name]).item())
+            result[name] = spec.values[chosen_index]
+        return result
+
+    def search_space_spec(self):
+        return self._space_spec
+
+    @classmethod
+    def mutate(cls, module, name, memo, mutate_kwargs):
+        if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
+            # Only interesting when depth is mutable
+            softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
+            return cls(module.blocks, module.depth_choice, softmax, memo)
+
+    def forward(self, x):
+        weights: dict[str, torch.Tensor] = {
+            label: self._softmax(alpha) for label, alpha in self._arch_alpha.items()
+        }
+        depth_weights = dict(traverse_all_options(self.depth, weights=weights))
+
+        res: torch.Tensor | None = None
+        for i, block in enumerate(self.blocks, start=1):  # start=1 because depths are 1, 2, 3, 4...
+            x = block(x)
+            if i in depth_weights:
+                if res is None:
+                    res = depth_weights[i] * x
+                else:
+                    res = res + depth_weights[i] * x
+        return res
+
+
 class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
     """Implementes the differentiable sampling in mixed operation.
 
@@ -284,10 +349,10 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
         return {}
 
     def export(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
-        """Export is also random for each leaf value choice."""
+        """Export is argmax for each leaf value choice."""
         result = {}
         for name, spec in operation.search_space_spec().items():
-            if name in result:
+            if name in memo:
                 continue
             chosen_index = int(torch.argmax(cast(dict, operation._arch_alpha)[name]).item())
             result[name] = spec.values[chosen_index]
