@@ -42,7 +42,7 @@ class NNITrainer():
             val_dataloaders: Union[DataLoader, Sequence[DataLoader]]):
         if (isinstance(train_dataloaders, Sequence) and len(train_dataloaders) != 1) or \
             (isinstance(val_dataloaders, Sequence) and len(train_dataloaders) != 1):
-            raise Error('Default fit() does not support sequence dataloader, please costomize NNITrainer.fit().')
+            raise ValueError('Default fit() does not support sequence dataloader, please costomize NNITrainer.fit().')
         model.train()
         torch.set_grad_enabled(True)
         optimizer, lr_scheduler = model.configure_optimizers()

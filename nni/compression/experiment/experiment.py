@@ -24,12 +24,12 @@ class CompressionExperiment(Experiment):
 
         self.compression_config = compression_config
         assert all([model, finetuner, evaluator])
-        assert all([trainer, optimizer, criterion]) or not Any([trainer, optimizer, criterion])
+        assert all([trainer, optimizer, criterion]) or not any([trainer, optimizer, criterion])
         self.vessel = CompressionVessel(model, finetuner, evaluator, dummy_input, trainer, optimizer, criterion, device)
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         if self.config.search_space or self.config.search_space_file:
-            _logger.warning('Manual configuration of search_space is not recommended in compression experiments. ' + \
+            _logger.warning('Manual configuration of search_space is not recommended in compression experiments. %s',
                             'Please make sure you know what will happen.')
         else:
             self.config.search_space = cc_cv2ss(self.compression_config, self.vessel)
