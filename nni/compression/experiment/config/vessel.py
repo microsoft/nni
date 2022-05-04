@@ -38,16 +38,18 @@ class CompressionVessel(ConfigBase):
         self.model = dump(model) if not isinstance(model, str) else model
         self.finetuner = dump(finetuner) if not isinstance(finetuner, str) else finetuner
         self.evaluator = dump(evaluator) if not isinstance(evaluator, str) else evaluator
-        if not isinstance(dummy_input, bytes):
+        if not isinstance(dummy_input, str):
             buff = io.BytesIO()
             torch.save(dummy_input, buff)
             buff.seek(0)
             dummy_input = base64.b64encode(buff.read()).decode()
         self.dummy_input = dummy_input
         self.trainer = dump(trainer) if not isinstance(trainer, str) else trainer
-        if not isinstance(optimizer_helper, (str, OptimizerConstructHelper)):
-            optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer_helper)
-        self.optimizer_helper = dump(optimizer_helper)
+        if not isinstance(optimizer_helper, str):
+            if not isinstance(optimizer_helper, OptimizerConstructHelper):
+                optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer_helper)
+            optimizer_helper = dump(optimizer_helper)
+        self.optimizer_helper = optimizer_helper
         self.criterion = dump(criterion) if not isinstance(criterion, str) else criterion
         self.device = str(device)
 

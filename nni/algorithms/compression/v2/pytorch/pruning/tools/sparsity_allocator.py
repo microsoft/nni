@@ -191,29 +191,36 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
             sparsities = {name: self.pruner.get_modules_wrapper()[name].config['total_sparsity'] for name in group_metric_dict.keys()}
             min_sparsity = min(sparsities.values())
 
-            conv2d_groups = [self.group_depen[name] for name in group_metric_dict.keys()]
-            max_conv2d_group = np.lcm.reduce(conv2d_groups)
+            # generate group mask
+            conv2d_groups, group_mask = [], []
+            for name in group_metric_dict.keys():
+                if name in self.group_depen:
+                    conv2d_groups.append(self.group_depen[name])
+            if conv2d_groups:
+                max_conv2d_group = np.lcm.reduce(conv2d_groups)
+                pruned_per_conv2d_group = int(group_metric.numel() / max_conv2d_group * min_sparsity)
+                conv2d_group_step = int(group_metric.numel() / max_conv2d_group)
 
-            pruned_per_conv2d_group = int(group_metric.numel() / max_conv2d_group * min_sparsity)
-            conv2d_group_step = int(group_metric.numel() / max_conv2d_group)
-
-            group_mask = []
-            for gid in range(max_conv2d_group):
-                _start = gid * conv2d_group_step
-                _end = (gid + 1) * conv2d_group_step
-                if pruned_per_conv2d_group > 0:
-                    threshold = torch.topk(group_metric[_start: _end], pruned_per_conv2d_group, largest=False)[0].max()
-                    conv2d_group_mask = torch.gt(group_metric[_start:_end], threshold).type_as(group_metric)
-                else:
-                    conv2d_group_mask = torch.ones(conv2d_group_step, device=group_metric.device)
-                group_mask.append(conv2d_group_mask)
-            group_mask = torch.cat(group_mask, dim=0)
+                for gid in range(max_conv2d_group):
+                    _start = gid * conv2d_group_step
+                    _end = (gid + 1) * conv2d_group_step
+                    if pruned_per_conv2d_group > 0:
+                        threshold = torch.topk(group_metric[_start: _end], pruned_per_conv2d_group, largest=False)[0].max()
+                        conv2d_group_mask = torch.gt(group_metric[_start:_end], threshold).type_as(group_metric)
+                    else:
+                        conv2d_group_mask = torch.ones(conv2d_group_step, device=group_metric.device)
+                    group_mask.append(conv2d_group_mask)
+                group_mask = torch.cat(group_mask, dim=0)
 
             for name, metric in group_metric_dict.items():
                 # We assume the metric value are all positive right now.
-                metric = metric * group_mask
+                if isinstance(group_mask, Tensor):
+                    metric = metric * group_mask
                 pruned_num = int(sparsities[name] * len(metric))
-                threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
+                if pruned_num == 0:
+                    threshold = metric.min() - 1
+                else:
+                    threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
                 mask = torch.gt(metric, threshold).type_as(metric)
                 masks[name] = self._expand_mask(name, mask)
                 if self.continuous_mask:

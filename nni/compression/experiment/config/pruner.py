@@ -1,15 +1,20 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing_extensions import Literal
 from nni.experiment.config.base import ConfigBase
 
 
 @dataclass
 class PrunerConfig(ConfigBase):
-    pass
+    pruner_type: Literal['Pruner']
+
+    def json(self):
+        canon = self.canonical_copy()
+        return asdict(canon)
 
 
 @dataclass
 class L1NormPrunerConfig(PrunerConfig):
+    pruner_type: Literal['L1NormPruner'] = 'L1NormPruner'
     mode: Literal['normal', 'dependency_aware'] = 'dependency_aware'
 
 

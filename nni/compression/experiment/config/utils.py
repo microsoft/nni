@@ -42,20 +42,6 @@ def _metric_theta_helper(target: Optional[float], origin: float) -> Tuple[float,
     else:
         raise NotImplementedError('Currently only supports setting the lower limit.')
 
-# FIXME: to avoid circular import, copy this function in this place
-def _get_module_by_name(model, module_name):
-    name_list = module_name.split(".")
-    for name in name_list[:-1]:
-        if hasattr(model, name):
-            model = getattr(model, name)
-        else:
-            return None, None
-    if hasattr(model, name_list[-1]):
-        leaf_module = getattr(model, name_list[-1])
-        return model, leaf_module
-    else:
-        return None, None
-
 def _summery_module_names(model: Module,
                           module_types: List[Union[Type[Module], str]],
                           module_names: List[str],
@@ -140,3 +126,25 @@ def parse_params(kwargs: Dict[str, Any]):
             thetas = value
 
     return pruner_config, config_list, vessel, original_target, thetas
+
+def parse_basic_pruner(pruner_config: Dict[str, str], config_list: List[Dict[str, Any]], vessel: CompressionVessel):
+    model, finetuner, evaluator, dummy_input, trainer, optimizer_helper, criterion, device = vessel.export()
+    if pruner_config['pruner_type'] == 'L1NormPruner':
+        from nni.compression.pytorch.pruning import L1NormPruner
+        basic_pruner = L1NormPruner(model=model,
+                                    config_list=config_list,
+                                    mode=pruner_config['mode'],
+                                    dummy_input=dummy_input)
+    elif pruner_config['pruner_type'] == 'TaylorFOWeightPruner':
+        from nni.compression.pytorch.pruning import TaylorFOWeightPruner
+        basic_pruner = TaylorFOWeightPruner(model=model,
+                                            config_list=config_list,
+                                            trainer=trainer,
+                                            traced_optimizer=optimizer_helper,
+                                            criterion=criterion,
+                                            training_batches=pruner_config['training_batches'],
+                                            mode=pruner_config['mode'],
+                                            dummy_input=dummy_input)
+    else:
+        raise NotImplementedError('Unsupported basic pruner type {}'.format(pruner_config.pruner_type))
+    return basic_pruner, model, finetuner, evaluator, dummy_input, device
