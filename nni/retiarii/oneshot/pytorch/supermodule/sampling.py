@@ -249,7 +249,7 @@ class PathSamplingRepeat(BaseSuperNetModule):
     def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
             # Only interesting when depth is mutable
-            return cls(module.blocks, module.depth_choice)
+            return cls(cast(List[nn.Module], module.blocks), module.depth_choice)
 
     def forward(self, x):
         if self._sampled is None:
@@ -319,7 +319,7 @@ class PathSamplingCell(BaseSuperNetModule):
 
         self.label = label
 
-        self._sampled: dict[str, int | str] = {}
+        self._sampled: dict[str, str | int] = {}
 
     def search_space_spec(self) -> dict[str, ParameterSpec]:
         # TODO: Recreating the space here.
@@ -358,10 +358,11 @@ class PathSamplingCell(BaseSuperNetModule):
             for k in range(self.num_ops_per_node):
                 # Select op list based on the input chosen
                 input_index = self._sampled[f'{self.label}/input_{i}_{k}']
-                op_candidates = ops[input_index]
+                op_candidates = ops[cast(int, input_index)]
                 # Select op from op list based on the op chosen
-                op = op_candidates[self._sampled[f'{self.label}/op_{i}_{k}']]
-                current_state.append(op(states[input_index]))
+                op_index = self._sampled[f'{self.label}/op_{i}_{k}']
+                op = op_candidates[cast(str, op_index)]
+                current_state.append(op(states[cast(int, input_index)]))
 
             states.append(sum(current_state))
 
@@ -378,7 +379,7 @@ class PathSamplingCell(BaseSuperNetModule):
                 assert isinstance(op_factory, list) or isinstance(op_factory, dict), \
                     'Only support op_factory of type list or dict.'
             elif module.merge_op == 'loose_end':
-                op_candidates_lc = module.ops[-1][-1]
+                op_candidates_lc = module.ops[-1][-1]  # type: ignore
                 assert isinstance(op_candidates_lc, LayerChoice)
                 op_factory = {  # create a factory
                     name: lambda _, __, ___: copy.deepcopy(op_candidates_lc[name])

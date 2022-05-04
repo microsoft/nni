@@ -7,7 +7,7 @@ import functools
 import logging
 import warnings
 
-from typing import Any, Dict, Sequence, cast
+from typing import Any, Dict, Sequence, List, Tuple, cast
 
 import torch
 import torch.nn as nn
@@ -355,7 +355,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
         if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
             # Only interesting when depth is mutable
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            return cls(module.blocks, module.depth_choice, softmax, memo)
+            return cls(cast(List[nn.Module], module.blocks), module.depth_choice, softmax, memo)
 
     def parameters(self, *args, **kwargs):
         for _, p in self.named_parameters(*args, **kwargs):
@@ -375,7 +375,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
         weights: dict[str, torch.Tensor] = {
             label: self._softmax(alpha) for label, alpha in self._arch_alpha.items()
         }
-        depth_weights = dict(traverse_all_options(self.depth, weights=weights))
+        depth_weights = dict(cast(List[Tuple[int, float]], traverse_all_options(self.depth, weights=weights)))
 
         res: torch.Tensor | None = None
         for i, block in enumerate(self.blocks, start=1):  # start=1 because depths are 1, 2, 3, 4...
@@ -411,15 +411,16 @@ class DifferentiableMixedCell(PathSamplingCell):
         for i in range(self.num_predecessors, self.num_nodes + self.num_predecessors):
             for j in range(i):
                 edge_label = f'{label}/{i}_{j}'
+                op = cast(List[Dict[str, nn.Module]], self.ops[i - self.num_predecessors])[j]
                 if edge_label in memo:
                     alpha = memo[edge_label]
-                    if len(alpha) != len(self.ops[i][j]):
+                    if len(alpha) != len(op):
                         raise ValueError(
                             f'Architecture parameter size of same label {edge_label} conflict: '
-                            '{len(alpha)} vs. {len(self.ops[i][j])}'
+                            f'{len(alpha)} vs. {len(op)}'
                         )
                 else:
-                    alpha = nn.Parameter(torch.randn(len(self.ops[i - self.num_predecessors][j])) * 1E-3)
+                    alpha = nn.Parameter(torch.randn(len(op)) * 1E-3)
                 self._arch_alpha[edge_label] = alpha
 
         self._softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
@@ -430,7 +431,7 @@ class DifferentiableMixedCell(PathSamplingCell):
 
     def export(self, memo):
         """Tricky export.
-        
+
         Reference: https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/model_search.py#L135
         We don't avoid selecting operations like ``none`` here, because it looks like a different search space.
         """
