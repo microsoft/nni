@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import math
 from typing import Any, Optional, Tuple, Dict, List, Type, Union

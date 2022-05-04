@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from dataclasses import dataclass, asdict
 from typing_extensions import Literal
 from nni.experiment.config.base import ConfigBase

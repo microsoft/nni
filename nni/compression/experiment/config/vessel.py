@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import base64
 import io
 from dataclasses import dataclass, asdict
