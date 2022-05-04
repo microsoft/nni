@@ -2,8 +2,7 @@
 # Licensed under the MIT license.
 
 from abc import abstractmethod
-from msilib.schema import Error
-from typing import Callable, Sequence, Tuple
+from typing import Optional, Sequence, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -12,7 +11,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
-from .config.utils import ComparableType
+from .config.common import ComparableType
 
 
 class NNILightningModule(Module):
@@ -34,14 +33,15 @@ class NNILightningModule(Module):
         pass
 
     @abstractmethod
-    def configure_optimizers(self) -> Tuple[Optimizer, _LRScheduler | None]:
+    def configure_optimizers(self) -> Tuple[Optimizer, Optional[_LRScheduler]]:
         pass
 
 
 class NNITrainer():
-    def fit(self, model: NNILightningModule, train_dataloaders: DataLoader | Sequence[DataLoader],
-            val_dataloaders: DataLoader | Sequence[DataLoader]):
-        if (isinstance(train_dataloaders, Sequence) and len(train_dataloaders) != 1) or (isinstance(val_dataloaders, Sequence) and len(train_dataloaders) != 1):
+    def fit(self, model: NNILightningModule, train_dataloaders:Union[ DataLoader, Sequence[DataLoader]],
+            val_dataloaders: Union[DataLoader, Sequence[DataLoader]]):
+        if (isinstance(train_dataloaders, Sequence) and len(train_dataloaders) != 1) or \
+            (isinstance(val_dataloaders, Sequence) and len(train_dataloaders) != 1):
             raise Error('Default fit() does not support sequence dataloader, please costomize NNITrainer.fit().')
         model.train()
         torch.set_grad_enabled(True)

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import MutableSequence, Protocol, TypeVar
+from typing import Protocol, TypeVar
 
 
 __all__ = ['ComparableType']

@@ -1,7 +1,7 @@
 import base64
 import io
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
 from typing_extensions import Literal
 
 import torch

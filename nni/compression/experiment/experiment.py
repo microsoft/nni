@@ -1,10 +1,8 @@
 import logging
 from typing import Any, Callable, List, Optional, Union
-from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.common import dump, load
 from nni.compression.experiment.config.utils import cc_cv2ss
 from nni.experiment import Experiment, ExperimentConfig
 from .config import CompressionConfig, CompressionVessel

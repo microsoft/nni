@@ -9,7 +9,6 @@ import nni
 from nni.algorithms.compression.v2.pytorch.pruning import PruningScheduler
 from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
 from .config.utils import parse_params, parse_basic_pruner
-from .engine import CompressionEngine
 
 
 if __name__ == '__main__':
