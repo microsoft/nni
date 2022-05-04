@@ -134,6 +134,31 @@ class RepeatNet(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
+@model_wrapper
+class CellNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.stem = nn.Conv2d(1, 5, 7, stride=4)
+        self.cells = nn.Repeat(
+            lambda index: nn.Cell({
+                'conv1': lambda _, __, inp: nn.Conv2d(
+                    (5 if index == 0 else 3 * 4) if inp is not None and inp < 1 else 4, 4, 1
+                ),
+                'conv2': lambda _, __, inp: nn.Conv2d(
+                    (5 if index == 0 else 3 * 4) if inp is not None and inp < 1 else 4, 4, 3, padding=1
+                ),
+            }, 3, merge_op='loose_end'), (1, 3)
+        )
+        self.fc = nn.Linear(3 * 4, 10)
+
+    def forward(self, x):
+        x = self.stem(x)
+        x = self.cells(x)
+        x = torch.mean(x, (2, 3))
+        x = self.fc(x)
+        return F.log_softmax(x, dim=1)
+
+
 @basic_unit
 class MyOp(nn.Module):
     def __init__(self, some_ch):
@@ -180,6 +205,8 @@ def _mnist_net(type_):
         base_model = ValueChoiceConvNet()
     elif type_ == 'repeat':
         base_model = RepeatNet()
+    elif type_ == 'cell':
+        base_model = CellNet()
     elif type_ == 'custom_op':
         base_model = CustomOpValueChoiceNet()
     else:
@@ -226,15 +253,16 @@ def _multihead_attention_net():
     return base_model, evaluator
 
 
-def _test_strategy(strategy_, support_value_choice=True):
+def _test_strategy(strategy_, if_support_value_choice=True):
     to_test = [
         # (model, evaluator), support_or_not
         (_mnist_net('simple'), True),
-        (_mnist_net('simple_value_choice'), support_value_choice),
-        (_mnist_net('value_choice'), support_value_choice),
-        (_mnist_net('repeat'), support_value_choice),   # no strategy supports repeat currently
+        (_mnist_net('simple_value_choice'), if_support_value_choice),
+        (_mnist_net('value_choice'), if_support_value_choice),
+        (_mnist_net('repeat'), if_support_value_choice),
+        (_mnist_net('cell'), if_support_value_choice),
         (_mnist_net('custom_op'), False),               # this is definitely a NO
-        (_multihead_attention_net(), support_value_choice),
+        (_multihead_attention_net(), if_support_value_choice),
     ]
 
     for (base_model, evaluator), support_or_not in to_test:
