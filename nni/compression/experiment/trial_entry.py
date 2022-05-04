@@ -32,4 +32,4 @@ if __name__ == '__main__':
     metric_score = sigmoid(metric / original_target['metric'], *thetas['metric'])
     final_result = flops_score + params_score + metric_score
 
-    nni.report_final_result({'default': final_result, 'flops': flops, 'params': params, 'metric': score})
+    nni.report_final_result({'default': final_result, 'flops': flops, 'params': params, 'metric': metric})
