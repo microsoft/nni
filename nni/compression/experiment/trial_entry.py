@@ -8,7 +8,9 @@ Entrypoint for trials.
 import nni
 from nni.algorithms.compression.v2.pytorch.pruning import PruningScheduler
 from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
+from nni.compression.pytorch.utils import count_flops_params
 from .config.utils import parse_params, parse_basic_pruner
+from .config.utils import sigmoid
 
 
 if __name__ == '__main__':
@@ -16,10 +18,18 @@ if __name__ == '__main__':
     pruner_config, config_list, vessel, original_target, thetas = parse_params(kwargs)
     basic_pruner, model, finetuner, evaluator, dummy_input, device = parse_basic_pruner(pruner_config, config_list, vessel)
 
-    task_generator = AGPTaskGenerator(total_iteration=3, origin_model=model, origin_config_list=config_list)
+    task_generator = AGPTaskGenerator(total_iteration=3, origin_model=model, origin_config_list=config_list, skip_zero_iteration=True)
     speedup = dummy_input is not None
     scheduler = PruningScheduler(pruner=basic_pruner, task_generator=task_generator, finetuner=finetuner, speedup=speedup,
-                                 dummy_input=dummy_input, evaluator=evaluator)
+                                 dummy_input=dummy_input, evaluator=None)
     scheduler.compress()
-    _, _, _, score, _ = scheduler.get_best_result()
-    nni.report_final_result(score)
+    _, model, _, _, _ = scheduler.get_best_result()
+    metric = evaluator(model)
+    flops, params, _ = count_flops_params(model, dummy_input, verbose=False, mode='full')
+
+    flops_score = sigmoid(flops / original_target['flops'], *thetas['flops'])
+    params_score = sigmoid(params / original_target['params'], *thetas['params'])
+    metric_score = sigmoid(metric / original_target['metric'], *thetas['metric'])
+    final_result = flops_score + params_score + metric_score
+
+    nni.report_final_result({'default': final_result, 'flops': flops, 'params': params, 'metric': score})

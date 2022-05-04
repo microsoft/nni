@@ -4,6 +4,7 @@
 import base64
 import io
 from dataclasses import dataclass, asdict
+from pathlib import Path
 from typing import Any, Callable, Optional, Tuple, Union
 from typing_extensions import Literal
 
@@ -60,8 +61,11 @@ class CompressionVessel(ConfigBase):
                               Optional[Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None]],
                               Optional[OptimizerConstructHelper], Optional[Callable[[Any, Any], Any]], torch.device]:
         device = torch.device(self.device)
+        model = load(self.model)
+        if Path('nni_model_state_dict.pth').exists():
+            model.load_state_dict(torch.load('nni_model_state_dict.pth'))
         return (
-            load(self.model).to(device),
+            model.to(device),
             load(self.finetuner),
             load(self.evaluator),
             torch.load(io.BytesIO(base64.b64decode(self.dummy_input.encode()))).to(device),

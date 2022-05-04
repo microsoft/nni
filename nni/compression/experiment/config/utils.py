@@ -27,17 +27,17 @@ def _flops_theta_helper(target: Union[int, float, str, None], origin: int) -> Tu
         return (0., 0.)
     elif isinstance(target, float):
         assert 0. < target < 1.
-        return (0.1 - target, 50.)
+        return (-0.1 - target, -50.)
     elif isinstance(target, int):
         assert 0 < target < origin
-        return (0.1 - target / origin, 50.)
+        return (-0.1 - target / origin, -50.)
     else:
         raise NotImplementedError('Currently only supports setting the lower limit.')
 
 # hard code and magic number for metric reward function
 def _metric_theta_helper(target: Optional[float], origin: float) -> Tuple[float, float]:
     if not target:
-        return (0., 0.)
+        return (-0.85, 50.)
     elif isinstance(target, float):
         assert 0. <= target <= 1.
         return (0.1 - target, 50.)
@@ -88,7 +88,7 @@ def _summery_module_names(model: Module,
 def cc_cv2ss(config: CompressionConfig, vessel: CompressionVessel):
     search_space = {}
     model, _, evaluator, dummy_input, _, _, _, _ = vessel.export()
-    flops, params, results = count_flops_params(model, dummy_input, mode='full')
+    flops, params, results = count_flops_params(model, dummy_input, verbose=False, mode='full')
     metric = evaluator(model)
 
     module_names_summery = _summery_module_names(model, config.module_types, config.module_names, config.exclude_module_names)

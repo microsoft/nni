@@ -2,7 +2,10 @@
 # Licensed under the MIT license.
 
 import logging
+from pathlib import Path
 from typing import Any, Callable, List, Optional, Union
+
+import torch
 from torch.nn import Module
 from torch.optim import Optimizer
 
@@ -25,6 +28,7 @@ class CompressionExperiment(Experiment):
         self.compression_config = compression_config
         assert all([model, finetuner, evaluator])
         assert all([trainer, optimizer, criterion]) or not any([trainer, optimizer, criterion])
+        torch.save(model.state_dict(), Path(self.config.trial_code_directory, 'nni_model_state_dict.pth'))
         self.vessel = CompressionVessel(model, finetuner, evaluator, dummy_input, trainer, optimizer, criterion, device)
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
