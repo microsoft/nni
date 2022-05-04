@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import functools
+import logging
 import warnings
 
 from typing import Any, Dict, Sequence, cast
@@ -21,6 +22,8 @@ from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingPolicy
 from .sampling import PathSamplingCell
 from ._valuechoice_utils import traverse_all_options, dedup_inner_choices
+
+_logger = logging.getLogger(__name__)
 
 
 class GumbelSoftmax(nn.Softmax):
@@ -416,7 +419,7 @@ class DifferentiableMixedCell(PathSamplingCell):
                             '{len(alpha)} vs. {len(self.ops[i][j])}'
                         )
                 else:
-                    alpha = nn.Parameter(torch.randn(len(self.ops[i][j])) * 1E-3)
+                    alpha = nn.Parameter(torch.randn(len(self.ops[i - self.num_predecessors][j])) * 1E-3)
                 self._arch_alpha[edge_label] = alpha
 
         self._softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
@@ -448,16 +451,20 @@ class DifferentiableMixedCell(PathSamplingCell):
             # Therefore we gather first occurrences of distinct input_index to the front.
             first_occurrence_index: list[int] = [
                 all_weights.index(                                      # The index of
-                    next(filter(lambda _, t, __: t == j, all_weights))  # First occurence of j
+                    next(filter(lambda t: t[1] == j, all_weights))      # First occurence of j
                 )
                 for j in range(i)                                       # For j < i
             ]
+            first_occurrence_index.sort()                               # Keep them ordered too.
 
             all_weights = [all_weights[k] for k in first_occurrence_index] + \
                 [w for j, w in enumerate(all_weights) if j not in first_occurrence_index]
 
+            _logger.info('Sorted weights in differentiable cell export (node %d): %s', i, all_weights)
+
             for k in range(self.num_ops_per_node):
-                _, j, op_name = all_weights[k % len(all_weights)]  # all_weights could be too short
+                # all_weights could be too short in case ``num_ops_per_node`` is too large.
+                _, j, op_name = all_weights[k % len(all_weights)]
                 exported[f'{self.label}/op_{i}_{k}'] = op_name
                 exported[f'{self.label}/input_{i}_{k}'] = j
 

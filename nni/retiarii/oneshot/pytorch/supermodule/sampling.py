@@ -347,7 +347,7 @@ class PathSamplingCell(BaseSuperNetModule):
 
     def export(self, memo):
         """Randomly choose one to export."""
-        return self.resample()
+        return self.resample(memo)
 
     def forward(self, *inputs: list[torch.Tensor] | torch.Tensor) -> tuple[torch.Tensor, ...] | torch.Tensor:
         processed_inputs: List[torch.Tensor] = preprocess_cell_inputs(self.num_predecessors, *inputs)
@@ -379,7 +379,7 @@ class PathSamplingCell(BaseSuperNetModule):
                     'Only support op_factory of type list or dict.'
             elif module.merge_op == 'loose_end':
                 op_candidates_lc = module.ops[-1][-1]
-                assert isinstance(LayerChoice, op_candidates_lc)
+                assert isinstance(op_candidates_lc, LayerChoice)
                 op_factory = {  # create a factory
                     name: lambda _, __, ___: copy.deepcopy(op_candidates_lc[name])
                     for name in op_candidates_lc.names
@@ -387,6 +387,7 @@ class PathSamplingCell(BaseSuperNetModule):
             if op_factory is not None:
                 return cls(
                     op_factory,
+                    module.num_nodes,
                     module.num_ops_per_node,
                     module.num_predecessors,
                     module.preprocessor,
