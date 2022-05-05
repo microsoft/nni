@@ -106,11 +106,7 @@ function randomSelect<T>(a: T[]): T {
 }
 
 function getCmdPy(): string {
-    let cmd = 'python3';
-    if (process.platform === 'win32') {
-        cmd = 'python';
-    }
-    return cmd;
+    return globals.args.pythonInterpreter;
 }
 
 /**
