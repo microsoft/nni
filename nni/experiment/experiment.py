@@ -87,6 +87,32 @@ class Experiment:
         else:
             self.config = config_or_platform
 
+    def _start_begin(self, debug: bool, run_mode: RunMode) -> ExperimentConfig:
+        assert self.config is not None
+        if run_mode is not RunMode.Detach:
+            atexit.register(self.stop)
+
+        config = self.config.canonical_copy()
+        if hasattr(config, "use_annotation") and config.use_annotation: # will be refactored
+            raise RuntimeError('NNI annotation is not supported by Python experiment API.')
+
+        if config.experiment_working_directory is not None:
+            log_dir = Path(config.experiment_working_directory, self.id, 'log')
+        else:  # this should never happen in latest version, keep it until v2.7 for potential compatibility
+            log_dir = Path.home() / f'nni-experiments/{self.id}/log'
+        nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
+        return config
+
+    def _start_end(self, port: int, nni_manager_ip: str) -> None:
+        ips = [nni_manager_ip]
+        for interfaces in psutil.net_if_addrs().values():
+            for interface in interfaces:
+                if interface.family == socket.AF_INET:
+                    ips.append(interface.address)
+        ips = [f'http://{ip}:{port}' for ip in ips if ip]
+        msg = 'Web portal URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
+        _logger.info(msg)
+
     def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
         """
         Start the experiment in background.
@@ -101,33 +127,14 @@ class Experiment:
         debug
             Whether to start in debug mode.
         """
-        assert self.config is not None
-        if run_mode is not RunMode.Detach:
-            atexit.register(self.stop)
-
-        config = self.config.canonical_copy()
-        if config.use_annotation:
-            raise RuntimeError('NNI annotation is not supported by Python experiment API.')
-
-        if config.experiment_working_directory is not None:
-            log_dir = Path(config.experiment_working_directory, self.id, 'log')
-        else:  # this should never happen in latest version, keep it until v2.7 for potential compatibility
-            log_dir = Path.home() / f'nni-experiments/{self.id}/log'
-        nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
+        config = self._start_begin(debug, run_mode)
 
         self._proc = launcher.start_experiment(self._action, self.id, config, port, debug, run_mode, self.url_prefix)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed
 
-        ips = [config.nni_manager_ip]
-        for interfaces in psutil.net_if_addrs().values():
-            for interface in interfaces:
-                if interface.family == socket.AF_INET:
-                    ips.append(interface.address)
-        ips = [f'http://{ip}:{port}' for ip in ips if ip]
-        msg = 'Web portal URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
-        _logger.info(msg)
+        self._start_end(port, config.nni_manager_ip)
 
     def stop(self) -> None:
         """

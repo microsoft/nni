@@ -1,11 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import atexit
+from __future__ import annotations
+
 import logging
 import os
-import socket
-import time
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,24 +13,22 @@ from threading import Thread
 from typing import Any, List, Optional, Union, cast, overload
 
 import colorama
-import psutil
 import torch
 import torch.nn as nn
-import nni.runtime.log
 from nni.common.device import GPUDevice
-from nni.experiment import Experiment, RunMode, launcher, management, rest
+from nni.experiment import Experiment, RunMode
 from nni.experiment.config import utils
 from nni.experiment.config.base import ConfigBase
 from nni.experiment.config.training_service import TrainingServiceConfig
 from nni.experiment.config.training_services import RemoteConfig
 from nni.runtime.protocol import connect_websocket
-from nni.tools.nnictl.command_utils import kill_command
 
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
 from ..execution.utils import get_mutation_dict
+from ..execution.interface import AbstractExecutionEngine
 from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
@@ -304,20 +301,7 @@ class RetiariiExperiment(Experiment):
         # TODO: find out a proper way to show no more trial message on WebUI
         # self._dispatcher.mark_experiment_as_ending()
 
-    def start(self, port: int = 8080, debug: bool = False) -> None:
-        """
-        Start the experiment in background.
-        This method will raise exception on failure.
-        If it returns, the experiment should have been successfully started.
-        Parameters
-        ----------
-        port
-            The port of web UI.
-        debug
-            Whether to start in debug mode.
-        """
-        super().start(port, debug)
-
+    def _create_execution_engine(self) -> AbstractExecutionEngine:
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
             from ..execution.base import BaseExecutionEngine
@@ -341,6 +325,32 @@ class RetiariiExperiment(Experiment):
             engine = BenchmarkExecutionEngine(self.config.benchmark)
         else:
             raise ValueError(f'Unsupported engine type: {self.config.execution_engine}')
+        return engine
+
+    def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
+        """
+        Start the experiment in background.
+        This method will raise exception on failure.
+        If it returns, the experiment should have been successfully started.
+        Parameters
+        ----------
+        port
+            The port of web UI.
+        debug
+            Whether to start in debug mode.
+        """
+        config = self._start_begin(debug, run_mode)
+
+        ws_url = f'ws://localhost:{port}/tuner'
+        self._proc = launcher.start_experiment('create', self.id, config, port, debug,  # type: ignore
+                                               RunMode.Background, None, ws_url, ['retiarii'])
+        assert self._proc is not None
+        connect_websocket(ws_url)
+        self.port = port  # port will be None if start up failed
+
+        self._start_end(port, config.nni_manager_ip)
+
+        engine = self._create_execution_engine()
         set_execution_engine(engine)
 
         # dispatcher must be launched after pipe initialized
@@ -367,29 +377,25 @@ class RetiariiExperiment(Experiment):
     def _create_dispatcher(self):
         return self._dispatcher
 
-    @overload
     def run(self, config: Optional[RetiariiExeConfig] = None, port: int = 8080, debug: bool = False) -> None:
-        ...
-    def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
         """
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        if not isinstance(port, int):
-            assert port is None or isinstance(port, RetiariiExeConfig)
-            warnings.warn('Passing `config` in run() is deprecated.')
-            if port is None:
-                config = RetiariiExeConfig()
-                config.execution_engine = 'oneshot'
-                self.config = config
-            else:
-                self.config = port # for backward compatibility, will remove in future release
+        assert port is None or isinstance(port, RetiariiExeConfig)
+        warnings.warn('Passing `config` in run() is deprecated.')
+        if port is None:
+            config = RetiariiExeConfig()
+            config.execution_engine = 'oneshot'
+            self.config = config
+        else:
+            self.config = port # for backward compatibility, will remove in future release
         
         if self.config.execution_engine == 'oneshot':
             base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
-            super().run(port, wait_completion, debug)
+            super().run(port, True, debug)
 
     def stop(self) -> None:
         """
@@ -451,3 +457,26 @@ class RetiariiExperiment(Experiment):
         this function retrains the exported model, and test it to output test accuracy
         """
         raise NotImplementedError
+
+
+class NasExperiment(RetiariiExperiment):
+    """
+    This class is only a new interface wrapper.
+    """
+    def __init__(self, model: nn.Module,
+                 evaluator: Union[BaseOneShotTrainer, Evaluator],
+                 strategy: BaseStrategy,
+                 config_or_platform: ExperimentConfig | str | list[str] | None = 'local',
+                 mutators: List[Mutator] = cast(List[Mutator], None)):
+        ...
+
+    def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
+        """
+        Run the experiment.
+        This function will block until experiment finish or error.
+        """
+        if self.config.execution_engine == 'oneshot':
+            base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
+            self.strategy.run(base_model_ir, self.applied_mutators)
+        else:
+            super().run(port, wait_completion, debug)
