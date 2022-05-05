@@ -105,10 +105,6 @@ function randomSelect<T>(a: T[]): T {
     return a[Math.floor(Math.random() * a.length)];
 }
 
-function getCmdPy(): string {
-    return globals.args.pythonInterpreter;
-}
-
 /**
  * Generate command line to start automl algorithm(s),
  * either start advisor or start a process which runs tuner and assessor
@@ -119,7 +115,7 @@ function getCmdPy(): string {
 function getMsgDispatcherCommand(expParams: ExperimentConfig): string {
     const clonedParams = Object.assign({}, expParams);
     delete clonedParams.searchSpace;
-    return `${getCmdPy()} -m nni --exp_params ${Buffer.from(JSON.stringify(clonedParams)).toString('base64')}`;
+    return `${globals.args.pythonInterpreter} -m nni --exp_params ${Buffer.from(JSON.stringify(clonedParams)).toString('base64')}`;
 }
 
 /**
