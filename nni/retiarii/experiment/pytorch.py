@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
 from threading import Thread
-from typing import Any, List, Optional, Union, cast
+from typing import Any, List, Optional, Union, cast, overload
 
 import colorama
 import psutil
@@ -396,32 +396,29 @@ class RetiariiExperiment(Experiment):
     def _create_dispatcher(self):
         return self._dispatcher
 
+    @overload
     def run(self, config: Optional[RetiariiExeConfig] = None, port: int = 8080, debug: bool = False) -> None:
+        ...
+    def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
         """
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        if isinstance(self.evaluator, BaseOneShotTrainer):
-            # TODO: will throw a deprecation warning soon
-            # warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
-            #               'We will try to convert this trainer to our new implementation to run the algorithm. '
-            #               'In case you want to stick to the old implementation, '
-            #               'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
-            self.evaluator.fit()
-
-        if config is None:
-            warnings.warn('config = None is deprecate in future. If you are running a one-shot experiment, '
-                          'please consider creating a config and set execution engine to `oneshot`.', DeprecationWarning)
-            config = RetiariiExeConfig()
-            config.execution_engine = 'oneshot'
-
-        if config.execution_engine == 'oneshot':
+        if not isinstance(port, int):
+            assert port is None or isinstance(port, RetiariiExeConfig)
+            warnings.warn('Passing `config` in run() is deprecated.')
+            if port is None:
+                config = RetiariiExeConfig()
+                config.execution_engine = 'oneshot'
+                self.config = config
+            else:
+                self.config = port # for backward compatibility, will remove in future release
+        
+        if self.config.execution_engine == 'oneshot':
             base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
-            assert config is not None, 'You are using classic search mode, config cannot be None!'
-            self.config = config
-            self.start(port, debug)
+            super().run(port, wait_completion, debug)
 
     def _check_exp_status(self) -> bool:
         """
@@ -453,40 +450,21 @@ class RetiariiExperiment(Experiment):
         """
         Stop background experiment.
         """
-        _logger.info('Stopping experiment, please wait...')
-        atexit.unregister(self.stop)
-
+        _logger.info('To stop experiment...')
         # stop strategy first
         if self._dispatcher_thread is not None:
             self._dispatcher.stopping = True
             self._dispatcher_thread.join(timeout=1)
-
-        if self.id is not None:
-            nni.runtime.log.stop_experiment_log(self.id)
-        if self._proc is not None:
-            try:
-                # this if is to deal with the situation that
-                # nnimanager is cleaned up by ctrl+c first
-                if self._proc.poll() is None:
-                    rest.delete(self.port, '/experiment')
-            except Exception as e:
-                _logger.exception(e)
-                _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
-                kill_command(self._proc.pid)
-
-        if self._pipe is not None:
-            self._pipe.close()
-
-        self.id = cast(str, None)
-        self.port = cast(int, None)
-        self._proc = None
-        self._pipe = None
+        
         self._dispatcher = cast(RetiariiAdvisor, None)
         self._dispatcher_thread = None
-        _logger.info('Experiment stopped')
+
+        super().stop()
 
     def export_top_models(self, top_k: int = 1, optimize_mode: str = 'maximize', formatter: str = 'dict') -> Any:
         """
+        TODO: the base class may also need this method
+
         Export several top performing models.
 
         For one-shot algorithms, only top-1 is supported. For others, ``optimize_mode`` and ``formatter`` are
