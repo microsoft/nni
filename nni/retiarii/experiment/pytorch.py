@@ -316,9 +316,7 @@ class RetiariiExperiment(Experiment):
         debug
             Whether to start in debug mode.
         """
-        atexit.register(self.stop)
-
-        self.config = self.config.canonical_copy()
+        super().start(port, debug)
 
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
@@ -345,43 +343,15 @@ class RetiariiExperiment(Experiment):
             raise ValueError(f'Unsupported engine type: {self.config.execution_engine}')
         set_execution_engine(engine)
 
-        self.id = management.generate_experiment_id()
-
-        if self.config.experiment_working_directory is not None:
-            log_dir = Path(self.config.experiment_working_directory, self.id, 'log')
-        else:
-            log_dir = Path.home() / f'nni-experiments/{self.id}/log'
-        nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
-
-        ws_url = f'ws://localhost:{port}/tuner'
-        self._proc = launcher.start_experiment('create', self.id, self.config, port, debug,  # type: ignore
-                                               RunMode.Background, None, ws_url, ['retiarii'])
-        assert self._proc is not None
-        connect_websocket(ws_url)
-
-        self.port = port  # port will be None if start up failed
-
         # dispatcher must be launched after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
         self._dispatcher = self._create_dispatcher()
         self._dispatcher_thread = Thread(target=self._dispatcher.run)
         self._dispatcher_thread.start()
 
-        ips = [self.config.nni_manager_ip]
-        for interfaces in psutil.net_if_addrs().values():
-            for interface in interfaces:
-                if interface.family == socket.AF_INET:
-                    ips.append(interface.address)
-        ips = [f'http://{ip}:{port}' for ip in ips if ip]
-        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
-        _logger.info(msg)
-
-        exp_status_checker = Thread(target=self._check_exp_status)
-        exp_status_checker.start()
         self._start_strategy()
         # TODO: the experiment should be completed, when strategy exits and there is no running job
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
-        exp_status_checker.join()
 
     def _construct_devices(self):
         devices = []
@@ -420,32 +390,6 @@ class RetiariiExperiment(Experiment):
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
             super().run(port, wait_completion, debug)
-
-    def _check_exp_status(self) -> bool:
-        """
-        Run the experiment.
-        This function will block until experiment finish or error.
-        Return `True` when experiment done; or return `False` when experiment failed.
-        """
-        assert self._proc is not None
-        try:
-            while True:
-                time.sleep(10)
-                # this if is to deal with the situation that
-                # nnimanager is cleaned up by ctrl+c first
-                if self._proc.poll() is None:
-                    status = self.get_status()
-                else:
-                    return False
-                if status == 'DONE' or status == 'STOPPED':
-                    return True
-                if status == 'ERROR':
-                    return False
-        except KeyboardInterrupt:
-            _logger.warning('KeyboardInterrupt detected')
-        finally:
-            self.stop()
-        raise RuntimeError('Check experiment status failed.')
 
     def stop(self) -> None:
         """
