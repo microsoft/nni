@@ -18,7 +18,7 @@ from nni import ClassArgsValidator
 from nni.common.hpo_utils import validate_search_space
 from nni.runtime.common import multi_phase_enabled
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
-from nni.runtime.protocol import CommandType, send
+from nni.runtime.tuner_command_channel import CommandType
 from nni.utils import NodeType, OptimizeMode, MetricType, extract_scalar_reward
 from nni import parameter_expressions
 
@@ -432,7 +432,7 @@ class Hyperband(MsgDispatcherBase):
             search space
         """
         self.handle_update_search_space(data)
-        send(CommandType.Initialized, '')
+        self.send(CommandType.Initialized, '')
 
     def handle_request_trial_jobs(self, data):
         """
@@ -449,7 +449,7 @@ class Hyperband(MsgDispatcherBase):
     def _request_one_trial_job(self):
         ret = self._get_one_trial_job()
         if ret is not None:
-            send(CommandType.NewTrialJob, nni.dump(ret))
+            self.send(CommandType.NewTrialJob, nni.dump(ret))
             self.credit -= 1
 
     def _get_one_trial_job(self):
@@ -478,7 +478,7 @@ class Hyperband(MsgDispatcherBase):
                     'parameter_source': 'algorithm',
                     'parameters': ''
                 }
-                send(CommandType.NoMoreTrialJobs, nni.dump(ret))
+                self.send(CommandType.NoMoreTrialJobs, nni.dump(ret))
                 return None
 
         assert self.generated_hyper_configs
@@ -553,7 +553,7 @@ class Hyperband(MsgDispatcherBase):
             if data['parameter_index'] is not None:
                 ret['parameter_index'] = data['parameter_index']
             self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
-            send(CommandType.SendTrialJobParameter, nni.dump(ret))
+            self.send(CommandType.SendTrialJobParameter, nni.dump(ret))
         else:
             value = extract_scalar_reward(data['value'])
             bracket_id, i, _ = data['parameter_id'].split('_')

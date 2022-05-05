@@ -24,7 +24,7 @@ from nni.experiment.config import utils
 from nni.experiment.config.base import ConfigBase
 from nni.experiment.config.training_service import TrainingServiceConfig
 from nni.experiment.config.training_services import RemoteConfig
-from nni.runtime.protocol import connect_websocket
+from nni.runtime.tuner_command_channel import TunerCommandChannel
 from nni.tools.nnictl.command_utils import kill_command
 
 from ..codegen import model_to_pytorch_script
@@ -274,7 +274,8 @@ class RetiariiExperiment(Experiment):
 
         from nni.retiarii.oneshot.pytorch.strategy import OneShotStrategy
         if not isinstance(strategy, OneShotStrategy):
-            self._dispatcher = RetiariiAdvisor()
+            # FIXME: Dispatcher should not be created this early.
+            self._dispatcher = RetiariiAdvisor('_placeholder_')
         else:
             self._dispatcher = cast(RetiariiAdvisor, None)
         self._dispatcher_thread: Optional[Thread] = None
@@ -357,13 +358,14 @@ class RetiariiExperiment(Experiment):
         self._proc = launcher.start_experiment('create', self.id, self.config, port, debug,  # type: ignore
                                                RunMode.Background, None, ws_url, ['retiarii'])
         assert self._proc is not None
-        connect_websocket(ws_url)
 
         self.port = port  # port will be None if start up failed
 
         # dispatcher must be launched after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
         self._dispatcher = self._create_dispatcher()
+        if self._dispatcher is not None:
+            self._dispatcher._channel = TunerCommandChannel(ws_url)
         self._dispatcher_thread = Thread(target=self._dispatcher.run)
         self._dispatcher_thread.start()
 

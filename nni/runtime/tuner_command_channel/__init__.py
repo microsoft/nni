@@ -2,7 +2,8 @@
 # Licensed under the MIT license.
 
 """
-The IPC channel between tuner/assessor and NNI manager.
-
-Work in progress.
+Low level APIs for algorithms to communicate with NNI manager.
 """
+
+from .command_type import CommandType
+from .channel import TunerCommandChannel
