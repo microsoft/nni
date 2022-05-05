@@ -9,7 +9,9 @@ The support remains limited. Known limitations include:
 - The code contains duplicates. Needs refactor.
 """
 
-from typing import List, Tuple, Optional, cast
+from __future__ import annotations
+
+from typing import cast
 
 import torch
 import torch.nn as nn
@@ -48,13 +50,13 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
 
     _arch_parameter_names = ['_arch_alpha', '_binary_gates']
 
-    def __init__(self, paths: List[Tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
+    def __init__(self, paths: list[tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__(paths, alpha, softmax, label)
         self._binary_gates = nn.Parameter(torch.randn(len(paths)) * 1E-3)
 
         # like sampling-based methods, it has a ``_sampled``.
-        self._sampled: Optional[str] = None
-        self._sample_idx: Optional[int] = None
+        self._sampled: str | None = None
+        self._sample_idx: int | None = None
 
     def forward(self, *args, **kwargs):
         def run_function(ops, active_id, **kwargs):
@@ -130,10 +132,10 @@ class ProxylessMixedInput(DifferentiableMixedInput):
 
     _arch_parameter_names = ['_arch_alpha', '_binary_gates']
 
-    def __init__(self, n_candidates: int, n_chosen: Optional[int], alpha: torch.Tensor, softmax: nn.Module, label: str):
+    def __init__(self, n_candidates: int, n_chosen: int | None, alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__(n_candidates, n_chosen, alpha, softmax, label)
         self._binary_gates = nn.Parameter(torch.randn(n_candidates) * 1E-3)
-        self._sampled: Optional[int] = None
+        self._sampled: int | None = None
 
     def forward(self, inputs):
         def run_function(active_sample):

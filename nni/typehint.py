@@ -5,18 +5,11 @@
 Types for static checking.
 """
 
-__all__ = [
-    'Literal', 'TypedDict',
-    'Parameters', 'SearchSpace', 'TrialMetric', 'TrialRecord',
-]
+__all__ = ['Parameters', 'SearchSpace', 'TrialMetric', 'TrialRecord']
 
-import sys
-from typing import Any, Dict, List, TYPE_CHECKING
+from typing import Any, Dict, List
 
-if TYPE_CHECKING or sys.version_info >= (3, 8):
-    from typing import Literal, TypedDict
-else:
-    from typing_extensions import Literal, TypedDict
+from typing_extensions import Literal, TypedDict
 
 Parameters = Dict[str, Any]
 """

@@ -1,13 +1,16 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import warnings
 from itertools import chain
-from typing import Dict, Callable, List, Union, Any, Tuple
+from typing import Callable, Any, Dict, Union, Tuple, List, cast
 
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
+from torch.optim import Optimizer
 
 from torch.optim.lr_scheduler import _LRScheduler
 
@@ -24,8 +27,8 @@ MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Union[
 
 
 def traverse_and_mutate_submodules(
-    root_module: nn.Module, hooks: List[MutationHook], mutate_kwargs: Dict[str, Any], topdown: bool = True
-) -> List[BaseSuperNetModule]:
+    root_module: nn.Module, hooks: list[MutationHook], mutate_kwargs: dict[str, Any], topdown: bool = True
+) -> list[BaseSuperNetModule]:
     """
     Traverse the module-tree of ``root_module``, and call ``hooks`` on every tree node.
 
@@ -36,7 +39,7 @@ def traverse_and_mutate_submodules(
         Since this method is called in the ``__init__`` of :class:`BaseOneShotLightningModule`,
         it's usually a ``pytorch_lightning.LightningModule``.
         The mutation will be in-place on ``root_module``.
-    hooks : List[MutationHook]
+    hooks : list[MutationHook]
         List of mutation hooks. See :class:`BaseOneShotLightningModule` for how to write hooks.
         When a hook returns an module, the module will be replaced (mutated) to the new module.
     mutate_kwargs : dict
@@ -47,7 +50,7 @@ def traverse_and_mutate_submodules(
 
     Returns
     ----------
-    modules : Dict[str, nn.Module]
+    modules : dict[str, nn.Module]
         The replace result.
     """
     memo = {}
@@ -101,7 +104,7 @@ def traverse_and_mutate_submodules(
     return module_list
 
 
-def no_default_hook(module: nn.Module, name: str, memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> bool:
+def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_kwargs: dict[str, Any]) -> bool:
     """Add this hook at the end of your hook list to raise error for unsupported mutation primitives."""
 
     # Forward IS NOT supernet
@@ -125,7 +128,7 @@ def no_default_hook(module: nn.Module, name: str, memo: Dict[str, Any], mutate_k
     if is_traceable(module):
         # check whether there is a value-choice in its arguments
         has_valuechoice = False
-        for arg in chain(module.trace_args, module.trace_kwargs.values()):
+        for arg in chain(cast(list, module.trace_args), cast(dict, module.trace_kwargs).values()):
             if isinstance(arg, ValueChoiceX):
                 has_valuechoice = True
                 break
@@ -139,7 +142,7 @@ def no_default_hook(module: nn.Module, name: str, memo: Dict[str, Any], mutate_k
 
 class BaseOneShotLightningModule(pl.LightningModule):
 
-    _mutation_hooks_note = """mutation_hooks : List[MutationHook]
+    _mutation_hooks_note = """mutation_hooks : list[MutationHook]
         Mutation hooks are callable that inputs an Module and returns a :class:`BaseSuperNetModule`.
         They are invoked in :meth:`traverse_and_mutate_submodules`, on each submodules.
         For each submodule, the hook list are invoked subsequently,
@@ -194,36 +197,40 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     Attributes
     ----------
-    nas_modules : List[BaseSuperNetModule]
+    nas_modules : list[BaseSuperNetModule]
         Modules that have been mutated, which the search algorithms should care about.
 
     Parameters
     ----------
     """ + _inner_module_note + _mutation_hooks_note
 
-    automatic_optimization = False
+    trainer: pl.Trainer
 
-    def default_mutation_hooks(self) -> List[MutationHook]:
+    @property
+    def automatic_optimization(self) -> bool:
+        return False
+
+    def default_mutation_hooks(self) -> list[MutationHook]:
         """Override this to define class-default mutation hooks."""
         return [no_default_hook]
 
-    def mutate_kwargs(self) -> Dict[str, Any]:
+    def mutate_kwargs(self) -> dict[str, Any]:
         """Extra keyword arguments passed to mutation hooks. Usually algo-specific."""
         return {}
 
-    def __init__(self, base_model: pl.LightningModule, mutation_hooks: List[MutationHook] = None):
+    def __init__(self, model: pl.LightningModule, mutation_hooks: list[MutationHook] | None = None):
         super().__init__()
-        assert isinstance(base_model, pl.LightningModule)
-        self.model = base_model
+        assert isinstance(model, pl.LightningModule)
+        self.model = model
 
         # append the default hooks
         mutation_hooks = (mutation_hooks or []) + self.default_mutation_hooks()
 
         # traverse the model, calling hooks on every submodule
-        self.nas_modules: List[BaseSuperNetModule] = traverse_and_mutate_submodules(
+        self.nas_modules: list[BaseSuperNetModule] = traverse_and_mutate_submodules(
             self.model, mutation_hooks, self.mutate_kwargs(), topdown=True)
 
-    def search_space_spec(self) -> Dict[str, ParameterSpec]:
+    def search_space_spec(self) -> dict[str, ParameterSpec]:
         """Get the search space specification from ``nas_module``.
 
         Returns
@@ -236,7 +243,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             result.update(module.search_space_spec())
         return result
 
-    def resample(self) -> Dict[str, Any]:
+    def resample(self) -> dict[str, Any]:
         """Trigger the resample for each ``nas_module``.
         Sometimes (e.g., in differentiable cases), it does nothing.
 
@@ -250,7 +257,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             result.update(module.resample(memo=result))
         return result
 
-    def export(self) -> Dict[str, Any]:
+    def export(self) -> dict[str, Any]:
         """
         Export the NAS result, ideally the best choice of each ``nas_module``.
         You may implement an ``export`` method for your customized ``nas_module``.
@@ -291,12 +298,30 @@ class BaseOneShotLightningModule(pl.LightningModule):
             arc_optimizers = [arc_optimizers]
         self.arc_optim_count = len(arc_optimizers)
 
+        # FIXME: this part uses non-official lightning API.
         # The return values ``frequency`` and ``monitor`` are ignored because lightning requires
         # ``len(optimizers) == len(frequency)``, and gradient backword is handled manually.
         # For data structure of variables below, please see pytorch lightning docs of ``configure_optimizers``.
-        w_optimizers, lr_schedulers, self.frequencies, monitor = \
-            self.trainer._configure_optimizers(self.model.configure_optimizers())
-        lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
+        try:
+            # above v1.6
+            from pytorch_lightning.core.optimizer import (  # pylint: disable=import-error
+                _configure_optimizers,  # type: ignore
+                _configure_schedulers_automatic_opt,  # type: ignore
+                _configure_schedulers_manual_opt  # type: ignore
+            )
+            w_optimizers, lr_schedulers, self.frequencies, monitor = \
+                _configure_optimizers(self.model.configure_optimizers())  # type: ignore
+            lr_schedulers = (
+                _configure_schedulers_automatic_opt(lr_schedulers, monitor)
+                if self.automatic_optimization
+                else _configure_schedulers_manual_opt(lr_schedulers)
+            )
+        except ImportError:
+            # under v1.5
+            w_optimizers, lr_schedulers, self.frequencies, monitor = \
+                self.trainer._configure_optimizers(self.model.configure_optimizers())  # type: ignore
+            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
+
         if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):
             raise Exception(
                 "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
@@ -312,7 +337,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # redirect the access to trainer/log to this module
         # but note that we might be missing other attributes,
         # which could potentially be a problem
-        self.model.trainer = self.trainer
+        self.model.trainer = self.trainer  # type: ignore
         self.model.log = self.log
         return self.model.on_train_start()
 
@@ -359,7 +384,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         Returns
         ----------
-        arc_optimizers : List[Optimizer], Optimizer
+        arc_optimizers : list[Optimizer], Optimizer
             Optimizers used by a specific NAS algorithm. Return None if no architecture optimizers are needed.
         """
         return None
@@ -376,9 +401,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         def apply(lr_scheduler):
             # single scheduler is called every epoch
-            if isinstance(lr_scheduler, _LRScheduler) and \
-                    self.trainer.is_last_batch:
-                lr_schedulers.step()
+            if isinstance(lr_scheduler, _LRScheduler):
+                if self.trainer.is_last_batch:
+                    lr_scheduler.step()
             # lr_scheduler_config is called as configured
             elif isinstance(lr_scheduler, dict):
                 interval = lr_scheduler['interval']
@@ -392,7 +417,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
                         self.trainer.is_last_batch and
                         (self.trainer.current_epoch + 1) % frequency == 0
                 ):
-                    lr_scheduler.step()
+                    lr_scheduler['scheduler'].step()
 
         lr_schedulers = self.lr_schedulers()
 
@@ -402,7 +427,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             apply(lr_schedulers)
 
-    def call_user_optimizers(self, method):
+    def call_weight_optimizers(self, method):
         """
         Function that imitates lightning trainer's behavior of calling user's optimizers. Since auto_optimization is turned off by this
         class, you can use this function to make user optimizers behave as they were automatically handled by the lightning trainer.
@@ -418,9 +443,11 @@ class BaseOneShotLightningModule(pl.LightningModule):
             elif method == 'zero_grad':
                 optimizer.zero_grad()
 
-        optimizers = self.user_optimizers
+        optimizers = self.weight_optimizers()
         if optimizers is None:
             return
+
+        assert isinstance(optimizers, list), 'Did you forget to set use_pl_optimizers to true?'
 
         if len(self.frequencies) > 0:
             self.cur_optimizer_step += 1
@@ -434,14 +461,13 @@ class BaseOneShotLightningModule(pl.LightningModule):
             for optimizer in optimizers:
                 apply_method(optimizer, method)
 
-    @property
-    def architecture_optimizers(self):
+    def architecture_optimizers(self) -> list[Optimizer] | Optimizer | None:
         """
         Get architecture optimizers from all optimizers. Use this to get your architecture optimizers in ``training_step``.
 
         Returns
         ----------
-        opts : List[Optimizer], Optimizer, None
+        opts : list[Optimizer], Optimizer, None
             Architecture optimizers defined in ``configure_architecture_optimizers``. This will be None if there is no
             architecture optimizers.
         """
@@ -450,28 +476,30 @@ class BaseOneShotLightningModule(pl.LightningModule):
             # pylint: disable=unsubscriptable-object
             arc_opts = opts[:self.arc_optim_count]
             if len(arc_opts) == 1:
-                arc_opts = arc_opts[0]
-            return arc_opts
+                return cast(Optimizer, arc_opts[0])
+            return cast(List[Optimizer], arc_opts)
         # If there is only 1 optimizer and it is the architecture optimizer
         if self.arc_optim_count == 1:
-            return opts
+            return cast(Union[List[Optimizer], Optimizer], opts)
         return None
 
-    @property
-    def user_optimizers(self):
+    def weight_optimizers(self) -> list[Optimizer] | Optimizer | None:
         """
         Get user optimizers from all optimizers. Use this to get user optimizers in ``training_step``.
 
         Returns
         ----------
-        opts : List[Optimizer], Optimizer, None
+        opts : list[Optimizer], Optimizer, None
             Optimizers defined by user's model. This will be None if there is no user optimizers.
         """
+        # Since use_pl_optimizer is set true (by default) here.
+        # opts always return a list
         opts = self.optimizers()
         if isinstance(opts, list):
             # pylint: disable=unsubscriptable-object
-            return opts[self.arc_optim_count:]
+            return cast(List[Optimizer], opts[self.arc_optim_count:])
+        # FIXME: this case is actually not correctly handled
         # If there is only 1 optimizer and no architecture optimizer
         if self.arc_optim_count == 0:
-            return opts
+            return cast(Union[List[Optimizer], Optimizer], opts)
         return None

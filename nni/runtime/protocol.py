@@ -1,72 +1,39 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import logging
-import os
-import threading
-from enum import Enum
+# pylint: disable=unused-import
 
-_logger = logging.getLogger(__name__)
+from __future__ import annotations
 
+from .tuner_command_channel.command_type import CommandType
+from .tuner_command_channel import legacy
+from .tuner_command_channel import shim
 
-class CommandType(Enum):
-    # in
-    Initialize = b'IN'
-    RequestTrialJobs = b'GE'
-    ReportMetricData = b'ME'
-    UpdateSearchSpace = b'SS'
-    ImportData = b'FD'
-    AddCustomizedTrialJob = b'AD'
-    TrialEnd = b'EN'
-    Terminate = b'TE'
-    Ping = b'PI'
+_use_ws = False
 
-    # out
-    Initialized = b'ID'
-    NewTrialJob = b'TR'
-    SendTrialJobParameter = b'SP'
-    NoMoreTrialJobs = b'NO'
-    KillTrialJob = b'KI'
+def connect_websocket(url: str):
+    global _use_ws
+    _use_ws = True
+    shim.connect(url)
 
-_lock = threading.Lock()
-try:
-    if os.environ.get('NNI_PLATFORM') != 'unittest':
-        _in_file = open(3, 'rb')
-        _out_file = open(4, 'wb')
-except OSError:
-    _logger.debug('IPC pipeline not exists')
+def send(command: CommandType, data: str) -> None:
+    if _use_ws:
+        shim.send(command, data)
+    else:
+        legacy.send(command, data)
 
+def receive() -> tuple[CommandType, str] | tuple[None, None]:
+    if _use_ws:
+        return shim.receive()
+    else:
+        return legacy.receive()
 
-def send(command, data):
-    """Send command to Training Service.
-    command: CommandType object.
-    data: string payload.
-    """
-    global _lock
-    try:
-        _lock.acquire()
-        data = data.encode('utf8')
-        msg = b'%b%014d%b' % (command.value, len(data), data)
-        _logger.debug('Sending command, data: [%s]', msg)
-        _out_file.write(msg)
-        _out_file.flush()
-    finally:
-        _lock.release()
+# for unit test compatibility
+def _set_in_file(in_file):
+    legacy._in_file = in_file
 
+def _set_out_file(out_file):
+    legacy._out_file = out_file
 
-def receive():
-    """Receive a command from Training Service.
-    Returns a tuple of command (CommandType) and payload (str)
-    """
-    header = _in_file.read(16)
-    _logger.debug('Received command, header: [%s]', header)
-    if header is None or len(header) < 16:
-        # Pipe EOF encountered
-        _logger.debug('Pipe EOF encountered')
-        return None, None
-    length = int(header[2:])
-    data = _in_file.read(length)
-    command = CommandType(header[:2])
-    data = data.decode('utf8')
-    _logger.debug('Received command, data: [%s]', data)
-    return command, data
+def _get_out_file():
+    return legacy._out_file

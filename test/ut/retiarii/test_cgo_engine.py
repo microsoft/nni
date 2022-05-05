@@ -298,8 +298,8 @@ class CGOEngineTest(unittest.TestCase):
         os.makedirs('generated', exist_ok=True)
         from nni.runtime import protocol
         import nni.runtime.platform.test as tt
-        protocol._out_file = open('generated/debug_protocol_out_file.py', 'wb')
-        protocol._in_file = open('generated/debug_protocol_out_file.py', 'rb')
+        protocol._set_out_file(open('generated/debug_protocol_out_file.py', 'wb'))
+        protocol._set_in_file(open('generated/debug_protocol_out_file.py', 'rb'))
 
         models = _load_mnist(2)
 

@@ -40,5 +40,5 @@ about: NNI Student Program China issue template on Github
 **Log message / 日志信息 :**
  - [nnimanager.log and dispatcher.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory) : 
 
- - [nnictl stdout and stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout) : 
+ - [nnictl stdout and stderr](https://nni.readthedocs.io/en/stable/reference/nnictl.html#nnictl-log-stdout) : 
 

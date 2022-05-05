@@ -7,7 +7,8 @@ from typing import Dict, List, Tuple, Callable
 
 import torch
 from torch import autograd, Tensor
-from torch.nn import Module, Parameter
+from torch.nn import Module
+from torch.nn.parameter import Parameter
 from torch.optim import Optimizer, Adam
 
 from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper, LayerInfo
@@ -41,15 +42,15 @@ class PrunerScoredModuleWrapper(PrunerModuleWrapper):
     """
     def __init__(self, module: Module, module_name: str, config: Dict):
         super().__init__(module, module_name, config)
-        self.weight_score = Parameter(torch.empty(self.weight.size()))
+        self.weight_score = Parameter(torch.empty(self.weight.size()))  # type: ignore
         torch.nn.init.constant_(self.weight_score, val=0.0)
 
     def forward(self, *inputs):
         # apply mask to weight, bias
-        # NOTE: I don't know why training getting slower and slower if only `self.weight_mask` without `detach_()`
-        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask.detach_()))
+        # NOTE: I don't know why training getting slower and slower if only `self.weight_mask` without `detach()`
+        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask.detach()))  # type: ignore
         if hasattr(self.module, 'bias') and self.module.bias is not None:
-            self.module.bias = torch.mul(self.bias, self.bias_mask)
+            self.module.bias = torch.mul(self.bias, self.bias_mask)  # type: ignore
         return self.module(*inputs)
 
 
@@ -58,7 +59,7 @@ class _StraightThrough(autograd.Function):
     Straight through the gradient to the score, then the score = initial_score + sum(-lr * grad(weight) * weight).
     """
     @staticmethod
-    def forward(self, score, masks):
+    def forward(ctx, score, masks):
         return masks
 
     @staticmethod
@@ -71,12 +72,13 @@ class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
     Collect all weight_score in wrappers as data used to calculate metrics.
     """
     def collect(self) -> Dict[str, Tensor]:
+        assert self.compressor.bound_model is not None
         for _ in range(self.training_epochs):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
 
         data = {}
         for _, wrapper in self.compressor.get_modules_wrapper().items():
-            data[wrapper.name] = wrapper.weight_score.data
+            data[wrapper.name] = wrapper.weight_score.data  # type: ignore
         return data
 
 
@@ -193,6 +195,7 @@ class MovementPruner(BasicPruner):
             self.sparsity_allocator = NormalSparsityAllocator(self, continuous_mask=False)
 
         # use Adam to update the weight_score
+        assert self.bound_model is not None
         params = [{"params": [p for n, p in self.bound_model.named_parameters() if "weight_score" in n and p.requires_grad]}]
         optimizer = Adam(params, 1e-2)
         self.step_counter = 0
@@ -205,10 +208,10 @@ class MovementPruner(BasicPruner):
             if self.step_counter > self.warm_up_step:
                 self.cubic_schedule(self.step_counter)
                 data = {}
-                for _, wrapper in self.get_modules_wrapper().items():
+                for wrapper in self.get_modules_wrapper().values():
                     data[wrapper.name] = wrapper.weight_score.data
-                metrics = self.metrics_calculator.calculate_metrics(data)
-                masks = self.sparsity_allocator.generate_sparsity(metrics)
+                metrics = self.metrics_calculator.calculate_metrics(data)  # type: ignore
+                masks = self.sparsity_allocator.generate_sparsity(metrics)  # type: ignore
                 self.load_masks(masks)
 
         if self.data_collector is None:
@@ -232,15 +235,15 @@ class MovementPruner(BasicPruner):
         wrapper = PrunerScoredModuleWrapper(layer.module, layer.name, config)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight
-        wrapper.to(layer.module.weight.device)
+        wrapper.to(layer.module.weight.device)  # type: ignore
         return wrapper
 
     def compress(self) -> Tuple[Module, Dict]:
         # sparsity grow from 0
-        for _, wrapper in self.get_modules_wrapper().items():
+        for wrapper in self.get_modules_wrapper().values():
             wrapper.config['total_sparsity'] = 0
         result = super().compress()
         # del weight_score
-        for _, wrapper in self.get_modules_wrapper().items():
+        for wrapper in self.get_modules_wrapper().values():
             wrapper.weight_score = None
         return result

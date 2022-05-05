@@ -22,10 +22,10 @@ from typing import Any, NamedTuple
 
 import numpy as np
 from scipy.special import erf  # pylint: disable=no-name-in-module
+from typing_extensions import Literal
 
 from nni.common.hpo_utils import Deduplicator, OptimizeMode, format_search_space, deformat_parameters, format_parameters
 from nni.tuner import Tuner
-from nni.typehint import Literal
 from nni.utils import extract_scalar_reward
 from . import random_tuner
 

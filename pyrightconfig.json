@@ -1,6 +1,11 @@
 {
     "ignore": [
-        "nni/algorithms",
+        "nni/algorithms/compression/pytorch",
+        "nni/algorithms/compression/tensorflow",
+        "nni/algorithms/compression/v2/pytorch/base/pruner.py",
+        "nni/algorithms/feature_engineering",
+        "nni/algorithms/hpo",
+        "nni/algorithms/nas",
         "nni/common/device.py",
         "nni/common/graph_utils.py",
         "nni/compression",
@@ -9,7 +14,6 @@
         "nni/retiarii/execution/cgo_engine.py",
         "nni/retiarii/execution/logical_optimizer",
         "nni/retiarii/evaluator/pytorch/cgo",
-        "nni/retiarii/oneshot",
         "nni/smartparam.py",
         "nni/tools/annotation",
         "nni/tools/gpu_tool",

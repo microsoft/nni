@@ -6,9 +6,9 @@ import os from 'os';
 import path from 'path';
 import assert from 'assert';
 
-import { getLogger, Logger } from '../common/log';
-import { isAlive, withLockSync, getExperimentsInfoPath, delay } from '../common/utils';
-import { ExperimentManager } from '../common/experimentManager';
+import { getLogger, Logger } from 'common/log';
+import { isAlive, withLockSync, getExperimentsInfoPath, delay } from 'common/utils';
+import { ExperimentManager } from 'common/experimentManager';
 import { Deferred } from 'ts-deferred';
 
 interface CrashedInfo {

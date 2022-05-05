@@ -1,8 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import random
-from typing import Optional, List, Tuple, Union, Dict, Any
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -28,14 +30,14 @@ class PathSamplingLayer(BaseSuperNetModule):
         Name of the choice.
     """
 
-    def __init__(self, paths: List[Tuple[str, nn.Module]], label: str):
+    def __init__(self, paths: list[tuple[str, nn.Module]], label: str):
         super().__init__()
         self.op_names = []
         for name, module in paths:
             self.add_module(name, module)
             self.op_names.append(name)
         assert self.op_names, 'There has to be at least one op to choose from.'
-        self._sampled: Optional[Union[List[str], str]] = None  # sampled can be either a list of indices or an index
+        self._sampled: list[str] | str | None = None  # sampled can be either a list of indices or an index
         self.label = label
 
     def resample(self, memo):
@@ -89,7 +91,7 @@ class PathSamplingInput(BaseSuperNetModule):
         self.n_candidates = n_candidates
         self.n_chosen = n_chosen
         self.reduction = reduction
-        self._sampled: Optional[Union[List[int], int]] = None
+        self._sampled: list[int] | int | None = None
         self.label = label
 
     def _random_choose_n(self):
@@ -159,11 +161,11 @@ class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
     We sample the leaf nodes, and composits them into the values on arguments.
     """
 
-    def __init__(self, operation: MixedOperation, memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> None:
+    def __init__(self, operation: MixedOperation, memo: dict[str, Any], mutate_kwargs: dict[str, Any]) -> None:
         # Sampling arguments. This should have the same keys with `operation.mutable_arguments`
-        self._sampled: Optional[Dict[str, Any]] = None
+        self._sampled: dict[str, Any] | None = None
 
-    def resample(self, operation: MixedOperation, memo: Dict[str, Any]) -> Dict[str, Any]:
+    def resample(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
         """Random sample for each leaf value choice."""
         result = {}
         space_spec = operation.search_space_spec()
@@ -181,7 +183,7 @@ class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
 
         return result
 
-    def export(self, operation: MixedOperation, memo: Dict[str, Any]) -> Dict[str, Any]:
+    def export(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
         """Export is also random for each leaf value choice."""
         result = {}
         space_spec = operation.search_space_spec()

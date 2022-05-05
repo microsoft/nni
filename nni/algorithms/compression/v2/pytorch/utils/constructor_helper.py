@@ -19,7 +19,7 @@ class ConstructHelper:
     def __init__(self, callable_obj: Callable, *args, **kwargs):
         assert callable(callable_obj), '`callable_obj` must be a callable object.'
         self.callable_obj = callable_obj
-        self.args = deepcopy(args)
+        self.args = deepcopy(list(args))
         self.kwargs = deepcopy(kwargs)
 
     def call(self):
