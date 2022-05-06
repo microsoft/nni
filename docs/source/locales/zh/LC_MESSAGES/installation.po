@@ -1,0 +1,130 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022, Microsoft
+# This file is distributed under the same license as the NNI package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: NNI \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-13 03:14+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../source/installation.rst:2
+msgid "Install NNI"
+msgstr ""
+
+#: ../../source/installation.rst:4
+msgid ""
+"NNI requires Python >= 3.7. It is tested and supported on Ubuntu >= "
+"18.04, Windows 10 >= 21H2, and macOS >= 11."
+msgstr ""
+
+#: ../../source/installation.rst:8
+msgid "There are 3 ways to install NNI:"
+msgstr ""
+
+#: ../../source/installation.rst:10
+msgid ":ref:`Using pip <installation-pip>`"
+msgstr ""
+
+#: ../../source/installation.rst:11
+msgid ":ref:`Build source code <installation-source>`"
+msgstr ""
+
+#: ../../source/installation.rst:12
+msgid ":ref:`Using Docker <installation-docker>`"
+msgstr ""
+
+#: ../../source/installation.rst:17
+msgid "Using pip"
+msgstr ""
+
+#: ../../source/installation.rst:19
+msgid ""
+"NNI provides official packages for x86-64 CPUs. They can be installed "
+"with pip:"
+msgstr ""
+
+#: ../../source/installation.rst:25
+msgid "Or to upgrade to latest version:"
+msgstr ""
+
+#: ../../source/installation.rst:31
+msgid "You can check installation with:"
+msgstr ""
+
+#: ../../source/installation.rst:37
+msgid ""
+"On Linux systems without Conda, you may encounter ``bash: nnictl: command"
+" not found`` error. In this case you need to add pip script directory to "
+"``PATH``:"
+msgstr ""
+
+#: ../../source/installation.rst:48
+msgid "Installing from Source Code"
+msgstr ""
+
+#: ../../source/installation.rst:50
+msgid "NNI hosts source code on `GitHub <https://github.com/microsoft/nni>`__."
+msgstr ""
+
+#: ../../source/installation.rst:52
+msgid ""
+"NNI has experimental support for ARM64 CPUs, including Apple M1. It "
+"requires to install from source code."
+msgstr ""
+
+#: ../../source/installation.rst:55
+msgid "See :doc:`/notes/build_from_source`."
+msgstr ""
+
+#: ../../source/installation.rst:60
+msgid "Using Docker"
+msgstr ""
+
+#: ../../source/installation.rst:62
+msgid ""
+"NNI provides official Docker image on `Docker Hub "
+"<https://hub.docker.com/r/msranni/nni>`__."
+msgstr ""
+
+#: ../../source/installation.rst:69
+msgid "Installing Extra Dependencies"
+msgstr ""
+
+#: ../../source/installation.rst:71
+msgid ""
+"Some built-in algorithms of NNI requires extra packages. Use ``nni"
+"[<algorithm-name>]`` to install their dependencies."
+msgstr ""
+
+#: ../../source/installation.rst:74
+msgid ""
+"For example, to install dependencies of :class:`DNGO "
+"tuner<nni.algorithms.hpo.dngo_tuner.DNGOTuner>` :"
+msgstr ""
+
+#: ../../source/installation.rst:80
+msgid ""
+"This command will not reinstall NNI itself, even if it was installed in "
+"development mode."
+msgstr ""
+
+#: ../../source/installation.rst:82
+msgid "Alternatively, you may install all extra dependencies at once:"
+msgstr ""
+
+#: ../../source/installation.rst:88
+msgid ""
+"**NOTE**: SMAC tuner depends on swig3, which requires a manual downgrade "
+"on Ubuntu:"
+msgstr ""
+

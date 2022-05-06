@@ -272,8 +272,8 @@ class BOHB(MsgDispatcherBase):
 
     .. code-block::
 
-        config.advisor.name = 'BOHB'
-        config.advisor.class_args = {
+        config.tuner.name = 'BOHB'
+        config.tuner.class_args = {
             'optimize_mode': 'maximize',
             'min_budget': 1,
             'max_budget': 27,

@@ -6,7 +6,7 @@ import itertools
 import logging
 import random
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence, Optional
 
 from .. import InvalidMutation, Sampler, submit_models, query_available_resources, budget_exhausted
 from .base import BaseStrategy
@@ -30,6 +30,7 @@ def random_generator(search_space: Dict[Any, List[Any]], dedup=True, retries=500
     history = set()
     search_space_values = copy.deepcopy(list(search_space.values()))
     while True:
+        selected: Optional[Sequence[int]] = None
         for retry_count in range(retries):
             selected = [random.choice(v) for v in search_space_values]
             if not dedup:
@@ -41,6 +42,7 @@ def random_generator(search_space: Dict[Any, List[Any]], dedup=True, retries=500
             if retry_count + 1 == retries:
                 _logger.debug('Random generation has run out of patience. There is nothing to search. Exiting.')
                 return
+        assert selected is not None, 'Retry attempts exhausted.'
         yield {key: value for key, value in zip(keys, selected)}
 
 

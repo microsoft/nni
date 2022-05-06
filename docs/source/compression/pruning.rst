@@ -1,5 +1,5 @@
-Model Pruning with NNI
-======================
+Overview of NNI Model Pruning
+=============================
 
 Pruning is a common technique to compress neural network models.
 The pruning methods explore the redundancy in the model weights(parameters) and try to remove/prune the redundant and uncritical weights.
@@ -7,21 +7,26 @@ The redundant elements are pruned from the model, their values are zeroed and we
 
 The following concepts can help you understand pruning in NNI.
 
-.. Using rubric to prevent the section heading to be include into toc
-
-.. rubric:: Pruning Target
+Pruning Target
+--------------
 
 Pruning target means where we apply the sparsity.
 Most pruning methods prune the weights to reduce the model size and accelerate the inference latency.
 Other pruning methods also apply sparsity on activations (e.g., inputs, outputs, or feature maps) to accelerate the inference latency.
 NNI supports pruning module weights right now, and will support other pruning targets in the future.
 
-.. rubric:: Basic Pruner
+.. _basic-pruner:
+
+Basic Pruner
+------------
 
 Basic pruner generates the masks for each pruning target (weights) for a determined sparsity ratio.
 It usually takes model and config as input arguments, then generates masks for each pruning target.
 
-.. rubric:: Scheduled Pruner
+.. _scheduled-pruner:
+
+Scheduled Pruner
+----------------
 
 Scheduled pruner decides how to allocate sparsity ratio to each pruning target,
 it also handles the model speedup (after each pruning iteration) and finetuning logic.
@@ -34,13 +39,14 @@ For a clearer structure vision, please refer to the figure below.
 
 .. image:: ../../img/pruning_process.png
    :target: ../../img/pruning_process.png
-   :scale: 80%
+   :scale: 30%
    :align: center
    :alt:
 
 More information about scheduled pruning process please refer to :doc:`Pruning Scheduler <pruning_scheduler>`.
 
-.. rubric:: Granularity
+Granularity
+-----------
 
 Fine-grained pruning or unstructured pruning refers to pruning each individual weights separately.
 Coarse-grained pruning or structured pruning is pruning a regular group of weights, such as a convolutional filter.
@@ -49,7 +55,8 @@ Only :ref:`level-pruner` and :ref:`admm-pruner` support fine-grained pruning, al
 
 .. _dependency-awareode-for-output-channel-pruning:
 
-.. rubric:: Dependency-aware Mode for Output Channel Pruning
+Dependency-aware Mode for Output Channel Pruning
+------------------------------------------------
 
 Currently, we support dependency-aware mode in several ``pruner``: :ref:`l1-norm-pruner`, :ref:`l2-norm-pruner`, :ref:`fpgm-pruner`,
 :ref:`activation-apoz-rank-pruner`, :ref:`activation-mean-rank-pruner`, :ref:`taylor-fo-weight-pruner`.
@@ -99,11 +106,3 @@ In addition, for the convolutional layers that have more than one filter group,
 Overall, this pruner will prune the model according to the L1 norm of each filter and try to meet the topological constrains (channel dependency, etc) to improve the final speed gain after the speedup process. 
 
 In the dependency-aware mode, the pruner will provide a better speed gain from the model pruning.
-
-.. toctree::
-    :hidden:
-    :maxdepth: 2
-
-    Quickstart <../tutorials/cp_pruning_quick_start_mnist>
-    Pruner <pruner>
-    Speedup <../tutorials/cp_pruning_speedup>

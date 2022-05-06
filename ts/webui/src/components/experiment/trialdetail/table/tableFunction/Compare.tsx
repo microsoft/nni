@@ -194,7 +194,7 @@ class Compare extends React.Component<CompareProps, CompareState> {
         const metricKeys = this._overlapKeys(items.map(item => item.metrics));
 
         return (
-            <table className={`compare-modal-table ${scrollClass}`}>
+            <table className={`compare-modal-table ${scrollClass} fontColor333`}>
                 <tbody>
                     {this._renderRow('id', 'ID', 'value idList', items, item => item.id)}
                     {this._renderRow('trialnum', 'Trial No.', 'value', items, item => item.sequenceId.toString())}
@@ -281,7 +281,7 @@ class Compare extends React.Component<CompareProps, CompareState> {
                     ) : null}
                     <Stack className='compare-modal-intermediate'>
                         {this._intermediates(items)}
-                        <Stack className='compare-yAxis'># Intermediate result</Stack>
+                        <Stack className='compare-yAxis fontColor333'># Intermediate result</Stack>
                     </Stack>
                     {showDetails && <Stack>{this._columns(items)}</Stack>}
                 </div>

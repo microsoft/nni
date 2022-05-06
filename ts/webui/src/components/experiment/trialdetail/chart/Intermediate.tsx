@@ -277,7 +277,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         notMerge={true} // update now
                         onEvents={IntermediateEvents}
                     />
-                    <div className='xAxis'># Intermediate result</div>
+                    <div className='fontColor333'># Intermediate result</div>
                 </div>
             </div>
         );

@@ -2,7 +2,8 @@
 # Licensed under the MIT license.
 
 import logging
-from typing import Dict, List, Callable, Optional
+from pathlib import Path
+from typing import Dict, List, Callable, Optional, Union
 
 from torch import Tensor
 from torch.nn import Module
@@ -105,14 +106,14 @@ class LinearPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import LinearPruner
+        >>> from nni.compression.pytorch.pruning import LinearPruner
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> finetuner = ...
         >>> pruner = LinearPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
@@ -170,14 +171,14 @@ class AGPPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import AGPPruner
+        >>> from nni.compression.pytorch.pruning import AGPPruner
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> finetuner = ...
         >>> pruner = AGPPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
@@ -248,14 +249,14 @@ class LotteryTicketPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import LotteryTicketPruner
+        >>> from nni.compression.pytorch.pruning import LotteryTicketPruner
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> finetuner = ...
         >>> pruner = LotteryTicketPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner, reset_weight=True)
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
 
     """
 
@@ -293,9 +294,9 @@ class SimulatedAnnealingPruner(IterativePruner):
 
     Parameters
     ----------
-    model : Module
+    model : Optional[Module]
         The origin unwrapped pytorch model to be pruned.
-    config_list : List[Dict]
+    config_list : Optional[List[Dict]]
         The origin config list provided by the user.
     evaluator : Callable[[Module], float]
         Evaluate the pruned model and give a score.
@@ -312,7 +313,7 @@ class SimulatedAnnealingPruner(IterativePruner):
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
     pruning_params : Dict
         If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
-    log_dir : str
+    log_dir : Union[str, Path]
         The log directory use to saving the result, you can find the best result under this folder.
     keep_intermediate_result : bool
         If keeping the intermediate result, including intermediate model and masks during each iteration.
@@ -325,7 +326,7 @@ class SimulatedAnnealingPruner(IterativePruner):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
+        >>> from nni.compression.pytorch.pruning import SimulatedAnnealingPruner
         >>> model = ...
         >>> config_list = [{'sparsity': 0.8, 'op_types': ['Conv2d']}]
         >>> evaluator = ...
@@ -334,12 +335,12 @@ class SimulatedAnnealingPruner(IterativePruner):
         >>> pruner.compress()
         >>> _, model, masks, _, _ = pruner.get_best_result()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py <examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py>`
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/simulated_anealing_pruning_torch.py <examples/model_compress/pruning/simulated_anealing_pruning_torch.py>`
     """
 
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: Callable[[Module], float], start_temperature: float = 100,
+    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]], evaluator: Callable[[Module], float], start_temperature: float = 100,
                  stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
-                 pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False, dummy_input: Optional[Tensor] = None):
         task_generator = SimulatedAnnealingTaskGenerator(origin_model=model,
                                                          origin_config_list=config_list,
@@ -350,7 +351,7 @@ class SimulatedAnnealingPruner(IterativePruner):
                                                          log_dir=log_dir,
                                                          keep_intermediate_result=keep_intermediate_result)
         if 'traced_optimizer' in pruning_params:
-            pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
+            pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])  # type: ignore
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)

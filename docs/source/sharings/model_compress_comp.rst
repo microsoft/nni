@@ -13,7 +13,7 @@ The experiments are performed with the following pruners/datasets/models:
 
 
 * 
-  Models: :githublink:`VGG16, ResNet18, ResNet50 <examples/model_compress/pruning/models/cifar10>`
+  Models: :githublink:`VGG16, ResNet18, ResNet50 <examples/model_compress/models/cifar10>`
 
 * 
   Datasets: CIFAR-10
@@ -35,7 +35,7 @@ The experiments are performed with the following pruners/datasets/models:
     For the pruners with scheduling, ``L1Filter Pruner`` is used as the base algorithm. That is to say, after the sparsities distribution is decided by the scheduling algorithm, ``L1Filter Pruner`` is used to performn real pruning.
 
   * 
-    All the pruners listed above are implemented in :githublink:`nni <docs/en_US/Compression/Overview.rst>`.
+    All the pruners listed above are implemented in :doc:`nni </compression/overview>`.
 
 Experiment Result
 -----------------
@@ -50,24 +50,24 @@ The experiment result are shown in the following figures:
 CIFAR-10, VGG16:
 
 
-.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_vgg16.png
-   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_vgg16.png
+.. image:: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_vgg16.png
+   :target: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_vgg16.png
    :alt: 
 
 
 CIFAR-10, ResNet18:
 
 
-.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet18.png
-   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet18.png
+.. image:: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_resnet18.png
+   :target: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_resnet18.png
    :alt: 
 
 
 CIFAR-10, ResNet50:
 
 
-.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet50.png
-   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet50.png
+.. image:: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_resnet50.png
+   :target: ../../../examples/model_compress/pruning/legacy/comparison_of_pruners/img/performance_comparison_resnet50.png
    :alt: 
 
 
@@ -88,22 +88,19 @@ Implementation Details
 ^^^^^^^^^^^^^^^^^^^^^^
 
 
-* 
-  The experiment results are all collected with the default configuration of the pruners in nni, which means that when we call a pruner class in nni, we don't change any default class arguments.
+* The experiment results are all collected with the default configuration of the pruners in nni, which means that when we call a pruner class in nni, we don't change any default class arguments.
 
-* 
-  Both FLOPs and the number of parameters are counted with :githublink:`Model FLOPs/Parameters Counter <docs/en_US/Compression/CompressionUtils.md#model-flopsparameters-counter>` after :githublink:`model speedup <docs/en_US/Compression/ModelSpeedup.rst>`.
+* Both FLOPs and the number of parameters are counted with :ref:`Model FLOPs/Parameters Counter <flops-counter>` after :doc:`model speedup </tutorials/pruning_speedup>`.
   This avoids potential issues of counting them of masked models.
 
-* 
-  The experiment code can be found :githublink:`here <examples/model_compress/pruning/auto_pruners_torch.py>`.
+* The experiment code can be found :githublink:`here <examples/model_compress/pruning/legacy/auto_pruners_torch.py>`.
 
 Experiment Result Rendering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 
-  If you follow the practice in the :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>`\ , for every single pruning experiment, the experiment result will be saved in JSON format as follows:
+  If you follow the practice in the :githublink:`example <examples/model_compress/pruning/legacy/auto_pruners_torch.py>`\ , for every single pruning experiment, the experiment result will be saved in JSON format as follows:
 
   .. code-block:: json
 
@@ -114,8 +111,8 @@ Experiment Result Rendering
        }
 
 * 
-  The experiment results are saved :githublink:`here <examples/model_compress/pruning/comparison_of_pruners>`. 
-  You can refer to :githublink:`analyze <examples/model_compress/pruning/comparison_of_pruners/analyze.py>` to plot new performance comparison figures.
+  The experiment results are saved :githublink:`here <examples/model_compress/pruning/legacy/comparison_of_pruners>`. 
+  You can refer to :githublink:`analyze <examples/model_compress/pruning/legacy/comparison_of_pruners/analyze.py>` to plot new performance comparison figures.
 
 Contribution
 ------------

@@ -28,7 +28,7 @@
     "mini-css-extract-plugin": "^1.6.0",
     "monaco-editor": "^0.25.0",
     "monaco-editor-webpack-plugin": "^4.0.0",
-    "node-sass": "^7.0.0",
+    "node-sass": "^7.0.1",
     "parcoord-es": "^2.2.10",
     "pnp-webpack-plugin": "^1.6.4",
     "postcss-flexbugs-fixes": "^5.0.2",
@@ -85,6 +85,7 @@
     "prettier": "^2.3.1",
     "stylelint": "^13.7.0",
     "stylelint-config-standard": "^22.0.0",
+    "trim-newlines": "^3.0.0",
     "typescript": "^4.3.2",
     "webpack-dev-server": ">=4.7.4"
   },

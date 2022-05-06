@@ -2,8 +2,11 @@
 {% if toctree and sidebars and 'globaltoc.html' in sidebars %}
   {% set toctree_nodes = derender_toc(toctree, False) %}
   <ul class="md-nav__list">
+    <li class="md-nav__item md-nav__overview">
+      <a href="{{ pathto('index')|e }}" class="md-nav__link{% if pagename == 'index' %} md-nav__link--active{% endif %}">{{ _('Overview') }}</a>
+    </li>
   {%- for item in toctree_nodes recursive %}
-    <li class="md-nav__item">
+    <li class="md-nav__item{% if item.children %} md-nav__expand{% endif %}">
     {% if "caption" in item %}
       <span class="md-nav__link caption">{{ item.caption }}</span>
     {% else %}
@@ -11,7 +14,12 @@
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     <label class="md-nav__link md-nav__link--active" for="__toc"> {{ item.contents }} </label>
     {% endif %}
-      <a href="{{ item.href|e }}" class="md-nav__link{% if item.current %} md-nav__link--active{% endif %}">{{ item.contents }}</a>
+      <a href="{{ item.href|e }}" class="md-nav__link{% if item.current %} md-nav__link--active{% endif %}">
+      {% if item.children %}
+        <span class="material-icons md-nav__tocarrow">&#xE5C5;</span>
+      {% endif %}
+      {{ item.contents }}
+      </a>
       {% if item.current %}
         {%- set sphinx_material_include_searchbox=False %}
         {% include "localtoc.html" %}

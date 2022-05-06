@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
 from threading import Thread
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Union, cast
 
 import colorama
 import psutil
@@ -19,11 +19,12 @@ import torch
 import torch.nn as nn
 import nni.runtime.log
 from nni.common.device import GPUDevice
-from nni.experiment import Experiment, launcher, management, rest
+from nni.experiment import Experiment, RunMode, launcher, management, rest
 from nni.experiment.config import utils
 from nni.experiment.config.base import ConfigBase
 from nni.experiment.config.training_service import TrainingServiceConfig
-from nni.experiment.pipe import Pipe
+from nni.experiment.config.training_services import RemoteConfig
+from nni.runtime.protocol import connect_websocket
 from nni.tools.nnictl.command_utils import kill_command
 
 from ..codegen import model_to_pytorch_script
@@ -34,7 +35,9 @@ from ..execution.utils import get_mutation_dict
 from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
-from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation, process_evaluator_mutations
+from ..nn.pytorch.mutator import (
+    extract_mutation_from_pt_module, process_inline_mutation, process_evaluator_mutations, process_oneshot_mutations
+)
 from ..oneshot.interface import BaseOneShotTrainer
 from ..serializer import is_model_wrapped
 from ..strategy import BaseStrategy
@@ -61,7 +64,7 @@ class RetiariiExeConfig(ConfigBase):
     batch_waiting_time: Optional[int] = None
     nni_manager_ip: Optional[str] = None
     debug: bool = False
-    log_level: Optional[str] = None
+    log_level: str = 'info'
     experiment_working_directory: utils.PathLike = '~/nni-experiments'
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
@@ -89,7 +92,7 @@ class RetiariiExeConfig(ConfigBase):
         if key == 'trial_code_directory' and not (str(value) == '.' or os.path.isabs(value)):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         if key == 'execution_engine':
-            assert value in ['base', 'py', 'cgo', 'benchmark'], f'The specified execution engine "{value}" is not supported.'
+            assert value in ['base', 'py', 'cgo', 'benchmark', 'oneshot'], f'The specified execution engine "{value}" is not supported.'
             self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + value
         self.__dict__[key] = value
 
@@ -118,9 +121,11 @@ _validation_rules = {
 }
 
 
-def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_input=None):
+def preprocess_model(base_model, evaluator, applied_mutators, full_ir=True, dummy_input=None, oneshot=False):
     # TODO: this logic might need to be refactored into execution engine
-    if full_ir:
+    if oneshot:
+        base_model_ir, mutators = process_oneshot_mutations(base_model, evaluator)
+    elif full_ir:
         try:
             script_module = torch.jit.script(base_model)
         except Exception as e:
@@ -137,17 +142,21 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_
         mutators = process_inline_mutation(base_model_ir)
     else:
         base_model_ir, mutators = extract_mutation_from_pt_module(base_model)
-    base_model_ir.evaluator = trainer
+    base_model_ir.evaluator = evaluator
 
     if mutators is not None and applied_mutators:
         raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
                            'do not use mutators when you use LayerChoice/InputChoice')
     if mutators is not None:
         applied_mutators = mutators
+
+    # Add mutations on evaluators
+    applied_mutators += process_evaluator_mutations(evaluator, applied_mutators)
+
     return base_model_ir, applied_mutators
 
 
-def debug_mutated_model(base_model, trainer, applied_mutators):
+def debug_mutated_model(base_model, evaluator, applied_mutators):
     """
     Locally run only one trial without launching an experiment for debug purpose, then exit.
     For example, it can be used to quickly check shape mismatch.
@@ -155,16 +164,18 @@ def debug_mutated_model(base_model, trainer, applied_mutators):
     Specifically, it applies mutators (default to choose the first candidate for the choices)
     to generate a new model, then run this model locally.
 
+    The model will be parsed with graph execution engine.
+
     Parameters
     ----------
     base_model : nni.retiarii.nn.pytorch.nn.Module
         the base model
-    trainer : nni.retiarii.evaluator
+    evaluator : nni.retiarii.graph.Evaluator
         the training class of the generated models
     applied_mutators : list
         a list of mutators that will be applied on the base model for generating a new model
     """
-    base_model_ir, applied_mutators = preprocess_model(base_model, trainer, applied_mutators)
+    base_model_ir, applied_mutators = preprocess_model(base_model, evaluator, applied_mutators)
     from ..strategy import _LocalDebugStrategy
     strategy = _LocalDebugStrategy()
     strategy.run(base_model_ir, applied_mutators)
@@ -172,21 +183,102 @@ def debug_mutated_model(base_model, trainer, applied_mutators):
 
 
 class RetiariiExperiment(Experiment):
-    def __init__(self, base_model: nn.Module, trainer: Union[Evaluator, BaseOneShotTrainer],
-                 applied_mutators: List[Mutator] = None, strategy: BaseStrategy = None):
+    """
+    The entry for a NAS experiment.
+    Users can use this class to start/stop or inspect an experiment, like exporting the results.
+
+    Experiment is a sub-class of :class:`nni.experiment.Experiment`, there are many similarities such as
+    configurable training service to distributed running the experiment on remote server.
+    But unlike :class:`nni.experiment.Experiment`, RetiariiExperiment doesn't support configure:
+
+    - ``trial_code_directory``, which can only be current working directory.
+    - ``search_space``, which is auto-generated in NAS.
+    - ``trial_command``, which must be ``python -m nni.retiarii.trial_entry`` to launch the modulized trial code.
+
+    RetiariiExperiment also doesn't have tuner/assessor/advisor, because they are also implemented in strategy.
+
+    Also, unlike :class:`nni.experiment.Experiment` which is bounded to a node server,
+    RetiariiExperiment optionally starts a node server to schedule the trials, when the strategy is a multi-trial strategy.
+    When the strategy is one-shot, the step of launching node server is omitted, and the experiment is run locally by default.
+
+    Configurations of experiments, such as execution engine, number of GPUs allocated,
+    should be put into a :class:`RetiariiExeConfig` and used as an argument of :meth:`RetiariiExperiment.run`.
+
+    Parameters
+    ----------
+    base_model : nn.Module
+        The model defining the search space / base skeleton without mutation.
+        It should be wrapped by decorator ``nni.retiarii.model_wrapper``.
+    evaluator : nni.retiarii.Evaluator, default = None
+        Evaluator for the experiment.
+        If you are using a one-shot trainer, it should be placed here, although this usage is deprecated.
+    applied_mutators : list of nni.retiarii.Mutator, default = None
+        Mutators os mutate the base model. If none, mutators are skipped.
+        Note that when ``base_model`` uses inline mutations (e.g., LayerChoice), ``applied_mutators`` must be empty / none.
+    strategy : nni.retiarii.strategy.BaseStrategy, default = None
+        Exploration strategy. Can be multi-trial or one-shot.
+    trainer : BaseOneShotTrainer
+        Kept for compatibility purposes.
+
+    Examples
+    --------
+    Multi-trial NAS:
+
+    >>> base_model = Net()
+    >>> search_strategy = strategy.Random()
+    >>> model_evaluator = FunctionalEvaluator(evaluate_model)
+    >>> exp = RetiariiExperiment(base_model, model_evaluator, [], search_strategy)
+    >>> exp_config = RetiariiExeConfig('local')
+    >>> exp_config.trial_concurrency = 2
+    >>> exp_config.max_trial_number = 20
+    >>> exp_config.training_service.use_active_gpu = False
+    >>> exp.run(exp_config, 8081)
+
+    One-shot NAS:
+
+    >>> base_model = Net()
+    >>> search_strategy = strategy.DARTS()
+    >>> evaluator = pl.Classification(train_dataloader=train_loader, val_dataloaders=valid_loader)
+    >>> exp = RetiariiExperiment(base_model, evaluator, [], search_strategy)
+    >>> exp_config = RetiariiExeConfig()
+    >>> exp_config.execution_engine = 'oneshot'  # must be set of one-shot strategy
+    >>> exp.run(exp_config)
+
+    Export top models:
+
+    >>> for model_dict in exp.export_top_models(formatter='dict'):
+    ...     print(model_dict)
+    >>> with nni.retarii.fixed_arch(model_dict):
+    ...     final_model = Net()
+    """
+
+    def __init__(self, base_model: nn.Module, evaluator: Union[BaseOneShotTrainer, Evaluator] = cast(Evaluator, None),
+                 applied_mutators: List[Mutator] = cast(List[Mutator], None), strategy: BaseStrategy = cast(BaseStrategy, None),
+                 trainer: BaseOneShotTrainer = cast(BaseOneShotTrainer, None)):
+        if trainer is not None:
+            warnings.warn('Usage of `trainer` in RetiariiExperiment is deprecated and will be removed soon. '
+                          'Please consider specifying it as a positional argument, or use `evaluator`.', DeprecationWarning)
+            evaluator = trainer
+
+        if evaluator is None:
+            raise ValueError('Evaluator should not be none.')
+
         # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
-        self.config: RetiariiExeConfig = None
+        self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
         self.port: Optional[int] = None
 
         self.base_model = base_model
-        self.trainer = trainer
+        self.evaluator: Union[Evaluator, BaseOneShotTrainer] = evaluator
         self.applied_mutators = applied_mutators
         self.strategy = strategy
 
-        self._dispatcher = RetiariiAdvisor()
+        from nni.retiarii.oneshot.pytorch.strategy import OneShotStrategy
+        if not isinstance(strategy, OneShotStrategy):
+            self._dispatcher = RetiariiAdvisor()
+        else:
+            self._dispatcher = cast(RetiariiAdvisor, None)
         self._dispatcher_thread: Optional[Thread] = None
         self._proc: Optional[Popen] = None
-        self._pipe: Optional[Pipe] = None
 
         self.url_prefix = None
 
@@ -199,11 +291,10 @@ class RetiariiExperiment(Experiment):
 
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
-            self.base_model, self.trainer, self.applied_mutators,
+            self.base_model, self.evaluator, self.applied_mutators,
             full_ir=self.config.execution_engine not in ['py', 'benchmark'],
             dummy_input=self.config.dummy_input
         )
-        self.applied_mutators += process_evaluator_mutations(self.trainer, self.applied_mutators)
 
         _logger.info('Start strategy...')
         search_space = dry_run_for_formatted_search_space(base_model_ir, self.applied_mutators)
@@ -238,7 +329,7 @@ class RetiariiExperiment(Experiment):
 
             assert self.config.training_service.platform == 'remote', \
                 "CGO execution engine currently only supports remote training service"
-            assert self.config.batch_waiting_time is not None
+            assert self.config.batch_waiting_time is not None and self.config.max_concurrency_cgo is not None
             devices = self._construct_devices()
             engine = CGOExecutionEngine(devices,
                                         max_concurrency=self.config.max_concurrency_cgo,
@@ -248,7 +339,10 @@ class RetiariiExperiment(Experiment):
             engine = PurePythonExecutionEngine()
         elif self.config.execution_engine == 'benchmark':
             from ..execution.benchmark import BenchmarkExecutionEngine
+            assert self.config.benchmark is not None, '"benchmark" must be set when benchmark execution engine is used.'
             engine = BenchmarkExecutionEngine(self.config.benchmark)
+        else:
+            raise ValueError(f'Unsupported engine type: {self.config.execution_engine}')
         set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()
@@ -259,9 +353,11 @@ class RetiariiExperiment(Experiment):
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        self._proc, self._pipe = launcher.start_experiment_retiarii(self.id, self.config, port, debug)
+        ws_url = f'ws://localhost:{port}/tuner'
+        self._proc = launcher.start_experiment('create', self.id, self.config, port, debug,  # type: ignore
+                                               RunMode.Background, None, ws_url, ['retiarii'])
         assert self._proc is not None
-        assert self._pipe is not None
+        connect_websocket(ws_url)
 
         self.port = port  # port will be None if start up failed
 
@@ -290,9 +386,10 @@ class RetiariiExperiment(Experiment):
     def _construct_devices(self):
         devices = []
         if hasattr(self.config.training_service, 'machine_list'):
-            for machine in self.config.training_service.machine_list:
+            for machine in cast(RemoteConfig, self.config.training_service).machine_list:
                 assert machine.gpu_indices is not None, \
                     'gpu_indices must be set in RemoteMachineConfig for CGO execution engine'
+                assert isinstance(machine.gpu_indices, list), 'gpu_indices must be a list'
                 for gpu_idx in machine.gpu_indices:
                     devices.append(GPUDevice(machine.host, gpu_idx))
         return devices
@@ -300,13 +397,28 @@ class RetiariiExperiment(Experiment):
     def _create_dispatcher(self):
         return self._dispatcher
 
-    def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
+    def run(self, config: Optional[RetiariiExeConfig] = None, port: int = 8080, debug: bool = False) -> None:
         """
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        if isinstance(self.trainer, BaseOneShotTrainer):
-            self.trainer.fit()
+        if isinstance(self.evaluator, BaseOneShotTrainer):
+            # TODO: will throw a deprecation warning soon
+            # warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
+            #               'We will try to convert this trainer to our new implementation to run the algorithm. '
+            #               'In case you want to stick to the old implementation, '
+            #               'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
+            self.evaluator.fit()
+
+        if config is None:
+            warnings.warn('config = None is deprecate in future. If you are running a one-shot experiment, '
+                          'please consider creating a config and set execution engine to `oneshot`.', DeprecationWarning)
+            config = RetiariiExeConfig()
+            config.execution_engine = 'oneshot'
+
+        if config.execution_engine == 'oneshot':
+            base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
+            self.strategy.run(base_model_ir, self.applied_mutators)
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'
             self.config = config
@@ -318,6 +430,7 @@ class RetiariiExperiment(Experiment):
         This function will block until experiment finish or error.
         Return `True` when experiment done; or return `False` when experiment failed.
         """
+        assert self._proc is not None
         try:
             while True:
                 time.sleep(10)
@@ -335,6 +448,7 @@ class RetiariiExperiment(Experiment):
             _logger.warning('KeyboardInterrupt detected')
         finally:
             self.stop()
+        raise RuntimeError('Check experiment status failed.')
 
     def stop(self) -> None:
         """
@@ -361,14 +475,10 @@ class RetiariiExperiment(Experiment):
                 _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
                 kill_command(self._proc.pid)
 
-        if self._pipe is not None:
-            self._pipe.close()
-
-        self.id = None
-        self.port = None
+        self.id = cast(str, None)
+        self.port = cast(int, None)
         self._proc = None
-        self._pipe = None
-        self._dispatcher = None
+        self._dispatcher = cast(RetiariiAdvisor, None)
         self._dispatcher_thread = None
         _logger.info('Experiment stopped')
 
@@ -393,10 +503,14 @@ class RetiariiExperiment(Experiment):
         """
         if formatter == 'code':
             assert self.config.execution_engine != 'py', 'You should use `dict` formatter when using Python execution engine.'
-        if isinstance(self.trainer, BaseOneShotTrainer):
+        if isinstance(self.evaluator, BaseOneShotTrainer):
             assert top_k == 1, 'Only support top_k is 1 for now.'
-            return self.trainer.export()
-        else:
+            return self.evaluator.export()
+        try:
+            # this currently works for one-shot algorithms
+            return self.strategy.export_top_models(top_k=top_k)
+        except NotImplementedError:
+            # when strategy hasn't implemented its own export logic
             all_models = filter(lambda m: m.metric is not None, list_models())
             assert optimize_mode in ['maximize', 'minimize']
             all_models = sorted(all_models, key=lambda m: m.metric, reverse=optimize_mode == 'maximize')

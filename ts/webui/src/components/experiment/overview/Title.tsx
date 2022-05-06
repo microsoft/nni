@@ -8,7 +8,7 @@ export const Title = (): any => (
         {(value): React.ReactNode => (
             <Stack horizontal className='panelTitle'>
                 <Icon iconName={value.icon} />
-                <span>{value.text}</span>
+                <span className='fontColor333'>{value.text}</span>
             </Stack>
         )}
     </TitleContext.Consumer>

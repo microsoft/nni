@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import argparse
 import re
 
@@ -17,7 +20,7 @@ def parse_arch_str(arch_str):
         'nor_conv_3x3': CONV_3X3,
         'avg_pool_3x3': AVG_POOL_3X3
     }
-    m = re.match(r'\|(.*)~0\|\+\|(.*)~0\|(.*)~1\|\+\|(.*)~0\|(.*)~1\|(.*)~2\|', arch_str)
+    m: re.Match = re.match(r'\|(.*)~0\|\+\|(.*)~0\|(.*)~1\|\+\|(.*)~0\|(.*)~1\|(.*)~2\|', arch_str)  # type: ignore
     return {
         '0_1': mp[m.group(1)],
         '0_2': mp[m.group(2)],

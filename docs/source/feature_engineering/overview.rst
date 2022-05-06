@@ -1,13 +1,15 @@
 Feature Engineering with NNI
 ============================
 
-We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on user feedback. We'd like to invite you to use, feedback and even contribute.
+.. note::
+
+    We are glad to announce the alpha release for Feature Engineering toolkit on top of NNI, it's still in the experiment phase which might evolve based on user feedback. We'd like to invite you to use, feedback and even contribute.
 
 For now, we support the following feature selector:
 
 
-* `GradientFeatureSelector <./gradient_feature_selector.rst>`__
-* `GBDTSelector <./gbdt_selector.rst>`__
+* :doc:`GradientFeatureSelector <./gradient_feature_selector>`
+* :doc:`GBDTSelector <./gbdt_selector>`
 
 These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
 
@@ -307,13 +309,3 @@ Benchmark
 The dataset of benchmark could be download in `here <https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/>`__
 
 The code could be refenrence ``/examples/feature_engineering/gradient_feature_selector/benchmark_test.py``.
-
-Reference and Feedback
-----------------------
-
-
-* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__ for this feature in GitHub;
-* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__ for this feature in GitHub;
-* To know more about :githublink:`Neural Architecture Search with NNI <docs/en_US/NAS/Overview.rst>`\ ;
-* To know more about :githublink:`Model Compression with NNI <docs/en_US/Compression/Overview.rst>`\ ;
-* To know more about :githublink:`Hyperparameter Tuning with NNI <docs/en_US/Tuner/BuiltinTuner.rst>`\ ;

@@ -195,7 +195,7 @@ describe('Unit Test for TrialDispatcher', () => {
         chai.should();
         chai.use(chaiAsPromised);
         prepareUnitTest();
-        log = getLogger();
+        log = getLogger('unittest');
     });
 
     after(() => {

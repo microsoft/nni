@@ -10,7 +10,7 @@ from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper as Pr
 from .utils import get_module_by_name
 
 
-__all__ = ['ChannelDependency', 'GroupDependency',
+__all__ = ['ChannelDependency', 'GroupDependency', 'ReshapeDependency',
            'InputChannelDependency', 'AttentionWeightDependency']
 
 

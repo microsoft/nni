@@ -8,7 +8,7 @@ It's called ``nasnet.py`` simply because NASNet is the first to propose such str
 """
 
 from collections import OrderedDict
-from typing import Tuple, List, Union, Iterable, Dict, Callable
+from typing import Tuple, List, Union, Iterable, Dict, Callable, Optional, cast
 
 try:
     from typing import Literal
@@ -250,14 +250,14 @@ class CellPreprocessor(nn.Module):
     See :class:`CellBuilder` on how to calculate those channel numbers.
     """
 
-    def __init__(self, C_pprev: int, C_prev: int, C: int, last_cell_reduce: bool) -> None:
+    def __init__(self, C_pprev: nn.MaybeChoice[int], C_prev: nn.MaybeChoice[int], C: nn.MaybeChoice[int], last_cell_reduce: bool) -> None:
         super().__init__()
 
         if last_cell_reduce:
-            self.pre0 = FactorizedReduce(C_pprev, C)
+            self.pre0 = FactorizedReduce(cast(int, C_pprev), cast(int, C))
         else:
-            self.pre0 = ReLUConvBN(C_pprev, C, 1, 1, 0)
-        self.pre1 = ReLUConvBN(C_prev, C, 1, 1, 0)
+            self.pre0 = ReLUConvBN(cast(int, C_pprev), cast(int, C), 1, 1, 0)
+        self.pre1 = ReLUConvBN(cast(int, C_prev), cast(int, C), 1, 1, 0)
 
     def forward(self, cells):
         assert len(cells) == 2
@@ -283,15 +283,19 @@ class CellBuilder:
     Note that the builder is ephemeral, it can only be called once for every index.
     """
 
-    def __init__(self, op_candidates: List[str], C_prev_in: int, C_in: int, C: int,
-                 num_nodes: int, merge_op: Literal['all', 'loose_end'],
+    def __init__(self, op_candidates: List[str],
+                 C_prev_in: nn.MaybeChoice[int],
+                 C_in: nn.MaybeChoice[int],
+                 C: nn.MaybeChoice[int],
+                 num_nodes: int,
+                 merge_op: Literal['all', 'loose_end'],
                  first_cell_reduce: bool, last_cell_reduce: bool):
         self.C_prev_in = C_prev_in      # This is the out channels of the cell before last cell.
         self.C_in = C_in                # This is the out channesl of last cell.
         self.C = C                      # This is NOT C_out of this stage, instead, C_out = C * len(cell.output_node_indices)
         self.op_candidates = op_candidates
         self.num_nodes = num_nodes
-        self.merge_op = merge_op
+        self.merge_op: Literal['all', 'loose_end'] = merge_op
         self.first_cell_reduce = first_cell_reduce
         self.last_cell_reduce = last_cell_reduce
         self._expect_idx = 0
@@ -312,7 +316,7 @@ class CellBuilder:
         # self.C_prev_in, self.C_in, self.last_cell_reduce are updated after each cell is built.
         preprocessor = CellPreprocessor(self.C_prev_in, self.C_in, self.C, self.last_cell_reduce)
 
-        ops_factory: Dict[str, Callable[[int, int, int], nn.Module]] = {
+        ops_factory: Dict[str, Callable[[int, int, Optional[int]], nn.Module]] = {
             op:  # make final chosen ops named with their aliases
             lambda node_index, op_index, input_index:
             OPS[op](self.C, 2 if is_reduction_cell and (
@@ -353,7 +357,7 @@ _INIT_PARAMETER_DOCS = """
 
 
 class NDS(nn.Module):
-    """
+    __doc__ = """
     The unified version of NASNet search space.
 
     We follow the implementation in
@@ -378,8 +382,8 @@ class NDS(nn.Module):
                  op_candidates: List[str],
                  merge_op: Literal['all', 'loose_end'] = 'all',
                  num_nodes_per_cell: int = 4,
-                 width: Union[Tuple[int], int] = 16,
-                 num_cells: Union[Tuple[int], int] = 20,
+                 width: Union[Tuple[int, ...], int] = 16,
+                 num_cells: Union[Tuple[int, ...], int] = 20,
                  dataset: Literal['cifar', 'imagenet'] = 'imagenet',
                  auxiliary_loss: bool = False):
         super().__init__()
@@ -394,30 +398,31 @@ class NDS(nn.Module):
         else:
             C = width
 
+        self.num_cells: nn.MaybeChoice[int] = cast(int, num_cells)
         if isinstance(num_cells, Iterable):
-            num_cells = nn.ValueChoice(list(num_cells), label='depth')
-        num_cells_per_stage = [i * num_cells // 3 - (i - 1) * num_cells // 3 for i in range(3)]
+            self.num_cells = nn.ValueChoice(list(num_cells), label='depth')
+        num_cells_per_stage = [i * self.num_cells // 3 - (i - 1) * self.num_cells // 3 for i in range(3)]
 
         # auxiliary head is different for network targetted at different datasets
         if dataset == 'imagenet':
             self.stem0 = nn.Sequential(
-                nn.Conv2d(3, C // 2, kernel_size=3, stride=2, padding=1, bias=False),
-                nn.BatchNorm2d(C // 2),
+                nn.Conv2d(3, cast(int, C // 2), kernel_size=3, stride=2, padding=1, bias=False),
+                nn.BatchNorm2d(cast(int, C // 2)),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(C // 2, C, 3, stride=2, padding=1, bias=False),
+                nn.Conv2d(cast(int, C // 2), cast(int, C), 3, stride=2, padding=1, bias=False),
                 nn.BatchNorm2d(C),
             )
             self.stem1 = nn.Sequential(
                 nn.ReLU(inplace=True),
-                nn.Conv2d(C, C, 3, stride=2, padding=1, bias=False),
+                nn.Conv2d(cast(int, C), cast(int, C), 3, stride=2, padding=1, bias=False),
                 nn.BatchNorm2d(C),
             )
             C_pprev = C_prev = C_curr = C
             last_cell_reduce = True
         elif dataset == 'cifar':
             self.stem = nn.Sequential(
-                nn.Conv2d(3, 3 * C, 3, padding=1, bias=False),
-                nn.BatchNorm2d(3 * C)
+                nn.Conv2d(3, cast(int, 3 * C), 3, padding=1, bias=False),
+                nn.BatchNorm2d(cast(int, 3 * C))
             )
             C_pprev = C_prev = 3 * C
             C_curr = C
@@ -439,7 +444,7 @@ class NDS(nn.Module):
             # C_pprev is output channel number of last second cell among all the cells already built.
             if len(stage) > 1:
                 # Contains more than one cell
-                C_pprev = len(stage[-2].output_node_indices) * C_curr
+                C_pprev = len(cast(nn.Cell, stage[-2]).output_node_indices) * C_curr
             else:
                 # Look up in the out channels of last stage.
                 C_pprev = C_prev
@@ -447,7 +452,7 @@ class NDS(nn.Module):
             # This was originally,
             # C_prev = num_nodes_per_cell * C_curr.
             # but due to loose end, it becomes,
-            C_prev = len(stage[-1].output_node_indices) * C_curr
+            C_prev = len(cast(nn.Cell, stage[-1]).output_node_indices) * C_curr
 
             # Useful in aligning the pprev and prev cell.
             last_cell_reduce = cell_builder.last_cell_reduce
@@ -457,11 +462,11 @@ class NDS(nn.Module):
 
         if auxiliary_loss:
             assert isinstance(self.stages[2], nn.Sequential), 'Auxiliary loss can only be enabled in retrain mode.'
-            self.stages[2] = SequentialBreakdown(self.stages[2])
-            self.auxiliary_head = AuxiliaryHead(C_to_auxiliary, self.num_labels, dataset=self.dataset)
+            self.stages[2] = SequentialBreakdown(cast(nn.Sequential, self.stages[2]))
+            self.auxiliary_head = AuxiliaryHead(C_to_auxiliary, self.num_labels, dataset=self.dataset)  # type: ignore
 
         self.global_pooling = nn.AdaptiveAvgPool2d((1, 1))
-        self.classifier = nn.Linear(C_prev, self.num_labels)
+        self.classifier = nn.Linear(cast(int, C_prev), self.num_labels)
 
     def forward(self, inputs):
         if self.dataset == 'imagenet':
@@ -483,7 +488,7 @@ class NDS(nn.Module):
         out = self.global_pooling(s1)
         logits = self.classifier(out.view(out.size(0), -1))
         if self.training and self.auxiliary_loss:
-            return logits, logits_aux
+            return logits, logits_aux  # type: ignore
         else:
             return logits
 
@@ -524,8 +529,8 @@ class NASNet(NDS):
     ]
 
     def __init__(self,
-                 width: Union[Tuple[int], int] = (16, 24, 32),
-                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 width: Union[Tuple[int, ...], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
                  auxiliary_loss: bool = False):
         super().__init__(self.NASNET_OPS,
@@ -555,8 +560,8 @@ class ENAS(NDS):
     ]
 
     def __init__(self,
-                 width: Union[Tuple[int], int] = (16, 24, 32),
-                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 width: Union[Tuple[int, ...], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
                  auxiliary_loss: bool = False):
         super().__init__(self.ENAS_OPS,
@@ -590,8 +595,8 @@ class AmoebaNet(NDS):
     ]
 
     def __init__(self,
-                 width: Union[Tuple[int], int] = (16, 24, 32),
-                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 width: Union[Tuple[int, ...], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
                  auxiliary_loss: bool = False):
 
@@ -626,8 +631,8 @@ class PNAS(NDS):
     ]
 
     def __init__(self,
-                 width: Union[Tuple[int], int] = (16, 24, 32),
-                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 width: Union[Tuple[int, ...], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
                  auxiliary_loss: bool = False):
         super().__init__(self.PNAS_OPS,
@@ -660,8 +665,8 @@ class DARTS(NDS):
     ]
 
     def __init__(self,
-                 width: Union[Tuple[int], int] = (16, 24, 32),
-                 num_cells: Union[Tuple[int], int] = (4, 8, 12, 16, 20),
+                 width: Union[Tuple[int, ...], int] = (16, 24, 32),
+                 num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
                  auxiliary_loss: bool = False):
         super().__init__(self.DARTS_OPS,

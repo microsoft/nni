@@ -81,6 +81,7 @@
 }
 
 .tooldetailAccuracy {
+    -webkit-user-select: text;
     user-select: text;
     min-width: 245px;
     max-width: 350px;
@@ -110,7 +111,6 @@
         position: absolute;
         left: 48%;
         top: 30%;
-        color: #333;
     }
 }
 
@@ -127,7 +127,6 @@
     position: relative;
 
     .xAxis {
-        color: #333;
         position: absolute;
         left: 50%;
         top: 88%;

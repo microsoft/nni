@@ -1,5 +1,5 @@
-NNI Experiment
-==============
+Overview of NNI Experiment
+==========================
 
 An NNI experiment is a unit of one tuning process. For example, it is one run of hyper-parameter tuning on a specific search space, it is one run of neural architecture search on a search space, or it is one run of automatic model compression on user specified goal on latency and accuracy. Usually, the tuning process requires many trials to explore feasible and potentially good-performing models. Thus, an important component of NNI experiment is **training service**, which is a unified interface to abstract diverse computation resources (e.g., local machine, remote servers, AKS). Users can easily run the tuning process on their prefered computation resource and platform. On the other hand, NNI experiment provides **WebUI** to visualize the tuning process to users.
 
@@ -11,11 +11,8 @@ The relation of the components in NNI experiment is illustrated in the following
    :scale: 80 %
    :align: center
 
-Before reading the following content, you are recommended to go through the quick start first.
+Before reading the following content, you are recommended to go through either :doc:`the quickstart of HPO </tutorials/hpo_quickstart_pytorch/main>` or :doc:`quickstart of NAS </tutorials/hello_nas>` first.
 
-..  toctree::
-    :maxdepth: 2
-
-    Training Services <training_service>
-    Web Portal <web_portal>
-    Experiment Management <exp_management>
+* :doc:`Overview of NNI training service <training_service/overview>`
+* :doc:`Introduction to Web Portal <web_portal/web_portal>`
+* :doc:`Manange Multiple Experiments <experiment_management>`

@@ -42,16 +42,37 @@ function hide_nav() {
     }
 }
 
-function hide_toc_header() {
-    const d = $(".md-nav__title.md-nav__title--site");
-    // https://stackoverflow.com/questions/11362085/jquery-get-text-for-element-without-children-text
-    const pageTitle = $("#index--page-root").clone().children().remove().end().text();
-    if (d.text().trim() == pageTitle) {
-        d.hide();
+// Expand link
+function expand_link() {
+    // on load, collapse all links without active on the inside
+    $(".md-nav__expand").filter(function (index) {
+        return $(".md-nav__link--active", this).length >= 1;
+    }).addClass("md-nav__expand--active");
+
+    function toggleExpand(event) {
+        event.preventDefault();
+
+        $(event.target)
+            .closest(".md-nav__expand")
+            .toggleClass("md-nav__expand--active");
+
+        return false;
     }
+
+    // bind click events
+    $(".md-nav__expand > a").click(toggleExpand);
+    $(".md-nav__expand > a > .md-nav__tocarrow").click(toggleExpand);
+}
+
+// Propagate card link from another element
+function propagate_card_link() {
+    $(".card-link-clickable").each(function() {
+        $(this).attr("href", $(this).next("a.reference").attr("href"));
+    });
 }
 
 $(document).ready(function() {
     hide_nav();
-    hide_toc_header();
+    expand_link();
+    propagate_card_link();
 });

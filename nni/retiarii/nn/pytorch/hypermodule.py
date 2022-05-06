@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from packaging.version import Version
 import torch
 import torch.nn as nn
@@ -233,7 +235,7 @@ class AutoActivation(nn.Module):
     -----
     Current `beta` is not per-channel parameter.
     """
-    def __init__(self, unit_num: int = 1, label: str = None):
+    def __init__(self, unit_num: int = 1, label: str | None = None):
         super().__init__()
         self._label = generate_new_label(label)
         self.unaries = nn.ModuleList()

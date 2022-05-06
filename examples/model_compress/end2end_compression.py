@@ -15,7 +15,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms
 
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils import count_flops_params
 from nni.compression.pytorch import ModelSpeedup
 
 from nni.algorithms.compression.pytorch.pruning import L1FilterPruner

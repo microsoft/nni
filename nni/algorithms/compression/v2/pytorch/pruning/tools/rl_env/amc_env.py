@@ -11,7 +11,7 @@ from torch import Tensor
 from torch.nn import Module
 
 from nni.algorithms.compression.v2.pytorch.utils import config_list_canonical
-from nni.compression.pytorch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils import count_flops_params
 
 _logger = logging.getLogger(__name__)
 
@@ -38,8 +38,8 @@ class AMCEnv:
         assert target in ['flops', 'params']
         self.target = target
 
-        self.origin_target, self.origin_params_num, self.origin_statistics = count_flops_params(model, dummy_input, verbose=False)
-        self.origin_statistics = {result['name']: result for result in self.origin_statistics}
+        self.origin_target, self.origin_params_num, origin_statistics = count_flops_params(model, dummy_input, verbose=False)
+        self.origin_statistics = {result['name']: result for result in origin_statistics}
 
         self.under_pruning_target = sum([self.origin_statistics[name][self.target] for name in self.pruning_op_names])
         self.excepted_pruning_target = self.total_sparsity * self.under_pruning_target

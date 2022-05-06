@@ -4,7 +4,7 @@ CWD=${PWD}
 
 echo ""
 echo "===========================Testing: pruning and speedup==========================="
-cd ${CWD}/../examples/model_compress/pruning
+cd ${CWD}/../examples/model_compress/pruning/legacy
 
 echo "testing fpgm pruning and speedup..."
 python3 basic_pruners_torch.py --pruner fpgm --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10

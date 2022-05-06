@@ -26,6 +26,7 @@ div.sphx-glr-footer {
 
 .sphx-glr-download-link-note {
     margin-bottom: 1.5rem;
+    line-height: 2.5rem;
 }
 
 .notebook-action-div {
@@ -81,6 +82,11 @@ div.sphx-glr-footer {
     margin-top: 0.3rem;
     margin-bottom: 0.5rem;
     font-size: 0.75rem;
+}
+
+/* hide link */
+.card-link-anchor {
+    display: none;
 }
 
 .card-link-tag {
