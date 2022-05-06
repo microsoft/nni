@@ -53,6 +53,19 @@ steps:
     echo '===== recommended ====='
     python -m pip install -r dependencies/recommended.txt
   displayName: Install Python dependencies
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'gpu')))
+
+- script: |
+    echo '===== develop ====='
+    python -m pip install -r dependencies/develop.txt
+    echo '===== required ====='
+    python -m pip install -r dependencies/required.txt
+    echo '===== required extra ====='
+    python -m pip install -r dependencies/required_extra.txt
+    echo '===== recommended ====='
+    python -m pip install -r dependencies/recommended_gpu.txt
+  displayName: Install Python dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu'))
 
 # TODO: Delete this after upgrading to PyTorch 1.11.
 - script: |

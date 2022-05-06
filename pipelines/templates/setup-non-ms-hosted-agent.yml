@@ -2,6 +2,26 @@ steps:
 
 # OS from VMSS is very clean... Need to install basic utilities.
 
+# Build essentials are required.
+
+- script: |
+    set -e
+    sudo apt update
+    sudo apt install -y build-essential
+  displayName: Install build essential
+
+# VM with GPU needs to install drivers.
+
+- script: |
+    set -e
+    sudo apt install linux-headers-$(uname -r) -y
+    sudo wget -O /etc/apt/preferences.d/cuda-repository-pin-600 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+    sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
+    sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+    sudo apt update
+    sudo apt install cuda-drivers
+  displayName: Install CUDA
+
 # UsePythonVersion task only works when the specific Python version is already installed.
 
 # The following is for linux.
