@@ -11,10 +11,11 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.9
-    displayName: (latest) Configure Python version
+  - template: templates/setup-non-ms-hosted-agent.yml
+
+  - template: templates/config-version.yml
+    parameters:
+      platform: ubuntu-latest
 
   - script: |
       echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
