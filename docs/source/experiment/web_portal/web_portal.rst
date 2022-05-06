@@ -24,7 +24,6 @@ What should you do when you think the chart is strange, such as ``Default metric
 
 
 .. image:: ../../../img/webui-img/summary.png
-   :target: ../../../img/webui-img/summary.png
    :alt: summary
 
 
