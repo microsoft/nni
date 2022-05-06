@@ -3,6 +3,14 @@ trigger: none
 stages:
 - stage: lint
   jobs:
+
+  - job: copyright
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - script: python test/vso_tools/copyright_check.py
+      displayName: Check copyright header
+
   - job: docs
     pool:
       vmImage: ubuntu-latest
