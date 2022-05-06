@@ -121,7 +121,7 @@ class SerializableObject(Traceable):  # should be (Generic[T], Traceable), but c
     Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
     """
 
-    def __init__(self, symbol: T, args: List[Any], kwargs: Dict[str, Any], call_super: bool = False):
+    def __init__(self, symbol: Type, args: List[Any], kwargs: Dict[str, Any], call_super: bool = False):
         # use dict to avoid conflicts with user's getattr and setattr
         self.__dict__['_nni_symbol'] = symbol
         self.__dict__['_nni_args'] = args
@@ -135,19 +135,19 @@ class SerializableObject(Traceable):  # should be (Generic[T], Traceable), but c
                 **{kw: _argument_processor(arg) for kw, arg in kwargs.items()}
             )
 
-    def trace_copy(self: T) -> Union[T, 'SerializableObject']:
+    def trace_copy(self) -> 'SerializableObject':
         return SerializableObject(
             self.trace_symbol,
             [copy.copy(arg) for arg in self.trace_args],
             {k: copy.copy(v) for k, v in self.trace_kwargs.items()},
         )
 
-    def get(self: T) -> T:
+    def get(self) -> Any:
         if not self._get_nni_attr('call_super'):
             # Reinitialize
             return trace(self.trace_symbol)(*self.trace_args, **self.trace_kwargs)
 
-        return cast(T, self)
+        return self
 
     @property
     def trace_symbol(self) -> Any:
