@@ -4,25 +4,25 @@
 from __future__ import annotations
 
 import logging
-import os
+
 import warnings
-from dataclasses import dataclass
-from pathlib import Path
 from subprocess import Popen
 from threading import Thread
-from typing import Any, List, Optional, Union, cast, overload
+from typing import Any, List, Optional, Union, cast
 
 import colorama
+import psutil
+from typing_extensions import Literal
+
 import torch
 import torch.nn as nn
-from nni.common.device import GPUDevice
-from nni.experiment import Experiment, RunMode
-from nni.experiment.config import utils
-from nni.experiment.config.base import ConfigBase
-from nni.experiment.config.training_service import TrainingServiceConfig
-from nni.experiment.config.training_services import RemoteConfig
+from nni.retiarii.experiment.config.engine_config import *
+import nni.runtime.log
+from nni.experiment import Experiment, RunMode, launcher, management
+from nni.experiment.config import ExperimentConfig
 from nni.runtime.protocol import connect_websocket
 
+from .config import RetiariiExeConfig, OneshotEngineConfig
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
@@ -43,79 +43,7 @@ from ..strategy.utils import dry_run_for_formatted_search_space
 _logger = logging.getLogger(__name__)
 
 
-__all__ = ['RetiariiExeConfig', 'RetiariiExperiment']
-
-
-@dataclass(init=False)
-class RetiariiExeConfig(ConfigBase):
-    experiment_name: Optional[str] = None
-    search_space: Any = ''  # TODO: remove
-    trial_command: str = '_reserved'
-    trial_code_directory: utils.PathLike = '.'
-    trial_concurrency: int
-    trial_gpu_number: int = 0
-    devices: Optional[List[Union[str, GPUDevice]]] = None
-    max_experiment_duration: Optional[str] = None
-    max_trial_number: Optional[int] = None
-    max_concurrency_cgo: Optional[int] = None
-    batch_waiting_time: Optional[int] = None
-    nni_manager_ip: Optional[str] = None
-    debug: bool = False
-    log_level: str = 'info'
-    experiment_working_directory: utils.PathLike = '~/nni-experiments'
-    # remove configuration of tuner/assessor/advisor
-    training_service: TrainingServiceConfig
-    execution_engine: str = 'py'
-
-    # input used in GraphConverterWithShape. Currently support shape tuple only.
-    dummy_input: Optional[List[int]] = None
-
-    # input used for benchmark engine.
-    benchmark: Optional[str] = None
-
-    def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
-        super().__init__(**kwargs)
-        if training_service_platform is not None:
-            assert 'training_service' not in kwargs
-            self.training_service = utils.training_service_config_factory(platform=training_service_platform)
-        self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry py'
-
-    def __setattr__(self, key, value):
-        fixed_attrs = {'search_space': '',
-                       'trial_command': '_reserved'}
-        if key in fixed_attrs and fixed_attrs[key] != value:
-            raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
-        # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
-        if key == 'trial_code_directory' and not (str(value) == '.' or os.path.isabs(value)):
-            raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
-        if key == 'execution_engine':
-            assert value in ['base', 'py', 'cgo', 'benchmark', 'oneshot'], f'The specified execution engine "{value}" is not supported.'
-            self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + value
-        self.__dict__[key] = value
-
-    def validate(self, initialized_tuner: bool = False) -> None:
-        super().validate()
-
-    @property
-    def _canonical_rules(self):
-        return _canonical_rules
-
-    @property
-    def _validation_rules(self):
-        return _validation_rules
-
-
-_canonical_rules = {
-}
-
-_validation_rules = {
-    'trial_code_directory': lambda value: (Path(value).is_dir(), f'"{value}" does not exist or is not directory'),
-    'trial_concurrency': lambda value: value > 0,
-    'trial_gpu_number': lambda value: value >= 0,
-    'max_trial_number': lambda value: value > 0,
-    'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
-    'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
-}
+__all__ = ['RetiariiExperiment', 'NasExperiment']
 
 
 def preprocess_model(base_model, evaluator, applied_mutators, full_ir=True, dummy_input=None, oneshot=False):
@@ -252,6 +180,8 @@ class RetiariiExperiment(Experiment):
     def __init__(self, base_model: nn.Module, evaluator: Union[BaseOneShotTrainer, Evaluator] = cast(Evaluator, None),
                  applied_mutators: List[Mutator] = cast(List[Mutator], None), strategy: BaseStrategy = cast(BaseStrategy, None),
                  trainer: BaseOneShotTrainer = cast(BaseOneShotTrainer, None)):
+        nni.runtime.log.init_logger_for_command_line()
+
         if trainer is not None:
             warnings.warn('Usage of `trainer` in RetiariiExperiment is deprecated and will be removed soon. '
                           'Please consider specifying it as a positional argument, or use `evaluator`.', DeprecationWarning)
@@ -259,6 +189,13 @@ class RetiariiExperiment(Experiment):
 
         if evaluator is None:
             raise ValueError('Evaluator should not be none.')
+
+        self.config: RetiariiExeConfig | None = None
+        self.id: str = management.generate_experiment_id()
+        self.port: int | None = None
+        self._proc: Popen | psutil.Process | None = None
+        self._action: Literal['create', 'resume', 'view'] = 'create'
+        self.url_prefix: str | None = None
 
         # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
         self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
@@ -289,8 +226,8 @@ class RetiariiExperiment(Experiment):
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
             self.base_model, self.evaluator, self.applied_mutators,
-            full_ir=self.config.execution_engine not in ['py', 'benchmark'],
-            dummy_input=self.config.dummy_input
+            full_ir=not isinstance(self.config.execution_engine, (PyEngineConfig, BenchmarkEngineConfig)),
+            dummy_input=self.config.execution_engine.dummy_input if hasattr(self.config.execution_engine, 'dummy_input') else None
         )
 
         _logger.info('Start strategy...')
@@ -303,23 +240,22 @@ class RetiariiExperiment(Experiment):
 
     def _create_execution_engine(self) -> AbstractExecutionEngine:
         # we will probably need a execution engine factory to make this clean and elegant
-        if self.config.execution_engine == 'base':
+        if isinstance(self.config.execution_engine, BaseEngineConfig):
             from ..execution.base import BaseExecutionEngine
             engine = BaseExecutionEngine()
-        elif self.config.execution_engine == 'cgo':
+        elif isinstance(self.config.execution_engine, CgoEngineConfig):
             from ..execution.cgo_engine import CGOExecutionEngine
 
             assert self.config.training_service.platform == 'remote', \
                 "CGO execution engine currently only supports remote training service"
             assert self.config.batch_waiting_time is not None and self.config.max_concurrency_cgo is not None
-            devices = self._construct_devices()
-            engine = CGOExecutionEngine(devices,
+            engine = CGOExecutionEngine(self.config.training_service,
                                         max_concurrency=self.config.max_concurrency_cgo,
                                         batch_waiting_time=self.config.batch_waiting_time)
-        elif self.config.execution_engine == 'py':
+        elif isinstance(self.config.execution_engine, PyEngineConfig):
             from ..execution.python import PurePythonExecutionEngine
             engine = PurePythonExecutionEngine()
-        elif self.config.execution_engine == 'benchmark':
+        elif isinstance(self.config.execution_engine, BenchmarkEngineConfig):
             from ..execution.benchmark import BenchmarkExecutionEngine
             assert self.config.benchmark is not None, '"benchmark" must be set when benchmark execution engine is used.'
             engine = BenchmarkExecutionEngine(self.config.benchmark)
@@ -363,17 +299,6 @@ class RetiariiExperiment(Experiment):
         # TODO: the experiment should be completed, when strategy exits and there is no running job
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
 
-    def _construct_devices(self):
-        devices = []
-        if hasattr(self.config.training_service, 'machine_list'):
-            for machine in cast(RemoteConfig, self.config.training_service).machine_list:
-                assert machine.gpu_indices is not None, \
-                    'gpu_indices must be set in RemoteMachineConfig for CGO execution engine'
-                assert isinstance(machine.gpu_indices, list), 'gpu_indices must be a list'
-                for gpu_idx in machine.gpu_indices:
-                    devices.append(GPUDevice(machine.host, gpu_idx))
-        return devices
-
     def _create_dispatcher(self):
         return self._dispatcher
 
@@ -382,16 +307,20 @@ class RetiariiExperiment(Experiment):
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        assert port is None or isinstance(port, RetiariiExeConfig)
-        warnings.warn('Passing `config` in run() is deprecated.')
-        if port is None:
+        if isinstance(self.evaluator, BaseOneShotTrainer):
+            # TODO: will throw a deprecation warning soon
+            # warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
+            #               'We will try to convert this trainer to our new implementation to run the algorithm. '
+            #               'In case you want to stick to the old implementation, '
+            #               'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
+            self.evaluator.fit()
+
+        if config is None:
             config = RetiariiExeConfig()
-            config.execution_engine = 'oneshot'
-            self.config = config
-        else:
-            self.config = port # for backward compatibility, will remove in future release
-        
-        if self.config.execution_engine == 'oneshot':
+            config.execution_engine = OneshotEngineConfig()
+        self.config = config
+
+        if self.config.execution_engine.name == 'oneshot':
             base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
@@ -406,7 +335,7 @@ class RetiariiExperiment(Experiment):
         if self._dispatcher_thread is not None:
             self._dispatcher.stopping = True
             self._dispatcher_thread.join(timeout=1)
-        
+
         self._dispatcher = cast(RetiariiAdvisor, None)
         self._dispatcher_thread = None
 
@@ -434,7 +363,7 @@ class RetiariiExperiment(Experiment):
             If ``dict``, the mutation history will be returned.
         """
         if formatter == 'code':
-            assert self.config.execution_engine != 'py', 'You should use `dict` formatter when using Python execution engine.'
+            assert not isinstance(self.config.execution_engine, PyEngineConfig), 'You should use `dict` formatter when using Python execution engine.'
         if isinstance(self.evaluator, BaseOneShotTrainer):
             assert top_k == 1, 'Only support top_k is 1 for now.'
             return self.evaluator.export()
@@ -475,7 +404,7 @@ class NasExperiment(RetiariiExperiment):
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        if self.config.execution_engine == 'oneshot':
+        if self.config.execution_engine.name == 'oneshot': #TODO
             base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:

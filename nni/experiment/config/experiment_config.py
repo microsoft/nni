@@ -141,7 +141,7 @@ class ExperimentConfig(ConfigBase):
                 msg = f'nni_manager_ip is not set, please make sure {ip} is accessible from training machines'
                 logging.getLogger('nni.experiment.config').warning(msg)
 
-    def _validate_canonical(self):
+    def _validate_canonical(self, validate_tuner: bool = True): # FIXME: remove validate_tuner
         super()._validate_canonical()
 
         space_cnt = (self.search_space is not None) + (self.search_space_file is not None)
@@ -164,10 +164,11 @@ class ExperimentConfig(ConfigBase):
         # currently I have only seen one issue of this kind
         #Path(self.experiment_working_directory).mkdir(parents=True, exist_ok=True)
 
-        utils.validate_gpu_indices(self.tuner_gpu_indices)
+        if validate_tuner:
+            utils.validate_gpu_indices(self.tuner_gpu_indices)
 
-        if self.tuner is None:
-            raise ValueError('ExperimentConfig: tuner must be set')
+            if self.tuner is None:
+                raise ValueError('ExperimentConfig: tuner must be set')
 
 def _load_search_space_file(search_space_path):
     # FIXME

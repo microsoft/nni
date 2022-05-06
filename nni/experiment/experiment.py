@@ -10,7 +10,7 @@ from pathlib import Path
 import socket
 from subprocess import Popen
 import time
-from typing import Any
+from typing import Any, Optional
 
 import colorama
 import psutil
@@ -92,8 +92,9 @@ class Experiment:
         if run_mode is not RunMode.Detach:
             atexit.register(self.stop)
 
+        print(type(self.config))
         config = self.config.canonical_copy()
-        if hasattr(config, "use_annotation") and config.use_annotation: # will be refactored
+        if hasattr(config, "use_annotation") and config.use_annotation: #TODO: will be refactored
             raise RuntimeError('NNI annotation is not supported by Python experiment API.')
 
         if config.experiment_working_directory is not None:
@@ -103,7 +104,7 @@ class Experiment:
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
         return config
 
-    def _start_end(self, port: int, nni_manager_ip: str) -> None:
+    def _start_end(self, port: int, nni_manager_ip: Optional[str]) -> None:
         ips = [nni_manager_ip]
         for interfaces in psutil.net_if_addrs().values():
             for interface in interfaces:
