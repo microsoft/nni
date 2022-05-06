@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from collections import OrderedDict
 import torch.nn as nn
 from nni.nas.pytorch.mutables import LayerChoice

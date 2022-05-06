@@ -16,7 +16,7 @@ const receivedCommands: { [key: string]: string }[] = [];
 
 let rejectCommandType: Error | undefined;
 
-function runProcess(): Promise<Error | null> {
+async function runProcess(): Promise<Error | null> {
     // the process is intended to throw error, do not reject
     const deferred: Deferred<Error | null> = new Deferred<Error | null>();
 
@@ -42,7 +42,7 @@ function runProcess(): Promise<Error | null> {
     });
 
     // create IPC interface
-    const dispatcher: IpcInterface = createDispatcherInterface(proc);
+    const dispatcher: IpcInterface = await createDispatcherInterface();
     dispatcher.onCommand((commandType: string, content: string): void => {
         receivedCommands.push({ commandType, content });
     });

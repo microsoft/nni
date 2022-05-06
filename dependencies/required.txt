@@ -19,5 +19,5 @@ scikit-learn >= 0.24.1
 scipy < 1.8 ; python_version < "3.8"
 scipy ; python_version >= "3.8"
 typeguard
-typing_extensions >= 4.0.0 ; python_version < "3.8"
+typing_extensions >= 4.0.0
 websockets >= 10.1

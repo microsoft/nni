@@ -4,10 +4,11 @@
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, Union, Optional, List, Callable
+from typing import Dict, Union, Optional, List, Callable, Type
 
 import pytorch_lightning as pl
 import torch.nn as nn
+import torch.nn.functional as nn_functional
 import torch.optim as optim
 import torchmetrics
 import torch.utils.data as torch_data
@@ -124,12 +125,12 @@ class Lightning(Evaluator):
         if other is None:
             return False
         if hasattr(self, "function") and hasattr(other, "function"):
-            eq_func = (self.function == other.function)
+            eq_func = getattr(self, "function") == getattr(other, "function")
         elif not (hasattr(self, "function") or hasattr(other, "function")):
             eq_func = True
 
         if hasattr(self, "arguments") and hasattr(other, "arguments"):
-            eq_args = (self.arguments == other.arguments)
+            eq_args = getattr(self, "arguments") == getattr(other, "arguments")
         elif not (hasattr(self, "arguments") or hasattr(other, "arguments")):
             eq_args = True
 
@@ -159,10 +160,13 @@ def _check_dataloader(dataloader):
 ### The following are some commonly used Lightning modules ###
 
 class _SupervisedLearningModule(LightningModule):
-    def __init__(self, criterion: nn.Module, metrics: Dict[str, torchmetrics.Metric],
+
+    trainer: pl.Trainer
+
+    def __init__(self, criterion: Type[nn.Module], metrics: Dict[str, Type[torchmetrics.Metric]],
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam,
+                 optimizer: Type[optim.Optimizer] = optim.Adam,
                  export_onnx: Union[Path, str, bool, None] = None):
         super().__init__()
         self.save_hyperparameters('criterion', 'optimizer', 'learning_rate', 'weight_decay')
@@ -214,7 +218,7 @@ class _SupervisedLearningModule(LightningModule):
             self.log('test_' + name, metric(y_hat, y), prog_bar=True)
 
     def configure_optimizers(self):
-        return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)
+        return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)  # type: ignore
 
     def on_validation_epoch_end(self):
         nni.report_intermediate_result(self._get_validation_metrics())
@@ -233,15 +237,15 @@ class _SupervisedLearningModule(LightningModule):
 
 class _AccuracyWithLogits(torchmetrics.Accuracy):
     def update(self, pred, target):
-        return super().update(nn.functional.softmax(pred), target)
+        return super().update(nn_functional.softmax(pred), target)
 
 
 @nni.trace
 class _ClassificationModule(_SupervisedLearningModule):
-    def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
+    def __init__(self, criterion: Type[nn.Module] = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam,
+                 optimizer: Type[optim.Optimizer] = optim.Adam,
                  export_onnx: bool = True):
         super().__init__(criterion, {'acc': _AccuracyWithLogits},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer,
@@ -275,10 +279,10 @@ class Classification(Lightning):
         `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
     """
 
-    def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
+    def __init__(self, criterion: Type[nn.Module] = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam,
+                 optimizer: Type[optim.Optimizer] = optim.Adam,
                  train_dataloader: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
                  export_onnx: bool = True,
@@ -291,10 +295,10 @@ class Classification(Lightning):
 
 @nni.trace
 class _RegressionModule(_SupervisedLearningModule):
-    def __init__(self, criterion: nn.Module = nn.MSELoss,
+    def __init__(self, criterion: Type[nn.Module] = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam,
+                 optimizer: Type[optim.Optimizer] = optim.Adam,
                  export_onnx: bool = True):
         super().__init__(criterion, {'mse': torchmetrics.MeanSquaredError},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer,
@@ -328,10 +332,10 @@ class Regression(Lightning):
         `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
     """
 
-    def __init__(self, criterion: nn.Module = nn.MSELoss,
+    def __init__(self, criterion: Type[nn.Module] = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam,
+                 optimizer: Type[optim.Optimizer] = optim.Adam,
                  train_dataloader: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
                  export_onnx: bool = True,

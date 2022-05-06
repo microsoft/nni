@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import (Any, Dict, List)
+from typing import (Any, Dict, List, Optional, cast)
 
 from . import debug_configs
 
@@ -34,6 +34,8 @@ class Operation:
         Arbitrary key-value parameters (e.g. kernel_size).
     """
 
+    io_names: List[str] = []
+
     def __init__(self, type_name: str, parameters: Dict[str, Any] = {}, _internal: bool = False, attributes: Dict[str, Any] = {}):
         assert _internal, '`Operation()` is private, use `Operation.new()` instead'
         self.type: str = type_name
@@ -43,7 +45,7 @@ class Operation:
     def to_init_code(self, field: str) -> str:
         raise NotImplementedError()
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         raise NotImplementedError()
 
     def _to_class_name(self) -> str:
@@ -53,8 +55,8 @@ class Operation:
         return True
 
     @staticmethod
-    def new(type_name: str, parameters: Dict[str, Any] = None, cell_name: str = None,
-            attributes: Dict[str, Any] = None) -> 'Operation':
+    def new(type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None), cell_name: str = cast(str, None),
+            attributes: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Operation':
         parameters = parameters or {}
         attributes = attributes or {}
         if type_name == '_cell':
@@ -98,16 +100,16 @@ class PyTorchOperation(Operation):
             subclass_name = 'FunctionalOperator'
         for subclass in cls.__subclasses__():
             if hasattr(subclass, '_ori_type_name') and \
-                subclass_name in subclass._ori_type_name:
+                subclass_name in cast(Any, subclass)._ori_type_name:
                 return subclass
         for subclass in cls.__subclasses__():
             if hasattr(subclass, '_artificial_op_name') and \
-                subclass_name in subclass._artificial_op_name:
+                subclass_name in cast(Any, subclass)._artificial_op_name:
                 return subclass
         return cls
 
     @classmethod
-    def to_class_name(cls, type_name) -> str:
+    def to_class_name(cls, type_name) -> Optional[str]:
         if type_name.startswith('__torch__.'):
             return type_name[len('__torch__.'):]
         elif type_name.startswith('__mutated__.'):
@@ -119,7 +121,7 @@ class PyTorchOperation(Operation):
     def is_functional(cls, type_name) -> bool:
         return type_name.startswith('Function.')
 
-    def _to_class_name(self) -> str:
+    def _to_class_name(self) -> Optional[str]:
         if self.type.startswith('__torch__.'):
             return self.type[len('__torch__.'):]
         elif self.type.startswith('__mutated__.'):
@@ -127,7 +129,7 @@ class PyTorchOperation(Operation):
         else:
             return None
 
-    def get_import_pkg(self) -> str:
+    def get_import_pkg(self) -> Optional[str]:
         if self.type.startswith('__torch__.'):
             return self.type[len('__torch__.'):].split('.')[0]
         elif self.type.startswith('__mutated__.'):
@@ -135,14 +137,14 @@ class PyTorchOperation(Operation):
         else:
             return None
 
-    def to_init_code(self, field: str) -> str:
+    def to_init_code(self, field: str) -> Optional[str]:
         if self._to_class_name() is not None:
             assert 'positional_args' not in self.parameters
             kw_params = ', '.join(f'{key}={repr(value)}' for key, value in self.parameters.items())
             return f'self.{field} = {self._to_class_name()}({kw_params})'
         return None
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         """
         Parameters
         ----------
@@ -207,7 +209,9 @@ class Cell(PyTorchOperation):
         No real usage. Exists for compatibility with base class.
     """
 
-    def __init__(self, cell_name: str, parameters: Dict[str, Any] = None, attributes: Dict[str, Any] = None):
+    def __init__(self, cell_name: str,
+                 parameters: Dict[str, Any] = cast(Dict[str, Any], None),
+                 attributes: Dict[str, Any] = cast(Dict[str, Any], None)):
         self.type = '_cell'
         self.cell_name = cell_name
         self.parameters = parameters or {}
@@ -217,7 +221,7 @@ class Cell(PyTorchOperation):
         # TODO: ugly, think about how to refactor this part
         return _convert_name(self.cell_name)
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = self.{field}({", ".join(inputs)})'
 
 class _IOPseudoOperation(Operation):
@@ -227,7 +231,7 @@ class _IOPseudoOperation(Operation):
     especially in static type checking.
     """
 
-    def __init__(self, type_name: str, io_names: List = None):
+    def __init__(self, type_name: str, io_names: List[str] = cast(List[str], None)):
         assert type_name.startswith('_')
         super(_IOPseudoOperation, self).__init__(type_name, {}, True)
         self.io_names = io_names
@@ -235,7 +239,7 @@ class _IOPseudoOperation(Operation):
     def to_init_code(self, field: str) -> str:
         raise ValueError(f'Cannot generate code for pseudo operation "{self.type}"')
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         raise ValueError(f'Cannot generate code for pseudo operation "{self.type}"')
 
     def __bool__(self) -> bool:

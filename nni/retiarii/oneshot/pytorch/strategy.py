@@ -10,8 +10,10 @@ For example, ``nni.retiarii.strategy.DartsStrategy`` (this requires pytorch to b
 When adding/modifying a new strategy in this file, don't forget to link it in strategy/oneshot.py.
 """
 
+from __future__ import annotations
+
 import warnings
-from typing import Any, List, Optional, Type, Union, Tuple
+from typing import Any, Type
 
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -33,10 +35,10 @@ class OneShotStrategy(BaseStrategy):
         self.oneshot_module = oneshot_module
         self.oneshot_kwargs = kwargs
 
-        self.model: Optional[BaseOneShotLightningModule] = None
+        self.model: BaseOneShotLightningModule | None = None
 
-    def _get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader) \
-        -> Union[DataLoader, Tuple[DataLoader, DataLoader]]:
+    def _get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader | list[DataLoader]) \
+        -> DataLoader | tuple[DataLoader, DataLoader]:
         """
         One-shot strategy typically requires a customized dataloader.
 
@@ -51,9 +53,9 @@ class OneShotStrategy(BaseStrategy):
 
         _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
 
-        py_model: nn.Module = base_model.python_object
-        if not isinstance(py_model, nn.Module):
+        if not isinstance(base_model.python_object, nn.Module):
             raise TypeError('Model is not a nn.Module. ' + _reason)
+        py_model: nn.Module = base_model.python_object
 
         if applied_mutators:
             raise ValueError('Mutator is not empty. ' + _reason)
@@ -64,8 +66,10 @@ class OneShotStrategy(BaseStrategy):
         evaluator_module: LightningModule = base_model.evaluator.module
         evaluator_module.set_model(py_model)
 
-        self.model: BaseOneShotLightningModule = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
+        self.model = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
         evaluator: Lightning = base_model.evaluator
+        if evaluator.train_dataloader is None or evaluator.val_dataloaders is None:
+            raise TypeError('Train or val dataloader is not set.')
         dataloader = self._get_dataloader(evaluator.train_dataloader, evaluator.val_dataloaders)
         if isinstance(dataloader, tuple):
             dataloader, val_loader = dataloader
@@ -73,7 +77,7 @@ class OneShotStrategy(BaseStrategy):
         else:
             evaluator.trainer.fit(self.model, dataloader)
 
-    def export_top_models(self, top_k: int = 1) -> List[Any]:
+    def export_top_models(self, top_k: int = 1) -> list[Any]:
         if self.model is None:
             raise RuntimeError('One-shot strategy needs to be run before export.')
         if top_k != 1:

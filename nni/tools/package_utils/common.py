@@ -7,7 +7,7 @@ __all__ = ['AlgoMeta']
 
 from typing import NamedTuple
 
-from nni.typehint import Literal
+from typing_extensions import Literal
 
 class AlgoMeta(NamedTuple):
     name: str

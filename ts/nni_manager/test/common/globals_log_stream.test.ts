@@ -3,6 +3,7 @@
 
 import assert from 'assert/strict';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { setTimeout } from 'timers/promises';
 
@@ -74,7 +75,7 @@ describe('## globals.log_stream ##', () => {
 /* configure test environment */
 
 const origConsoleLog = console.log;
-const tempDir = fs.mkdtempSync('nni-ut-');
+const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nni-ut-'));
 
 function beforeHook() {
     console.log = (line => { consoleContent += line + '\n'; });

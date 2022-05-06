@@ -4,19 +4,26 @@
 """Utilities to process the value choice compositions,
 in the way that is most convenient to one-shot algorithms."""
 
+from __future__ import annotations
+
 import itertools
-from typing import List, Any, Dict, Tuple, Optional, Union
+from typing import Any, TypeVar, List, cast
+
+import numpy as np
+import torch
 
 from nni.common.hpo_utils import ParameterSpec
-from nni.retiarii.nn.pytorch.api import ValueChoiceX
+from nni.retiarii.nn.pytorch.api import ChoiceOf, ValueChoiceX
 
 
 Choice = Any
 
+T = TypeVar('T')
+
 __all__ = ['dedup_inner_choices', 'evaluate_value_choice_with_dict', 'traverse_all_options']
 
 
-def dedup_inner_choices(value_choices: List[ValueChoiceX]) -> Dict[str, ParameterSpec]:
+def dedup_inner_choices(value_choices: list[ValueChoiceX]) -> dict[str, ParameterSpec]:
     """Find all leaf nodes in ``value_choices``,
     save them into in the format of ``{label: parameter_spec}``.
     """
@@ -33,7 +40,7 @@ def dedup_inner_choices(value_choices: List[ValueChoiceX]) -> Dict[str, Paramete
     return result
 
 
-def evaluate_value_choice_with_dict(value_choice: ValueChoiceX, chosen: Dict[str, Choice]) -> Any:
+def evaluate_value_choice_with_dict(value_choice: ChoiceOf[T], chosen: dict[str, Choice]) -> T:
     """To evaluate a composition of value-choice with a dict,
     with format of ``{label: chosen_value}``.
     The implementation is two-pass. We first get a list of values,
@@ -56,8 +63,10 @@ def evaluate_value_choice_with_dict(value_choice: ValueChoiceX, chosen: Dict[str
     return value_choice.evaluate(choice_inner_values)
 
 
-def traverse_all_options(value_choice: ValueChoiceX,
-                         weights: Optional[Dict[str, List[float]]] = None) -> List[Union[Tuple[Any, float], Any]]:
+def traverse_all_options(
+    value_choice: ChoiceOf[T],
+    weights: dict[str, list[float]] | dict[str, np.ndarray] | dict[str, torch.Tensor] | None = None
+) -> list[tuple[T, float]] | list[T]:
     """Traverse all possible computation outcome of a value choice.
     If ``weights`` is not None, it will also compute the probability of each possible outcome.
 
@@ -65,33 +74,33 @@ def traverse_all_options(value_choice: ValueChoiceX,
     ----------
     value_choice : ValueChoiceX
         The value choice to traverse.
-    weights : Optional[Dict[str, List[float]]], default = None
+    weights : Optional[dict[str, list[float]]], default = None
         If there's a prior on leaf nodes, and we intend to know the (joint) prior on results,
         weights can be provided. The key is label, value are list of float indicating probability.
         Normally, they should sum up to 1, but we will not check them in this function.
 
     Returns
     -------
-    List[Union[Tuple[Any, float], Any]]
+    list[Union[tuple[Any, float], Any]]
         Results will be sorted and duplicates will be eliminated.
         If weights is provided, the return value will be a list of tuple, with option and its weight.
         Otherwise, it will be a list of options.
     """
     # get a dict of {label: list of tuple of choice and weight}
-    leafs: Dict[str, List[Tuple[Choice, float]]] = {}
+    leafs: dict[str, list[tuple[T, float]]] = {}
     for label, param_spec in dedup_inner_choices([value_choice]).items():
         if weights is not None:
             if label not in weights:
                 raise KeyError(f'{value_choice} depends on a weight with key {label}, but not found in {weights}')
             if len(weights[label]) != param_spec.size:
                 raise KeyError(f'Expect weights with {label} to be of length {param_spec.size}, but {len(weights[label])} found')
-            leafs[label] = list(zip(param_spec.values, weights[label]))
+            leafs[label] = list(zip(param_spec.values, cast(List[float], weights[label])))
         else:
             # create a dummy weight of zero, in case that weights are not provided.
             leafs[label] = list(zip(param_spec.values, itertools.repeat(0., param_spec.size)))
 
     # result is a dict from a option to its weight
-    result: Dict[str, Optional[float]] = {}
+    result: dict[T, float | None] = {}
     labels, values = list(leafs.keys()), list(leafs.values())
 
     if not labels:
@@ -126,6 +135,6 @@ def traverse_all_options(value_choice: ValueChoiceX,
                 result[eval_res] = chosen_weight
 
     if weights is None:
-        return sorted(result.keys())
+        return sorted(result.keys())  # type: ignore
     else:
-        return sorted(result.items())
+        return sorted(result.items())  # type: ignore

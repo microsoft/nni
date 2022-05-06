@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import os
 
 from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model

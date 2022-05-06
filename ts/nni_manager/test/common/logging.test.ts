@@ -8,6 +8,8 @@ import { Logger, getLogger, getRobustLogger } from 'common/log';
 
 /* test cases */
 
+// Write a log message in different format for each level.
+// Checks the log stream contains all messages.
 function testDebugLevel() {
     stream.reset();
     globals.args.logLevel = 'debug';
@@ -26,6 +28,8 @@ function testDebugLevel() {
     assert.equal(stderr, '');
 }
 
+// Write a log message in different format for each level.
+// Check logs below specified log level are filtered.
 function testWarningLevel() {
     stream.reset();
     globals.args.logLevel = 'warning';
@@ -45,6 +49,8 @@ function testWarningLevel() {
     assert.equal(stderr, '');
 }
 
+// Write some logs; simulate an error in log stream; then write other logs.
+// Check logs after the error are written to stderr.
 function testRobust() {
     stream.reset();
     globals.args.logLevel = 'info';

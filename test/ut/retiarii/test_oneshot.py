@@ -12,6 +12,7 @@ from nni.retiarii import strategy, model_wrapper, basic_unit
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.evaluator.pytorch.lightning import Classification, Regression, DataLoader
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, ValueChoice
+from nni.retiarii.strategy import BaseStrategy
 
 
 class DepthwiseSeparableConv(nn.Module):
@@ -237,8 +238,12 @@ def _test_strategy(strategy_, support_value_choice=True):
     ]
 
     for (base_model, evaluator), support_or_not in to_test:
-        print('Testing:', type(strategy_).__name__, type(base_model).__name__, type(evaluator).__name__, support_or_not)
-        experiment = RetiariiExperiment(base_model, evaluator, strategy=strategy_)
+        if isinstance(strategy_, BaseStrategy):
+            strategy = strategy_
+        else:
+            strategy = strategy_(base_model, evaluator)
+        print('Testing:', type(strategy).__name__, type(base_model).__name__, type(evaluator).__name__, support_or_not)
+        experiment = RetiariiExperiment(base_model, evaluator, strategy=strategy)
 
         config = RetiariiExeConfig()
         config.execution_engine = 'oneshot'
@@ -263,7 +268,12 @@ def test_proxyless():
 
 @pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_enas():
-    _test_strategy(strategy.ENAS())
+    def strategy_fn(base_model, evaluator):
+        if isinstance(base_model, MultiHeadAttentionNet):
+            return strategy.ENAS(reward_metric_name='val_mse')
+        return strategy.ENAS(reward_metric_name='val_acc')
+
+    _test_strategy(strategy_fn)
 
 
 @pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')

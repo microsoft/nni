@@ -8,6 +8,7 @@ import * as component from '../common/component';
 import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
 import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
+import globals from 'common/globals';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manager';
 import { ExperimentManager } from '../common/experimentManager';
@@ -22,17 +23,15 @@ import { TrialJobStatus } from '../common/trainingService';
 //const expressJoi = require('express-joi-validator');
 
 class NNIRestHandler {
-    private stopCallback: () => Promise<void>;
     private nniManager: Manager;
     private experimentsManager: ExperimentManager;
     private tensorboardManager: TensorboardManager;
     private log: Logger;
 
-    constructor(stopCallback: () => Promise<void>) {
+    constructor() {
         this.nniManager = component.get(Manager);
         this.experimentsManager = component.get(ExperimentManager);
         this.tensorboardManager = component.get(TensorboardManager);
-        this.stopCallback = stopCallback;
         this.log = getLogger('NNIRestHandler');
     }
 
@@ -124,7 +123,7 @@ class NNIRestHandler {
                 this.handleError(err, res);
                 this.log.error(err.message);
                 this.log.error(`Datastore initialize failed, stopping rest server...`);
-                await this.stopCallback();
+                globals.shutdown.criticalError('RestHandler', err);
             });
         });
     }
@@ -416,10 +415,8 @@ class NNIRestHandler {
 
     private stop(router: Router): void {
         router.delete('/experiment', (_req: Request, res: Response) => {
-            this.nniManager.stopExperimentTopHalf().then(() => {
-                res.send();
-                this.nniManager.stopExperimentBottomHalf();
-            });
+            res.send();
+            globals.shutdown.initiate('REST request');
         });
     }
 
@@ -433,8 +430,6 @@ class NNIRestHandler {
     }
 }
 
-export function createRestHandler(stopCallback: () => Promise<void>): Router {
-    const handler: NNIRestHandler = new NNIRestHandler(stopCallback);
-
-    return handler.createRestHandler();
+export function createRestHandler(): Router {
+    return new NNIRestHandler().createRestHandler();
 }

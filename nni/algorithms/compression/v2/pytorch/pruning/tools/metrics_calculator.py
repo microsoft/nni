@@ -79,7 +79,7 @@ class NormMetricsCalculator(MetricsCalculator):
             if len(across_dim) == 0:
                 metrics[name] = tensor.abs()
             else:
-                metrics[name] = tensor.norm(p=self.p, dim=across_dim)
+                metrics[name] = tensor.norm(p=self.p, dim=across_dim)  # type: ignore
         if self.block_sparse_size is not None:
             # operation like pooling
             lower_case_letters = 'abcdefghijklmnopqrstuvwxyz'
@@ -166,7 +166,7 @@ class DistMetricsCalculator(MetricsCalculator):
                 if len(across_dim) == 0:
                     dist_sum = torch.abs(reorder_tensor - other).sum()
                 else:
-                    dist_sum = torch.norm((reorder_tensor - other), p=self.p, dim=across_dim).sum()
+                    dist_sum = torch.norm((reorder_tensor - other), p=self.p, dim=across_dim).sum()  # type: ignore
                 # NOTE: this place need refactor when support layer level pruning.
                 tmp_metric = metric
                 for i in idx[:-1]:
