@@ -10,13 +10,20 @@ steps:
     sudo apt install -y build-essential
   displayName: Install build essential
 
-# VM with GPU needs to install drivers.
+# VM with GPU needs to install drivers. Reference:
+# https://docs.microsoft.com/en-us/azure/virtual-machines/linux/n-series-driver-setup
+# https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
+# https://linuxhint.com/install-cuda-ubuntu/
+
+- script: |
+    lspci | grep -i NVIDIA
+  displayName: GPU status verification
 
 - script: |
     set -e
     sudo apt install linux-headers-$(uname -r) -y
     sudo wget -O /etc/apt/preferences.d/cuda-repository-pin-600 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-    sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
+    sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
     sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
     sudo apt update
     sudo apt install cuda-drivers
