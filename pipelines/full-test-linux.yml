@@ -17,38 +17,24 @@ jobs:
     parameters:
       platform: ubuntu-latest
 
-  - script: |
-      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
-      echo "##vso[task.setvariable variable=NNI_RELEASE]999.$(date -u +%Y%m%d%H%M%S)"
-
-      python3 -m pip install -U -r dependencies/setup.txt
-      python3 -m pip install -r dependencies/develop.txt
-    displayName: Prepare
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: ubuntu-latest
 
   - script: |
-      set -e
-      python3 setup.py build_ts
-      python3 setup.py bdist_wheel -p manylinux1_x86_64
-      python3 -m pip install dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl[SMAC,BOHB,PPOTuner]
+      python setup.py develop
     displayName: Install NNI
 
   - script: |
       set -e
-      sudo apt-get install swig -y
-      python3 -m pip install -r dependencies/recommended_gpu.txt
-      python3 -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
-    displayName: Install extra dependencies
-
-  - script: |
-      set -e
       cd examples/tuners/customized_tuner
-      python3 setup.py develop --user
+      python setup.py develop
       nnictl algo register --meta meta_file.yml
     displayName: Install customized tuner
 
   - script: |
       set -e
-      (cd test && python3 -m pytest ut)
+      (cd test && python -m pytest ut)
       export PATH=$PATH:$PWD/toolchain/yarn/bin
       export CI=true
       (cd ts/nni_manager && yarn test)
@@ -57,7 +43,7 @@ jobs:
 
   - script: |
       cd test
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
     displayName: Integration test
     continueOnError: true
 
