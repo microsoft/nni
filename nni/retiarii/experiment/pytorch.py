@@ -177,8 +177,10 @@ class RetiariiExperiment(Experiment):
     ...     final_model = Net()
     """
 
-    def __init__(self, base_model: nn.Module, evaluator: Union[BaseOneShotTrainer, Evaluator] = cast(Evaluator, None),
-                 applied_mutators: List[Mutator] = cast(List[Mutator], None), strategy: BaseStrategy = cast(BaseStrategy, None),
+    def __init__(self, base_model: nn.Module,
+                 evaluator: Union[BaseOneShotTrainer, Evaluator] = cast(Evaluator, None),
+                 applied_mutators: List[Mutator] = cast(List[Mutator], None),
+                 strategy: BaseStrategy = cast(BaseStrategy, None),
                  trainer: BaseOneShotTrainer = cast(BaseOneShotTrainer, None)):
         nni.runtime.log.init_logger_for_command_line()
 
@@ -196,8 +198,6 @@ class RetiariiExperiment(Experiment):
         self._proc: Popen | psutil.Process | None = None
         self._action: Literal['create', 'resume', 'view'] = 'create'
         self.url_prefix: str | None = None
-
-        # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
         self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
         self.port: Optional[int] = None
 
@@ -205,16 +205,6 @@ class RetiariiExperiment(Experiment):
         self.evaluator: Union[Evaluator, BaseOneShotTrainer] = evaluator
         self.applied_mutators = applied_mutators
         self.strategy = strategy
-
-        from nni.retiarii.oneshot.pytorch.strategy import OneShotStrategy
-        if not isinstance(strategy, OneShotStrategy):
-            self._dispatcher = RetiariiAdvisor()
-        else:
-            self._dispatcher = cast(RetiariiAdvisor, None)
-        self._dispatcher_thread: Optional[Thread] = None
-        self._proc: Optional[Popen] = None
-
-        self.url_prefix = None
 
         # check for sanity
         if not is_model_wrapped(base_model):
@@ -238,8 +228,8 @@ class RetiariiExperiment(Experiment):
         # TODO: find out a proper way to show no more trial message on WebUI
         # self._dispatcher.mark_experiment_as_ending()
 
-    def _create_execution_engine(self) -> AbstractExecutionEngine:
-        # we will probably need a execution engine factory to make this clean and elegant
+    def _create_execution_engine(self) -> None:
+        #TODO: we will probably need a execution engine factory to make this clean and elegant
         if isinstance(self.config.execution_engine, BaseEngineConfig):
             from ..execution.base import BaseExecutionEngine
             engine = BaseExecutionEngine()
@@ -261,7 +251,7 @@ class RetiariiExperiment(Experiment):
             engine = BenchmarkExecutionEngine(self.config.benchmark)
         else:
             raise ValueError(f'Unsupported engine type: {self.config.execution_engine}')
-        return engine
+        set_execution_engine(engine)
 
     def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
         """
@@ -286,21 +276,17 @@ class RetiariiExperiment(Experiment):
 
         self._start_end(port, config.nni_manager_ip)
 
-        engine = self._create_execution_engine()
-        set_execution_engine(engine)
+        self._create_execution_engine() # FIXME: engine cannot be created twice
 
+        self._dispatcher = RetiariiAdvisor()
         # dispatcher must be launched after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
-        self._dispatcher = self._create_dispatcher()
         self._dispatcher_thread = Thread(target=self._dispatcher.run)
         self._dispatcher_thread.start()
 
         self._start_strategy()
         # TODO: the experiment should be completed, when strategy exits and there is no running job
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
-
-    def _create_dispatcher(self):
-        return self._dispatcher
 
     def run(self, config: Optional[RetiariiExeConfig] = None, port: int = 8080, debug: bool = False) -> None:
         """
@@ -314,16 +300,16 @@ class RetiariiExperiment(Experiment):
             #               'In case you want to stick to the old implementation, '
             #               'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
             self.evaluator.fit()
+            return
 
         if config is None:
-            config = RetiariiExeConfig()
-            config.execution_engine = OneshotEngineConfig()
-        self.config = config
-
-        if self.config.execution_engine.name == 'oneshot':
+            self.config = RetiariiExeConfig()
+            self.config.execution_engine = OneshotEngineConfig()
             base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
+            # FIXME: oneshot strategy should also be executable on training services
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
+            self.config = config
             super().run(port, True, debug)
 
     def stop(self) -> None:
@@ -396,6 +382,7 @@ class NasExperiment(RetiariiExperiment):
                  evaluator: Union[BaseOneShotTrainer, Evaluator],
                  strategy: BaseStrategy,
                  config_or_platform: ExperimentConfig | str | list[str] | None = 'local',
+                 execution_engine: Union[str, ExecutionEngineConfig] = 'py',
                  mutators: List[Mutator] = cast(List[Mutator], None)):
         ...
 
@@ -404,7 +391,7 @@ class NasExperiment(RetiariiExperiment):
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        if self.config.execution_engine.name == 'oneshot': #TODO
+        if isinstance(self.config.execution_engine.name, OneshotEngineConfig):
             base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:

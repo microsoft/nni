@@ -30,7 +30,7 @@ class RetiariiExeConfig(ExperimentConfig):
     search_space: Any = ''
     trial_code_directory: utils.PathLike = '.'
     trial_command: str = '_reserved'
-
+    # new config field for NAS
     execution_engine: ExecutionEngineConfig = PyEngineConfig()
 
     def __init__(self, training_service_platform: Optional[str] = None,
