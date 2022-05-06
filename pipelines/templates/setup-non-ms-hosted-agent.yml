@@ -26,7 +26,7 @@ steps:
     sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
     sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
     sudo apt update
-    sudo apt install cuda-drivers
+    sudo apt install -y cuda-drivers
   displayName: Install CUDA
 
 # UsePythonVersion task only works when the specific Python version is already installed.
