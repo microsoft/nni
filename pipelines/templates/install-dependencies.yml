@@ -10,7 +10,7 @@ steps:
 - script: |
     set -e
     sudo apt-get install -y swig3.0
-    sudo rm /usr/bin/swig
+    sudo rm -f /usr/bin/swig
     sudo ln -s swig3.0 /usr/bin/swig
   displayName: (Ubuntu) Downgrade swig
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
