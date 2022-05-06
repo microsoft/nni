@@ -115,7 +115,7 @@ def is_wrapped_with_trace(cls_or_func: Any) -> bool:
     )
 
 
-class SerializableObject(Generic[T], Traceable):
+class SerializableObject(Traceable):  # should be (Generic[T], Traceable), but cloudpickle is unhappy with Generic.
     """
     Serializable object is a wrapper of existing python objects, that supports dump and load easily.
     Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
@@ -135,14 +135,14 @@ class SerializableObject(Generic[T], Traceable):
                 **{kw: _argument_processor(arg) for kw, arg in kwargs.items()}
             )
 
-    def trace_copy(self) -> Union[T, 'SerializableObject']:
+    def trace_copy(self: T) -> Union[T, 'SerializableObject']:
         return SerializableObject(
             self.trace_symbol,
             [copy.copy(arg) for arg in self.trace_args],
             {k: copy.copy(v) for k, v in self.trace_kwargs.items()},
         )
 
-    def get(self) -> T:
+    def get(self: T) -> T:
         if not self._get_nni_attr('call_super'):
             # Reinitialize
             return trace(self.trace_symbol)(*self.trace_args, **self.trace_kwargs)
