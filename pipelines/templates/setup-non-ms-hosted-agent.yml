@@ -29,6 +29,10 @@ steps:
     sudo apt install -y cuda-drivers
   displayName: Install CUDA
 
+- script: |
+    nvidia-smi
+  displayName: nvidia-smi verification
+
 # UsePythonVersion task only works when the specific Python version is already installed.
 
 # The following is for linux.
