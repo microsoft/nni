@@ -11,6 +11,11 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.9
+    displayName: (latest) Configure Python version
+
   - script: |
       echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
       echo "##vso[task.setvariable variable=NNI_RELEASE]999.$(date -u +%Y%m%d%H%M%S)"
