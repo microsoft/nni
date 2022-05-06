@@ -60,6 +60,8 @@ def generate_stub_file() -> str:
     ]
 
     code = [
+        '# Copyright (c) Microsoft Corporation.',
+        '# Licensed under the MIT license.',
         '# This file is auto-generated to make auto-completion work.',
         '# When pytorch version does not match, it will get automatically updated.',
         '# pylint: skip-file',

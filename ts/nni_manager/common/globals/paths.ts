@@ -10,6 +10,7 @@
 
 import assert from 'assert/strict';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 import type { NniManagerArgs } from './arguments';
@@ -17,6 +18,7 @@ import type { NniManagerArgs } from './arguments';
 export interface NniPaths {
     readonly experimentRoot: string;
     readonly experimentsDirectory: string;
+    readonly experimentsList: string;
     readonly logDirectory: string;  // contains nni manager and dispatcher log; trial logs are not here
     readonly nniManagerLog: string;
 }
@@ -35,9 +37,13 @@ export function createPaths(args: NniManagerArgs): NniPaths {
 
     const nniManagerLog = path.join(logDirectory, 'nnimanager.log');
 
+    // TODO: this should follow experiments directory config
+    const experimentsList = path.join(os.homedir(), 'nni-experiments', '.experiment');
+
     return {
         experimentRoot,
         experimentsDirectory: args.experimentsDirectory,
+        experimentsList,
         logDirectory,
         nniManagerLog,
     };

@@ -7,17 +7,18 @@ $themeBlue: #0071bc;
 }
 
 .link {
+    color: $themeBlue;
     outline: none;
     text-decoration: none;
 
     &:hover {
-        color: #0071bc !important;
+        color: $themeBlue;
         text-decoration: underline;
     }
 
     &:active,
     &:visited {
-        color: #0071bc;
+        color: $themeBlue;
     }
 }
 
