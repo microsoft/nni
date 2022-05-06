@@ -64,7 +64,7 @@ steps:
     python -m pip install -r dependencies/required_extra.txt
     echo '===== recommended ====='
     python -m pip install -r dependencies/recommended_gpu.txt
-  displayName: Install Python dependencies
+  displayName: Install Python dependencies (cuda)
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu'))
 
 # TODO: Delete this after upgrading to PyTorch 1.11.

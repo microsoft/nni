@@ -15,7 +15,7 @@ jobs:
 
   - template: templates/config-version.yml
     parameters:
-      platform: ubuntu-latest
+      platform: ubuntu-latest-gpu
 
   - template: templates/install-dependencies.yml
     parameters:
