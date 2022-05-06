@@ -31,7 +31,7 @@ class NormMetricsCalculator(MetricsCalculator):
     """
 
     def __init__(self, dim: Optional[Union[int, List[int]]] = None, p: Optional[Union[int, float]] = None,
-                 block_sparse_size: Optional[Union[int, List[int]]] = None):
+                 block_sparse_size: Union[int, List[int], None] = None):
         """
         Parameters
         ----------
@@ -58,6 +58,14 @@ class NormMetricsCalculator(MetricsCalculator):
             In both of these two case, the metric of this module has size (32,).
         p
             The order of norm. None means Frobenius norm.
+        block_sparse_size
+            This used to describe the block size a metric value represented. By default, None means the block size is ones(len(dim)).
+            Make sure len(dim) == len(block_sparse_size), and the block_sparse_size dimension position is corresponding to dim.
+
+            Example:
+
+            The under pruning weight size is (768, 768), and you want to apply a block sparse on dim=[0] with block size [64, 768],
+            then you can set block_sparse_size=[64]. The final metric size is (12,).
         """
         super().__init__(dim=dim, block_sparse_size=block_sparse_size)
         self.p = p if p is not None else 'fro'
@@ -76,12 +84,17 @@ class NormMetricsCalculator(MetricsCalculator):
             # operation like pooling
             lower_case_letters = 'abcdefghijklmnopqrstuvwxyz'
             for name, metric in metrics.items():
+                block_sparse_size = list(self.block_sparse_size)
+                # padding block_sparse_size to metric length if dim is None
+                if self.dim is None:
+                    for _ in range(len(metric.size()) - len(self.block_sparse_size)):
+                        block_sparse_size.insert(0, 1)
                 ein_expression = ''
-                for i, step in enumerate(self.block_sparse_size):
+                for i, step in enumerate(block_sparse_size):
                     metric = metric.unfold(i, step, step)
                     ein_expression += lower_case_letters[i]
                 ein_expression = '...{},{}'.format(ein_expression, ein_expression)
-                metrics[name] = torch.einsum(ein_expression, metric, torch.ones(self.block_sparse_size).to(metric.device))
+                metrics[name] = torch.einsum(ein_expression, metric, torch.ones(block_sparse_size).to(metric.device))
         return metrics
 
 

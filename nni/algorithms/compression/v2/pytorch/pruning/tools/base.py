@@ -277,7 +277,7 @@ class MetricsCalculator:
     """
 
     def __init__(self, dim: Optional[Union[int, List[int]]] = None,
-                 block_sparse_size: Optional[Union[int, List[int]]] = None):
+                 block_sparse_size: Union[int, List[int], None] = None):
         self.dim = dim if not isinstance(dim, int) else [dim]
         self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
         if self.block_sparse_size is not None:
@@ -335,7 +335,7 @@ class SparsityAllocator:
     """
 
     def __init__(self, pruner: Compressor, dim: Optional[Union[int, List[int]]] = None,
-                 block_sparse_size: Optional[Union[int, List[int]]] = None, continuous_mask: bool = True):
+                 block_sparse_size: Union[int, List[int], None] = None, continuous_mask: bool = True):
         self.pruner = pruner
         self.dim = dim if not isinstance(dim, int) else [dim]
         self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
@@ -374,10 +374,15 @@ class SparsityAllocator:
         weight_mask = mask.clone()
 
         if self.block_sparse_size is not None:
+            block_sparse_size = list(self.block_sparse_size)
+            # padding block_sparse_size to weight_mask length if dim is None
+            if self.dim is None:
+                for _ in range(len(weight_mask.size()) - len(self.block_sparse_size)):
+                    block_sparse_size.insert(0, 1)
             # expend mask with block_sparse_size
             expand_size = list(weight_mask.size())
             reshape_size = list(weight_mask.size())
-            for i, block_width in reversed(list(enumerate(self.block_sparse_size))):
+            for i, block_width in reversed(list(enumerate(block_sparse_size))):
                 weight_mask = weight_mask.unsqueeze(i + 1)
                 expand_size.insert(i + 1, block_width)
                 reshape_size[i] *= block_width
@@ -387,7 +392,7 @@ class SparsityAllocator:
         weight_size = wrapper.weight.data.size()
 
         if self.dim is None:
-            assert weight_mask.size() == weight_size, 'weight_mask size: {} , weight size: {}'.format(weight_mask.size(), weight_size)
+            assert weight_mask.size() == weight_size, 'tensor size mismatched, weight_mask size: {} , weight size: {}'.format(weight_mask.size(), weight_size)
             expand_mask = {'weight': weight_mask}
         else:
             # expand mask to weight size with dim
@@ -432,14 +437,19 @@ class SparsityAllocator:
             mask = torch.sum(mask, dim=mask_dim)
 
         if self.block_sparse_size is not None:
+            block_sparse_size = list(self.block_sparse_size)
+            # padding block_sparse_size to mask length if dim is None
+            if self.dim is None:
+                for _ in range(len(mask.size()) - len(self.block_sparse_size)):
+                    block_sparse_size.insert(0, 1)
             # operation like pooling
             lower_case_letters = 'abcdefghijklmnopqrstuvwxyz'
             ein_expression = ''
-            for i, step in enumerate(self.block_sparse_size):
+            for i, step in enumerate(block_sparse_size):
                 mask = mask.unfold(i, step, step)
                 ein_expression += lower_case_letters[i]
             ein_expression = '...{},{}'.format(ein_expression, ein_expression)
-            mask = torch.einsum(ein_expression, mask, torch.ones(self.block_sparse_size).to(mask.device))
+            mask = torch.einsum(ein_expression, mask, torch.ones(block_sparse_size).to(mask.device))
 
         return (mask != 0).type_as(mask)
 

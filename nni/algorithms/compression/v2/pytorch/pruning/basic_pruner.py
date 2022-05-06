@@ -163,27 +163,47 @@ class LevelPruner(BasicPruner):
         the non-zero value in tensor which create chance for better hardware acceleration.
 
         Note: If length of given balance_gran smaller than length of pruning tensor shape, it will be made up
-              in right align(such as example 1).
+        in right align(such as example 1).
 
-            example 1:
-                operation: Linear
-                pruning tensor: weight
-                pruning tensor shape: [32, 32]
-                sparsity: 50%
-                balance_gran: [4]
+        Example 1::
 
-                pruning result: Weight tensor whose shape is [32, 32] will be split into 256 [1, 4] sub blocks.
-                                Each sub block will be pruned 2 values.
+            operation: Linear
+            pruning tensor: weight
+            pruning tensor shape: [32, 32]
+            sparsity: 50%
+            balance_gran: [4]
+            pruning result: Weight tensor whose shape is [32, 32] will be split into 256 [1, 4] sub blocks.
+                            Each sub block will be pruned 2 values.
 
-            example 2:
-                operation: Linear
-                pruning tensor: weight
-                pruning tensor shape: [64, 64]
-                sparsity: 25%
-                balance_gran: [32, 32]
+        Example 2::
 
-                pruning result: Weight tensor whose shape is [64, 64] will be split into 4 [32, 32] sub blocks.
-                                Each sub block will be pruned 256 values.
+            operation: Linear
+            pruning tensor: weight
+            pruning tensor shape: [64, 64]
+            sparsity: 25%
+            balance_gran: [32, 32]
+            pruning result: Weight tensor whose shape is [64, 64] will be split into 4 [32, 32] sub blocks.
+                            Each sub block will be pruned 256 values.
+    block_sparse_size : Union[int, List[int], None]
+        (experimental) By default, block_sparse_size is None, which means element-wise pruning with block size [1, 1, ..., 1].
+        If block_sparse_size is set, pruner will treat the block as a whole to prune.
+        Note that block_sparse_size is back-aligned with weight size.
+
+        Example::
+        
+            pruning tensor: weight
+            pruning tensor shape: [2, 4, 4]
+            sparsity: 25%
+            block_sparse_size: [2, 2]
+            generated mask might be:
+            [[[1., 1., 1., 1.],
+              [1., 1., 1., 1.],
+              [1., 1., 1., 1.],
+              [1., 1., 1., 1.]],
+             [[0., 0., 1., 1.],
+              [0., 0., 1., 1.],
+              [1., 1., 0., 0.],
+              [1., 1., 0., 0.]]]
 
     Examples
     --------
@@ -197,7 +217,7 @@ class LevelPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: Optional[List] = None,
-                 block_sparse_size: Optional[Union[int, List[int]]] = None):
+                 block_sparse_size: Union[int, List[int], None] = None):
         self.mode = mode
         self.balance_gran = balance_gran
         self.block_sparse_size = block_sparse_size

@@ -47,7 +47,7 @@ class BankSparsityAllocator(SparsityAllocator):
     aligned with balance_gran. Each sub block has the same sparsity which equal to the overall sparsity.
     This allocator pruned the weight in the granularity of block. 
     """
-    def __init__(self, pruner: Pruner, balance_gran: list, block_sparse_size: Optional[Union[int, List[int]]] = None):
+    def __init__(self, pruner: Pruner, balance_gran: list, block_sparse_size: Union[int, List[int], None] = None):
         super().__init__(pruner, block_sparse_size=block_sparse_size)
         self.balance_gran = balance_gran
         for gran in self.balance_gran:
