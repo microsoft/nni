@@ -37,7 +37,7 @@ jobs:
       python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
     displayName: Integration test
 
-- job: local_windows
+- job: windows
   pool: NNI CI WINDOWS FULL TEST
   timeoutInMinutes: 120
 
