@@ -276,17 +276,13 @@ class RetiariiExperiment(Experiment):
 
         self._start_end(port, config.nni_manager_ip)
 
-        self._create_execution_engine() # FIXME: engine cannot be created twice
-
         self._dispatcher = RetiariiAdvisor()
         # dispatcher must be launched after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
         self._dispatcher_thread = Thread(target=self._dispatcher.run)
         self._dispatcher_thread.start()
 
-        self._start_strategy()
-        # TODO: the experiment should be completed, when strategy exits and there is no running job
-        _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
+        self._create_execution_engine() # FIXME: engine cannot be created twice
 
     def run(self, config: Optional[RetiariiExeConfig] = None, port: int = 8080, debug: bool = False) -> None:
         """
@@ -310,22 +306,24 @@ class RetiariiExperiment(Experiment):
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
             self.config = config
-            super().run(port, True, debug)
+            self.start(port, debug)
+            try:
+                self._start_strategy()
+                self._wait_completion()
+            except KeyboardInterrupt:
+                _logger.warning('KeyboardInterrupt detected')
+                self.stop()
 
     def stop(self) -> None:
         """
         Stop background experiment.
         """
-        _logger.info('To stop experiment...')
-        # stop strategy first
-        if self._dispatcher_thread is not None:
-            self._dispatcher.stopping = True
-            self._dispatcher_thread.join(timeout=1)
-
+        _logger.info('Stopping experiment, please wait...')
+        self._stop()
+        self._dispatcher_thread.join()
         self._dispatcher = cast(RetiariiAdvisor, None)
         self._dispatcher_thread = None
-
-        super().stop()
+        _logger.info('Experiment stopped')
 
     def export_top_models(self, top_k: int = 1, optimize_mode: str = 'maximize', formatter: str = 'dict') -> Any:
         """

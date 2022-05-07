@@ -92,7 +92,6 @@ class Experiment:
         if run_mode is not RunMode.Detach:
             atexit.register(self.stop)
 
-        print(type(self.config))
         config = self.config.canonical_copy()
         if hasattr(config, "use_annotation") and config.use_annotation: #TODO: will be refactored
             raise RuntimeError('NNI annotation is not supported by Python experiment API.')
@@ -137,11 +136,7 @@ class Experiment:
 
         self._start_end(port, config.nni_manager_ip)
 
-    def stop(self) -> None:
-        """
-        Stop the experiment.
-        """
-        _logger.info('Stopping experiment, please wait...')
+    def _stop(self) -> None:
         atexit.unregister(self.stop)
 
         nni.runtime.log.stop_experiment_log(self.id)
@@ -156,7 +151,23 @@ class Experiment:
         self.id = None  # type: ignore
         self.port = None
         self._proc = None
+
+    def stop(self) -> None:
+        """
+        Stop the experiment.
+        """
+        _logger.info('Stopping experiment, please wait...')
+        self._stop()
         _logger.info('Experiment stopped')
+
+    def _wait_completion(self) -> None:
+        while True:
+            time.sleep(10)
+            status = self.get_status()
+            if status == 'DONE' or status == 'STOPPED':
+                return True
+            if status == 'ERROR':
+                return False
 
     def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
         """
@@ -171,13 +182,7 @@ class Experiment:
         self.start(port, debug)
         if wait_completion:
             try:
-                while True:
-                    time.sleep(10)
-                    status = self.get_status()
-                    if status == 'DONE' or status == 'STOPPED':
-                        return True
-                    if status == 'ERROR':
-                        return False
+                self._wait_completion()
             except KeyboardInterrupt:
                 _logger.warning('KeyboardInterrupt detected')
                 self.stop()

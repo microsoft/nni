@@ -303,8 +303,8 @@ class NNIManager implements Manager {
         }
 
         this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
+        this.dispatcher.sendCommand(TERMINATE);
         if (this.dispatcherPid > 0) {
-            this.dispatcher.sendCommand(TERMINATE);
             // gracefully terminate tuner and assessor here, wait at most 30 seconds.
             for (let i: number = 0; i < 30; i++) {
                 if (!await isAlive(this.dispatcherPid)) {
