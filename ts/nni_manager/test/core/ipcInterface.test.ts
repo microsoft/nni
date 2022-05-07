@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
-import { cleanupUnitTest, prepareUnitTest, getTunerProc, getCmdPy } from '../../common/utils';
+import { cleanupUnitTest, prepareUnitTest, getTunerProc } from '../../common/utils';
 import * as CommandType from '../../core/commands';
 import { createDispatcherInterface, IpcInterface } from '../../core/ipcInterface';
 import { NNIError } from '../../common/errors';
@@ -22,7 +22,7 @@ async function runProcess(): Promise<Error | null> {
 
     // create fake assessor process
     const stdio: StdioOptions = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
-    const command: string = getCmdPy() + ' assessor.py';
+    const command: string = 'python assessor.py';
     const proc: ChildProcess = getTunerProc(command, stdio,  'core/test', process.env);
     // record its sent/received commands on exit
     proc.on('error', (error: Error): void => { deferred.resolve(error); });

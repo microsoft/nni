@@ -27,7 +27,6 @@ import { Container, Scope } from 'typescript-ioc';
 
 import * as component from 'common/component';
 import { Database, DataStore } from 'common/datastore';
-import { ExperimentManager } from 'common/experimentManager';
 import globals, { initGlobals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import { Manager } from 'common/manager';
@@ -35,7 +34,7 @@ import { TensorboardManager } from 'common/tensorboardManager';
 import { NNIDataStore } from 'core/nniDataStore';
 import { NNIManager } from 'core/nnimanager';
 import { SqlDB } from 'core/sqlDatabase';
-import { NNIExperimentsManager } from 'extensions/experiments_manager';
+import { initExperimentsManager } from 'extensions/experiments_manager';
 import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
 import { RestServer } from 'rest_server';
 
@@ -49,7 +48,6 @@ async function start(): Promise<void> {
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
-    Container.bind(ExperimentManager).to(NNIExperimentsManager).scope(Scope.Singleton);
     Container.bind(TensorboardManager).to(NNITensorboardManager).scope(Scope.Singleton);
 
     const ds: DataStore = component.get(DataStore);
@@ -57,6 +55,8 @@ async function start(): Promise<void> {
 
     const restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
     await restServer.start();
+
+    initExperimentsManager();
 
     globals.shutdown.notifyInitializeComplete();
 }

@@ -182,10 +182,6 @@ class Experiment {
         return new SearchSpace('', '', this.searchSpace);
     }
 
-    get logCollectionEnabled(): boolean {
-        return false;
-    }
-
     get status(): string {
         if (!this.statusField) {
             // throw Error('Experiment status not initialized');

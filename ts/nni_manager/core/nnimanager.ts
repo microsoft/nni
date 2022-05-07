@@ -15,7 +15,7 @@ import {
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
 import { ExperimentConfig, LocalConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
-import { ExperimentManager } from '../common/experimentManager';
+import { getExperimentsManager } from 'extensions/experiments_manager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, TrialCommandContent, PlacementConstraint
@@ -33,7 +33,6 @@ import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 class NNIManager implements Manager {
     private trainingService!: TrainingService;
     private dispatcher: IpcInterface | undefined;
-    private experimentManager: ExperimentManager;
     private currSubmittedTrialNum: number;  // need to be recovered
     private trialConcurrencyChange: number; // >0: increase, <0: decrease
     private log: Logger;
@@ -52,7 +51,6 @@ class NNIManager implements Manager {
     constructor() {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
-        this.experimentManager = component.get(ExperimentManager);
         this.dispatcherPid = 0;
         this.waitingTrials = [];
         this.trialJobs = new Map<string, TrialJobDetail>();
@@ -347,7 +345,6 @@ class NNIManager implements Manager {
         this.setStatus('STOPPED');
         this.log.info('Experiment stopped.');
 
-        await this.experimentManager.stop();
         await component.get<TensorboardManager>(TensorboardManager).stop();
         await this.dataStore.close();
     }
@@ -882,13 +879,13 @@ class NNIManager implements Manager {
         if (status !== this.status.status) {
             this.log.info(`Change NNIManager status from: ${this.status.status} to: ${status}`);
             this.status.status = status;
-            this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'status', this.status.status);
+            getExperimentsManager().setExperimentInfo(this.experimentProfile.id, 'status', this.status.status);
         }
     }
 
     private setEndtime(): void {
         this.experimentProfile.endTime = Date.now();
-        this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'endTime', this.experimentProfile.endTime);
+        getExperimentsManager().setExperimentInfo(this.experimentProfile.id, 'endTime', this.experimentProfile.endTime);
     }
 
     private async createCheckpointDir(): Promise<string> {
