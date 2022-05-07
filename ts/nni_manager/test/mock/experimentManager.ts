@@ -1,16 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { ExperimentManager } from '../../common/experimentManager';
-import { Provider } from 'typescript-ioc';
-
-export const testExperimentManagerProvider: Provider = {
-    get: (): ExperimentManager => { return new mockedeExperimentManager(); }
-};
-
-export class mockedeExperimentManager extends ExperimentManager {
+export class MockedExperimentManager {
     public getExperimentsInfo(): Promise<JSON> {
         const expInfo = JSON.parse(JSON.stringify({
             "test": {

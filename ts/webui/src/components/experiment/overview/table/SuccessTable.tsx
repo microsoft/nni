@@ -14,7 +14,7 @@ import {
     ScrollbarVisibility
 } from '@fluentui/react';
 import DefaultMetric from './DefaultMetric';
-import OpenRow from '@components/common/OpenRow';
+import OpenRow from '@/components/common/ExpandableDetails/OpenRow';
 import CopyButton from '@components/common/CopyButton';
 import { convertDuration, copyAndSort } from '@static/function';
 import { TRIALS } from '@static/datamodel';

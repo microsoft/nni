@@ -16,7 +16,7 @@ import { TitleContext } from './TitleContext';
 import { itemStyleSucceed, entriesOption } from './overviewConst';
 import '@style/experiment/overview/overview.scss';
 import '@style/experiment/overview/topTrial.scss';
-import '@style/logPath.scss';
+import '@style/table.scss';
 
 /**
  * single experiment
