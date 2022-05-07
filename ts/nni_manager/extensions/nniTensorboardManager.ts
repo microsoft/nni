@@ -11,6 +11,7 @@ import { getLogger, Logger } from '../common/log';
 import { getTunerProc, isAlive, uniqueString, mkDirPSync, getFreePort } from '../common/utils';
 import { Manager } from '../common/manager';
 import { TensorboardParams, TensorboardTaskStatus, TensorboardTaskInfo, TensorboardManager } from '../common/tensorboardManager';
+import globals from 'common/globals';
 
 class TensorboardTaskDetail implements TensorboardTaskInfo {
     public id: string;
@@ -112,7 +113,7 @@ class NNITensorboardManager implements TensorboardManager {
     }
 
     private setTensorboardVersion(): void {
-        let command = `python3 -c 'import tensorboard ; print(tensorboard.__version__)' 2>&1`;
+        let command = `${globals.args.pythonInterpreter} -c 'import tensorboard ; print(tensorboard.__version__)' 2>&1`;
         if (process.platform === 'win32') {
             command = `python -c "import tensorboard ; print(tensorboard.__version__)" 2>&1`;
         }
