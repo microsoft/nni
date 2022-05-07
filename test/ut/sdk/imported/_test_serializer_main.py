@@ -11,8 +11,12 @@ from nni.retiarii import model_wrapper
 class Net(nn.Module):
     something = 1
 
+import cloudpickle
+
 if sys.argv[1] == '0':
-    nni.dump(Net, fp=open('serialize_result.txt', 'w'))
+    cloudpickle.dump(Net, open('serialize_result.txt', 'wb'))
+    # nni.dump(Net, fp=open('serialize_result.txt', 'w'))
 else:
-    obj = nni.load(fp=open('serialize_result.txt'))
+    obj = cloudpickle.load(open('serialize_result.txt', 'rb'))
+    # obj = nni.load(fp=open('serialize_result.txt'))
     assert obj().something == 1
