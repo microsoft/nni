@@ -13,7 +13,7 @@ steps:
     set -e
     mkdir -p test/data
     cd test
-    azcopy copy 'https://nni.blob.core.windows.net/testdata/*.zip' data
+    azcopy copy 'https://nni.blob.core.windows.net/testdata/*' data
     python vso_tools/unpack_testdata.py
     ls -al data
   displayName: Download test data
