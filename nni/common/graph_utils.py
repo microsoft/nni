@@ -709,7 +709,7 @@ class TorchModuleGraph(TorchGraph):
 
         self.leaf_modules = self._extract_leaf_modules()
         module_to_type = {name: parse_traced_name(
-            module.original_name) for name, module in self.trace.named_modules()}
+            module._name if hasattr(module, '_name') else module.original_name) for name, module in self.trace.named_modules()}
 
         # associate module name with their trace graph nodes
         for node in graph.nodes():
