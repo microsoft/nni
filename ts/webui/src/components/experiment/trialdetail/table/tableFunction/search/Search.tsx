@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import {
     Stack,
@@ -13,11 +13,13 @@ import { SearchItems } from '@static/interface';
 import SearchParameterConditions from './SearchParameterConditions';
 import GeneralSearch from './GeneralSearch';
 import { classNames, isChoiceType } from './searchFunction';
+import { AppContext } from '@/App';
 
 // TableList search layout
 
 function Search(props): any {
-    const { searchFilter, changeSearchFilterList, updatePage } = props;
+    const { searchFilter, changeSearchFilterList } = props;
+    const { updateDetailPage } = useContext(AppContext);
     const [searchInputVal, setSearchInputVal] = useState('');
 
     function getSearchMenu(parameterList): IContextualMenuProps {
@@ -80,7 +82,7 @@ function Search(props): any {
                 parameter={item.text}
                 searchFilter={searchFilter} // search filter list
                 changeSearchFilterList={changeSearchFilterList}
-                updatePage={updatePage}
+                updatePage={updateDetailPage}
                 setSearchInputVal={setSearchInputVal}
                 dismiss={dismissMenu} // close menu
             />
@@ -94,7 +96,6 @@ function Search(props): any {
                 searchFilter={searchFilter} // search fliter list
                 changeSearchFilterList={changeSearchFilterList}
                 setSearchInputVal={setSearchInputVal}
-                updatePage={updatePage}
                 dismiss={dismissMenu} // after click Apply button to close menu
             />
         );
@@ -107,7 +108,7 @@ function Search(props): any {
     // update TableList page
     function changeTableListPage(searchFilterList: Array<SearchItems>): void {
         changeSearchFilterList(searchFilterList);
-        updatePage();
+        updateDetailPage();
     }
 
     // deal with the format 1.[x, (space)xx] 2. (space)[x]
@@ -266,8 +267,7 @@ function Search(props): any {
 
 Search.propTypes = {
     searchFilter: PropTypes.array,
-    changeSearchFilterList: PropTypes.func,
-    updatePage: PropTypes.func
+    changeSearchFilterList: PropTypes.func
 };
 
 export default Search;

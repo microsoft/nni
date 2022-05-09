@@ -4,9 +4,9 @@
 import inspect
 import os
 import warnings
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar, Type
 
-from nni.common.serializer import Traceable, is_traceable, is_wrapped_with_trace, trace, _copy_class_wrapper_attributes
+from nni.common.serializer import is_traceable, is_wrapped_with_trace, trace, _copy_class_wrapper_attributes
 from .utils import ModelNamespace
 
 __all__ = ['get_init_parameters_or_fail', 'serialize', 'serialize_cls', 'basic_unit', 'model_wrapper',
@@ -48,7 +48,7 @@ def serialize_cls(cls):
     return trace(cls)
 
 
-def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
+def basic_unit(cls: T, basic_unit_tag: bool = True) -> T:
     """
     To wrap a module as a basic unit, is to make it a primitive and stop the engine from digging deeper into it.
 
@@ -75,17 +75,17 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
         return cls
 
     import torch.nn as nn
-    assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
+    assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'  # type: ignore
 
     cls = trace(cls)
-    cls._nni_basic_unit = basic_unit_tag
+    cls._nni_basic_unit = basic_unit_tag  # type: ignore
 
     _torchscript_patch(cls)
 
     return cls
 
 
-def model_wrapper(cls: T) -> Union[T, Traceable]:
+def model_wrapper(cls: T) -> T:
     """
     Wrap the base model (search space). For example,
 
@@ -113,7 +113,7 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
         return cls
 
     import torch.nn as nn
-    assert issubclass(cls, nn.Module)
+    assert issubclass(cls, nn.Module)  # type: ignore
 
     # subclass can still use trace info
     wrapper = trace(cls, inheritable=True)
@@ -146,7 +146,7 @@ def is_model_wrapped(cls_or_instance) -> bool:
     return getattr(cls_or_instance, '_nni_model_wrapper', False)
 
 
-def _check_wrapped(cls: T, rewrap: str) -> bool:
+def _check_wrapped(cls: Type, rewrap: str) -> bool:
     wrapped = None
     if is_model_wrapped(cls):
         wrapped = 'model_wrapper'

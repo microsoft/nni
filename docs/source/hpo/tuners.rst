@@ -38,7 +38,7 @@ As a general example, random tuner can be configured as follow:
         'x': {'_type': 'uniform', '_value': [0, 1]},
         'y': {'_type': 'choice', '_value': ['a', 'b', 'c']}
     }
-    config.tuner.name = 'Random'
+    config.tuner.name = 'random'
     config.tuner.class_args = {'seed': 0}
 
 Built-in Tuners

@@ -61,6 +61,7 @@ extensions = [
 
     # Custom extensions in extension/ folder.
     'tutorial_links',  # this has to be after sphinx-gallery
+    'getpartialtext',
     'inplace_translation',
     'cardlinkitem',
     'codesnippetcard',
@@ -98,8 +99,13 @@ nitpicky = False  # disabled for now
 # A list of regular expressions that match URIs that should not be checked.
 linkcheck_ignore = [
     r'http://localhost:\d+',
-    r'.*://.*/#/',                          # Modern websites that has URLs like xxx.com/#/guide
-    r'https://github.com/JSong-Jia/Pic/',   # Community links can't be found any more
+    r'.*://.*/#/',                           # Modern websites that has URLs like xxx.com/#/guide
+    r'https://github\.com/JSong-Jia/Pic/',   # Community links can't be found any more
+
+    # Some URLs that often fail
+    r'https://www\.cs\.toronto\.edu/',                      # CIFAR-10
+    r'https://help\.aliyun\.com/document_detail/\d+\.html', # Aliyun
+    r'http://www\.image-net\.org/',                         # ImageNet
 ]
 
 # Ignore all links located in release.rst
@@ -185,6 +191,18 @@ master_doc = 'index'
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
 language = None
+
+# Translation related settings
+locale_dir = ['locales']
+
+# Documents that requires translation: https://github.com/microsoft/nni/issues/4298
+gettext_documents = [
+    r'^index$',
+    r'^quickstart$',
+    r'^installation$',
+    r'^(nas|hpo|compression)/overview$',
+    r'^tutorials/(hello_nas|pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
+]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

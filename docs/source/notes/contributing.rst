@@ -305,16 +305,31 @@ To contribute a new tutorial, here are the steps to follow:
    * `How to add images to notebooks <https://sphinx-gallery.github.io/stable/configuration.html#adding-images-to-notebooks>`_.
    * `How to reference a tutorial in documentation <https://sphinx-gallery.github.io/stable/advanced.html#cross-referencing>`_.
 
-Chinese translation
-^^^^^^^^^^^^^^^^^^^
+Translation (i18n)
+^^^^^^^^^^^^^^^^^^
 
-We only maintain `a partial set of documents <https://github.com/microsoft/nni/issues/4298>`_ with Chinese translation. If you intend to contribute more, follow the steps:
+We only maintain `a partial set of documents <https://github.com/microsoft/nni/issues/4298>`_ with translation. Currently, translation is provided in Simplified Chinese only.
 
-1. Add a ``xxx_zh.rst`` in the same folder where ``xxx.rst`` exists. 
-2. Run ``python tools/chineselink.py`` under ``docs`` folder, to generate a hash string in your created ``xxx_zh.rst``.
-3. Don't delete the hash string, add your translation after it.
+* If you want to update the translation of an existing document, please update messages in ``docs/source/locales``.
+* If you have updated a translated English document, we require that the corresponding translated documents to be updated (at least the update should be triggered). Please follow these steps:
 
-In case you modify an English document with Chinese translation already exists, you also need to run ``python tools/chineselink.py`` first to update the hash string, and update the Chinese translation contents accordingly.
+  1. Run ``make i18n`` under ``docs`` folder.
+  2. Verify that there are new messages in ``docs/source/locales``.
+  3. Translate the messages.
+
+* If you intend to translate a new document:
+
+  1. Update ``docs/source/conf.py`` to make ``gettext_documents`` include your document (probably adding a new regular expression).
+  2. See the steps above.
+
+
+To build the translated documentation (for example Chinese documentation), please run:
+
+.. code-block:: bash
+
+   make -e SPHINXOPTS="-D language='zh'" html
+
+If you ever encountered problems for translation builds, try to remove the previous build via ``rm -r docs/build/``.
 
 .. _code-of-conduct:
 
@@ -327,3 +342,17 @@ For more information see the `Code of Conduct FAQ <https://opensource.microsoft.
 Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
 
 When you submit a pull request, a CLA bot will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions provided by the bot. You will only need to do this once across all repos using our CLA.
+
+We enforce every source files in this project to carry a license header. This should be added at the beginning of each file. Please contact the maintainer if you think there should be an exception.
+
+.. tabs::
+
+   .. code-tab:: python
+
+      # Copyright (c) Microsoft Corporation.
+      # Licensed under the MIT license.
+
+   .. code-tab:: typescript
+
+      // Copyright (c) Microsoft Corporation.
+      // Licensed under the MIT license.

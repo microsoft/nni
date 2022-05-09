@@ -13,7 +13,7 @@ from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression.v2.pytorch.base import Compressor, LayerInfo, Task, TaskResult
+from nni.algorithms.compression.v2.pytorch.base import Pruner, LayerInfo, Task, TaskResult
 from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
 
 _logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class DataCollector:
         The compressor binded with this DataCollector.
     """
 
-    def __init__(self, compressor: Compressor):
+    def __init__(self, compressor: Pruner):
         self.compressor = compressor
 
     def reset(self):
@@ -76,10 +76,10 @@ class TrainerBasedDataCollector(DataCollector):
     This class includes some trainer based util functions, i.e., patch optimizer or criterion, add hooks.
     """
 
-    def __init__(self, compressor: Compressor, trainer: Callable[[Module, Optimizer, Callable], None], optimizer_helper: OptimizerConstructHelper,
+    def __init__(self, compressor: Pruner, trainer: Callable[[Module, Optimizer, Callable], None], optimizer_helper: OptimizerConstructHelper,
                  criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int,
                  opt_before_tasks: List = [], opt_after_tasks: List = [],
-                 collector_infos: List[HookCollectorInfo] = [], criterion_patch: Callable[[Callable], Callable] = None):
+                 collector_infos: List[HookCollectorInfo] = [], criterion_patch: Optional[Callable[[Callable], Callable]] = None):
         """
         Parameters
         ----------
@@ -165,6 +165,7 @@ class TrainerBasedDataCollector(DataCollector):
 
     def _reset_optimizer(self):
         parameter_name_map = self.compressor.get_origin2wrapped_parameter_name_map()
+        assert self.compressor.bound_model is not None
         self.optimizer = self.optimizer_helper.call(self.compressor.bound_model, parameter_name_map)
 
     def _patch_optimizer(self):
@@ -187,11 +188,11 @@ class TrainerBasedDataCollector(DataCollector):
         self._hook_buffer[self._hook_id] = {}
 
         if collector_info.hook_type == 'forward':
-            self._add_forward_hook(self._hook_id, collector_info.targets, collector_info.collector)
+            self._add_forward_hook(self._hook_id, collector_info.targets, collector_info.collector)  # type: ignore
         elif collector_info.hook_type == 'backward':
-            self._add_backward_hook(self._hook_id, collector_info.targets, collector_info.collector)
+            self._add_backward_hook(self._hook_id, collector_info.targets, collector_info.collector)  # type: ignore
         elif collector_info.hook_type == 'tensor':
-            self._add_tensor_hook(self._hook_id, collector_info.targets, collector_info.collector)
+            self._add_tensor_hook(self._hook_id, collector_info.targets, collector_info.collector)  # type: ignore
         else:
             _logger.warning('Skip unsupported hook type: %s', collector_info.hook_type)
 
@@ -210,7 +211,7 @@ class TrainerBasedDataCollector(DataCollector):
         assert all(isinstance(layer_info, LayerInfo) for layer_info in layers)
         for layer in layers:
             self._hook_buffer[hook_id][layer.name] = []
-            handle = layer.module.register_backward_hook(collector(self._hook_buffer[hook_id][layer.name]))
+            handle = layer.module.register_backward_hook(collector(self._hook_buffer[hook_id][layer.name]))  # type: ignore
             self._hook_handles[hook_id][layer.name] = handle
 
     def _add_tensor_hook(self, hook_id: int, tensors: Dict[str, Tensor],
@@ -286,7 +287,7 @@ class MetricsCalculator:
             self.block_sparse_size = [1] * len(self.dim)
         if self.dim is not None:
             assert all(i >= 0 for i in self.dim)
-            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))
+            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))  # type: ignore
 
     def calculate_metrics(self, data: Dict) -> Dict[str, Tensor]:
         """
@@ -334,7 +335,7 @@ class SparsityAllocator:
         Inherit the mask already in the wrapper if set True.
     """
 
-    def __init__(self, pruner: Compressor, dim: Optional[Union[int, List[int]]] = None,
+    def __init__(self, pruner: Pruner, dim: Optional[Union[int, List[int]]] = None,
                  block_sparse_size: Optional[Union[int, List[int]]] = None, continuous_mask: bool = True):
         self.pruner = pruner
         self.dim = dim if not isinstance(dim, int) else [dim]
@@ -345,7 +346,7 @@ class SparsityAllocator:
             self.block_sparse_size = [1] * len(self.dim)
         if self.dim is not None:
             assert all(i >= 0 for i in self.dim)
-            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))
+            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))  # type: ignore
         self.continuous_mask = continuous_mask
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
@@ -384,7 +385,7 @@ class SparsityAllocator:
             weight_mask = weight_mask.expand(expand_size).reshape(reshape_size)
 
         wrapper = self.pruner.get_modules_wrapper()[name]
-        weight_size = wrapper.weight.data.size()
+        weight_size = wrapper.weight.data.size()  # type: ignore
 
         if self.dim is None:
             assert weight_mask.size() == weight_size
@@ -401,7 +402,7 @@ class SparsityAllocator:
             expand_mask = {'weight': weight_mask.expand(weight_size).clone()}
             # NOTE: assume we only mask output, so the mask and bias have a one-to-one correspondence.
             # If we support more kind of masks, this place need refactor.
-            if wrapper.bias_mask is not None and weight_mask.size() == wrapper.bias_mask.size():
+            if wrapper.bias_mask is not None and weight_mask.size() == wrapper.bias_mask.size():  # type: ignore
                 expand_mask['bias'] = weight_mask.clone()
         return expand_mask
 
@@ -463,7 +464,7 @@ class TaskGenerator:
         If keeping the intermediate result, including intermediate model and masks during each iteration.
     """
     def __init__(self, origin_model: Optional[Module], origin_masks: Optional[Dict[str, Dict[str, Tensor]]] = {},
-                 origin_config_list: Optional[List[Dict]] = [], log_dir: str = '.', keep_intermediate_result: bool = False):
+                 origin_config_list: Optional[List[Dict]] = [], log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False):
         self._log_dir = log_dir
         self._keep_intermediate_result = keep_intermediate_result
 
@@ -486,7 +487,7 @@ class TaskGenerator:
         self._save_data('origin', model, masks, config_list)
 
         self._task_id_candidate = 0
-        self._tasks: Dict[int, Task] = {}
+        self._tasks: Dict[Union[int, str], Task] = {}
         self._pending_tasks: List[Task] = self.init_pending_tasks()
 
         self._best_score = None
@@ -560,7 +561,7 @@ class TaskGenerator:
             self._dump_tasks_info()
             return task
 
-    def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]]:
+    def get_best_result(self) -> Optional[Tuple[Union[int, str], Module, Dict[str, Dict[str, Tensor]], Optional[float], List[Dict]]]:
         """
         Returns
         -------

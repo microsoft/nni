@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Callable, Optional
 from schema import And, Or, Optional as SchemaOptional, SchemaError
 import torch
 from torch import Tensor
-import torch.nn as nn
+import torch.nn.functional as F
 from torch.nn import Module
 from torch.optim import Optimizer
 
@@ -77,10 +77,10 @@ INTERNAL_SCHEMA = {
 
 
 class BasicPruner(Pruner):
-    def __init__(self, model: Module, config_list: List[Dict]):
-        self.data_collector: DataCollector = None
-        self.metrics_calculator: MetricsCalculator = None
-        self.sparsity_allocator: SparsityAllocator = None
+    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]]):
+        self.data_collector: Optional[DataCollector] = None
+        self.metrics_calculator: Optional[MetricsCalculator] = None
+        self.sparsity_allocator: Optional[SparsityAllocator] = None
 
         super().__init__(model, config_list)
 
@@ -114,6 +114,8 @@ class BasicPruner(Pruner):
         Tuple[Module, Dict]
             Return the wrapped model and mask.
         """
+        assert self.bound_model is not None and self.config_list is not None, 'Model and/or config_list are not set in this pruner, please set them by reset() before compress().'
+        assert self.data_collector is not None and self.metrics_calculator is not None and self.sparsity_allocator is not None
         data = self.data_collector.collect()
         _logger.debug('Collected Data:\n%s', data)
         metrics = self.metrics_calculator.calculate_metrics(data)
@@ -553,8 +555,8 @@ class SlimPruner(BasicPruner):
     def criterion_patch(self, criterion: Callable[[Tensor, Tensor], Tensor]) -> Callable[[Tensor, Tensor], Tensor]:
         def patched_criterion(input_tensor: Tensor, target: Tensor):
             sum_l1 = 0
-            for _, wrapper in self.get_modules_wrapper().items():
-                sum_l1 += torch.norm(wrapper.module.weight, p=1)
+            for wrapper in self.get_modules_wrapper().values():
+                sum_l1 += torch.norm(wrapper.module.weight, p=1)  # type: ignore
             return criterion(input_tensor, target) + self._scale * sum_l1
         return patched_criterion
 
@@ -654,11 +656,11 @@ class ActivationPruner(BasicPruner):
 
     def _choose_activation(self, activation: str = 'relu') -> Callable:
         if activation == 'relu':
-            return nn.functional.relu
+            return F.relu
         elif activation == 'relu6':
-            return nn.functional.relu6
+            return F.relu6
         else:
-            raise 'Unsupported activatoin {}'.format(activation)
+            raise Exception('Unsupported activatoin {}'.format(activation))
 
     def _collector(self, buffer: List) -> Callable[[Module, Tensor, Tensor], None]:
         assert len(buffer) == 0, 'Buffer pass to activation pruner collector is not empty.'
@@ -684,7 +686,7 @@ class ActivationPruner(BasicPruner):
             self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                       1, collector_infos=[collector_info])
         else:
-            self.data_collector.reset(collector_infos=[collector_info])
+            self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
         if self.metrics_calculator is None:
             self.metrics_calculator = self._get_metrics_calculator()
         if self.sparsity_allocator is None:
@@ -999,13 +1001,13 @@ class TaylorFOWeightPruner(BasicPruner):
         return (weight_tensor.detach() * grad.detach()).data.pow(2)
 
     def reset_tools(self):
-        hook_targets = {name: wrapper.weight for name, wrapper in self.get_modules_wrapper().items()}
-        collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)
+        hook_targets = {name: wrapper.weight for name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
+        collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)  # type: ignore
         if self.data_collector is None:
             self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                       1, collector_infos=[collector_info])
         else:
-            self.data_collector.reset(collector_infos=[collector_info])
+            self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
         if self.metrics_calculator is None:
             self.metrics_calculator = MultiDataNormMetricsCalculator(p=1, dim=0)
         if self.sparsity_allocator is None:
@@ -1095,24 +1097,26 @@ class ADMMPruner(BasicPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/admm_pruning_torch.py <examples/model_compress/pruning/admm_pruning_torch.py>`
     """
 
-    def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
+    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]], trainer: Callable[[Module, Optimizer, Callable], None],
                  traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int,
                  training_epochs: int, granularity: str = 'fine-grained'):
         self.trainer = trainer
         if isinstance(traced_optimizer, OptimizerConstructHelper):
             self.optimizer_helper = traced_optimizer
         else:
+            assert model is not None, 'Model is required if traced_optimizer is provided.'
             self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.iterations = iterations
         self.training_epochs = training_epochs
         assert granularity in ['fine-grained', 'coarse-grained']
         self.granularity = granularity
+        self.Z, self.U = {}, {}
         super().__init__(model, config_list)
 
-    def reset(self, model: Optional[Module], config_list: Optional[List[Dict]]):
+    def reset(self, model: Module, config_list: List[Dict]):
         super().reset(model, config_list)
-        self.Z = {name: wrapper.module.weight.data.clone().detach() for name, wrapper in self.get_modules_wrapper().items()}
+        self.Z = {name: wrapper.module.weight.data.clone().detach() for name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
         self.U = {name: torch.zeros_like(z).to(z.device) for name, z in self.Z.items()}
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -1156,6 +1160,8 @@ class ADMMPruner(BasicPruner):
         Tuple[Module, Dict]
             Return the wrapped model and mask.
         """
+        assert self.bound_model is not None
+        assert self.data_collector is not None and self.metrics_calculator is not None and self.sparsity_allocator is not None
         for i in range(self.iterations):
             _logger.info('======= ADMM Iteration %d Start =======', i)
             data = self.data_collector.collect()
@@ -1169,11 +1175,10 @@ class ADMMPruner(BasicPruner):
                 self.Z[name] = self.Z[name].mul(mask['weight'])
                 self.U[name] = self.U[name] + data[name] - self.Z[name]
 
-        self.Z = None
-        self.U = None
+        self.Z, self.U = {}, {}
         torch.cuda.empty_cache()
 
-        metrics = self.metrics_calculator.calculate_metrics(data)
+        metrics = self.metrics_calculator.calculate_metrics(data)  # type: ignore
         masks = self.sparsity_allocator.generate_sparsity(metrics)
 
         self.load_masks(masks)

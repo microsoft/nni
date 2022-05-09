@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from __future__ import absolute_import
 
 from .mutator import FBNetMutator  # noqa: F401

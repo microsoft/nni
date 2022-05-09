@@ -2,7 +2,7 @@ import * as React from 'react';
 import axios from 'axios';
 import { Stack, StackItem, CommandBarButton, IContextualMenuProps } from '@fluentui/react';
 import { Link } from 'react-router-dom';
-import { WEBUIDOC, MANAGER_IP } from '@static/const';
+import { MANAGER_IP, WEBUIDOC } from '@static/const';
 import ExperimentSummaryPanel from './slideNav/ExperimentSummaryPanel';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './slideNav/NNItabs';
 import { EXPERIMENT } from '@static/datamodel';
@@ -160,7 +160,7 @@ class NavCon extends React.Component<NavProps, NavState> {
                     </StackItem>
                     {isvisibleExperimentDrawer && (
                         <ExperimentSummaryPanel
-                            closeExpDrawer={this.closeExpDrawer}
+                            closeExpPanel={this.closeExpDrawer}
                             experimentProfile={EXPERIMENT.profile}
                         />
                     )}

@@ -1,6 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import copy
 import warnings
-from typing import Callable, Dict, List, Union, Optional, Tuple
+from typing import Callable, Dict, List, Union, Optional, Tuple, Sequence, cast
 try:
     from typing import Literal
 except ImportError:
@@ -193,8 +196,10 @@ class Cell(nn.Module):
     def __init__(self,
                  op_candidates: Union[
                      Callable[[], List[nn.Module]],
-                     List[Union[nn.Module, _cell_op_factory_type]],
-                     Dict[str, Union[nn.Module, _cell_op_factory_type]]
+                     List[nn.Module],
+                     List[_cell_op_factory_type],
+                     Dict[str, nn.Module],
+                     Dict[str, _cell_op_factory_type]
                  ],
                  num_nodes: int,
                  num_ops_per_node: int = 1,
@@ -251,8 +256,8 @@ class Cell(nn.Module):
                 ops = self._convert_op_candidates(op_candidates, i, k, chosen)
 
                 # though it's layer choice and input choice here, in fixed mode, the chosen module will be created.
-                self.ops[-1].append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
-                self.inputs[-1].append(inp)
+                cast(ModuleList, self.ops[-1]).append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
+                cast(ModuleList, self.inputs[-1]).append(inp)
 
     @property
     def label(self):
@@ -274,13 +279,17 @@ class Cell(nn.Module):
             By default, it's the output of ``merge_op``, which is a contenation (on ``concat_dim``)
             of some of (possibly all) the nodes' outputs in the cell.
         """
+        processed_inputs: List[torch.Tensor]
         if len(inputs) == 1 and isinstance(inputs[0], list):
-            inputs = inputs[0]
+            processed_inputs = list(inputs[0])  # shallow copy
         else:
-            inputs = list(inputs)
-        assert len(inputs) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
-        states = self.preprocessor(inputs)
-        for ops, inps in zip(self.ops, self.inputs):
+            processed_inputs = cast(List[torch.Tensor], list(inputs))
+        assert len(processed_inputs) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
+        states: List[torch.Tensor] = self.preprocessor(processed_inputs)
+        for ops, inps in zip(
+            cast(Sequence[Sequence[LayerChoice]], self.ops),
+            cast(Sequence[Sequence[InputChoice]], self.inputs)
+        ):
             current_state = []
             for op, inp in zip(ops, inps):
                 current_state.append(op(inp(states)))
@@ -291,7 +300,7 @@ class Cell(nn.Module):
             this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)
         else:
             this_cell = torch.cat([states[k] for k in self.output_node_indices], self.concat_dim)
-        return self.postprocessor(this_cell, inputs)
+        return self.postprocessor(this_cell, processed_inputs)
 
     @staticmethod
     def _convert_op_candidates(op_candidates, node_index, op_index, chosen) -> Union[Dict[str, nn.Module], List[nn.Module]]:

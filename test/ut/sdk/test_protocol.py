@@ -9,11 +9,12 @@ from unittest import TestCase, main
 
 
 def _prepare_send():
-    protocol._out_file = BytesIO()
-    return protocol._out_file
+    out_file = BytesIO()
+    protocol._set_out_file(out_file)
+    return out_file
 
 def _prepare_receive(data):
-    protocol._in_file = BytesIO(data)
+    protocol._set_in_file(BytesIO(data))
 
 
 class ProtocolTestCase(TestCase):

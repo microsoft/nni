@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import
 from collections import deque, namedtuple
+from typing import Any, List
 import warnings
 import random
 
@@ -31,7 +32,7 @@ def sample_batch_indexes(low, high, size):
             'Not enough entries to sample without replacement. '
             'Consider increasing your warm-up phase to avoid oversampling!')
         batch_idxs = np.random.random_integers(low, high - 1, size=size)
-    assert len(batch_idxs) == size
+    assert len(batch_idxs) == size  # type: ignore
     return batch_idxs
 
 
@@ -147,14 +148,14 @@ class SequentialMemory(Memory):
                 # Skip this transition because the environment was reset here. Select a new, random
                 # transition and use this instead. This may cause the batch to contain the same
                 # transition twice.
-                idx = sample_batch_indexes(1, self.nb_entries, size=1)[0]
+                idx = sample_batch_indexes(1, self.nb_entries, size=1)[0]  # type: ignore
                 terminal0 = self.terminals[idx - 2] if idx >= 2 else False
             assert 1 <= idx < self.nb_entries
 
             # This code is slightly complicated by the fact that subsequent observations might be
             # from different episodes. We ensure that an experience never spans multiple episodes.
             # This is probably not that important in practice but it seems cleaner.
-            state0 = [self.observations[idx - 1]]
+            state0: List[Any] = [self.observations[idx - 1]]
             for offset in range(0, self.window_length - 1):
                 current_idx = idx - 2 - offset
                 current_terminal = self.terminals[current_idx - 1] if current_idx - 1 > 0 else False

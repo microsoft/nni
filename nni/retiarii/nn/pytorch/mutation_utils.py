@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Any, Optional, Tuple, Union
 
 import torch.nn as nn
@@ -41,7 +44,7 @@ def generate_new_label(label: Optional[str]):
     return label
 
 
-def get_fixed_value(label: str) -> Any:
+def get_fixed_value(label: Optional[str]) -> Any:
     ret = get_current_context('fixed')
     try:
         return ret[generate_new_label(label)]
@@ -49,7 +52,7 @@ def get_fixed_value(label: str) -> Any:
         raise KeyError(f'Fixed context with {label} not found. Existing values are: {ret}')
 
 
-def get_fixed_dict(label_prefix: str) -> Tuple[str, Any]:
+def get_fixed_dict(label_prefix: Optional[str]) -> Tuple[str, Any]:
     ret = get_current_context('fixed')
     try:
         label_prefix = generate_new_label(label_prefix)

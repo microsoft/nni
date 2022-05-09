@@ -81,7 +81,7 @@ class MetisTuner(Tuner):
 
     .. code-block::
 
-        config.tuner.name = 'MetisTuner'
+        config.tuner.name = 'Metis'
         config.tuner.class_args = {
             'optimize_mode': 'maximize'
         }
