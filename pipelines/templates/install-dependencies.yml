@@ -25,14 +25,14 @@ steps:
 
 - script: |
     set -e
-    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
+    wget 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' -O dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
   displayName: (POSIX) Download cache
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
   continueOnError: true
 
 - powershell: |
-    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
+    wget 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' -O dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
   displayName: (Windows) Download cache
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
