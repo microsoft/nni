@@ -54,6 +54,7 @@ steps:
 # The following is for linux.
 # Reference: https://dev.to/akaszynski/create-an-azure-self-hosted-agent-without-going-insane-173g
 # We only need Python 3.7 and 3.9 for now.
+# --system-site-packages is required to make packages installed with --user visible to virtualenv.
 - script: |
     set -e
     sudo add-apt-repository ppa:deadsnakes/ppa
@@ -68,7 +69,7 @@ steps:
     mkdir $PY37_VER
     ln -s $PY37_VER 3.7
     cd $PY37_VER
-    python3.7 -m venv x64
+    python3.7 -m venv x64 --system-site-packages
     touch x64.complete
   displayName: Configure Python 3.7
 
@@ -79,6 +80,6 @@ steps:
     mkdir $PY39_VER
     ln -s $PY39_VER 3.9
     cd $PY39_VER
-    python3.9 -m venv x64
+    python3.9 -m venv x64 --system-site-packages
     touch x64.complete
   displayName: Configure Python 3.9
