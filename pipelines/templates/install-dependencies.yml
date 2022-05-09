@@ -59,6 +59,12 @@ steps:
     python -m pip install -r dependencies/recommended.txt
   displayName: Install Python dependencies
 
+- script: |
+    ls -al ${HOME}/.local/bin
+    echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+  displayName: Add .local/bin to PATH
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
+
 # TODO: Delete this after upgrading to PyTorch 1.11.
 - script: |
     python test/vso_tools/interim_patch.py
