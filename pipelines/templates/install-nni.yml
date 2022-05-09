@@ -8,6 +8,7 @@ steps:
 - ${{ if eq(parameters.user, true) }}:
     script: |
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+      ls -al ${HOME}/.local/bin
       python setup.py develop
   ${{ else }}:
     script: |
