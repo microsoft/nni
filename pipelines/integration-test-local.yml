@@ -21,9 +21,7 @@ jobs:
     parameters:
       platform: ubuntu-latest-gpu
 
-  - script: |
-      python setup.py develop
-    displayName: Install NNI
+  - template: templates/install-nni.yml
 
   - script: |
       set -e
