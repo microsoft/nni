@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import math
-from typing import Any, Optional, Tuple, Dict, List, Type, Union
+from __future__ import annotations
+from typing import Any, Tuple, Dict, List, Type
 
 from torch.nn import Module
 
@@ -18,11 +18,8 @@ KEY_ORIGINAL_TARGET = '_original_target'
 KEY_THETAS = '_thetas'
 
 
-def sigmoid(x: float, theta0: float = -0.5, theta1: float = 10) -> float:
-    return 1 / (1 + math.exp(-theta1 * (x + theta0)))
-
 # hard code and magic number for flops/params reward function
-def _flops_theta_helper(target: Union[int, float, str, None], origin: int) -> Tuple[float, float]:
+def _flops_theta_helper(target: int | float | str | None, origin: int) -> Tuple[float, float]:
     if not target or (isinstance(target, (int, float)) and target == 0):
         return (0., 0.)
     elif isinstance(target, float):
@@ -35,7 +32,7 @@ def _flops_theta_helper(target: Union[int, float, str, None], origin: int) -> Tu
         raise NotImplementedError('Currently only supports setting the lower limit.')
 
 # hard code and magic number for metric reward function
-def _metric_theta_helper(target: Optional[float], origin: float) -> Tuple[float, float]:
+def _metric_theta_helper(target: float | None, origin: float) -> Tuple[float, float]:
     if not target:
         return (-0.85, 50.)
     elif isinstance(target, float):
@@ -44,13 +41,13 @@ def _metric_theta_helper(target: Optional[float], origin: float) -> Tuple[float,
     else:
         raise NotImplementedError('Currently only supports setting the lower limit.')
 
-def _summery_module_names(model: Module,
-                          module_types: List[Union[Type[Module], str]],
+def _summary_module_names(model: Module,
+                          module_types: List[Type[Module] | str],
                           module_names: List[str],
                           exclude_module_names: List[str]) -> List[str]:
     _module_types = set()
     _all_module_names = set()
-    module_names_summery = set()
+    module_names_summary = set()
     if module_types:
         for module_type in module_types:
             if isinstance(module_type, Module):
@@ -58,41 +55,41 @@ def _summery_module_names(model: Module,
             assert isinstance(module_type, str)
             _module_types.add(module_type)
 
-    # unfold module types as module names, add them to summery
+    # unfold module types as module names, add them to summary
     for module_name, module in model.named_modules():
         module_type = type(module).__name__
         if module_type in _module_types:
-            module_names_summery.add(module_name)
+            module_names_summary.add(module_name)
         _all_module_names.add(module_name)
 
-    # add module names to summery
+    # add module names to summary
     if module_names:
         for module_name in module_names:
             if module_name not in _all_module_names:
                 # need warning, module_name not exist
                 continue
             else:
-                module_names_summery.add(module_name)
+                module_names_summary.add(module_name)
 
-    # remove module names in exclude_module_names from module_names_summery
+    # remove module names in exclude_module_names from module_names_summary
     if exclude_module_names:
         for module_name in exclude_module_names:
             if module_name not in _all_module_names:
                 # need warning, module_name not exist
                 continue
-            if module_name in module_names_summery:
-                module_names_summery.remove(module_name)
+            if module_name in module_names_summary:
+                module_names_summary.remove(module_name)
 
-    return list(module_names_summery)
+    return list(module_names_summary)
 
-def cc_cv2ss(config: CompressionConfig, vessel: CompressionVessel):
+def generate_compression_search_space(config: CompressionConfig, vessel: CompressionVessel):
     search_space = {}
     model, _, evaluator, dummy_input, _, _, _, _ = vessel.export()
     flops, params, results = count_flops_params(model, dummy_input, verbose=False, mode='full')
     metric = evaluator(model)
 
-    module_names_summery = _summery_module_names(model, config.module_types, config.module_names, config.exclude_module_names)
-    for module_name in module_names_summery:
+    module_names_summary = _summary_module_names(model, config.module_types, config.module_names, config.exclude_module_names)
+    for module_name in module_names_summary:
         search_space['{}{}'.format(KEY_MODULE_NAME, module_name)] = {'_type': 'uniform', '_value': [0, 1]}
 
     assert not config.pruners or not config.quantizers
@@ -126,6 +123,8 @@ def parse_params(kwargs: Dict[str, Any]):
             original_target = value
         elif key == KEY_THETAS:
             thetas = value
+        else:
+            raise KeyError('Unrecognized key {}'.format(key))
 
     return pruner_config, config_list, vessel, original_target, thetas
 

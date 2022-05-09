@@ -1,11 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
 import base64
 import io
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Tuple
 from typing_extensions import Literal
 
 import torch
@@ -20,13 +21,13 @@ from nni.experiment.config.base import ConfigBase
 
 @dataclass(init=False)
 class CompressionVessel(ConfigBase):
-    model: Union[str, bytes]
-    finetuner: Union[str, bytes]
-    evaluator: Union[str, bytes]
-    dummy_input: Union[str, bytes]
-    trainer: Union[str, bytes, Literal['null'], None]
-    optimizer_helper: Union[str, bytes, Literal['null'], None]
-    criterion: Union[str, bytes, Literal['null'], None]
+    model: str | bytes
+    finetuner: str | bytes
+    evaluator: str | bytes
+    dummy_input: str | bytes
+    trainer: str | bytes | Literal['null'] | None
+    optimizer_helper: str | bytes | Literal['null'] | None
+    criterion: str | bytes | Literal['null'] | None
     device: str
 
     def __init__(self,
@@ -34,10 +35,10 @@ class CompressionVessel(ConfigBase):
                  finetuner: Callable[[Module], None],
                  evaluator: Callable[[Module], float],
                  dummy_input: Tensor,
-                 trainer: Optional[Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None]],
-                 optimizer_helper: Union[Optimizer, OptimizerConstructHelper, None],
-                 criterion: Optional[Callable[[Any, Any], Any]],
-                 device: str):
+                 trainer: Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None] | None,
+                 optimizer_helper: Optimizer | OptimizerConstructHelper | None,
+                 criterion: Callable[[Any, Any], Any] | None,
+                 device: str | torch.device):
         # should be wrote as override __init__
         self.model = dump(model) if not isinstance(model, str) else model
         self.finetuner = dump(finetuner) if not isinstance(finetuner, str) else finetuner
@@ -58,8 +59,8 @@ class CompressionVessel(ConfigBase):
         self.device = str(device)
 
     def export(self) -> Tuple[Module, Callable[[Module], None], Callable[[Module], float], Tensor,
-                              Optional[Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None]],
-                              Optional[OptimizerConstructHelper], Optional[Callable[[Any, Any], Any]], torch.device]:
+                              Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None] | None,
+                              OptimizerConstructHelper | None, Callable[[Any, Any], Any] | None, torch.device]:
         device = torch.device(self.device)
         model = load(self.model)
         if Path('nni_model_state_dict.pth').exists():

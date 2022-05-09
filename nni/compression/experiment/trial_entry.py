@@ -3,15 +3,20 @@
 
 """
 Entrypoint for trials.
+TODO: split this file to several modules
 """
+
+import math
 
 import nni
 from nni.algorithms.compression.v2.pytorch.pruning import PruningScheduler
 from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
 from nni.compression.pytorch.utils import count_flops_params
 from .config.utils import parse_params, parse_basic_pruner
-from .config.utils import sigmoid
 
+
+def sigmoid(x: float, theta0: float = -0.5, theta1: float = 10) -> float:
+    return 1 / (1 + math.exp(-theta1 * (x + theta0)))
 
 if __name__ == '__main__':
     kwargs = nni.get_next_parameter()
