@@ -56,7 +56,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     <React.Fragment>
                         <div className='trial' id='tabsty'>
                             <Pivot
-                                defaultSelectedKey={'1'}
+                                defaultSelectedKey={'0'}
                                 className='detail-title'
                                 onLinkClick={this.handleWhichTabs}
                                 selectedKey={whichChart}

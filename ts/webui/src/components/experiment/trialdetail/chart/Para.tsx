@@ -127,7 +127,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             { key: 'maximize', text: 'Maximize' },
                             { key: 'minimize', text: 'Minimize' }
                         ]}
-                        styles={{ dropdown: { width: 100, borderRight: 'none' } }}
+                        styles={{ dropdown: { width: 100 } }}
                         className='para-filter-percent'
                     />
                     <Dropdown
