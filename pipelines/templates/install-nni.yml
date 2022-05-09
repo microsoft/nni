@@ -6,10 +6,10 @@ parameters:
 steps:
 
 - ${{ if eq(parameters.user, true) }}:
-  script: |
-    echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-    python setup.py develop
+    script: |
+      echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+      python setup.py develop
   ${{ else }}:
-  script: |
-    python setup.py develop --no-user
+    script: |
+      python setup.py develop --no-user
   displayName: Install NNI
