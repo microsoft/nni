@@ -192,14 +192,12 @@ class RetiariiExperiment(Experiment):
         if evaluator is None:
             raise ValueError('Evaluator should not be none.')
 
-        self.config: RetiariiExeConfig | None = None
         self.id: str = management.generate_experiment_id()
         self.port: int | None = None
         self._proc: Popen | psutil.Process | None = None
         self._action: Literal['create', 'resume', 'view'] = 'create'
         self.url_prefix: str | None = None
-        self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
-        self.port: Optional[int] = None
+        self.config: RetiariiExeConfig | None = cast(RetiariiExeConfig, None)
 
         self.base_model = base_model
         self.evaluator: Union[Evaluator, BaseOneShotTrainer] = evaluator
@@ -213,7 +211,7 @@ class RetiariiExperiment(Experiment):
                           'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
                           RuntimeWarning)
 
-    def _start_strategy(self):
+    def _run_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
             self.base_model, self.evaluator, self.applied_mutators,
             full_ir=not isinstance(self.config.execution_engine, (PyEngineConfig, BenchmarkEngineConfig)),
@@ -232,7 +230,7 @@ class RetiariiExperiment(Experiment):
         #TODO: we will probably need a execution engine factory to make this clean and elegant
         if isinstance(self.config.execution_engine, BaseEngineConfig):
             from ..execution.base import BaseExecutionEngine
-            engine = BaseExecutionEngine()
+            engine = BaseExecutionEngine(self.port, self.url_prefix)
         elif isinstance(self.config.execution_engine, CgoEngineConfig):
             from ..execution.cgo_engine import CGOExecutionEngine
 
@@ -241,10 +239,12 @@ class RetiariiExperiment(Experiment):
             assert self.config.batch_waiting_time is not None and self.config.max_concurrency_cgo is not None
             engine = CGOExecutionEngine(self.config.training_service,
                                         max_concurrency=self.config.max_concurrency_cgo,
-                                        batch_waiting_time=self.config.batch_waiting_time)
+                                        batch_waiting_time=self.config.batch_waiting_time,
+                                        rest_port=self.port,
+                                        rest_url_prefix=self.url_prefix)
         elif isinstance(self.config.execution_engine, PyEngineConfig):
             from ..execution.python import PurePythonExecutionEngine
-            engine = PurePythonExecutionEngine()
+            engine = PurePythonExecutionEngine(self.port, self.url_prefix)
         elif isinstance(self.config.execution_engine, BenchmarkEngineConfig):
             from ..execution.benchmark import BenchmarkExecutionEngine
             assert self.config.benchmark is not None, '"benchmark" must be set when benchmark execution engine is used.'
@@ -284,7 +284,9 @@ class RetiariiExperiment(Experiment):
 
         self._create_execution_engine() # FIXME: engine cannot be created twice
 
-    def run(self, config: Optional[RetiariiExeConfig] = None, port: int = 8080, debug: bool = False) -> None:
+    def run(self, config: Optional[RetiariiExeConfig] = None,
+            port: int = 8080,
+            debug: bool = False) -> None:
         """
         Run the experiment.
         This function will block until experiment finish or error.
@@ -308,11 +310,13 @@ class RetiariiExperiment(Experiment):
             self.config = config
             self.start(port, debug)
             try:
-                self._start_strategy()
+                self._run_strategy()
+                # FIXME: move this logic to strategy with a new API provided by execution engine
                 self._wait_completion()
             except KeyboardInterrupt:
                 _logger.warning('KeyboardInterrupt detected')
                 self.stop()
+            _logger.info('Search process is done, the experiment is still alive')
 
     def stop(self) -> None:
         """

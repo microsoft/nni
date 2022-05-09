@@ -7,6 +7,8 @@ import random
 import string
 from typing import Any, Dict, Iterable, List
 
+from nni.experiment import rest
+
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .utils import get_mutation_summary
 from .. import codegen, utils
@@ -54,12 +56,15 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     Resource management is implemented in this class.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, rest_port: int = None, rest_url_prefix: str = None) -> None:
         """
         Upon initialization, advisor callbacks need to be registered.
         Advisor will call the callbacks when the corresponding event has been triggered.
         Base execution engine will get those callbacks and broadcast them to graph listener.
         """
+        self.port = rest_port
+        self.url_prefix = rest_url_prefix
+
         self._listeners: List[AbstractGraphListener] = []
 
         # register advisor callbacks
@@ -123,8 +128,8 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         return self.resources
 
     def budget_exhausted(self) -> bool:
-        advisor = get_advisor()
-        return advisor.stopping
+        resp = rest.get(self.port, '/check-status', self.url_prefix)
+        return resp['status'] == 'DONE'
 
     @classmethod
     def pack_model_data(cls, model: Model) -> Any:

@@ -162,12 +162,12 @@ class Experiment:
 
     def _wait_completion(self) -> None:
         while True:
-            time.sleep(10)
             status = self.get_status()
             if status == 'DONE' or status == 'STOPPED':
                 return True
             if status == 'ERROR':
                 return False
+            time.sleep(10)
 
     def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
         """

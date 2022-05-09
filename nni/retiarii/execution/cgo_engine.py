@@ -53,7 +53,12 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     def __init__(self, training_service,
                  max_concurrency: int = None,
                  batch_waiting_time: int = 60,
+                 rest_port: int = None,
+                 rest_url_prefix: str = None
                  ) -> None:
+        self.port = rest_port
+        self.url_prefix = rest_url_prefix
+
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
