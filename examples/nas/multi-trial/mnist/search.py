@@ -131,7 +131,7 @@ if __name__ == '__main__':
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnist_search'
     exp_config.trial_concurrency = 2
-    exp_config.max_trial_number = 20
+    exp_config.max_trial_number = 4
     exp_config.training_service.use_active_gpu = False
     export_formatter = 'dict'
 
@@ -139,7 +139,8 @@ if __name__ == '__main__':
     # exp_config.execution_engine = 'base'
     # export_formatter = 'code'
 
-    exp.run(exp_config, 8080)
+    exp.run(exp_config, 8090)
     print('Final model:')
     for model_code in exp.export_top_models(formatter=export_formatter):
         print(model_code)
+    exp.stop()
