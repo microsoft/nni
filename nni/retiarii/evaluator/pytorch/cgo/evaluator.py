@@ -16,6 +16,7 @@ from ..lightning import LightningModule, _AccuracyWithLogits, Lightning
 from .trainer import Trainer
 
 
+@nni.trace
 class _MultiModelSupervisedLearningModule(LightningModule):
     def __init__(self, criterion: Type[nn.Module], metrics: Dict[str, torchmetrics.Metric],
                  n_models: int = 0,
@@ -112,7 +113,6 @@ class _MultiModelSupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-@nni.trace
 class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
     """
     Lightning Module of SupervisedLearning for Cross-Graph Optimization.
