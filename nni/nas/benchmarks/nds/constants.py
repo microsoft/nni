@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 NONE = 'none'
 SKIP_CONNECT = 'skip_connect'
 AVG_POOL_3X3 = 'avg_pool_3x3'

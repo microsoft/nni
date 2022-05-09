@@ -14,7 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class ObserverQuantizer(Quantizer):
-    """This quantizer uses observers to record weight/output statistics to get quantization information.
+    r"""
+    Observer quantizer is a framework of post-training quantization.
+    It will insert observers into the place where the quantization will happen.
+    During quantization calibration, each observer will record all the tensors it 'sees'.
+    These tensors will be used to calculate the quantization statistics after calibration.
+
     The whole process can be divided into three steps:
 
     1. It will register observers to the place where quantization would happen (just like registering hooks).
@@ -23,6 +28,66 @@ class ObserverQuantizer(Quantizer):
 
     Note that the observer type, tensor dtype and quantization qscheme are hard coded for now. Their customization
     are under development and will be ready soon.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be quantized.
+    config_list : List[Dict]
+        List of configurations for quantization. Supported keys:
+            - quant_types : List[str]
+                Type of quantization you want to apply, currently support 'weight', 'input', 'output'.
+            - quant_bits : Union[int, Dict[str, int]]
+                Bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
+                when the type is int, all quantization types share same bits length.
+            - op_types : List[str]
+                Types of nn.module you want to apply quantization, eg. 'Conv2d'.
+            - op_names : List[str]
+                Names of nn.module you want to apply quantization, eg. 'conv1'.
+            - exclude : bool
+                Set True then the layers setting by op_types and op_names will be excluded from quantization.
+    optimizer : torch.optim.Optimizer
+        Optimizer is optional in `ObserverQuantizer`.
+
+    Examples
+    --------
+        >>> from nni.algorithms.compression.pytorch.quantization import ObserverQuantizer
+        >>> model = ...
+        >>> config_list = [{'quant_types': ['weight', 'input'], 'quant_bits': {'weight': 8, 'input': 8}, 'op_types': ['Conv2d']}]
+        >>> quantizer = ObserverQuantizer(model, config_list)
+        >>> # define a calibration function
+        >>> def calibration(model, calib_loader):
+        >>>     model.eval()
+        >>>     with torch.no_grad():
+        >>>         for data, _ in calib_loader:
+        >>>             model(data)
+        >>> calibration(model, calib_loader)
+        >>> quantizer.compress()
+
+    For detailed example please refer to
+    :githublink:`examples/model_compress/quantization/observer_quantizer.py <examples/model_compress/quantization/observer_quantizer.py>`.
+
+    .. note::
+        This quantizer is still under development for now. Some quantizer settings are hard-coded:
+
+        - weight observer: per_tensor_symmetric, qint8
+        - output observer: per_tensor_affine, quint8, reduce_range=True
+
+        Other settings (such as quant_type and op_names) can be configured.
+
+    Notes
+    -----
+
+    **About the compress API**
+
+    Before the `compress` API is called, the model will only record tensors' statistics and no quantization process will be executed.
+    After the `compress` API is called, the model will NOT record tensors' statistics any more. The quantization scale and zero point will
+    be generated for each tensor and will be used to quantize each tensor during inference (we call it evaluation mode)
+
+    **About calibration**
+
+    Usually we pick up about 100 training/evaluation examples for calibration. If you found the accuracy is a bit low, try
+    to reduce the number of calibration examples.
     """
 
     def __init__(self, model, config_list, optimizer=None):

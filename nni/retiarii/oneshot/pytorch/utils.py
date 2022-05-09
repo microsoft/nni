@@ -1,12 +1,16 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import logging
 from collections import OrderedDict
+from typing import cast
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
+
 import nni.retiarii.nn.pytorch as nn
 from nni.nas.pytorch.mutables import InputChoice, LayerChoice
 from pytorch_lightning.trainer.data_loading import TrainerDataLoadingMixin
@@ -133,7 +137,7 @@ def _replace_module_with_type(root_module, init_fn, type_name, modules):
         for name, child in m.named_children():
             if isinstance(child, type_name):
                 setattr(m, name, init_fn(child))
-                modules.append((child.key, getattr(m, name)))
+                modules.append((child.label, getattr(m, name)))
             else:
                 apply(child)
 
@@ -156,7 +160,7 @@ def replace_layer_choice(root_module, init_fn, modules=None):
 
     Returns
     -------
-    List[Tuple[str, nn.Module]]
+    list[tuple[str, nn.Module]]
         A list from layer choice keys (names) and replaced modules.
     """
     return _replace_module_with_type(root_module, init_fn, (LayerChoice, nn.LayerChoice), modules)
@@ -177,7 +181,7 @@ def replace_input_choice(root_module, init_fn, modules=None):
 
     Returns
     -------
-    List[Tuple[str, nn.Module]]
+    list[tuple[str, nn.Module]]
         A list from layer choice keys (names) and replaced modules.
     """
     return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
@@ -212,13 +216,18 @@ class InterleavedTrainValDataLoader(DataLoader):
     Example
     --------
     Fit your dataloaders into a parallel one.
-    >>> para_dataloader = InterleavedTrainValDataLoader(train_dataloader, val_dataloader)
-    Then you can use the ``para_dataloader`` as a normal training loader.
+
+    >>> para_loader = InterleavedTrainValDataLoader(train_dataloader, val_dataloader)
+
+    Then you can use the ``para_loader`` as a normal training loader.
     """
-    def __init__(self, train_dataloader, val_dataloader, batch_sampler=None, dataset = None, sampler=None, shuffle=None):
+    def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader],
+                 batch_sampler=None, dataset = None, sampler=None, shuffle=None):
+        if isinstance(val_dataloader, list):
+            raise TypeError('Validation dataloader of type list is not supported.')
         if sampler is None: # single process
-            self.train_dataloader = train_dataloader
-            self.val_dataloader = val_dataloader
+            self.train_dataloader: DataLoader = train_dataloader
+            self.val_dataloader: DataLoader = val_dataloader
         else: # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
             train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle = True, overfit_batches = 0)
             self.train_dataloader = TrainerDataLoadingMixin._update_dataloader(train_dataloader, train_sampler)
@@ -286,13 +295,18 @@ class ConcatenateTrainValDataLoader(DataLoader):
     Example
     --------
     Fit your dataloaders into a concatenated one.
-    >>> concat_dataloader = ConcatenateTrainValDataLoader(train_dataloader, val_datalodaer)
-    Then you can use the ``concat_dataloader`` as a normal training loader.
+
+    >>> concat_loader = ConcatenateTrainValDataLoader(train_dataloader, val_datalodaer)
+
+    Then you can use the ``concat_loader`` as a normal training loader.
     """
-    def __init__(self, train_dataloader, val_dataloader, batch_sampler=None, dataset = None, sampler=None, shuffle=None):
+    def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader],
+                 batch_sampler=None, dataset = None, sampler=None, shuffle=None):
+        if isinstance(val_dataloader, list):
+            raise TypeError('Validation dataloader of type list is not supported.')
         if sampler is None: # single process
-            self.train_dataloader = train_dataloader
-            self.val_dataloader = val_dataloader
+            self.train_dataloader: DataLoader = train_dataloader
+            self.val_dataloader: DataLoader = val_dataloader
         else: # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
             train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle = True, overfit_batches = 0)
             self.train_dataloader = TrainerDataLoadingMixin._update_dataloader(train_dataloader, train_sampler)

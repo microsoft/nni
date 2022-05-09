@@ -45,7 +45,7 @@ describe('Unit Test for MountedStorageService', () => {
         chai.should();
         chai.use(chaiAsPromised);
         prepareUnitTest();
-        log = getLogger();
+        log = getLogger('unittest');
 
         const testRoot = path.dirname(__filename);
         localPath = path.join(testRoot, localPath);

@@ -3,11 +3,11 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import { getPrefix } from './static/function';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-const Overview = lazy(() => import('./components/Overview'));
-const TrialsDetail = lazy(() => import('./components/TrialsDetail'));
-const Experiment = lazy(() => import('./components/managementExp/ExperimentManager'));
-import './index.css';
-import './static/style/loading.scss';
+const Overview = lazy(() => import('./components/experiment/overview/Overview'));
+const TrialsDetail = lazy(() => import('./components/experiment/trialdetail/TrialsDetail'));
+const ExperimentManagerIndex = lazy(() => import('./components/experimentManagement/ExperimentManagerIndex'));
+import '@style/index.css';
+import '@style/loading.scss';
 import * as serviceWorker from './serviceWorker';
 
 const path = getPrefix();
@@ -17,11 +17,11 @@ ReactDOM.render(
         <Suspense
             fallback={
                 <div className='loading'>
-                    <img src={(path || '') + '/loading.gif'} />
+                    <img title='loading-graph' src={(path || '') + '/loading.gif'} />
                 </div>
             }
         >
-            <Route path='/experiment' component={Experiment} exact />
+            <Route path='/experiment' component={ExperimentManagerIndex} exact />
             <Switch>
                 <App>
                     <Route path='/' component={Overview} exact />

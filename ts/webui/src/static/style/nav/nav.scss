@@ -11,6 +11,7 @@ $barHeight: 56px;
 
     .ms-Button--commandBar {
         background-color: #0071bc;
+        -webkit-user-select: none;
         user-select: none;
 
         &:hover,

@@ -1,8 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# type: ignore
+
 import logging
 import random
+import warnings
 
 import torch
 import torch.nn as nn
@@ -122,6 +125,8 @@ class SinglePathTrainer(BaseOneShotTrainer):
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
                  batch_size=64, workers=4, device=None, log_frequency=None):
+        warnings.warn('SinglePathTrainer is deprecated. Please use strategy.RandomOneShot instead.', DeprecationWarning)
+
         self.model = model
         self.loss = loss
         self.metrics = metrics
@@ -143,7 +148,8 @@ class SinglePathTrainer(BaseOneShotTrainer):
 
         self.train_loader = torch.utils.data.DataLoader(self.dataset_train,
                                                         batch_size=batch_size,
-                                                        num_workers=workers)
+                                                        num_workers=workers,
+                                                        shuffle=True)
         self.valid_loader = torch.utils.data.DataLoader(self.dataset_valid,
                                                         batch_size=batch_size,
                                                         num_workers=workers)

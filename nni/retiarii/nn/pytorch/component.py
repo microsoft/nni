@@ -1,16 +1,20 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import copy
+import warnings
 from collections import OrderedDict
-from typing import Callable, List, Union, Tuple, Optional
+from typing import Callable, List, Dict, Union, Tuple, Optional
 
 import torch
 import torch.nn as nn
 
-from nni.retiarii.utils import STATE_DICT_PY_MAPPING_PARTIAL
+from nni.retiarii.utils import NoContextError, STATE_DICT_PY_MAPPING_PARTIAL
 
-from .api import LayerChoice
+from .api import LayerChoice, ValueChoice, ValueChoiceX, ChoiceOf
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
-from .utils import Mutable, generate_new_label, get_fixed_value
+from .mutation_utils import Mutable, generate_new_label, get_fixed_value
 
 
 __all__ = ['Repeat', 'Cell', 'NasBench101Cell', 'NasBench101Mutator', 'NasBench201Cell']
@@ -23,13 +27,38 @@ class Repeat(Mutable):
     Parameters
     ----------
     blocks : function, list of function, module or list of module
-        The block to be repeated. If not a list, it will be replicated into a list.
+        The block to be repeated. If not a list, it will be replicated (**deep-copied**) into a list.
         If a list, it should be of length ``max_depth``, the modules will be instantiated in order and a prefix will be taken.
         If a function, it will be called (the argument is the index) to instantiate a module.
         Otherwise the module will be deep-copied.
     depth : int or tuple of int
         If one number, the block will be repeated by a fixed number of times. If a tuple, it should be (min, max),
-        meaning that the block will be repeated at least `min` times and at most `max` times.
+        meaning that the block will be repeated at least ``min`` times and at most ``max`` times.
+        If a ValueChoice, it should choose from a series of positive integers.
+
+    Examples
+    --------
+    Block() will be deep copied and repeated 3 times. ::
+
+        self.blocks = nn.Repeat(Block(), 3)
+
+    Block() will be repeated 1, 2, or 3 times. ::
+
+        self.blocks = nn.Repeat(Block(), (1, 3))
+
+    Can be used together with layer choice.
+    With deep copy, the 3 layers will have the same label, thus share the choice. ::
+
+        self.blocks = nn.Repeat(nn.LayerChoice([...]), (1, 3))
+
+    To make the three layer choices independent,
+    we need a factory function that accepts index (0, 1, 2, ...) and returns the module of the ``index``-th layer. ::
+
+        self.blocks = nn.Repeat(lambda index: nn.LayerChoice([...], label=f'layer{index}'), (1, 3))
+
+    Depth can be a ValueChoice to support arbitrary depth candidate list. ::
+
+        self.blocks = nn.Repeat(Block(), nn.ValueChoice([1, 3, 5]))
     """
 
     @classmethod
@@ -38,33 +67,67 @@ class Repeat(Mutable):
                                           List[Callable[[int], nn.Module]],
                                           nn.Module,
                                           List[nn.Module]],
-                            depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
-        repeat = get_fixed_value(label)
-        result = nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
+                            depth: Union[int, Tuple[int, int], ChoiceOf[int]], *, label: Optional[str] = None):
+        if isinstance(depth, tuple):
+            # we can't create a value choice here,
+            # otherwise we will have two value choices, one created here, another in init.
+            depth = get_fixed_value(label)
 
-        if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
-            # already has a mapping, will merge with it
-            prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
-            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'blocks.{v}' for k, v in prev_mapping.items()})
-        else:
-            setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': 'blocks'})
-        return result
+        if isinstance(depth, int):
+            # if depth is a valuechoice, it should be already an int
+            result = nn.Sequential(*cls._replicate_and_instantiate(blocks, depth))
+
+            if hasattr(result, STATE_DICT_PY_MAPPING_PARTIAL):
+                # already has a mapping, will merge with it
+                prev_mapping = getattr(result, STATE_DICT_PY_MAPPING_PARTIAL)
+                setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {k: f'blocks.{v}' for k, v in prev_mapping.items()})
+            else:
+                setattr(result, STATE_DICT_PY_MAPPING_PARTIAL, {'__self__': 'blocks'})
+
+            return result
+
+        raise NoContextError(f'Not in fixed mode, or {depth} not an integer.')
 
     def __init__(self,
                  blocks: Union[Callable[[int], nn.Module],
                                List[Callable[[int], nn.Module]],
                                nn.Module,
                                List[nn.Module]],
-                 depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
+                 depth: Union[int, Tuple[int, int], ChoiceOf[int]], *, label: Optional[str] = None):
         super().__init__()
-        self._label = generate_new_label(label)
-        self.min_depth = depth if isinstance(depth, int) else depth[0]
-        self.max_depth = depth if isinstance(depth, int) else depth[1]
+
+        self._label = None  # by default, no label
+
+        if isinstance(depth, ValueChoiceX):
+            if label is not None:
+                warnings.warn(
+                    'In repeat, `depth` is already a ValueChoice, but `label` is still set. It will be ignored.',
+                    RuntimeWarning
+                )
+            self.depth_choice = depth
+            all_values = list(self.depth_choice.all_options())
+            self.min_depth = min(all_values)
+            self.max_depth = max(all_values)
+
+            if isinstance(depth, ValueChoice):
+                self._label = depth.label  # if a leaf node
+
+        elif isinstance(depth, tuple):
+            self.min_depth = depth if isinstance(depth, int) else depth[0]
+            self.max_depth = depth if isinstance(depth, int) else depth[1]
+            self.depth_choice = ValueChoice(list(range(self.min_depth, self.max_depth + 1)), label=label)
+            self._label = self.depth_choice.label
+
+        elif isinstance(depth, int):
+            self.min_depth = self.max_depth = depth
+            self.depth_choice = depth
+        else:
+            raise TypeError(f'Unsupported "depth" type: {type(depth)}')
         assert self.max_depth >= self.min_depth > 0
         self.blocks = nn.ModuleList(self._replicate_and_instantiate(blocks, self.max_depth))
 
     @property
-    def label(self):
+    def label(self) -> Optional[str]:
         return self._label
 
     def forward(self, x):
@@ -86,10 +149,19 @@ class Repeat(Mutable):
             blocks = [b(i) for i, b in enumerate(blocks)]
         return blocks
 
+    def __getitem__(self, index):
+        # shortcut for blocks[index]
+        return self.blocks[index]
+
+    def __len__(self):
+        return self.max_depth
+
 
 class NasBench201Cell(nn.Module):
     """
-    Cell structure that is proposed in NAS-Bench-201 [nasbench201]_ .
+    Cell structure that is proposed in NAS-Bench-201.
+
+    Proposed by `NAS-Bench-201: Extending the Scope of Reproducible Neural Architecture Search <https://arxiv.org/abs/2001.00326>`__.
 
     This cell is a densely connected DAG with ``num_tensors`` nodes, where each node is tensor.
     For every i < j, there is an edge from i-th node to j-th node.
@@ -115,11 +187,6 @@ class NasBench201Cell(nn.Module):
         Number of tensors in the cell (input included). Default: 4
     label : str
         Identifier of the cell. Cell sharing the same label will semantically share the same choice.
-
-    References
-    ----------
-    .. [nasbench201] Dong, X. and Yang, Y., 2020. Nas-bench-201: Extending the scope of reproducible neural architecture search.
-        arXiv preprint arXiv:2001.00326.
     """
 
     @staticmethod
@@ -128,7 +195,7 @@ class NasBench201Cell(nn.Module):
             return OrderedDict([(str(i), t) for i, t in enumerate(x)])
         return OrderedDict(x)
 
-    def __init__(self, op_candidates: List[Callable[[int, int], nn.Module]],
+    def __init__(self, op_candidates: Union[Dict[str, Callable[[int, int], nn.Module]], List[Callable[[int, int], nn.Module]]],
                  in_features: int, out_features: int, num_tensors: int = 4,
                  label: Optional[str] = None):
         super().__init__()
@@ -150,12 +217,15 @@ class NasBench201Cell(nn.Module):
                 node_ops.append(LayerChoice(op_choices, label=f'{self._label}__{j}_{tid}'))  # put __ here to be compatible with base engine
             self.layers.append(node_ops)
 
-    def forward(self, inputs):
-        tensors = [inputs]
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        """
+        The forward of input choice is simply selecting first on all choices.
+        It shouldn't be called directly by users in most cases.
+        """
+        tensors: List[torch.Tensor] = [inputs]
         for layer in self.layers:
-            current_tensor = []
-            for i, op in enumerate(layer):
-                current_tensor.append(op(tensors[i]))
-            current_tensor = torch.sum(torch.stack(current_tensor), 0)
-            tensors.append(current_tensor)
+            current_tensor: List[torch.Tensor] = []
+            for i, op in enumerate(layer):  # type: ignore
+                current_tensor.append(op(tensors[i]))  # type: ignore
+            tensors.append(torch.sum(torch.stack(current_tensor), 0))
         return tensors[-1]

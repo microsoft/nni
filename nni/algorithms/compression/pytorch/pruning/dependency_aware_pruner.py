@@ -35,7 +35,7 @@ class DependencyAwarePruner(Pruner):
 
         if self.dependency_aware:
             if not self._supported_dependency_aware():
-                raise ValueError('This pruner does not support dependency aware!')
+                raise ValueError('This pruner does not support dependency-aware!')
 
             errmsg = "When dependency_aware is set, the dummy_input should not be None"
             assert self.dummy_input is not None, errmsg

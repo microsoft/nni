@@ -1,5 +1,5 @@
-nnictl
-======
+nnictl Commands
+===============
 
 .. argparse::
    :module: nni.tools.nnictl.nnictl

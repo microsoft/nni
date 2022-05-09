@@ -113,6 +113,11 @@ class ExperimentConfig(ConfigBase):
             if algo is not None and algo.name == '_none_':
                 setattr(self, algo_type, None)
 
+        if self.advisor is not None:
+            assert self.tuner is None, '"advisor" is deprecated. You should only set "tuner".'
+            self.tuner = self.advisor
+            self.advisor = None
+
         super()._canonicalize([self])
 
         if self.search_space_file is not None:
@@ -161,9 +166,8 @@ class ExperimentConfig(ConfigBase):
 
         utils.validate_gpu_indices(self.tuner_gpu_indices)
 
-        tuner_cnt = (self.tuner is not None) + (self.advisor is not None)
-        if tuner_cnt != 1:
-            raise ValueError('ExperimentConfig: tuner and advisor must be set one')
+        if self.tuner is None:
+            raise ValueError('ExperimentConfig: tuner must be set')
 
 def _load_search_space_file(search_space_path):
     # FIXME
