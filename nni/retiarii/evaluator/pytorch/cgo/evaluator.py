@@ -16,7 +16,6 @@ from ..lightning import LightningModule, _AccuracyWithLogits, Lightning
 from .trainer import Trainer
 
 
-@nni.trace
 class _MultiModelSupervisedLearningModule(LightningModule):
     def __init__(self, criterion: Type[nn.Module], metrics: Dict[str, torchmetrics.Metric],
                  n_models: int = 0,
