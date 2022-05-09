@@ -7,9 +7,20 @@ steps:
 - script: |
     set -e
     sudo apt update
-    sudo apt install -y build-essential cmake wget
+    sudo apt install -y build-essential cmake
   displayName: Install build essential
 
+
+# Install azcopy for cache download.
+# https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10#use-azcopy-in-a-script
+
+- script: |
+    set -e
+    mkdir -p tmp
+    cd tmp
+    wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1
+    sudo cp ./azcopy /usr/bin/
+  displayName: Setup azcopy
 
 # VM with GPU needs to install drivers. Reference:
 # https://docs.microsoft.com/en-us/azure/virtual-machines/linux/n-series-driver-setup
