@@ -16,19 +16,20 @@ from typing_extensions import Literal
 
 import torch
 import torch.nn as nn
-from nni.retiarii.experiment.config.engine_config import *
 import nni.runtime.log
 from nni.experiment import Experiment, RunMode, launcher, management
 from nni.experiment.config import ExperimentConfig
 from nni.runtime.protocol import connect_websocket
 
-from .config import RetiariiExeConfig, OneshotEngineConfig
+from .config import (
+    RetiariiExeConfig, ExecutionEngineConfig, OneshotEngineConfig, BaseEngineConfig,
+    PyEngineConfig, CgoEngineConfig, BenchmarkEngineConfig
+)
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
 from ..execution.utils import get_mutation_dict
-from ..execution.interface import AbstractExecutionEngine
 from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
@@ -351,7 +352,8 @@ class RetiariiExperiment(Experiment):
             If ``dict``, the mutation history will be returned.
         """
         if formatter == 'code':
-            assert not isinstance(self.config.execution_engine, PyEngineConfig), 'You should use `dict` formatter when using Python execution engine.'
+            assert not isinstance(self.config.execution_engine, PyEngineConfig), \
+                'You should use `dict` formatter when using Python execution engine.'
         if isinstance(self.evaluator, BaseOneShotTrainer):
             assert top_k == 1, 'Only support top_k is 1 for now.'
             return self.evaluator.export()
