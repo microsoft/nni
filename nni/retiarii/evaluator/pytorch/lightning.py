@@ -95,8 +95,12 @@ class Lightning(Evaluator):
 
     def __init__(self, lightning_module: LightningModule, trainer: Trainer,
                  train_dataloaders: Optional[Any] = None,
-                 val_dataloaders: Optional[Any] = None):
+                 val_dataloaders: Optional[Any] = None,
+                 train_dataloader: Optional[Any] = None):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
+        if train_dataloader is not None:
+            warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
+            train_dataloaders = train_dataloader
         if cgo_import_failed:
             assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), f'Trainer must be imported from {__name__}'
         else:
