@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 __all__ = [
     'get_algo_meta',
     'get_all_algo_meta',
@@ -9,24 +11,26 @@ __all__ = [
 ]
 
 from collections import defaultdict
-from typing import List, Optional
 
 import yaml
 
 from nni.runtime.config import get_builtin_config_file, get_config_file
 from .common import AlgoMeta
 
-def get_algo_meta(name: AlgoMeta) -> Optional[AlgoMeta]:
+def get_algo_meta(name: str) -> AlgoMeta | None:
     """
     Get meta information of a built-in or registered algorithm.
     Return None if not found.
     """
+    name = name.lower()
     for algo in get_all_algo_meta():
-        if algo.name == name:
+        if algo.name.lower() == name:
+            return algo
+        if algo.alias is not None and algo.alias.lower() == name:
             return algo
     return None
 
-def get_all_algo_meta() -> List[AlgoMeta]:
+def get_all_algo_meta() -> list[AlgoMeta]:
     """
     Get meta information of all built-in and registered algorithms.
     """
@@ -64,7 +68,7 @@ def _load_config_file(path):
     algos = []
     for algo_type in ['tuner', 'assessor', 'advisor']:
         for algo in config.get(algo_type + 's', []):
-            algos.append(AlgoMeta.load(algo, algo_type))
+            algos.append(AlgoMeta.load(algo, algo_type))  # type: ignore
     return algos
 
 def _save_custom_config(custom_algos):

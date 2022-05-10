@@ -13,8 +13,8 @@ logLevel: warning
 tunerGpuIndices: 0
 assessor:
     name: assess
-advisor:
-    className: Advisor
+tuner:
+    className: Tuner
     codeDirectory: .
     classArgs: {random_seed: 0}
 trainingService:

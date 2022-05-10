@@ -45,15 +45,15 @@ _out_buf = BytesIO()
 def _reverse_io():
     _in_buf.seek(0)
     _out_buf.seek(0)
-    protocol._out_file = _in_buf
-    protocol._in_file = _out_buf
+    protocol._set_out_file(_in_buf)
+    protocol._set_in_file(_out_buf)
 
 
 def _restore_io():
     _in_buf.seek(0)
     _out_buf.seek(0)
-    protocol._in_file = _in_buf
-    protocol._out_file = _out_buf
+    protocol._set_in_file(_in_buf)
+    protocol._set_out_file(_out_buf)
 
 
 class MsgDispatcherTestCase(TestCase):

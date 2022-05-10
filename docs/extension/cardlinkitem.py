@@ -7,6 +7,7 @@ import os
 from docutils.parsers.rst import Directive, directives
 from docutils.statemachine import StringList
 from docutils import nodes
+from sphinx.addnodes import pending_xref
 
 TAG_TEMPLATE = """<span class="card-link-tag">{tag}</span>"""
 
@@ -14,12 +15,12 @@ TAGS_TEMPLATE = """
     <p class="card-link-summary">{tags}</p>
 """
 
-CARD_TEMPLATE = """
+CARD_HEADER = """
 .. raw:: html
 
     <div class="card-link admonition">
 
-    <a href="{link}">
+    <a class="card-link-clickable" href="#">
 
     <div class="card-link-body">
 
@@ -46,6 +47,10 @@ CARD_TEMPLATE = """
     </div>
 
     </a>
+"""
+
+CARD_FOOTER = """
+.. raw:: html
 
     </div>
 """
@@ -95,15 +100,30 @@ class CustomCardItemDirective(Directive):
         else:
             tags_rst = ''
 
-        card_rst = CARD_TEMPLATE.format(header=header,
-                                        image=image,
-                                        image_background=image_background,
-                                        link=link,
-                                        description=description,
-                                        tags=tags_rst)
-        card_list = StringList(card_rst.split('\n'))
+        card_rst = CARD_HEADER.format(
+            header=header,
+            image=image,
+            image_background=image_background,
+            link=link,
+            description=description,
+            tags=tags_rst)
         card = nodes.paragraph()
-        self.state.nested_parse(card_list, self.content_offset, card)
+        self.state.nested_parse(StringList(card_rst.split('\n')), self.content_offset, card)
+
+        # This needs to corporate with javascript: propagate_card_link.
+        # because sphinx can't correctly handle image in a `pending_xref` after `keepformat`.
+        link_node = pending_xref('<a/>',
+                                 reftype='doc',
+                                 refdomain='std',
+                                 reftarget=link,
+                                 refexplicit=False,
+                                 refwarn=True)
+        link_node += nodes.paragraph(header)
+        link_node['classes'] = ['card-link-anchor']
+        card += link_node
+
+        self.state.nested_parse(StringList(CARD_FOOTER.split('\n')), self.content_offset, card)
+
         return [card]
 
 
