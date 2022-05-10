@@ -5,7 +5,7 @@ pool:
 
 variables:
  - name: nni-version
-   value: 999.$(date -u +%Y%m%d%H%M%S)
+   value: 999.${{ date -u +%Y%m%d%H%M%S }}
 
 steps:
 
