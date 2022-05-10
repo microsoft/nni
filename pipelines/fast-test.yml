@@ -3,10 +3,6 @@ trigger: none
 pool:
   vmImage: ubuntu-latest
 
-variables:
- - name: nni-version
-   value: 999.${{ date -u +%Y%m%d%H%M%S }}
-
 steps:
 
 - template: templates/install-dependencies.yml
@@ -14,7 +10,7 @@ steps:
     platform: ubuntu-latest
 
 - script: |
-    export NNI_RELEASE=$(nni-version)
+    export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
     echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
     echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
 
@@ -38,7 +34,8 @@ steps:
     repository: nnidev/nni-nightly
     command: build
     Dockerfile: '**/Dockerfile'
-    arguments: --build-arg NNI_RELEASE=$(nni-version)
+    arguments: --build-arg NNI_RELEASE=$(NNI_RELEASE)
+    tags: latest
   displayName: Build Docker Image
 
 - task: Docker@2
