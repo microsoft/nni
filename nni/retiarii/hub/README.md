@@ -51,7 +51,7 @@ evaluate(model, imagenet_data)
 
 ``MobileNetV3Space`` can be replaced with any search space listed above, and ``mobilenetv3-small-075`` can be any model listed below.
 
-See an example of ``evaluate`` [here](https://github.com/ultmaster/spacehub-conversion/blob/4260378ed9df0f1e9822762eaf1e62a487c98508/cutils.py#L53).
+See an example of ``evaluate`` [here](https://github.com/rwightman/pytorch-image-models/blob/d30685c283137b4b91ea43c4e595c964cd2cb6f0/train.py#L778).
 
 | Search space     | Model                 | Dataset  | Metric | Eval Protocol                |
 |------------------|-----------------------|----------|--------|------------------------------|
@@ -74,11 +74,7 @@ See an example of ``evaluate`` [here](https://github.com/ultmaster/spacehub-conv
 | DARTS            | darts-v2              | CIFAR-10 | 97.37  | Default                      |
 | ShuffleNetSpace  | spos                  | ImageNet | 74.14  | BGR tensor; no normalization |
 
-The pretrained weights listed above are converted with [these scripts](https://github.com/ultmaster/spacehub-conversion).
-Do note that some metrics can be higher / lower than the original report,
-because there could be subtle differences between data preprocessing, operation implementation (e.g., 3rd-party hswish vs ``nn.Hardswish``),
-or even library versions we are using. But most of these errors are acceptable (~0.1%).
-We will retrain these architectures in a reproducible and fair training settings, and update these results when the training is ready.
+The pretrained weights listed above are converted with [these scripts](https://github.com/ultmaster/spacehub-conversion). Do note that some metrics can be higher / lower than the original report, because there could be subtle differences between data preprocessing, operation implementation (e.g., 3rd-party hswish vs ``nn.Hardswish``), or even library versions we are using. But most of these errors are acceptable (~0.1%). We will retrain these architectures in a reproducible and fair training settings, and update these results when the training is ready.
 
 Latency / FLOPs data are missing in the table. Measuring them would be another task.
 

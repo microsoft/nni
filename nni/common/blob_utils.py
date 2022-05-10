@@ -93,7 +93,7 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
 
 
 def upload_file(local_path: str, destination_path: str, sas_token: str) -> str:
-    """For maintainers to add updated static files to the server easily.
+    """For NNI maintainers to add updated static files to the Azure blob easily.
     In most cases, you don't need to calculate the hash on your own, it will be automatically inserted.
     For example, if you write ``https://xxx.com/myfile.zip``, the uploaded file will look like
     ``https://xxx.com/myfile-da5f43b7.zip``.
