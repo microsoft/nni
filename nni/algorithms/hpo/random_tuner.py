@@ -42,13 +42,15 @@ class RandomTuner(Tuner):
         The random seed.
     """
 
-    def __init__(self, seed: int | None = None):
+    def __init__(self, seed: int | None = None, optimize_mode: str | None = None):
         self.space = None
         if seed is None:  # explicitly generate a seed to make the experiment reproducible
             seed = np.random.default_rng().integers(2 ** 31)
         self.rng = np.random.default_rng(seed)
         self.dedup = None
         _logger.info(f'Using random seed {seed}')
+        if optimize_mode is not None:
+            _logger.info(f'Ignored optimize_mode "{optimize_mode}"')
 
     def update_search_space(self, space):
         self.space = format_search_space(space)
@@ -64,7 +66,10 @@ class RandomTuner(Tuner):
 
 class RandomClassArgsValidator(ClassArgsValidator):
     def validate_class_args(self, **kwargs):
-        schema.Schema({schema.Optional('seed'): int}).validate(kwargs)
+        schema.Schema({
+            schema.Optional('optimize_mode'): str,
+            schema.Optional('seed'): int,
+        }).validate(kwargs)
 
 def suggest(rng, space):
     params = {}
