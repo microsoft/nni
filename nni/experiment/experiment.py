@@ -93,7 +93,7 @@ class Experiment:
             atexit.register(self.stop)
 
         config = self.config.canonical_copy()
-        if hasattr(config, "use_annotation") and config.use_annotation: #TODO: will be refactored
+        if config.use_annotation:
             raise RuntimeError('NNI annotation is not supported by Python experiment API.')
 
         if config.experiment_working_directory is not None:

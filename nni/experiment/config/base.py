@@ -158,9 +158,7 @@ class ConfigBase:
             A deep copy.
         """
         canon = copy.deepcopy(self)
-        print(type(canon))
         canon._canonicalize([])
-        print(type(canon))
         canon._validate_canonical()
         return canon
 
