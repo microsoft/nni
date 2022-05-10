@@ -177,15 +177,8 @@ function Search(props): any {
         if (str.includes('>') || str.includes('<') || str.includes(':') || str.includes('≠')) {
             // according [input val] to change searchFilter list
             const allFilterConditions = searchInputVal.trim().split(';');
-            // delete '' in filter list
-            if (allFilterConditions.includes('')) {
-                allFilterConditions.splice(
-                    allFilterConditions.findIndex(item => item === ''),
-                    1
-                );
-            }
-
             allFilterConditions.forEach(eachFilterConditionStr => {
+                eachFilterConditionStr = eachFilterConditionStr.trim();
                 // input content looks like that: `Trial id:`
                 if (
                     eachFilterConditionStr.endsWith(':') ||

@@ -8,7 +8,7 @@ import { AppContext } from '@/App';
 
 // This file is for filtering trial default metric column including intermediate results
 // you could click `filter` button -> `Default metric` use it
-// if you want to use search input , please use these format: 
+// if you want to use search input , please use these format:
 // Default metric>0.9; // search trial metric value > 0.9
 // Default metric<0.9; // search trial metric value < 0.9
 // Default metric:[0.1,0.2];  //  0.1 < trial metric < 0.2
