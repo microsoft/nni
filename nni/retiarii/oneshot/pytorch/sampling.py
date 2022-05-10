@@ -143,52 +143,43 @@ class EnasLightningModule(RandomSamplingLightningModule):
         self.controller.eval()
         return self.model.on_validation_epoch_start()
 
-    def training_step(self, batch, batch_idx):
-        # train model params
-        with torch.no_grad():
-            self.resample()
-        self.call_weight_optimizers('zero_grad')
-        loss_and_metrics = self.model.training_step(batch, batch_idx)
-        w_step_loss = loss_and_metrics['loss'] \
-            if isinstance(loss_and_metrics, dict) else loss_and_metrics
-        self.manual_backward(w_step_loss)
-        self.call_weight_optimizers('step')
-        return loss_and_metrics
+    def training_step(self, batch_packed, batch_idx):
+        batch, mode = batch_packed
 
-    def validation_step(self, batch, batch_idx):
-        if self.trainer.sanity_checking:
-            # Sanity check shouldn't do any training.
-            self.resample()
-            return self.model.validation_step(batch, batch_idx)
+        if mode == 'train':
+            # train model params
+            with torch.no_grad():
+                self.resample()
+            self.call_weight_optimizers('zero_grad')
+            step_output = self.model.training_step(batch, batch_idx)
+            w_step_loss = step_output['loss'] \
+                if isinstance(step_output, dict) else step_output
+            self.manual_backward(w_step_loss)
+            self.call_weight_optimizers('step')
 
-        # train ENAS agent
-        arc_opt = self.architecture_optimizers()
-        if not isinstance(arc_opt, optim.Optimizer):
-            raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
-        with torch.enable_grad():
+        else:
+            # train ENAS agent
+            arc_opt = self.architecture_optimizers()
+            if not isinstance(arc_opt, optim.Optimizer):
+                raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
             arc_opt.zero_grad()
             self.resample()
 
-        # Set training=True to log metrics (with Internal API)
-        original_training = self.trainer._results.training
-        self.trainer._results.training = True
+            step_output = self.model.validation_step(batch, batch_idx)
 
-        step_output = self.model.validation_step(batch, batch_idx)
+            # use the default metric of self.model as reward function
+            if len(self.trainer.callback_metrics) == 1:
+                _, metric = next(iter(self.trainer.callback_metrics.items()))
+            else:
+                metric_name = self.reward_metric_name or 'default'
+                if metric_name not in self.trainer.callback_metrics:
+                    raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
+                                   f'found multiple (or zero) metrics without default: {list(self.trainer.callback_metrics.keys())}. '
+                                   f'Try to use self.log to report metrics with the specified key ``{metric_name}`` in validation_step, '
+                                   'and remember to set on_step=True.')
+                metric = self.trainer.callback_metrics[metric_name]
+            reward: float = metric.item()
 
-        # use the default metric of self.model as reward function
-        if len(self.trainer.callback_metrics) == 1:
-            _, metric = next(iter(self.trainer.callback_metrics.items()))
-        else:
-            metric_name = self.reward_metric_name or 'default'
-            if metric_name not in self.trainer.callback_metrics:
-                raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
-                               f'found multiple (or zero) metrics without default: {list(self.trainer.callback_metrics.keys())}. '
-                               f'Try to use self.log to report metrics with the specified key ``{metric_name}`` in validation_step, '
-                               'and remember to set on_step=True.')
-            metric = self.trainer.callback_metrics[metric_name]
-        reward: float = metric.item()
-
-        with torch.enable_grad():
             if self.entropy_weight:
                 reward = reward + self.entropy_weight * self.controller.sample_entropy.item()  # type: ignore
             self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
@@ -199,13 +190,11 @@ class EnasLightningModule(RandomSamplingLightningModule):
             rnn_step_loss = rnn_step_loss / self.ctrl_steps_aggregate
             self.manual_backward(rnn_step_loss)
 
-        if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
-            if self.ctrl_grad_clip > 0:
-                nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
-            arc_opt.step()
-            arc_opt.zero_grad()
-
-        
+            if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
+                if self.ctrl_grad_clip > 0:
+                    nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
+                arc_opt.step()
+                arc_opt.zero_grad()
 
         return step_output
 

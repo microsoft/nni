@@ -16,9 +16,9 @@ import warnings
 from typing import Any, Type
 
 import torch.nn as nn
-from pytorch_lightning.loops import FitLoop
 
 from nni.retiarii.graph import Model
+from nni.retiarii.oneshot.pytorch.utils import ConcatLoader
 from nni.retiarii.strategy.base import BaseStrategy
 from nni.retiarii.evaluator.pytorch.lightning import Lightning, LightningModule
 
@@ -127,6 +127,12 @@ class ENAS(OneShotStrategy):
 
     def __init__(self, **kwargs):
         super().__init__(EnasLightningModule, **kwargs)
+
+    def preprocess_dataloader(self, train_dataloaders, val_dataloaders):
+        return ConcatLoader({
+            'train': train_dataloaders,
+            'val': val_dataloaders
+        }), None
 
 
 class RandomOneShot(OneShotStrategy):

@@ -356,7 +356,17 @@ class ConcatLoader(CombinedLoader):
             }
 
         In this example, the loader will first produce the batches from "train", then "val".
+
+    mode
+        Only support "min_size" for now.
     """
+
+    def __init__(self, loaders: dict[str, Any], mode: str = 'min_size'):
+        # FIXME: max_cycle will make dataloaders cycle iterators,
+        # causing extra problems.
+        if mode != 'min_size':
+            raise ValueError('Only min_size mode is supported now.')
+        super().__init__(loaders, mode)
 
     def __iter__(self) -> Any:
         """Replace the super-class iterator with ours."""
@@ -392,7 +402,6 @@ class ConcatLoaderIterator(CombinedLoaderIterator):
         """
         if not len(self.loader_iters) == len(self.loaders):
             raise RuntimeError('loader_iters must have the same length as loaders.')
-        print(self.loader_iters)
         for i, (loader_name, iterator) in enumerate(self.loader_iters.items()):
             try:
                 return (self.request_next_batch(iterator), loader_name)

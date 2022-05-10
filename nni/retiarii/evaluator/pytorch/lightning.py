@@ -206,7 +206,6 @@ class _SupervisedLearningModule(LightningModule):
         self.log('train_loss', loss, prog_bar=True)
         for name, metric in self.metrics.items():
             self.log('train_' + name, metric(y_hat, y), prog_bar=True)
-        print('inside train', self.trainer.callback_metrics)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -223,9 +222,6 @@ class _SupervisedLearningModule(LightningModule):
         self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)
         for name, metric in self.metrics.items():
             self.log('val_' + name, metric(y_hat, y), prog_bar=True)
-        print('trainer results', self.trainer._results)
-        import pdb; pdb.set_trace()
-        print('inside', self.trainer.callback_metrics)
 
     def test_step(self, batch, batch_idx):
         x, y = batch
