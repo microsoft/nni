@@ -3,9 +3,24 @@ trigger: none
 pool:
   vmImage: ubuntu-latest
 
-steps:
 - script: |
     export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
+    echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
+    echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
+
+    echo "Working directory: ${PWD}"
+    echo "NNI version: ${NNI_RELEASE}"
+    echo "Build docker image: $(build_docker_image)"
+
+    python3 -m pip install --upgrade pip setuptools
+  displayName: Prepare
+
+- script: |
+    set -e
+    python setup.py build_ts
+    python setup.py bdist_wheel -p manylinux1_x86_64
+    python -m pip install dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl[SMAC,BOHB]
+  displayName: Build and install NNI
 
 - task: Docker@2
   inputs:
