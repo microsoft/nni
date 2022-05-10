@@ -43,4 +43,5 @@ steps:
     containerRegistry: msraieg-docker
     repository: nnidev/nni-nightly
     command: push
+    tags: latest
   displayName: Push Docker Image
