@@ -53,8 +53,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     def __init__(self, training_service,
                  max_concurrency: int = None,
                  batch_waiting_time: int = 60,
-                 rest_port: int = None,
-                 rest_url_prefix: str = None
+                 rest_port: int | None = None,
+                 rest_url_prefix: str | None = None
                  ) -> None:
         self.port = rest_port
         self.url_prefix = rest_url_prefix

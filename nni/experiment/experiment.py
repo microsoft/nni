@@ -160,7 +160,7 @@ class Experiment:
         self._stop()
         _logger.info('Experiment stopped')
 
-    def _wait_completion(self) -> None:
+    def _wait_completion(self) -> bool:
         while True:
             status = self.get_status()
             if status == 'DONE' or status == 'STOPPED':

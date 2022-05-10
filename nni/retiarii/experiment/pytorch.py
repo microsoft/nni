@@ -198,7 +198,7 @@ class RetiariiExperiment(Experiment):
         self._proc: Popen | psutil.Process | None = None
         self._action: Literal['create', 'resume', 'view'] = 'create'
         self.url_prefix: str | None = None
-        self.config: RetiariiExeConfig | None = cast(RetiariiExeConfig, None)
+        self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
 
         self.base_model = base_model
         self.evaluator: Union[Evaluator, BaseOneShotTrainer] = evaluator
@@ -216,7 +216,8 @@ class RetiariiExperiment(Experiment):
         base_model_ir, self.applied_mutators = preprocess_model(
             self.base_model, self.evaluator, self.applied_mutators,
             full_ir=not isinstance(self.config.execution_engine, (PyEngineConfig, BenchmarkEngineConfig)),
-            dummy_input=self.config.execution_engine.dummy_input if hasattr(self.config.execution_engine, 'dummy_input') else None
+            dummy_input=self.config.execution_engine.dummy_input
+                if isinstance(self.config.execution_engine, (BaseEngineConfig, CgoEngineConfig)) else None
         )
 
         _logger.info('Start strategy...')
@@ -235,12 +236,14 @@ class RetiariiExperiment(Experiment):
         elif isinstance(self.config.execution_engine, CgoEngineConfig):
             from ..execution.cgo_engine import CGOExecutionEngine
 
-            assert self.config.training_service.platform == 'remote', \
+            assert not isinstance(self.config.training_service, list) \
+                and self.config.training_service.platform == 'remote', \
                 "CGO execution engine currently only supports remote training service"
-            assert self.config.batch_waiting_time is not None and self.config.max_concurrency_cgo is not None
+            assert self.config.execution_engine.batch_waiting_time is not None \
+                and self.config.execution_engine.max_concurrency_cgo is not None
             engine = CGOExecutionEngine(self.config.training_service,
-                                        max_concurrency=self.config.max_concurrency_cgo,
-                                        batch_waiting_time=self.config.batch_waiting_time,
+                                        max_concurrency=self.config.execution_engine.max_concurrency_cgo,
+                                        batch_waiting_time=self.config.execution_engine.batch_waiting_time,
                                         rest_port=self.port,
                                         rest_url_prefix=self.url_prefix)
         elif isinstance(self.config.execution_engine, PyEngineConfig):

@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+from __future__ import annotations
 
 import logging
 import os
@@ -56,7 +57,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     Resource management is implemented in this class.
     """
 
-    def __init__(self, rest_port: int = None, rest_url_prefix: str = None) -> None:
+    def __init__(self, rest_port: int | None = None, rest_url_prefix: str = None) -> None:
         """
         Upon initialization, advisor callbacks need to be registered.
         Advisor will call the callbacks when the corresponding event has been triggered.
