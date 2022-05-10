@@ -191,7 +191,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         # ungrouped metrics stand alone as a group
         ungrouped_names = set(metrics.keys()).difference(grouped_names)
         for name in ungrouped_names:
-            idx += 1
+            idx += 1  # type: ignore
             grouped_metrics[idx] = {name: metrics[name]}
 
         # generate masks
