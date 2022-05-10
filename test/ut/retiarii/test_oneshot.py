@@ -274,7 +274,7 @@ def test_darts():
     _test_strategy(strategy.DARTS())
 
 
-@pytest.mark.skipif(not torch.cuda.is_available() or torch.cuda.device_count() <= 1, 'Must have multiple GPUs.')
+@pytest.mark.skipif(not torch.cuda.is_available() or torch.cuda.device_count() <= 1, reason='Must have multiple GPUs.')
 def test_darts_multi_gpu():
     _test_strategy(strategy.DARTS(), multi_gpu=True)
 
@@ -292,7 +292,7 @@ def test_enas():
     _test_strategy(strategy_fn)
 
 
-@pytest.mark.skipif(not torch.cuda.is_available() or torch.cuda.device_count() <= 1, 'Must have multiple GPUs.')
+@pytest.mark.skipif(not torch.cuda.is_available() or torch.cuda.device_count() <= 1, reason='Must have multiple GPUs.')
 def test_enas_multi_gpu():
     def strategy_fn(base_model, evaluator):
         if isinstance(base_model, MultiHeadAttentionNet):

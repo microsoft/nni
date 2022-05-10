@@ -3,10 +3,11 @@ from typing import Union
 
 import pytest
 import torch
+import pytorch_lightning
 from pytorch_lightning import LightningModule, Trainer
 from torch.utils.data import DataLoader, Dataset
 
-from nni.retiarii.oneshot.pytorch.utils import ConcatLoader
+pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs')
 
 
 class RandomDataset(Dataset):
@@ -48,6 +49,8 @@ class BoringModel(LightningModule):
 
 
 def test_concat_loader():
+    from nni.retiarii.oneshot.pytorch.dataloader import ConcatLoader
+
     loaders = {
         'a': DataLoader(range(10), batch_size=4),
         'b': DataLoader(range(20), batch_size=5),
@@ -64,6 +67,8 @@ def test_concat_loader():
 
 
 def test_concat_loader_nested():
+    from nni.retiarii.oneshot.pytorch.dataloader import ConcatLoader
+
     loaders = {
         'a': [DataLoader(range(10), batch_size=4), DataLoader(range(20), batch_size=6)],
         'b': DataLoader(range(20), batch_size=5),
@@ -85,6 +90,8 @@ def test_concat_loader_with_ddp(
     replace_sampler_ddp: bool, is_min_size_mode: bool, num_devices: Union[int, str]
 ):
     """Inspired by tests/trainer/test_supporters.py in lightning."""
+    from nni.retiarii.oneshot.pytorch.dataloader import ConcatLoader
+
     mode = 'min_size' if is_min_size_mode else 'max_size_cycle'
     dim = 3
     n1 = 8

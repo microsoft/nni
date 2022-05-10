@@ -18,7 +18,6 @@ from typing import Any, Type
 import torch.nn as nn
 
 from nni.retiarii.graph import Model
-from nni.retiarii.oneshot.pytorch.utils import ConcatLoader
 from nni.retiarii.strategy.base import BaseStrategy
 from nni.retiarii.evaluator.pytorch.lightning import Lightning, LightningModule
 
@@ -130,6 +129,8 @@ class ENAS(OneShotStrategy):
         super().__init__(EnasLightningModule, **kwargs)
 
     def preprocess_dataloader(self, train_dataloaders, val_dataloaders):
+        # Import locally to avoid import error on legacy PL version
+        from .dataloader import ConcatLoader
         return ConcatLoader({
             'train': train_dataloaders,
             'val': val_dataloaders
