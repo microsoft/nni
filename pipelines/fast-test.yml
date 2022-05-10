@@ -5,6 +5,10 @@ pool:
 
 steps:
 
+- template: templates/install-dependencies.yml
+  parameters:
+    platform: ubuntu-latest
+
 - script: |
     export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
     echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
@@ -14,7 +18,7 @@ steps:
     echo "NNI version: ${NNI_RELEASE}"
     echo "Build docker image: $(build_docker_image)"
 
-    python3 -m pip install --upgrade pip setuptools
+    python -m pip install --upgrade pip setuptools
   displayName: Prepare
 
 - script: |
