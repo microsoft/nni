@@ -133,16 +133,6 @@ class EnasLightningModule(RandomSamplingLightningModule):
     def configure_architecture_optimizers(self):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
 
-    def on_train_epoch_start(self):
-        self.model.train()
-        self.controller.eval()
-        return self.model.on_train_epoch_start()
-
-    def on_validation_epoch_start(self):
-        self.model.train()
-        self.controller.eval()
-        return self.model.on_validation_epoch_start()
-
     def training_step(self, batch_packed, batch_idx):
         batch, mode = batch_packed
 
