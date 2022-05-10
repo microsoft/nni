@@ -40,10 +40,10 @@ class OneShotStrategy(BaseStrategy):
     def _get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader | list[DataLoader]) \
         -> DataLoader | tuple[DataLoader, DataLoader]:
         """
-        One-shot strategy typically requires a customized dataloader.
-
-        If only train dataloader is produced, return one dataloader.
-        Otherwise, return train dataloader and valid loader as a tuple.
+        One-shot strategy typically requires fusing train and validation dataloader in an ad-hoc way.
+        As one-shot strategy doesn't try to open the blackbox of a batch,
+        theoretically, these dataloader can be
+        `any dataloader types supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
         """
         raise NotImplementedError()
 
@@ -69,7 +69,7 @@ class OneShotStrategy(BaseStrategy):
         self.model = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
         evaluator: Lightning = base_model.evaluator
         if evaluator.train_dataloader is None or evaluator.val_dataloaders is None:
-            raise TypeError('Train or val dataloader is not set.')
+            raise TypeError('Training and validation dataloader are both required to set in evaluator for one-shot strategy.')
         dataloader = self._get_dataloader(evaluator.train_dataloader, evaluator.val_dataloaders)
         if isinstance(dataloader, tuple):
             dataloader, val_loader = dataloader

@@ -133,40 +133,49 @@ class EnasLightningModule(RandomSamplingLightningModule):
     def configure_architecture_optimizers(self):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
 
+    def on_train_epoch_start(self):
+        self.model.train()
+        self.controller.eval()
+        return self.model.on_train_epoch_start()
+
+    def on_validation_epoch_start(self):
+        self.model.train()
+        self.controller.eval()
+        return self.model.on_validation_epoch_start()
+
     def training_step(self, batch, batch_idx):
-        # The ConcatenateTrainValDataloader yields both data and which dataloader it comes from.
-        batch, source = batch
-
-        if source == 'train':
-            # step 1: train model params
+        # train model params
+        with torch.no_grad():
             self.resample()
-            self.call_weight_optimizers('zero_grad')
-            loss_and_metrics = self.model.training_step(batch, batch_idx)
-            w_step_loss = loss_and_metrics['loss'] \
-                if isinstance(loss_and_metrics, dict) else loss_and_metrics
-            self.manual_backward(w_step_loss)
-            self.call_weight_optimizers('step')
-            return loss_and_metrics
+        self.call_weight_optimizers('zero_grad')
+        loss_and_metrics = self.model.training_step(batch, batch_idx)
+        w_step_loss = loss_and_metrics['loss'] \
+            if isinstance(loss_and_metrics, dict) else loss_and_metrics
+        self.manual_backward(w_step_loss)
+        self.call_weight_optimizers('step')
+        return loss_and_metrics
 
-        if source == 'val':
-            # step 2: train ENAS agent
-            arc_opt = self.architecture_optimizers()
-            if not isinstance(arc_opt, optim.Optimizer):
-                raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
+    def validation_step(self, batch, batch_idx):
+        # train ENAS agent
+        arc_opt = self.architecture_optimizers()
+        if not isinstance(arc_opt, optim.Optimizer):
+            raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
+        with torch.enable_grad():
             arc_opt.zero_grad()
             self.resample()
-            self.model.validation_step(batch, batch_idx)
-            # use the default metric of self.model as reward function
-            if len(self.trainer.callback_metrics) == 1:
-                _, metric = next(iter(self.trainer.callback_metrics.items()))
-            else:
-                metric_name = self.reward_metric_name or 'default'
-                if metric_name not in self.trainer.callback_metrics:
-                    raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
-                                   f'found multiple metrics without default: {self.trainer.callback_metrics.keys()}')
-                metric = self.trainer.callback_metrics[metric_name]
-            reward: float = metric.item()
+        self.model.validation_step(batch, batch_idx)
+        # use the default metric of self.model as reward function
+        if len(self.trainer.callback_metrics) == 1:
+            _, metric = next(iter(self.trainer.callback_metrics.items()))
+        else:
+            metric_name = self.reward_metric_name or 'default'
+            if metric_name not in self.trainer.callback_metrics:
+                raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
+                                f'found multiple metrics without default: {self.trainer.callback_metrics.keys()}')
+            metric = self.trainer.callback_metrics[metric_name]
+        reward: float = metric.item()
 
+        with torch.enable_grad():
             if self.entropy_weight:
                 reward = reward + self.entropy_weight * self.controller.sample_entropy.item()  # type: ignore
             self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
@@ -177,11 +186,11 @@ class EnasLightningModule(RandomSamplingLightningModule):
             rnn_step_loss = rnn_step_loss / self.ctrl_steps_aggregate
             self.manual_backward(rnn_step_loss)
 
-            if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
-                if self.ctrl_grad_clip > 0:
-                    nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
-                arc_opt.step()
-                arc_opt.zero_grad()
+        if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
+            if self.ctrl_grad_clip > 0:
+                nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
+            arc_opt.step()
+            arc_opt.zero_grad()
 
     def resample(self):
         """Resample the architecture with ENAS controller."""
