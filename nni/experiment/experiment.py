@@ -126,6 +126,8 @@ class Experiment:
             The port of web UI.
         debug
             Whether to start in debug mode.
+        run_mode
+            Running the experiment in foreground or background
         """
         config = self._start_begin(debug, run_mode)
 

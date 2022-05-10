@@ -62,6 +62,13 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         Upon initialization, advisor callbacks need to be registered.
         Advisor will call the callbacks when the corresponding event has been triggered.
         Base execution engine will get those callbacks and broadcast them to graph listener.
+
+        Parameters
+        ----------
+        rest_port
+            The port of the experiment's rest server
+        rest_url_prefix
+            The url prefix of the experiment's rest entry
         """
         self.port = rest_port
         self.url_prefix = rest_url_prefix

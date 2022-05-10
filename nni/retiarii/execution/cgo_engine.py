@@ -42,16 +42,20 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
     Parameters
     ----------
-    devices : List[Device]
-        Available devices for execution.
-    max_concurrency : int
+    training_service
+        The remote training service config.
+    max_concurrency
         The maximum number of trials to run concurrently.
-    batch_waiting_time: int
+    batch_waiting_time
         Seconds to wait for each batch of trial submission.
         The trials within one batch could apply cross-graph optimization.
+    rest_port
+        The port of the experiment's rest server
+    rest_url_prefix
+        The url prefix of the experiment's rest entry
     """
 
-    def __init__(self, training_service,
+    def __init__(self, training_service: RemoteConfig,
                  max_concurrency: int = None,
                  batch_waiting_time: int = 60,
                  rest_port: int | None = None,

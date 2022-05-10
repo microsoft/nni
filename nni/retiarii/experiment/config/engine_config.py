@@ -11,8 +11,6 @@ __all__ = ['ExecutionEngineConfig', 'BaseEngineConfig', 'OneshotEngineConfig',
 
 @dataclass(init=False)
 class ExecutionEngineConfig(ConfigBase):
-    """
-    """
     name: str
 
 @dataclass(init=False)
