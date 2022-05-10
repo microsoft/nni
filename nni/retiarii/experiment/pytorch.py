@@ -18,6 +18,7 @@ import torch
 import torch.nn as nn
 import nni.runtime.log
 from nni.experiment import Experiment, RunMode, launcher, management
+from nni.experiment.config.training_services import RemoteConfig
 from nni.runtime.protocol import connect_websocket
 
 from .config import (
@@ -240,7 +241,7 @@ class RetiariiExperiment(Experiment):
                 "CGO execution engine currently only supports remote training service"
             assert self.config.execution_engine.batch_waiting_time is not None \
                 and self.config.execution_engine.max_concurrency_cgo is not None
-            engine = CGOExecutionEngine(self.config.training_service,
+            engine = CGOExecutionEngine(cast(RemoteConfig, self.config.training_service),
                                         max_concurrency=self.config.execution_engine.max_concurrency_cgo,
                                         batch_waiting_time=self.config.execution_engine.batch_waiting_time,
                                         rest_port=self.port,
