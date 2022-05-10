@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any
 
 from nni.experiment.config import utils, ExperimentConfig
 

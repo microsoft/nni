@@ -57,7 +57,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     Resource management is implemented in this class.
     """
 
-    def __init__(self, rest_port: int | None = None, rest_url_prefix: str = None) -> None:
+    def __init__(self, rest_port: int | None = None, rest_url_prefix: str | None = None) -> None:
         """
         Upon initialization, advisor callbacks need to be registered.
         Advisor will call the callbacks when the corresponding event has been triggered.

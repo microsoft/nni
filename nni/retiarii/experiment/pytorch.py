@@ -18,11 +18,10 @@ import torch
 import torch.nn as nn
 import nni.runtime.log
 from nni.experiment import Experiment, RunMode, launcher, management
-from nni.experiment.config import ExperimentConfig
 from nni.runtime.protocol import connect_websocket
 
 from .config import (
-    RetiariiExeConfig, ExecutionEngineConfig, OneshotEngineConfig, BaseEngineConfig,
+    RetiariiExeConfig, OneshotEngineConfig, BaseEngineConfig,
     PyEngineConfig, CgoEngineConfig, BenchmarkEngineConfig
 )
 from ..codegen import model_to_pytorch_script
@@ -44,7 +43,7 @@ from ..strategy.utils import dry_run_for_formatted_search_space
 _logger = logging.getLogger(__name__)
 
 
-__all__ = ['RetiariiExperiment', 'NasExperiment']
+__all__ = ['RetiariiExperiment']
 
 
 def preprocess_model(base_model, evaluator, applied_mutators, full_ir=True, dummy_input=None, oneshot=False):
