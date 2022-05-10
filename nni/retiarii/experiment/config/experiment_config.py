@@ -39,14 +39,10 @@ class RetiariiExeConfig(ExperimentConfig):
                  **kwargs):
         super().__init__(training_service_platform, **kwargs)
 
-        if execution_engine is not None:
-            # the user chose to init with `config = ExperimentConfig('local')` and set fields later
-            # we need to create empty training service & algorithm configs to support `config.tuner.name = 'random'`
-            assert utils.is_missing(self.execution_engine)
-            if isinstance(execution_engine, str):
-                self.execution_engine = execution_engine_config_factory(execution_engine)
-            else:
-                self.execution_engine = execution_engine
+        if isinstance(execution_engine, str):
+            self.execution_engine = execution_engine_config_factory(execution_engine)
+        else:
+            self.execution_engine = execution_engine
 
         self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + self.execution_engine.name
 
