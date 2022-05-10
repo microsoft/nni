@@ -22,6 +22,7 @@ except ImportError:
     cgo_import_failed = True
 
 from nni.retiarii.graph import Evaluator
+from nni.typehint import Literal
 
 
 __all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression']
@@ -35,6 +36,9 @@ class LightningModule(pl.LightningModule):
     It's a subclass of ``pytorch_lightning.LightningModule``.
     See https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html
     """
+
+    running_mode: Literal['multi', 'oneshot'] = 'multi'
+    """An indicator of whether current module is running in a multi-trial experiment or an one-shot."""
 
     def set_model(self, model: Union[Callable[[], nn.Module], nn.Module]) -> None:
         """Set the inner model (architecture) to train / evaluate.
@@ -189,7 +193,6 @@ class _SupervisedLearningModule(LightningModule):
 
         if export_onnx is None or export_onnx is True:
             self.export_onnx = Path(os.environ.get('NNI_OUTPUT_DIR', '.')) / 'model.onnx'
-            self.export_onnx.parent.mkdir(exist_ok=True)
         elif export_onnx:
             self.export_onnx = Path(export_onnx)
         else:
@@ -212,7 +215,8 @@ class _SupervisedLearningModule(LightningModule):
         x, y = batch
         y_hat = self(x)
 
-        if self.export_onnx is not None:
+        if self.running_mode == 'multi' and self.export_onnx is not None:
+            self.export_onnx.parent.mkdir(exist_ok=True)
             try:
                 self.to_onnx(self.export_onnx, x, export_params=True)
             except RuntimeError as e:
@@ -234,10 +238,12 @@ class _SupervisedLearningModule(LightningModule):
         return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)  # type: ignore
 
     def on_validation_epoch_end(self):
-        nni.report_intermediate_result(self._get_validation_metrics())
+        if self.running_mode == 'multi':
+            nni.report_intermediate_result(self._get_validation_metrics())
 
     def on_fit_end(self):
-        nni.report_final_result(self._get_validation_metrics())
+        if self.running_mode == 'multi':
+            nni.report_final_result(self._get_validation_metrics())
 
     def _get_validation_metrics(self):
         if len(self.metrics) == 1:

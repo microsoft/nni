@@ -66,6 +66,7 @@ class OneShotStrategy(BaseStrategy):
             raise TypeError('Evaluator needs to be a lightning evaluator to make one-shot strategy work.')
 
         evaluator_module: LightningModule = base_model.evaluator.module
+        evaluator_module.running_mode = 'oneshot'
         evaluator_module.set_model(py_model)
 
         self.model = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
