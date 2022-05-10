@@ -11,7 +11,7 @@ import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
 import globals from 'common/globals';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manager';
-import { ExperimentManager } from '../common/experimentManager';
+import { getExperimentsManager } from 'extensions/experiments_manager';
 import { TensorboardManager, TensorboardTaskInfo } from '../common/tensorboardManager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { getVersion } from '../common/utils';
@@ -24,13 +24,11 @@ import { TrialJobStatus } from '../common/trainingService';
 
 class NNIRestHandler {
     private nniManager: Manager;
-    private experimentsManager: ExperimentManager;
     private tensorboardManager: TensorboardManager;
     private log: Logger;
 
     constructor() {
         this.nniManager = component.get(Manager);
-        this.experimentsManager = component.get(ExperimentManager);
         this.tensorboardManager = component.get(TensorboardManager);
         this.log = getLogger('NNIRestHandler');
     }
@@ -328,7 +326,7 @@ class NNIRestHandler {
         router.get('/experiment-metadata', (_req: Request, res: Response) => {
             Promise.all([
                 this.nniManager.getExperimentProfile(),
-                this.experimentsManager.getExperimentsInfo()
+                getExperimentsManager().getExperimentsInfo()
             ]).then(([profile, experimentInfo]) => {
                 for (const info of experimentInfo as any) {
                     if (info.id === profile.id) {
@@ -344,7 +342,7 @@ class NNIRestHandler {
 
     private getExperimentsInfo(router: Router): void {
         router.get('/experiments-info', (_req: Request, res: Response) => {
-            this.experimentsManager.getExperimentsInfo().then((experimentInfo: JSON) => {
+            getExperimentsManager().getExperimentsInfo().then((experimentInfo: JSON) => {
                 res.send(JSON.stringify(experimentInfo));
             }).catch((err: Error) => {
                 this.handleError(err, res);

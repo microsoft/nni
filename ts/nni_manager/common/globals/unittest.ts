@@ -48,8 +48,9 @@ export function resetGlobals(): void {
         logLevel: 'info',
         foreground: false,
         urlPrefix: '',
-        mode: 'unittest',
-        dispatcherPipe: undefined
+        tunerCommandChannel: null,
+        pythonInterpreter: 'python',
+        mode: 'unittest'
     };
     const paths = createPaths(args);
     const logStream = {
