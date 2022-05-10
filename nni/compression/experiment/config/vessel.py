@@ -6,7 +6,7 @@ import base64
 import io
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, Tuple, overload
 from typing_extensions import Literal
 
 import torch
@@ -21,14 +21,18 @@ from nni.experiment.config.base import ConfigBase
 
 @dataclass(init=False)
 class CompressionVessel(ConfigBase):
-    model: str | bytes
-    finetuner: str | bytes
-    evaluator: str | bytes
-    dummy_input: str | bytes
-    trainer: str | bytes | Literal['null'] | None
-    optimizer_helper: str | bytes | Literal['null'] | None
-    criterion: str | bytes | Literal['null'] | None
+    model: str
+    finetuner: str
+    evaluator: str
+    dummy_input: str
+    trainer: str | None
+    optimizer_helper: str | None
+    criterion: str | None
     device: str
+
+    @overload
+    def __init__(self, model: str, finetuner: str, evaluator: str, dummy_input: str,
+                 trainer: str, optimizer_helper: str, criterion: str, device: str): ...
 
     def __init__(self,
                  model: Module,
