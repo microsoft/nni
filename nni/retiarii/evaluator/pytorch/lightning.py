@@ -4,7 +4,7 @@
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, Union, Optional, List, Callable, Type
+from typing import Any, Dict, Union, Optional, List, Callable, Type
 
 import pytorch_lightning as pl
 import torch.nn as nn
@@ -59,6 +59,7 @@ DataLoader.__doc__ = """
 Traced version of ``torch.utils.data.DataLoader``. See https://pytorch.org/docs/stable/data.html
 """
 
+
 @nni.trace
 class Lightning(Evaluator):
     """
@@ -74,21 +75,23 @@ class Lightning(Evaluator):
 
     Parameters
     ----------
-    lightning_module : LightningModule
+    lightning_module
         Lightning module that defines the training logic.
-    trainer : Trainer
+    trainer
         Lightning trainer that handles the training.
-    train_dataloders : DataLoader
+    train_dataloders
         Used in ``trainer.fit()``. A PyTorch DataLoader with training samples.
         If the ``lightning_module`` has a predefined train_dataloader method this will be skipped.
-    val_dataloaders : DataLoader or List of DataLoader
+        It can be `any types of dataloader supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
+    val_dataloaders
         Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list of them, specifying validation samples.
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
+        It can be `any types of dataloader supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
     """
 
     def __init__(self, lightning_module: LightningModule, trainer: Trainer,
-                 train_dataloader: Optional[DataLoader] = None,
-                 val_dataloaders: Union[DataLoader, List[DataLoader], None] = None):
+                 train_dataloaders: Optional[Any] = None,
+                 val_dataloaders: Optional[Any] = None):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
         if cgo_import_failed:
             assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), f'Trainer must be imported from {__name__}'
@@ -96,28 +99,38 @@ class Lightning(Evaluator):
             # this is not isinstance(trainer, Trainer) because with a different trace call, it can be different
             assert (isinstance(trainer, pl.Trainer) and is_traceable(trainer)) or isinstance(trainer, cgo_trainer.Trainer), \
                 f'Trainer must be imported from {__name__} or nni.retiarii.evaluator.pytorch.cgo.trainer'
-        assert _check_dataloader(train_dataloader), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
-        assert _check_dataloader(val_dataloaders), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
+        if not _check_dataloader(train_dataloaders):
+            warnings.warn(f'Unexpected dataloader type: {type(train_dataloaders)}. '
+                          f'You might have forgotten to import DataLoader from {__name__}: {train_dataloaders}',
+                          RuntimeWarning)
+        if not _check_dataloader(val_dataloaders):
+            warnings.warn(f'Unexpected dataloader type: {type(train_dataloaders)}. '
+                          f'You might have forgotten to import DataLoader from {__name__}: {val_dataloaders}',
+                          RuntimeWarning)
         self.module = lightning_module
         self.trainer = trainer
-        self.train_dataloader = train_dataloader
+        self.train_dataloaders = train_dataloaders
         self.val_dataloaders = val_dataloaders
 
     @staticmethod
     def _load(ir):
-        return Lightning(ir['module'], ir['trainer'], ir['train_dataloader'], ir['val_dataloaders'])
+        return Lightning(ir['module'], ir['trainer'], ir['train_dataloaders'], ir['val_dataloaders'])
 
     def _dump(self):
         return {
             'type': self.__class__,
             'module': self.module,
             'trainer': self.trainer,
-            'train_dataloader': self.train_dataloader,
+            'train_dataloaders': self.train_dataloaders,
             'val_dataloaders': self.val_dataloaders
         }
 
     def _execute(self, model_cls):
         return self.fit(model_cls)
+
+    @property
+    def train_dataloader(self):
+        warnings.warn('train_dataloader is deprecated, please use `train_dataloaders`.', DeprecationWarning)
 
     def __eq__(self, other):
         eq_func = False
@@ -146,7 +159,7 @@ class Lightning(Evaluator):
             The model to fit.
         """
         self.module.set_model(model)
-        return self.trainer.fit(self.module, self.train_dataloader, self.val_dataloaders)
+        return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders)
 
 
 def _check_dataloader(dataloader):
@@ -193,6 +206,7 @@ class _SupervisedLearningModule(LightningModule):
         self.log('train_loss', loss, prog_bar=True)
         for name, metric in self.metrics.items():
             self.log('train_' + name, metric(y_hat, y), prog_bar=True)
+        print('inside train', self.trainer.callback_metrics)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -209,6 +223,9 @@ class _SupervisedLearningModule(LightningModule):
         self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)
         for name, metric in self.metrics.items():
             self.log('val_' + name, metric(y_hat, y), prog_bar=True)
+        print('trainer results', self.trainer._results)
+        import pdb; pdb.set_trace()
+        print('inside', self.trainer.callback_metrics)
 
     def test_step(self, batch, batch_idx):
         x, y = batch
@@ -283,14 +300,18 @@ class Classification(Lightning):
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: Type[optim.Optimizer] = optim.Adam,
-                 train_dataloader: Optional[DataLoader] = None,
+                 train_dataloaders: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
                  export_onnx: bool = True,
+                 train_dataloader: Optional[DataLoader] = None,
                  **trainer_kwargs):
+        if train_dataloader is not None:
+            warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
+            train_dataloaders = train_dataloader
         module = _ClassificationModule(criterion=criterion, learning_rate=learning_rate,
                                        weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
         super().__init__(module, Trainer(**trainer_kwargs),
-                         train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
+                         train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
 
 
 @nni.trace
@@ -336,11 +357,15 @@ class Regression(Lightning):
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: Type[optim.Optimizer] = optim.Adam,
-                 train_dataloader: Optional[DataLoader] = None,
+                 train_dataloaders: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
                  export_onnx: bool = True,
+                 train_dataloader: Optional[DataLoader] = None,
                  **trainer_kwargs):
+        if train_dataloader is not None:
+            warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
+            train_dataloaders = train_dataloader
         module = _RegressionModule(criterion=criterion, learning_rate=learning_rate,
                                    weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
         super().__init__(module, Trainer(**trainer_kwargs),
-                         train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
+                         train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)

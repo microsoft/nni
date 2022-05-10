@@ -156,6 +156,11 @@ class EnasLightningModule(RandomSamplingLightningModule):
         return loss_and_metrics
 
     def validation_step(self, batch, batch_idx):
+        if self.trainer.sanity_checking:
+            # Sanity check shouldn't do any training.
+            self.resample()
+            return self.model.validation_step(batch, batch_idx)
+
         # train ENAS agent
         arc_opt = self.architecture_optimizers()
         if not isinstance(arc_opt, optim.Optimizer):
@@ -163,7 +168,13 @@ class EnasLightningModule(RandomSamplingLightningModule):
         with torch.enable_grad():
             arc_opt.zero_grad()
             self.resample()
-        self.model.validation_step(batch, batch_idx)
+
+        # Set training=True to log metrics (with Internal API)
+        original_training = self.trainer._results.training
+        self.trainer._results.training = True
+
+        step_output = self.model.validation_step(batch, batch_idx)
+
         # use the default metric of self.model as reward function
         if len(self.trainer.callback_metrics) == 1:
             _, metric = next(iter(self.trainer.callback_metrics.items()))
@@ -171,7 +182,9 @@ class EnasLightningModule(RandomSamplingLightningModule):
             metric_name = self.reward_metric_name or 'default'
             if metric_name not in self.trainer.callback_metrics:
                 raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
-                                f'found multiple metrics without default: {self.trainer.callback_metrics.keys()}')
+                               f'found multiple (or zero) metrics without default: {list(self.trainer.callback_metrics.keys())}. '
+                               f'Try to use self.log to report metrics with the specified key ``{metric_name}`` in validation_step, '
+                               'and remember to set on_step=True.')
             metric = self.trainer.callback_metrics[metric_name]
         reward: float = metric.item()
 
@@ -191,6 +204,10 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
             arc_opt.step()
             arc_opt.zero_grad()
+
+        
+
+        return step_output
 
     def resample(self):
         """Resample the architecture with ENAS controller."""

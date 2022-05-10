@@ -335,21 +335,21 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return arc_optimizers + w_optimizers, lr_schedulers
 
     def on_train_start(self):
-        # redirect the access to trainer/log to this module
-        # but note that we might be missing other attributes,
-        # which could potentially be a problem
-        self.model.trainer = self.trainer  # type: ignore
-        self.model.log = self.log
         return self.model.on_train_start()
 
     def on_train_end(self):
         return self.model.on_train_end()
 
     def on_fit_start(self):
-        return self.model.on_train_start()
+        # redirect the access to trainer/log to this module
+        # but note that we might be missing other attributes,
+        # which could potentially be a problem
+        self.model.trainer = self.trainer  # type: ignore
+        self.model.log = self.log
+        return self.model.on_fit_start()
 
     def on_fit_end(self):
-        return self.model.on_train_end()
+        return self.model.on_fit_end()
 
     def on_train_batch_start(self, batch, batch_idx, unused=0):
         return self.model.on_train_batch_start(batch, batch_idx, unused)
@@ -357,6 +357,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_train_batch_end(self, outputs, batch, batch_idx, unused=0):
         return self.model.on_train_batch_end(outputs, batch, batch_idx, unused)
 
+    # Deprecated hooks in pytorch-lightning
     def on_epoch_start(self):
         return self.model.on_epoch_start()
 

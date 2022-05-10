@@ -15,6 +15,9 @@ from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, ValueChoice
 from nni.retiarii.strategy import BaseStrategy
 
 
+pytestmark = pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
+
+
 class DepthwiseSeparableConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super().__init__()
@@ -256,17 +259,14 @@ def _test_strategy(strategy_, support_value_choice=True):
                 experiment.run(config)
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_darts():
     _test_strategy(strategy.DARTS())
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_proxyless():
     _test_strategy(strategy.Proxyless(), False)
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_enas():
     def strategy_fn(base_model, evaluator):
         if isinstance(base_model, MultiHeadAttentionNet):
@@ -276,12 +276,10 @@ def test_enas():
     _test_strategy(strategy_fn)
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_random():
     _test_strategy(strategy.RandomOneShot())
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_gumbel_darts():
     _test_strategy(strategy.GumbelDARTS())
 

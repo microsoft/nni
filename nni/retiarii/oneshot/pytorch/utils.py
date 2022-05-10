@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 from collections import OrderedDict
-from typing import cast
+from typing import cast, Any
 
 import numpy as np
 import torch
@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader, Dataset
 import nni.retiarii.nn.pytorch as nn
 from nni.nas.pytorch.mutables import InputChoice, LayerChoice
 from pytorch_lightning.trainer.data_loading import TrainerDataLoadingMixin
+from pytorch_lightning.trainer.supporters import CombinedLoader, CombinedLoaderIterator
 
 _logger = logging.getLogger(__name__)
 
@@ -133,6 +134,7 @@ class AverageMeter:
 def _replace_module_with_type(root_module, init_fn, type_name, modules):
     if modules is None:
         modules = []
+
     def apply(m):
         for name, child in m.named_children():
             if isinstance(child, type_name):
@@ -191,6 +193,7 @@ class PseudoDataset:
     """
     A work around for distributed training to pretend that there were a dataset in the oneshot dataloader.
     """
+
     def __init__(self, pseudo_len):
         self.pseudo_len = pseudo_len
 
@@ -221,17 +224,18 @@ class InterleavedTrainValDataLoader(DataLoader):
 
     Then you can use the ``para_loader`` as a normal training loader.
     """
+
     def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader],
-                 batch_sampler=None, dataset = None, sampler=None, shuffle=None):
+                 batch_sampler=None, dataset=None, sampler=None, shuffle=None):
         if isinstance(val_dataloader, list):
             raise TypeError('Validation dataloader of type list is not supported.')
-        if sampler is None: # single process
+        if sampler is None:  # single process
             self.train_dataloader: DataLoader = train_dataloader
             self.val_dataloader: DataLoader = val_dataloader
-        else: # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
-            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle = True, overfit_batches = 0)
+        else:  # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
+            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle=True, overfit_batches=0)
             self.train_dataloader = TrainerDataLoadingMixin._update_dataloader(train_dataloader, train_sampler)
-            val_sampler = TrainerDataLoadingMixin._get_distributed_sampler(val_dataloader, shuffle = False, overfit_batches = 0)
+            val_sampler = TrainerDataLoadingMixin._get_distributed_sampler(val_dataloader, shuffle=False, overfit_batches=0)
             self.val_dataloader = TrainerDataLoadingMixin._update_dataloader(val_dataloader, val_sampler)
         self.equal_len = len(train_dataloader) == len(val_dataloader)
         self.train_longer = len(train_dataloader) > len(val_dataloader)
@@ -300,17 +304,18 @@ class ConcatenateTrainValDataLoader(DataLoader):
 
     Then you can use the ``concat_loader`` as a normal training loader.
     """
+
     def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader],
-                 batch_sampler=None, dataset = None, sampler=None, shuffle=None):
+                 batch_sampler=None, dataset=None, sampler=None, shuffle=None):
         if isinstance(val_dataloader, list):
             raise TypeError('Validation dataloader of type list is not supported.')
-        if sampler is None: # single process
+        if sampler is None:  # single process
             self.train_dataloader: DataLoader = train_dataloader
             self.val_dataloader: DataLoader = val_dataloader
-        else: # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
-            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle = True, overfit_batches = 0)
+        else:  # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
+            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle=True, overfit_batches=0)
             self.train_dataloader = TrainerDataLoadingMixin._update_dataloader(train_dataloader, train_sampler)
-            val_sampler = TrainerDataLoadingMixin._get_distributed_sampler(val_dataloader, shuffle = False, overfit_batches = 0)
+            val_sampler = TrainerDataLoadingMixin._get_distributed_sampler(val_dataloader, shuffle=False, overfit_batches=0)
             self.val_dataloader = TrainerDataLoadingMixin._update_dataloader(val_dataloader, val_sampler)
         super().__init__(PseudoDataset(len(self)))
 
@@ -334,3 +339,63 @@ class ConcatenateTrainValDataLoader(DataLoader):
 
     def __len__(self):
         return len(self.train_dataloader) + len(self.val_dataloader)
+
+
+class ConcatLoader(CombinedLoader):
+    """This loader is same as CombinedLoader in PyTorch-Lightning, but concatenate sub-loaders
+    instead of loading them in parallel.
+
+    Parameters
+    ----------
+    loaders
+        For example, ::
+
+            {
+                "train": DataLoader(train_dataset),
+                "val": DataLoader(val_dataset)
+            }
+
+        In this example, the loader will first produce the batches from "train", then "val".
+    """
+
+    def __iter__(self) -> Any:
+        """Replace the super-class iterator with ours."""
+        self._try_to_patch_pytorch_dataloader()
+        iterator = ConcatLoaderIterator(self.loaders)
+        # handle fault tolerant restart.
+        self.on_restart(iterator)
+        self._iterator = iterator
+        return iterator
+
+    @staticmethod
+    def _try_to_patch_pytorch_dataloader():
+        """Copied from CombinedLoader."""
+        from torch.utils.data.dataloader import _BaseDataLoaderIter
+
+        # prevent `NotImplementedError` from PyTorch:
+        # https://github.com/pytorch/pytorch/blob/v1.9.0/torch/utils/data/dataloader.py#L541
+        def __getstate__patch__(*_):
+            return {}
+
+        _BaseDataLoaderIter.__getstate__ = __getstate__patch__
+
+    def __len__(self) -> int:
+        return sum(self._calc_num_batches(loader) for loader in self.loaders.values())
+
+
+class ConcatLoaderIterator(CombinedLoaderIterator):
+    """Similar to CombinedLoaderIterator in Lightning, but in a concat manner."""
+
+    def __next__(self) -> Any:
+        """Fetches the next batch from multiple data loaders,
+        by looking for the first iterator that isn't exhausted yet.
+        """
+        if not len(self.loader_iters) == len(self.loaders):
+            raise RuntimeError('loader_iters must have the same length as loaders.')
+        print(self.loader_iters)
+        for i, (loader_name, iterator) in enumerate(self.loader_iters.items()):
+            try:
+                return (self.request_next_batch(iterator), loader_name)
+            except StopIteration:
+                if i + 1 == len(self.loader_iters):
+                    raise
