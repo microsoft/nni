@@ -251,8 +251,9 @@ class RetiariiExperiment(Experiment):
             engine = PurePythonExecutionEngine(self.port, self.url_prefix)
         elif isinstance(self.config.execution_engine, BenchmarkEngineConfig):
             from ..execution.benchmark import BenchmarkExecutionEngine
-            assert self.config.benchmark is not None, '"benchmark" must be set when benchmark execution engine is used.'
-            engine = BenchmarkExecutionEngine(self.config.benchmark)
+            assert self.config.execution_engine.benchmark is not None, \
+                '"benchmark" must be set when benchmark execution engine is used.'
+            engine = BenchmarkExecutionEngine(self.config.execution_engine.benchmark)
         else:
             raise ValueError(f'Unsupported engine type: {self.config.execution_engine}')
         set_execution_engine(engine)
@@ -328,7 +329,8 @@ class RetiariiExperiment(Experiment):
         """
         _logger.info('Stopping experiment, please wait...')
         self._stop()
-        self._dispatcher_thread.join()
+        if self._dispatcher_thread:
+            self._dispatcher_thread.join()
         self._dispatcher = cast(RetiariiAdvisor, None)
         self._dispatcher_thread = None
         _logger.info('Experiment stopped')
@@ -380,11 +382,11 @@ class RetiariiExperiment(Experiment):
         """
         raise NotImplementedError
 
-
+"""
 class NasExperiment(RetiariiExperiment):
-    """
-    This class is only a new interface wrapper.
-    """
+
+    #This class is only a new interface wrapper.
+
     def __init__(self, model: nn.Module,
                  evaluator: Union[BaseOneShotTrainer, Evaluator],
                  strategy: BaseStrategy,
@@ -394,12 +396,11 @@ class NasExperiment(RetiariiExperiment):
         ...
 
     def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
-        """
-        Run the experiment.
-        This function will block until experiment finish or error.
-        """
+        #Run the experiment.
+        #This function will block until experiment finish or error.
         if isinstance(self.config.execution_engine.name, OneshotEngineConfig):
             base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
             super().run(port, wait_completion, debug)
+"""

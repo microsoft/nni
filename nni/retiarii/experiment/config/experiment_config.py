@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+from __future__ import annotations
 
 import os
 from dataclasses import dataclass
@@ -33,8 +34,8 @@ class RetiariiExeConfig(ExperimentConfig):
     # new config field for NAS
     execution_engine: ExecutionEngineConfig = PyEngineConfig()
 
-    def __init__(self, training_service_platform: Optional[str] = None,
-                 execution_engine: Union[str, ExecutionEngineConfig] = None, #TODO: having default value or not?
+    def __init__(self, training_service_platform: str | None = None,
+                 execution_engine: str | ExecutionEngineConfig = PyEngineConfig(),
                  **kwargs):
         super().__init__(training_service_platform, **kwargs)
 
