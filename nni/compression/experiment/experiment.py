@@ -12,13 +12,13 @@ from torch.optim import Optimizer
 
 from nni.compression.experiment.config import generate_compression_search_space
 from nni.experiment import Experiment
-from .config import CompressionConfig, CompressionExperimentConfig, CompressionVessel
+from .config import CompressionExperimentConfig, CompressionVessel
 
 _logger = logging.getLogger('nni.experiment')
 
 
 class CompressionExperiment(Experiment):
-    def __init__(self, config_or_platform: CompressionExperimentConfig | str | list[str] | None,
+    def __init__(self, config_or_platform: CompressionExperimentConfig | str | List[str] | None,
                  model: Module, finetuner: Callable[[Module], None],
                  evaluator: Callable[[Module], float], dummy_input: Any | None,
                  trainer: Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None] | None,

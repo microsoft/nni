@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Dict, List, Type
+from typing import List, Type
 
 from torch.nn import Module
 
