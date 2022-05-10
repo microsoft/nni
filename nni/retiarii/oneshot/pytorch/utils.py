@@ -188,18 +188,6 @@ def replace_input_choice(root_module, init_fn, modules=None):
     return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
 
 
-class PseudoDataset:
-    """
-    A work around for distributed training to pretend that there were a dataset in the oneshot dataloader.
-    """
-
-    def __init__(self, pseudo_len):
-        self.pseudo_len = pseudo_len
-
-    def __len__(self):
-        return self.pseudo_len
-
-
 class InterleavedTrainValDataLoader(DataLoader):
     """
     Dataloader that yields both train data and validation data in a batch, with an order of (train_batch, val_batch). The shorter
