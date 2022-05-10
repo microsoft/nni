@@ -10,13 +10,10 @@ from typing import cast, Any
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
+from pytorch_lightning.trainer.supporters import CombinedLoader, CombinedLoaderIterator
 
 import nni.retiarii.nn.pytorch as nn
 from nni.nas.pytorch.mutables import InputChoice, LayerChoice
-from pytorch_lightning.trainer.data_loading import TrainerDataLoadingMixin
-from pytorch_lightning.trainer.supporters import CombinedLoader, CombinedLoaderIterator
-
-_logger = logging.getLogger(__name__)
 
 
 def to_device(obj, device):
@@ -206,45 +203,32 @@ class InterleavedTrainValDataLoader(DataLoader):
     Dataloader that yields both train data and validation data in a batch, with an order of (train_batch, val_batch). The shorter
     one will be upsampled (repeated) to the length of the longer one, and the tail of the last repeat will be dropped. This enables
     users to train both model parameters and architecture parameters in parallel in an epoch.
-
     Some NAS algorithms, i.e. DARTS and Proxyless, require this type of dataloader.
-
     Parameters
     ----------
     train_data : DataLoader
         training dataloader
     val_data : DataLoader
         validation dataloader
-
     Example
     --------
     Fit your dataloaders into a parallel one.
-
     >>> para_loader = InterleavedTrainValDataLoader(train_dataloader, val_dataloader)
-
     Then you can use the ``para_loader`` as a normal training loader.
     """
-
-    def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader],
-                 batch_sampler=None, dataset=None, sampler=None, shuffle=None):
+    def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader]):
         if isinstance(val_dataloader, list):
             raise TypeError('Validation dataloader of type list is not supported.')
-        if sampler is None:  # single process
-            self.train_dataloader: DataLoader = train_dataloader
-            self.val_dataloader: DataLoader = val_dataloader
-        else:  # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
-            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle=True, overfit_batches=0)
-            self.train_dataloader = TrainerDataLoadingMixin._update_dataloader(train_dataloader, train_sampler)
-            val_sampler = TrainerDataLoadingMixin._get_distributed_sampler(val_dataloader, shuffle=False, overfit_batches=0)
-            self.val_dataloader = TrainerDataLoadingMixin._update_dataloader(val_dataloader, val_sampler)
+        self.train_loader: DataLoader = train_dataloader
+        self.val_loader: DataLoader = val_dataloader
         self.equal_len = len(train_dataloader) == len(val_dataloader)
         self.train_longer = len(train_dataloader) > len(val_dataloader)
-        # Ther have to be pseudoDataset to pass the trainer's validation
-        super().__init__(PseudoDataset(len(self)))
+        super().__init__(cast(Dataset, None))
 
     def __iter__(self):
-        self.train_iter = iter(self.train_dataloader)
-        self.val_iter = iter(self.val_dataloader)
+        self.train_iter = iter(self.train_loader)
+        self.val_iter = iter(self.val_loader)
+        return self
 
     def __next__(self):
         try:
@@ -255,7 +239,7 @@ class InterleavedTrainValDataLoader(DataLoader):
                 # if training is the longger one or equal, stop iteration
                 raise StopIteration()
             # if training is the shorter one, upsample it
-            self.train_iter = iter(self.train_dataloader)
+            self.train_iter = iter(self.train_loader)
             train_batch = next(self.train_iter)
 
         try:
@@ -267,13 +251,13 @@ class InterleavedTrainValDataLoader(DataLoader):
                 # covered above), stop iteration
                 raise StopIteration()
             # if validation is the shorter one, upsample it
-            self.val_iter = iter(self.val_dataloader)
+            self.val_iter = iter(self.val_loader)
             val_batch = next(self.val_iter)
 
         return train_batch, val_batch
 
     def __len__(self) -> int:
-        return max(len(self.train_dataloader), len(self.val_dataloader))
+        return max(len(self.train_loader), len(self.val_loader))
 
 
 class ConcatenateTrainValDataLoader(DataLoader):
@@ -281,46 +265,32 @@ class ConcatenateTrainValDataLoader(DataLoader):
     Dataloader that yields validation data after training data in an epoch. You will get a batch with the form of (batch, source) in the
     training step, where ``source`` is a string which is either 'train' or 'val', indicating which dataloader the batch comes from. This
     enables users to train model parameters first in an epoch, and then train architecture parameters.
-
     Some NAS algorithms, i.e. ENAS, may require this type of dataloader.
-
     Parameters
     ----------
     train_data : DataLoader
         training dataloader
     val_data : DataLoader
         validation dataloader
-
     Warnings
     ----------
     If you set ``limit_train_batches`` of the trainer, the validation batches may be skipped.
     Consider downsampling the train dataset and the validation dataset instead if you want to shorten the length of data.
-
     Example
     --------
     Fit your dataloaders into a concatenated one.
-
     >>> concat_loader = ConcatenateTrainValDataLoader(train_dataloader, val_datalodaer)
-
     Then you can use the ``concat_loader`` as a normal training loader.
     """
-
-    def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader],
-                 batch_sampler=None, dataset=None, sampler=None, shuffle=None):
+    def __init__(self, train_dataloader: DataLoader, val_dataloader: DataLoader | list[DataLoader]):
         if isinstance(val_dataloader, list):
             raise TypeError('Validation dataloader of type list is not supported.')
-        if sampler is None:  # single process
-            self.train_dataloader: DataLoader = train_dataloader
-            self.val_dataloader: DataLoader = val_dataloader
-        else:  # pytorch will reinstantiate this dataloader to inject distributed sampler under multiprocess condition
-            train_sampler = TrainerDataLoadingMixin._get_distributed_sampler(train_dataloader, shuffle=True, overfit_batches=0)
-            self.train_dataloader = TrainerDataLoadingMixin._update_dataloader(train_dataloader, train_sampler)
-            val_sampler = TrainerDataLoadingMixin._get_distributed_sampler(val_dataloader, shuffle=False, overfit_batches=0)
-            self.val_dataloader = TrainerDataLoadingMixin._update_dataloader(val_dataloader, val_sampler)
-        super().__init__(PseudoDataset(len(self)))
+        self.train_loader: DataLoader = train_dataloader
+        self.val_loader: DataLoader = val_dataloader
+        super().__init__(cast(Dataset, None))
 
     def __iter__(self):
-        self.cur_iter = iter(self.train_dataloader)
+        self.cur_iter = iter(self.train_loader)
         self.source = 'train'
         return self
 
@@ -330,7 +300,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
         except StopIteration:
             # training data is used up, change to validation data
             if self.source == 'train':
-                self.cur_iter = iter(self.val_dataloader)
+                self.cur_iter = iter(self.val_loader)
                 self.source = 'val'
                 return next(self)
             raise StopIteration()
@@ -338,7 +308,7 @@ class ConcatenateTrainValDataLoader(DataLoader):
             return batch, self.source
 
     def __len__(self):
-        return len(self.train_dataloader) + len(self.val_dataloader)
+        return len(self.train_loader) + len(self.val_loader)
 
 
 class ConcatLoader(CombinedLoader):
@@ -387,10 +357,10 @@ class ConcatLoader(CombinedLoader):
         def __getstate__patch__(*_):
             return {}
 
-        _BaseDataLoaderIter.__getstate__ = __getstate__patch__
+        _BaseDataLoaderIter.__getstate__ = __getstate__patch__  # type: ignore
 
     def __len__(self) -> int:
-        return sum(self._calc_num_batches(loader) for loader in self.loaders.values())
+        return int(sum(self._calc_num_batches(loader) for loader in self.loaders.values()))
 
 
 class ConcatLoaderIterator(CombinedLoaderIterator):
