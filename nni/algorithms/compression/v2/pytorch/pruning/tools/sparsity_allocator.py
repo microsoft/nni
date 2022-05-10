@@ -228,8 +228,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
             # generate final mask
             for name, metric in group_metric_dict.items():
                 # We assume the metric value are all positive right now.
-                if isinstance(group_mask, Tensor):
-                    metric = metric * group_mask
+                metric = metric * group_mask
                 pruned_num = int(sparsities[name] * len(metric))
                 if pruned_num == 0:
                     threshold = metric.min() - 1
