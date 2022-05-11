@@ -6,7 +6,7 @@ parameters:
   type: boolean
   default: false
 - name: extra_dep
-  type: str
+  type: string
   default: ""
 
 steps:
