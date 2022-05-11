@@ -192,3 +192,7 @@ def test_shufflenet():
 
     ss = searchspace.ShuffleNetSpace(channel_search=True)
     _test_searchspace_on_dataset(ss, dataset='imagenet')
+
+def test_autoformer():
+    ss = searchspace.AutoformerSpace()
+    _test_searchspace_on_dataset(ss, dataset='imagenet')
