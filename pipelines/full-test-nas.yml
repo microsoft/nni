@@ -1,0 +1,29 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+jobs:
+- job: linux
+  pool: nni-it
+  timeoutInMinutes: 120
+
+  steps:
+  - template: templates/setup-non-ms-hosted-agent.yml
+
+  - template: templates/config-version.yml
+    parameters:
+      platform: ubuntu-latest-gpu
+
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: ubuntu-latest-gpu
+
+  - template: templates/install-nni.yml
+
+  - script: |
+      cd test
+      source scripts/nas.sh
+    displayName: NAS test

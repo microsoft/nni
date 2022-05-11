@@ -1,0 +1,14 @@
+parameters:
+- name: user
+  type: boolean
+  default: true
+
+steps:
+
+- ${{ if eq(parameters.user, true) }}:
+    script: |
+      python setup.py develop
+  ${{ else }}:
+    script: |
+      python setup.py develop --no-user
+  displayName: Install NNI
