@@ -7,13 +7,148 @@ import logging
 import sys
 from datetime import datetime
 from io import TextIOBase
-from logging import FileHandler, Formatter, Handler, StreamHandler
+from logging import FileHandler, Formatter, Handler, LogRecord, Logger, StreamHandler
 from pathlib import Path
+import string
 from typing import Optional
 
 import colorama
 
 from .env_vars import dispatcher_env_vars, trial_env_vars
+
+_global_logging_enabled: bool = False
+
+_root_logger: Logger = logging.getLogger()
+logging.getLogger('nni').setLevel(logging.INFO)
+
+_handlers: dict[str, Handler] = {}
+
+colorama.init()
+_colorful: dict[str, str] = colorama.Fore.__dict__
+_colorless: dict[str, str] = {key: '' for key in _colorful.keys()}
+
+def start_stdout_logging() -> None:
+    """
+    Register the stdout handler.
+
+    This function should be invoked on importing nni.
+
+    It is safe to call it multiple times.
+    """
+    if '_stdout_' in _handlers:
+        return
+
+    handler = StreamHandler(sys.stdout)
+    handler.addFilter(_nni_filter)
+    handler.setFormatter(_StdoutFormatter())
+
+    _handlers['_stdout_'] = handler
+    _root_logger.addHandler(handler)
+
+def silence_stdout() -> None:
+    """
+    Stop NNI from printing to stdout.
+
+    By default NNI prints log messages of ``INFO`` or higher level to console.
+    Use this function if you want a clean stdout, or if you want to handle logs yourself.
+    """
+    handler = _handlers.pop('_stdout_', None)
+    if handler is not None:
+        _root_logger.removeHandler(handler)
+
+def start_experiment_logging(experiment_id: str, log_file: Path, level: str) -> None:
+    """
+    Register the log file handler for an experiment's ``experiment.log``.
+
+    This function should be invoked on starting experiment.
+    We don't want to create the experiment folder if the user does not launch it.
+
+    If there are multiple experiments running concurrently,
+    log messages will be written to all running experiments' log file.
+
+    It is safe to call it multiple times.
+    """
+    if experiment_id in _handlers:
+        return
+
+    handler = FileHandler(log_file, encoding='utf_8')
+    handler.addFilter(_nni_filter)
+    handler.setFormatter(_LogFileFormatter())
+    handler.setLevel(level.upper())
+
+    _handlers[experiment_id] = handler
+    _root_logger.addHandler(handler)
+
+def stop_experiment_logging(experiment_id: str) -> None:
+    """
+    Unregister an experiment's ``experiment.log`` handler.
+    """
+    handler = _handlers.pop(experiment_id, None)
+    if handler is not None:
+        _root_logger.removeHandler(handler)
+
+def enable_global_logging(enable: bool = True) -> None:
+    """
+    Let NNI to handle all logs in this process.
+
+    Use ``enable_global_logging(False)`` to reverse the setting.
+    (The root log level will not be restored.)
+    """
+    global _global_logging_enabled
+    _global_logging_enabled = enable
+    _root_logger.setLevel(logging.INFO)
+
+def _nni_filter(record: LogRecord) -> bool:
+    return _global_logging_enabled or record.name.startswith('nni')
+
+class _StdoutFormatter(Formatter):
+    def __init__(self):
+        fmt = '[%(asctime)s] (%(threadName)s:%(name)s) %(message)s'
+        datefmt = '%Y-%m-%d %H:%M:%S'
+        super().__init__(fmt, datefmt)
+
+    def formatMessage(self, record: LogRecord) -> str:
+        if '${' in record.message:
+            message = string.Template(record.message).safe_substitute(_colorful)
+        else:
+            message = record.message
+
+        if record.levelno >= logging.ERROR:
+            level = colorama.Fore.RED + 'ERROR: '
+        elif record.levelno >= logging.WARNING:
+            level = colorama.Fore.YELLOW + 'WARNING: '
+        elif record.levelno >= logging.INFO:
+            level = colorama.Fore.GREEN
+        else:
+            level = colorama.Fore.BLUE
+
+        content = level + message + colorama.Style.RESET_ALL
+        if record.levelno >= logging.INFO:
+            return f'[{record.asctime}] {content}'
+        elif record.threadName == 'MainThread':
+            return f'[{record.asctime}] {record.name} {content}'
+        else:
+            return f'[{record.asctime}] {record.threadName}:{record.name} {content}'
+
+class _LogFileFormatter(Formatter):
+    def __init__(self):
+        fmt = '[%(asctime)s] (%(threadName)s:%(name)s) %(message)s'
+        datefmt = '%Y-%m-%d %H:%M:%S'
+        super().__init__(fmt, datefmt)
+
+    def formatMessage(self, record: LogRecord) -> str:
+        if '${' in record.message:
+            message = string.Template(record.message).safe_substitute(_colorless)
+        else:
+            message = record.message
+
+        if record.threadName == 'MainThread':
+            return f'[{record.asctime}] {record.levelname} ({record.name}) {message}'
+        else:
+            return f'[{record.asctime}] {record.levelname} ({record.threadName}:{record.name}) {message}'
+
+
+## legacy part ##
 
 handlers = {}
 
@@ -45,41 +180,7 @@ def init_logger() -> None:
         _init_logger_trial()
         return
 
-    _init_logger_standalone()
-
-    logging.getLogger('filelock').setLevel(logging.WARNING)
-
-_cli_log_initialized = False
-
-def init_logger_for_command_line() -> None:
-    """
-    Initialize logger for command line usage.
-    This means that NNI is used as "main function" rather than underlying library or background service,
-    so it should print log to stdout.
-
-    It is used by nnictl and `nni.experiment.Experiment`.
-
-    This function will get invoked after `init_logger()`.
-    """
-    global _cli_log_initialized
-    if not _cli_log_initialized:
-        _cli_log_initialized = True
-        colorful_formatter = Formatter(log_format, time_format)
-        colorful_formatter.format = _colorful_format
-        if '_default_' not in handlers:  # this happens when building sphinx gallery
-            _register_handler(StreamHandler(sys.stdout), logging.INFO)
-        handlers['_default_'].setFormatter(colorful_formatter)
-
-def start_experiment_log(experiment_id: str, log_directory: Path, debug: bool) -> None:
-    log_path = _prepare_log_dir(log_directory) / 'dispatcher.log'
-    log_level = logging.DEBUG if debug else logging.INFO
-    _register_handler(FileHandler(log_path), log_level, experiment_id)
-
-def stop_experiment_log(experiment_id: str) -> None:
-    if experiment_id in handlers:
-        handler = handlers.pop(experiment_id, None)
-        if handler is not None:
-            logging.getLogger().removeHandler(handler)
+    start_stdout_logging()
 
 
 def _init_logger_dispatcher() -> None:
@@ -106,10 +207,6 @@ def _init_logger_trial() -> None:
         sys.stdout = _LogFileWrapper(log_file)
 
 
-def _init_logger_standalone() -> None:
-    _register_handler(StreamHandler(sys.stdout), logging.INFO)
-
-
 def _prepare_log_dir(path: Path | str) -> Path:
     if path is None:
         return Path()
@@ -124,28 +221,6 @@ def _register_handler(handler: Handler, level: int, tag: str = '_default_') -> N
     logger = logging.getLogger()
     logger.addHandler(handler)
     logger.setLevel(level)
-
-def _colorful_format(record):
-    time = formatter.formatTime(record, time_format)
-    if not record.name.startswith('nni.'):
-        return '[{}] ({}) {}'.format(time, record.name, record.msg % record.args)
-    if record.levelno >= logging.ERROR:
-        color = colorama.Fore.RED
-        level = 'ERROR: '
-    elif record.levelno >= logging.WARNING:
-        color = colorama.Fore.YELLOW
-        level = 'WARNING: '
-    elif record.levelno >= logging.INFO:
-        color = colorama.Fore.GREEN
-        level = ''
-    else:
-        color = colorama.Fore.BLUE
-        level = ''
-    msg = color + level + (record.msg % record.args) + colorama.Style.RESET_ALL
-    if record.levelno < logging.INFO:
-        return '[{}] {}:{} {}'.format(time, record.threadName, record.name, msg)
-    else:
-        return '[{}] {}'.format(time, msg)
 
 class _LogFileWrapper(TextIOBase):
     # wrap the logger file so that anything written to it will automatically get formatted
