@@ -26,5 +26,3 @@ steps:
       echo "Install NNI (no user)"
       python setup.py develop --no-user
   displayName: Install NNI
-
-- ${{ if eq(parameter.user)}}
