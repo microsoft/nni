@@ -22,6 +22,12 @@ jobs:
     parameters:
       platform: ubuntu-latest-gpu
 
+  - task: DockerInstaller@0
+    displayName: Install Docker
+    inputs:
+      dockerVersion: "20.10.15"
+      releaseType: stable
+
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu
@@ -31,12 +37,6 @@ jobs:
       echo "Working directory: ${PWD}"
       echo "NNI version: ${NNI_RELEASE}"
     displayName: Setup NNI release version
-
-  - task: DockerInstaller@0
-    displayName: Install Docker
-    inputs:
-      dockerVersion: “20.10.15”
-      releaseType: stable
 
   - script: |
       sudo docker run hello-world
