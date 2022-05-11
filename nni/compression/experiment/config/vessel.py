@@ -7,7 +7,6 @@ import io
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Callable, Tuple, overload
-from typing_extensions import Literal
 
 import torch
 from torch import Tensor
@@ -32,7 +31,8 @@ class CompressionVessel(ConfigBase):
 
     @overload
     def __init__(self, model: str, finetuner: str, evaluator: str, dummy_input: str,
-                 trainer: str, optimizer_helper: str, criterion: str, device: str): ...
+                 trainer: str, optimizer_helper: str, criterion: str, device: str):
+        ...
 
     def __init__(self,
                  model: Module,
