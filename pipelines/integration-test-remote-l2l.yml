@@ -1,9 +1,9 @@
 trigger: none
 pr: none
-schedules:
-- cron: 0 16 * * *
-  branches:
-    include: [ master ]
+# schedules:
+# - cron: 0 16 * * *
+#   branches:
+#     include: [ master ]
 
 # variables set on VSO: (for security concern)
 #   manager_ip
@@ -12,29 +12,47 @@ schedules:
 
 jobs:
 - job: remote_linux2linux
-  pool: NNI CI REMOTE CLI
+  pool: nni-it
   timeoutInMinutes: 140
 
   steps:
-  - script: |
-      export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
-      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
-      echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
+  - template: templates/setup-non-ms-hosted-agent.yml
 
+  - template: templates/config-version.yml
+    parameters:
+      platform: ubuntu-latest-gpu
+
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: ubuntu-latest-gpu
+
+  - script: |
+      echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
       echo "Working directory: ${PWD}"
       echo "NNI version: ${NNI_RELEASE}"
+    displayName: Setup NNI release version
 
-      python3 -m pip install --upgrade pip setuptools
-    displayName: Prepare
+  - task: DockerInstaller@0
+    displayName: Install Docker
+    inputs:
+      dockerVersion: 20.10.15-ce
+      releaseType: stable
+
+  - script: |
+      sudo docker run hello-world
+    displayName: Docker test
+
+  - template: templates/install-nni.yml
+    parameters:
+      wheel: true
+      extra_dep: SMAC,BOHB
 
   - script: |
       set -e
-      python3 test/vso_tools/install_nni.py $(NNI_RELEASE) SMAC,BOHB
-
       cd examples/tuners/customized_tuner
-      python3 setup.py develop --user
+      python setup.py develop
       nnictl algo register --meta meta_file.yml
-    displayName: Install NNI
+    displayName: Install customized tuner
 
   - task: CopyFilesOverSSH@0
     inputs:
