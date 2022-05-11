@@ -112,7 +112,7 @@ class Lightning(Evaluator):
                           f'You might have forgotten to import DataLoader from {__name__}: {train_dataloaders}',
                           RuntimeWarning)
         if not _check_dataloader(val_dataloaders):
-            warnings.warn(f'Unexpected dataloader type: {type(train_dataloaders)}. '
+            warnings.warn(f'Unexpected dataloader type: {type(val_dataloaders)}. '
                           f'You might have forgotten to import DataLoader from {__name__}: {val_dataloaders}',
                           RuntimeWarning)
         self.module = lightning_module
