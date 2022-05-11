@@ -43,7 +43,6 @@ class CompressionVessel(ConfigBase):
                  optimizer_helper: Optimizer | OptimizerConstructHelper | None,
                  criterion: Callable[[Any, Any], Any] | None,
                  device: str | torch.device):
-        # should be wrote as override __init__
         self.model = dump(model) if not isinstance(model, str) else model
         self.finetuner = dump(finetuner) if not isinstance(finetuner, str) else finetuner
         self.evaluator = dump(evaluator) if not isinstance(evaluator, str) else evaluator
@@ -67,8 +66,8 @@ class CompressionVessel(ConfigBase):
                               OptimizerConstructHelper | None, Callable[[Any, Any], Any] | None, torch.device]:
         device = torch.device(self.device)
         model = load(self.model)
-        if Path('nni_model_state_dict.pth').exists():
-            model.load_state_dict(torch.load('nni_model_state_dict.pth'))
+        if Path('nni-checkpoint', 'model_state_dict.pth').exists():
+            model.load_state_dict(torch.load(Path('nni-checkpoint', 'model_state_dict.pth')))
         return (
             model.to(device),
             load(self.finetuner),
