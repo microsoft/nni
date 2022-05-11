@@ -29,7 +29,7 @@ def _flops_theta_helper(target: int | float | str | None, origin: int) -> Tuple[
         assert 0 < target < origin
         return (-0.1 - target / origin, -50.)
     else:
-        raise NotImplementedError('Currently only supports setting the lower limit.')
+        raise NotImplementedError('Currently only supports setting the upper limit.')
 
 # hard code and magic number for metric reward function
 def _metric_theta_helper(target: float | None, origin: float) -> Tuple[float, float]:
@@ -93,11 +93,13 @@ def generate_compression_search_space(config: CompressionConfig, vessel: Compres
         search_space['{}{}'.format(KEY_MODULE_NAME, module_name)] = {'_type': 'uniform', '_value': [0, 1]}
 
     assert not config.pruners or not config.quantizers
-    # hard code for test, need remove
+
+    # TODO: hard code for steo 1, need refactor
     search_space[KEY_PRUNERS] = {'_type': 'choice', '_value': [pruner_config.json() for pruner_config in config.pruners]}
 
     original_target = {'flops': flops, 'params': params, 'metric': metric, 'results': results}
 
+    # TODO: following fucntion need improvement
     flops_theta = _flops_theta_helper(config.flops, flops)
     params_theta = _flops_theta_helper(config.params, params)
     metric_theta = _metric_theta_helper(config.metric, metric)
