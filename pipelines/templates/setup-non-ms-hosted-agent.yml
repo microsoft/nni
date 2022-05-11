@@ -51,7 +51,9 @@ steps:
 
 # Install docker
 - script: |
+    set -e
     curl -fsSL https://get.docker.com | sh
+    dockerd-rootless-setuptool.sh install
     sudo systemctl --now enable docker
   displayName: Install Docker
 
