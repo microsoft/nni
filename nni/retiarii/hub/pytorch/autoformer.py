@@ -5,8 +5,8 @@ import itertools
 import math
 import warnings
 
-import nni.retiarii.nn.pytorch as nn
 import torch
+import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
 
