@@ -22,16 +22,6 @@ jobs:
     parameters:
       platform: ubuntu-latest-gpu
 
-  - task: DockerInstaller@0
-    displayName: Install Docker
-    inputs:
-      dockerVersion: "20.10.15"
-      releaseType: stable
-
-  - script: |
-      docker run hello-world
-    displayName: Docker test
-
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu

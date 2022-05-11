@@ -49,6 +49,17 @@ steps:
   displayName: nvidia-smi verification
 
 
+# Install docker
+- script: |
+    curl -fsSL https://get.docker.com | sh
+    sudo systemctl --now enable docker
+  displayName: Install Docker
+
+- script: |
+    sudo docker run hello-world
+  displayName: Try Docker
+
+
 # UsePythonVersion task only works when the specific Python version is already installed.
 
 # The following is for linux.
