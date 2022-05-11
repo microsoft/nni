@@ -11,6 +11,20 @@ Level Pruner
 
 ..  autoclass:: nni.compression.pytorch.pruning.LevelPruner
 
+.. _balanced-pruner:
+
+(experimental) Balanced Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.compression.pytorch.pruning.BalancedPruner
+
+.. _block-pruner:
+
+(experimental) Block Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.compression.pytorch.pruning.BlockPruner
+
 .. _l1-norm-pruner:
 
 L1 Norm Pruner

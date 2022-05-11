@@ -4,7 +4,7 @@
 from __future__ import annotations
 from copy import deepcopy
 import logging
-from typing import List, Dict, Tuple, Callable, Optional, Union
+from typing import List, Dict, Tuple, Callable, Optional
 
 from schema import And, Or, Optional as SchemaOptional, SchemaError
 import torch
@@ -134,9 +134,9 @@ class _LevelPruner(BasicPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -144,7 +144,7 @@ class _LevelPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode : str
+    mode
         'normal' or 'balance'.
         If set 'normal' mode, target tensor will be pruned in the way of finegrained pruning.
         If set 'balance' mode, a special sparse pattern will be chosen by pruner. Take linear
@@ -153,7 +153,7 @@ class _LevelPruner(BasicPruner):
         pattern has more chance to achieve better trade-off between model performance and hardware
         acceleration. Please refer to releated paper for further information `Balanced Sparsity for
         Efficient DNN Inference on GPU <https://arxiv.org/pdf/1811.00206.pdf>`__.
-    balance_gran : list
+    balance_gran
         Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning
         without awaring balance, namely normal finegrained pruning.
         If passing list of int, LevelPruner will prune the model in the granularity of multi-dimension block.
@@ -187,7 +187,7 @@ class _LevelPruner(BasicPruner):
             balance_gran: [32, 32]
             pruning result: Weight tensor whose shape is [64, 64] will be split into 4 [32, 32] sub blocks.
                             Each sub block will be pruned 256 values.
-    block_sparse_size : Union[int, List[int], None]
+    block_sparse_size
         (experimental) By default, block_sparse_size is None, which means pruning granularity is single value.
         If block_sparse_size is set, pruner will treat the block as a whole to prune.
         Note that block_sparse_size is back-aligned with weight size.
