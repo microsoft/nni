@@ -45,10 +45,13 @@ class CompressionExperiment(Experiment):
         self.vessel = CompressionVessel(model, finetuner, evaluator, dummy_input, trainer, optimizer, criterion, device)
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
-        # copy files in temp directory to nni-checkpoint
+        # TODO: python3 is not robust, need support in nni manager
+        self.config.trial_command = 'python3 -m nni.compression.experiment.trial_entry'
+
+        # copy files in temp directory to nni-checkpoints
         # TODO: copy files to code dir is a temporary solution, need nnimanager support upload multi-directory,
         # or package additional files when uploading.
-        checkpoint_dir = Path(self.config.canonical_copy().trial_code_directory, 'nni-checkpoint')
+        checkpoint_dir = Path(self.config.trial_code_directory, 'nni-checkpoints')
         shutil.copytree(self.temp_directory, checkpoint_dir, dirs_exist_ok=True)
 
         if self.config.search_space or self.config.search_space_file:
@@ -56,7 +59,5 @@ class CompressionExperiment(Experiment):
                             'Please make sure you know what will happen.')
         else:
             self.config.search_space = generate_compression_search_space(self.config.compression_setting, self.vessel)
-        # TODO: python3 is not robust, need support in nni manager
-        self.config.trial_command = 'python3 -m nni.compression.experiment.trial_entry'
 
         return super().start(port, debug)

@@ -66,8 +66,8 @@ class CompressionVessel(ConfigBase):
                               OptimizerConstructHelper | None, Callable[[Any, Any], Any] | None, torch.device]:
         device = torch.device(self.device)
         model = load(self.model)
-        if Path('nni-checkpoint', 'model_state_dict.pth').exists():
-            model.load_state_dict(torch.load(Path('nni-checkpoint', 'model_state_dict.pth')))
+        if Path('nni-checkpoints', 'model_state_dict.pth').exists():
+            model.load_state_dict(torch.load(Path('nni-checkpoints', 'model_state_dict.pth')))
         return (
             model.to(device),
             load(self.finetuner),

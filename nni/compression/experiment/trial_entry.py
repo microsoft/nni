@@ -24,7 +24,7 @@ if __name__ == '__main__':
     basic_pruner, model, finetuner, evaluator, dummy_input, device = parse_basic_pruner(pruner_config, config_list, vessel)
 
     # TODO: move following logic to excution engine
-    task_generator = AGPTaskGenerator(total_iteration=3, origin_model=model, origin_config_list=config_list, skip_zero_iteration=True, log_dir='nni-log')
+    task_generator = AGPTaskGenerator(total_iteration=3, origin_model=model, origin_config_list=config_list, skip_zero_iteration=True, log_dir='nni-logs')
     speedup = dummy_input is not None
     scheduler = PruningScheduler(pruner=basic_pruner, task_generator=task_generator, finetuner=finetuner, speedup=speedup,
                                  dummy_input=dummy_input, evaluator=None)
