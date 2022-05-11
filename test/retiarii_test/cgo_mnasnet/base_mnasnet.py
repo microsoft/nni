@@ -40,12 +40,12 @@ class _InvertedResidual(nn.Module):
             # Pointwise
             nn.Conv2d(in_ch, mid_ch, 1, bias=False),
             nn.BatchNorm2d(mid_ch, momentum=bn_momentum),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
             # Depthwise
             nn.Conv2d(mid_ch, mid_ch, kernel_size, padding=kernel_size // 2,
                       stride=stride, groups=mid_ch, bias=False),
             nn.BatchNorm2d(mid_ch, momentum=bn_momentum),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
             # Linear pointwise. Note that there's no activation.
             nn.Conv2d(mid_ch, out_ch, 1, bias=False),
             nn.BatchNorm2d(out_ch, momentum=bn_momentum))
@@ -78,14 +78,14 @@ def _stack_normal_conv(in_ch, out_ch, kernel_size, skip, dconv, stride, repeats,
             modules = [
                 nn.Conv2d(in_ch, in_ch, kernel_size, padding=kernel_size // 2, stride=s, groups=in_ch, bias=False),
                 nn.BatchNorm2d(in_ch, momentum=bn_momentum),
-                nn.ReLU(inplace=True),
+                nn.ReLU(inplace=False),
                 nn.Conv2d(in_ch, out_ch, 1, padding=0, stride=1, bias=False),
                 nn.BatchNorm2d(out_ch, momentum=bn_momentum)
             ]
         else:
             modules = [
                 nn.Conv2d(in_ch, out_ch, kernel_size, padding=kernel_size // 2, stride=s, bias=False),
-                nn.ReLU(inplace=True),
+                nn.ReLU(inplace=False),
                 nn.BatchNorm2d(out_ch, momentum=bn_momentum)
             ]
         if skip and in_ch == out_ch and s == 1:
@@ -141,7 +141,7 @@ class MNASNet(nn.Module):
             # First layer: regular conv.
             nn.Conv2d(3, depths[0], 3, padding=1, stride=2, bias=False),
             nn.BatchNorm2d(depths[0], momentum=_BN_MOMENTUM),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
         ]
         count = 0
         # for conv, prev_depth, depth, ks, skip, stride, repeat, exp_ratio in \
@@ -177,10 +177,10 @@ class MNASNet(nn.Module):
             # Final mapping to classifier input.
             nn.Conv2d(depths[7], 1280, 1, padding=0, stride=1, bias=False),
             nn.BatchNorm2d(1280, momentum=_BN_MOMENTUM),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
         ]
         self.layers = nn.Sequential(*layers)
-        self.classifier = nn.Sequential(nn.Dropout(p=dropout, inplace=True),
+        self.classifier = nn.Sequential(nn.Dropout(p=dropout, inplace=False),
                                         nn.Linear(1280, num_classes))
         self._initialize_weights()
         #self.for_test = 10
@@ -228,7 +228,7 @@ class RegularConv(nn.Module):
         self.stride = stride
 
         self.conv = nn.Conv2d(in_ch, out_ch, kernel_size, padding=kernel_size // 2, stride=stride, bias=False)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
         self.bn = nn.BatchNorm2d(out_ch, momentum=BN_MOMENTUM)
 
     def forward(self, x):
@@ -250,7 +250,7 @@ class DepthwiseConv(nn.Module):
 
         self.conv1 = nn.Conv2d(in_ch, in_ch, kernel_size, padding=kernel_size // 2, stride=stride, groups=in_ch, bias=False)
         self.bn1 = nn.BatchNorm2d(in_ch, momentum=BN_MOMENTUM)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
         self.conv2 = nn.Conv2d(in_ch, out_ch, 1, padding=0, stride=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out_ch, momentum=BN_MOMENTUM)
 
@@ -277,12 +277,12 @@ class MobileConv(nn.Module):
             # Pointwise
             nn.Conv2d(in_ch, mid_ch, 1, bias=False),
             nn.BatchNorm2d(mid_ch, momentum=BN_MOMENTUM),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
             # Depthwise
             nn.Conv2d(mid_ch, mid_ch, kernel_size, padding=(kernel_size - 1) // 2,
                       stride=stride, groups=mid_ch, bias=False),
             nn.BatchNorm2d(mid_ch, momentum=BN_MOMENTUM),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
             # Linear pointwise. Note that there's no activation.
             nn.Conv2d(mid_ch, out_ch, 1, bias=False),
             nn.BatchNorm2d(out_ch, momentum=BN_MOMENTUM))
