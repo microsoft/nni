@@ -11,12 +11,9 @@ from nni.retiarii import model_wrapper
 class Net(nn.Module):
     something = 1
 
-import cloudpickle
-
 if sys.argv[1] == '0':
-    cloudpickle.dump(Net, open('serialize_result.txt', 'wb'))
-    # nni.dump(Net, fp=open('serialize_result.txt', 'w'))
+    # This could be extraordinary large on MacOS
+    nni.dump(Net, fp=open('serialize_result.txt', 'w'), pickle_size_limit=16384)
 else:
-    obj = cloudpickle.load(open('serialize_result.txt', 'rb'))
-    # obj = nni.load(fp=open('serialize_result.txt'))
+    obj = nni.load(fp=open('serialize_result.txt'))
     assert obj().something == 1
