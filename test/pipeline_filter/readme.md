@@ -2,7 +2,7 @@
 
 ## Checks
 
-If any checks passed (decide to run following tests), the `skipsubsequent` variable will be set to true.
+If ANY checks passed (decide to run following tests), the `skipsubsequent` variable will be set to false and the program will exit.
 
 ### Basic Check
 
