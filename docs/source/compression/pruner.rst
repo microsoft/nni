@@ -30,6 +30,8 @@ There are two kinds of pruners in NNI, please refer to :ref:`basic pruner <basic
      - Pruning filters based on the first order taylor expansion on weights(Importance Estimation for Neural Network Pruning) `Reference Paper <http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf>`__
    * - :ref:`admm-pruner`
      - Pruning based on ADMM optimization technique `Reference Paper <https://arxiv.org/abs/1804.03294>`__
+   * - :ref:`balanced-pruner`
+     - Split the module weight into sub-blocks and prune with the same strategy in each sub-block `Reference Paper <https://arxiv.org/pdf/1811.00206.pdf>`__
    * - :ref:`linear-pruner`
      - Sparsity ratio increases linearly during each pruning rounds, in each round, using a basic pruner to prune the model.
    * - :ref:`agp-pruner`

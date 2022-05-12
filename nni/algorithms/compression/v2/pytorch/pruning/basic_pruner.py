@@ -148,8 +148,8 @@ class _LevelPruner(BasicPruner):
         'normal' or 'balance'.
         If set 'normal' mode, target tensor will be pruned in the way of finegrained pruning.
         If set 'balance' mode, a special sparse pattern will be chosen by pruner. Take linear
-        operation as an example, weight tensor will be split into sub block whose shape is aligned to
-        balance_gran. Then finegrained pruning will be applied internal of sub block. This sparsity
+        operation as an example, weight tensor will be split into sub-block whose shape is aligned to
+        balance_gran. Then finegrained pruning will be applied internal of sub-block. This sparsity
         pattern has more chance to achieve better trade-off between model performance and hardware
         acceleration. Please refer to releated paper for further information `Balanced Sparsity for
         Efficient DNN Inference on GPU <https://arxiv.org/pdf/1811.00206.pdf>`__.
@@ -175,8 +175,8 @@ class _LevelPruner(BasicPruner):
             pruning tensor shape: [32, 32]
             sparsity: 50%
             balance_gran: [4]
-            pruning result: Weight tensor whose shape is [32, 32] will be split into 256 [1, 4] sub blocks.
-                            Each sub block will be pruned 2 values.
+            pruning result: Weight tensor whose shape is [32, 32] will be split into 256 [1, 4] sub-blocks.
+                            Each sub-block will be pruned 2 values.
 
         Example 2::
 
@@ -185,8 +185,8 @@ class _LevelPruner(BasicPruner):
             pruning tensor shape: [64, 64]
             sparsity: 25%
             balance_gran: [32, 32]
-            pruning result: Weight tensor whose shape is [64, 64] will be split into 4 [32, 32] sub blocks.
-                            Each sub block will be pruned 256 values.
+            pruning result: Weight tensor whose shape is [64, 64] will be split into 4 [32, 32] sub-blocks.
+                            Each sub-block will be pruned 256 values.
     block_sparse_size
         (experimental) By default, block_sparse_size is None, which means pruning granularity is single value.
         If block_sparse_size is set, pruner will treat the block as a whole to prune.
@@ -284,8 +284,8 @@ class LevelPruner(_LevelPruner):
 class BalancedPruner(_LevelPruner):
     r"""
     This pruner is an extension of LevelPruner, it support generating balanced masks.
-    Take linear operation as an example, weight tensor will be split into sub block whose shape
-    is aligned to balance_gran. Then finegrained pruning will be applied internal of sub block.
+    Take linear operation as an example, weight tensor will be split into sub-block whose shape
+    is aligned to balance_gran. Then finegrained pruning will be applied internal of sub-block.
     This sparsity pattern has more chance to achieve better trade-off between model performance
     and hardware acceleration. Please refer to releated paper for further information
     `Balanced Sparsity for Efficient DNN Inference on GPU <https://arxiv.org/pdf/1811.00206.pdf>`__.
@@ -323,8 +323,8 @@ class BalancedPruner(_LevelPruner):
             pruning tensor shape: [32, 32]
             sparsity: 50%
             balance_gran: [4]
-            pruning result: Weight tensor whose shape is [32, 32] will be split into 256 [1, 4] sub blocks.
-                            Each sub block will be pruned 2 values.
+            pruning result: Weight tensor whose shape is [32, 32] will be split into 256 [1, 4] sub-blocks.
+                            Each sub-block will be pruned 2 values.
 
         Example 2::
 
@@ -333,8 +333,8 @@ class BalancedPruner(_LevelPruner):
             pruning tensor shape: [64, 64]
             sparsity: 25%
             balance_gran: [32, 32]
-            pruning result: Weight tensor whose shape is [64, 64] will be split into 4 [32, 32] sub blocks.
-                            Each sub block will be pruned 256 values.
+            pruning result: Weight tensor whose shape is [64, 64] will be split into 4 [32, 32] sub-blocks.
+                            Each sub-block will be pruned 256 values.
     align_n
         (experimental) align_n determines the size of each unit in a balanced block. By default align_n is None,
         means each unit in a balanced block is a single value.
