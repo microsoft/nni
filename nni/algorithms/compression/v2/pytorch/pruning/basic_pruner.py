@@ -366,7 +366,7 @@ class BlockPruner(_LevelPruner):
         Note that block_sparse_size is back-aligned with weight size.
 
         Example::
-        
+
             pruning tensor: weight
             pruning tensor shape: [2, 4, 4]
             sparsity: 25%

@@ -12,6 +12,7 @@ import nni
 from nni.compression.pytorch.pruning import (
     LevelPruner,
     BalancedPruner,
+    BlockPruner,
     L1NormPruner,
     L2NormPruner,
     SlimPruner,
@@ -84,6 +85,14 @@ class PrunerTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         # round down cause to lower sparsity
         assert sparsity_list[0]['total_sparsity'] == 0.6
+
+    def test_block_pruner(self):
+        model = TorchModel()
+        config_list = [{'op_names': ['fc1'], 'sparsity': 0.8}]
+        pruner = BlockPruner(model=model, config_list=config_list, block_sparse_size=[4, 4])
+        _, masks = pruner.compress()
+        sparsity = 1 - F.max_pool2d(masks['fc1']['weight'].unsqueeze(0), 4, 4).sum() * 16 / masks['fc1']['weight'].numel()
+        assert sparsity == 0.8
 
     def test_l1_norm_pruner(self):
         model = TorchModel()
