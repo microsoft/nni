@@ -53,9 +53,11 @@ steps:
 - script: |
     set -e
     curl -fsSL https://get.docker.com | sh
-    printenv
-    export XDG_RUNTIME_DIR=/run/user/$(id -u)
-    systemctl --user
+    PATH=/usr/bin:/sbin:/usr/sbin:$PATH dockerd-rootless.sh 
+    export XDG_RUNTIME_DIR=/home/AzDevOps/.docker/run
+    export DOCKER_HOST=unix:///home/AzDevOps/.docker/run/docker.sock
+    echo "##vso[task.setvariable variable=XDG_RUNTIME_DIR]${XDG_RUNTIME_DIR}"
+    echo "##vso[task.setvariable variable=DOCKER_HOST]${DOCKER_HOST}"
     dockerd-rootless-setuptool.sh install
     sudo systemctl --now enable docker
   displayName: Install Docker
