@@ -72,7 +72,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     };
 
     // get user mode number 'max' or 'min'
-    updateUserOptimizeMode  = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+    updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
             this.setState({ userSelectOptimizeMode: item.key.toString() }, () => {
                 this.renderParallelCoordinates();
