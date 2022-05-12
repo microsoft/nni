@@ -17,9 +17,9 @@ stages:
       inputs:
         versionSpec: '16.x'
     - script: npm ci
-      workingDirectory: 'test/test_filter'
+      workingDirectory: 'test/pipeline_filter'
       displayName: NPM Install
-    - script: node test/test_filter/main.mjs
+    - script: node test/pipeline_filter/main.mjs
       env:
         NNI_CI_GITHUBPAT: $(nni.ci.githubPAT)
       name: execution
