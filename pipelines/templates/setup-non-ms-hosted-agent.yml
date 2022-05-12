@@ -62,7 +62,7 @@ steps:
   displayName: Install Docker
 
 - script: |
-    sudo docker run hello-world
+    docker run hello-world
   displayName: Try Docker
 
 
