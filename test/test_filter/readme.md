@@ -1,6 +1,8 @@
-# Test Filter
+# Azure Pipeline Filter
 
 ## Checks
+
+If any checks passed (decide to run following tests), the `skipsubsequent` variable will be set to true.
 
 ### Basic Check
 
@@ -16,7 +18,7 @@ File is compared (git diff -stat) between current commit and pr target branch.
 
 The script will try to find the task list under the heading provided by pipeline variable `nni.ci.markdown.heading` from the pull request body markdown.
 
-If the task list is not found, continue.
+If the task list is not found, continue (skip).
 
 If any selected options match provided index / value, run following tests.
 

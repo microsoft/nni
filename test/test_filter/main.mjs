@@ -64,13 +64,13 @@ const prBodyCheck = async () => {
     return false
   }
   let selectedOptions = []
+  const prInfo = await getGithubPullRequestInfo()
+  const prBody = prInfo.body || ''
   try {
-    const prInfo = await getGithubPullRequestInfo()
-    const prBody = prInfo.body || ''
     selectedOptions = parsePullRequstBody(prBody, markdownHeading)
     console.log('Selected Options:', selectedOptions)
   } catch (e) {
-    console.log('Error when parsing pr body, skip.')
+    console.log('Error when parsing pull request body, skip.')
     console.log(e)
     return false
   }
