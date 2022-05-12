@@ -57,12 +57,23 @@ const basicCheck = async () => {
 
 const prBodyCheck = async () => {
   console.log('[Pull Request Body]')
-  const prInfo = await getGithubPullRequestInfo()
-  const prBody = prInfo.body || ''
   const markdownHeading = getPipelineVar(VARIABLES.markdownHeading)
   console.log('Hint Heading:', markdownHeading)
-  const selectedOptions = parsePullRequstBody(prBody, markdownHeading)
-  console.log('Selected Options:', selectedOptions)
+  if (typeof(markdownHeading) !== 'string' || markdownHeading.length == 0) {
+    console.log('Hint heading not provided, skip')
+    return false
+  }
+  let selectedOptions = []
+  try {
+    const prInfo = await getGithubPullRequestInfo()
+    const prBody = prInfo.body || ''
+    selectedOptions = parsePullRequstBody(prBody, markdownHeading)
+    console.log('Selected Options:', selectedOptions)
+  } catch (e) {
+    console.log('Error when parsing pr body, skip.')
+    console.log(e)
+    return false
+  }
 
   const optIdx = parseInt(getPipelineVar(VARIABLES.markdownOptionIndex), '10')
   const optValue = getPipelineVar(VARIABLES.markdownOptionValue)
