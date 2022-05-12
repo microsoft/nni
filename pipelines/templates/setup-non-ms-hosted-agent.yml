@@ -54,6 +54,9 @@ steps:
     set -e
     curl -fsSL https://get.docker.com | sh
     printenv
+    export XDG_RUNTIME_DIR=/home/AzDevOps/.docker/run
+    export PATH=/usr/bin:$PATH
+    export DOCKER_HOST=unix:///home/AzDevOps/.docker/run/docker.sock
     dockerd-rootless-setuptool.sh install
     sudo systemctl --now enable docker
   displayName: Install Docker
