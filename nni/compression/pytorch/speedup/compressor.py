@@ -45,7 +45,15 @@ class ModelSpeedup:
     customized_replace_func: None/Dict
         If the parameter is not None, then we will use the given function to replace the
         corresponding modules. The `key` of the dict is the opertor types and the `value`
-        is the replace function of corresponding opertor.
+        is the replace function of corresponding opertor. The replace function should take
+        two input parameters, one is the original module, the second input parameter is tuple
+        of the input mask, output mask and weight mask. This replace function should prune the module
+        accordingly. Here is an example of the replace function(more examples can refer to compress_modules.py):
+        def example_replace(ori_module, masks):
+            in_mask, out_mask, weight_mask = masks
+            # prune the ori_module to a new smaller module according to the mask
+            return new_small_module
+
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
@@ -76,12 +84,11 @@ class ModelSpeedup:
         elif isinstance(masks_file, dict):
             self.masks = masks_file
         else:
-            raise Exception(
-                'Please provide the mask or the path of the mask file')
+            raise Exception('Please provide the mask or the path of the mask file')
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
-        self.customized_replace_func = customized_replace_func
+        self.customized_replace_func = customized_replace_func if customized_replace_func is not None else {}
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         """
@@ -450,13 +457,13 @@ class ModelSpeedup:
             super_module, leaf_module = get_module_by_name(
                 self.bound_model, g_node.name)
             m_type = g_node.op_type
-            if not m_type in replace_module and (self.customized_replace_func is not None and m_type not in self.customized_replace_func):
+            if (not m_type in replace_module) and (m_type not in self.customized_replace_func):
                 raise RuntimeError(
                     "Has not supported replacing the module: `{}`".format(m_type))
             _logger.info("replace module (name: %s, op_type: %s)",
                          g_node.name, m_type)
             replace_function = replace_module[m_type]
-            if self.customized_replace_func is not None and m_type in self.customized_replace_func:
+            if m_type in self.customized_replace_func:
                 replace_function = self.customized_replace_func[m_type]
             compressed_module = replace_function(
                 leaf_module, auto_infer.get_masks())
