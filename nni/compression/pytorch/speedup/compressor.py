@@ -48,11 +48,12 @@ class ModelSpeedup:
         is the replace function of corresponding opertor. The replace function should take
         two input parameters, one is the original module, the second input parameter is tuple
         of the input mask, output mask and weight mask. This replace function should prune the module
-        accordingly. Here is an example of the replace function(more examples can refer to compress_modules.py):
-        def example_replace(ori_module, masks):
-            in_mask, out_mask, weight_mask = masks
-            # prune the ori_module to a new smaller module according to the mask
-            return new_small_module
+        accordingly. Here is an example of the replace function(more examples can refer to compress_modules.py)::
+
+            def example_replace(ori_module, masks):
+                in_mask, out_mask, weight_mask = masks
+                # prune the ori_module to a new smaller module according to the mask
+                return new_small_module
 
     """
 
