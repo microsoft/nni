@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "got": "^12.0.3",
+    "mdast-util-from-markdown": "^1.2.0",
+    "mdast-util-gfm-task-list-item": "^1.0.1",
+    "micromark-extension-gfm-task-list-item": "^1.0.3",
+    "multimatch": "^6.0.0",
+    "simple-git": "^3.7.1"
+  },
+  "devDependencies": {
+    "standard": "^16.0.4"
+  }
+}

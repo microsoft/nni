@@ -1,0 +1,35 @@
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  nni.ci.file.globs: 'a/**/*.txt,a/**/*.js'
+  nni.ci.markdown.heading: '#### Test Options'
+  nni.ci.markdown.optionIndex: 0
+stages:
+- stage: Filter
+  jobs:
+  - job: Check
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '16.x'
+    - script: npm ci
+      workingDirectory: 'test/test_filter'
+      displayName: NPM Install
+    - script: node test/test_filter/main.mjs
+      env:
+        NNI_CI_GITHUBPAT: $(nni.ci.githubPAT)
+      name: execution
+      displayName: Execution
+- stage: Main
+  dependsOn: Check
+  # dependencies.$(StageName).outputs['$(JobName).$(TaskName).$(VariableName)']
+  condition: and(succeeded(), ne(dependencies.Filter.outputs['Check.execution.skipsubsequent'], 'true'))
+  jobs:
+  - job: Main
+    steps:
+    - script: echo end
+      displayName: 'Run main test'
