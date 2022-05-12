@@ -7,7 +7,7 @@ steps:
 - script: |
     set -e
     sudo apt update
-    sudo apt install -y build-essential cmake
+    sudo apt install -y build-essential cmake uidmap
   displayName: Install build essential
 
 

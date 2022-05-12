@@ -56,8 +56,16 @@ jobs:
 
   - script: |
       set -e
-      export worker_ip=127.0.0.1
+      export worker_ip=localhost
+      export manager_ip=localhost
+      export password_in_docker=123456
       echo "##vso[task.setvariable variable=worker_ip]${worker_ip}"
+      echo "##vso[task.setvariable variable=manager_ip]${manager_ip}"
+      echo "##vso[task.setvariable variable=password_in_docker]${password_in_docker}"
+    displayName: Override environment variables
+
+  - script: |
+      set -e
       python /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
     displayName: Run a worker in docker
 
