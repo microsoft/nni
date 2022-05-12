@@ -7,11 +7,20 @@ Low level APIs for algorithms to communicate with NNI manager.
 
 from __future__ import annotations
 
+from more_itertools import tail
+
+from nni.runtime.tuner_command_channel import command_type
+
 __all__ = ['TunerCommandChannel']
 
 from .command_type import CommandType
 from .websocket import WebSocket
 
+class KillTrialJob:
+ 
+     def __init__(self, trial_id):
+        self.trial_id = trial_id
+       
 class TunerCommandChannel:
     """
     A channel to communicate with NNI manager.
@@ -49,6 +58,18 @@ class TunerCommandChannel:
     #     ...
     # def receive(self) -> Command | None:
     #     ...
+
+    def send(self, command: KillTrialJob) -> None:
+        msg = b'KI' + command.trial_id
+        self._channel.send(msg)
+
+    def receive(self) -> KillTrialJob | None:
+        msg = self._channel.receive()
+        if msg is None:
+            raise RuntimeError('NNI manager closed connection')
+        tail_id = msg[2:]
+        command = KillTrialJob(tail_id)
+        return command
 
     def _send(self, command_type: CommandType, data: str) -> None:
         command = command_type.value.decode() + data
