@@ -7,19 +7,11 @@ Low level APIs for algorithms to communicate with NNI manager.
 
 from __future__ import annotations
 
-from more_itertools import tail
-
-from nni.runtime.tuner_command_channel import command_type
-
 __all__ = ['TunerCommandChannel']
 
 from .command_type import CommandType
 from .websocket import WebSocket
-
-class KillTrialJob:
- 
-     def __init__(self, trial_id):
-        self.trial_id = trial_id
+from .semantic_command import KillTrialJob
        
 class TunerCommandChannel:
     """
