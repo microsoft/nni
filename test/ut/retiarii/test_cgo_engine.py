@@ -10,6 +10,7 @@ from pathlib import Path
 
 import nni
 import nni.runtime.platform.test
+from nni.runtime.tuner_command_channel import legacy as protocol
 import json
 
 try:
@@ -262,7 +263,11 @@ class CGOEngineTest(unittest.TestCase):
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor._channel = protocol.LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         available_devices = [GPUDevice("test", 0), GPUDevice("test", 1), GPUDevice("test", 2), GPUDevice("test", 3)]
         cgo = CGOExecutionEngine(devices=available_devices, batch_waiting_time=0)
 
@@ -281,7 +286,11 @@ class CGOEngineTest(unittest.TestCase):
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor._channel = protocol.LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         available_devices = [GPUDevice("test", 0), GPUDevice("test", 1)]
         cgo = CGOExecutionEngine(devices=available_devices, batch_waiting_time=0)
 
@@ -296,14 +305,17 @@ class CGOEngineTest(unittest.TestCase):
         _reset()
         nni.retiarii.debug_configs.framework = 'pytorch'
         os.makedirs('generated', exist_ok=True)
-        from nni.runtime import protocol
         import nni.runtime.platform.test as tt
         protocol._set_out_file(open('generated/debug_protocol_out_file.py', 'wb'))
         protocol._set_in_file(open('generated/debug_protocol_out_file.py', 'rb'))
 
         models = _load_mnist(2)
 
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor._channel = protocol.LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         cgo_engine = CGOExecutionEngine(devices=[GPUDevice("test", 0), GPUDevice("test", 1),
                                                  GPUDevice("test", 2), GPUDevice("test", 3)], batch_waiting_time=0)
         set_execution_engine(cgo_engine)

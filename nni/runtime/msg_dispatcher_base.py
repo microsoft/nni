@@ -3,14 +3,12 @@
 
 import threading
 import logging
-from multiprocessing.dummy import Pool as ThreadPool
 from queue import Queue, Empty
 
-from .common import multi_thread_enabled
 from .env_vars import dispatcher_env_vars
 from ..common import load
 from ..recoverable import Recoverable
-from .protocol import CommandType, receive
+from .tuner_command_channel import CommandType, TunerCommandChannel
 
 
 _logger = logging.getLogger(__name__)
@@ -24,58 +22,51 @@ class MsgDispatcherBase(Recoverable):
     Inherits this class to make your own advisor.
     """
 
-    def __init__(self):
+    def __init__(self, command_channel_url=None):
         self.stopping = False
-        if multi_thread_enabled():
-            self.pool = ThreadPool()
-            self.thread_results = []
-        else:
-            self.default_command_queue = Queue()
-            self.assessor_command_queue = Queue()
-            self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))
-            self.assessor_worker = threading.Thread(target=self.command_queue_worker,
-                                                    args=(self.assessor_command_queue,))
-            self.default_worker.start()
-            self.assessor_worker.start()
-            self.worker_exceptions = []
+        if command_channel_url is None:
+            command_channel_url = dispatcher_env_vars.NNI_TUNER_COMMAND_CHANNEL
+        self._channel = TunerCommandChannel(command_channel_url)
+        self.default_command_queue = Queue()
+        self.assessor_command_queue = Queue()
+        self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))
+        self.assessor_worker = threading.Thread(target=self.command_queue_worker, args=(self.assessor_command_queue,))
+        self.worker_exceptions = []
 
     def run(self):
         """Run the tuner.
         This function will never return unless raise.
         """
         _logger.info('Dispatcher started')
+
+        self._channel.connect()
+        self.default_worker.start()
+        self.assessor_worker.start()
+
         if dispatcher_env_vars.NNI_MODE == 'resume':
             self.load_checkpoint()
 
         while not self.stopping:
-            command, data = receive()
+            command, data = self._channel._receive()
             if data:
                 data = load(data)
 
             if command is None or command is CommandType.Terminate:
                 break
-            if multi_thread_enabled():
-                result = self.pool.map_async(self.process_command_thread, [(command, data)])
-                self.thread_results.append(result)
-                if any([thread_result.ready() and not thread_result.successful() for thread_result in
-                        self.thread_results]):
-                    _logger.debug('Caught thread exception')
-                    break
-            else:
-                self.enqueue_command(command, data)
-                if self.worker_exceptions:
-                    break
+            self.enqueue_command(command, data)
+            if self.worker_exceptions:
+                break
 
         _logger.info('Dispatcher exiting...')
         self.stopping = True
-        if multi_thread_enabled():
-            self.pool.close()
-            self.pool.join()
-        else:
-            self.default_worker.join()
-            self.assessor_worker.join()
+        self.default_worker.join()
+        self.assessor_worker.join()
+        self._channel.disconnect()
 
         _logger.info('Dispatcher terminiated')
+
+    def send(self, command, data):
+        self._channel._send(command, data)
 
     def command_queue_worker(self, command_queue):
         """Process commands in command queues.
@@ -111,19 +102,6 @@ class MsgDispatcherBase(Recoverable):
         qsize = self.assessor_command_queue.qsize()
         if qsize >= QUEUE_LEN_WARNING_MARK:
             _logger.warning('assessor queue length: %d', qsize)
-
-    def process_command_thread(self, request):
-        """Worker thread to process a command.
-        """
-        command, data = request
-        if multi_thread_enabled():
-            try:
-                self.process_command(command, data)
-            except Exception as e:
-                _logger.exception(str(e))
-                raise
-        else:
-            pass
 
     def process_command(self, command, data):
         _logger.debug('process_command: command: [%s], data: [%s]', command, data)
