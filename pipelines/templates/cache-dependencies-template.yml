@@ -28,6 +28,11 @@ steps:
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 - script: |
+    mv dependencies/recommended_gpu.txt dependencies/recommended.txt
+  displayName: (GPU) Activate CUDA dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu'))
+
+- script: |
     set -e
     echo '===== develop ====='
     ./pip-install -r dependencies/develop.txt

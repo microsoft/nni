@@ -23,14 +23,14 @@ import {
 } from '@static/function';
 import { TableObj, SortInfo, SearchItems } from '@static/interface';
 import { blocked, copy, LineChart, tableListIcon } from '@components/fluent/Icon';
-import Search from './tableFunction/search/Search';
 import Customize from './tableFunction/CustomizedTrial';
 import TensorboardUI from './tableFunction/tensorboard/TensorboardUI';
+import Search from './tableFunction/search/Search';
+import ExpandableDetails from '@components/common/ExpandableDetails/ExpandableIndex';
 import ChangeColumnComponent from '../ChangeColumnComponent';
 import Compare from './tableFunction/Compare';
 import KillJobIndex from './tableFunction/killJob/KillJobIndex';
 import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction';
-import ExpandableDetails from '@components/common/ExpandableDetails';
 import PaginationTable from '@components/common/PaginationTable';
 import CopyButton from '@components/common/CopyButton';
 

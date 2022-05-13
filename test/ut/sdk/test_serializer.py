@@ -1,11 +1,14 @@
 import math
+import os
 import pickle
+import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 import nni
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
@@ -375,3 +378,24 @@ def test_get():
     obj2 = obj1.trace_copy()
     obj2.trace_kwargs['a'] = -1
     assert obj2.get().bar() == 0
+
+
+def test_model_wrapper_serialize():
+    from nni.retiarii import model_wrapper
+
+    @model_wrapper
+    class Model(nn.Module):
+        def __init__(self, in_channels):
+            super().__init__()
+            self.in_channels = in_channels
+
+    model = Model(3)
+    dumped = nni.dump(model)
+    loaded = nni.load(dumped)
+    assert loaded.in_channels == 3
+
+
+def test_model_wrapper_across_process():
+    main_file = os.path.join(os.path.dirname(__file__), 'imported', '_test_serializer_main.py')
+    subprocess.run([sys.executable, main_file, '0'], check=True)
+    subprocess.run([sys.executable, main_file, '1'], check=True)

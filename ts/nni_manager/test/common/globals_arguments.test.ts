@@ -5,7 +5,15 @@ import assert from 'assert/strict';
 
 import { parseArgs } from 'common/globals/arguments';
 
-const command = '--port 80 --experiment-id ID --action resume --experiments-directory DIR --log-level error';
+const command = [
+    '--port 80',
+    '--experiment-id ID',
+    '--action resume',
+    '--experiments-directory DIR',
+    '--log-level error',
+    '--python-interpreter python',
+].join(' ');
+
 const expected = {
     port: 80,
     experimentId: 'ID',
@@ -15,6 +23,7 @@ const expected = {
     foreground: false,
     urlPrefix: '',
     tunerCommandChannel: null,
+    pythonInterpreter: 'python',
 
     mode: '',
 };
