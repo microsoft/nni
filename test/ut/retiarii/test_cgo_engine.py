@@ -40,6 +40,8 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 from sklearn.datasets import load_diabetes
 
+from ..sdk.helper.legacy_command_channel import LegacyCommandChannel
+
 
 class _model_cpu(nn.Module):
     def __init__(self):
@@ -262,7 +264,11 @@ class CGOEngineTest(unittest.TestCase):
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor._channel = LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         available_devices = [GPUDevice("test", 0), GPUDevice("test", 1), GPUDevice("test", 2), GPUDevice("test", 3)]
         cgo = CGOExecutionEngine(devices=available_devices, batch_waiting_time=0)
 
@@ -281,7 +287,11 @@ class CGOEngineTest(unittest.TestCase):
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor._channel = LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         available_devices = [GPUDevice("test", 0), GPUDevice("test", 1)]
         cgo = CGOExecutionEngine(devices=available_devices, batch_waiting_time=0)
 
@@ -303,7 +313,11 @@ class CGOEngineTest(unittest.TestCase):
 
         models = _load_mnist(2)
 
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor._channel = LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         cgo_engine = CGOExecutionEngine(devices=[GPUDevice("test", 0), GPUDevice("test", 1),
                                                  GPUDevice("test", 2), GPUDevice("test", 3)], batch_waiting_time=0)
         set_execution_engine(cgo_engine)
