@@ -13,7 +13,7 @@ import nni
 import nni.runtime.platform.test
 import nni.retiarii.evaluator.pytorch.lightning as pl
 import nni.retiarii.hub.pytorch as searchspace
-from nni.retiarii.utils import ContextStack
+from nni.retiarii import fixed_arch
 from nni.retiarii.execution.utils import _unpack_if_only_one
 from nni.retiarii.mutator import InvalidMutation, Sampler
 from nni.retiarii.nn.pytorch.mutator import extract_mutation_from_pt_module
@@ -61,7 +61,7 @@ def _test_searchspace_on_dataset(searchspace, dataset='cifar10', arch=None):
         arch = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
 
     print('Selected model:', arch)
-    with ContextStack('fixed', arch):
+    with fixed_arch(arch):
         model = model.python_class(**model.python_init_params)
 
     if dataset == 'cifar10':
