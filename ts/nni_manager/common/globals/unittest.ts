@@ -49,6 +49,7 @@ export function resetGlobals(): void {
         foreground: false,
         urlPrefix: '',
         tunerCommandChannel: null,
+        pythonInterpreter: 'python',
         mode: 'unittest'
     };
     const paths = createPaths(args);

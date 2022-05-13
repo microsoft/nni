@@ -29,6 +29,7 @@ export interface NniManagerArgs {
     readonly foreground: boolean;
     readonly urlPrefix: string;  // leading and trailing "/" must be stripped
     readonly tunerCommandChannel: string | null;
+    readonly pythonInterpreter: string;
 
     // these are planned to be removed
     readonly mode: string;
@@ -83,6 +84,10 @@ const yargsOptions = {
     },
     tunerCommandChannel: {
         default: null,
+        type: 'string'
+    },
+    pythonInterpreter: {
+        demandOption: true,
         type: 'string'
     },
 

@@ -12,16 +12,13 @@ import net from 'net';
 import os from 'os';
 import path from 'path';
 import * as timersPromises from 'timers/promises';
-import lockfile from 'lockfile';
 import { Deferred } from 'ts-deferred';
 import { Container } from 'typescript-ioc';
-import glob from 'glob';
 
 import { Database, DataStore } from './datastore';
 import globals from './globals';
 import { resetGlobals } from './globals/unittest';  // TODO: this file should not contain unittest helpers
 import { ExperimentConfig, Manager } from './manager';
-import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
@@ -42,10 +39,6 @@ function getDefaultDatabaseDir(): string {
 
 function getCheckpointDir(): string {
     return path.join(getExperimentRootDir(), 'checkpoint');
-}
-
-function getExperimentsInfoPath(): string {
-    return path.join(os.homedir(), 'nni-experiments', '.experiment');
 }
 
 async function mkDirP(dirPath: string): Promise<void> {
@@ -105,14 +98,6 @@ function randomSelect<T>(a: T[]): T {
     return a[Math.floor(Math.random() * a.length)];
 }
 
-function getCmdPy(): string {
-    let cmd = 'python3';
-    if (process.platform === 'win32') {
-        cmd = 'python';
-    }
-    return cmd;
-}
-
 /**
  * Generate command line to start automl algorithm(s),
  * either start advisor or start a process which runs tuner and assessor
@@ -123,7 +108,7 @@ function getCmdPy(): string {
 function getMsgDispatcherCommand(expParams: ExperimentConfig): string {
     const clonedParams = Object.assign({}, expParams);
     delete clonedParams.searchSpace;
-    return `${getCmdPy()} -m nni --exp_params ${Buffer.from(JSON.stringify(clonedParams)).toString('base64')}`;
+    return `${globals.args.pythonInterpreter} -m nni --exp_params ${Buffer.from(JSON.stringify(clonedParams)).toString('base64')}`;
 }
 
 /**
@@ -152,7 +137,6 @@ function prepareUnitTest(): void {
     Container.snapshot(DataStore);
     Container.snapshot(TrainingService);
     Container.snapshot(Manager);
-    Container.snapshot(ExperimentManager);
 
     resetGlobals();
 
@@ -173,7 +157,6 @@ function cleanupUnitTest(): void {
     Container.restore(TrainingService);
     Container.restore(DataStore);
     Container.restore(Database);
-    Container.restore(ExperimentManager);
 }
 
 let cachedIpv4Address: string | null = null;
@@ -352,27 +335,6 @@ function unixPathJoin(...paths: any[]): string {
     return dir;
 }
 
-/**
- * lock a file sync
- */
-function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]: any}, ...args: any): any {
-    const lockName = path.join(path.dirname(filePath), path.basename(filePath) + `.lock.${process.pid}`);
-    if (typeof lockOpts['stale'] === 'number'){
-        const lockPath = path.join(path.dirname(filePath), path.basename(filePath) + '.lock.*');
-        const lockFileNames: string[] = glob.sync(lockPath);
-        const canLock: boolean = lockFileNames.map((fileName) => {
-            return fs.existsSync(fileName) && Date.now() - fs.statSync(fileName).mtimeMs < lockOpts['stale'];
-        }).filter(unexpired=>unexpired === true).length === 0;
-        if (!canLock) {
-            throw new Error('File has been locked.');
-        }
-    }
-    lockfile.lockSync(lockName, lockOpts);
-    const result = func(...args);
-    lockfile.unlockSync(lockName);
-    return result;
-}
-
 async function isPortOpen(host: string, port: number): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
         try{
@@ -416,7 +378,7 @@ export function importModule(modulePath: string): any {
 }
 
 export {
-    countFilesRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync, getFreePort, isPortOpen,
-    mkDirP, mkDirPSync, delay, prepareUnitTest, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
+    countFilesRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, getFreePort, isPortOpen,
+    mkDirP, mkDirPSync, delay, prepareUnitTest, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getTunerProc, isAlive, killPid, getNewLine
 };

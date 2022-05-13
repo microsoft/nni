@@ -41,6 +41,7 @@ class NniManagerArgs:
     foreground: bool = False
     url_prefix: str | None = None  # leading and trailing "/" must be stripped
     tuner_command_channel: str | None = None
+    python_interpreter: str
 
     def __init__(self,
             action: Literal['create', 'resume', 'view'],
@@ -60,6 +61,7 @@ class NniManagerArgs:
         # see "ts/nni_manager/common/globals/arguments.ts" for details
         self.experiments_directory = cast(str, config.experiment_working_directory)
         self.tuner_command_channel = tuner_command_channel
+        self.python_interpreter = sys.executable
 
         if isinstance(config.training_service, list):
             self.mode = 'hybrid'

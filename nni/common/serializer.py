@@ -13,7 +13,7 @@ import sys
 import types
 import warnings
 from io import IOBase
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union, cast, Generic
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union, cast
 
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
@@ -115,13 +115,13 @@ def is_wrapped_with_trace(cls_or_func: Any) -> bool:
     )
 
 
-class SerializableObject(Generic[T], Traceable):
+class SerializableObject(Traceable):  # should be (Generic[T], Traceable), but cloudpickle is unhappy with Generic.
     """
     Serializable object is a wrapper of existing python objects, that supports dump and load easily.
     Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
     """
 
-    def __init__(self, symbol: T, args: List[Any], kwargs: Dict[str, Any], call_super: bool = False):
+    def __init__(self, symbol: Type, args: List[Any], kwargs: Dict[str, Any], call_super: bool = False):
         # use dict to avoid conflicts with user's getattr and setattr
         self.__dict__['_nni_symbol'] = symbol
         self.__dict__['_nni_args'] = args
@@ -135,19 +135,19 @@ class SerializableObject(Generic[T], Traceable):
                 **{kw: _argument_processor(arg) for kw, arg in kwargs.items()}
             )
 
-    def trace_copy(self) -> Union[T, 'SerializableObject']:
+    def trace_copy(self) -> 'SerializableObject':
         return SerializableObject(
             self.trace_symbol,
             [copy.copy(arg) for arg in self.trace_args],
             {k: copy.copy(v) for k, v in self.trace_kwargs.items()},
         )
 
-    def get(self) -> T:
+    def get(self) -> Any:
         if not self._get_nni_attr('call_super'):
             # Reinitialize
             return trace(self.trace_symbol)(*self.trace_args, **self.trace_kwargs)
 
-        return cast(T, self)
+        return self
 
     @property
     def trace_symbol(self) -> Any:
