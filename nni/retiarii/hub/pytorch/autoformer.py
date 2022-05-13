@@ -4,7 +4,7 @@
 import itertools
 import math
 import warnings
-from typing import Optional, List, cast
+from typing import Optional, Tuple, cast
 
 import torch
 import torch.nn.functional as F
@@ -381,27 +381,27 @@ class AutoformerSpace(nn.Module):
             abs_pos: bool = True,
             qk_scale: Optional[float] = None,
             rpe: bool = True,
-            search_embed_dim: List[int] = [
+            search_embed_dim: Tuple[int, ...] = (
                 192,
                 216,
-                240],
-            search_mlp_ratio: List[float] = [
+                240),
+            search_mlp_ratio: Tuple[float, ...] = (
                 3.5,
-                4.0],
-            search_num_heads: List[int] = [
+                4.0),
+            search_num_heads: Tuple[int, ...] = (
                 3,
-                4],
-            search_depth: List[int] = [
+                4),
+            search_depth: Tuple[int, ...] = (
                 12,
                 13,
-                14],
+                14),
     ):
         super().__init__()
 
-        embed_dim = nn.ValueChoice(search_embed_dim, label="embed_dim")
+        embed_dim = nn.ValueChoice(list(search_embed_dim), label="embed_dim")
         fixed_embed_dim = nn.ModelParameterChoice(
-            search_embed_dim, label="embed_dim")
-        depth = nn.ValueChoice(search_depth, label="depth")
+            list(search_embed_dim), label="embed_dim")
+        depth = nn.ValueChoice(list(search_depth), label="depth")
         self.patch_embed = nn.Conv2d(
             in_chans,
             cast(int, embed_dim),
@@ -412,7 +412,6 @@ class AutoformerSpace(nn.Module):
         self.cls_token = nn.Parameter(torch.zeros(1, 1, cast(int, fixed_embed_dim)))
         trunc_normal_(self.cls_token, std=.02)
 
-        self.blocks = []
         dpr = [
             x.item() for x in torch.linspace(
                 0,
