@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import json
-import logging
 import os
 
 from schema import And, Optional, Or, Regex, Schema, SchemaError
