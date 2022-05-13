@@ -12,6 +12,7 @@ from nni.runtime.protocol import CommandType, send, receive
 from nni.tuner import Tuner
 from nni.utils import extract_scalar_reward
 
+from .helper.legacy_command_channel import LegacyCommandChannel
 
 class NaiveTuner(Tuner):
     def __init__(self):
@@ -68,7 +69,8 @@ class MsgDispatcherTestCase(TestCase):
         _restore_io()
 
         tuner = NaiveTuner()
-        dispatcher = MsgDispatcher(tuner)
+        dispatcher = MsgDispatcher('ws://_placeholder_', tuner)
+        dispatcher._channel = LegacyCommandChannel()
         msg_dispatcher_base._worker_fast_exit_on_terminate = False
 
         dispatcher.run()

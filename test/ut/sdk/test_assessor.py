@@ -11,6 +11,8 @@ from nni.runtime.msg_dispatcher import MsgDispatcher
 from nni.runtime import protocol
 from nni.runtime.protocol import CommandType, send, receive
 
+from .helper.legacy_command_channel import LegacyCommandChannel
+
 _trials = []
 _end_trials = []
 
@@ -58,7 +60,8 @@ class AssessorTestCase(TestCase):
         _restore_io()
 
         assessor = NaiveAssessor()
-        dispatcher = MsgDispatcher(None, assessor)
+        dispatcher = MsgDispatcher('ws://_placeholder_', None, assessor)
+        dispatcher._channel = LegacyCommandChannel()
         msg_dispatcher_base._worker_fast_exit_on_terminate = False
 
         dispatcher.run()

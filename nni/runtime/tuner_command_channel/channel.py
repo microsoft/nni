@@ -35,7 +35,6 @@ class TunerCommandChannel:
     """
 
     def __init__(self, url: str):
-        assert url.startswith('ws://')
         self._channel = WebSocket(url)
 
     def connect(self) -> None:
