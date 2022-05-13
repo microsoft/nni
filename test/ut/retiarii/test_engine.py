@@ -12,6 +12,7 @@ from nni.retiarii.execution.python import PurePythonExecutionEngine
 from nni.retiarii.graph import DebugEvaluator
 from nni.retiarii.integration import RetiariiAdvisor
 
+from ..sdk.helper.legacy_command_channel import LegacyCommandChannel
 
 class EngineTest(unittest.TestCase):
     def test_codegen(self):
@@ -25,7 +26,11 @@ class EngineTest(unittest.TestCase):
     def test_base_execution_engine(self):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor._channel = LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         set_execution_engine(BaseExecutionEngine())
         with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
             model = Model._load(json.load(f))
@@ -38,7 +43,11 @@ class EngineTest(unittest.TestCase):
     def test_py_execution_engine(self):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor._channel = LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         set_execution_engine(PurePythonExecutionEngine())
         model = Model._load({
             '_model': {
