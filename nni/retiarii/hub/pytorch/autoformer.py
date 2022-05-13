@@ -4,8 +4,10 @@
 import itertools
 import math
 import warnings
+from typing import Optional, List, cast
 
 import torch
+import torch.nn.functional as F
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
@@ -141,9 +143,9 @@ class RelativePosition2D(nn.Module):
         final_mat_v = distance_mat_clipped_v + self.legnth + 1
         final_mat_h = distance_mat_clipped_h + self.legnth + 1
         # pad the 0 which represent the cls token
-        final_mat_v = torch.nn.functional.pad(
+        final_mat_v = F.pad(
             final_mat_v, (1, 0, 1, 0), "constant", 0)
-        final_mat_h = torch.nn.functional.pad(
+        final_mat_h = F.pad(
             final_mat_h, (1, 0, 1, 0), "constant", 0)
 
         final_mat_v = torch.tensor(
@@ -273,12 +275,12 @@ class TransformerEncoderLayer(nn.Module):
         self.ffn_layer_norm = nn.LayerNorm(embed_dim)
         self.activation_fn = nn.GELU()
         self.fc1 = nn.Linear(
-            embed_dim, nn.ValueChoice.to_int(
-                embed_dim * mlp_ratio))
+            cast(int, embed_dim), cast(int, nn.ValueChoice.to_int(
+                embed_dim * mlp_ratio)))
         self.fc2 = nn.Linear(
-            nn.ValueChoice.to_int(
-                embed_dim * mlp_ratio),
-            embed_dim)
+            cast(int, nn.ValueChoice.to_int(
+                embed_dim * mlp_ratio)),
+            cast(int, embed_dim))
 
     def forward(self, x):
         """
@@ -377,19 +379,19 @@ class AutoformerSpace(nn.Module):
             pre_norm: bool = True,
             global_pool: bool = False,
             abs_pos: bool = True,
-            qk_scale: float = None,
+            qk_scale: Optional[float] = None,
             rpe: bool = True,
-            search_embed_dim: list = [
+            search_embed_dim: List[int] = [
                 192,
                 216,
                 240],
-            search_mlp_ratio: list = [
+            search_mlp_ratio: List[float] = [
                 3.5,
                 4.0],
-            search_num_heads: list = [
+            search_num_heads: List[int] = [
                 3,
                 4],
-            search_depth: list = [
+            search_depth: List[int] = [
                 12,
                 13,
                 14],
@@ -402,12 +404,12 @@ class AutoformerSpace(nn.Module):
         depth = nn.ValueChoice(search_depth, label="depth")
         self.patch_embed = nn.Conv2d(
             in_chans,
-            embed_dim,
+            cast(int, embed_dim),
             kernel_size=patch_size,
             stride=patch_size)
         self.patches_num = int((img_size // patch_size) ** 2)
         self.global_pool = global_pool
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, fixed_embed_dim))
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, cast(int, fixed_embed_dim)))
         trunc_normal_(self.cls_token, std=.02)
 
         self.blocks = []
@@ -420,7 +422,7 @@ class AutoformerSpace(nn.Module):
         self.abs_pos = abs_pos
         if self.abs_pos:
             self.pos_embed = nn.Parameter(torch.zeros(
-                1, self.patches_num + 1, fixed_embed_dim))
+                1, self.patches_num + 1, cast(int, fixed_embed_dim)))
             trunc_normal_(self.pos_embed, std=.02)
 
         self.blocks = nn.Repeat(lambda index: nn.LayerChoice([
@@ -435,12 +437,11 @@ class AutoformerSpace(nn.Module):
                                     pre_norm=pre_norm,)
             for mlp_ratio, num_heads in itertools.product(search_mlp_ratio, search_num_heads)
         ], label=f'layer{index}'), depth)
-
         self.pre_norm = pre_norm
         if self.pre_norm:
-            self.norm = nn.LayerNorm(embed_dim)
+            self.norm = nn.LayerNorm(cast(int, embed_dim))
         self.head = nn.Linear(
-            embed_dim,
+            cast(int, embed_dim),
             num_classes) if num_classes > 0 else nn.Identity()
 
     def forward(self, x):
