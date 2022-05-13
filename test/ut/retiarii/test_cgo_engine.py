@@ -10,6 +10,7 @@ from pathlib import Path
 
 import nni
 import nni.runtime.platform.test
+from nni.runtime.tuner_command_channel import legacy as protocol
 import json
 
 try:
@@ -39,8 +40,6 @@ from torchvision.datasets import MNIST
 from torchvision import transforms
 from torch.utils.data import Dataset
 from sklearn.datasets import load_diabetes
-
-from ..sdk.helper.legacy_command_channel import LegacyCommandChannel
 
 
 class _model_cpu(nn.Module):
@@ -265,7 +264,7 @@ class CGOEngineTest(unittest.TestCase):
         opt.convert(lp)
 
         advisor = RetiariiAdvisor('ws://_placeholder_')
-        advisor._channel = LegacyCommandChannel()
+        advisor._channel = protocol.LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
 
@@ -288,7 +287,7 @@ class CGOEngineTest(unittest.TestCase):
         opt.convert(lp)
 
         advisor = RetiariiAdvisor('ws://_placeholder_')
-        advisor._channel = LegacyCommandChannel()
+        advisor._channel = protocol.LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
 
@@ -306,7 +305,6 @@ class CGOEngineTest(unittest.TestCase):
         _reset()
         nni.retiarii.debug_configs.framework = 'pytorch'
         os.makedirs('generated', exist_ok=True)
-        from nni.runtime import protocol
         import nni.runtime.platform.test as tt
         protocol._set_out_file(open('generated/debug_protocol_out_file.py', 'wb'))
         protocol._set_in_file(open('generated/debug_protocol_out_file.py', 'rb'))
@@ -314,7 +312,7 @@ class CGOEngineTest(unittest.TestCase):
         models = _load_mnist(2)
 
         advisor = RetiariiAdvisor('ws://_placeholder_')
-        advisor._channel = LegacyCommandChannel()
+        advisor._channel = protocol.LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
 

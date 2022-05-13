@@ -11,8 +11,7 @@ from nni.retiarii.execution.base import BaseExecutionEngine
 from nni.retiarii.execution.python import PurePythonExecutionEngine
 from nni.retiarii.graph import DebugEvaluator
 from nni.retiarii.integration import RetiariiAdvisor
-
-from ..sdk.helper.legacy_command_channel import LegacyCommandChannel
+from nni.runtime.tuner_command_channel.legacy import *
 
 class EngineTest(unittest.TestCase):
     def test_codegen(self):
@@ -72,11 +71,9 @@ class EngineTest(unittest.TestCase):
     def setUp(self) -> None:
         self.enclosing_dir = Path(__file__).parent
         os.makedirs(self.enclosing_dir / 'generated', exist_ok=True)
-        from nni.runtime import protocol
-        protocol._set_out_file(open(self.enclosing_dir / 'generated/debug_protocol_out_file.py', 'wb'))
+        _set_out_file(open(self.enclosing_dir / 'generated/debug_protocol_out_file.py', 'wb'))
 
     def tearDown(self) -> None:
-        from nni.runtime import protocol
-        protocol._get_out_file().close()
+        _get_out_file().close()
         nni.retiarii.execution.api._execution_engine = None
         nni.retiarii.integration_api._advisor = None

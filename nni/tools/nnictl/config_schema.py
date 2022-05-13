@@ -77,7 +77,6 @@ class AlgoSchema:
         if not builtin_name or not class_args:
             return
 
-        logging.getLogger('nni.protocol').setLevel(logging.ERROR)  # we know IPC is not there, don't complain
         validator = create_validator_instance(algo_type+'s', builtin_name)
         if validator:
             try:

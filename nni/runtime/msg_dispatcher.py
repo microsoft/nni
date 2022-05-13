@@ -10,7 +10,7 @@ from nni.assessor import AssessResult
 from .common import multi_phase_enabled
 from .env_vars import dispatcher_env_vars
 from .msg_dispatcher_base import MsgDispatcherBase
-from .protocol import CommandType
+from .tuner_command_channel import CommandType
 from ..common.serializer import dump, load
 from ..utils import MetricType
 
