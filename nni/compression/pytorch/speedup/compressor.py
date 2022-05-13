@@ -43,7 +43,7 @@ class ModelSpeedup:
     confidence: the confidence coefficient of the sparsity inference. This value is
         actually used as the batchsize of the dummy_input.
     customized_replace_func: None/Dict
-        If the parameter is not None, then we will use the given function to replace the
+        If `customized_replace_func` is not None, then we will use the given function to replace the
         corresponding modules. The `key` of the dict is the opertor types and the `value`
         is the replace function of corresponding opertor. The replace function should take
         two input parameters, one is the original module, the second input parameter is tuple
