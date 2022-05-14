@@ -101,6 +101,6 @@ jobs:
     displayName: Integration test
 
   - publish: $(readlink -f ~/nni-experiments/_latest)
-    artifactName: experiment
+    artifact: experiment
     condition: failed()
     displayName: Upload experiment artifact (if failed)
