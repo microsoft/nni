@@ -13,7 +13,7 @@ advisor:
     eta: 3
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-advisor
+  codeDir: ../../../../examples/trials/mnist-advisor
   command: python3 mnist.py
   gpuNum: 0
 

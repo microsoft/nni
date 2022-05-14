@@ -11,7 +11,7 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-annotation
+  codeDir: ../../../../examples/trials/mnist-annotation
   command: python3 mnist.py --batch_num 100
   gpuNum: 0
 

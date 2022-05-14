@@ -74,7 +74,7 @@ testCases:
 # nni features test
 #########################################################################
 - name: metrics-float
-  configFile: test/training_service/config/metrics_test/training_service/config.yml
+  configFile: test/training_service/config/metrics_test/config.yml
   config:
     maxTrialNum: 1
     trialConcurrency: 1
@@ -84,7 +84,7 @@ testCases:
       expected_result_file: expected_metrics.json
 
 - name: export-float
-  configFile: test/training_service/config/metrics_test/training_service/config.yml
+  configFile: test/training_service/config/metrics_test/config.yml
   config:
     maxTrialNum: 1
     trialConcurrency: 1
@@ -92,7 +92,7 @@ testCases:
     class: ExportValidator
 
 - name: metrics-dict
-  configFile: test/training_service/config/metrics_test/training_service/config_dict_metrics.yml
+  configFile: test/training_service/config/metrics_test/config_dict_metrics.yml
   config:
     maxTrialNum: 1
     trialConcurrency: 1
@@ -102,7 +102,7 @@ testCases:
       expected_result_file: expected_metrics_dict.json
 
 - name: export-dict
-  configFile: test/training_service/config/metrics_test/training_service/config_dict_metrics.yml
+  configFile: test/training_service/config/metrics_test/config_dict_metrics.yml
   config:
     maxTrialNum: 1
     trialConcurrency: 1

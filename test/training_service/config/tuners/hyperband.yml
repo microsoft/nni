@@ -13,7 +13,7 @@ advisor:
     eta: 3
     exec_mode: parallelism
 trial:
-  codeDir: ../../../examples/trials/mnist-advisor
+  codeDir: ../../../../examples/trials/mnist-advisor
   command: python3 mnist.py
   gpuNum: 0
 

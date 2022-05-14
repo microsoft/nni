@@ -1,7 +1,7 @@
 experimentName: default_test
 searchSpaceFile: ni-nas-search-space.json
 trialCommand: python3 main.py --epochs 1 --batches 1
-trialCodeDirectory: ../../../examples/nas/legacy/classic_nas
+trialCodeDirectory: ../../../../examples/nas/legacy/classic_nas
 trialGpuNumber: 0
 trialConcurrency: 1
 maxExperimentDuration: 15m

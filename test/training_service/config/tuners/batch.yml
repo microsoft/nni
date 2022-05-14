@@ -12,7 +12,7 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-batch-tune-keras
+  codeDir: ../../../../examples/trials/mnist-batch-tune-keras
   command: python3 mnist-keras.py --epochs 1
   gpuNum: 0
 

@@ -12,7 +12,7 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-pytorch
+  codeDir: ../../../../examples/trials/mnist-pytorch
   command: python3 mnist.py  --epochs 1 --batch_num 10
 
 useAnnotation: false

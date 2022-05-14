@@ -3,7 +3,7 @@ experimentName: default_test
 maxExecDuration: 5m
 maxTrialNum: 4
 trialConcurrency: 2
-searchSpacePath: ../../../examples/trials/sklearn/classification/search_space.json
+searchSpacePath: ../../../../examples/trials/sklearn/classification/search_space.json
 
 tuner:
   builtinTunerName: TPE
@@ -12,7 +12,7 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/sklearn/classification
+  codeDir: ../../../../examples/trials/sklearn/classification
   command: python3 main.py
   gpuNum: 0
 

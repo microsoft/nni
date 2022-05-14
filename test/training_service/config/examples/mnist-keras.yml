@@ -3,7 +3,7 @@ experimentName: default_test
 maxExecDuration: 5m
 maxTrialNum: 4
 trialConcurrency: 2
-searchSpacePath: ../../../examples/trials/mnist-keras/search_space.json
+searchSpacePath: ../../../../examples/trials/mnist-keras/search_space.json
 
 tuner:
   builtinTunerName: Random
@@ -12,7 +12,7 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-keras
+  codeDir: ../../../../examples/trials/mnist-keras
   command: python3 mnist-keras.py --num_train 200 --epochs 1
 
 useAnnotation: false

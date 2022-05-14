@@ -1,7 +1,7 @@
 experimentName: default_test
 searchSpaceFile: cifar10_search_space.json
 trialCommand: python3 main.py --epochs 1 --batches 1
-trialCodeDirectory: ../../../examples/trials/cifar10_pytorch
+trialCodeDirectory: ../../../../examples/trials/cifar10_pytorch
 trialGpuNumber: 0
 trialConcurrency: 1
 maxExperimentDuration: 15m

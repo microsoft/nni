@@ -68,14 +68,14 @@ testCases:
     class: ExportValidator 
 
 - name: metrics-dict
-  configFile: test/training_service/config/metrics_test/training_service/config_dict_metrics-v2.yml
+  configFile: test/training_service/config/metrics_test/config_dict_metrics-v2.yml
   validator:
     class: MetricsValidator
     kwargs:
       expected_result_file: expected_metrics_dict.json
 
 - name: export-dict
-  configFile: test/training_service/config/metrics_test/training_service/config_dict_metrics-v2.yml
+  configFile: test/training_service/config/metrics_test/config_dict_metrics-v2.yml
   validator:
     class: ExportValidator 
 
