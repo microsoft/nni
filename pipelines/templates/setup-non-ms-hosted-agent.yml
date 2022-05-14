@@ -53,14 +53,8 @@ steps:
 - script: |
     set -e
     curl -fsSL https://get.docker.com | sh
-    sudo usermod -aG docker $USER
-    newgrp docker
     sudo systemctl --now enable docker
   displayName: Install Docker
-
-- script: |
-    docker run hello-world
-  displayName: Try Docker
 
 
 # UsePythonVersion task only works when the specific Python version is already installed.
