@@ -100,7 +100,7 @@ jobs:
       python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
     displayName: Integration test
 
-  - publish: $(readlink -f ~/nni-experiments/_latest)
+  - publish: $(Agent.HomeDirectory)/nni-experiments
     artifact: experiment
     condition: failed()
     displayName: Upload experiment artifact (if failed)
