@@ -53,7 +53,7 @@ def update_training_service_config(config, training_service, config_file_path, n
         if config['trial']['codeDir'] == '.':
             containerCodeDir = '/' + config_file_path[:config_file_path.rfind('/')]
         elif config['trial']['codeDir'] == '../naive_trial':
-            containerCodeDir = '/test/config/naive_trial'
+            containerCodeDir = '/test/training_service/config/naive_trial'
         elif '../../../' in config['trial']['codeDir']:
             # replace example folders to container folder
             containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
@@ -301,8 +301,12 @@ def run(args):
                     print('skipped {}, remoteConfig not match.'.format(name))
                     continue
             wait_for_port_available(8080, 240)
+            wait_for_port_available(8081, 240)  # some training services need one more port to listen metrics
+            # FIXME: I don't know why the port might be not properly released.
+            # Might be a bug in experiment.stop()
         else:
             wait_for_port_available(8080, 60)
+            wait_for_port_available(8081, 60)
 
         # adl mode need more time to cleanup PVC
         if args.ts == 'adl' and name == 'nnictl-resume-2':

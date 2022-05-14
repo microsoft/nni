@@ -51,7 +51,7 @@ jobs:
       set -e
       cd test
       az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
-      python3 nni_test/nnitest/generate_ts_config.py \
+      python3 training_service/nnitest/generate_ts_config.py \
           --ts aml \
           --subscription_id $(subscriptionId) \
           --resource_group $(resourceGroup) \
@@ -60,5 +60,5 @@ jobs:
           --nni_manager_ip $(manager_ip) \
           --nni_docker_image nnidev/nni-nightly
 
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts aml
+      python3 training_service/nnitest/run_tests.py --config config/integration_tests.yml --ts aml
     displayName: Integration test

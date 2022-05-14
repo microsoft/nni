@@ -77,7 +77,7 @@ jobs:
 
   - script: |
       cd test
-      python3 nni_test/nnitest/generate_ts_config.py \
+      python3 training_service/nnitest/generate_ts_config.py \
           --ts hybrid \
           --remote_reuse true \
           --remote_user nni \
@@ -90,7 +90,7 @@ jobs:
           --workspace_name $(workspace_name) \
           --compute_target $(compute_target) \
           --config_version v2
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests_config_v2.yml --ts hybrid
+      python3 training_service/nnitest/run_tests.py --config config/integration_tests_config_v2.yml --ts hybrid
     displayName: Integration test
 
   - task: SSH@0

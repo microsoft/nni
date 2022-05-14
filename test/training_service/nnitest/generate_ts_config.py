@@ -7,8 +7,8 @@ import glob
 import argparse
 from utils import get_yml_content, dump_yml_content
 
-TRAINING_SERVICE_FILE = os.path.join('config', 'training_service.yml')
-TRAINING_SERVICE_FILE_V2 = os.path.join('config', 'training_service_v2.yml')
+TRAINING_SERVICE_FILE = os.path.join('training_service', 'config', 'training_service.yml')
+TRAINING_SERVICE_FILE_V2 = os.path.join('training_service', 'config', 'training_service_v2.yml')
 
 def update_training_service_config(args):
     config = get_yml_content(TRAINING_SERVICE_FILE)

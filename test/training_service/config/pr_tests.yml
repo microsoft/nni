@@ -13,8 +13,8 @@ testCases:
 #########################################################################
 
 - name: naive-test
-  configFile: test/config/naive_test/local.yml
-  launchCommand: python3 nni_test/nnitest/naive_test.py --config $configFile
+  configFile: test/training_service/config/naive_test/local.yml
+  launchCommand: python3 training_service/nnitest/naive_test.py --config $configFile
   experimentStatusCheck: False
   stopCommand:
   platform: linux darwin
@@ -23,7 +23,7 @@ testCases:
 # nni features test
 #########################################################################
 - name: metrics-float
-  configFile: test/config/metrics_test/config.yml
+  configFile: test/training_service/config/metrics_test/training_service/config.yml
   config:
     maxTrialNum: 1
     trialConcurrency: 1
@@ -33,7 +33,7 @@ testCases:
       expected_result_file: expected_metrics.json
 
 - name: metrics-dict
-  configFile: test/config/metrics_test/config_dict_metrics.yml
+  configFile: test/training_service/config/metrics_test/training_service/config_dict_metrics.yml
   config:
     maxTrialNum: 1
     trialConcurrency: 1
@@ -46,7 +46,7 @@ testCases:
 # nni assessor test
 #########################################################################
 - name: assessor-curvefitting
-  configFile: test/config/assessors/curvefitting.yml
+  configFile: test/training_service/config/assessors/curvefitting.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
@@ -55,7 +55,7 @@ testCases:
       command: python3 naive_trial.py
 
 - name: assessor-medianstop
-  configFile: test/config/assessors/medianstop.yml
+  configFile: test/training_service/config/assessors/medianstop.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
@@ -67,7 +67,7 @@ testCases:
 # nni tuners test
 #########################################################################
 - name: tuner-annel
-  configFile: test/config/tuners/anneal.yml
+  configFile: test/training_service/config/tuners/anneal.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
@@ -78,7 +78,7 @@ testCases:
       command: python3 naive_trial.py
 
 - name: tuner-evolution
-  configFile: test/config/tuners/evolution.yml
+  configFile: test/training_service/config/tuners/evolution.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
@@ -89,7 +89,7 @@ testCases:
       command: python3 naive_trial.py
 
 - name: tuner-random
-  configFile: test/config/tuners/random.yml
+  configFile: test/training_service/config/tuners/random.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
@@ -100,7 +100,7 @@ testCases:
       command: python3 naive_trial.py
 
 - name: tuner-tpe
-  configFile: test/config/tuners/tpe.yml
+  configFile: test/training_service/config/tuners/tpe.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
@@ -111,7 +111,7 @@ testCases:
       command: python3 naive_trial.py
 
 - name: tuner-batch
-  configFile: test/config/tuners/batch.yml
+  configFile: test/training_service/config/tuners/batch.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
@@ -122,7 +122,7 @@ testCases:
       command: python3 trial_choices.py
 
 - name: tuner-gp
-  configFile: test/config/tuners/gp.yml
+  configFile: test/training_service/config/tuners/gp.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2
@@ -133,7 +133,7 @@ testCases:
       command: python3 naive_trial.py
 
 - name: tuner-grid
-  configFile: test/config/tuners/gridsearch.yml
+  configFile: test/training_service/config/tuners/gridsearch.yml
   config:
     maxTrialNum: 2
     trialConcurrency: 2

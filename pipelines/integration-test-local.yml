@@ -32,7 +32,7 @@ jobs:
 
   - script: |
       cd test
-      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+      python training_service/nnitest/run_tests.py --config config/integration_tests.yml --ts local
     displayName: Integration test
 
 - job: windows
@@ -71,5 +71,5 @@ jobs:
 
   - script: |
       cd test
-      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+      python training_service/nnitest/run_tests.py --config config/integration_tests.yml --ts local
     displayName: Integration test
