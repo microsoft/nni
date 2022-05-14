@@ -24,7 +24,7 @@ it_variables = {}
 
 
 def update_training_service_config(config, training_service, config_file_path, nni_source_dir, reuse_mode='False'):
-    it_ts_config = get_yml_content(os.path.join('config', 'training_service.yml'))
+    it_ts_config = get_yml_content(os.path.join('training_service', 'config', 'training_service.yml'))
     # hack for kubeflow trial config
     if training_service == 'kubeflow' and reuse_mode == 'False':
         it_ts_config[training_service]['trial']['worker']['command'] = config['trial']['command']
@@ -32,7 +32,7 @@ def update_training_service_config(config, training_service, config_file_path, n
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
     elif training_service == 'kubeflow' and reuse_mode == 'True':
-        it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
+        it_ts_config = get_yml_content(os.path.join('training_service', 'config', 'training_service_v2.yml'))
         print(it_ts_config)
         it_ts_config[training_service]['trainingService']['worker']['command'] = config['trialCommand']
         it_ts_config[training_service]['trainingService']['worker']['code_directory'] = config['trialCodeDirectory']
@@ -43,7 +43,7 @@ def update_training_service_config(config, training_service, config_file_path, n
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
     elif training_service == 'frameworkcontroller' and reuse_mode == 'True':
-        it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
+        it_ts_config = get_yml_content(os.path.join('training_service', 'config', 'training_service_v2.yml'))
         it_ts_config[training_service]['trainingService']['taskRoles'][0]['command'] = config['trialCommand']
 
     if training_service == 'adl':
@@ -74,7 +74,7 @@ def update_training_service_config(config, training_service, config_file_path, n
             it_ts_config[training_service].pop('sharedStorage')
     
     if training_service == 'hybrid':
-        it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
+        it_ts_config = get_yml_content(os.path.join('training_service', 'config', 'training_service_v2.yml'))
     elif reuse_mode != 'True':
         deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
@@ -259,7 +259,7 @@ def match_training_service(test_case_config, cur_training_service):
     return False
 
 def match_remoteConfig(test_case_config, nni_source_dir):
-    trainingservice_config = get_yml_content(os.path.join('config', 'training_service.yml'))
+    trainingservice_config = get_yml_content(os.path.join('training_service', 'config', 'training_service.yml'))
     trainingservice_config_reuse_value = str(trainingservice_config['remote']['remoteConfig']['reuse']).lower()
     testcase_config = get_yml_content(nni_source_dir + test_case_config['configFile'])
     if testcase_config.get('remoteConfig') is not None:

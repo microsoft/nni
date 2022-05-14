@@ -51,7 +51,7 @@ class MetricsValidator(ITValidator):
 
     def check_metrics(self, nni_source_dir, **kwargs):
         expected_result_file = kwargs.get('expected_result_file', 'expected_metrics.json')
-        with open(osp.join(nni_source_dir, 'test', 'config', 'metrics_test', expected_result_file), 'r') as f:
+        with open(osp.join(nni_source_dir, 'test', 'training_service', 'config', 'metrics_test', expected_result_file), 'r') as f:
             expected_metrics = json.load(f)
         print('expected metrics:', expected_metrics)
         metrics = requests.get(METRICS_URL).json()

@@ -14,7 +14,7 @@ from utils import is_experiment_done, get_experiment_id, get_nni_log_path, read_
 from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
 NNI_SOURCE_DIR = '..'
-NAIVE_TEST_CONFIG_DIR = osp.join(NNI_SOURCE_DIR, 'test', 'config', 'naive_test')
+NAIVE_TEST_CONFIG_DIR = osp.join(NNI_SOURCE_DIR, 'test', 'training_service', 'config', 'naive_test')
 
 def naive_test(args):
     '''run naive integration test'''
