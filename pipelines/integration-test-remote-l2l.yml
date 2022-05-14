@@ -99,3 +99,8 @@ jobs:
           --nni_manager_ip $(manager_ip)
       python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
     displayName: Integration test
+
+  - publish: $(readlink -f ~/nni-experiments/_latest)
+    artifactName: experiment
+    condition: failed()
+    displayName: Upload experiment artifact (if failed)
