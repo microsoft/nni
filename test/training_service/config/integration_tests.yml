@@ -35,7 +35,7 @@ testCases:
   experimentStatusCheck: True
 
 - name: shared-storage-remote-azureblob
-  configFile: test/training_service/config/sharedstorage_test/training_service/config_sharedstorage_remote_azureblob.yml
+  configFile: test/training_service/config/sharedstorage_test/config_sharedstorage_remote_azureblob.yml
   config:
     sharedStorage:
       localMountPoint: /tmp/nnimount/testlocalrootpath
@@ -55,7 +55,7 @@ testCases:
 # mount point in local may late to umount when stop experiment in shared-storage-remote-azureblob,
 # so keep two shared storage tests away from each other.
 - name: shared-storage-remote-nfs
-  configFile: test/training_service/config/sharedstorage_test/training_service/config_sharedstorage_remote_nfs.yml
+  configFile: test/training_service/config/sharedstorage_test/config_sharedstorage_remote_nfs.yml
   trainingService: remote
   validator:
     class: FileExistValidator
