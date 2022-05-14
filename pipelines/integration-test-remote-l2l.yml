@@ -66,7 +66,7 @@ jobs:
 
   - script: |
       set -e
-      python /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
+      python /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py --sudo $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
     displayName: Run a worker in docker
 
   - script: |
