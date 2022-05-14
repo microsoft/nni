@@ -35,8 +35,9 @@ version=$(lsb_release -r | cut -c9- | sed s/[[:space:]]//g)
 if [ "$id" = "Ubuntu" ]
 then
     wget https://packages.microsoft.com/config/ubuntu/$version/packages-microsoft-prod.deb
-    sudo dpkg-reconfigure debconf -f noninteractive
-    sudo dpkg -i packages-microsoft-prod.deb
+    export DEBIAN_FRONTEND=noninteractive
+    sudo -E dpkg -i packages-microsoft-prod.deb
+    echo "dpkg success!"
     sudo apt-get update
     sudo apt-get install -y blobfuse fuse
 elif [ "$id" = "CentOS" ] || [ "$id" = "RHEL" ]
