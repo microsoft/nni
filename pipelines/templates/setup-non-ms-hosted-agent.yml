@@ -23,6 +23,32 @@ steps:
     sudo chmod +x /usr/bin/azcopy
   displayName: Setup azcopy
 
+
+# Install NFS server / client
+# This should only be done when neceessary, but it doesn't harm to install it, nonetheless.
+
+# The NFS server can be accessed through the path: host.docker.internal
+# Added a host alias so that it can also be used outside the container
+
+- script: |
+    set -e
+    sudo apt install -y nfs-kernel-server nfs-common
+    sudo mkdir -p /var/nfs/general
+    sudo chown nobody:nogroup /var/nfs/general
+    sudo echo "/var/nfs/general *(rw,sync,no_subtree_check)" >> /etc/exports
+    sudo echo "127.0.0.1 host.docker.internal" >> /etc/hosts
+    sudo systemctl restart nfs-kernel-server
+  displayName: Install NFS
+
+- script: |
+    sudo mkdir -p /nfs/general
+    sudo mount host.docker.internal:/var/nfs/general /nfs/general
+    df -h
+    sudo touch /nfs/general/general.test
+    ls -l /nfs/general/general.test
+  displayName: Test NFS
+
+
 # VM with GPU needs to install drivers. Reference:
 # https://docs.microsoft.com/en-us/azure/virtual-machines/linux/n-series-driver-setup
 # https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
@@ -50,6 +76,10 @@ steps:
 
 
 # Install docker
+# This docker must run with sudo,
+# because adding user to docker group requires re-login to take effect.
+# But we can't re-login on this pipeline.
+
 - script: |
     set -e
     curl -fsSL https://get.docker.com | sh
