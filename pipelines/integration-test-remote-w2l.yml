@@ -61,8 +61,8 @@ jobs:
           --remote_port $(docker_port) `
           --remote_pwd $(password_in_docker) `
           --nni_manager_ip $(manager_ip)
-      Get-Content config/training_service.yml
-      python training_service/nnitest/run_tests.py --config config/integration_tests.yml --ts remote --exclude cifar10
+      Get-Content training_service/config/training_service.yml
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote --exclude cifar10
     displayName: Integration test
 
   - task: SSH@0

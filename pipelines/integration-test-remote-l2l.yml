@@ -84,7 +84,7 @@ jobs:
           --local_mount_point $(LOCAL_MOUNT_POINT) \
           --remote_mount_point $(REMOTE_MOUNT_POINT) \
           --exported_directory $(Exported_Directory)
-      python3 training_service/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+      python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
     displayName: Integration test (reuse mode)
 
   - script: |
@@ -97,5 +97,5 @@ jobs:
           --remote_port $(docker_port) \
           --remote_pwd $(password_in_docker) \
           --nni_manager_ip $(manager_ip)
-      python3 training_service/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+      python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
     displayName: Integration test

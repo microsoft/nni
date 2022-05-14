@@ -60,5 +60,5 @@ jobs:
           --nni_manager_ip $(manager_ip) \
           --nni_docker_image nnidev/nni-nightly
 
-      python3 training_service/nnitest/run_tests.py --config config/integration_tests.yml --ts aml
+      python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts aml
     displayName: Integration test

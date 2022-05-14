@@ -90,7 +90,7 @@ jobs:
           --workspace_name $(workspace_name) \
           --compute_target $(compute_target) \
           --config_version v2
-      python3 training_service/nnitest/run_tests.py --config config/integration_tests_config_v2.yml --ts hybrid
+      python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests_config_v2.yml --ts hybrid
     displayName: Integration test
 
   - task: SSH@0
