@@ -40,14 +40,6 @@ steps:
     sudo systemctl restart nfs-kernel-server
   displayName: Install NFS
 
-- script: |
-    sudo mkdir -p /nfs/general
-    sudo mount host.docker.internal:/var/nfs/general /nfs/general
-    df -h
-    sudo touch /nfs/general/general.test
-    ls -l /nfs/general/general.test
-  displayName: Test NFS
-
 
 # VM with GPU needs to install drivers. Reference:
 # https://docs.microsoft.com/en-us/azure/virtual-machines/linux/n-series-driver-setup
