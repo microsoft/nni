@@ -29,6 +29,8 @@ steps:
 
 # The NFS server can be accessed through the path: host.docker.internal
 # Added a host alias so that it can also be used outside the container
+# Technically, inside the container they should use exactly the same user to read/write files.
+# But it doesn't matter in our case, because container is running in root mode.
 
 - script: |
     set -e
@@ -39,15 +41,6 @@ steps:
     echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
     sudo systemctl restart nfs-kernel-server
   displayName: Install NFS
-
-- script: |
-    set -e
-    mkdir -p /tmp/nnimount/testlocalrootpath
-    sudo mount host.docker.internal:/var/nfs/general /tmp/nnimount/testlocalrootpath
-    ls -al /tmp/nnimount/testlocalrootpath
-    mkdir -p /tmp/nnimount/testlocalrootpath/nni/something
-    touch /tmp/nnimount/testlocalrootpath/greeting.txt
-    ls -al /tmp/nnimount/testlocalrootpath
 
 
 # VM with GPU needs to install drivers. Reference:
