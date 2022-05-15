@@ -1,0 +1,19 @@
+# The test data should be uploaded to:
+#   https://nni.blob.core.windows.net/testdata/mnist.zip
+#   https://nni.blob.core.windows.net/testdata/cifar10.zip
+#   ...
+#
+# We can't upload the data regularly on pipelines,
+# because it's not easy to setup auto-download for some datasets.
+# See cache-dependencies-template.yml on how to generate credentials to upload new test data.
+
+steps:
+
+- script: |
+    set -e
+    mkdir -p test/data
+    cd test
+    azcopy copy 'https://nni.blob.core.windows.net/testdata/*' data
+    python vso_tools/unpack_testdata.py
+    ls -al data
+  displayName: Download test data

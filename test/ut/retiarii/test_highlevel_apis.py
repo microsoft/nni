@@ -843,6 +843,27 @@ class Python(GraphIR):
     @unittest.skip
     def test_valuechoice_getitem_functional_expression(self): ...
 
+    def test_repeat_zero(self):
+        class AddOne(nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(AddOne(), (0, 3))
+
+            def forward(self, x):
+                return self.block(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 1 + self.repeat_incr + self.value_choice_incr)
+        samplers = [EnumerateSampler() for _ in range(len(mutators))]
+        for target in [0, 1, 2, 3]:
+            new_model = _apply_all_mutators(model, mutators, samplers)
+            self.assertTrue((self._get_converted_pytorch_model(new_model)(torch.zeros(1, 16)) == target).all())
+
     def test_hyperparameter_choice(self):
         @model_wrapper
         class Net(nn.Module):

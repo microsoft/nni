@@ -10,7 +10,7 @@ steps:
 - script: |
     set -e
     sudo apt-get install -y swig3.0
-    sudo rm /usr/bin/swig
+    sudo rm -f /usr/bin/swig
     sudo ln -s swig3.0 /usr/bin/swig
   displayName: (Ubuntu) Downgrade swig
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
@@ -44,6 +44,11 @@ steps:
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 - script: |
+    mv dependencies/recommended_gpu.txt dependencies/recommended.txt
+  displayName: (GPU) Activate CUDA dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu'))
+
+- script: |
     echo '===== develop ====='
     python -m pip install -r dependencies/develop.txt
     echo '===== required ====='
@@ -53,6 +58,12 @@ steps:
     echo '===== recommended ====='
     python -m pip install -r dependencies/recommended.txt
   displayName: Install Python dependencies
+
+- script: |
+    ls -al ${HOME}/.local/bin
+    echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+  displayName: Add .local/bin to PATH
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
 
 # TODO: Delete this after upgrading to PyTorch 1.11.
 - script: |

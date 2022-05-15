@@ -1,6 +1,16 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+__all__ = [
+    'CommandType',
+    'LegacyCommandChannel',
+    'send',
+    'receive',
+    '_set_in_file',
+    '_set_out_file',
+    '_get_out_file',
+]
+
 import logging
 import os
 import threading
@@ -18,6 +28,29 @@ try:
 except OSError:
     _logger.debug('IPC pipeline not exists')
 
+def _set_in_file(in_file):
+    global _in_file
+    _in_file = in_file
+
+def _set_out_file(out_file):
+    global _out_file
+    _out_file = out_file
+
+def _get_out_file():
+    return _out_file
+
+class LegacyCommandChannel:
+    def connect(self):
+        pass
+
+    def disconnect(self):
+        pass
+
+    def _send(self, command, data):
+        send(command, data)
+
+    def _receive(self):
+        return receive()
 
 def send(command, data):
     """Send command to Training Service.
