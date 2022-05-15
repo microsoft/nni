@@ -224,8 +224,6 @@ class RetiariiExperiment(Experiment):
 
         _logger.info('Start strategy...')
         search_space = dry_run_for_formatted_search_space(base_model_ir, self.applied_mutators)
-        #import time
-        #time.sleep(10)
         self.update_search_space(search_space)
         self.strategy.run(base_model_ir, self.applied_mutators)
         _logger.info('Strategy exit')
@@ -283,12 +281,6 @@ class RetiariiExperiment(Experiment):
         self.port = port  # port will be None if start up failed
 
         self._start_end(port, config.nni_manager_ip)
-
-        #from nni.experiment import rest
-        #from collections import OrderedDict
-        #import time
-        #time.sleep(10)
-        #rest.put(8090, '/experiment?update_type=SEARCH_SPACE', {'params': {'experimentName': 'mnist_search', 'searchSpace': OrderedDict([('model_1', {'_type': 'choice', '_value': ['0', '1']}), ('model_2', {'_type': 'choice', '_value': [0.25, 0.5, 0.75]}), ('model_3', {'_type': 'choice', '_value': [64, 128, 256]})]), 'trialCommand': 'python3 -m nni.retiarii.trial_entry py', 'trialCodeDirectory': '.', 'trialConcurrency': 2, 'maxTrialNumber': 4, 'useAnnotation': False, 'debug': False, 'logLevel': 'info', 'experimentWorkingDirectory': '/home/quzha/nni-experiments', 'trainingService': {'platform': 'local', 'trialCommand': 'python3 -m nni.retiarii.trial_entry py', 'trialCodeDirectory': '/home/quzha/nni/nni/examples/nas/multi-trial/mnist', 'debug': False, 'useActiveGpu': False, 'maxTrialNumberPerGpu': 1, 'reuseMode': False}, 'executionEngine': {'name': 'py'}}, 'id': 'mn7j1h0g', 'execDuration': 0, 'logDir': '/home/quzha/nni-experiments/mn7j1h0g', 'startTime': 1652616830914, 'nextSequenceId': 0, 'revision': 2})
 
         self._dispatcher = RetiariiAdvisor(ws_url)
         self._dispatcher_thread = Thread(target=self._dispatcher.run)

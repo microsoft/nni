@@ -27,7 +27,7 @@ class MsgDispatcherBase(Recoverable):
         if command_channel_url is None:
             command_channel_url = dispatcher_env_vars.NNI_TUNER_COMMAND_CHANNEL
         self._channel = TunerCommandChannel(command_channel_url)
-        # NOTE: `connect()` should be put in __init__. First, this `connect()` affects nnimanager's 
+        # NOTE: `connect()` should be put in __init__. First, this `connect()` affects nnimanager's
         # starting process, without `connect()` nnimanager is blocked in `dispatcher.init()`.
         # Second, nas experiment uses a thread to execute `run()` of this class, thus, there is
         # no way to know when the websocket between nnimanager and dispatcher is built. The following
