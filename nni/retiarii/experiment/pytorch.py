@@ -307,6 +307,8 @@ class RetiariiExperiment(Experiment):
             return
 
         if config is None:
+            warnings.warn('config = None is deprecate in future. If you are running a one-shot experiment, '
+                          'please consider creating a config and set execution engine to `oneshot`.', DeprecationWarning)
             self.config = RetiariiExeConfig()
             self.config.execution_engine = OneshotEngineConfig()
         else:
