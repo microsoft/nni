@@ -35,6 +35,7 @@ def main():
 
     run_command(f'{docker} build --build-arg NNI_RELEASE={version} -t nnidev/nni-nightly .')
     run_command(f'{docker} run --privileged -d -t -p {port}:22 --add-host=host.docker.internal:host-gateway --name {container} nnidev/nni-nightly')
+    run_command(f'{docker} exec {container} groupadd -g {gid} nni')
     run_command(f'{docker} exec {container} useradd --create-home --password {password} -u {uid} -g {gid} nni')
     run_command(docker.split() + ['exec', container, 'bash', '-c', f'echo "nni:{password}" | chpasswd'])
     run_command(docker.split() + ['exec', container, 'bash', '-c', 'echo "nni ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers'])
