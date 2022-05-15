@@ -8,7 +8,7 @@ from typing import Any
 
 from nni.experiment.config import utils, ExperimentConfig
 
-from .engine_config import ExecutionEngineConfig, PyEngineConfig
+from .engine_config import ExecutionEngineConfig
 
 __all__ = ['RetiariiExeConfig']
 
@@ -32,33 +32,30 @@ class RetiariiExeConfig(ExperimentConfig):
     trial_code_directory: utils.PathLike = '.'
     trial_command: str = '_reserved'
     # new config field for NAS
-    execution_engine: ExecutionEngineConfig = PyEngineConfig()
+    execution_engine: str | ExecutionEngineConfig
 
     def __init__(self, training_service_platform: str | None = None,
-                 execution_engine: str | ExecutionEngineConfig = PyEngineConfig(),
+                 execution_engine: str | ExecutionEngineConfig = 'py',
                  **kwargs):
         super().__init__(training_service_platform, **kwargs)
+        self.execution_engine = execution_engine
 
-        if isinstance(execution_engine, str):
-            self.execution_engine = execution_engine_config_factory(execution_engine)
-        else:
-            self.execution_engine = execution_engine
+    def _canonicalize(self, _parents):
+        msg = '{} is not supposed to be set in Retiarii experiment by users, your config is {}.'
+        if self.search_space != '':
+            raise ValueError(msg.format('search_space', self.search_space))
+        if str(self.trial_code_directory) != '.' and not os.path.isabs(self.trial_code_directory):
+            raise ValueError(msg.format('trial_code_directory', self.trial_code_directory))
+        if self.trial_command != '_reserved' and \
+            not self.trial_command.startswith('python3 -m nni.retiarii.trial_entry '):
+            raise ValueError(msg.format('trial_command', self.trial_command))
 
-        self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + self.execution_engine.name
+        if isinstance(self.execution_engine, str):
+            self.execution_engine = execution_engine_config_factory(self.execution_engine)
+        if self.execution_engine.name in ('py', 'base', 'cgo'):
+            self.trial_command = 'python3 -m nni.retiarii.trial_entry ' + self.execution_engine.name
 
-    def __setattr__(self, key, value):
-        #TODO: tuner settings can also be blocked here
-        fixed_attrs = {'search_space': '',
-                       'trial_command': '_reserved'}
-        if key in fixed_attrs and fixed_attrs[key] != value:
-            raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
-        # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
-        if key == 'trial_code_directory' and not (str(value) == '.' or os.path.isabs(value)):
-            raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
-        #if key == 'execution_engine':
-        #    assert value in ['base', 'py', 'cgo', 'benchmark', 'oneshot'], f'The specified execution engine "{value}" is not supported.'
-        #    self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + value
-        super().__setattr__(key, value) #TODO: double check whether new fields are validated
+        super()._canonicalize([self])
 
     def _validate_canonical(self):
         super()._validate_canonical(False)

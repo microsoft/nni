@@ -8,7 +8,7 @@ import logging
 import warnings
 from subprocess import Popen
 from threading import Thread
-from typing import Any, List, Optional, Union, cast
+from typing import Any, List, Union, cast
 
 import colorama
 import psutil
@@ -205,6 +205,9 @@ class RetiariiExperiment(Experiment):
         self.applied_mutators = applied_mutators
         self.strategy = strategy
 
+        self._dispatcher = None
+        self._dispatcher_thread = None
+
         # check for sanity
         if not is_model_wrapped(base_model):
             warnings.warn(colorama.Style.BRIGHT + colorama.Fore.RED +
@@ -212,12 +215,12 @@ class RetiariiExperiment(Experiment):
                           'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
                           RuntimeWarning)
 
-    def _run_strategy(self):
+    def _run_strategy(self, config: RetiariiExeConfig):
         base_model_ir, self.applied_mutators = preprocess_model(
             self.base_model, self.evaluator, self.applied_mutators,
-            full_ir=not isinstance(self.config.execution_engine, (PyEngineConfig, BenchmarkEngineConfig)),
-            dummy_input=self.config.execution_engine.dummy_input
-                if isinstance(self.config.execution_engine, (BaseEngineConfig, CgoEngineConfig)) else None
+            full_ir=not isinstance(config.execution_engine, (PyEngineConfig, BenchmarkEngineConfig)),
+            dummy_input=config.execution_engine.dummy_input
+                if isinstance(config.execution_engine, (BaseEngineConfig, CgoEngineConfig)) else None
         )
 
         _logger.info('Start strategy...')
@@ -226,39 +229,39 @@ class RetiariiExperiment(Experiment):
         self.strategy.run(base_model_ir, self.applied_mutators)
         _logger.info('Strategy exit')
         # TODO: find out a proper way to show no more trial message on WebUI
-        # self._dispatcher.mark_experiment_as_ending()
 
-    def _create_execution_engine(self) -> None:
+    def _create_execution_engine(self, config: RetiariiExeConfig) -> None:
         #TODO: we will probably need a execution engine factory to make this clean and elegant
-        if isinstance(self.config.execution_engine, BaseEngineConfig):
+        if isinstance(config.execution_engine, BaseEngineConfig):
             from ..execution.base import BaseExecutionEngine
             engine = BaseExecutionEngine(self.port, self.url_prefix)
-        elif isinstance(self.config.execution_engine, CgoEngineConfig):
+        elif isinstance(config.execution_engine, CgoEngineConfig):
             from ..execution.cgo_engine import CGOExecutionEngine
 
-            assert not isinstance(self.config.training_service, list) \
-                and self.config.training_service.platform == 'remote', \
+            assert not isinstance(config.training_service, list) \
+                and config.training_service.platform == 'remote', \
                 "CGO execution engine currently only supports remote training service"
-            assert self.config.execution_engine.batch_waiting_time is not None \
-                and self.config.execution_engine.max_concurrency_cgo is not None
-            engine = CGOExecutionEngine(cast(RemoteConfig, self.config.training_service),
-                                        max_concurrency=self.config.execution_engine.max_concurrency_cgo,
-                                        batch_waiting_time=self.config.execution_engine.batch_waiting_time,
+            assert config.execution_engine.batch_waiting_time is not None \
+                and config.execution_engine.max_concurrency_cgo is not None
+            engine = CGOExecutionEngine(cast(RemoteConfig, config.training_service),
+                                        max_concurrency=config.execution_engine.max_concurrency_cgo,
+                                        batch_waiting_time=config.execution_engine.batch_waiting_time,
                                         rest_port=self.port,
                                         rest_url_prefix=self.url_prefix)
-        elif isinstance(self.config.execution_engine, PyEngineConfig):
+        elif isinstance(config.execution_engine, PyEngineConfig):
             from ..execution.python import PurePythonExecutionEngine
             engine = PurePythonExecutionEngine(self.port, self.url_prefix)
-        elif isinstance(self.config.execution_engine, BenchmarkEngineConfig):
+        elif isinstance(config.execution_engine, BenchmarkEngineConfig):
             from ..execution.benchmark import BenchmarkExecutionEngine
-            assert self.config.execution_engine.benchmark is not None, \
+            assert config.execution_engine.benchmark is not None, \
                 '"benchmark" must be set when benchmark execution engine is used.'
-            engine = BenchmarkExecutionEngine(self.config.execution_engine.benchmark)
+            engine = BenchmarkExecutionEngine(config.execution_engine.benchmark)
         else:
-            raise ValueError(f'Unsupported engine type: {self.config.execution_engine}')
+            raise ValueError(f'Unsupported engine type: {config.execution_engine}')
         set_execution_engine(engine)
 
-    def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
+    def start(self, port: int = 8080, debug: bool = False,
+              run_mode: RunMode = RunMode.Background) -> RetiariiExeConfig:
         """
         Start the experiment in background.
         This method will raise exception on failure.
@@ -282,14 +285,12 @@ class RetiariiExperiment(Experiment):
         self._start_end(port, config.nni_manager_ip)
 
         self._dispatcher = RetiariiAdvisor()
-        # dispatcher must be launched after pipe initialized
-        # the logic to launch dispatcher in background should be refactored into dispatcher api
         self._dispatcher_thread = Thread(target=self._dispatcher.run)
         self._dispatcher_thread.start()
+        return config
 
-        self._create_execution_engine() # FIXME: engine cannot be created twice
-
-    def run(self, config: Optional[RetiariiExeConfig] = None,
+    def run(self,
+            config: RetiariiExeConfig | None = None,
             port: int = 8080,
             debug: bool = False) -> None:
         """
@@ -308,20 +309,26 @@ class RetiariiExperiment(Experiment):
         if config is None:
             self.config = RetiariiExeConfig()
             self.config.execution_engine = OneshotEngineConfig()
-            base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
-            # FIXME: oneshot strategy should also be executable on training services
-            self.strategy.run(base_model_ir, self.applied_mutators)
         else:
             self.config = config
-            self.start(port, debug)
+
+        if isinstance(self.config.execution_engine, OneshotEngineConfig) \
+            or (isinstance(self.config.execution_engine, str) and self.config.execution_engine == 'oneshot'):
+            # this is hacky, will be refactored when oneshot can run on training services
+            base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
+            self.strategy.run(base_model_ir, self.applied_mutators)
+        else:
+            config = self.start(port, debug)
+            # FIXME: engine cannot be created twice
+            self._create_execution_engine(config)
             try:
-                self._run_strategy()
+                self._run_strategy(config)
                 # FIXME: move this logic to strategy with a new API provided by execution engine
                 self._wait_completion()
             except KeyboardInterrupt:
                 _logger.warning('KeyboardInterrupt detected')
                 self.stop()
-            _logger.info('Search process is done, the experiment is still alive')
+            _logger.info('Search process is done, the experiment is still alive, `stop()` can terminate the experiment.')
 
     def stop(self) -> None:
         """
