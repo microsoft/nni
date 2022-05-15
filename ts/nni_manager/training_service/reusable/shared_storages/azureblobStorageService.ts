@@ -157,6 +157,7 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
             return Promise.reject(errorMessage);
         }
 
+        // FIXME: This has security risks. The command might contain secrets.
         this.log.debug(`Local mount command is: ${this.localMountCommand}`);
         const result = await cpp.exec(this.localMountCommand);
         if (result.stderr) {

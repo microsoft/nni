@@ -35,10 +35,19 @@ steps:
     sudo apt install -y nfs-kernel-server nfs-common
     sudo mkdir -p /var/nfs/general
     sudo chown nobody:nogroup /var/nfs/general
-    echo "/var/nfs/general *(rw,sync,no_subtree_check)" | sudo tee -a /etc/exports
+    echo "/var/nfs/general *(rw,sync,insecure,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
     echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
     sudo systemctl restart nfs-kernel-server
   displayName: Install NFS
+
+- script: |
+    set -e
+    mkdir -p /tmp/nnimount/testlocalrootpath
+    sudo mount host.docker.internal:/var/nfs/general /tmp/nnimount/testlocalrootpath
+    ls -al /tmp/nnimount/testlocalrootpath
+    mkdir -p /tmp/nnimount/testlocalrootpath/nni/something
+    touch /tmp/nnimount/testlocalrootpath/greeting.txt
+    ls -al /tmp/nnimount/testlocalrootpath
 
 
 # VM with GPU needs to install drivers. Reference:
