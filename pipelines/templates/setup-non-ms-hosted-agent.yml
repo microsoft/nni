@@ -34,7 +34,7 @@ steps:
     set -e
     sudo apt install -y nfs-kernel-server nfs-common
     sudo mkdir -p /var/nfs/general
-    sudo chown nobody:nogroup /var/nfs/general
+    sudo chmod 755 /var/nfs/general
     echo "/var/nfs/general *(rw,sync,insecure,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
     echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
     sudo systemctl restart nfs-kernel-server
