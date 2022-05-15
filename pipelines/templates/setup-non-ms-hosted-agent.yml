@@ -29,8 +29,7 @@ steps:
 
 # The NFS server can be accessed through the path: host.docker.internal
 # Added a host alias so that it can also be used outside the container
-# Technically, inside the container they should use exactly the same user to read/write files.
-# But it doesn't matter in our case, because container is running in root mode.
+# Inside the container they should use exactly the same uid/gid to read/write files.
 
 - script: |
     set -e
