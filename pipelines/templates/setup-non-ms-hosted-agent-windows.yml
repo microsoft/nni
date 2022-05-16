@@ -16,7 +16,6 @@ steps:
     Invoke-WebRequest -Uri "https://aka.ms/downloadazcopy-v10-windows" -OutFile "$(Agent.ToolsDirectory)\azcopy\azcopy.zip"
     Expand-Archive "$(Agent.ToolsDirectory)\azcopy\azcopy.zip" -DestinationPath "$(Agent.ToolsDirectory)\azcopy"
     Remove-Item "$(Agent.ToolsDirectory)\azcopy\azcopy.zip"
-    Get-ChildItem "$(Agent.ToolsDirectory)\azcopy\azcopy*" | Rename-Item -NewName azcopy.exe
     Get-ChildItem "$(Agent.ToolsDirectory)\azcopy"
     Write-Host "##vso[task.prependpath]$(Agent.ToolsDirectory)\azcopy"
   displayName: Setup azcopy
