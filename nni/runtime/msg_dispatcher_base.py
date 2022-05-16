@@ -42,7 +42,7 @@ class MsgDispatcherBase(Recoverable):
         # search space too soon, as the websocket has not been built, the rest api of updating search
         # space will timeout.
         # FIXME: this is making unittest happy
-        if command_channel_url.startswith('ws://_unittest_'):
+        if not command_channel_url.startswith('ws://_unittest_'):
             self._channel.connect()
         self.default_command_queue = Queue()
         self.assessor_command_queue = Queue()
