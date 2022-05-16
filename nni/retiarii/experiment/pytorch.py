@@ -182,7 +182,8 @@ class RetiariiExperiment(Experiment):
                  applied_mutators: List[Mutator] = cast(List[Mutator], None),
                  strategy: BaseStrategy = cast(BaseStrategy, None),
                  trainer: BaseOneShotTrainer = cast(BaseOneShotTrainer, None)):
-        nni.runtime.log.init_logger_for_command_line()
+        super().__init__(None)
+        self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
 
         if trainer is not None:
             warnings.warn('Usage of `trainer` in RetiariiExperiment is deprecated and will be removed soon. '
@@ -191,13 +192,6 @@ class RetiariiExperiment(Experiment):
 
         if evaluator is None:
             raise ValueError('Evaluator should not be none.')
-
-        self.id: str = management.generate_experiment_id()
-        self.port: int | None = None
-        self._proc: Popen | psutil.Process | None = None
-        self._action: Literal['create', 'resume', 'view'] = 'create'
-        self.url_prefix: str | None = None
-        self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
 
         self.base_model = base_model
         self.evaluator: Union[Evaluator, BaseOneShotTrainer] = evaluator
@@ -259,33 +253,13 @@ class RetiariiExperiment(Experiment):
             raise ValueError(f'Unsupported engine type: {config.execution_engine}')
         set_execution_engine(engine)
 
-    def start(self, port: int = 8080, debug: bool = False,
-              run_mode: RunMode = RunMode.Background) -> RetiariiExeConfig:
+    def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
         """
-        Start the experiment in background.
-        This method will raise exception on failure.
-        If it returns, the experiment should have been successfully started.
-        Parameters
-        ----------
-        port
-            The port of web UI.
-        debug
-            Whether to start in debug mode.
+        By design, the only different between `start` and `run` is that `start` is asynchronous,
+        while `run` waits the experiment to complete. RetiariiExperiment always waits the experiment
+        to complete as strategy runs in foreground.
         """
-        config = self._start_begin(debug, run_mode)
-
-        ws_url = f'ws://localhost:{port}/tuner'
-        self._proc = launcher.start_experiment('create', self.id, config, port, debug,  # type: ignore
-                                               RunMode.Background, None, ws_url, ['retiarii'])
-        assert self._proc is not None
-        self.port = port  # port will be None if start up failed
-
-        self._start_end(port, config.nni_manager_ip)
-
-        self._dispatcher = RetiariiAdvisor(ws_url)
-        self._dispatcher_thread = Thread(target=self._dispatcher.run)
-        self._dispatcher_thread.start()
-        return cast(RetiariiExeConfig, config)
+        raise NotImplementedError('RetiariiExperiment is not supposed to provide `start` method')
 
     def run(self,
             config: RetiariiExeConfig | None = None,
@@ -318,7 +292,11 @@ class RetiariiExperiment(Experiment):
             base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
-            config = self.start(port, debug)
+            ws_url = f'ws://localhost:{port}/tuner'
+            config = self._start_impl(port, debug, RunMode.Background, None, ws_url, ['retiarii'])
+            self._dispatcher = RetiariiAdvisor(ws_url)
+            self._dispatcher_thread = Thread(target=self._dispatcher.run)
+            self._dispatcher_thread.start()
             # FIXME: engine cannot be created twice
             self._create_execution_engine(config)
             try:
@@ -382,9 +360,3 @@ class RetiariiExperiment(Experiment):
                 return [model_to_pytorch_script(model) for model in all_models[:top_k]]
             elif formatter == 'dict':
                 return [get_mutation_dict(model) for model in all_models[:top_k]]
-
-    def retrain_model(self, model):
-        """
-        this function retrains the exported model, and test it to output test accuracy
-        """
-        raise NotImplementedError

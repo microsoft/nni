@@ -87,7 +87,10 @@ class Experiment:
         else:
             self.config = config_or_platform
 
-    def _start_begin(self, debug: bool, run_mode: RunMode) -> ExperimentConfig:
+    def _start_impl(self, port: int, debug: bool, run_mode: RunMode,
+                    url_prefix: str | None,
+                    tuner_command_channel: str | None,
+                    tags: list[str] = []) -> ExperimentConfig:
         assert self.config is not None
         if run_mode is not RunMode.Detach:
             atexit.register(self.stop)
@@ -101,10 +104,14 @@ class Experiment:
         else:  # this should never happen in latest version, keep it until v2.7 for potential compatibility
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
-        return config
 
-    def _start_end(self, port: int, nni_manager_ip: Optional[str]) -> None:
-        ips = [nni_manager_ip]
+        self._proc = launcher.start_experiment(self._action, self.id, config, port, debug, run_mode,
+                                               url_prefix, tuner_command_channel, tags)
+        assert self._proc is not None
+
+        self.port = port  # port will be None if start up failed
+
+        ips = [config.nni_manager_ip]
         for interfaces in psutil.net_if_addrs().values():
             for interface in interfaces:
                 if interface.family == socket.AF_INET:
@@ -112,6 +119,7 @@ class Experiment:
         ips = [f'http://{ip}:{port}' for ip in ips if ip]
         msg = 'Web portal URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
+        return config
 
     def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
         """
@@ -129,14 +137,7 @@ class Experiment:
         run_mode
             Running the experiment in foreground or background
         """
-        config = self._start_begin(debug, run_mode)
-
-        self._proc = launcher.start_experiment(self._action, self.id, config, port, debug, run_mode, self.url_prefix)
-        assert self._proc is not None
-
-        self.port = port  # port will be None if start up failed
-
-        self._start_end(port, config.nni_manager_ip)
+        self._start_impl(port, debug, run_mode, self.url_prefix, None, [])
 
     def _stop(self) -> None:
         atexit.unregister(self.stop)
