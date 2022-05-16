@@ -18,6 +18,27 @@ __all__ = ['CompressionConfig', 'CompressionExperimentConfig']
 
 @dataclass
 class CompressionConfig(ConfigBase):
+    """
+    Attributes
+    ----------
+    params
+        The upper remaining ratio bound of the model params.
+    flops
+        The upper remaining ratio bound of the model flops.
+    metric
+        The lower remaining ratio bound of the model metric.
+    module_types
+        The modules of the type in this list will be compressed.
+    module_names
+        The modules in this list will be compressed.
+    exclude_module_names
+        The modules in this list will not be compressed.
+    pruners
+        A list of `PrunerConfig`, possible pruner choices.
+    quantizers
+        A list of `QuantizerConfig`, possible quantizer choices.
+    """
+
     # constraints
     params: str | int | float | None = None
     flops: str | int | float | None = None
