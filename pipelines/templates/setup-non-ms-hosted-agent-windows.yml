@@ -2,13 +2,6 @@
 
 steps:
 
-# Package manager.
-
-- powershell: |
-    $env:path.Split(";")
-  displayName: Display all environment variables
-
-
 # Install azcopy for cache download.
 
 - powershell: |
@@ -25,16 +18,10 @@ steps:
 
 # The following is for linux.
 # Reference: https://stackoverflow.com/questions/60936103/install-python-to-self-hosted-windows-build-agent
-# We only need Python 3.7 and 3.9 for now.
-
-- powershell: |
-    Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.7.13/python-3.7.13-amd64.exe" -OutFile "python-3.7.exe"
-    .\python-3.7.exe /quiet TargetDir=$(Agent.ToolsDirectory)\Python\3.7.13\x64 Include_launcher=0
-    New-Item $(Agent.ToolsDirectory)\Python\3.7.13\x64.complete -type file
-  displayName: Configure Python 3.7
+# We only need Python 3.9 on Windows.
 
 - powershell: |
     Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-3.9.exe"
     .\python-3.9.exe /quiet TargetDir=$(Agent.ToolsDirectory)\Python\3.9.12\x64 Include_launcher=0
     New-Item $(Agent.ToolsDirectory)\Python\3.9.12\x64.complete -type file
-  displayName: Configure Python 3.9
+  displayName: Install Python 3.9
