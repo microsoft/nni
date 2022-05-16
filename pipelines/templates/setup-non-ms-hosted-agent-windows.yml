@@ -22,6 +22,7 @@ steps:
 - powershell: |
     Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"
     Start-Process -FilePath .\python-installer.exe -NoNewWindow -Wait -ArgumentList "/quiet TargetDir=C:\a\ Include_launcher=0"
+    Start-Sleep -Seconds 60
     Get-ChildItem C:\a\
     Start-Process -FilePath .\python-installer.exe -NoNewWindow -Wait -ArgumentList "/quiet TargetDir=$(Agent.ToolsDirectory)\Python\3.9.12\x64 Include_launcher=0"
     New-Item -Path $(Agent.ToolsDirectory)\Python\3.9.12\x64.complete -ItemType file -Force
