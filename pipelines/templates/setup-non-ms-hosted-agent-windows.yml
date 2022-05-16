@@ -9,11 +9,6 @@ steps:
   displayName: Display all environment variables
 
 
-- bash: |
-    pwd
-    echo $PATH
-  displayName: Test bash
-
 # Install azcopy for cache download.
 
 - powershell: |
