@@ -21,7 +21,7 @@ steps:
 
 - powershell: |
     Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-3.9.exe"
-    Start-Process -FilePath .\python-3.9.exe -NoNewWindow -Wait -ArgumentList "/passive TargetDir=$(Agent.ToolsDirectory)\Python\3.9.12\x64 Include_launcher=0"
+    Start-Process -FilePath .\python-3.9.exe -NoNewWindow -Wait -ArgumentList "/quiet TargetDir=$(Agent.ToolsDirectory)\Python\3.9.12\x64 Include_launcher=0"
     New-Item -Path $(Agent.ToolsDirectory)\Python\3.9.12\x64.complete -ItemType file -Force
     Get-ChildItem $(Agent.ToolsDirectory)\Python\3.9.12
     Get-ChildItem $(Agent.ToolsDirectory)\Python\3.9.12\x64
