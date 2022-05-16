@@ -6,18 +6,14 @@ from __future__ import annotations
 import logging
 
 import warnings
-from subprocess import Popen
 from threading import Thread
 from typing import Any, List, Union, cast
 
 import colorama
-import psutil
-from typing_extensions import Literal
 
 import torch
 import torch.nn as nn
-import nni.runtime.log
-from nni.experiment import Experiment, RunMode, launcher, management
+from nni.experiment import Experiment, RunMode
 from nni.experiment.config.training_services import RemoteConfig
 
 from .config import (
