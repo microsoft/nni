@@ -42,19 +42,17 @@ jobs:
   steps:
   - template: templates/setup-non-ms-hosted-agent-windows.yml
 
-  - script: |
-      python -m pip install -U -r dependencies/setup.txt
-      python -m pip install -r dependencies/develop.txt
-      python -m pip install -r dependencies/recommended.txt
-    displayName: Install Python tools
+  - template: templates/config-version.yml
+    parameters:
+      platform: windows
 
-  - script: |
-      python -m pip uninstall nni --yes
-      set NNI_RELEASE=999.0
-      python setup.py build_ts
-      python setup.py bdist_wheel -p win_amd64
-      python -m pip install dist/nni-999.0-py3-none-win_amd64.whl[PPOTuner,DNGO]
-    displayName: Install NNI
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: windows
+
+  - template: templates/install-nni.yml
+    parameters:
+      user: false
 
   - script: |
       cd examples/tuners/customized_tuner
