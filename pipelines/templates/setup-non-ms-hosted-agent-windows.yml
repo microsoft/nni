@@ -7,9 +7,8 @@ steps:
 - powershell: |
     New-Item -ItemType Directory -Force -Path $(Agent.ToolsDirectory)\azcopy
     Invoke-WebRequest -Uri "https://aka.ms/downloadazcopy-v10-windows" -OutFile "$(Agent.ToolsDirectory)\azcopy\azcopy.zip"
-    Expand-Archive "$(Agent.ToolsDirectory)\azcopy\azcopy.zip" -DestinationPath "$(Agent.ToolsDirectory)\azcopy"
+    Expand-Archive -Force "$(Agent.ToolsDirectory)\azcopy\azcopy.zip" -DestinationPath "$(Agent.ToolsDirectory)\azcopy"
     Copy-Item "$(Agent.ToolsDirectory)\azcopy\azcopy*\*" -Destination "$(Agent.ToolsDirectory)\azcopy"
-    Get-ChildItem "$(Agent.ToolsDirectory)\azcopy"
     Write-Host "##vso[task.prependpath]$(Agent.ToolsDirectory)\azcopy"
   displayName: Setup azcopy
 
