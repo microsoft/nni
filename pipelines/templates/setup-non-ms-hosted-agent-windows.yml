@@ -5,9 +5,14 @@ steps:
 # Package manager.
 
 - powershell: |
-    gci env:* | sort-object name
+    $env:path.Split(";")
   displayName: Display all environment variables
 
+
+- bash: |
+    pwd
+    echo $PATH
+  displayName: Test bash
 
 # Install azcopy for cache download.
 
@@ -15,6 +20,7 @@ steps:
     Invoke-WebRequest -Uri "https://aka.ms/downloadazcopy-v10-windows" -OutFile "$(Agent.ToolsDirectory)\azcopy.zip"
     Expand-Archive "$(Agent.ToolsDirectory)\azcopy.zip" -DestinationPath "$(Agent.ToolsDirectory)"
     Remove-Item "$(Agent.ToolsDirectory)\azcopy.zip"
+    Get-ChildItem "$(Agent.ToolsDirectory)\azcopy*" | Rename-Item -NewName azcopy.exe
     Get-ChildItem "$(Agent.ToolsDirectory)"
     azcopy --version
   displayName: Setup azcopy
