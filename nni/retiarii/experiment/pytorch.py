@@ -289,14 +289,15 @@ class RetiariiExperiment(Experiment):
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
             ws_url = f'ws://localhost:{port}/tuner'
-            config = self._start_impl(port, debug, RunMode.Background, None, ws_url, ['retiarii'])
+            canonicalized_config = self._start_impl(port, debug, RunMode.Background, None, ws_url, ['retiarii'])
+            canonicalized_config = cast(RetiariiExeConfig, canonicalized_config)
             self._dispatcher = RetiariiAdvisor(ws_url)
             self._dispatcher_thread = Thread(target=self._dispatcher.run)
             self._dispatcher_thread.start()
             # FIXME: engine cannot be created twice
-            self._create_execution_engine(config)
+            self._create_execution_engine(canonicalized_config)
             try:
-                self._run_strategy(config)
+                self._run_strategy(canonicalized_config)
                 # FIXME: move this logic to strategy with a new API provided by execution engine
                 self._wait_completion()
             except KeyboardInterrupt:
