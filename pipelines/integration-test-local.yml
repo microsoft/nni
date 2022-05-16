@@ -6,40 +6,42 @@ schedules:
     include: [ master ]
 
 jobs:
-- job: linux
-  pool: nni-it
-  timeoutInMinutes: 120
+# - job: linux
+#   pool: nni-it
+#   timeoutInMinutes: 120
 
-  steps:
-  - template: templates/setup-non-ms-hosted-agent.yml
+#   steps:
+#   - template: templates/setup-non-ms-hosted-agent.yml
 
-  - template: templates/config-version.yml
-    parameters:
-      platform: ubuntu-latest-gpu
+#   - template: templates/config-version.yml
+#     parameters:
+#       platform: ubuntu-latest-gpu
 
-  - template: templates/install-dependencies.yml
-    parameters:
-      platform: ubuntu-latest-gpu
+#   - template: templates/install-dependencies.yml
+#     parameters:
+#       platform: ubuntu-latest-gpu
 
-  - template: templates/install-nni.yml
+#   - template: templates/install-nni.yml
 
-  - script: |
-      set -e
-      cd examples/tuners/customized_tuner
-      python setup.py develop
-      nnictl algo register --meta meta_file.yml
-    displayName: Install customized tuner
+#   - script: |
+#       set -e
+#       cd examples/tuners/customized_tuner
+#       python setup.py develop
+#       nnictl algo register --meta meta_file.yml
+#     displayName: Install customized tuner
 
-  - script: |
-      cd test
-      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
-    displayName: Integration test
+#   - script: |
+#       cd test
+#       python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
+#     displayName: Integration test
 
 - job: windows
-  pool: NNI CI WINDOWS FULL TEST
+  pool: nni-it-windows
   timeoutInMinutes: 120
 
   steps:
+  - template: templates/setup-non-ms-hosted-agent-windows.yml
+
   - script: |
       python -m pip install -U -r dependencies/setup.txt
       python -m pip install -r dependencies/develop.txt
