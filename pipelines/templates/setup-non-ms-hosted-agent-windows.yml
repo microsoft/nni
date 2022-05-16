@@ -22,7 +22,8 @@ steps:
   displayName: Setup azcopy
 
 - powershell: |
-    azcopy --version
+    $env:path.Split(";")
+    azcopy.exe --version
   displayName: Check azcopy
 
 # UsePythonVersion task only works when the specific Python version is already installed.
