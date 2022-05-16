@@ -1,3 +1,14 @@
-*.ts text eol=lf
-*.py text eol=lf
-*.sh text eol=lf
+# The following types are treated as text
+# EOL are converted to LF
+*.tsx   text    eol=lf
+*.ts    text    eol=lf
+*.py    text    eol=lf
+*.sh    text    eol=lf
+
+# The following types are treated as binary
+# These files appear mostly in docs/ folder
+.ipynb  binary
+.pickle binary
+
+# Linguist override (for github)
+docs/source/tutorials/*     linguist-generated

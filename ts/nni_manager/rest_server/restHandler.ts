@@ -8,12 +8,12 @@ import * as component from '../common/component';
 import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
 import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
+import globals from 'common/globals';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manager';
-import { ExperimentManager } from '../common/experimentManager';
+import { getExperimentsManager } from 'extensions/experiments_manager';
 import { TensorboardManager, TensorboardTaskInfo } from '../common/tensorboardManager';
 import { ValidationSchemas } from './restValidationSchemas';
-import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
 import { MetricType } from '../common/datastore';
 import { ProfileUpdateType } from '../common/manager';
@@ -23,17 +23,13 @@ import { TrialJobStatus } from '../common/trainingService';
 //const expressJoi = require('express-joi-validator');
 
 class NNIRestHandler {
-    private restServer: NNIRestServer;
     private nniManager: Manager;
-    private experimentsManager: ExperimentManager;
     private tensorboardManager: TensorboardManager;
     private log: Logger;
 
-    constructor(rs: NNIRestServer) {
+    constructor() {
         this.nniManager = component.get(Manager);
-        this.experimentsManager = component.get(ExperimentManager);
         this.tensorboardManager = component.get(TensorboardManager);
-        this.restServer = rs;
         this.log = getLogger('NNIRestHandler');
     }
 
@@ -101,7 +97,7 @@ class NNIRestHandler {
 
         // If it's a fatal error, exit process
         if (isFatal) {
-            this.log.fatal(err);
+            this.log.critical(err);
             process.exit(1);
         } else {
             this.log.error(err);
@@ -125,7 +121,7 @@ class NNIRestHandler {
                 this.handleError(err, res);
                 this.log.error(err.message);
                 this.log.error(`Datastore initialize failed, stopping rest server...`);
-                await this.restServer.stop();
+                globals.shutdown.criticalError('RestHandler', err);
             });
         });
     }
@@ -330,7 +326,7 @@ class NNIRestHandler {
         router.get('/experiment-metadata', (_req: Request, res: Response) => {
             Promise.all([
                 this.nniManager.getExperimentProfile(),
-                this.experimentsManager.getExperimentsInfo()
+                getExperimentsManager().getExperimentsInfo()
             ]).then(([profile, experimentInfo]) => {
                 for (const info of experimentInfo as any) {
                     if (info.id === profile.id) {
@@ -346,7 +342,7 @@ class NNIRestHandler {
 
     private getExperimentsInfo(router: Router): void {
         router.get('/experiments-info', (_req: Request, res: Response) => {
-            this.experimentsManager.getExperimentsInfo().then((experimentInfo: JSON) => {
+            getExperimentsManager().getExperimentsInfo().then((experimentInfo: JSON) => {
                 res.send(JSON.stringify(experimentInfo));
             }).catch((err: Error) => {
                 this.handleError(err, res);
@@ -417,10 +413,8 @@ class NNIRestHandler {
 
     private stop(router: Router): void {
         router.delete('/experiment', (_req: Request, res: Response) => {
-            this.nniManager.stopExperimentTopHalf().then(() => {
-                res.send();
-                this.nniManager.stopExperimentBottomHalf();
-            });
+            res.send();
+            globals.shutdown.initiate('REST request');
         });
     }
 
@@ -434,8 +428,6 @@ class NNIRestHandler {
     }
 }
 
-export function createRestHandler(rs: NNIRestServer): Router {
-    const handler: NNIRestHandler = new NNIRestHandler(rs);
-
-    return handler.createRestHandler();
+export function createRestHandler(): Router {
+    return new NNIRestHandler().createRestHandler();
 }

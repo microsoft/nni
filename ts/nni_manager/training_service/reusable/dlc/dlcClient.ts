@@ -16,11 +16,14 @@ export class DlcClient {
     // e.g., data1e6vg1tu0zi7, to generate it, go to 'Dataset Config' page of DLC
     //       create a NAS data and copy the 'DataSet ConfigurationID'
     public nasDataSourceId: string;
+    public ossDataSourceId: string;
     public accessKeyId: string;
     public accessKeySecret: string;
     public experimentId: string;
     public environmentId: string;
     public userCommand: string;
+    // dlcUtil exception log dir
+    public logDir: string;
     public pythonShellClient: undefined | PythonShell;
 
     constructor(
@@ -36,6 +39,8 @@ export class DlcClient {
         accessKeyId: string,
         accessKeySecret: string,
         userCommand: string,
+        logDir: string,
+        ossDataSourceId?: string,
         ) {
         this.log = getLogger('DlcClient');
         this.type = type;
@@ -46,11 +51,17 @@ export class DlcClient {
         this.image = image;
         this.region = region;
         this.nasDataSourceId = nasDataSourceId;
+        if (ossDataSourceId !== undefined) {
+            this.ossDataSourceId = ossDataSourceId;
+        } else {
+            this.ossDataSourceId = '';
+        }
         this.accessKeyId = accessKeyId;
         this.accessKeySecret = accessKeySecret
         this.experimentId = experimentId;
         this.environmentId = environmentId;
         this.userCommand = userCommand;
+        this.logDir = logDir;
     }
 
     public submit(): Promise<string> {
@@ -67,10 +78,12 @@ export class DlcClient {
                 '--ecs_spec', this.ecsSpec,
                 '--region', this.region,
                 '--nas_data_source_id', this.nasDataSourceId,
+                '--oss_data_source_id', this.ossDataSourceId,
                 '--access_key_id', this.accessKeyId,
                 '--access_key_secret', this.accessKeySecret,
                 '--experiment_name', `nni_exp_${this.experimentId}_env_${this.environmentId}`,
                 '--user_command', this.userCommand,
+                '--log_dir', this.logDir,
               ]
         });
         this.log.debug(this.pythonShellClient.command);

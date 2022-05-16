@@ -47,10 +47,7 @@ if __name__ == "__main__":
     if args.load_checkpoint:
         if not args.spos_preprocessing:
             logger.warning("You might want to use SPOS preprocessing if you are loading their checkpoints.")
-        # load state_dict and 
-        model_dict = model.state_dict()
-        model_dict.update(load_and_parse_state_dict())
-        model.load_state_dict(model_dict)
+        model.load_state_dict(load_and_parse_state_dict(), strict=False)
         logger.info(f'Model loaded from ./data/checkpoint-150000.pth.tar')
     model.cuda()
     if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu

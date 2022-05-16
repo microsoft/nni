@@ -1,1 +1,13 @@
-**/_build
+build/
+
+# legacy build
+_build/
+
+# ignored copied rst in tutorials
+/source/tutorials/**/cp_*.rst
+
+# auto-generated reference table
+_modules/
+
+# Machine-style translation files
+*.mo

@@ -116,15 +116,22 @@ function formatMessage(message) {
   return message.trim();
 }
 
-function formatWebpackMessages(json) {
-  const formattedErrors = json.errors.map(formatMessage);
-  const formattedWarnings = json.warnings.map(formatMessage);
-  const result = { errors: formattedErrors, warnings: formattedWarnings };
-  if (result.errors.some(isLikelyASyntaxError)) {
-    // If there are any syntax errors, show just them.
-    result.errors = result.errors.filter(isLikelyASyntaxError);
-  }
-  return result;
+function formatWebpackMessages({ err, stats }) {
+    let json;
+    if (err) {
+        json = { errors: [ err.message ?? 'Unknown error' ], warnings: [ ] };
+    } else {
+        json = stats.toJson({ all: false, warnings: true, errors: true });
+    }
+
+    const formattedErrors = json.errors.map(formatMessage);
+    const formattedWarnings = json.warnings.map(formatMessage);
+    const result = { errors: formattedErrors, warnings: formattedWarnings };
+    if (result.errors.some(isLikelyASyntaxError)) {
+        // If there are any syntax errors, show just them.
+        result.errors = result.errors.filter(isLikelyASyntaxError);
+    }
+    return result;
 }
 
 module.exports = formatWebpackMessages;

@@ -6,6 +6,7 @@ import unittest
 import torch
 import torch.nn.functional as F
 
+import nni
 from nni.algorithms.compression.v2.pytorch.base import Pruner
 from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     WeightDataCollector,
@@ -24,7 +25,7 @@ from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     GlobalSparsityAllocator
 )
 from nni.algorithms.compression.v2.pytorch.pruning.tools.base import HookCollectorInfo
-from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name, trace_parameters
+from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name
 from nni.algorithms.compression.v2.pytorch.utils.constructor_helper import OptimizerConstructHelper
 
 
@@ -62,7 +63,7 @@ def trainer(model, optimizer, criterion):
 
 
 def get_optimizer(model):
-    return trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    return nni.trace(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 
 criterion = torch.nn.CrossEntropyLoss()
@@ -82,17 +83,17 @@ class PruningToolsTestCase(unittest.TestCase):
         # Test WeightDataCollector
         data_collector = WeightDataCollector(pruner)
         data = data_collector.collect()
-        assert all(torch.equal(get_module_by_name(model, module_name)[1].module.weight.data, data[module_name]) for module_name in ['conv1', 'conv2'])
+        assert all(torch.equal(get_module_by_name(model, module_name)[1].weight.data, data[module_name]) for module_name in ['conv1', 'conv2'])
 
         # Test WeightTrainerBasedDataCollector
         def opt_after():
-            model.conv1.module.weight.data = torch.ones(5, 1, 5, 5)
-            model.conv2.module.weight.data = torch.ones(10, 5, 5, 5)
+            model.conv1.weight.data = torch.ones(5, 1, 5, 5)
+            model.conv2.weight.data = torch.ones(10, 5, 5, 5)
 
         optimizer_helper = OptimizerConstructHelper.from_trace(model, get_optimizer(model))
         data_collector = WeightTrainerBasedDataCollector(pruner, trainer, optimizer_helper, criterion, 1, opt_after_tasks=[opt_after])
         data = data_collector.collect()
-        assert all(torch.equal(get_module_by_name(model, module_name)[1].module.weight.data, data[module_name]) for module_name in ['conv1', 'conv2'])
+        assert all(torch.equal(get_module_by_name(model, module_name)[1].weight.data, data[module_name]) for module_name in ['conv1', 'conv2'])
         assert all(t.numel() == (t == 1).type_as(t).sum().item() for t in data.values())
 
         # Test SingleHookTrainerBasedDataCollector
@@ -101,7 +102,7 @@ class PruningToolsTestCase(unittest.TestCase):
                 if len(buffer) < 2:
                     buffer.append(grad.clone().detach())
             return collect_taylor
-        hook_targets = {'conv1': model.conv1.module.weight, 'conv2': model.conv2.module.weight}
+        hook_targets = {'conv1': model.conv1.weight, 'conv2': model.conv2.weight}
         collector_info = HookCollectorInfo(hook_targets, 'tensor', _collector)
 
         optimizer_helper = OptimizerConstructHelper.from_trace(model, get_optimizer(model))

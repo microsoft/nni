@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-FROM nvidia/cuda:10.2-cudnn8-runtime-ubuntu18.04
+FROM nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
 
 ARG NNI_RELEASE
 
@@ -11,84 +11,48 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -y update
 RUN apt-get -y install \
-    sudo \
-    apt-utils \
-    git \
-    curl \
-    vim \
-    unzip \
-    wget \
+    automake \
     build-essential \
     cmake \
-    libopenblas-dev \
-    automake \
-    openssh-client \
+    curl \
+    git \
     openssh-server \
-    lsof \
-    python3.6 \
+    python3 \
     python3-dev \
     python3-pip \
-    python3-tk \
-    libcupti-dev
+    sudo \
+    unzip \
+    wget \
+    zip
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
-#
-# generate python script
-#
 RUN ln -s python3 /usr/bin/python
 
-#
-# update pip
-#
-RUN python3 -m pip install --upgrade pip==20.2.4 setuptools==50.3.2
+RUN python3 -m pip --no-cache-dir install pip==22.0.3 setuptools==60.9.1 wheel==0.37.1
 
-# numpy 1.19.5  scipy 1.5.4
-RUN python3 -m pip --no-cache-dir install numpy==1.19.5 scipy==1.5.4
+RUN python3 -m pip --no-cache-dir install \
+    lightgbm==3.3.2 \
+    numpy==1.22.2 \
+    pandas==1.4.1 \
+    scikit-learn==1.0.2 \
+    scipy==1.8.0
 
-#
-# TensorFlow
-#
-RUN python3 -m pip --no-cache-dir install tensorflow==2.3.1
+RUN python3 -m pip --no-cache-dir install \
+    torch==1.10.2+cu113 \
+    torchvision==0.11.3+cu113 \
+    torchaudio==0.10.2+cu113 \
+    -f https://download.pytorch.org/whl/cu113/torch_stable.html
+RUN python3 -m pip --no-cache-dir install pytorch-lightning==1.5.10
 
-#
-# Keras
-#
-RUN python3 -m pip --no-cache-dir install Keras==2.4.3
+RUN python3 -m pip --no-cache-dir install tensorflow==2.8.0
 
-#
-# PyTorch
-#
-RUN python3 -m pip --no-cache-dir install torch==1.7.1 torchvision==0.8.2 pytorch-lightning==1.3.3
+RUN python3 -m pip --no-cache-dir install azureml==0.2.7 azureml-sdk==1.38.0
 
-#
-# sklearn 0.24.1
-#
-RUN python3 -m pip --no-cache-dir install scikit-learn==0.24.1
-
-#
-# pandas==0.23.4 lightgbm==2.2.2
-#
-RUN python3 -m pip --no-cache-dir install pandas==1.1 lightgbm==2.2.2
-
-#
-# Install NNI
-#
 COPY dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl .
 RUN python3 -m pip install nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl
+RUN rm nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl
 
-# 
-# Vision patch. Need del later
-# 
-COPY test/vso_tools/interim_patch.py .
-RUN python3 interim_patch.py
-
-#
-# install aml package
-#
-RUN python3 -m pip --no-cache-dir install azureml
-RUN python3 -m pip --no-cache-dir install azureml-sdk
-
-ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
+ENV PATH=/root/.local/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/usr/sbin
 
 WORKDIR /root

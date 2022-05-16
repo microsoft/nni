@@ -147,12 +147,7 @@ interface TrialJobInfo {
     hyperParameters?: string[];
     logPath?: string;
     finalMetricData?: MetricDataRecord[];
-    stderrPath?: string;
 }
-
-//interface ClusterItem {
-//    command?: string;
-//}
 
 interface ExperimentProfile {
     params: ExperimentConfig;
@@ -207,6 +202,7 @@ interface AllExperimentList {
     pid: number;
     webuiUrl: string[];
     logDir: string[];
+    prefixUrl: string;
 }
 
 interface Tensorboard {

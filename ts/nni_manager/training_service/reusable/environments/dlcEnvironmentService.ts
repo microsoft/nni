@@ -116,6 +116,8 @@ export class DlcEnvironmentService extends EnvironmentService {
             this.config.accessKeyId,
             this.config.accessKeySecret,
             environment.command,
+            dlcEnvironment.workingFolder,
+            this.config.ossDataSourceId,
         );
 
         dlcEnvironment.id = await dlcClient.submit();

@@ -73,7 +73,7 @@ def check_rest_server(rest_port):
                 return False, response
         else:
             time.sleep(1)
-    return  False, response
+    return False, response
 
 def check_rest_server_quick(rest_port):
     '''Check if restful server is ready, only check once'''

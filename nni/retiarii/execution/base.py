@@ -17,6 +17,8 @@ _logger = logging.getLogger(__name__)
 
 class BaseGraphData:
     """
+    Data sent between strategy and trial, in graph-based execution engine.
+
     Attributes
     ----------
     model_script
@@ -127,6 +129,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     @classmethod
     def pack_model_data(cls, model: Model) -> Any:
         mutation_summary = get_mutation_summary(model)
+        assert model.evaluator is not None, 'Model evaluator can not be None'
         return BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator, mutation_summary)
 
     @classmethod

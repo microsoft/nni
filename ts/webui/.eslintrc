@@ -10,7 +10,8 @@
     },
     "plugins": [
         "@typescript-eslint",
-        "eslint-plugin-prettier"
+        "eslint-plugin-prettier",
+        "import"
     ],
     "extends": [
         "eslint:recommended",
@@ -25,6 +26,7 @@
         "@typescript-eslint/no-namespace": 0,
         "@typescript-eslint/consistent-type-assertions": 0,
         "@typescript-eslint/no-inferrable-types": 0,
+        "@typescript-eslint/no-non-null-assertion": 0,
         "@typescript-eslint/no-use-before-define": [2, "nofunc"],
         "@typescript-eslint/no-var-requires": 0,
         "@typescript-eslint/no-unused-vars": [2, { "argsIgnorePattern": "^_" }],
@@ -48,6 +50,15 @@
     "settings": {
         "react": {
             "version": "detect"
+        },
+        "import/resolver": {
+            "alias": {
+                "@": "src",
+                "@components": "src/components",
+                "@static": "src/static",
+                "@style": "src/static/style",
+                "@model": "src/static/model"
+            }
         },
         "ignorePatterns": [
             "node_modules/",

@@ -1,0 +1,41 @@
+<header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex navheader">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="{{ pathto(master_doc)|e }}" title="{{ docstitle|e }}"
+            class="md-header-nav__button md-logo">
+          {% if theme_logo_icon|e %}
+            <i class="md-icon">{{ theme_logo_icon }}</i>
+          {% elif logo %}
+              <img src="{{ pathto('_static/' ~ logo, 1) }}" height="26"
+                    alt="{{ shorttitle|striptags|e }} logo">
+          {% else %}
+            &nbsp;
+          {% endif %}
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          <span class="md-header-nav__topic">{{ theme_nav_title or shorttitle }}</span>
+          <span class="md-header-nav__topic"> {{ title|striptags|e }} </span>
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+        {% include "searchbox.html" %}
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink drop version"></div>
+      <div class="md-flex__cell md-flex__cell--shrink drop language"></div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        {% if theme_repo_url %}
+        <div class="md-header-nav__source">
+          {% include "repo.html" %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+</header>

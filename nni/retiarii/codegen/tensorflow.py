@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 # pylint: skip-file
+# type: ignore
 
 """
 FIXME
