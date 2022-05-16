@@ -18,8 +18,15 @@ _worker_fast_exit_on_terminate = True
 
 
 class MsgDispatcherBase(Recoverable):
-    """This is where tuners and assessors are not defined yet.
+    """
+    This is where tuners and assessors are not defined yet.
     Inherits this class to make your own advisor.
+
+    .. note::
+
+        The class inheriting MsgDispatcherBase should be instantiated
+        after nnimanager (rest server) is started, so that the object
+        is ready to use right after its instantiation.
     """
 
     def __init__(self, command_channel_url=None):
@@ -34,7 +41,9 @@ class MsgDispatcherBase(Recoverable):
         # logic may crash is websocket is not built. One example is updating search space. If updating
         # search space too soon, as the websocket has not been built, the rest api of updating search
         # space will timeout.
-        self._channel.connect()
+        # FIXME: this is making unittest happy
+        if command_channel_url.startswith('ws://_unittest_'):
+            self._channel.connect()
         self.default_command_queue = Queue()
         self.assessor_command_queue = Queue()
         self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))

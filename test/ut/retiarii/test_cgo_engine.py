@@ -263,7 +263,7 @@ class CGOEngineTest(unittest.TestCase):
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
-        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
         advisor._channel = protocol.LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
@@ -286,7 +286,7 @@ class CGOEngineTest(unittest.TestCase):
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
-        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
         advisor._channel = protocol.LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
@@ -311,7 +311,7 @@ class CGOEngineTest(unittest.TestCase):
 
         models = _load_mnist(2)
 
-        advisor = RetiariiAdvisor('ws://_placeholder_')
+        advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
         advisor._channel = protocol.LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
