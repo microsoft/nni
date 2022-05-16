@@ -9,6 +9,7 @@ from pytorch_lightning.utilities.seed import seed_everything
 from pathlib import Path
 
 import nni
+from nni.experiment.config import RemoteConfig, RemoteMachineConfig
 import nni.runtime.platform.test
 from nni.runtime.tuner_command_channel import legacy as protocol
 import json
@@ -268,8 +269,9 @@ class CGOEngineTest(unittest.TestCase):
         advisor.default_worker.start()
         advisor.assessor_worker.start()
 
-        available_devices = [GPUDevice("test", 0), GPUDevice("test", 1), GPUDevice("test", 2), GPUDevice("test", 3)]
-        cgo = CGOExecutionEngine(devices=available_devices, batch_waiting_time=0)
+        remote = RemoteConfig(machine_list=[])
+        remote.machine_list.append(RemoteMachineConfig(host='test', gpu_indices=[0,1,2,3]))
+        cgo = CGOExecutionEngine(training_service=remote, batch_waiting_time=0)
 
         phy_models = cgo._assemble(lp)
         self.assertTrue(len(phy_models) == 1)
@@ -291,8 +293,9 @@ class CGOEngineTest(unittest.TestCase):
         advisor.default_worker.start()
         advisor.assessor_worker.start()
 
-        available_devices = [GPUDevice("test", 0), GPUDevice("test", 1)]
-        cgo = CGOExecutionEngine(devices=available_devices, batch_waiting_time=0)
+        remote = RemoteConfig(machine_list=[])
+        remote.machine_list.append(RemoteMachineConfig(host='test', gpu_indices=[0,1]))
+        cgo = CGOExecutionEngine(training_service=remote, batch_waiting_time=0)
 
         phy_models = cgo._assemble(lp)
         self.assertTrue(len(phy_models) == 2)
@@ -316,8 +319,9 @@ class CGOEngineTest(unittest.TestCase):
         advisor.default_worker.start()
         advisor.assessor_worker.start()
 
-        cgo_engine = CGOExecutionEngine(devices=[GPUDevice("test", 0), GPUDevice("test", 1),
-                                                 GPUDevice("test", 2), GPUDevice("test", 3)], batch_waiting_time=0)
+        remote = RemoteConfig(machine_list=[])
+        remote.machine_list.append(RemoteMachineConfig(host='test', gpu_indices=[0,1,2,3]))
+        cgo_engine = CGOExecutionEngine(training_service=remote, batch_waiting_time=0)
         set_execution_engine(cgo_engine)
         submit_models(*models)
         time.sleep(3)
