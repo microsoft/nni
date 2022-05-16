@@ -338,7 +338,8 @@ class RetiariiExperiment(Experiment):
             If ``dict``, the mutation history will be returned.
         """
         if formatter == 'code':
-            assert not isinstance(self.config.execution_engine, PyEngineConfig), \
+            config = self.config.canonical_copy()
+            assert not isinstance(config.execution_engine, PyEngineConfig), \
                 'You should use `dict` formatter when using Python execution engine.'
         if isinstance(self.evaluator, BaseOneShotTrainer):
             assert top_k == 1, 'Only support top_k is 1 for now.'

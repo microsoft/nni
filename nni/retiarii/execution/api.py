@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import time
+import warnings
 from typing import Iterable
 
 from ..graph import Model, ModelStatus
@@ -21,9 +22,10 @@ def set_execution_engine(engine: AbstractExecutionEngine) -> None:
     if _execution_engine is None:
         _execution_engine = engine
     else:
-        raise RuntimeError('Execution engine is already set. '
-                           'You should avoid instantiating RetiariiExperiment twice in one process. '
-                           'If you are running in a Jupyter notebook, please restart the kernel.')
+        warnings.warn('Execution engine is already set. '
+                      'You should avoid instantiating RetiariiExperiment twice in one process. '
+                      'If you are running in a Jupyter notebook, please restart the kernel.',
+                      RuntimeWarning)
 
 
 def get_execution_engine() -> AbstractExecutionEngine:
