@@ -285,7 +285,7 @@ class RetiariiExperiment(Experiment):
         self._dispatcher = RetiariiAdvisor(ws_url)
         self._dispatcher_thread = Thread(target=self._dispatcher.run)
         self._dispatcher_thread.start()
-        return config
+        return cast(RetiariiExeConfig, config)
 
     def run(self,
             config: RetiariiExeConfig | None = None,
@@ -388,26 +388,3 @@ class RetiariiExperiment(Experiment):
         this function retrains the exported model, and test it to output test accuracy
         """
         raise NotImplementedError
-
-"""
-class NasExperiment(RetiariiExperiment):
-
-    #This class is only a new interface wrapper.
-
-    def __init__(self, model: nn.Module,
-                 evaluator: Union[BaseOneShotTrainer, Evaluator],
-                 strategy: BaseStrategy,
-                 config_or_platform: ExperimentConfig | str | list[str] | None = 'local',
-                 execution_engine: Union[str, ExecutionEngineConfig] = 'py',
-                 mutators: List[Mutator] = cast(List[Mutator], None)):
-        ...
-
-    def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
-        #Run the experiment.
-        #This function will block until experiment finish or error.
-        if isinstance(self.config.execution_engine.name, OneshotEngineConfig):
-            base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.evaluator, self.applied_mutators, oneshot=True)
-            self.strategy.run(base_model_ir, self.applied_mutators)
-        else:
-            super().run(port, wait_completion, debug)
-"""
