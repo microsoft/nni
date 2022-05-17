@@ -37,6 +37,7 @@ steps:
     New-Item "$PythonDir\3.9.12" -ItemType Directory -Force
     nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
     Copy-Item "$PythonDir\python.3.9.12\tools" -Destination "$PythonDir\3.9.12\x64"
+    Get-ChildItem "$PythonDir\3.9.12\x64"
     New-Item -Path "$PythonDir\3.9.12\x64.complete" -ItemType file -Force
   displayName: Install Python 3.9
 
