@@ -41,7 +41,7 @@ steps:
     nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
     # $env:path = "$env:path; $PythonDir\python.3.9.12\tools\"
     # python -m pip install pip==22.0.4 setuptools==62.1.0 wheel==0.37.1
-    cmd /c mklink "$PythonDir\3.9.12\x64" "$PythonDir\python.3.9.12\tools"
+    cmd /c mklink "$PythonDir\python.3.9.12\tools" "$PythonDir\3.9.12\x64"
     # Copy-Item "$PythonDir\python.3.9.12\tools\*" -Destination "$PythonDir\3.9.12\x64"
     Get-ChildItem "$PythonDir\3.9.12\x64"
     New-Item -Path "$PythonDir\3.9.12\x64.complete" -ItemType file -Force
