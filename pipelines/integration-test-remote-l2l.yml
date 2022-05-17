@@ -18,10 +18,6 @@ jobs:
   steps:
   - template: templates/setup-non-ms-hosted-agent.yml
 
-  - template: templates/config-version.yml
-    parameters:
-      platform: ubuntu-latest-gpu
-
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu
