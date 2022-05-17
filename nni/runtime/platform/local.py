@@ -53,7 +53,7 @@ def get_next_parameter():
     while not (os.path.isfile(params_filepath) and os.path.getsize(params_filepath) > 0):
         time.sleep(3)
     params_file = open(params_filepath, 'r')
-    params = load(fp=params_file)
+    params = load(fp=params_file, preserve_order=False)
     _param_index += 1
     return params
 
