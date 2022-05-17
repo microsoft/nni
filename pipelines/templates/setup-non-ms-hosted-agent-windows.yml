@@ -2,6 +2,22 @@
 
 steps:
 
+# Choco.
+# https://docs.chocolatey.org/en-us/choco/setup#non-administrative-install
+
+- powershell: |
+    $InstallDir = "$(Agent.ToolsDirectory)\choco"
+    $env:ChocolateyInstall = "$InstallDir"
+    Set-ExecutionPolicy Bypass -Scope Process -Force;
+    iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+    $env:Path
+  displayName: Install choco
+
+- powershell: |
+    choco --version
+  displayName: Choco
+
 # Install azcopy for cache download.
 
 - powershell: |
