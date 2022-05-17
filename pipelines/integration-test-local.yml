@@ -45,6 +45,7 @@ jobs:
   - template: templates/config-version.yml
     parameters:
       platform: windows
+      configure_python: false
 
   - template: templates/install-dependencies.yml
     parameters:

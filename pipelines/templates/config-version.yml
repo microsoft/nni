@@ -1,19 +1,22 @@
 parameters:
 - name: platform
   type: string
+- name: configure_python
+  type: boolean
+  default: true
 
 steps:
 - task: UsePythonVersion@0
   inputs:
     versionSpec: 3.9
   displayName: (latest) Configure Python version
-  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'legacy')))
+  condition: and(succeeded(), parameters.configure_python, not(contains('${{ parameters.platform }}', 'legacy')))
 
 - task: UsePythonVersion@0
   inputs:
     versionSpec: 3.7
   displayName: (legacy) Configure Python version
-  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
+  condition: and(succeeded(), parameters.configure_python, contains('${{ parameters.platform }}', 'legacy'))
 
 - task: NodeTool@0
   inputs:
