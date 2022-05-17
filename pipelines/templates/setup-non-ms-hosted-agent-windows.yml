@@ -4,6 +4,7 @@ steps:
 
 # Choco.
 # https://docs.chocolatey.org/en-us/choco/setup#non-administrative-install
+# Community version can't customize output directory.
 
 - powershell: |
     $InstallDir = "$(Agent.ToolsDirectory)\choco"
@@ -13,9 +14,16 @@ steps:
     Write-Host "##vso[task.prependpath]$InstallDir\bin"
   displayName: Install choco
 
-- powershell: |
-    choco --version
-  displayName: Verify choco
+
+# Nuget.
+# Doesn't have azcopy.
+
+- powershell:
+    $NugetDir = $(Agent.ToolsDirectory)\nuget
+    New-Item "$NugetDir" -ItemType Directory -Force
+    Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
+    Write-Host "##vso[task.prependpath]$NugetDir"
+
 
 # Install azcopy for cache download.
 
@@ -24,6 +32,14 @@ steps:
     azcopy --version
   displayName: Setup azcopy
 
+- powershell: |
+    $PythonDir = $(Agent.ToolsDirectory)\Python
+    New-Item "$PythonDir\3.9.12" -ItemType Directory -Force
+    nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
+    New-Item -Path "$PythonDir\python.3.9.12\tools" -ItemType SymbolicLink -Value "$PythonDir\3.9.12\x64"
+    New-Item -Path "$PythonDir\3.9.12\x64.complete" -ItemType file -Force
+  displayName: Install Python 3.9
+
 
 # UsePythonVersion task only works when the specific Python version is already installed.
 
@@ -31,19 +47,19 @@ steps:
 # Reference: https://stackoverflow.com/questions/60936103/install-python-to-self-hosted-windows-build-agent
 # We only need Python 3.9 on Windows.
 
-- powershell: |
-    Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"
-    Get-ChildItem C:\
-    Get-Date
-    $process = Start-Process -FilePath .\python-installer.exe -PassThru -NoNewWindow -Wait -ArgumentList "/quiet TargetDir=C:\Python InstallAllUsers=1 Include_launcher=0"
-    $process.ExitCode
-    $process | Select-Object -Property *
-    Get-ChildItem C:\
-    Get-Date
-    Start-Sleep -Seconds 60
-    Get-ChildItem C:\a\
-    Start-Process -FilePath .\python-installer.exe -NoNewWindow -Wait -ArgumentList "/quiet InstallAllUsers=1 TargetDir=$(Agent.ToolsDirectory)\Python\3.9.12\x64 Include_launcher=0"
-    New-Item -Path $(Agent.ToolsDirectory)\Python\3.9.12\x64.complete -ItemType file -Force
-    Get-ChildItem $(Agent.ToolsDirectory)\Python\3.9.12
-    Get-ChildItem $(Agent.ToolsDirectory)\Python\3.9.12\x64
-  displayName: Install Python 3.9
+# - powershell: |
+#     Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"
+#     Get-ChildItem C:\
+#     Get-Date
+#     $process = Start-Process -FilePath .\python-installer.exe -PassThru -NoNewWindow -Wait -ArgumentList "/quiet TargetDir=C:\Python InstallAllUsers=1 Include_launcher=0"
+#     $process.ExitCode
+#     $process | Select-Object -Property *
+#     Get-ChildItem C:\
+#     Get-Date
+#     Start-Sleep -Seconds 60
+#     Get-ChildItem C:\a\
+#     Start-Process -FilePath .\python-installer.exe -NoNewWindow -Wait -ArgumentList "/quiet InstallAllUsers=1 TargetDir=$(Agent.ToolsDirectory)\Python\3.9.12\x64 Include_launcher=0"
+#     New-Item -Path $(Agent.ToolsDirectory)\Python\3.9.12\x64.complete -ItemType file -Force
+#     Get-ChildItem $(Agent.ToolsDirectory)\Python\3.9.12
+#     Get-ChildItem $(Agent.ToolsDirectory)\Python\3.9.12\x64
+#   displayName: Install Python 3.9
