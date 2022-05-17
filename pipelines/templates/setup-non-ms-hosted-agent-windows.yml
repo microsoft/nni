@@ -37,7 +37,7 @@ steps:
 # Install swig.
 
 - powershell: |
-    choco install swig --version=3.0.12
+    choco install -y swig --version=3.0.12
     swig -version
   displayName: Setup swig
 
