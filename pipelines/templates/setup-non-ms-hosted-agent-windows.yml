@@ -23,20 +23,14 @@ steps:
     Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"
     Get-ChildItem C:\
     Get-Date
-    $process = Start-Process -FilePath .\python-installer.exe -PassThru -NoNewWindow -Wait -ArgumentList "/quiet TargetDir=C:\Python Include_launcher=0"
+    $process = Start-Process -FilePath .\python-installer.exe -PassThru -NoNewWindow -Wait -ArgumentList "/quiet TargetDir=C:\Python InstallAllUsers=1 Include_launcher=0"
     $process.ExitCode
     $process | Select-Object -Property *
     Get-ChildItem C:\
     Get-Date
-    .\python-installer.exe /quiet TargetDir=C:\Python Include_launcher=0
-    Get-ChildItem C:\
-    Get-Date
-    & .\python-installer.exe /quiet TargetDir=C:\Python Include_launcher=0
-    Get-ChildItem C:\
-    Get-Date
     Start-Sleep -Seconds 60
     Get-ChildItem C:\a\
-    Start-Process -FilePath .\python-installer.exe -NoNewWindow -Wait -ArgumentList "/quiet TargetDir=$(Agent.ToolsDirectory)\Python\3.9.12\x64 Include_launcher=0"
+    Start-Process -FilePath .\python-installer.exe -NoNewWindow -Wait -ArgumentList "/quiet InstallAllUsers=1 TargetDir=$(Agent.ToolsDirectory)\Python\3.9.12\x64 Include_launcher=0"
     New-Item -Path $(Agent.ToolsDirectory)\Python\3.9.12\x64.complete -ItemType file -Force
     Get-ChildItem $(Agent.ToolsDirectory)\Python\3.9.12
     Get-ChildItem $(Agent.ToolsDirectory)\Python\3.9.12\x64
