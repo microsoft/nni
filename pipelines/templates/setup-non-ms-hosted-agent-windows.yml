@@ -8,24 +8,20 @@ steps:
 - powershell: |
     $InstallDir = "$(Agent.ToolsDirectory)\choco"
     $env:ChocolateyInstall = "$InstallDir"
-    Set-ExecutionPolicy Bypass -Scope Process -Force;
+    Set-ExecutionPolicy Bypass -Scope Process -Force
     iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-
-    $env:Path
+    Write-Host "##vso[task.prependpath]$InstallDir\bin"
   displayName: Install choco
 
 - powershell: |
     choco --version
-  displayName: Choco
+  displayName: Verify choco
 
 # Install azcopy for cache download.
 
 - powershell: |
-    New-Item -ItemType Directory -Force -Path $(Agent.ToolsDirectory)\azcopy
-    Invoke-WebRequest -Uri "https://aka.ms/downloadazcopy-v10-windows" -OutFile "$(Agent.ToolsDirectory)\azcopy\azcopy.zip"
-    Expand-Archive -Force "$(Agent.ToolsDirectory)\azcopy\azcopy.zip" -DestinationPath "$(Agent.ToolsDirectory)\azcopy"
-    Copy-Item "$(Agent.ToolsDirectory)\azcopy\azcopy*\*" -Destination "$(Agent.ToolsDirectory)\azcopy"
-    Write-Host "##vso[task.prependpath]$(Agent.ToolsDirectory)\azcopy"
+    choco install azcopy10
+    azcopy --version
   displayName: Setup azcopy
 
 
