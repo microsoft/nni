@@ -36,7 +36,7 @@ steps:
     $PythonDir = "$(Agent.ToolsDirectory)\Python"
     New-Item "$PythonDir\3.9.12" -ItemType Directory -Force
     nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
-    New-Item -Path "$PythonDir\python.3.9.12\tools" -ItemType SymbolicLink -Value "$PythonDir\3.9.12\x64"
+    New-Item -Path "$PythonDir\3.9.12\x64" -ItemType SymbolicLink -Value "$PythonDir\python.3.9.12\tools"
     New-Item -Path "$PythonDir\3.9.12\x64.complete" -ItemType file -Force
   displayName: Install Python 3.9
 
