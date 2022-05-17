@@ -75,5 +75,5 @@ steps:
   displayName: Torch utils tensorboard interim patch
 
 - script: |
-    pip list
+    python -m pip list
   displayName: List pip dependencies
