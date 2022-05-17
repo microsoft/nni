@@ -1,7 +1,66 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""
+NNI's logging system.
+
+For end users you only need to care about :func:`silence_stdout` and :func:`enable_global_logging`.
+Following stuffs are for NNI contributors.
+
+The logging system is initialized on importing ``nni``.
+By design it should not have side effects on non-NNI modules' logs,
+unless the user explicitly invokes :func:`enable_global_logging`.
+
+The logging system is divided into experiment (user code) part, trial part, and dispatcher part.
+
+Experiment Part
+===============
+
+There are two kinds of log handlers here, stdout handler and experiment file handler.
+
+Console
+-------
+
+NNI prints log messages of ``INFO`` and above levels to stdout, in colorful format.
+This can be turned off with :func:`silence_stdout`.
+
+Logs are automatically colored according to their log level.
+
+One can manually alter the text color with escape sequence.
+For example ``logger.error('hello ${GREEN}world')`` will print "hello" in red (error's color) and "world" in green.
+
+The escape sequence affects the words from its position to end of line.
+It supports all colors in ``colorama.Fore``.
+
+Please use NNI's escape sequences rather than colorama's because the latter will pollute log files.
+
+Log Files
+---------
+
+NNI save log messages to ``~/nni-experiments/<ID>/log/experiment.log``.
+
+It is the experiment classes' role to invoke :func:`start_experiment_logging` and :func:`stop_experiment_logging`.
+
+Only the messages logged during an experiment's life span will be saved to log file.
+Logs written before `exp.start()` and after `exp.stop()` will not be saved.
+
+If there are multiple experiments running concurrently,
+all logs will be saved to all experiments' log files.
+
+Trial Part
+==========
+
+WIP
+
+Dispatcher Part
+===============
+
+WIP
+"""
+
 from __future__ import annotations
+
+__all__ = ['enable_global_logging', 'silence_stdout']
 
 import logging
 import sys
@@ -16,14 +75,14 @@ import colorama
 
 from .env_vars import dispatcher_env_vars, trial_env_vars
 
+_colorama_initialized: bool = False
 _global_logging_enabled: bool = False
 
-_root_logger: Logger = logging.getLogger()
-logging.getLogger('nni').setLevel(logging.INFO)
+_root_logger: Logger = logging.getLogger('nni')
+_root_logger.setLevel(logging.INFO)
 
 _handlers: dict[str, Handler] = {}
 
-colorama.init()
 _colorful: dict[str, str] = colorama.Fore.__dict__
 _colorless: dict[str, str] = {key: '' for key in _colorful.keys()}
 
@@ -39,7 +98,6 @@ def start_stdout_logging() -> None:
         return
 
     handler = StreamHandler(sys.stdout)
-    handler.addFilter(_nni_filter)
     handler.setFormatter(_StdoutFormatter())
 
     _handlers['_stdout_'] = handler
@@ -49,8 +107,8 @@ def silence_stdout() -> None:
     """
     Stop NNI from printing to stdout.
 
-    By default NNI prints log messages of ``INFO`` or higher level to console.
-    Use this function if you want a clean stdout, or if you want to handle logs yourself.
+    By default NNI prints log messages of ``INFO`` and higher levels to console.
+    Use this function if you want a clean stdout, or if you want to handle logs by yourself.
     """
     handler = _handlers.pop('_stdout_', None)
     if handler is not None:
@@ -64,7 +122,7 @@ def start_experiment_logging(experiment_id: str, log_file: Path, level: str) -> 
     We don't want to create the experiment folder if the user does not launch it.
 
     If there are multiple experiments running concurrently,
-    log messages will be written to all running experiments' log file.
+    log messages will be written to all running experiments' log files.
 
     It is safe to call it multiple times.
     """
@@ -72,7 +130,6 @@ def start_experiment_logging(experiment_id: str, log_file: Path, level: str) -> 
         return
 
     handler = FileHandler(log_file, encoding='utf_8')
-    handler.addFilter(_nni_filter)
     handler.setFormatter(_LogFileFormatter())
     handler.setLevel(level.upper())
 
@@ -89,17 +146,30 @@ def stop_experiment_logging(experiment_id: str) -> None:
 
 def enable_global_logging(enable: bool = True) -> None:
     """
-    Let NNI to handle all logs in this process.
+    Let NNI to handle all logs. Useful for debugging.
 
-    Use ``enable_global_logging(False)`` to reverse the setting.
-    (The root log level will not be restored.)
+    By default only NNI's logs are printed to stdout and saved to ``nni-experiments`` log files.
+    The function will extend these settings to all modules' logs.
+
+    Use ``enable_global_logging(False)`` to reverse it.
+    The log level of root logger will not be reversed though.
     """
-    global _global_logging_enabled
-    _global_logging_enabled = enable
-    _root_logger.setLevel(logging.INFO)
+    global _global_logging_enabled, _root_logger
 
-def _nni_filter(record: LogRecord) -> bool:
-    return _global_logging_enabled or record.name.startswith('nni')
+    if enable == _global_logging_enabled:
+        return
+
+    if enable:
+        level = logging.getLogger('nni').getEffectiveLevel()
+        logging.getLogger().setLevel(level)
+
+    new_root = logging.getLogger() if enable else logging.getLogger('nni')
+    for handler in _handlers.values():
+        _root_logger.removeHandler(handler)
+        new_root.addHandler(handler)
+
+    _root_logger = new_root
+    _global_logging_enabled = enable
 
 class _StdoutFormatter(Formatter):
     def __init__(self):
@@ -108,7 +178,12 @@ class _StdoutFormatter(Formatter):
         super().__init__(fmt, datefmt)
 
     def formatMessage(self, record: LogRecord) -> str:
-        if '${' in record.message:
+        global _colorama_initialized
+
+        if '${' in record.message:  # contains colorful text: "hello ${GREEN}world"
+            if not _colorama_initialized:
+                colorama.init()
+                _colorama_initialized = True
             message = string.Template(record.message).safe_substitute(_colorful)
         else:
             message = record.message
@@ -157,7 +232,7 @@ time_format = '%Y-%m-%d %H:%M:%S'
 formatter = Formatter(log_format, time_format)
 
 
-def init_logger() -> None:
+def _init_logger() -> None:
     """
     This function will (and should only) get invoked on the first time of importing nni (no matter which submodule).
     It will try to detect the running environment and setup logger accordingly.
@@ -165,7 +240,9 @@ def init_logger() -> None:
     The detection should work in most cases but for `nnictl` and `nni.experiment`.
     They will be identified as "standalone" mode and must configure the logger by themselves.
     """
-    colorama.init()
+    # I think dispatcher and trial do not need colorful stdout.
+    # Remove this when we finish refactor.
+    #colorama.init()
 
     if dispatcher_env_vars.SDK_PROCESS == 'dispatcher':
         _init_logger_dispatcher()

@@ -6,8 +6,8 @@ try:
 except ModuleNotFoundError:
     __version__ = '999.dev0'
 
-from .runtime.log import init_logger
-init_logger()
+from .runtime.log import _init_logger
+_init_logger()
 
 from .common.serializer import trace, dump, load
 from .experiment import Experiment
