@@ -58,6 +58,7 @@ def traverse_and_mutate_submodules(
     module_list = []
 
     def apply(m):
+        # Need to call list() here because the loop body might replace some children in-place.
         for name, child in list(m.named_children()):
             # post-order DFS
             if not topdown:
