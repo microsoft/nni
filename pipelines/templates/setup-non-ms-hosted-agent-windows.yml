@@ -34,7 +34,10 @@ steps:
 
 - powershell: |
     $PythonDir = "$(Agent.ToolsDirectory)\Python"
-    New-Item "$PythonDir\3.9.12" -ItemType Directory -Force
+    if (Test-Path "$PythonDir\3.9.12") {
+      Remove-Item "$PythonDir\3.9.12" -Recurse -Force
+    }
+    New-Item "$PythonDir\3.9.12\x64" -ItemType Directory -Force
     nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
     Copy-Item "$PythonDir\python.3.9.12\tools\*" -Destination "$PythonDir\3.9.12\x64"
     Get-ChildItem "$PythonDir\3.9.12\x64"
