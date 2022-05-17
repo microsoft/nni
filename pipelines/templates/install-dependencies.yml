@@ -43,8 +43,12 @@ steps:
   displayName: (legacy) Activate legacy dependencies
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
-- script: |
-    mv dependencies/recommended_gpu.txt dependencies/recommended.txt
+- ${{ if contains(parameters.platform, 'windows') }}:
+    powershell:
+      Rename-Item -Path dependencies/recommended_gpu.txt -NewName dependencies/recommended.txt
+  ${{ else }}:
+    script: |
+      mv dependencies/recommended_gpu.txt dependencies/recommended.txt
   displayName: (GPU) Activate CUDA dependencies
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu'))
 
