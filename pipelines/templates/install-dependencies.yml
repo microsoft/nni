@@ -45,7 +45,7 @@ steps:
 
 - ${{ if contains(parameters.platform, 'windows') }}:
     powershell:
-      Rename-Item -Path dependencies/recommended_gpu.txt -NewName dependencies/recommended.txt
+      Rename-Item -Path dependencies/recommended_gpu.txt -NewName recommended.txt
   ${{ else }}:
     script: |
       mv dependencies/recommended_gpu.txt dependencies/recommended.txt
