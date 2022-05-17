@@ -29,7 +29,7 @@ steps:
 # Install azcopy for cache download.
 
 - powershell: |
-    choco install -y azcopy10
+    choco install -y --force azcopy10
     azcopy --version
   displayName: Setup azcopy
 
@@ -37,7 +37,7 @@ steps:
 # Install swig.
 
 - powershell: |
-    choco install -y swig --version=3.0.12
+    choco install -y --force swig --version=3.0.12
     swig -version
   displayName: Setup swig
 
