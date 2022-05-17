@@ -24,7 +24,8 @@ steps:
     Get-ChildItem C:\
     Get-Date
     $process = Start-Process -FilePath .\python-installer.exe -PassThru -NoNewWindow -Wait -ArgumentList "/quiet TargetDir=C:\Python Include_launcher=0"
-    $process
+    $process.ExitCode
+    $process | Select-Object -Property *
     Get-ChildItem C:\
     Get-Date
     Start-Sleep -Seconds 60
