@@ -33,6 +33,15 @@ steps:
     azcopy --version
   displayName: Setup azcopy
 
+
+# Install swig.
+
+- powershell: |
+    choco install swig --version=3.0.12
+    swig -version
+  displayName: Setup swig
+
+
 # Install python.
 # Originally I tried to install the python by downloading from official, and run the installation.
 #
