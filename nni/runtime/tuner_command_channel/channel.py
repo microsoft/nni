@@ -13,9 +13,13 @@ __all__ = ['TunerCommandChannel']
 
 from .command_type import CommandType
 from .websocket import WebSocket
-from .semantic_command import ReportMetricData, UpdateSearchSpace, ImportData, TrialEnd, NewTrialJob, SendTrialJobParameter, NoMoreTrialJobs, KillTrialJob
-Command = TypeVar('Command', ReportMetricData, UpdateSearchSpace, ImportData, TrialEnd, NewTrialJob, SendTrialJobParameter, NoMoreTrialJobs, KillTrialJob)
-       
+from .semantic_command import ReportMetricData, UpdateSearchSpace
+from .semantic_command import ImportData, TrialEnd
+from .semantic_command import NewTrialJob, SendTrialJobParameter
+from .semantic_command import NoMoreTrialJobs, KillTrialJob
+Command = TypeVar('Command', ReportMetricData, UpdateSearchSpace,
+ImportData, TrialEnd, NewTrialJob, SendTrialJobParameter, NoMoreTrialJobs, KillTrialJob)
+
 class TunerCommandChannel:
     """
     A channel to communicate with NNI manager.
