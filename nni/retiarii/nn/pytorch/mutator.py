@@ -2,11 +2,11 @@
 # Licensed under the MIT license.
 
 import inspect
-from typing import Any, List, Optional, Tuple, Dict, Iterator
+from typing import Any, List, Optional, Tuple, Dict, Iterator, Iterable, cast
 
 import torch.nn as nn
 
-from nni.common.serializer import is_traceable
+from nni.common.serializer import is_traceable, is_wrapped_with_trace
 from nni.retiarii.graph import Cell, Graph, Model, ModelStatus, Node, Evaluator
 from nni.retiarii.mutator import Mutator
 from nni.retiarii.serializer import is_basic_unit, is_model_wrapped
@@ -28,12 +28,14 @@ class LayerChoiceMutator(Mutator):
             # Each layer choice corresponds to a cell, which is unconnected in the base graph.
             # We add the connections here in the mutation logic.
             # Thus, the mutated model should not be mutated again. Everything should be based on the original base graph.
-            target = model.graphs[node.operation.cell_name]
+            target = model.graphs[cast(Cell, node.operation).cell_name]
             chosen_node = target.get_node_by_name(chosen)
             assert chosen_node is not None
             target.add_edge((target.input_node, 0), (chosen_node, None))
             target.add_edge((chosen_node, None), (target.output_node, None))
-            model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
+            operation = cast(Cell, node.operation)
+            target_node = cast(Node, model.get_node_by_name(node.name))
+            target_node.update_operation(Cell(operation.cell_name))
 
             # remove redundant nodes
             for rm_node in list(target.hidden_nodes):  # remove from a list on the fly will cause issues
@@ -57,7 +59,7 @@ class InputChoiceMutator(Mutator):
         else:
             chosen = [self.choice(candidates) for _ in range(n_chosen)]
         for node in self.nodes:
-            target = model.get_node_by_name(node.name)
+            target = cast(Node, model.get_node_by_name(node.name))
             target.update_operation('__torch__.nni.retiarii.nn.pytorch.ChosenInputs',
                                     {'chosen': chosen, 'reduction': node.operation.parameters['reduction']})
 
@@ -74,7 +76,7 @@ class ValueChoiceMutator(Mutator):
         # no need to support transformation here,
         # because it is naturally done in forward loop
         for node in self.nodes:
-            target = model.get_node_by_name(node.name)
+            target = cast(Node, model.get_node_by_name(node.name))
             target.update_operation('prim::Constant', {'type': type(chosen).__name__, 'value': chosen})
 
 
@@ -86,7 +88,7 @@ class ParameterChoiceLeafMutator(Mutator):
         super().__init__(label=label)
         self.candidates = candidates
 
-    def mutate(self, model: Model) -> Model:
+    def mutate(self, model: Model) -> None:
         # leave a record here
         # real mutations will be done in ParameterChoiceMutator
         self.choice(self.candidates)
@@ -103,7 +105,7 @@ class ParameterChoiceMutator(Mutator):
 
         self.nodes = nodes
 
-    def mutate(self, model: Model) -> Model:
+    def mutate(self, model: Model) -> None:
         # looks like {"label1": "cat", "label2": 123}
         value_choice_decisions = {}
         for mutation in model.history:
@@ -122,7 +124,7 @@ class ParameterChoiceMutator(Mutator):
             result_value = value_choice.evaluate(leaf_node_values)
 
             # update model with graph mutation primitives
-            target = model.get_node_by_name(node.name)
+            target = cast(Node, model.get_node_by_name(node.name))
             target.update_operation(target.operation.type, {**target.operation.parameters, argname: result_value})
 
 
@@ -138,20 +140,20 @@ class RepeatMutator(Mutator):
         while u != graph.output_node:
             if u != graph.input_node:
                 chain.append(u)
-            assert len(u.successors) == 1, f'This graph is an illegal chain. {u} has output {u.successor}.'
+            assert len(u.successors) == 1, f'This graph is an illegal chain. {u} has output {u.successors}.'
             u = u.successors[0]
         return chain
 
     def mutate(self, model):
         for node in self.nodes:
             # the logic here is similar to layer choice. We find cell attached to each node.
-            target: Graph = model.graphs[node.operation.cell_name]
+            target: Graph = model.graphs[cast(Cell, node.operation).cell_name]
             chain = self._retrieve_chain_from_graph(target)
             # and we get the chosen depth (by value choice)
-            node_in_model = model.get_node_by_name(node.name)
+            node_in_model = cast(Node, model.get_node_by_name(node.name))
             # depth is a value choice in base model
             # but it's already mutated by a ParameterChoiceMutator here
-            chosen_depth = node_in_model.operation.parameters['depth']
+            chosen_depth: int = node_in_model.operation.parameters['depth']
             for edge in chain[chosen_depth - 1].outgoing_edges:
                 edge.remove()
             target.add_edge((chain[chosen_depth - 1], None), (target.output_node, None))
@@ -159,8 +161,11 @@ class RepeatMutator(Mutator):
                 for edge in rm_node.outgoing_edges:
                     edge.remove()
                 rm_node.remove()
+
             # to delete the unused parameters.
-            model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
+            target_node = cast(Node, model.get_node_by_name(node.name))
+            cell_operation = cast(Cell, node.operation)
+            target_node.update_operation(Cell(cell_operation.cell_name))
 
 
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
@@ -241,7 +246,7 @@ class ManyChooseManyMutator(Mutator):
     Choose based on labels. Will not affect the model itself.
     """
 
-    def __init__(self, label: Optional[str]):
+    def __init__(self, label: str):
         super().__init__(label=label)
 
     @staticmethod
@@ -257,7 +262,7 @@ class ManyChooseManyMutator(Mutator):
             return node.operation.parameters['n_chosen']
         return 1
 
-    def mutate(self, model: Model):
+    def mutate(self, model: Model) -> None:
         # this mutate does not have any effect, but it is recorded in the mutation history
         for node in model.get_nodes_by_label(self.label):
             n_chosen = self.number_of_chosen(node)
@@ -280,12 +285,12 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         if not is_model_wrapped(pytorch_model):
             raise ValueError('Please annotate the model with @model_wrapper decorator in python execution mode '
                              'if your model has init parameters.')
-        model.python_init_params = pytorch_model.trace_kwargs
+        model.python_init_params = cast(dict, pytorch_model.trace_kwargs)
     else:
         model.python_init_params = {}
 
     # hyper-parameter choice
-    namespace: ModelNamespace = pytorch_model._model_namespace
+    namespace: ModelNamespace = cast(ModelNamespace, pytorch_model._model_namespace)
     for param_spec in namespace.parameter_specs:
         assert param_spec.categorical and param_spec.type == 'choice'
         node = graph.add_node(f'param_spec_{param_spec.name}', 'ModelParameterChoice', {'candidates': param_spec.values})
@@ -294,7 +299,8 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
     for name, module in pytorch_model.named_modules():
         # tricky case: value choice that serves as parameters are stored in traced arguments
         if is_basic_unit(module):
-            for key, value in module.trace_kwargs.items():
+            trace_kwargs = cast(Dict[str, Any], module.trace_kwargs)
+            for key, value in trace_kwargs.items():
                 if isinstance(value, ValueChoiceX):
                     for i, choice in enumerate(value.inner_choices()):
                         node = graph.add_node(f'{name}.init.{key}.{i}', 'ValueChoice', {'candidates': choice.candidates})
@@ -329,14 +335,17 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
     mutators = []
     mutators_final = []
     for nodes in _group_by_label_and_type(graph.hidden_nodes):
+        label = nodes[0].label
+        assert label is not None, f'label of {nodes[0]} can not be None.'
         assert _is_all_equal(map(lambda n: n.operation.type, nodes)), \
-            f'Node with label "{nodes[0].label}" does not all have the same type.'
+            f'Node with label "{label}" does not all have the same type.'
         assert _is_all_equal(map(lambda n: n.operation.parameters, nodes)), \
-            f'Node with label "{nodes[0].label}" does not agree on parameters.'
+            f'Node with label "{label}" does not agree on parameters.'
         if nodes[0].operation.type == 'NasBench101Cell':
-            mutators_final.append(NasBench101Mutator(nodes[0].label))
+            # The mutation of Nas-bench-101 is special, and has to be done lastly.
+            mutators_final.append(NasBench101Mutator(label))
         else:
-            mutators.append(ManyChooseManyMutator(nodes[0].label))
+            mutators.append(ManyChooseManyMutator(label))
     return model, mutators + mutators_final
 
 
@@ -350,7 +359,7 @@ class EvaluatorValueChoiceLeafMutator(Mutator):
         super().__init__(label=label)
         self.candidates = candidates
 
-    def mutate(self, model: Model) -> Model:
+    def mutate(self, model: Model) -> None:
         # leave a record here
         # real mutations will be done in ParameterChoiceMutator
         self.choice(self.candidates)
@@ -361,34 +370,34 @@ class EvaluatorValueChoiceMutator(Mutator):
     # we only need one such mutator for one model/evaluator
 
     def _mutate_traceable_object(self, obj: Any, value_choice_decisions: Dict[str, Any]) -> Any:
-        if not is_traceable(obj):
+        if not _is_traceable_object(obj):
             return obj
 
-        if not any(isinstance(value, ValueChoiceX) for value in obj.trace_kwargs.values()):
-            # No valuechoice, not interesting
-            return obj
-
-        # Make a copy
-        obj = obj.trace_copy()
-
-        result = {}
+        updates = {}
 
         # For each argument that is a composition of value choice
         # we find all the leaf-value-choice in the mutation
-        # and compute the final result
+        # and compute the final updates
         for key, param in obj.trace_kwargs.items():
             if isinstance(param, ValueChoiceX):
                 leaf_node_values = [value_choice_decisions[choice.label] for choice in param.inner_choices()]
-                result[key] = param.evaluate(leaf_node_values)
+                updates[key] = param.evaluate(leaf_node_values)
             elif is_traceable(param):
                 # Recursively
-                result[key] = self._mutate_traceable_object(param, value_choice_decisions)
+                sub_update = self._mutate_traceable_object(param, value_choice_decisions)
+                if sub_update is not param:  # if mutated
+                    updates[key] = sub_update
 
-        obj.trace_kwargs.update(result)
+        if updates:
+            mutated_obj = obj.trace_copy()                  # Make a copy
+            mutated_obj.trace_kwargs.update(updates)        # Mutate
+            mutated_obj = mutated_obj.get()                 # Instantiate the full mutated object
+
+            return mutated_obj
 
         return obj
 
-    def mutate(self, model: Model):
+    def mutate(self, model: Model) -> None:
         value_choice_decisions = {}
         for mutation in model.history:
             if isinstance(mutation.mutator, EvaluatorValueChoiceLeafMutator):
@@ -400,7 +409,7 @@ class EvaluatorValueChoiceMutator(Mutator):
 def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mutator]) -> List[Mutator]:
     # take all the value choice in the kwargs of evaluaator into a list
     # `existing_mutators` can mutators generated from `model`
-    if not is_traceable(evaluator):
+    if not _is_traceable_object(evaluator):
         return []
     mutator_candidates = {}
     for param in _expand_nested_trace_kwargs(evaluator):
@@ -428,6 +437,20 @@ def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mu
     return mutators
 
 
+# the following are written for one-shot mode
+# they shouldn't technically belong here, but all other engines are written here
+# let's refactor later
+
+def process_oneshot_mutations(base_model: nn.Module, evaluator: Evaluator):
+    # It's not intuitive, at all, (actually very hacky) to wrap a `base_model` and `evaluator` into a graph.Model.
+    # But unfortunately, this is the required interface of strategy.
+    model = Model(_internal=True)
+    model.python_object = base_model
+    # no need to set evaluator here because it will be set after this method is called
+
+    return model, []
+
+
 # utility functions
 
 
@@ -440,7 +463,7 @@ def _is_all_equal(lst):
     return True
 
 
-def _group_by_label_and_type(nodes: List[Node]) -> List[List[Node]]:
+def _group_by_label_and_type(nodes: Iterable[Node]) -> List[List[Node]]:
     result = {}
     for node in nodes:
         key = (node.label, node.operation.type)
@@ -450,7 +473,7 @@ def _group_by_label_and_type(nodes: List[Node]) -> List[List[Node]]:
     return list(result.values())
 
 
-def _group_by_label(nodes: List[Node]) -> List[List[Node]]:
+def _group_by_label(nodes: Iterable[Node]) -> List[List[Node]]:
     result = {}
     for node in nodes:
         label = node.operation.parameters['label']
@@ -464,9 +487,12 @@ def _expand_nested_trace_kwargs(obj: Any) -> Iterator[Any]:
     # Get items from `trace_kwargs`.
     # If some item is traceable itself, get items recursively.
 
-    if not is_traceable(obj):
-        return
+    if _is_traceable_object(obj):
+        for param in obj.trace_kwargs.values():
+            yield param
+            yield from _expand_nested_trace_kwargs(param)
 
-    for param in obj.trace_kwargs.values():
-        yield param
-        yield from _expand_nested_trace_kwargs(param)
+
+def _is_traceable_object(obj: Any) -> bool:
+    # Is it a traceable "object" (not class)?
+    return is_traceable(obj) and not is_wrapped_with_trace(obj)

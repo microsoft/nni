@@ -22,7 +22,8 @@ _dispatcher_env_var_names = [
     'NNI_CHECKPOINT_DIRECTORY',
     'NNI_LOG_DIRECTORY',
     'NNI_LOG_LEVEL',
-    'NNI_INCLUDE_INTERMEDIATE_RESULTS'
+    'NNI_INCLUDE_INTERMEDIATE_RESULTS',
+    'NNI_TUNER_COMMAND_CHANNEL',
 ]
 
 def _load_env_vars(env_var_names):

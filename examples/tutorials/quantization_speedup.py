@@ -30,7 +30,7 @@ model to generate inference engine.
 
 
 Quantization aware training combines NNI quantization algorithm 'QAT' and NNI quantization speedup tool.
-Users should set config to train quantized model using QAT algorithm(please refer to `NNI Quantization Algorithms <https://nni.readthedocs.io/en/stable/Compression/Quantizer.html>`__\  ).
+Users should set config to train quantized model using QAT algorithm(please refer to :doc:`NNI Quantization Algorithms <../compression/quantizer>`  ).
 After quantization aware training, users can get new config with calibration parameters and model with quantized weight. By passing new config and model to quantization speedup tool, users can get real mixed precision speedup engine to do inference.
 
 
@@ -69,25 +69,21 @@ from scripts.compression_mnist_model import TorchModel, device, trainer, evaluat
 config_list = [{
     'quant_types': ['input', 'weight'],
     'quant_bits': {'input': 8, 'weight': 8},
-    'op_names': ['conv1']
+    'op_types': ['Conv2d']
 }, {
     'quant_types': ['output'],
     'quant_bits': {'output': 8},
-    'op_names': ['relu1']
+    'op_types': ['ReLU']
 }, {
     'quant_types': ['input', 'weight'],
     'quant_bits': {'input': 8, 'weight': 8},
-    'op_names': ['conv2']
-}, {
-    'quant_types': ['output'],
-    'quant_bits': {'output': 8},
-    'op_names': ['relu2']
+    'op_names': ['fc1', 'fc2']
 }]
 
 model = TorchModel().to(device)
 optimizer = SGD(model.parameters(), lr=0.01, momentum=0.5)
 criterion = F.nll_loss
-dummy_input = torch.rand(32, 1, 28,28).to(device)
+dummy_input = torch.rand(32, 1, 28, 28).to(device)
 
 from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
 quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
@@ -101,6 +97,8 @@ for epoch in range(3):
 
 # %%
 # export model and get calibration_config
+import os
+os.makedirs('log', exist_ok=True)
 model_path = "./log/mnist_model.pth"
 calibration_path = "./log/mnist_calibration.pth"
 calibration_config = quantizer.export_model(model_path, calibration_path)
@@ -110,18 +108,18 @@ print("calibration_config: ", calibration_config)
 # %%
 # build tensorRT engine to make a real speedup
 
-# from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-# input_shape = (32, 1, 28, 28)
-# engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
-# engine.compress()
-# test_trt(engine)
+from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+input_shape = (32, 1, 28, 28)
+engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
+engine.compress()
+test_trt(engine)
 
 # %%
 # Note that NNI also supports post-training quantization directly, please refer to complete examples for detail.
 #
 # For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 #
-# For more parameters about the class 'TensorRTModelSpeedUp', you can refer to `Model Compression API Reference <https://nni.readthedocs.io/en/stable/Compression/CompressionReference.html#quantization-speedup>`__\.
+# For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :doc:`Model Compression API Reference <../reference/compression/quantization_speedup>`.
 #
 # Mnist test
 # ^^^^^^^^^^

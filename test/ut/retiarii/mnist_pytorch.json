@@ -36,5 +36,9 @@
             {"head": ["conv2", null], "tail": ["pool2", null]},
             {"head": ["pool2", null], "tail": ["_outputs", 0]}
         ]
+    },
+
+    "_evaluator": {
+        "type": "DebugEvaluator"
     }
 }

@@ -172,7 +172,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                         notMerge={true} // update now
                         onEvents={onEvents}
                     />
-                    <div className='default-metric-noData'>{accNodata}</div>
+                    <div className='default-metric-noData fontColor333'>{accNodata}</div>
                 </div>
             </div>
         );

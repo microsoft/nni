@@ -14,9 +14,9 @@ NNI Documentation
    :caption: User Guide
    :hidden:
 
-   Hyperparameter Optimization <hpo/index>
-   Neural Architecture Search <nas/index>
-   Model Compression <compression/index>
+   hpo/toctree
+   nas/toctree
+   Model Compression <compression/toctree>
    feature_engineering/toctree
    experiment/toctree
 
@@ -44,8 +44,8 @@ NNI Documentation
 **NNI (Neural Network Intelligence)** is a lightweight but powerful toolkit to help users **automate**:
 
 * :doc:`Hyperparameter Optimization </hpo/overview>`
-* :doc:`Neural Architecture Search </nas/index>`
-* :doc:`Model Compression </compression/index>`
+* :doc:`Neural Architecture Search </nas/overview>`
+* :doc:`Model Compression </compression/overview>`
 * :doc:`Feature Engineering </feature_engineering/overview>`
 
 Get Started
@@ -62,13 +62,11 @@ See the :doc:`installation guide </installation>` if you need additional help on
 Try your first NNI experiment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To run your first NNI experiment:
-
 .. code-block:: shell
 
    $ nnictl hello
 
-.. note:: you need to have `PyTorch <https://pytorch.org/>`_ (as well as `torchvision <https://pytorch.org/vision/stable/index.html>`_) installed to run this experiment.
+.. note:: You need to have `PyTorch <https://pytorch.org/>`_ (as well as `torchvision <https://pytorch.org/vision/stable/index.html>`_) installed to run this experiment.
 
 To start your journey now, please follow the :doc:`absolute quickstart of NNI <quickstart>`!
 
@@ -84,7 +82,7 @@ NNI makes AutoML techniques plug-and-play
 
 .. codesnippetcard::
    :icon: ../img/thumbnails/hpo-small.svg
-   :title: Hyper-parameter Tuning
+   :title: Hyperparameter Tuning
    :link: tutorials/hpo_quickstart_pytorch/main
 
    .. code-block::
@@ -130,7 +128,7 @@ NNI makes AutoML techniques plug-and-play
 .. codesnippetcard::
    :icon: ../img/thumbnails/quantization-small.svg
    :title: Quantization
-   :link: tutorials/quantization_speedup
+   :link: tutorials/quantization_quick_start_mnist
 
    .. code-block::
 
@@ -159,14 +157,15 @@ NNI makes AutoML techniques plug-and-play
    :title: Neural Architecture Search
    :link: tutorials/hello_nas
 
-   .. code-block:: diff
+   .. code-block:: python
 
       # define model space
-      -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
-      +   self.conv2 = nn.LayerChoice([
-      +       nn.Conv2d(32, 64, 3, 1),
-      +       DepthwiseSeparableConv(32, 64)
-      +   ])
+      class Model(nn.Module):
+          self.conv2 = nn.LayerChoice([
+              nn.Conv2d(32, 64, 3, 1),
+              DepthwiseSeparableConv(32, 64)
+          ])
+      model_space = Model()
       # search strategy + evaluator
       strategy = RegularizedEvolution()
       evaluator = FunctionalEvaluator(
@@ -179,7 +178,7 @@ NNI makes AutoML techniques plug-and-play
 .. codesnippetcard::
    :icon: ../img/thumbnails/one-shot-nas-small.svg
    :title: One-shot NAS
-   :link: nas/index
+   :link: nas/exploration_strategy
 
    .. code-block::
 
@@ -260,7 +259,7 @@ Get Support and Contribute Back
 NNI is maintained on the `NNI GitHub repository <https://github.com/microsoft/nni>`_. We collect feedbacks and new proposals/ideas on GitHub. You can:
 
 * Open a `GitHub issue <https://github.com/microsoft/nni/issues>`_ for bugs and feature requests.
-* Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to contribute code (make sure to read the `contribution guide </contribution>` before doing this).
+* Open a `pull request <https://github.com/microsoft/nni/pulls>`_ to contribute code (make sure to read the :doc:`contribution guide <notes/contributing>` before doing this).
 * Participate in `NNI Discussion <https://github.com/microsoft/nni/discussions>`_ for general questions and new ideas.
 * Join the following IM groups.
 

@@ -7,26 +7,26 @@ import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { caclMonacoEditorHeight } from '@static/function';
 import '@style/logPanel.scss';
 
-interface ExpDrawerProps {
-    closeExpDrawer: () => void;
+interface ExpPanelProps {
+    closeExpPanel: () => void;
     experimentProfile: object;
 }
 
-interface ExpDrawerState {
+interface ExpPanelState {
     experiment: string;
-    expDrawerHeight: number;
+    expPanelHeight: number;
 }
 
-class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerState> {
+class ExperimentSummaryPanel extends React.Component<ExpPanelProps, ExpPanelState> {
     public _isExperimentMount!: boolean;
     private refreshId!: number | undefined;
 
-    constructor(props: ExpDrawerProps) {
+    constructor(props: ExpPanelProps) {
         super(props);
 
         this.state = {
             experiment: '',
-            expDrawerHeight: window.innerHeight
+            expPanelHeight: window.innerHeight
         };
     }
 
@@ -67,7 +67,7 @@ class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerSt
     };
 
     onWindowResize = (): void => {
-        this.setState(() => ({ expDrawerHeight: window.innerHeight }));
+        this.setState(() => ({ expPanelHeight: window.innerHeight }));
     };
 
     componentDidMount(): void {
@@ -84,12 +84,12 @@ class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerSt
     }
 
     render(): React.ReactNode {
-        const { closeExpDrawer } = this.props;
-        const { experiment, expDrawerHeight } = this.state;
-        const monacoEditorHeight = caclMonacoEditorHeight(expDrawerHeight);
+        const { closeExpPanel } = this.props;
+        const { experiment, expPanelHeight } = this.state;
+        const monacoEditorHeight = caclMonacoEditorHeight(expPanelHeight);
 
         return (
-            <Panel isOpen={true} hasCloseButton={false} isLightDismiss={true} onLightDismissClick={closeExpDrawer}>
+            <Panel isOpen={true} hasCloseButton={false} isLightDismiss={true} onLightDismissClick={closeExpPanel}>
                 <div className='panel'>
                     <div className='panelName'>Summary</div>
                     <MonacoEditor
@@ -104,7 +104,7 @@ class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerSt
                             <PrimaryButton text='Download' onClick={this.downExperimentParameters} />
                         </StackItem>
                         <StackItem grow={50} className='close'>
-                            <DefaultButton text='Close' onClick={closeExpDrawer} />
+                            <DefaultButton text='Close' onClick={closeExpPanel} />
                         </StackItem>
                     </Stack>
                 </div>

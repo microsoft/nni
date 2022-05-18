@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v2.6'
+release = 'v2.7'
 
 # -- General configuration ---------------------------------------------------
 
@@ -61,6 +61,7 @@ extensions = [
 
     # Custom extensions in extension/ folder.
     'tutorial_links',  # this has to be after sphinx-gallery
+    'getpartialtext',
     'inplace_translation',
     'cardlinkitem',
     'codesnippetcard',
@@ -94,6 +95,22 @@ autodoc_inherit_docstrings = False
 
 # Sphinx will warn about all references where the target cannot be found.
 nitpicky = False  # disabled for now
+
+# A list of regular expressions that match URIs that should not be checked.
+linkcheck_ignore = [
+    r'http://localhost:\d+',
+    r'.*://.*/#/',                           # Modern websites that has URLs like xxx.com/#/guide
+    r'https://github\.com/JSong-Jia/Pic/',   # Community links can't be found any more
+
+    # Some URLs that often fail
+    r'https://www\.cs\.toronto\.edu/',                      # CIFAR-10
+    r'https://help\.aliyun\.com/document_detail/\d+\.html', # Aliyun
+    r'http://www\.image-net\.org/',                         # ImageNet
+    r'https://www\.msra\.cn/',                              # MSRA
+]
+
+# Ignore all links located in release.rst
+linkcheck_exclude_documents = ['^release']
 
 # Bibliography files
 bibtex_bibfiles = ['refs.bib']
@@ -145,11 +162,6 @@ sphinx_tabs_disable_css_loading = True
 tutorials_copy_list = [
     # Seems that we don't need it for now.
     # Add tuples back if we need it in future.
-
-    # ('tutorials/pruning_quick_start_mnist.rst', 'tutorials/cp_pruning_quick_start_mnist.rst'),
-    # ('tutorials/pruning_speedup.rst', 'tutorials/cp_pruning_speedup.rst'),
-    # ('tutorials/quantization_quick_start_mnist.rst', 'tutorials/cp_quantization_quick_start_mnist.rst'),
-    # ('tutorials/quantization_speedup.rst', 'tutorials/cp_quantization_speedup.rst'),
 ]
 
 # Toctree ensures that toctree docs do not contain any other contents.
@@ -158,8 +170,6 @@ toctree_check_whitelist = [
     'index',
 
     # FIXME: Other exceptions should be correctly handled.
-    'nas/index',
-    'nas/benchmarks',
     'compression/index',
     'compression/pruning',
     'compression/quantization',
@@ -182,6 +192,18 @@ master_doc = 'index'
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
 language = None
+
+# Translation related settings
+locale_dir = ['locales']
+
+# Documents that requires translation: https://github.com/microsoft/nni/issues/4298
+gettext_documents = [
+    r'^index$',
+    r'^quickstart$',
+    r'^installation$',
+    r'^(nas|hpo|compression)/overview$',
+    r'^tutorials/(hello_nas|pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
+]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

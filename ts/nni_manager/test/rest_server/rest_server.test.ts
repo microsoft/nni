@@ -7,7 +7,7 @@ import path from 'path';
 
 import fetch from 'node-fetch';
 
-import { setExperimentStartupInfo } from 'common/experimentStartupInfo';
+import globals from 'common/globals/unittest';
 import { RestServer, UnitTestHelpers } from 'rest_server';
 import * as mock_netron_server from './mock_netron_server';
 
@@ -89,6 +89,8 @@ async function testOutsidePrefix(): Promise<void> {
 /* Register test cases */
 
 describe('## rest_server ##', () => {
+    before(beforeHook);
+
     it('logs', () => testLogs());
     it('netron get', () => testNetronGet());
     it('netron post', () => testNetronPost());
@@ -107,29 +109,34 @@ describe('## rest_server ##', () => {
     it('prefix webui resource', () => testWebuiResource());
     it('prefix webui routing', () => testWebuiRouting());
     it('outside prefix', () => testOutsidePrefix());
+
+    after(afterHook);
 });
 
 /* Configure test environment */
 
-before(async () => {
+async function beforeHook() {
     await configRestServer();
 
     const netronPort = await mock_netron_server.start();
     netronHost = `localhost:${netronPort}`;
     UnitTestHelpers.setNetronUrl('http://' + netronHost);
-});
+}
 
-after(async () => {
+async function afterHook() {
     await restServer.shutdown();
-});
+    globals.reset();
+    UnitTestHelpers.reset();
+}
 
-async function configRestServer(urlPrefix?: string) {
+async function configRestServer(urlPrefix?: string): Promise<void> {
     if (restServer !== undefined) {
         await restServer.shutdown();
     }
 
-    UnitTestHelpers.setLogDirectory(path.join(__dirname, 'log'));
+    globals.paths.logDirectory = path.join(__dirname, 'log');
     UnitTestHelpers.setWebuiPath(path.join(__dirname, 'static'));
+    UnitTestHelpers.disableNniManager();
 
     restServer = new RestServer(0, urlPrefix ?? '');
     await restServer.start();

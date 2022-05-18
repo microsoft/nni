@@ -8,3 +8,6 @@ _build/
 
 # auto-generated reference table
 _modules/
+
+# Machine-style translation files
+*.mo

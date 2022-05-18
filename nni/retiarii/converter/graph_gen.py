@@ -411,6 +411,7 @@ class GraphConverter:
                     edge.graph = ir_graph
                     if edge.head == method_ir_graph.input_node:
                         # this is a member method, 'self' is the first argument, thus +1
+                        assert edge.head_slot is not None
                         _input = node.inputsAt(edge.head_slot + 1)
                         src_node, src_node_idx = self._add_edge_handle_source_node(_input, graph_inputs, ir_graph, output_remap, node_index)
                         edge.head = src_node
@@ -745,6 +746,7 @@ class GraphConverterWithShape(GraphConverter):
             if isinstance(submodule, LayerChoice):
                 full_name = get_full_name_by_scope_name(ir_model, name.split('.'), module_name)
                 lc_node = ir_model.get_node_by_name(full_name)
+                assert lc_node is not None, f'Cannot find a node with name {full_name}'
 
                 for cand_name in submodule.names:
                     cand = submodule[cand_name]
@@ -761,12 +763,14 @@ class GraphConverterWithShape(GraphConverter):
                 return
 
             graph_node = ir_model.get_node_by_name(graph.name)
+            assert graph_node is not None, f'Cannot find a node with name {graph.name}'
             if not _without_shape_info(graph_node):
                 return
 
             if is_layerchoice_node(graph_node):
                 cand_name = graph_node.operation.parameters['candidates'][0]
                 cand_node = ir_model.get_node_by_name(cand_name)
+                assert cand_node is not None, f'Cannot find a node with name {cand_name}'
                 if _without_shape_info(cand_node):
                     propagate_shape_for_graph(ir_model.graphs[cand_name])
                 graph_node.operation.attributes['input_shape'] = cand_node.operation.attributes['input_shape']

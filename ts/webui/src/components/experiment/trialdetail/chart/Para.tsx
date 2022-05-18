@@ -15,6 +15,7 @@ import '@style/experiment/trialdetail/para.scss';
 interface ParaState {
     dimName: string[];
     selectedPercent: string;
+    userSelectOptimizeMode: string;
     primaryMetricKey: string;
     noChart: boolean;
     customizeColumnsDialogVisible: boolean;
@@ -49,6 +50,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             dimName: [],
             primaryMetricKey: 'default',
             selectedPercent: '1',
+            userSelectOptimizeMode: EXPERIMENT.optimizeMode || 'maximize',
             noChart: true,
             customizeColumnsDialogVisible: false,
             availableDimensions: [],
@@ -64,6 +66,15 @@ class Para extends React.Component<ParaProps, ParaState> {
     percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
             this.setState({ selectedPercent: item.key.toString() }, () => {
+                this.renderParallelCoordinates();
+            });
+        }
+    };
+
+    // get user mode number 'max' or 'min'
+    updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+        if (item !== undefined) {
+            this.setState({ userSelectOptimizeMode: item.key.toString() }, () => {
                 this.renderParallelCoordinates();
             });
         }
@@ -90,8 +101,14 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     render(): React.ReactNode {
-        const { selectedPercent, noChart, customizeColumnsDialogVisible, availableDimensions, chosenDimensions } =
-            this.state;
+        const {
+            selectedPercent,
+            noChart,
+            customizeColumnsDialogVisible,
+            availableDimensions,
+            chosenDimensions,
+            userSelectOptimizeMode
+        } = this.state;
 
         return (
             <div className='parameter'>
@@ -102,6 +119,16 @@ class Para extends React.Component<ParaProps, ParaState> {
                             this.setState({ customizeColumnsDialogVisible: true });
                         }}
                         styles={{ root: { marginRight: 10 } }}
+                    />
+                    <Dropdown
+                        selectedKey={userSelectOptimizeMode}
+                        onChange={this.updateUserOptimizeMode}
+                        options={[
+                            { key: 'maximize', text: 'Maximize' },
+                            { key: 'minimize', text: 'Minimize' }
+                        ]}
+                        styles={{ dropdown: { width: 100 } }}
+                        className='para-filter-percent'
                     />
                     <Dropdown
                         selectedKey={selectedPercent}
@@ -175,7 +202,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     private renderParallelCoordinates(): void {
         const { searchSpace } = this.props;
         const percent = parseFloat(this.state.selectedPercent);
-        const { primaryMetricKey, chosenDimensions } = this.state;
+        const { primaryMetricKey, chosenDimensions, userSelectOptimizeMode } = this.state;
 
         const inferredSearchSpace = TRIALS.inferredSearchSpace(searchSpace);
         const inferredMetricSpace = TRIALS.inferredMetricSpace();
@@ -200,7 +227,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 // set color for primary metrics
                 // `colorScale` is used to produce a color range, while `scale` is to produce a pixel range
                 colorScale = this.convertToD3Scale(v, false);
-                convertedTrials.sort((a, b) => (EXPERIMENT.optimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]));
+                convertedTrials.sort((a, b) => (userSelectOptimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]));
                 // filter top trials
                 if (percent != 1) {
                     const keptTrialNum = Math.max(Math.ceil(convertedTrials.length * percent), 1);

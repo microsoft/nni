@@ -1,9 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from typing import (Any, Dict, List)
 
 import torch
+import torch.nn.functional as nn_functional
 
 from ..operation import PyTorchOperation
 
@@ -39,23 +42,23 @@ class NoOpIdentity(PyTorchOperation):
     """
     _ori_type_name = ['noop_identity']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = {", ".join(inputs)}'
 
 
 class ModuleOperator(PyTorchOperation):
     _ori_type_name = ['ModuleOperator', 'shared']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = self.{field}({", ".join(inputs)})'
 
 
 class FunctionalOperator(PyTorchOperation):
     _ori_type_name = ['FunctionalOperator']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         func_name = self.type[len('Function.'):]
-        if not hasattr(torch.nn.functional, func_name):
+        if not hasattr(nn_functional, func_name):
             raise RuntimeError('For now, we only support calling independent functions from `torch.nn.functional`, '
                                f'{func_name} is not in it.')
         return f'{output} = F.{func_name}({", ".join(inputs)})'
@@ -64,7 +67,7 @@ class FunctionalOperator(PyTorchOperation):
 class PrimConstant(PyTorchOperation):
     _ori_type_name = ['prim::Constant']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         # TODO: refactor this part, maybe we can remove the code gen of prim::Constant
         # TODO: deal with all the types
         if self.parameters['type'] in ['None', 'NoneType']:
@@ -87,28 +90,28 @@ class PrimConstant(PyTorchOperation):
 class PrimListConstruct(PyTorchOperation):
     _ori_type_name = ['prim::ListConstruct']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = [{", ".join(inputs)}]'
 
 
 class PrimListUnpack(PyTorchOperation):
     _ori_type_name = ['prim::ListUnpack']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = {inputs[0]}'
 
 
 class PrimTupleConstruct(PyTorchOperation):
     _ori_type_name = ['prim::TupleConstruct']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = ({", ".join(inputs)})'
 
 
 class PrimTupleUnpack(PyTorchOperation):
     _ori_type_name = ['prim::TupleUnpack']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         # have single output here, because the following code uses index to access the unpacked values
         assert len(inputs) == 1
         return f'{output} = {inputs[0]}'
@@ -117,7 +120,7 @@ class PrimTupleUnpack(PyTorchOperation):
 class PrimGetAttr(PyTorchOperation):
     _ori_type_name = ['prim::GetAttr']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         if self.parameters['value'] is not None:
             return f"{output} = {self.parameters['value']}"
         else:
@@ -127,14 +130,14 @@ class PrimGetAttr(PyTorchOperation):
 class PrimUncheckedCast(PyTorchOperation):
     _ori_type_name = ['prim::unchecked_cast']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = {inputs[0]}'
 
 
 class SimpleMember(PyTorchOperation):
     _ori_type_name = ['prim::is_cuda', 'prim::data']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         member_name = self.type.split('::')[-1]
         return f'{output} = {inputs[0]}.{member_name}'
 
@@ -142,16 +145,16 @@ class SimpleMember(PyTorchOperation):
 class AtenContiguous(PyTorchOperation):
     _ori_type_name = ['aten::contiguous']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         # defined in pytorch/c10/core/MemoryFormat.h
-        assert inputs_value[1] in [0, 1, 2]
+        assert inputs_value is not None and inputs_value[1] in [0, 1, 2]
         return f'{output} = {inputs[0]}.contiguous(memory_format={mem_format[inputs_value[1]]})'
 
 
 class AtenGetitem(PyTorchOperation):
     _ori_type_name = ['aten::__getitem__']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         assert len(inputs) == 2
         return f'{output} = {inputs[0]}[{inputs[1]}]'
 
@@ -159,7 +162,7 @@ class AtenGetitem(PyTorchOperation):
 class AtenAppend(PyTorchOperation):
     _ori_type_name = ['aten::append']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         assert len(inputs) == 2
         return f'_, {output} = {inputs[0]}.append({inputs[1]}), {inputs[0]}'
 
@@ -167,7 +170,7 @@ class AtenAppend(PyTorchOperation):
 class MergedSlice(PyTorchOperation):
     _ori_type_name = ['MergedSlice']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         if (len(inputs) - 1) % 4 == 0:
             slices = []
             dim = int((len(inputs) - 1) / 4)
@@ -187,21 +190,21 @@ class MergedSlice(PyTorchOperation):
 class AtenBool(PyTorchOperation):
     _ori_type_name = ['aten::Bool']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = bool({inputs[0]})'
 
 
 class AtenNot(PyTorchOperation):
     _ori_type_name = ['aten::__not__']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = not {inputs[0]}'
 
 
 class AtenCat(PyTorchOperation):
     _ori_type_name = ['aten::cat']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         assert len(inputs) == 2
         return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
 
@@ -215,7 +218,7 @@ class AtenTensors(PyTorchOperation):
                       'aten::new_empty', 'aten::new_zeros', 'aten::arange',
                       'aten::tensor', 'aten::ones', 'aten::zeros', 'aten::as_tensor']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         schemas = torch._C._jit_get_schemas_for_operator(self.type)
         # match number of inputs
         overloaded_defs = [len(s.arguments) for s in schemas]
@@ -257,40 +260,41 @@ class AtenTensors(PyTorchOperation):
 class AtenFloordiv(PyTorchOperation):
     _ori_type_name = ['aten::floordiv']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = {inputs[0]} // {inputs[1]}'
 
 
 class AtenMul(PyTorchOperation):
     _ori_type_name = ['aten::mul']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = {inputs[0]} * {inputs[1]}'
 
 
 class AtenLen(PyTorchOperation):
     _ori_type_name = ['aten::len']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = len({inputs[0]})'
 
 
 class AtenIntImplicit(PyTorchOperation):
     _ori_type_name = ['aten::IntImplicit', 'aten::Float', 'aten::Int', 'aten::ScalarImplicit']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         if self.type.endswith('Implicit'):
             return f'{output} = {inputs[0]}'
         elif self.type == 'aten::Int':
             return f'{output} = int({inputs[0]})'
         elif self.type == 'aten::Float':
             return f'{output} = float({inputs[0]})'
+        raise TypeError(f'Unexpected type: {self.type}')
 
 
 class AtenIndex(PyTorchOperation):
     _ori_type_name = ['aten::index']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = {inputs[0]}[{inputs[1]}]'
 
 
@@ -355,13 +359,13 @@ def _get_tensor_ops():
 
 def _get_torch_ops():
     torch_op_args = {}
-    for mod in torch.jit._builtins._modules_containing_builtins:
+    for mod in torch.jit._builtins._modules_containing_builtins:  # type: ignore
         name = mod.__name__
         if name == 'torch._C._nn':
             continue
         # only process 'torch.XXX'
         for elem in dir(mod):
-            builtin = torch.jit._builtins._find_builtin(getattr(mod, elem))
+            builtin = torch.jit._builtins._find_builtin(getattr(mod, elem))  # type: ignore
             if builtin is not None:
                 schemas = torch._C._jit_get_schemas_for_operator(builtin)
                 for schema in schemas:
@@ -436,7 +440,7 @@ class TensorOps(PyTorchOperation):
                 return None
             raise RuntimeError(f'tensor op type {_type} has no matched')
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         # TODO: deal with conditional ops
         if self.type in TensorOps.comparison_ops:
             return f'{output} = ({inputs[0]} {TensorOps.comparison_ops[self.type]} {inputs[1]})'
@@ -486,7 +490,7 @@ class TorchOps(PyTorchOperation):
         else:
             raise RuntimeError(f'torch op type {_type} has no matched')
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         matched_args = TorchOps._get_matched_args(self.type, inputs)
         op_name = self.type.split('::')[-1]
         args_str = ', '.join([f'{name}={inputs[i]}' if t.startswith('Optional[') else f'{inputs[i]}'
@@ -498,7 +502,7 @@ class AtenAvgpool2d(PyTorchOperation):
     # NOTE: it is not included in the above aten ops for unkown reason
     _ori_type_name = ['aten::avg_pool2d']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = F.avg_pool2d({", ".join(inputs)})'
 
 
@@ -506,7 +510,7 @@ class ToDevice(PyTorchOperation):
     _artificial_op_name = "ToDevice"
 
     def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False,
-                 attributes: Dict[str, Any] = None):
+                 attributes: Dict[str, Any] = {}):
         self.type = "ToDevice"
         self.device = parameters['device']
         self.overridden_device_repr = None
@@ -540,5 +544,5 @@ class AtenDet(PyTorchOperation):
     # NOTE: it is not included in the above aten ops, maybe because torch.det is alias for torch.linalg.det
     _ori_type_name = ['aten::linalg_det']
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = torch.det({inputs[0]})'

@@ -1,14 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Stack, PrimaryButton, Dropdown, IDropdownOption } from '@fluentui/react';
 import { EXPERIMENT } from '@static/datamodel';
 import { getDropdownOptions, getSearchInputValueBySearchList } from './searchFunction';
 import { gap10 } from '@components/fluent/ChildrenGap';
+import { AppContext } from '@/App';
 
-// This file is for filtering trial parameters and trial status
+/***
+ * This file is for filtering trial parameters and trial status
+ * filter status
+ * rules: (1) click filter -> click `Status` -> choose you wanted status, and click apply
+ * rules: (2) you could input the rule in the search input
+ * Status:[FAILED]; Status:[FAILED,SUCCEEDED]; Status≠[FAILED]; Status≠[FAILED,SUCCEEDED];
+ *
+ * filter parameters
+ * parameters have many types, such as int, string
+ * int: dropout_rate:[0.1,0.2]; // 0.1 < dropout_rate value < 0.2
+ *      dropout_rate>0.5; // dropout_rate value > 0.5
+ *      dropout_rate<0.6; // dropout_rate value < 0.6
+ *
+ * string: conv_size:[2]; // conv_size value is 2
+ *         conv_size:2; // conv_size value is 2(more simple)
+ *         conv_size:[2,3]; // conv_size value is 2 or 3
+ *         conv_size≠[2,3]; // conv_size value is not 2 or 3
+ *         conv_size≠[2]; // conv_size value is not 2
+ *
+ * wrong write:
+ *         conv_size≠2; // wrong write, please don't input this!
+ *         hidden_size≠1024  // please don't input this format!
+ */
 
 function SearchParameterConditions(props): any {
-    const { parameter, searchFilter, dismiss, changeSearchFilterList, updatePage, setSearchInputVal } = props;
+    const { parameter, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal } = props;
+    const { updateDetailPage } = useContext(AppContext);
     const isChoiceTypeSearchFilter = parameter === 'StatusNNI' || EXPERIMENT.searchSpace[parameter]._type === 'choice';
     const operatorList = isChoiceTypeSearchFilter ? ['=', '≠'] : ['between', '>', '<', '=', '≠'];
 
@@ -125,7 +149,7 @@ function SearchParameterConditions(props): any {
 
         setSearchInputVal(getSearchInputValueBySearchList(newSearchFilters));
         changeSearchFilterList(newSearchFilters);
-        updatePage();
+        updateDetailPage();
         dismiss(); // close menu
     }
 

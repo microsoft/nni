@@ -1,15 +1,31 @@
 Build from Source
 =================
 
-This article describes how to build and install NNI from `source code`_.
+This article describes how to build and install NNI from `source code <https://github.com/microsoft/nni>`__.
 
-We recommend using latest setuptools:
+Preparation
+-----------
+
+Fetch source code from GitHub:
+
+.. code-block:: bash
+
+    git clone https://github.com/microsoft/nni.git
+    cd nni
+
+Upgrade to latest toolchain:
 
 .. code-block:: text
 
     pip install --upgrade setuptools pip wheel
 
-.. _source code: https://github.com/microsoft/nni
+.. note::
+
+    Please make sure ``python`` and ``pip`` executables have correct Python version.
+
+    For Apple Silicon M1, if ``python`` command is not available, you may need to manually fix dependency building issues.
+    (`GitHub issue <https://github.com/mapbox/node-sqlite3/issues/1413>`__ |
+    `Stack Overflow question <https://stackoverflow.com/questions/70874412/sqlite3-on-m1-chip-npm-is-failing>`__)
 
 Development Build
 -----------------
@@ -24,6 +40,8 @@ This will install NNI as symlink, and the version number will be ``999.dev0``.
 
 .. _development mode: https://setuptools.pypa.io/en/latest/userguide/development_mode.html
 
+Then if you want to modify NNI source code, please check :doc:`contribution guide <contributing>`.
+
 Release Build
 -------------
 
@@ -34,15 +52,16 @@ A release package requires jupyterlab to build the extension:
 
 .. code-block:: text
 
-    pip install jupyterlab
+    pip install jupyterlab==3.0.9
 
-And you need to set ``NNI_RELEASE`` environment variable, and compile TypeScript modules before "bdist_wheel".
+You need to set ``NNI_RELEASE`` environment variable to the version number,
+and compile TypeScript modules before "bdist_wheel".
 
 In bash:
 
 .. code-block:: bash
 
-    export NNI_RELEASE=2.7
+    export NNI_RELEASE=2.0
     python setup.py build_ts
     python bdist_wheel
 
@@ -50,7 +69,7 @@ In PowerShell:
 
 .. code-block:: powershell
 
-    $env:NNI_RELEASE=2.7
+    $env:NNI_RELEASE=2.0
     python setup.py build_ts
     python bdist_wheel
 

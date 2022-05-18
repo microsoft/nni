@@ -25,12 +25,7 @@ class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
                 {item.status === 'STOPPED' ? (
                     <div className='idColor'>{item.id}</div>
                 ) : (
-                    <a
-                        href={webuiPortal}
-                        className='link toAnotherExp idColor'
-                        target='_blank'
-                        rel='noopener noreferrer'
-                    >
+                    <a href={webuiPortal} className='link' target='_blank' rel='noopener noreferrer'>
                         {item.id}
                     </a>
                 )}

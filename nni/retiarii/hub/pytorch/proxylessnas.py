@@ -2,14 +2,27 @@
 # Licensed under the MIT license.
 
 import math
-from typing import Optional, Callable, List, Tuple
+from typing import Optional, Callable, List, Tuple, Iterator, Union, cast, overload
 
 import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
+from .utils.fixed import FixedFactory
+from .utils.pretrained import load_pretrained_weight
 
-def make_divisible(v, divisor, min_val=None):
+
+@overload
+def make_divisible(v: Union[int, float], divisor, min_val=None) -> int:
+    ...
+
+
+@overload
+def make_divisible(v: Union[nn.ChoiceOf[int], nn.ChoiceOf[float]], divisor, min_val=None) -> nn.ChoiceOf[int]:
+    ...
+
+
+def make_divisible(v: Union[nn.ChoiceOf[int], nn.ChoiceOf[float], int, float], divisor, min_val=None) -> nn.MaybeChoice[int]:
     """
     This function is taken from the original tf repo.
     It ensures that all layers have a channel number that is divisible by 8
@@ -24,6 +37,22 @@ def make_divisible(v, divisor, min_val=None):
     return nn.ValueChoice.condition(new_v < 0.9 * v, new_v + divisor, new_v)
 
 
+def simplify_sequential(sequentials: List[nn.Module]) -> Iterator[nn.Module]:
+    """
+    Flatten the sequential blocks so that the hierarchy looks better.
+    Eliminate identity modules automatically.
+    """
+    for module in sequentials:
+        if isinstance(module, nn.Sequential):
+            for submodule in module.children():
+                # no recursive expansion
+                if not isinstance(submodule, nn.Identity):
+                    yield submodule
+        else:
+            if not isinstance(module, nn.Identity):
+                yield module
+
+
 class ConvBNReLU(nn.Sequential):
     """
     The template for a conv-bn-relu block.
@@ -31,12 +60,12 @@ class ConvBNReLU(nn.Sequential):
 
     def __init__(
         self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int = 3,
+        in_channels: nn.MaybeChoice[int],
+        out_channels: nn.MaybeChoice[int],
+        kernel_size: nn.MaybeChoice[int] = 3,
         stride: int = 1,
-        groups: int = 1,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        groups: nn.MaybeChoice[int] = 1,
+        norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
         dilation: int = 1,
     ) -> None:
@@ -45,41 +74,69 @@ class ConvBNReLU(nn.Sequential):
             norm_layer = nn.BatchNorm2d
         if activation_layer is None:
             activation_layer = nn.ReLU6
-        super().__init__(
-            nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation=dilation, groups=groups,
-                      bias=False),
-            norm_layer(out_channels),
+        # If no normalization is used, set bias to True
+        # https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L194
+        norm = norm_layer(cast(int, out_channels))
+        no_normalization = isinstance(norm, nn.Identity)
+        blocks: List[nn.Module] = [
+            nn.Conv2d(
+                cast(int, in_channels),
+                cast(int, out_channels),
+                cast(int, kernel_size),
+                stride,
+                cast(int, padding),
+                dilation=dilation,
+                groups=cast(int, groups),
+                bias=no_normalization
+            ),
+            # Normalization, regardless of batchnorm or identity
+            norm,
+            # One pytorch implementation as an SE here, to faithfully reproduce paper
+            # We follow a more accepted approach to put SE outside
+            # Reference: https://github.com/d-li14/mobilenetv3.pytorch/issues/18
             activation_layer(inplace=True)
-        )
+        ]
+
+        super().__init__(*simplify_sequential(blocks))
         self.out_channels = out_channels
 
 
-class SeparableConv(nn.Sequential):
+class DepthwiseSeparableConv(nn.Sequential):
     """
     In the original MobileNetV2 implementation, this is InvertedResidual when expand ratio = 1.
     Residual connection is added if input and output shape are the same.
+
+    References:
+
+    - https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/efficientnet_blocks.py#L90
+    - https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L433
+    - https://github.com/ultmaster/AceNAS/blob/46c8895f/searchspace/proxylessnas/utils.py#L100
     """
 
     def __init__(
         self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int = 3,
+        in_channels: nn.MaybeChoice[int],
+        out_channels: nn.MaybeChoice[int],
+        kernel_size: nn.MaybeChoice[int] = 3,
         stride: int = 1,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        squeeze_excite: Optional[Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module]] = None,
+        norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
-        super().__init__(
+        blocks = [
             # dw
             ConvBNReLU(in_channels, in_channels, stride=stride, kernel_size=kernel_size, groups=in_channels,
                        norm_layer=norm_layer, activation_layer=activation_layer),
+            # optional se
+            squeeze_excite(in_channels, in_channels) if squeeze_excite else nn.Identity(),
             # pw-linear
             ConvBNReLU(in_channels, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
-        )
-        self.residual_connection = stride == 1 and in_channels == out_channels
+        ]
+        super().__init__(*simplify_sequential(blocks))
+        self.has_skip = stride == 1 and in_channels == out_channels
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.residual_connection:
+        if self.has_skip:
             return x + super().forward(x)
         else:
             return super().forward(x)
@@ -89,25 +146,28 @@ class InvertedResidual(nn.Sequential):
     """
     An Inverted Residual Block, sometimes called an MBConv Block, is a type of residual block used for image models
     that uses an inverted structure for efficiency reasons.
+
     It was originally proposed for the `MobileNetV2 <https://arxiv.org/abs/1801.04381>`__ CNN architecture.
     It has since been reused for several mobile-optimized CNNs.
     It follows a narrow -> wide -> narrow approach, hence the inversion.
     It first widens with a 1x1 convolution, then uses a 3x3 depthwise convolution (which greatly reduces the number of parameters),
     then a 1x1 convolution is used to reduce the number of channels so input and output can be added.
 
-    Follow implementation of:
-    https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/rematlib/mobile_model_v3.py#L453
+    This implementation is sort of a mixture between:
+
+    - https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L453
+    - https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/efficientnet_blocks.py#L134
     """
 
     def __init__(
         self,
-        in_channels: int,
-        out_channels: int,
-        expand_ratio: int,
-        kernel_size: int = 3,
+        in_channels: nn.MaybeChoice[int],
+        out_channels: nn.MaybeChoice[int],
+        expand_ratio: nn.MaybeChoice[float],
+        kernel_size: nn.MaybeChoice[int] = 3,
         stride: int = 1,
-        squeeze_and_excite: Optional[Callable[[int], nn.Module]] = None,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        squeeze_excite: Optional[Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module]] = None,
+        norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
         super().__init__()
@@ -115,11 +175,10 @@ class InvertedResidual(nn.Sequential):
         self.out_channels = out_channels
         assert stride in [1, 2]
 
-        hidden_ch = nn.ValueChoice.to_int(round(in_channels * expand_ratio))
+        hidden_ch = cast(int, make_divisible(in_channels * expand_ratio, 8))
 
-        # FIXME: check whether this equal works
-        # Residual connection is added here stride = 1 and input channels and output channels are the same.
-        self.residual_connection = stride == 1 and in_channels == out_channels
+        # NOTE: this equivalence check should also work for ValueChoice
+        self.has_skip = stride == 1 and in_channels == out_channels
 
         layers: List[nn.Module] = [
             # point-wise convolution
@@ -130,21 +189,20 @@ class InvertedResidual(nn.Sequential):
                        norm_layer=norm_layer, activation_layer=activation_layer),
             # depth-wise
             ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch,
-                       norm_layer=norm_layer, activation_layer=activation_layer)
-        ]
-
-        if squeeze_and_excite:
-            layers.append(squeeze_and_excite(hidden_ch))
-
-        layers += [
+                       norm_layer=norm_layer, activation_layer=activation_layer),
+            # SE
+            squeeze_excite(
+                cast(int, hidden_ch),
+                cast(int, in_channels)
+            ) if squeeze_excite is not None else nn.Identity(),
             # pw-linear
-            ConvBNReLU(hidden_ch, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
+            ConvBNReLU(hidden_ch, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity),
         ]
 
-        super().__init__(*layers)
+        super().__init__(*simplify_sequential(layers))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.residual_connection:
+        if self.has_skip:
             return x + super().forward(x)
         else:
             return super().forward(x)
@@ -191,7 +249,9 @@ class ProxylessNAS(nn.Module):
     Following the official implementation, the inverted residual with kernel size / expand ratio variations in each layer
     is implemented with a :class:`nn.LayerChoice` with all-combination candidates. That means,
     when used in weight sharing, these candidates will be treated as separate layers, and won't be fine-grained shared.
-    We note that ``MobileNetV3Space`` is different in this perspective.
+    We note that :class:`MobileNetV3Space` is different in this perspective.
+
+    This space can be implemented as part of :class:`MobileNetV3Space`, but we separate those following conventions.
     """
 
     def __init__(self, num_labels: int = 1000,
@@ -213,11 +273,11 @@ class ProxylessNAS(nn.Module):
         self.bn_eps = bn_eps
         self.bn_momentum = bn_momentum
 
-        self.first_conv = ConvBNReLU(3, widths[0], stride=2, norm_layer=nn.BatchNorm2d)
+        self.stem = ConvBNReLU(3, widths[0], stride=2, norm_layer=nn.BatchNorm2d)
 
-        blocks = [
+        blocks: List[nn.Module] = [
             # first stage is fixed
-            SeparableConv(widths[0], widths[1], kernel_size=3, stride=1)
+            DepthwiseSeparableConv(widths[0], widths[1], kernel_size=3, stride=1)
         ]
 
         # https://github.com/ultmaster/AceNAS/blob/46c8895fd8a05ffbc61a6b44f1e813f64b4f66b7/searchspace/proxylessnas/__init__.py#L21
@@ -226,7 +286,7 @@ class ProxylessNAS(nn.Module):
             # we return a builder that dynamically creates module for different `repeat_idx`.
             builder = inverted_residual_choice_builder(
                 [3, 6], [3, 5, 7], downsamples[stage], widths[stage - 1], widths[stage], f's{stage}')
-            if stage < 6:
+            if stage < 7:
                 blocks.append(nn.Repeat(builder, (1, 4), label=f's{stage}_depth'))
             else:
                 # No mutation for depth in the last stage.
@@ -244,7 +304,7 @@ class ProxylessNAS(nn.Module):
         reset_parameters(self, bn_momentum=bn_momentum, bn_eps=bn_eps)
 
     def forward(self, x):
-        x = self.first_conv(x)
+        x = self.stem(x)
         x = self.blocks(x)
         x = self.feature_mix_layer(x)
         x = self.global_avg_pooling(x)
@@ -259,6 +319,193 @@ class ProxylessNAS(nn.Module):
         if hasattr(self, 'classifier'):
             return {'classifier.weight', 'classifier.bias'}
         return set()
+
+    @classmethod
+    def fixed_arch(cls, arch: dict) -> FixedFactory:
+        return FixedFactory(cls, arch)
+
+    @classmethod
+    def load_searched_model(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+
+        init_kwargs = {}  # all default
+
+        if name == 'acenas-m1':
+            arch = {
+                's2_depth': 2,
+                's2_i0': 'k3e6',
+                's2_i1': 'k3e3',
+                's3_depth': 3,
+                's3_i0': 'k5e3',
+                's3_i1': 'k3e3',
+                's3_i2': 'k5e3',
+                's4_depth': 2,
+                's4_i0': 'k3e6',
+                's4_i1': 'k5e3',
+                's5_depth': 4,
+                's5_i0': 'k7e6',
+                's5_i1': 'k3e6',
+                's5_i2': 'k3e6',
+                's5_i3': 'k7e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e6',
+                's6_i2': 'k7e3',
+                's6_i3': 'k7e3',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            }
+
+        elif name == 'acenas-m2':
+            arch = {
+                's2_depth': 1,
+                's2_i0': 'k5e3',
+                's3_depth': 3,
+                's3_i0': 'k3e6',
+                's3_i1': 'k3e3',
+                's3_i2': 'k5e3',
+                's4_depth': 2,
+                's4_i0': 'k7e6',
+                's4_i1': 'k5e6',
+                's5_depth': 4,
+                's5_i0': 'k5e6',
+                's5_i1': 'k5e3',
+                's5_i2': 'k5e6',
+                's5_i3': 'k3e6',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k5e6',
+                's6_i2': 'k5e3',
+                's6_i3': 'k5e6',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            }
+
+        elif name == 'acenas-m3':
+            arch = {
+                's2_depth': 2,
+                's2_i0': 'k3e3',
+                's2_i1': 'k3e6',
+                's3_depth': 2,
+                's3_i0': 'k5e3',
+                's3_i1': 'k3e3',
+                's4_depth': 3,
+                's4_i0': 'k5e6',
+                's4_i1': 'k7e6',
+                's4_i2': 'k3e6',
+                's5_depth': 4,
+                's5_i0': 'k7e6',
+                's5_i1': 'k7e3',
+                's5_i2': 'k7e3',
+                's5_i3': 'k5e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e3',
+                's6_i2': 'k7e6',
+                's6_i3': 'k3e3',
+                's7_depth': 1,
+                's7_i0': 'k5e6'
+            }
+
+        elif name == 'proxyless-cpu':
+            arch = {
+                's2_depth': 4,
+                's2_i0': 'k3e6',
+                's2_i1': 'k3e3',
+                's2_i2': 'k3e3',
+                's2_i3': 'k3e3',
+                's3_depth': 4,
+                's3_i0': 'k3e6',
+                's3_i1': 'k3e3',
+                's3_i2': 'k3e3',
+                's3_i3': 'k5e3',
+                's4_depth': 2,
+                's4_i0': 'k3e6',
+                's4_i1': 'k3e3',
+                's5_depth': 4,
+                's5_i0': 'k5e6',
+                's5_i1': 'k3e3',
+                's5_i2': 'k3e3',
+                's5_i3': 'k3e3',
+                's6_depth': 4,
+                's6_i0': 'k5e6',
+                's6_i1': 'k5e3',
+                's6_i2': 'k5e3',
+                's6_i3': 'k3e3',
+                's7_depth': 1,
+                's7_i0': 'k5e6'
+            }
+
+            init_kwargs['base_widths'] = [40, 24, 32, 48, 88, 104, 216, 360, 1432]
+
+        elif name == 'proxyless-gpu':
+            arch = {
+                's2_depth': 1,
+                's2_i0': 'k5e3',
+                's3_depth': 2,
+                's3_i0': 'k7e3',
+                's3_i1': 'k3e3',
+                's4_depth': 2,
+                's4_i0': 'k7e6',
+                's4_i1': 'k5e3',
+                's5_depth': 3,
+                's5_i0': 'k5e6',
+                's5_i1': 'k3e3',
+                's5_i2': 'k5e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e6',
+                's6_i2': 'k7e6',
+                's6_i3': 'k5e6',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            }
+
+            init_kwargs['base_widths'] = [40, 24, 32, 56, 112, 128, 256, 432, 1728]
+
+        elif name == 'proxyless-mobile':
+            arch = {
+                's2_depth': 2,
+                's2_i0': 'k5e3',
+                's2_i1': 'k3e3',
+                's3_depth': 4,
+                's3_i0': 'k7e3',
+                's3_i1': 'k3e3',
+                's3_i2': 'k5e3',
+                's3_i3': 'k5e3',
+                's4_depth': 4,
+                's4_i0': 'k7e6',
+                's4_i1': 'k5e3',
+                's4_i2': 'k5e3',
+                's4_i3': 'k5e3',
+                's5_depth': 4,
+                's5_i0': 'k5e6',
+                's5_i1': 'k5e3',
+                's5_i2': 'k5e3',
+                's5_i3': 'k5e3',
+                's6_depth': 4,
+                's6_i0': 'k7e6',
+                's6_i1': 'k7e6',
+                's6_i2': 'k7e3',
+                's6_i3': 'k7e3',
+                's7_depth': 1,
+                's7_i0': 'k7e6'
+            }
+
+        else:
+            raise ValueError(f'Unsupported architecture with name: {name}')
+
+        model_factory = cls.fixed_arch(arch)
+        model = model_factory(**init_kwargs)
+
+        if pretrained:
+            weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
+            model.load_state_dict(pretrained_weights)
+
+        return model
 
 
 def reset_parameters(model, model_init='he_fout', init_div_groups=False,

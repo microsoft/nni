@@ -25,4 +25,6 @@ if __name__ == '__main__':
     elif args.exec == 'benchmark':
         from .execution.benchmark import BenchmarkExecutionEngine
         engine = BenchmarkExecutionEngine
+    else:
+        raise ValueError(f'Unrecognized benchmark name: {args.exec}')
     engine.trial_execute_graph()

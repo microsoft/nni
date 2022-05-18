@@ -6,7 +6,7 @@ NNI supports running an experiment on `OpenPAI <https://github.com/Microsoft/pai
 Prerequisite
 ------------
 
-1. Before starting to use OpenPAI training service, you should have an account to access an `OpenPAI <https://github.com/Microsoft/pai>`__ cluster. See `here <https://github.com/Microsoft/pai#how-to-deploy>`__ if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. Please note that, on OpenPAI, your trial program will run in Docker containers.
+1. Before starting to use OpenPAI training service, you should have an account to access an `OpenPAI <https://github.com/Microsoft/pai>`__ cluster. See `here <https://github.com/Microsoft/pai>`__ if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. Please note that, on OpenPAI, your trial program will run in Docker containers.
 
 2. Get token. Open web portal of OpenPAI, and click ``My profile`` button in the top-right side.
 
@@ -100,7 +100,7 @@ Compared with :doc:`local` and :doc:`remote`, OpenPAI training service supports 
    * - trialMemorySize
      - Optional field. Should be in format like ``2gb`` based on your trial program's memory requirement. If it's not set in trial configuration, it should be set in the config specified in ``openpaiConfig`` or ``openpaiConfigFile`` field.
    * - dockerImage
-     - Optional field. In OpenPAI training service, your trial program will be scheduled by OpenPAI to run in `Docker container <https://www.docker.com/>`__. This key is used to specify the Docker image used to create the container in which your trial will run. Upon every NNI release, we build `a docker image <https://hub.docker.com/r/msranni/nni>`__ with :githublink:`this Dockerfile <https://hub.docker.com/r/msranni/nni>`. You can either use this image directly in your config file, or build your own image. If it's not set in trial configuration, it should be set in the config specified in ``openpaiConfig`` or ``openpaiConfigFile`` field.
+     - Optional field. In OpenPAI training service, your trial program will be scheduled by OpenPAI to run in `Docker container <https://www.docker.com/>`__. This key is used to specify the Docker image used to create the container in which your trial will run. Upon every NNI release, we build `a docker image <https://hub.docker.com/r/msranni/nni>`__ with `this Dockerfile <https://hub.docker.com/r/msranni/nni>`__. You can either use this image directly in your config file, or build your own image. If it's not set in trial configuration, it should be set in the config specified in ``openpaiConfig`` or ``openpaiConfigFile`` field.
    * - virtualCluster
      - Optional field. Set the virtualCluster of OpenPAI. If omitted, the job will run on ``default`` virtual cluster.
    * - localStorageMountPoint

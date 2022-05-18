@@ -13,7 +13,7 @@ Prerequisite
 
 2. Make sure remote machines can be accessed through SSH from the machine which runs ``nnictl`` command. It supports both password and key authentication of SSH. For advanced usage, please refer to :ref:`reference-remote-config-label` in reference for detailed usage.
 
-3. Make sure the NNI version on each machine is consistent. Follow the install guide `here <../Tutorial/QuickStart.rst>`__ to install NNI.
+3. Make sure the NNI version on each machine is consistent. Follow the install guide :doc:`here </installation>` to install NNI.
 
 4. Make sure the command of Trial is compatible with remote OSes, if you want to use remote Linux and Windows together. For example, the default python 3.x executable called ``python3`` on Linux, and ``python`` on Windows.
 
@@ -21,18 +21,18 @@ In addition, there are several steps for Windows server.
 
 1. Install and start ``OpenSSH Server``.
 
-    1) Open ``Settings`` app on Windows.
+  1) Open ``Settings`` app on Windows.
 
-    2) Click ``Apps``\ , then click ``Optional features``.
+  2) Click ``Apps``\ , then click ``Optional features``.
 
-    3) Click ``Add a feature``\ , search and select ``OpenSSH Server``\ , and then click ``Install``.
+  3) Click ``Add a feature``\ , search and select ``OpenSSH Server``\ , and then click ``Install``.
 
-    4) Once it's installed, run below command to start and set to automatic start.
+  4) Once it's installed, run below command to start and set to automatic start.
 
-    .. code-block:: bat
+  .. code-block:: bat
 
-        sc config sshd start=auto
-        net start sshd
+      sc config sshd start=auto
+      net start sshd
 
 2. Make sure remote account is administrator, so that it can stop running trials.
 
@@ -85,7 +85,7 @@ You can run below command on Windows, Linux, or macOS to spawn trials on remote 
 
 .. _nniignore:
 
-.. Note:: If you are planning to use remote machines or clusters as your training service, to avoid too much pressure on network, NNI limits the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
+.. Note:: If you are planning to use remote machines or clusters as your training service, to avoid too much pressure on network, NNI limits the number of files to 2000 and total size to 300MB. If your trial code directory contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
 
 *Example:* :githublink:`config_detailed.yml <examples/trials/mnist-pytorch/config_detailed.yml>` and :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
 
@@ -111,4 +111,4 @@ Remote training service support shared storage, which can help use your own stor
 Monitor via TensorBoard
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Remote training service support trial visualization via TensorBoard. Follow the guide `here <./tensorboard.rst>`__ to learn how to use TensorBoard.
+Remote training service support trial visualization via TensorBoard. Follow the guide :doc:`/experiment/web_portal/tensorboard` to learn how to use TensorBoard.

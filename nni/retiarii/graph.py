@@ -5,10 +5,16 @@
 Model representation.
 """
 
+from __future__ import annotations
+
 import abc
 import json
 from enum import Enum
-from typing import (Any, Dict, Iterable, List, Optional, Tuple, Type, Union, overload)
+from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
+                    Optional, Set, Tuple, Type, Union, cast, overload)
+
+if TYPE_CHECKING:
+    from .mutator import Mutator
 
 from .operation import Cell, Operation, _IOPseudoOperation
 from .utils import uid
@@ -63,7 +69,7 @@ class Evaluator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _execute(self, model_cls: type) -> Any:
+    def _execute(self, model_cls: Union[Callable[[], Any], Any]) -> Any:
         pass
 
     @abc.abstractmethod
@@ -84,6 +90,8 @@ class Model:
 
     Attributes
     ----------
+    python_object
+        Python object of base model. It will be none when the base model is not available.
     python_class
         Python class that base model is converted from.
     python_init_params
@@ -110,6 +118,7 @@ class Model:
     def __init__(self, _internal=False):
         assert _internal, '`Model()` is private, use `model.fork()` instead'
         self.model_id: int = uid('model')
+        self.python_object: Optional[Any] = None  # type is uncertain because it could differ between DL frameworks
         self.python_class: Optional[Type] = None
         self.python_init_params: Optional[Dict[str, Any]] = None
 
@@ -200,7 +209,7 @@ class Model:
             matched_nodes.extend(nodes)
         return matched_nodes
 
-    def get_node_by_name(self, node_name: str) -> 'Node':
+    def get_node_by_name(self, node_name: str) -> 'Node' | None:
         """
         Traverse all the nodes to find the matched node with the given name.
         """
@@ -214,7 +223,7 @@ class Model:
         else:
             return None
 
-    def get_node_by_python_name(self, python_name: str) -> 'Node':
+    def get_node_by_python_name(self, python_name: str) -> Optional['Node']:
         """
         Traverse all the nodes to find the matched node with the given python_name.
         """
@@ -294,7 +303,7 @@ class Graph:
         The name of torch.nn.Module, should have one-to-one mapping with items in python model.
     """
 
-    def __init__(self, model: Model, graph_id: int, name: str = None, _internal: bool = False):
+    def __init__(self, model: Model, graph_id: int, name: str = cast(str, None), _internal: bool = False):
         assert _internal, '`Graph()` is private'
 
         self.model: Model = model
@@ -335,9 +344,9 @@ class Graph:
     @overload
     def add_node(self, name: str, operation: Operation) -> 'Node': ...
     @overload
-    def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = None) -> 'Node': ...
+    def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
 
-    def add_node(self, name, operation_or_type, parameters=None):
+    def add_node(self, name, operation_or_type, parameters=None):  # type: ignore
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
@@ -347,9 +356,10 @@ class Graph:
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, operation: Operation) -> 'Node': ...
     @overload
-    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = None) -> 'Node': ...
+    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str,
+                            parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
 
-    def insert_node_on_edge(self, edge, name, operation_or_type, parameters=None) -> 'Node':
+    def insert_node_on_edge(self, edge, name, operation_or_type, parameters=None) -> 'Node':  # type: ignore
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
@@ -402,7 +412,7 @@ class Graph:
     def get_nodes_by_name(self, name: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.name == name]
 
-    def get_nodes_by_python_name(self, python_name: str) -> Optional['Node']:
+    def get_nodes_by_python_name(self, python_name: str) -> List['Node']:
         return [node for node in self.nodes if node.python_name == python_name]
 
     def topo_sort(self) -> List['Node']:
@@ -591,7 +601,7 @@ class Node:
         return sorted(set(edge.tail for edge in self.outgoing_edges), key=(lambda node: node.id))
 
     @property
-    def successor_slots(self) -> List[Tuple['Node', Union[int, None]]]:
+    def successor_slots(self) -> Set[Tuple['Node', Union[int, None]]]:
         return set((edge.tail, edge.tail_slot) for edge in self.outgoing_edges)
 
     @property
@@ -607,19 +617,19 @@ class Node:
         assert isinstance(self.operation, Cell)
         return self.graph.model.graphs[self.operation.parameters['cell']]
 
-    def update_label(self, label: str) -> None:
+    def update_label(self, label: Optional[str]) -> None:
         self.label = label
 
     @overload
     def update_operation(self, operation: Operation) -> None: ...
     @overload
-    def update_operation(self, type_name: str, parameters: Dict[str, Any] = None) -> None: ...
+    def update_operation(self, type_name: str, parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> None: ...
 
-    def update_operation(self, operation_or_type, parameters=None):
+    def update_operation(self, operation_or_type, parameters=None):  # type: ignore
         if isinstance(operation_or_type, Operation):
             self.operation = operation_or_type
         else:
-            self.operation = Operation.new(operation_or_type, parameters)
+            self.operation = Operation.new(operation_or_type, cast(dict, parameters))
 
     # mutation
     def remove(self) -> None:
@@ -660,7 +670,13 @@ class Node:
         return node
 
     def _dump(self) -> Any:
-        ret = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters, 'attributes': self.operation.attributes}}
+        ret: Dict[str, Any] = {
+            'operation': {
+                'type': self.operation.type,
+                'parameters': self.operation.parameters,
+                'attributes': self.operation.attributes
+            }
+        }
         if isinstance(self.operation, Cell):
             ret['operation']['cell_name'] = self.operation.cell_name
         if self.label is not None:

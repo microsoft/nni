@@ -78,7 +78,7 @@ for path in iterate_dir(Path('source')):
                 failed_files.append('(redundant) ' + source_path.as_posix())
                 if not pipeline_mode:
                     print(f'Deleting {source_path}')
-                    source_path.unlink()
+                    path.unlink()
 
 
 if pipeline_mode and failed_files:

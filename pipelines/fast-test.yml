@@ -3,6 +3,14 @@ trigger: none
 stages:
 - stage: lint
   jobs:
+
+  - job: copyright
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - script: python test/vso_tools/copyright_check.py
+      displayName: Check copyright header
+
   - job: docs
     pool:
       vmImage: ubuntu-latest
@@ -33,9 +41,16 @@ stages:
       displayName: Sphinx sanity check (Chinese)
 
     - script: |
+        set -e
         cd docs
-        python tools/chineselink.py check
+        make i18n
+        git diff --exit-code source/locales
       displayName: Translation up-to-date
+
+    - script: |
+        cd docs
+        sphinx-build -b linkcheck -W --keep-going -T -q source build/linkcheck
+      displayName: External links integrity check
 
   - job: python
     pool:
@@ -49,6 +64,9 @@ stages:
         # pylint requires newer typing extension. Override requirements in tensorflow
         python -m pip install "typing-extensions>=3.10"
       displayName: Resolve dependency version
+
+    - script: python test/vso_tools/trigger_import.py
+      displayName: Trigger import
 
     - script: |
         python -m pylint --rcfile pylintrc nni
@@ -99,10 +117,7 @@ stages:
       parameters:
         platform: ubuntu-latest
 
-    - script: |
-        python setup.py develop
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install NNI
+    - template: templates/install-nni.yml
 
     - script: |
         set -e
@@ -152,10 +167,7 @@ stages:
       parameters:
         platform: ubuntu-legacy
 
-    - script: |
-        python setup.py develop
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install NNI
+    - template: templates/install-nni.yml
 
     - script: |
         cd test
@@ -183,9 +195,9 @@ stages:
       parameters:
         platform: windows
 
-    - script: |
-        python setup.py develop --no-user
-      displayName: Install NNI
+    - template: templates/install-nni.yml
+      parameters:
+        user: false
 
     - script: |
         cd test
@@ -210,10 +222,7 @@ stages:
       parameters:
         platform: macos
 
-    - script: |
-        python setup.py develop
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install NNI
+    - template: templates/install-nni.yml
 
     - script: |
         CI=true yarn --cwd ts/nni_manager test --exclude test/core/nnimanager.test.ts

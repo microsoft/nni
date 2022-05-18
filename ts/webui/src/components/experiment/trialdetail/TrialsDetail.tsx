@@ -8,7 +8,6 @@ import Para from './chart/Para';
 import Intermediate from './chart/Intermediate';
 import TableList from './table/TableList';
 import '@style/button.scss';
-import '@style/logPath.scss';
 import '@style/openRow.scss';
 import '@style/pagination.scss';
 import '@style/experiment/overview/overviewTitle.scss';
@@ -96,7 +95,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         </div>
                         {/* trial table list */}
                         <div className='detailTable' style={{ marginTop: 10 }}>
-                            <TableList tableSource={source} updateDetailPage={this.context.updateDetailPage} />
+                            <TableList tableSource={source} />
                         </div>
                     </React.Fragment>
                 )}

@@ -512,6 +512,7 @@ def replace_convtranspose2d(convtrans, masks):
                                              kernel_size=convtrans.kernel_size,
                                              stride=convtrans.stride,
                                              padding=convtrans.padding,
+                                             output_padding=convtrans.output_padding,
                                              dilation=convtrans.dilation,
                                              groups=new_groups,
                                              bias=convtrans.bias is not None,

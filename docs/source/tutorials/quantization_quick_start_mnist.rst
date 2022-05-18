@@ -43,7 +43,7 @@ If you are familiar with defining a model and training in pytorch, you can skip 
     import torch.nn.functional as F
     from torch.optim import SGD
 
-    from scripts.compression_mnist_model import TorchModel, trainer, evaluator, device
+    from scripts.compression_mnist_model import TorchModel, trainer, evaluator, device, test_trt
 
     # define the model
     model = TorchModel().to(device)
@@ -68,9 +68,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.4043, Accuracy: 8879/10000 (89%)
-    Average test loss: 0.2668, Accuracy: 9212/10000 (92%)
-    Average test loss: 0.1599, Accuracy: 9510/10000 (95%)
+    Average test loss: 0.7073, Accuracy: 7624/10000 (76%)
+    Average test loss: 0.2776, Accuracy: 9122/10000 (91%)
+    Average test loss: 0.1907, Accuracy: 9412/10000 (94%)
 
 
 
@@ -83,7 +83,7 @@ Quantizing Model
 Initialize a `config_list`.
 Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-62
+.. GENERATED FROM PYTHON SOURCE LINES 43-58
 
 .. code-block:: default
 
@@ -91,19 +91,15 @@ Detailed about how to write ``config_list`` please refer :doc:`compression confi
     config_list = [{
         'quant_types': ['input', 'weight'],
         'quant_bits': {'input': 8, 'weight': 8},
-        'op_names': ['conv1']
+        'op_types': ['Conv2d']
     }, {
         'quant_types': ['output'],
         'quant_bits': {'output': 8},
-        'op_names': ['relu1']
+        'op_types': ['ReLU']
     }, {
         'quant_types': ['input', 'weight'],
         'quant_bits': {'input': 8, 'weight': 8},
-        'op_names': ['conv2']
-    }, {
-        'quant_types': ['output'],
-        'quant_bits': {'output': 8},
-        'op_names': ['relu2']
+        'op_names': ['fc1', 'fc2']
     }]
 
 
@@ -113,11 +109,11 @@ Detailed about how to write ``config_list`` please refer :doc:`compression confi
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 63-64
+.. GENERATED FROM PYTHON SOURCE LINES 59-60
 
 finetuning the model by using QAT
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-69
+.. GENERATED FROM PYTHON SOURCE LINES 60-65
 
 .. code-block:: default
 
@@ -136,8 +132,6 @@ finetuning the model by using QAT
 
  .. code-block:: none
 
-    op_names ['relu1'] not found in model
-    op_names ['relu2'] not found in model
 
     TorchModel(
       (conv1): QuantizerModuleWrapper(
@@ -146,20 +140,38 @@ finetuning the model by using QAT
       (conv2): QuantizerModuleWrapper(
         (module): Conv2d(6, 16, kernel_size=(5, 5), stride=(1, 1))
       )
-      (fc1): Linear(in_features=256, out_features=120, bias=True)
-      (fc2): Linear(in_features=120, out_features=84, bias=True)
+      (fc1): QuantizerModuleWrapper(
+        (module): Linear(in_features=256, out_features=120, bias=True)
+      )
+      (fc2): QuantizerModuleWrapper(
+        (module): Linear(in_features=120, out_features=84, bias=True)
+      )
       (fc3): Linear(in_features=84, out_features=10, bias=True)
+      (relu1): QuantizerModuleWrapper(
+        (module): ReLU()
+      )
+      (relu2): QuantizerModuleWrapper(
+        (module): ReLU()
+      )
+      (relu3): QuantizerModuleWrapper(
+        (module): ReLU()
+      )
+      (relu4): QuantizerModuleWrapper(
+        (module): ReLU()
+      )
+      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
+      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-73
+.. GENERATED FROM PYTHON SOURCE LINES 66-69
 
 The model has now been wrapped, and quantization targets ('quant_types' setting in `config_list`)
 will be quantized & dequantized for simulated quantization in the wrapped layers.
 QAT is a training-aware quantizer, it will update scale and zero point during training.
 
-.. GENERATED FROM PYTHON SOURCE LINES 73-78
+.. GENERATED FROM PYTHON SOURCE LINES 69-74
 
 .. code-block:: default
 
@@ -178,18 +190,18 @@ QAT is a training-aware quantizer, it will update scale and zero point during tr
 
  .. code-block:: none
 
-    Average test loss: 0.1332, Accuracy: 9601/10000 (96%)
-    Average test loss: 0.1180, Accuracy: 9657/10000 (97%)
-    Average test loss: 0.0894, Accuracy: 9714/10000 (97%)
+    Average test loss: 0.1542, Accuracy: 9529/10000 (95%)
+    Average test loss: 0.1133, Accuracy: 9664/10000 (97%)
+    Average test loss: 0.0919, Accuracy: 9726/10000 (97%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 79-80
+.. GENERATED FROM PYTHON SOURCE LINES 75-76
 
 export model and get calibration_config
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-85
+.. GENERATED FROM PYTHON SOURCE LINES 76-82
 
 .. code-block:: default
 
@@ -202,13 +214,44 @@ export model and get calibration_config
 
 
 
+
 .. rst-class:: sphx-glr-script-out
 
  Out:
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0040], device='cuda:0'), 'weight_zero_point': tensor([84.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([111.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 18.413312911987305}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0031], device='cuda:0'), 'weight_zero_point': tensor([76.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0018], device='cuda:0'), 'weight_zero_point': tensor([113.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 12.42452621459961}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0011], device='cuda:0'), 'weight_zero_point': tensor([124.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 31.650196075439453}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0013], device='cuda:0'), 'weight_zero_point': tensor([122.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 25.805370330810547}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 12.499907493591309}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 32.0243034362793}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.491384506225586}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 17.662996292114258}}
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 83-84
+
+build tensorRT engine to make a real speedup, for more information about speedup, please refer :doc:`quantization_speedup`.
+
+.. GENERATED FROM PYTHON SOURCE LINES 84-90
+
+.. code-block:: default
+
+
+    from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+    input_shape = (32, 1, 28, 28)
+    engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
+    engine.compress()
+    test_trt(engine)
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Loss: 0.09358334274291992  Accuracy: 97.21%
+    Inference elapsed_time (whole dataset): 0.04445981979370117s
 
 
 
@@ -216,7 +259,7 @@ export model and get calibration_config
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  46.015 seconds)
+   **Total running time of the script:** ( 1 minutes  36.499 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start_mnist.py:

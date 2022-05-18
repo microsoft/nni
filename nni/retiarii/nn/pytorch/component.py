@@ -1,14 +1,17 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import copy
 import warnings
 from collections import OrderedDict
-from typing import Callable, List, Union, Tuple, Optional
+from typing import Callable, List, Dict, Union, Tuple, Optional
 
 import torch
 import torch.nn as nn
 
 from nni.retiarii.utils import NoContextError, STATE_DICT_PY_MAPPING_PARTIAL
 
-from .api import LayerChoice, ValueChoice, ValueChoiceX
+from .api import LayerChoice, ValueChoice, ValueChoiceX, ChoiceOf
 from .cell import Cell
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
 from .mutation_utils import Mutable, generate_new_label, get_fixed_value
@@ -32,6 +35,8 @@ class Repeat(Mutable):
         If one number, the block will be repeated by a fixed number of times. If a tuple, it should be (min, max),
         meaning that the block will be repeated at least ``min`` times and at most ``max`` times.
         If a ValueChoice, it should choose from a series of positive integers.
+
+        *New in v2.8*: Minimum depth can be 0. But this feature is NOT supported on graph engine.
 
     Examples
     --------
@@ -64,7 +69,7 @@ class Repeat(Mutable):
                                           List[Callable[[int], nn.Module]],
                                           nn.Module,
                                           List[nn.Module]],
-                            depth: Union[int, Tuple[int, int], ValueChoice], *, label: Optional[str] = None):
+                            depth: Union[int, Tuple[int, int], ChoiceOf[int]], *, label: Optional[str] = None):
         if isinstance(depth, tuple):
             # we can't create a value choice here,
             # otherwise we will have two value choices, one created here, another in init.
@@ -90,7 +95,7 @@ class Repeat(Mutable):
                                List[Callable[[int], nn.Module]],
                                nn.Module,
                                List[nn.Module]],
-                 depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
+                 depth: Union[int, Tuple[int, int], ChoiceOf[int]], *, label: Optional[str] = None):
         super().__init__()
 
         self._label = None  # by default, no label
@@ -120,7 +125,7 @@ class Repeat(Mutable):
             self.depth_choice = depth
         else:
             raise TypeError(f'Unsupported "depth" type: {type(depth)}')
-        assert self.max_depth >= self.min_depth > 0
+        assert self.max_depth >= self.min_depth >= 0 and self.max_depth >= 1, f'Depth of {self.min_depth} to {self.max_depth} is invalid.'
         self.blocks = nn.ModuleList(self._replicate_and_instantiate(blocks, self.max_depth))
 
     @property
@@ -136,13 +141,13 @@ class Repeat(Mutable):
     def _replicate_and_instantiate(blocks, repeat):
         if not isinstance(blocks, list):
             if isinstance(blocks, nn.Module):
-                blocks = [blocks] + [copy.deepcopy(blocks) for _ in range(repeat - 1)]
+                blocks = [blocks if i == 0 else copy.deepcopy(blocks) for i in range(repeat)]
             else:
                 blocks = [blocks for _ in range(repeat)]
-        assert len(blocks) > 0
         assert repeat <= len(blocks), f'Not enough blocks to be used. {repeat} expected, only found {len(blocks)}.'
-        blocks = blocks[:repeat]
-        if not isinstance(blocks[0], nn.Module):
+        if repeat < len(blocks):
+            blocks = blocks[:repeat]
+        if len(blocks) > 0 and not isinstance(blocks[0], nn.Module):
             blocks = [b(i) for i, b in enumerate(blocks)]
         return blocks
 
@@ -192,7 +197,7 @@ class NasBench201Cell(nn.Module):
             return OrderedDict([(str(i), t) for i, t in enumerate(x)])
         return OrderedDict(x)
 
-    def __init__(self, op_candidates: List[Callable[[int, int], nn.Module]],
+    def __init__(self, op_candidates: Union[Dict[str, Callable[[int, int], nn.Module]], List[Callable[[int, int], nn.Module]]],
                  in_features: int, out_features: int, num_tensors: int = 4,
                  label: Optional[str] = None):
         super().__init__()
@@ -214,16 +219,15 @@ class NasBench201Cell(nn.Module):
                 node_ops.append(LayerChoice(op_choices, label=f'{self._label}__{j}_{tid}'))  # put __ here to be compatible with base engine
             self.layers.append(node_ops)
 
-    def forward(self, inputs):
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """
         The forward of input choice is simply selecting first on all choices.
         It shouldn't be called directly by users in most cases.
         """
-        tensors = [inputs]
+        tensors: List[torch.Tensor] = [inputs]
         for layer in self.layers:
-            current_tensor = []
-            for i, op in enumerate(layer):
-                current_tensor.append(op(tensors[i]))
-            current_tensor = torch.sum(torch.stack(current_tensor), 0)
-            tensors.append(current_tensor)
+            current_tensor: List[torch.Tensor] = []
+            for i, op in enumerate(layer):  # type: ignore
+                current_tensor.append(op(tensors[i]))  # type: ignore
+            tensors.append(torch.sum(torch.stack(current_tensor), 0))
         return tensors[-1]

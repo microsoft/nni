@@ -1,13 +1,8 @@
 HPO Benchmarks
 ==============
 
-..  toctree::
-    :hidden:
-
-    HPO Benchmark Example Statistics <hpo_benchmark_stats>
-
 We provide a benchmarking tool to compare the performances of tuners provided by NNI (and users' custom tuners) on different
-types of tasks. This tool uses the `automlbenchmark repository <https://github.com/openml/automlbenchmark)>`_  to run different *benchmarks* on the NNI *tuners*.
+types of tasks. This tool uses the `automlbenchmark repository <https://github.com/openml/automlbenchmark>`_  to run different *benchmarks* on the NNI *tuners*.
 The tool is located in ``examples/trials/benchmarking/automlbenchmark``. This document provides a brief introduction to the tool, its usage, and currently available benchmarks.
 
 Overview and Terminologies
@@ -29,7 +24,7 @@ and handle the repeated trial-evaluate-feedback loop in the **framework** abstra
 contains two main components: a **benchmark** from the automlbenchmark library, and an **architecture** which defines the search
 space and the evaluator. To further clarify, we provide the definition for the terminologies used in this document.
 
-* **tuner**\ : a `tuner or advisor provided by NNI <https://nni.readthedocs.io/en/stable/builtin_tuner.html>`_, or a custom tuner provided by the user.
+* **tuner**\ : a :doc:`tuner or advisor provided by NNI <tuners>`, or a custom tuner provided by the user.
 * **task**\ : an abstraction used by automlbenchmark. A task can be thought of as a tuple (dataset, metric). It provides train and test datasets to the frameworks. Then, based on the returns predictions on the test set, the task evaluates the metric (e.g., mse for regression, f1 for classification) and reports the score.
 * **benchmark**\ : an abstraction used by automlbenchmark. A benchmark is a set of tasks, along with other external constraints such as time limits.
 * **framework**\ : an abstraction used by automlbenchmark. Given a task, a framework solves the proposed regression or classification problem using train data and produces predictions on the test set. In our implementation, each framework is an architecture, which defines a search space. To evaluate a task given by the benchmark on a specific tuner, we let the tuner continuously tune the hyperparameters (by giving it cross-validation score on the train data as feedback) until the time or trial limit is reached. Then, the architecture is retrained on the entire train set using the best set of hyperparameters.
@@ -153,7 +148,7 @@ By default, the script runs the specified tuners against the specified benchmark
 all tuners simultaneously in the background, set the "serialize" flag to false in ``runbenchmark_nni.sh``.
 
 Note: the SMAC tuner, DNGO tuner, and the BOHB advisor has to be manually installed before running benchmarks on them.
-Please refer to `this page <https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni>`_ for more details
+Please refer to :doc:`this page <tuners>` for more details
 on installation.
 
 Run customized benchmarks on existing tuners
@@ -168,10 +163,10 @@ Run benchmarks on custom tuners
 
 You may also use the benchmark to compare a custom tuner written by yourself with the NNI built-in tuners. To use custom
 tuners, first make sure that the tuner inherits from ``nni.tuner.Tuner`` and correctly implements the required APIs. For
-more information on implementing a custom tuner, please refer to `here <https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html>`_.
+more information on implementing a custom tuner, please refer to :doc:`here <custom_algorithm>`.
 Next, perform the following steps:
 
-#. Install the custom tuner via the command ``nnictl algo register``. Check `this document <https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html>`_ for details. 
+#. Install the custom tuner via the command ``nnictl algo register``. Check :doc:`this document <../reference/nnictl>` for details. 
 #. In ``./nni/frameworks.yaml``\ , add a new framework extending the base framework NNI. Make sure that the parameter ``tuner_type`` corresponds to the "builtinName" of tuner installed in step 1.
 #. Run the following command
 

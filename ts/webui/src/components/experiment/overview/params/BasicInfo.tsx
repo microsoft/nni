@@ -14,12 +14,12 @@ export const BasicInfo = (): any => {
     const descriptionId: string = useId('callout-description');
     const ref = React.createRef<HTMLDivElement>();
     const [isCalloutVisible, setCalloutVisible] = useState(false);
-    const [isShowLogDrawer, setShowLogDrawer] = useState(false);
+    const [isShowLogPanel, setShowLogPanel] = useState(false);
     const onDismiss = useCallback(() => setCalloutVisible(false), []);
     const showCallout = useCallback(() => setCalloutVisible(true), []);
 
-    const closeLogDrawer = useCallback(() => setShowLogDrawer(false), []);
-    const ShowLogDrawer = useCallback(() => setShowLogDrawer(true), []);
+    const closeLogPanel = useCallback(() => setShowLogPanel(false), []);
+    const ShowLogPanel = useCallback(() => setShowLogPanel(true), []);
 
     return (
         <div>
@@ -53,17 +53,17 @@ export const BasicInfo = (): any => {
                                         onDismiss={onDismiss}
                                         setInitialFocus={true}
                                     >
-                                        <div className={styles.header}>
-                                            <p className={`${styles.title} color`} id={labelId}>
+                                        <div className={`${styles.header} font`}>
+                                            <p className={`${styles.title} color333`} id={labelId}>
                                                 Error
                                             </p>
                                         </div>
-                                        <div className={styles.inner}>
-                                            <p className={`${styles.subtext} color`} id={descriptionId}>
+                                        <div className={`${styles.inner} font`}>
+                                            <p className={`${styles.subtext} color333`} id={descriptionId}>
                                                 {EXPERIMENT.error}
                                             </p>
                                             <div className={styles.actions}>
-                                                <Link className={styles.link} onClick={ShowLogDrawer}>
+                                                <Link className={styles.link} onClick={ShowLogPanel}>
                                                     Learn about
                                                 </Link>
                                             </div>
@@ -92,7 +92,7 @@ export const BasicInfo = (): any => {
                 </div>
             </Stack>
             {/* learn about click -> default active key is dispatcher. */}
-            {isShowLogDrawer ? <LogPanel closePanel={closeLogDrawer} activeTab='dispatcher' /> : null}
+            {isShowLogPanel ? <LogPanel closePanel={closeLogPanel} activeTab='dispatcher' /> : null}
         </div>
     );
 };

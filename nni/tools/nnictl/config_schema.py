@@ -2,15 +2,10 @@
 # Licensed under the MIT license.
 
 import json
-import logging
 import os
 
 from schema import And, Optional, Or, Regex, Schema, SchemaError
-from nni.tools.package_utils.tuner_factory import (
-    create_validator_instance,
-    get_all_builtin_names,
-    get_registered_algo_meta,
-)
+from nni.tools.package_utils.tuner_factory import create_validator_instance
 
 from .common_utils import get_yml_content, print_warning
 from .constants import SCHEMA_PATH_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_TYPE_ERROR
@@ -73,18 +68,14 @@ class AlgoSchema:
         }
         self.builtin_name_schema = {}
         for k, n in self.builtin_keys.items():
-            self.builtin_name_schema[k] = {Optional(n): setChoice(n, *get_all_builtin_names(k+'s'))}
+            self.builtin_name_schema[k] = {Optional(n): setType(n, str)}
 
         self.customized_keys = set(['codeDir', 'classFileName', 'className'])
 
     def validate_class_args(self, class_args, algo_type, builtin_name):
         if not builtin_name or not class_args:
             return
-        meta = get_registered_algo_meta(builtin_name, algo_type+'s')
-        if meta and 'acceptClassArgs' in meta and meta['acceptClassArgs'] == False:
-            raise SchemaError('classArgs is not allowed.')
 
-        logging.getLogger('nni.protocol').setLevel(logging.ERROR)  # we know IPC is not there, don't complain
         validator = create_validator_instance(algo_type+'s', builtin_name)
         if validator:
             try:
@@ -359,6 +350,7 @@ kubeflow_config_schema = {
             'path': setType('path', str)
         },
         Optional('reuse'): setType('reuse', bool),
+        Optional('namespace'): setType('namespace', str),
     }, {
         'operator': setChoice('operator', 'tf-operator', 'pytorch-operator'),
         'apiVersion': setType('apiVersion', str),
@@ -377,6 +369,7 @@ kubeflow_config_schema = {
         },
         Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
         Optional('reuse'): setType('reuse', bool),
+        Optional('namespace'): setType('namespace', str),
     })
 }
 
