@@ -27,9 +27,10 @@ steps:
 
 
 # Install azcopy for cache download.
+# Something wrong with the latest (10.15.0) checksum.
 
 - powershell: |
-    choco install -y --force azcopy10
+    choco install -y --force azcopy10 --version=10.14.1
     azcopy --version
   displayName: Setup azcopy
 
