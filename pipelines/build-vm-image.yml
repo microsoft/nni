@@ -8,7 +8,7 @@ jobs:
   steps:
   - powershell: |
       cd test/vso_tools/build_vm
-      $filePath = windows.json
+      $filePath = "windows.json"
       (Get-Content $filePath).Replace("<client_id>", "$(client_id)") | Set-Content $filePath
       (Get-Content $filePath).Replace("<client_secret>", "$(client_secret)") | Set-Content $filePath
       (Get-Content $filePath).Replace("<tenant_id>", "$(tenant_id)") | Set-Content $filePath
