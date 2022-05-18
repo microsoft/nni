@@ -1,51 +1,62 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from dataclasses import dataclass
+from nni.runtime.tuner_command_channel import command_type
+
+from nni.utils import MetricType
+
+@dataclass
 class BasicCommand:
-    def __init__(self, trial_job_id, parameter_id, parameter_index, parameters, parameter_source):
-        self.trial_job_id = trial_job_id
-        self.parameter_id = parameter_id
-        self.parameter_index = parameter_index
-        self.parameters = parameters
-        self.parameter_source = parameter_source
+    command_type: str = ''
+    trial_job_id: str = ''
+    parameter_id: int = 0
+    parameter_index: int = 0
+    parameters: dict = None
+    parameter_source: str = ''
 
+@dataclass
 class ReportMetricData:
-    def __init__(self, trial_job_id, parameter_id, parameter_index, type, value, sequence):
-        self.trial_job_id = trial_job_id
-        self.parameter_id = parameter_id
-        self.parameter_index = parameter_index
-        self.type = type
-        self.value = value
-        self.sequence = sequence
+    command_type: str = 'ReportMetricData'
+    trial_job_id: str = ''
+    parameter_id: int = 0
+    parameter_index: int = 0
+    type: MetricType = None
+    value: str = ''
+    sequence: int = 0
 
+@dataclass
 class UpdateSearchSpace:
-     def __init__(self, name):
-        self.name = name
+    command_type: str = 'UpdateSearchSpace'
+    name: str = ''
 
+@dataclass
 class ImportData:
-     def __init__(self, parameter, value):
-        self.parameter = parameter
-        self.value = value
+    command_type: str = 'ImportData'
+    parameters: dict = None
+    value: str = ''
 
+@dataclass
 class TrialEnd:
-     def __init__(self, trial_job_id, event):
-        self.trial_job_id = trial_job_id
-        self.event = event
+    command_type: str = 'TrialEnd'
+    trial_job_id: str = ''
+    event: str = ''
 
+@dataclass
 class NewTrialJob(BasicCommand):
-    def __init__(self, trial_job_id, parameter_id, parameter_index, parameters, parameter_source, placement_constraint, version_info):
-        self.placement_constraint = placement_constraint
-        self.version_info = version_info
-        super().__init__(trial_job_id, parameter_id, parameter_index, parameters, parameter_source)
+    command_type: str = 'NewTrialJob'
+    placement_constraint: str = ''
+    version_info: str = ''
 
+@dataclass
 class SendTrialJobParameter(BasicCommand):
-     def __init__(self, trial_job_id, parameter_id, parameter_index, parameters, parameter_source):
-        super().__init__(trial_job_id, parameter_id, parameter_index, parameters, parameter_source)
+    command_type: str = 'SendTrialJobParameter'
 
+@dataclass
 class NoMoreTrialJobs(BasicCommand):
-    def __init__(self, trial_job_id, parameter_id, parameter_index, parameters, parameter_source):
-        super().__init__(trial_job_id, parameter_id, parameter_index, parameters, parameter_source)
+    command_type: str = 'NoMoreTrialJobs'
 
+@dataclass
 class KillTrialJob:
-     def __init__(self, trial_job_id):
-        self.trial_job_id = trial_job_id
+    command_type: str = 'KillTrialJob'
+    trial_job_id: str = 'null'

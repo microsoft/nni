@@ -6,12 +6,15 @@ Low level APIs for algorithms to communicate with NNI manager.
 """
 
 from __future__ import annotations
+import json
+from typing import TypeVar
 
 __all__ = ['TunerCommandChannel']
 
 from .command_type import CommandType
 from .websocket import WebSocket
-from .semantic_command import KillTrialJob
+from .semantic_command import ReportMetricData, UpdateSearchSpace, ImportData, TrialEnd, NewTrialJob, SendTrialJobParameter, NoMoreTrialJobs, KillTrialJob
+Command = TypeVar('Command', ReportMetricData, UpdateSearchSpace, ImportData, TrialEnd, NewTrialJob, SendTrialJobParameter, NoMoreTrialJobs, KillTrialJob)
        
 class TunerCommandChannel:
     """
@@ -49,17 +52,34 @@ class TunerCommandChannel:
     #     ...
     # def receive(self) -> Command | None:
     #     ...
+    def send(self, command: Command) -> None:
+        command_dict = command.__dict__
+        command_json = json.dumps(command_dict)
+        self._channel.send(command_json)
 
-    def send(self, command: KillTrialJob) -> None:
-        msg = b'KI' + command.trial_id
-        self._channel.send(msg)
-
-    def receive(self) -> KillTrialJob | None:
-        msg = self._channel.receive()
-        if msg is None:
+    def receive(self) -> Command | None:
+        command_json = self._channel.receive()
+        if command_json is None:
             raise RuntimeError('NNI manager closed connection')
-        tail_id = msg[2:]
-        command = KillTrialJob(tail_id)
+        command = json.loads(command_json)
+        if command['command_type'] == 'ReportMetricData':
+            command = ReportMetricData(**command)
+        elif command['command_type'] == 'UpdateSearchSpace':
+            command = UpdateSearchSpace(**command)
+        elif command['command_type'] == 'ImportData':
+            command = ImportData(**command)
+        elif command['command_type'] == 'TrialEnd':
+            command = TrialEnd(**command)
+        elif command['command_type'] == 'NewTrialJob':
+            command = NewTrialJob(**command)
+        elif command['command_type'] == 'SendTrialJobParameter':
+            command = SendTrialJobParameter(**command)
+        elif command['command_type'] == 'NoMoreTrialJobs':
+            command = NoMoreTrialJobs(**command)
+        elif command['command_type'] == 'KillTrialJob':
+            command = KillTrialJob(**command)
+        else:
+            command = None
         return command
 
     def _send(self, command_type: CommandType, data: str) -> None:
