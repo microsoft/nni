@@ -13,6 +13,7 @@ jobs:
       (Get-Content $filePath).Replace("<client_secret>", "$(client_secret)") | Set-Content $filePath
       (Get-Content $filePath).Replace("<tenant_id>", "$(tenant_id)") | Set-Content $filePath
       (Get-Content $filePath).Replace("<subscription_id>", "$(subscription_id)") | Set-Content $filePath
+      (Get-Content $filePath).Replace("<object_id>", "$(object_id)") | Set-Content $filePath
 
       Get-Content $filePath
     displayName: Prepare packer configuration
