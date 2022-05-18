@@ -19,6 +19,10 @@ jobs:
     displayName: Prepare packer configuration
 
   - powershell: |
+      az login --service-principal --username $(client_id) --password $(client_secret) --tenant $(tenant_id)
+    displayName: Try login
+
+  - powershell: |
       cd test/vso_tools/build_vm
       packer build windows.json
     displayName: Packer build
