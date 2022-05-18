@@ -18,5 +18,6 @@ jobs:
     displayName: Prepare packer configuration
 
   - powershell: |
+      cd test/vso_tools/build_vm
       packer build windows.json
     displayName: Packer build
