@@ -12,12 +12,12 @@ jobs:
   - task: PackerBuild@1
     inputs:
       templateType: 'builtin'
-      ConnectedServiceName: $(subscription_id)
+      ConnectedServiceName: 'SYSTEM - MSRA(5e859c85-6060-4b7c-a269-4ed15b684059)'
       isManagedImage: true
       managedImageName: 'image-windows'
       location: 'southeastasia'
-      storageAccountName: $(storage_acccount)
-      azureResourceGroup: $(resource_group)
+      storageAccountName: 'nni'
+      azureResourceGroup: 'nni'
       baseImageSource: 'default'
       baseImage: 'MicrosoftWindowsServer:WindowsServer:2016-Datacenter:windows'
       packagePath: '.'
