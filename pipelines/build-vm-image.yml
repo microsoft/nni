@@ -7,18 +7,16 @@ jobs:
     vmImage: windows-latest
   steps:
   - powershell: |
-      Write-Host "Hello world!"
+      cd test/vso_tools/build_vm
+      $filePath = windows.json
+      (Get-Content $filePath).Replace("<client_id>", "$(client_id)") | Set-Content $filePath
+      (Get-Content $filePath).Replace("<client_secret>", "$(client_secret)") | Set-Content $filePath
+      (Get-Content $filePath).Replace("<tenant_id>", "$(tenant_id)") | Set-Content $filePath
+      (Get-Content $filePath).Replace("<subscription_id>", "$(subscription_id)") | Set-Content $filePath
 
-  - task: PackerBuild@1
-    inputs:
-      ConnectedServiceName: SYSTEM - MSRA(5e859c85-6060-4b7c-a269-4ed15b684059)
-      isManagedImage: true
-      managedImageName: image-windows
-      location: southeastasia
-      storageAccountName: nni
-      azureResourceGroup: nni
-      baseImageSource: default
-      baseImage: MicrosoftWindowsServer:WindowsServer:2022-Datacenter:windows
-      packagePath: test/vso_tools
-      deployScriptPath: build_vm_windows.ps1
-      skipTempFileCleanupDuringVMDeprovision: false
+      Get-Content -Path $filePath | Out-Printer
+    displayName: Prepare packer configuration
+
+  - powershell: |
+      packer build windows.json
+    displayName: Packer build

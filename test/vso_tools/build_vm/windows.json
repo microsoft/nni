@@ -1,0 +1,40 @@
+{
+  "builders": [
+    {
+      "type": "azure-arm",
+      "client_id": "<client_id>",
+      "client_secret": "<client_secret>",
+      "tenant_id": "<tenant_id>",
+      "subscription_id": "<subscription_id>",
+      "managed_image_resource_group_name": "nni",
+      "managed_image_name": "image-windows",
+      "os_type": "Windows",
+      "image_publisher": "MicrosoftWindowsServer",
+      "image_offer": "WindowsServer",
+      "image_sku": "2016-Datacenter",
+      "communicator": "winrm",
+      "winrm_use_ssl": true,
+      "winrm_insecure": true,
+      "winrm_timeout": "5m",
+      "winrm_username": "packer",
+      "azure_tags": {
+        "dept": "Engineering",
+        "task": "Image deployment"
+      },
+      "build_resource_group_name": "nni",
+      "vm_size": "Standard_D2_v2"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "powershell",
+      "inline": [
+        "Add-WindowsFeature Web-Server",
+        "while ((Get-Service RdAgent).Status -ne 'Running') { Start-Sleep -s 5 }",
+        "while ((Get-Service WindowsAzureGuestAgent).Status -ne 'Running') { Start-Sleep -s 5 }",
+        "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /quiet /quit",
+        "while($true) { $imageState = Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup\\State | Select ImageState; if($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') { Write-Output $imageState.ImageState; Start-Sleep -s 10  } else { break } }"
+      ]
+    }
+  ]
+}
