@@ -42,6 +42,14 @@ steps:
   displayName: Setup swig
 
 
+# Install CUDA.
+
+- powershell: |
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+    iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/GoogleCloudPlatform/compute-gpu-installation/main/windows/install_gpu_driver.ps1'))
+  displayName: Install CUDA
+
+
 # Install python.
 # Originally I tried to install the python by downloading from official, and run the installation.
 #
