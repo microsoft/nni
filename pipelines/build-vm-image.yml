@@ -12,7 +12,7 @@ jobs:
   - task: PackerBuild@1
     inputs:
       templateType: 'builtin'
-      ConnectedServiceName: $(subscription_id)
+      connectedServiceName: $(subscription_id)
       isManagedImage: true
       managedImageName: 'image-windows'
       location: 'southeastasia'
