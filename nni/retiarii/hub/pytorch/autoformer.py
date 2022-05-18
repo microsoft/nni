@@ -6,9 +6,9 @@ from typing import Optional, Tuple, cast
 
 import torch
 import torch.nn.functional as F
+from timm.models.layers import trunc_normal_, DropPath
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
-from timm.models.layers import trunc_normal_, DropPath
 
 
 class RelativePosition2D(nn.Module):
@@ -73,7 +73,7 @@ class RelativePosition2D(nn.Module):
 class RelativePositionAttention(nn.Module):
     """
     This class is designed to support the relative porision in attention.
-    The pytorch built-in nn.MultiheadAttention() does not support relative position embedding. 
+    The pytorch built-in nn.MultiheadAttention() does not support relative position embedding.
     """
     def __init__(
             self,
