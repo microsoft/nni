@@ -51,10 +51,6 @@ steps:
     $url = 'https://developer.download.nvidia.com/compute/cuda/11.4.0/network_installers/cuda_11.4.0_win10_network.exe';
     $file_dir = 'C:\NVIDIA-Driver\cuda_11.4.0_win10_network.exe';
 
-    # Check if the GPU exists and if the driver is already installed
-    Find-GPU
-    Check-Driver
-
     # Create the folder for the driver download
     if (!(Test-Path -Path 'C:\NVIDIA-Driver')) {
         New-Item -Path 'C:\' -Name 'NVIDIA-Driver' -ItemType 'directory' | Out-Null
