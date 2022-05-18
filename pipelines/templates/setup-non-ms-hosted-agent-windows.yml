@@ -36,6 +36,7 @@ steps:
 
 
 # Install swig.
+# swig 4.0 is not compatible with ConfigSpace.
 
 - powershell: |
     choco install -y --force swig --version=3.0.12
