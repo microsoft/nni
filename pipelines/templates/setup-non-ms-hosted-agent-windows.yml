@@ -47,8 +47,27 @@ steps:
 # Install CUDA.
 
 - powershell: |
-    Set-ExecutionPolicy Bypass -Scope Process -Force
-    iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/GoogleCloudPlatform/compute-gpu-installation/main/windows/install_gpu_driver.ps1'))
+    # Set the correct url for download and uses the appropriate file name to install the driver
+    $url = 'https://developer.download.nvidia.com/compute/cuda/11.4.0/network_installers/cuda_11.4.0_win10_network.exe';
+    $file_dir = 'C:\NVIDIA-Driver\cuda_11.4.0_win10_network.exe';
+
+    # Check if the GPU exists and if the driver is already installed
+    Find-GPU
+    Check-Driver
+
+    # Create the folder for the driver download
+    if (!(Test-Path -Path 'C:\NVIDIA-Driver')) {
+        New-Item -Path 'C:\' -Name 'NVIDIA-Driver' -ItemType 'directory' | Out-Null
+    }
+
+    # Download the file to a specfied directory
+    Invoke-WebRequest $url -OutFile $file_dir
+
+    # Install the file with the specified path from earlier as well as the RunAs admin option
+    Start-Process -FilePath $file_dir -ArgumentList '/s /n' -Wait
+
+    # Check driver
+    &'C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe'
   displayName: Install CUDA
 
 
