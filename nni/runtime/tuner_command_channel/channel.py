@@ -7,7 +7,7 @@ Low level APIs for algorithms to communicate with NNI manager.
 
 from __future__ import annotations
 import json
-from typing import TypeVar
+from typing import Union
 
 __all__ = ['TunerCommandChannel']
 
@@ -17,8 +17,8 @@ from .semantic_command import ReportMetricData, UpdateSearchSpace
 from .semantic_command import ImportData, TrialEnd
 from .semantic_command import NewTrialJob, SendTrialJobParameter
 from .semantic_command import NoMoreTrialJobs, KillTrialJob
-Command = TypeVar('Command', ReportMetricData, UpdateSearchSpace,
-ImportData, TrialEnd, NewTrialJob, SendTrialJobParameter, NoMoreTrialJobs, KillTrialJob)
+Command = Union[ReportMetricData, UpdateSearchSpace,
+ImportData, TrialEnd, NewTrialJob, SendTrialJobParameter, NoMoreTrialJobs, KillTrialJob]
 
 class TunerCommandChannel:
     """

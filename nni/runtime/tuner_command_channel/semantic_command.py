@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
+from typing import Literal
 from nni.utils import MetricType
 
 @dataclass
@@ -10,7 +11,7 @@ class BasicCommand:
     trial_job_id: str = ''
     parameter_id: int = 0
     parameter_index: int = 0
-    parameters: dict = None
+    parameters: dict = {}
     parameter_source: str = ''
 
 @dataclass
@@ -19,7 +20,7 @@ class ReportMetricData:
     trial_job_id: str = ''
     parameter_id: int = 0
     parameter_index: int = 0
-    type: MetricType = None
+    type: Literal['FINAL', 'PERIODICAL', 'REQUEST_PARAMETER'] = MetricType.PERIODICAL
     value: str = ''
     sequence: int = 0
 
@@ -31,7 +32,7 @@ class UpdateSearchSpace:
 @dataclass
 class ImportData:
     command_type: str = 'ImportData'
-    parameters: dict = None
+    parameters: dict = {}
     value: str = ''
 
 @dataclass
