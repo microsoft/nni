@@ -10,11 +10,12 @@ jobs:
       cd test/vso_tools/build_vm
       $filePath = "windows.json"
       (Get-Content $filePath).Replace("<client_id>", "$(client_id)") | Set-Content $filePath
-      (Get-Content $filePath).Replace("<client_secret>", "$(client_secret)") | Set-Content $filePath
-      (Get-Content $filePath).Replace("<tenant_id>", "$(tenant_id)") | Set-Content $filePath
-      (Get-Content $filePath).Replace("<subscription_id>", "$(subscription_id)") | Set-Content $filePath
+      # (Get-Content $filePath).Replace($Source_IP,$Target_IP) | Set-Content $filePath
+      # (Get-Content $filePath).Replace("<client_secret>", "$(client_secret)") | Set-Content $filePath
+      # (Get-Content $filePath).Replace("<tenant_id>", "$(tenant_id)") | Set-Content $filePath
+      # (Get-Content $filePath).Replace("<subscription_id>", "$(subscription_id)") | Set-Content $filePath
 
-      Get-Content -Path $filePath | Out-Printer
+      # Get-Content -Path $filePath | Out-Printer
     displayName: Prepare packer configuration
 
   - powershell: |
