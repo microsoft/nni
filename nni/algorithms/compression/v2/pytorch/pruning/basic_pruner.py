@@ -160,7 +160,7 @@ class _LevelPruner(BasicPruner):
 
 class LevelPruner(_LevelPruner):
     r"""
-    This is a basic pruner pruning the model in the granularity of single value. In some papers called it magnitude pruning or fine-grained pruning.
+    This is a basic pruner pruning the model in the granularity of single value. In some papers, it is also called magnitude pruning or fine-grained pruning.
     It will mask the smallest magnitude weights in each specified layer by a saprsity ratio configured in the config list.
 
     Parameters
@@ -193,7 +193,7 @@ class LevelPruner(_LevelPruner):
 
 class BalancedPruner(_LevelPruner):
     r"""
-    This pruner is an extension of LevelPruner, it support generating balanced masks.
+    This pruner is an extension of LevelPruner, it supports generating balanced masks.
     Take linear operation as an example, weight tensor will be split into sub-block whose shape
     is aligned to balance_gran. Then finegrained pruning will be applied internal of sub-block.
     This sparsity pattern has more chance to achieve better trade-off between model performance
