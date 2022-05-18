@@ -8,3 +8,18 @@ jobs:
   steps:
   - powershell: |
       Write-Host "Hello world!"
+
+  - task: PackerBuild@1
+    inputs:
+      templateType: 'builtin'
+      ConnectedServiceName: $(subscription_id)
+      isManagedImage: true
+      managedImageName: 'image-windows'
+      location: 'southeastasia'
+      storageAccountName: $(storage_acccount)
+      azureResourceGroup: $(resource_group)
+      baseImageSource: 'default'
+      baseImage: 'MicrosoftWindowsServer:WindowsServer:2016-Datacenter:windows'
+      packagePath: '.'
+      deployScriptPath: 'setup.py'
+      skipTempFileCleanupDuringVMDeprovision: false
