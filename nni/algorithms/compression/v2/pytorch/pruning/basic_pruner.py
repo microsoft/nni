@@ -128,96 +128,6 @@ class BasicPruner(Pruner):
 
 
 class _LevelPruner(BasicPruner):
-    r"""
-    This is a basic pruner pruning the model in the granularity of single value. In some papers called it magnitude pruning or fine-grained pruning.
-    It will mask the smallest magnitude weights in each specified layer by a saprsity ratio configured in the config list.
-
-    Parameters
-    ----------
-    model
-        Model to be pruned.
-    config_list
-        Supported keys:
-            - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
-            - sparsity_per_layer : Equals to sparsity.
-            - op_types : Operation types to be pruned.
-            - op_names : Operation names to be pruned.
-            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
-            - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode
-        'normal' or 'balance'.
-        If set 'normal' mode, target tensor will be pruned in the way of finegrained pruning.
-        If set 'balance' mode, a special sparse pattern will be chosen by pruner. Take linear
-        operation as an example, weight tensor will be split into sub-block whose shape is aligned to
-        balance_gran. Then finegrained pruning will be applied internal of sub-block. This sparsity
-        pattern has more chance to achieve better trade-off between model performance and hardware
-        acceleration. Please refer to releated paper for further information `Balanced Sparsity for
-        Efficient DNN Inference on GPU <https://arxiv.org/pdf/1811.00206.pdf>`__.
-    balance_gran
-        Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning
-        without awaring balance, namely normal finegrained pruning.
-        If passing list of int, LevelPruner will prune the model in the granularity of multi-dimension block.
-        Attention that the length of balance_gran should be smaller than tensor dimension.
-        For instance, in Linear operation, length of balance_gran should be equal or smaller than two since
-        dimension of pruning weight is two. If setting balbance_gran = [5, 5], sparsity = 0.6, pruner will
-        divide pruning parameters into multiple block with tile size (5,5) and each bank has 5 * 5 values
-        and 10 values would be kept after pruning. Finegrained pruning is applied in the granularity of block
-        so that each block will keep same number of non-zero values after pruning. Such pruning method "balance"
-        the non-zero value in tensor which create chance for better hardware acceleration.
-
-        Note: If length of given balance_gran smaller than length of pruning tensor shape, it will be made up
-        in right align(such as example 1).
-
-        Example 1::
-
-            operation: Linear
-            pruning tensor: weight
-            pruning tensor shape: [32, 32]
-            sparsity: 50%
-            balance_gran: [4]
-            pruning result: Weight tensor whose shape is [32, 32] will be split into 256 [1, 4] sub-blocks.
-                            Each sub-block will be pruned 2 values.
-
-        Example 2::
-
-            operation: Linear
-            pruning tensor: weight
-            pruning tensor shape: [64, 64]
-            sparsity: 25%
-            balance_gran: [32, 32]
-            pruning result: Weight tensor whose shape is [64, 64] will be split into 4 [32, 32] sub-blocks.
-                            Each sub-block will be pruned 256 values.
-    block_sparse_size
-        (experimental) By default, block_sparse_size is None, which means pruning granularity is single value.
-        If block_sparse_size is set, pruner will treat the block as a whole to prune.
-        Note that block_sparse_size is back-aligned with weight size.
-
-        Example::
-        
-            pruning tensor: weight
-            pruning tensor shape: [2, 4, 4]
-            sparsity: 25%
-            block_sparse_size: [2, 2]
-            generated mask might be:
-            [[[1., 1., 1., 1.],
-              [1., 1., 1., 1.],
-              [1., 1., 1., 1.],
-              [1., 1., 1., 1.]],
-             [[0., 0., 1., 1.],
-              [0., 0., 1., 1.],
-              [1., 1., 0., 0.],
-              [1., 1., 0., 0.]]]
-
-    Examples
-    --------
-        >>> model = ...
-        >>> from nni.compression.pytorch.pruning import LevelPruner
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-        >>> pruner = LevelPruner(model, config_list)
-        >>> masked_model, masks = pruner.compress()
-
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/level_pruning_torch.py <examples/model_compress/pruning/level_pruning_torch.py>`
-    """
 
     def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: List | None = None,
                  block_sparse_size: int | List[int] | None = None):
@@ -338,6 +248,7 @@ class BalancedPruner(_LevelPruner):
     align_n
         (experimental) align_n determines the size of each unit in a balanced block. By default align_n is None,
         means each unit in a balanced block is a single value.
+        Note that `align_n` is back-aligned with weight size and make sure the pruned weight shape can be devided by `align_n`.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], balance_gran: List, align_n: int | List[int] | None = None):
@@ -363,7 +274,7 @@ class BlockPruner(_LevelPruner):
     block_sparse_size
         (experimental) By default, block_sparse_size is None, which means pruning granularity is single value.
         If block_sparse_size is set, pruner will treat the block as a whole to prune.
-        Note that block_sparse_size is back-aligned with weight size.
+        Note that `block_sparse_size` is back-aligned with weight size and make sure the pruned weight shape can be devided by `block_sparse_size`.
 
         Example::
 

@@ -31,7 +31,9 @@ There are two kinds of pruners in NNI, please refer to :ref:`basic pruner <basic
    * - :ref:`admm-pruner`
      - Pruning based on ADMM optimization technique `Reference Paper <https://arxiv.org/abs/1804.03294>`__
    * - :ref:`balanced-pruner`
-     - Split the module weight into sub-blocks and prune with the same strategy in each sub-block `Reference Paper <https://arxiv.org/pdf/1811.00206.pdf>`__
+     - Split the module weight into sub-blocks and prune with the same sparsity ratio in each sub-block `Reference Paper <https://arxiv.org/pdf/1811.00206.pdf>`__
+   * - :ref:`block-pruner`
+     - Pruning the module weight by block sparse based on L1 norm for each block.
    * - :ref:`linear-pruner`
      - Sparsity ratio increases linearly during each pruning rounds, in each round, using a basic pruner to prune the model.
    * - :ref:`agp-pruner`
