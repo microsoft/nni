@@ -2,8 +2,6 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from nni.runtime.tuner_command_channel import command_type
-
 from nni.utils import MetricType
 
 @dataclass
