@@ -18,7 +18,7 @@ jobs:
       storageAccountName: nni
       azureResourceGroup: nni
       baseImageSource: default
-      baseImage: Win2022Datacenter
+      baseImage: MicrosoftWindowsServer:WindowsServer:2022-Datacenter:windows
       packagePath: test/vso_tools
       deployScriptPath: build_vm_windows.ps1
       skipTempFileCleanupDuringVMDeprovision: false
