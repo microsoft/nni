@@ -212,7 +212,7 @@ class TpeTuner(Tuner):
             if isinstance(loss, dict) and 'default' in loss:
                 loss = loss['default']
             if self.optimize_mode is OptimizeMode.Maximize:
-                loss = -trial['value']
+                loss = -loss
             for key, value in param.items():
                 self._history[key].append(Record(value, loss))
         _logger.info(f'Replayed {len(data)} trials')
