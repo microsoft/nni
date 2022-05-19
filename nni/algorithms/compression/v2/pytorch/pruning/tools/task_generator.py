@@ -4,7 +4,7 @@
 from copy import deepcopy
 import logging
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 import json_tricks
 
 import numpy as np
@@ -150,9 +150,9 @@ class LotteryTicketTaskGenerator(FunctionBasedTaskGenerator):
 
 
 class SimulatedAnnealingTaskGenerator(TaskGenerator):
-    def __init__(self, origin_model: Module, origin_config_list: List[Dict], origin_masks: Dict[str, Dict[str, Tensor]] = {},
+    def __init__(self, origin_model: Optional[Module], origin_config_list: Optional[List[Dict]], origin_masks: Dict[str, Dict[str, Tensor]] = {},
                  start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
-                 perturbation_magnitude: float = 0.35, log_dir: str = '.', keep_intermediate_result: bool = False):
+                 perturbation_magnitude: float = 0.35, log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False):
         """
         Parameters
         ----------
@@ -196,9 +196,9 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         self.target_sparsity_list = config_list_canonical(model, config_list)
         self._adjust_target_sparsity()
 
-        self._temp_config_list = None
-        self._current_sparsity_list = None
-        self._current_score = None
+        self._temp_config_list = []
+        self._current_sparsity_list = []
+        self._current_score = 0.
 
         super().reset(model, config_list=config_list, masks=masks)
 
@@ -248,7 +248,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
 
         return self._sparsity_to_config_list(rescaled_sparsity, config), rescaled_sparsity
 
-    def _rescale_sparsity(self, random_sparsity: List, target_sparsity: float, op_names: List) -> List:
+    def _rescale_sparsity(self, random_sparsity: List, target_sparsity: float, op_names: List) -> Optional[List]:
         assert len(random_sparsity) == len(op_names)
 
         num_weights = sorted([self.weights_numel[op_name] for op_name in op_names])
@@ -267,7 +267,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         scale = target_sparsity / (total_weights_pruned / total_weights)
 
         # rescale the sparsity
-        sparsity = np.asarray(sparsity) * scale
+        sparsity = list(np.asarray(sparsity) * scale)
         return sparsity
 
     def _sparsity_to_config_list(self, sparsity: List, config: Dict) -> List[Dict]:
@@ -285,7 +285,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         # decrease magnitude with current temperature
         magnitude = self.current_temperature / self.start_temperature * self.perturbation_magnitude
         for config, current_sparsity in zip(self.target_sparsity_list, self._current_sparsity_list):
-            if len(current_sparsity) == 0:
+            if not current_sparsity:
                 sub_temp_config_list = [deepcopy(config) for i in range(len(config['op_names']))]
                 for temp_config, op_name in zip(sub_temp_config_list, config['op_names']):
                     temp_config.update({'total_sparsity': 0, 'op_names': [op_name]})
@@ -327,11 +327,12 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
 
     def generate_tasks(self, task_result: TaskResult) -> List[Task]:
         # initial/update temp config list
-        if self._temp_config_list is None:
+        if not self._temp_config_list:
             self._init_temp_config_list()
         else:
             score = self._tasks[task_result.task_id].score
-            if self._current_sparsity_list is None:
+            assert score is not None, 'SimulatedAnnealingTaskGenerator need each score is not None.'
+            if not self._current_sparsity_list:
                 self._current_sparsity_list = deepcopy(self._temp_sparsity_list)
                 self._current_score = score
             else:

@@ -10,6 +10,9 @@
  *  Outputs:
  *
  *      [1970-01-01 00:00:00] INFO (moduleName) hello { to: 'world' }
+ *
+ *  Loggers use `util.inspect()` to format values,
+ *  so objects will be smartly stringified and exceptions will include stack trace.
  **/
 
 import util from 'util';

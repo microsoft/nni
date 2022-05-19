@@ -51,7 +51,10 @@ def main():
         assessor = _create_algo(exp_params['assessor'], 'assessor')
     else:
         assessor = None
-    dispatcher = MsgDispatcher(tuner, assessor)
+
+    # the url should be "ws://localhost:{port}/tuner" or "ws://localhost:{port}/{url_prefix}/tuner"
+    url = os.environ['NNI_TUNER_COMMAND_CHANNEL']
+    dispatcher = MsgDispatcher(url, tuner, assessor)
 
     try:
         dispatcher.run()

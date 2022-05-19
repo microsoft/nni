@@ -1,32 +1,24 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+__all__ = [
+    'CommandType',
+    'LegacyCommandChannel',
+    'send',
+    'receive',
+    '_set_in_file',
+    '_set_out_file',
+    '_get_out_file',
+]
+
 import logging
 import os
 import threading
-from enum import Enum
+
+from .command_type import CommandType
 
 _logger = logging.getLogger(__name__)
 
-
-class CommandType(Enum):
-    # in
-    Initialize = b'IN'
-    RequestTrialJobs = b'GE'
-    ReportMetricData = b'ME'
-    UpdateSearchSpace = b'SS'
-    ImportData = b'FD'
-    AddCustomizedTrialJob = b'AD'
-    TrialEnd = b'EN'
-    Terminate = b'TE'
-    Ping = b'PI'
-
-    # out
-    Initialized = b'ID'
-    NewTrialJob = b'TR'
-    SendTrialJobParameter = b'SP'
-    NoMoreTrialJobs = b'NO'
-    KillTrialJob = b'KI'
 
 _lock = threading.Lock()
 try:
@@ -36,6 +28,29 @@ try:
 except OSError:
     _logger.debug('IPC pipeline not exists')
 
+def _set_in_file(in_file):
+    global _in_file
+    _in_file = in_file
+
+def _set_out_file(out_file):
+    global _out_file
+    _out_file = out_file
+
+def _get_out_file():
+    return _out_file
+
+class LegacyCommandChannel:
+    def connect(self):
+        pass
+
+    def disconnect(self):
+        pass
+
+    def _send(self, command, data):
+        send(command, data)
+
+    def _receive(self):
+        return receive()
 
 def send(command, data):
     """Send command to Training Service.

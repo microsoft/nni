@@ -1,6 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 from collections import OrderedDict
-from typing import Callable, List, Optional, Union, Dict
+from typing import Callable, List, Optional, Union, Dict, Tuple, cast
 
 import numpy as np
 import torch
@@ -89,7 +92,7 @@ def compute_vertex_channels(input_channels, output_channels, matrix):
     return vertex_channels
 
 
-def prune(matrix, ops):
+def prune(matrix, ops) -> Tuple[np.ndarray, List[Union[str, Callable[[int], nn.Module]]]]:
     """
     Prune the extraneous parts of the graph.
 
@@ -152,11 +155,17 @@ class _NasBench101CellFixed(nn.Module):
 
         assert num_nodes == len(operations) + 2 == len(adjacency_list) + 1
 
-        self.operations = ['IN'] + operations + ['OUT']  # add psuedo nodes
+        raw_operations: List[Union[str, Callable[[int], nn.Module]]] = list(operations)
+        del operations  # operations is no longer needed. Delete it to avoid misuse
+
+        # add psuedo nodes
+        raw_operations.insert(0, 'IN')
+        raw_operations.append('OUT')
+
         self.connection_matrix = self.build_connection_matrix(adjacency_list, num_nodes)
         del num_nodes  # raw number of nodes is no longer used
 
-        self.connection_matrix, self.operations = prune(self.connection_matrix, self.operations)
+        self.connection_matrix, self.operations = prune(self.connection_matrix, raw_operations)
 
         self.hidden_features = compute_vertex_channels(in_features, out_features, self.connection_matrix)
 
@@ -172,7 +181,8 @@ class _NasBench101CellFixed(nn.Module):
             self.projections.append(projection(in_features, self.hidden_features[i]))
 
         for i in range(1, self.num_nodes - 1):
-            self.ops.append(operations[i - 1](self.hidden_features[i]))
+            operation = cast(Callable[[int], nn.Module], self.operations[i])
+            self.ops.append(operation(self.hidden_features[i]))
 
     @staticmethod
     def build_connection_matrix(adjacency_list, num_nodes):
@@ -361,7 +371,7 @@ class NasBench101Mutator(Mutator):
     # for validation purposes
     # for python execution engine
 
-    def __init__(self, label: Optional[str]):
+    def __init__(self, label: str):
         super().__init__(label=label)
 
     @staticmethod
@@ -378,9 +388,11 @@ class NasBench101Mutator(Mutator):
         return 1
 
     def mutate(self, model: Model):
+        max_num_edges = cast(int, None)
         for node in model.get_nodes_by_label(self.label):
             max_num_edges = node.operation.parameters['max_num_edges']
             break
+        assert max_num_edges is not None
         mutation_dict = {mut.mutator.label: mut.samples for mut in model.history}
         num_nodes = mutation_dict[f'{self.label}/num_nodes'][0]
         adjacency_list = [mutation_dict[f'{self.label}/input{i}'] for i in range(1, num_nodes)]

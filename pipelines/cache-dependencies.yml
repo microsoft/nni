@@ -38,3 +38,11 @@ jobs:
   - template: templates/cache-dependencies-template.yml
     parameters:
       platform: macos
+
+- job: ubuntu_gpu
+  pool:
+    vmImage: ubuntu-latest
+  steps:
+  - template: templates/cache-dependencies-template.yml
+    parameters:
+      platform: ubuntu-latest-gpu

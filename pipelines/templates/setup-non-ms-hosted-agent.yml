@@ -1,0 +1,85 @@
+steps:
+
+# OS from VMSS is very clean... Need to install basic utilities.
+
+# Build essentials are required.
+
+- script: |
+    set -e
+    sudo apt update
+    sudo apt install -y build-essential cmake
+  displayName: Install build essential
+
+
+# Install azcopy for cache download.
+# https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10#use-azcopy-in-a-script
+
+- script: |
+    set -e
+    mkdir -p tmp
+    cd tmp
+    wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux && tar -xf azcopy_v10.tar.gz --strip-components=1
+    sudo cp ./azcopy /usr/bin/
+    sudo chmod +x /usr/bin/azcopy
+  displayName: Setup azcopy
+
+# VM with GPU needs to install drivers. Reference:
+# https://docs.microsoft.com/en-us/azure/virtual-machines/linux/n-series-driver-setup
+# https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
+# https://linuxhint.com/install-cuda-ubuntu/
+
+- script: |
+    lspci | grep -i NVIDIA
+  displayName: GPU status verification
+
+- script: |
+    set -e
+    sudo apt install linux-headers-$(uname -r) -y
+    sudo wget -O /etc/apt/preferences.d/cuda-repository-pin-600 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+    sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
+    sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+    sudo apt update
+    sudo apt install -y cuda-drivers
+  displayName: Install CUDA
+
+# Technically we need a reboot here, but looks like it also works without reboot.
+
+- script: |
+    nvidia-smi
+  displayName: nvidia-smi verification
+
+
+# UsePythonVersion task only works when the specific Python version is already installed.
+
+# The following is for linux.
+# Reference: https://dev.to/akaszynski/create-an-azure-self-hosted-agent-without-going-insane-173g
+# We only need Python 3.7 and 3.9 for now.
+# --system-site-packages is required to make packages installed with --user visible to virtualenv.
+- script: |
+    set -e
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt install -y python3.7-dev python3.7-venv python3.9-dev python3.9-venv
+    mkdir $(Agent.ToolsDirectory)/Python
+  displayName: Download Python
+
+- script: |
+    set -e
+    cd $(Agent.ToolsDirectory)/Python
+    PY37_VER=$(python3.7 -c "import sys; print('.'.join([f'{val}' for val in sys.version_info[:3]]))")
+    mkdir $PY37_VER
+    ln -s $PY37_VER 3.7
+    cd $PY37_VER
+    python3.7 -m venv x64 --system-site-packages
+    touch x64.complete
+  displayName: Configure Python 3.7
+
+- script: |
+    set -e
+    cd $(Agent.ToolsDirectory)/Python
+    PY39_VER=$(python3.9 -c "import sys; print('.'.join([f'{val}' for val in sys.version_info[:3]]))")
+    mkdir $PY39_VER
+    ln -s $PY39_VER 3.9
+    cd $PY39_VER
+    python3.9 -m venv x64 --system-site-packages
+    touch x64.complete
+  displayName: Configure Python 3.9

@@ -9,7 +9,9 @@ The support remains limited. Known limitations include:
 - The code contains duplicates. Needs refactor.
 """
 
-from typing import List, Tuple, Optional
+from __future__ import annotations
+
+from typing import cast
 
 import torch
 import torch.nn as nn
@@ -48,13 +50,13 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
 
     _arch_parameter_names = ['_arch_alpha', '_binary_gates']
 
-    def __init__(self, paths: List[Tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
+    def __init__(self, paths: list[tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__(paths, alpha, softmax, label)
         self._binary_gates = nn.Parameter(torch.randn(len(paths)) * 1E-3)
 
         # like sampling-based methods, it has a ``_sampled``.
-        self._sampled: Optional[str] = None
-        self._sample_idx: Optional[int] = None
+        self._sampled: str | None = None
+        self._sample_idx: int | None = None
 
     def forward(self, *args, **kwargs):
         def run_function(ops, active_id, **kwargs):
@@ -94,7 +96,7 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
             self._sample_idx = self.op_names.index(self._sampled)
         else:
             probs = self._softmax(self._arch_alpha)
-            self._sample_idx = torch.multinomial(probs, 1)[0].item()
+            self._sample_idx = int(torch.multinomial(probs, 1)[0].item())
             self._sampled = self.op_names[self._sample_idx]
 
         # set binary gates
@@ -109,10 +111,11 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
         """Chose the argmax if label isn't found in memo."""
         if self.label in memo:
             return {}  # nothing new to export
-        return {self.label: self.op_names[torch.argmax(self._arch_alpha).item()]}
+        return {self.label: self.op_names[int(torch.argmax(self._arch_alpha).item())]}
 
     def finalize_grad(self):
         binary_grads = self._binary_gates.grad
+        assert binary_grads is not None
         with torch.no_grad():
             if self._arch_alpha.grad is None:
                 self._arch_alpha.grad = torch.zeros_like(self._arch_alpha.data)
@@ -129,10 +132,10 @@ class ProxylessMixedInput(DifferentiableMixedInput):
 
     _arch_parameter_names = ['_arch_alpha', '_binary_gates']
 
-    def __init__(self, n_candidates: int, n_chosen: Optional[int], alpha: torch.Tensor, softmax: nn.Module, label: str):
+    def __init__(self, n_candidates: int, n_chosen: int | None, alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__(n_candidates, n_chosen, alpha, softmax, label)
         self._binary_gates = nn.Parameter(torch.randn(n_candidates) * 1E-3)
-        self._sampled: Optional[int] = None
+        self._sampled: int | None = None
 
     def forward(self, inputs):
         def run_function(active_sample):
@@ -164,13 +167,13 @@ class ProxylessMixedInput(DifferentiableMixedInput):
         else:
             probs = self._softmax(self._arch_alpha)
             sample = torch.multinomial(probs, 1)[0].item()
-            self._sampled = sample
+            self._sampled = int(sample)
 
         # set binary gates
         with torch.no_grad():
             self._binary_gates.zero_()
             self._binary_gates.grad = torch.zeros_like(self._binary_gates.data)
-            self._binary_gates.data[sample] = 1.0
+            self._binary_gates.data[cast(int, self._sampled)] = 1.0
 
         return {self.label: self._sampled}
 
@@ -182,6 +185,7 @@ class ProxylessMixedInput(DifferentiableMixedInput):
 
     def finalize_grad(self):
         binary_grads = self._binary_gates.grad
+        assert binary_grads is not None
         with torch.no_grad():
             if self._arch_alpha.grad is None:
                 self._arch_alpha.grad = torch.zeros_like(self._arch_alpha.data)

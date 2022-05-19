@@ -2,14 +2,13 @@
 // Licensed under the MIT license.
 
 import { spawn } from 'child_process';
+import globals from './globals';
 import { Logger, getLogger } from './log';
 
 const logger: Logger = getLogger('pythonScript');
 
-const python: string = process.platform === 'win32' ? 'python.exe' : 'python3';
-
 export async function runPythonScript(script: string, logTag?: string): Promise<string> {
-    const proc = spawn(python, [ '-c', script ]);
+    const proc = spawn(globals.args.pythonInterpreter, [ '-c', script ]);
 
     let stdout: string = '';
     let stderr: string = '';

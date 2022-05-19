@@ -1,7 +1,7 @@
 /* react-json-tree background */
-#description ul,
+.description ul,
 #allList ul {
-    background: none !important;
+    background: none;
 }
 
 .tabScroll {
@@ -46,11 +46,6 @@
     }
 }
 
-/* office-fabric-ui */
-.ms-DetailsRow {
-    height: 30px;
-}
-
 .detail-table {
     padding-top: 5px;
 }
@@ -78,3 +73,19 @@ $checkboxwidth: 17px;
         }
     }
 }
+
+/* trial table: open row style */
+.logpath {
+    margin: 10px 0 10px 10px;
+    font-size: 14px;
+
+    .logName {
+        color: #268bd2;
+        margin-right: 5px;
+    }
+
+    .error {
+        color: #cb4b16;
+    }
+}
+

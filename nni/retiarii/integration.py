@@ -3,13 +3,13 @@
 
 import logging
 import os
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import nni
 from nni.common.serializer import PayloadTooLarge
 from nni.common.version import version_dump
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
-from nni.runtime.protocol import CommandType, send
+from nni.runtime.tuner_command_channel import CommandType
 from nni.utils import MetricType
 
 from .graph import MetricData
@@ -48,16 +48,16 @@ class RetiariiAdvisor(MsgDispatcherBase):
     final_metric_callback
     """
 
-    def __init__(self):
-        super(RetiariiAdvisor, self).__init__()
+    def __init__(self, url: str):
+        super().__init__(url)
         register_advisor(self)  # register the current advisor as the "global only" advisor
         self.search_space = None
 
-        self.send_trial_callback: Callable[[dict], None] = None
-        self.request_trial_jobs_callback: Callable[[int], None] = None
-        self.trial_end_callback: Callable[[int, bool], None] = None
-        self.intermediate_metric_callback: Callable[[int, MetricData], None] = None
-        self.final_metric_callback: Callable[[int, MetricData], None] = None
+        self.send_trial_callback: Optional[Callable[[dict], None]] = None
+        self.request_trial_jobs_callback: Optional[Callable[[int], None]] = None
+        self.trial_end_callback: Optional[Callable[[int, bool], None]] = None
+        self.intermediate_metric_callback: Optional[Callable[[int, MetricData], None]] = None
+        self.final_metric_callback: Optional[Callable[[int, MetricData], None]] = None
 
         self.parameters_count = 0
 
@@ -69,7 +69,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
             search space
         """
         self.handle_update_search_space(data)
-        send(CommandType.Initialized, '')
+        self.send(CommandType.Initialized, '')
 
     def _validate_placement_constraint(self, placement_constraint):
         if placement_constraint is None:
@@ -138,14 +138,14 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
         # trial parameters can be super large, disable pickle size limit here
         # nevertheless, there could still be blocked by pipe / nni-manager
-        send(CommandType.NewTrialJob, send_payload)
+        self.send(CommandType.NewTrialJob, send_payload)
 
         if self.send_trial_callback is not None:
             self.send_trial_callback(parameters)  # pylint: disable=not-callable
         return self.parameters_count
 
     def mark_experiment_as_ending(self):
-        send(CommandType.NoMoreTrialJobs, '')
+        self.send(CommandType.NoMoreTrialJobs, '')
 
     def handle_request_trial_jobs(self, num_trials):
         _logger.debug('Request trial jobs: %s', num_trials)
@@ -158,19 +158,22 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     def handle_trial_end(self, data):
         _logger.debug('Trial end: %s', data)
-        self.trial_end_callback(nni.load(data['hyper_params'])['parameter_id'],  # pylint: disable=not-callable
-                                data['event'] == 'SUCCEEDED')
+        if self.trial_end_callback is not None:
+            self.trial_end_callback(nni.load(data['hyper_params'])['parameter_id'],  # pylint: disable=not-callable
+                                    data['event'] == 'SUCCEEDED')
 
     def handle_report_metric_data(self, data):
         _logger.debug('Metric reported: %s', data)
         if data['type'] == MetricType.REQUEST_PARAMETER:
             raise ValueError('Request parameter not supported')
         elif data['type'] == MetricType.PERIODICAL:
-            self.intermediate_metric_callback(data['parameter_id'],  # pylint: disable=not-callable
-                                              self._process_value(data['value']))
+            if self.intermediate_metric_callback is not None:
+                self.intermediate_metric_callback(data['parameter_id'],  # pylint: disable=not-callable
+                                                  self._process_value(data['value']))
         elif data['type'] == MetricType.FINAL:
-            self.final_metric_callback(data['parameter_id'],  # pylint: disable=not-callable
-                                       self._process_value(data['value']))
+            if self.final_metric_callback is not None:
+                self.final_metric_callback(data['parameter_id'],  # pylint: disable=not-callable
+                                           self._process_value(data['value']))
 
     @staticmethod
     def _process_value(value) -> Any:  # hopefully a float

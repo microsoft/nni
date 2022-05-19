@@ -63,7 +63,7 @@ CGO Execution Engine (experimental)
 CGO (Cross-Graph Optimization) execution engine does cross-model optimizations based on the graph-based execution engine. In CGO execution engine, multiple models could be merged and trained together in one trial.
 Currently, it only supports ``DedupInputOptimizer`` that can merge graphs sharing the same dataset to only loading and pre-processing each batch of data once, which can avoid bottleneck on data loading. 
 
-.. note :: To use CGO engine, PyTorch Lightning of 1.5.x is required.
+.. note :: To use CGO engine, PyTorch Lightning >= 1.6.1 is required.
 
 To enable CGO execution engine, you need to follow these steps:
 

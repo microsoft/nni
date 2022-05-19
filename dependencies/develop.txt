@@ -1,3 +1,4 @@
+aioconsole
 coverage
 cython
 flake8
@@ -8,7 +9,6 @@ nbsphinx
 pylint
 pyright
 pytest
-pytest-azurepipelines
 pytest-cov
 rstcheck
 sphinx >= 4.5

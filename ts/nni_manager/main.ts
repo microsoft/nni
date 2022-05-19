@@ -27,27 +27,27 @@ import { Container, Scope } from 'typescript-ioc';
 
 import * as component from 'common/component';
 import { Database, DataStore } from 'common/datastore';
-import { ExperimentManager } from 'common/experimentManager';
 import globals, { initGlobals } from 'common/globals';
-import { getLogger } from 'common/log';
+import { Logger, getLogger } from 'common/log';
 import { Manager } from 'common/manager';
 import { TensorboardManager } from 'common/tensorboardManager';
 import { NNIDataStore } from 'core/nniDataStore';
-import { NNIExperimentsManager } from 'core/nniExperimentsManager';
-import { NNITensorboardManager } from 'core/nniTensorboardManager';
 import { NNIManager } from 'core/nnimanager';
 import { SqlDB } from 'core/sqlDatabase';
+import { initExperimentsManager } from 'extensions/experiments_manager';
+import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
 import { RestServer } from 'rest_server';
 
 import path from 'path';
 
+const logger: Logger = getLogger('main');
+
 async function start(): Promise<void> {
-    getLogger('main').info('Start NNI manager');
+    logger.info('Start NNI manager');
 
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
-    Container.bind(ExperimentManager).to(NNIExperimentsManager).scope(Scope.Singleton);
     Container.bind(TensorboardManager).to(NNITensorboardManager).scope(Scope.Singleton);
 
     const ds: DataStore = component.get(DataStore);
@@ -55,28 +55,28 @@ async function start(): Promise<void> {
 
     const restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
     await restServer.start();
+
+    initExperimentsManager();
+
+    globals.shutdown.notifyInitializeComplete();
 }
 
-function shutdown(): void {
-    (component.get(Manager) as Manager).stopExperiment();
-}
-    
 // Register callbacks to free training service resources on unexpected shutdown.
 // A graceful stop should use REST API,
 // because interrupts can cause strange behaviors in children processes.
-process.on('SIGTERM', shutdown);
-process.on('SIGBREAK', shutdown);
-process.on('SIGINT', shutdown);
+process.on('SIGTERM', () => { globals.shutdown.initiate('SIGTERM'); });
+process.on('SIGBREAK', () => { globals.shutdown.initiate('SIGBREAK'); });
+process.on('SIGINT', () => { globals.shutdown.initiate('SIGINT'); });
 
 /* main */
 
 initGlobals();
 
 start().then(() => {
-    getLogger('main').debug('start() returned.');
+    logger.debug('start() returned.');
 }).catch((error) => {
     try {
-        getLogger('main').error('Failed to start:', error);
+        logger.error('Failed to start:', error);
     } catch (loggerError) {
         console.error('Failed to start:', error);
         console.error('Seems logger is faulty:', loggerError);

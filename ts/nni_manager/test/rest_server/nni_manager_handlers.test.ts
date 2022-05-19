@@ -10,16 +10,16 @@ import { Container } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { DataStore } from '../../common/datastore';
 import { ExperimentProfile, Manager } from '../../common/manager';
-import { ExperimentManager } from '../../common/experimentManager'
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { MockedDataStore } from '../mock/datastore';
 import { MockedTrainingService } from '../mock/trainingService';
 import { RestServer, UnitTestHelpers } from 'rest_server';
 import { testManagerProvider } from '../mock/nniManager';
-import { testExperimentManagerProvider } from '../mock/experimentManager';
+import { MockedExperimentManager } from '../mock/experimentManager';
 import { TensorboardManager } from '../../common/tensorboardManager';
 import { MockTensorboardManager } from '../mock/mockTensorboardManager';
+import { UnitTestHelpers as ExpsMgrHelpers } from 'extensions/experiments_manager';
 
 let restServer: RestServer;
 
@@ -28,11 +28,11 @@ describe('Unit test for rest handler', () => {
     let ROOT_URL: string;
 
     before(async () => {
+        ExpsMgrHelpers.setExperimentsManager(new MockedExperimentManager());
         prepareUnitTest();
         Container.bind(Manager).provider(testManagerProvider);
         Container.bind(DataStore).to(MockedDataStore);
         Container.bind(TrainingService).to(MockedTrainingService);
-        Container.bind(ExperimentManager).provider(testExperimentManagerProvider);
         Container.bind(TensorboardManager).to(MockTensorboardManager);
         restServer = new RestServer(0, '');
         await restServer.start();

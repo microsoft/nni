@@ -29,7 +29,7 @@ class NormalSparsityAllocator(SparsityAllocator):
             # We assume the metric value are all positive right now.
             metric = metrics[name]
             if self.continuous_mask:
-                metric *= self._compress_mask(wrapper.weight_mask)
+                metric *= self._compress_mask(wrapper.weight_mask)  # type: ignore
             prune_num = int(sparsity_rate * metric.numel())
             if prune_num == 0:
                 threshold = metric.min() - 1
@@ -64,7 +64,7 @@ class BankSparsityAllocator(SparsityAllocator):
             # We assume the metric value are all positive right now.
             metric = metrics[name]
             if self.continuous_mask:
-                metric *= self._compress_mask(wrapper.weight_mask)
+                metric *= self._compress_mask(wrapper.weight_mask)  # type: ignore
             n_dim = len(metric.shape)
             assert n_dim >= len(self.balance_gran), 'Dimension of balance_gran should be smaller than metric'
             # make up for balance_gran
@@ -129,15 +129,15 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
             # We assume the metric value are all positive right now.
             if self.continuous_mask:
-                metric = metric * self._compress_mask(wrapper.weight_mask)
+                metric = metric * self._compress_mask(wrapper.weight_mask)  # type: ignore
 
-            layer_weight_num = wrapper.weight.data.numel()
+            layer_weight_num = wrapper.weight.data.numel()  # type: ignore
             total_weight_num += layer_weight_num
             expend_times = int(layer_weight_num / metric.numel())
 
             retention_ratio = 1 - max_sparsity_per_layer.get(name, 1)
             retention_numel = math.ceil(retention_ratio * layer_weight_num)
-            removed_metric_num = math.ceil(retention_numel / (wrapper.weight_mask.numel() / metric.numel()))
+            removed_metric_num = math.ceil(retention_numel / (wrapper.weight_mask.numel() / metric.numel()))  # type: ignore
             stay_metric_num = metric.numel() - removed_metric_num
             if stay_metric_num <= 0:
                 sub_thresholds[name] = metric.min().item() - 1
@@ -182,7 +182,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
             grouped_metric = {name: metrics[name] for name in names if name in metrics}
             if self.continuous_mask:
                 for name, metric in grouped_metric.items():
-                    metric *= self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
+                    metric *= self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)  # type: ignore
             if len(grouped_metric) > 0:
                 grouped_metrics[idx] = grouped_metric
         for _, group_metric_dict in grouped_metrics.items():

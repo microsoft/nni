@@ -6,13 +6,16 @@ Operations that support weight sharing at a fine-grained level,
 which is commonly known as super-kernel (as in channel search), or weight entanglement.
 """
 
+from __future__ import annotations
+
 import inspect
 import itertools
-from typing import Union, Tuple, Dict, List, Any, Type, Optional, TypeVar
+from typing import Any, Type, TypeVar, cast, Union, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 import nni.retiarii.nn.pytorch as retiarii_nn
 from nni.common.hpo_utils import ParameterSpec
@@ -36,7 +39,7 @@ class MixedOperationSamplingPolicy:
     One SamplingStrategy corresponds to one mixed operation.
     """
 
-    def __init__(self, operation: 'MixedOperation', memo: Dict[str, Any], mutate_kwargs: Dict[str, Any]) -> None:
+    def __init__(self, operation: 'MixedOperation', memo: dict[str, Any], mutate_kwargs: dict[str, Any]) -> None:
         """At init, the sampling policy can prepare basic parameters,
         and store them in operation if they need back propagation.
 
@@ -46,11 +49,11 @@ class MixedOperationSamplingPolicy:
         """
         pass
 
-    def resample(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def resample(self, operation: 'MixedOperation', memo: dict[str, Any]) -> dict[str, Any]:
         """The handler of :meth:`MixedOperation.resample`."""
         raise NotImplementedError()
 
-    def export(self, operation: 'MixedOperation', memo: Dict[str, Any] = None) -> Dict[str, Any]:
+    def export(self, operation: 'MixedOperation', memo: dict[str, Any]) -> dict[str, Any]:
         """The handler of :meth:`MixedOperation.export`."""
         raise NotImplementedError()
 
@@ -89,7 +92,7 @@ class MixedOperation(BaseSuperNetModule):
     """
 
     bound_type: Type[nn.Module]                 # defined in subclass
-    argument_list: List[str]                    # defined in subclass
+    argument_list: list[str]                    # defined in subclass
 
     sampling_policy: MixedOperationSamplingPolicy
 
@@ -113,11 +116,11 @@ class MixedOperation(BaseSuperNetModule):
         appended by forward arguments in the ``bound_type``."""
         raise NotImplementedError()
 
-    def __init__(self, module_kwargs: Dict[str, Any]) -> None:
+    def __init__(self, module_kwargs: dict[str, Any]) -> None:
         # Concerned arguments
-        self.mutable_arguments: Dict[str, ValueChoiceX] = {}
+        self.mutable_arguments: dict[str, ValueChoiceX] = {}
         # Useful when retrieving arguments without ValueChoice
-        self.init_arguments: Dict[str, Any] = {**module_kwargs}
+        self.init_arguments: dict[str, Any] = {**module_kwargs}
         self._fill_missing_init_arguments()
 
         # get init default
@@ -133,7 +136,7 @@ class MixedOperation(BaseSuperNetModule):
                 super_init_kwargs[key] = value
 
         # get all inner leaf value choices
-        self._space_spec: Dict[str, ParameterSpec] = dedup_inner_choices(self.mutable_arguments.values())
+        self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices(list(self.mutable_arguments.values()))
 
         super().__init__(**super_init_kwargs)
 
@@ -155,17 +158,17 @@ class MixedOperation(BaseSuperNetModule):
         """Find value choice in module's arguments and replace the whole module"""
         has_valuechoice = False
         if isinstance(module, cls.bound_type) and is_traceable(module):
-            for arg in itertools.chain(module.trace_args, module.trace_kwargs.values()):
+            for arg in itertools.chain(cast(list, module.trace_args), cast(dict, module.trace_kwargs).values()):
                 if isinstance(arg, ValueChoiceX):
                     has_valuechoice = True
 
         if has_valuechoice:
             if module.trace_args:
                 raise ValueError('ValueChoice on class arguments cannot appear together with ``trace_args``. '
-                                    'Please enable ``kw_only`` on nni.trace.')
+                                 'Please enable ``kw_only`` on nni.trace.')
 
             # save type and kwargs
-            mixed_op = cls(module.trace_kwargs)
+            mixed_op = cls(cast(dict, module.trace_kwargs))
 
             if 'mixed_op_sampling' not in mutate_kwargs:
                 raise ValueError('Need to sampling policy of mixed op, but not found in `mutate_kwargs`.')
@@ -228,15 +231,15 @@ class MixedLinear(MixedOperation, nn.Linear):
                           out_features: int_or_int_dict,
                           inputs: torch.Tensor) -> torch.Tensor:
 
-        in_features = _W(in_features)
-        out_features = _W(out_features)
+        in_features_ = _W(in_features)
+        out_features_ = _W(out_features)
 
-        weight = _S(self.weight)[:out_features]
-        weight = _S(weight)[:, :in_features]
+        weight = _S(self.weight)[:out_features_]
+        weight = _S(weight)[:, :in_features_]
         if self.bias is None:
             bias = self.bias
         else:
-            bias = _S(self.bias)[:out_features]
+            bias = _S(self.bias)[:out_features_]
 
         return F.linear(inputs, weight, bias)
 
@@ -277,7 +280,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
     ]
 
     @staticmethod
-    def _to_tuple(value: scalar_or_scalar_dict[T]) -> Tuple[T, T]:
+    def _to_tuple(value: scalar_or_scalar_dict[Any]) -> tuple[Any, Any]:
         if not isinstance(value, tuple):
             return (value, value)
         return value
@@ -317,33 +320,37 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         if any(isinstance(arg, dict) for arg in [stride, dilation, groups]):
             raise ValueError('stride, dilation, groups does not support weighted sampling.')
 
-        in_channels = _W(in_channels)
-        out_channels = _W(out_channels)
+        in_channels_ = _W(in_channels)
+        out_channels_ = _W(out_channels)
 
         # slice prefix
         # For groups > 1, we use groups to slice input weights
-        weight = _S(self.weight)[:out_channels]
-        weight = _S(weight)[:, :in_channels // groups]
+        weight = _S(self.weight)[:out_channels_]
+        weight = _S(weight)[:, :in_channels_ // groups]
 
         # slice center
         if isinstance(kernel_size, dict):
+            # If kernel size is a dict, ignore choices in padding.
+            if isinstance(self.padding, str):
+                raise ValueError(f'Use "{self.padding}" in padding is not supported.')
             padding = self.padding  # max padding, must be a tuple
-        kernel_a, kernel_b = self._to_tuple(kernel_size)
-        kernel_a, kernel_b = _W(kernel_a), _W(kernel_b)
-        max_kernel_a, max_kernel_b = self.kernel_size  # self.kernel_size must be a tuple
-        kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a) // 2, (max_kernel_b - kernel_b) // 2
-        weight = _S(weight)[:, :, kernel_a_left:kernel_a_left + kernel_a, kernel_b_top:kernel_b_top + kernel_b]
 
-        bias = _S(self.bias)[:out_channels] if self.bias is not None else None
+        kernel_a, kernel_b = self._to_tuple(kernel_size)
+        kernel_a_, kernel_b_ = _W(kernel_a), _W(kernel_b)
+        max_kernel_a, max_kernel_b = self.kernel_size  # self.kernel_size must be a tuple
+        kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a_) // 2, (max_kernel_b - kernel_b_) // 2
+        weight = _S(weight)[:, :, kernel_a_left:kernel_a_left + kernel_a_, kernel_b_top:kernel_b_top + kernel_b_]
+
+        bias = _S(self.bias)[:out_channels_] if self.bias is not None else None
 
         # The rest parameters only need to be converted to tuple
-        stride = self._to_tuple(stride)
-        dilation = self._to_tuple(dilation)
+        stride_ = self._to_tuple(stride)
+        dilation_ = self._to_tuple(dilation)
 
         if self.padding_mode != 'zeros':
             return F.conv2d(F.pad(inputs, self._reversed_padding_repeated_twice, mode=self.padding_mode),
-                            weight, bias, stride, (0, 0), dilation, groups)
-        return F.conv2d(inputs, weight, bias, stride, padding, dilation, groups)
+                            weight, bias, stride_, (0, 0), dilation_, groups)
+        return F.conv2d(inputs, weight, bias, stride_, cast('int | tuple', padding), dilation_, groups)
 
 
 class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
@@ -387,13 +394,15 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
         if num_features < self.num_features:
             weight = weight[:num_features]
             bias = bias[:num_features]
-            running_mean = running_mean[:num_features]
-            running_var = running_var[:num_features]
+            if running_mean is not None:
+                running_mean = running_mean[:num_features]
+            if running_var is not None:
+                running_var = running_var[:num_features]
 
         if self.training:
             bn_training = True
         else:
-            bn_training = (self.running_mean is None) and (self.running_var is None)
+            bn_training = (running_mean is None) and (running_var is None)
 
         return F.batch_norm(
             inputs,
@@ -472,7 +481,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def _to_proj_slice(self, embed_dim: _W) -> List[slice]:
+    def _to_proj_slice(self, embed_dim: _W) -> list[slice]:
         # slice three parts, corresponding to q, k, v respectively
         return [
             slice(embed_dim),
@@ -483,12 +492,12 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     def forward_with_args(
         self,
         embed_dim: int_or_int_dict, num_heads: int,
-        kdim: Optional[int_or_int_dict], vdim: Optional[int_or_int_dict],
+        kdim: int_or_int_dict | None, vdim: int_or_int_dict | None,
         dropout: float,
         query: torch.Tensor, key: torch.Tensor, value: torch.Tensor,
-        key_padding_mask: Optional[torch.Tensor] = None,
-        need_weights: bool = True, attn_mask: Optional[torch.Tensor] = None
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+        key_padding_mask: torch.Tensor | None = None,
+        need_weights: bool = True, attn_mask: torch.Tensor | None = None
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
 
         if any(isinstance(arg, dict) for arg in [num_heads, dropout]):
             raise ValueError('num_heads, dropout do not support weighted sampling.')
@@ -510,46 +519,45 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
         else:
             used_embed_dim = embed_dim
 
-        embed_dim = _W(embed_dim)
+        embed_dim_ = _W(embed_dim)
 
         # in projection weights & biases has q, k, v weights concatenated together
-        in_proj_bias = in_proj_weight = None
+        in_proj_bias: Tensor | None = None
+        in_proj_weight: Tensor | None = None
         if self.in_proj_bias is not None:
-            in_proj_bias = _S(self.in_proj_bias)[self._to_proj_slice(embed_dim)]
+            in_proj_bias = _S(cast(Tensor, self.in_proj_bias))[self._to_proj_slice(embed_dim_)]
         if self.in_proj_weight is not None:
-            in_proj_weight = _S(self.in_proj_weight)[self._to_proj_slice(embed_dim), :embed_dim]
+            in_proj_weight = _S(cast(Tensor, self.in_proj_weight))[self._to_proj_slice(embed_dim_), :embed_dim_]
 
-        bias_k = _S(self.bias_k)[:, :, :embed_dim] if self.bias_k is not None else None
-        bias_v = _S(self.bias_v)[:, :, :embed_dim] if self.bias_v is not None else None
-        out_proj_weight = _S(self.out_proj.weight)[:embed_dim, :embed_dim]
-        out_proj_bias = _S(self.out_proj.bias)[:embed_dim] if self.out_proj.bias is not None else None
+        bias_k = _S(cast(Tensor, self.bias_k))[:, :, :embed_dim_] if self.bias_k is not None else None
+        bias_v = _S(cast(Tensor, self.bias_v))[:, :, :embed_dim_] if self.bias_v is not None else None
+        out_proj_weight = _S(cast(Tensor, self.out_proj.weight))[:embed_dim_, :embed_dim_]
+        out_proj_bias = _S(cast(Tensor, self.out_proj.bias))[:embed_dim_] if self.out_proj.bias is not None else None
 
         if not qkv_same_embed_dim:
-            kdim = _W(kdim)
-            vdim = _W(vdim)
-
-            q_proj = _S(self.q_proj_weight)[:embed_dim, :embed_dim]
-            k_proj = _S(self.k_proj_weight)[:embed_dim]
-            k_proj = _S(k_proj)[:, :kdim]
-            v_proj = _S(self.v_proj_weight)[:embed_dim]
-            v_proj = _S(v_proj)[:, :vdim]
+            q_proj = _S(cast(Tensor, self.q_proj_weight))[:embed_dim_, :embed_dim_]
+            k_proj = _S(cast(Tensor, self.k_proj_weight))[:embed_dim_]
+            k_proj = _S(k_proj)[:, :_W(kdim)]
+            v_proj = _S(cast(Tensor, self.v_proj_weight))[:embed_dim_]
+            v_proj = _S(v_proj)[:, :_W(vdim)]
 
             # The rest part is basically same as pytorch
             attn_output, attn_output_weights = F.multi_head_attention_forward(
                 query, key, value, used_embed_dim, num_heads,
-                in_proj_weight, in_proj_bias,
+                cast(Tensor, in_proj_weight), cast(Tensor, in_proj_bias),
                 bias_k, bias_v, self.add_zero_attn,
-                dropout, out_proj_weight, out_proj_bias,
+                dropout, out_proj_weight, cast(Tensor, out_proj_bias),
                 training=self.training,
                 key_padding_mask=key_padding_mask, need_weights=need_weights,
                 attn_mask=attn_mask, use_separate_proj_weight=True,
                 q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
         else:
+            # Cast tensor here because of a bug in pytorch stub
             attn_output, attn_output_weights = F.multi_head_attention_forward(
                 query, key, value, used_embed_dim, num_heads,
-                in_proj_weight, in_proj_bias,
+                cast(Tensor, in_proj_weight), cast(Tensor, in_proj_bias),
                 bias_k, bias_v, self.add_zero_attn,
-                dropout, out_proj_weight, out_proj_bias,
+                dropout, out_proj_weight, cast(Tensor, out_proj_bias),
                 training=self.training,
                 key_padding_mask=key_padding_mask, need_weights=need_weights,
                 attn_mask=attn_mask)
@@ -560,7 +568,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             return attn_output, attn_output_weights
 
 
-NATIVE_MIXED_OPERATIONS: List[Type[MixedOperation]] = [
+NATIVE_MIXED_OPERATIONS: list[Type[MixedOperation]] = [
     MixedLinear,
     MixedConv2d,
     MixedBatchNorm2d,
