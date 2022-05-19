@@ -724,9 +724,12 @@ class NNIManager implements Manager {
             this.pingDispatcher().catch((err: Error) => {
                 throw NNIError.FromError(err, 'Dispatcher error: ');
             }),
-            this.trainingService.run().catch((err: Error) => {
-                throw NNIError.FromError(err, 'Training service error: ');
-            }),
+            this.trainingService.run(),
+            // FIXME: FromError is incorrect in that it will handle the real error.
+            // Disabled for now.
+            // .catch((err: Error) => {
+            //     throw NNIError.FromError(err, 'Training service error: ');
+            // }),
             this.manageTrials().catch((err: Error) => {
                 throw NNIError.FromError(err, 'Job management error: ');
             })]);

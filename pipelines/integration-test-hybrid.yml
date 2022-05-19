@@ -11,6 +11,10 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
+
+  - script: |
+      df -h
+
   - template: templates/setup-non-ms-hosted-agent.yml
 
   - template: templates/install-dependencies.yml
@@ -25,6 +29,9 @@ jobs:
   - template: templates/install-customized-tuner.yml
     parameters:
       platform: ubuntu-latest-gpu
+
+  - script: |
+      df -h
 
   - script: |
       sudo docker images
