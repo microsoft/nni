@@ -2,60 +2,102 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from typing import Literal
-from nni.utils import MetricType
+import json
+from typing import Dict, Literal
 
 @dataclass
-class BasicCommand:
-    command_type: str = ''
-    trial_job_id: str = ''
-    parameter_id: int = 0
-    parameter_index: int = 0
-    parameters: dict = {}
-    parameter_source: str = ''
+class BaseCommand:
+    command_type: str
+
+    def dump(self) -> str:
+        command_dict = self.__dict__
+        return json.dumps(command_dict)
+
+    @staticmethod
+    def load(command_dict: dict) -> 'BaseCommand':
+        return BaseCommand(**command_dict)
+
+    def to_info_dict(self) -> Dict[str, str]:
+        return {"command_type": self.command_type}
 
 @dataclass
-class ReportMetricData:
-    command_type: str = 'ReportMetricData'
-    trial_job_id: str = ''
-    parameter_id: int = 0
-    parameter_index: int = 0
-    type: Literal['FINAL', 'PERIODICAL', 'REQUEST_PARAMETER'] = MetricType.PERIODICAL
-    value: str = ''
-    sequence: int = 0
+class ReportMetricData(BaseCommand):
+    type: Literal['FINAL', 'PERIODICAL', 'REQUEST_PARAMETER']
+    value: str
+    sequence: int
+
+    @staticmethod
+    def load(command_dict: dict) -> 'ReportMetricData':
+        return ReportMetricData(**command_dict)
 
 @dataclass
-class UpdateSearchSpace:
-    command_type: str = 'UpdateSearchSpace'
-    name: str = ''
+class UpdateSearchSpace(BaseCommand):
+    name: str
+
+    @staticmethod
+    def load(command_dict: dict) -> 'UpdateSearchSpace':
+        return UpdateSearchSpace(**command_dict)
 
 @dataclass
-class ImportData:
-    command_type: str = 'ImportData'
-    parameters: dict = {}
-    value: str = ''
+class ImportData(BaseCommand):
+    parameters: dict
+    value: str
+
+    @staticmethod
+    def load(command_dict: dict) -> 'ImportData':
+        return ImportData(**command_dict)
 
 @dataclass
-class TrialEnd:
-    command_type: str = 'TrialEnd'
-    trial_job_id: str = ''
-    event: str = ''
+class TrialEnd(BaseCommand):
+    trial_job_id: str
+    event: str
+
+    @staticmethod
+    def load(command_dict: dict) -> 'TrialEnd':
+        return TrialEnd(**command_dict)
 
 @dataclass
-class NewTrialJob(BasicCommand):
-    command_type: str = 'NewTrialJob'
-    placement_constraint: str = ''
-    version_info: str = ''
+class NewTrialJob(BaseCommand):
+    trial_job_id: str
+    parameter_id: int
+    parameter_index: int
+    parameters: dict
+    parameter_source: str
+    placement_constraint: str
+    version_info: str
+
+    @staticmethod
+    def load(command_dict: dict) -> 'NewTrialJob':
+        return NewTrialJob(**command_dict)
 
 @dataclass
-class SendTrialJobParameter(BasicCommand):
-    command_type: str = 'SendTrialJobParameter'
+class SendTrialJobParameter(BaseCommand):
+    trial_job_id: str
+    parameter_id: int
+    parameter_index: int
+    parameters: dict
+    parameter_source: str
+
+    @staticmethod
+    def load(command_dict: dict) -> 'SendTrialJobParameter':
+        return SendTrialJobParameter(**command_dict)
 
 @dataclass
-class NoMoreTrialJobs(BasicCommand):
-    command_type: str = 'NoMoreTrialJobs'
+class NoMoreTrialJobs(BaseCommand):
+    trial_job_id: str
+    parameter_id: int
+    parameter_index: int
+    parameters: dict
+    parameter_source: str
+
+    @staticmethod
+    def load(command_dict: dict) -> 'NoMoreTrialJobs':
+        return NoMoreTrialJobs(**command_dict)
 
 @dataclass
-class KillTrialJob:
-    command_type: str = 'KillTrialJob'
-    trial_job_id: str = 'null'
+class KillTrialJob(BaseCommand):
+    trial_job_id: str
+
+    @staticmethod
+    def load(command_dict: dict) -> 'KillTrialJob':
+        return KillTrialJob(**command_dict)

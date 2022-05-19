@@ -7,18 +7,12 @@ Low level APIs for algorithms to communicate with NNI manager.
 
 from __future__ import annotations
 import json
-from typing import Union
 
 __all__ = ['TunerCommandChannel']
 
 from .command_type import CommandType
 from .websocket import WebSocket
-from .semantic_command import ReportMetricData, UpdateSearchSpace
-from .semantic_command import ImportData, TrialEnd
-from .semantic_command import NewTrialJob, SendTrialJobParameter
-from .semantic_command import NoMoreTrialJobs, KillTrialJob
-Command = Union[ReportMetricData, UpdateSearchSpace,
-ImportData, TrialEnd, NewTrialJob, SendTrialJobParameter, NoMoreTrialJobs, KillTrialJob]
+from .semantic_command import BaseCommand
 
 class TunerCommandChannel:
     """
@@ -56,35 +50,19 @@ class TunerCommandChannel:
     #     ...
     # def receive(self) -> Command | None:
     #     ...
-    def send(self, command: Command) -> None:
-        command_dict = command.__dict__
-        command_json = json.dumps(command_dict)
+    def send(self, command: BaseCommand) -> None:
+        command_json = command.dump()
         self._channel.send(command_json)
 
-    def receive(self) -> Command | None:
+    def receive(self) -> BaseCommand | None:
         command_json = self._channel.receive()
         if command_json is None:
             raise RuntimeError('NNI manager closed connection')
-        command = json.loads(command_json)
-        if command['command_type'] == 'ReportMetricData':
-            command = ReportMetricData(**command)
-        elif command['command_type'] == 'UpdateSearchSpace':
-            command = UpdateSearchSpace(**command)
-        elif command['command_type'] == 'ImportData':
-            command = ImportData(**command)
-        elif command['command_type'] == 'TrialEnd':
-            command = TrialEnd(**command)
-        elif command['command_type'] == 'NewTrialJob':
-            command = NewTrialJob(**command)
-        elif command['command_type'] == 'SendTrialJobParameter':
-            command = SendTrialJobParameter(**command)
-        elif command['command_type'] == 'NoMoreTrialJobs':
-            command = NoMoreTrialJobs(**command)
-        elif command['command_type'] == 'KillTrialJob':
-            command = KillTrialJob(**command)
-        else:
-            command = None
-        return command
+        command_dict = json.loads(command_json)
+        for cls in BaseCommand.__subclasses__():
+            if cls.__name__ == command_dict['command_type']:
+                return cls.load(command_dict)
+        return None
 
     def _send(self, command_type: CommandType, data: str) -> None:
         command = command_type.value.decode() + data
