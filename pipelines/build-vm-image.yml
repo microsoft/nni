@@ -9,22 +9,33 @@ jobs:
       curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
     displayName: Install azcli
 
+  # TODO: add comments
   - script: |
       export USERNAME="/subscriptions/$(subscription_id)/resourcegroups/nni/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(identity_name)"
       az login --identity --allow-no-subscriptions --username $USERNAME
     displayName: az login
 
+  # Make sure all these are registered.
+  # If not, might need az provider register -n xxx
+  # Need subscription-write access.
+
   - script: |
       set -e
-      # Make sure all these are registered.
-      # If not, might need az provider register -n xxx
-      # Need subscription-write access.
       az provider show -n Microsoft.VirtualMachineImages -o json
       az provider show -n Microsoft.KeyVault -o json
       az provider show -n Microsoft.Compute -o json
       az provider show -n Microsoft.Storage -o json
       az provider show -n Microsoft.Network -o json
     displayName: Register features
+
+  # Need to create an image gallery before this.
+  # Only need to create once.
+  # az sig create --resource-group <resource_group> --gallery-name <sig_name>
+
+  - script: |
+      set -e
+      az sig image-definition list --gallery-name nni_image_gallery --resource-group nni
+    displayName: List image definitions
 
   # - powershell: |
   #     cd test/vso_tools/build_vm
