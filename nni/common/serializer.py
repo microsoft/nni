@@ -393,7 +393,7 @@ def _dump(*, obj: Any, fp: Optional[Any], use_trace: bool, pickle_size_limit: in
 
 
 def load(string: Optional[str] = None, *, fp: Optional[Any] = None,
-         preserve_order=False, ignore_comments: bool = True, **json_tricks_kwargs) -> Any:
+         preserve_order: bool = False, ignore_comments: bool = True, **json_tricks_kwargs) -> Any:
     """
     Load the string or from file, and convert it to a complex data structure.
     At least one of string or fp has to be not none.
@@ -404,7 +404,7 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None,
         JSON string to parse. Can be set to none if fp is used.
     fp : str
         File path to load JSON from. Can be set to none if string is used.
-    preserve_order: bool
+    preserve_order : bool
         Use ``OrderedDict`` instead of ``dict``. Note that the order is always preserved even when this is False.
     ignore_comments : bool
         Remove comments (starting with ``#`` or ``//``). Default is true.
