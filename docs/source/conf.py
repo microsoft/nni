@@ -106,6 +106,7 @@ linkcheck_ignore = [
     r'https://www\.cs\.toronto\.edu/',                      # CIFAR-10
     r'https://help\.aliyun\.com/document_detail/\d+\.html', # Aliyun
     r'http://www\.image-net\.org/',                         # ImageNet
+    r'https://www\.msra\.cn/',                              # MSRA
 ]
 
 # Ignore all links located in release.rst

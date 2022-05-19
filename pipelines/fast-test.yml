@@ -124,10 +124,7 @@ stages:
       parameters:
         platform: ubuntu-latest
 
-    - script: |
-        python setup.py develop
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install NNI
+    - template: templates/install-nni.yml
 
     - script: |
         set -e
@@ -177,10 +174,7 @@ stages:
       parameters:
         platform: ubuntu-legacy
 
-    - script: |
-        python setup.py develop
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install NNI
+    - template: templates/install-nni.yml
 
     - script: |
         cd test
@@ -208,9 +202,9 @@ stages:
       parameters:
         platform: windows
 
-    - script: |
-        python setup.py develop --no-user
-      displayName: Install NNI
+    - template: templates/install-nni.yml
+      parameters:
+        user: false
 
     - script: |
         cd test
@@ -235,10 +229,7 @@ stages:
       parameters:
         platform: macos
 
-    - script: |
-        python setup.py develop
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install NNI
+    - template: templates/install-nni.yml
 
     - script: |
         CI=true yarn --cwd ts/nni_manager test --exclude test/core/nnimanager.test.ts

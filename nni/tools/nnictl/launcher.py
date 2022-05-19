@@ -88,11 +88,14 @@ def create_experiment(args):
 
     exp = Experiment(config)
     exp.url_prefix = url_prefix
-    run_mode = RunMode.Foreground if foreground else RunMode.Detach
-    exp.start(port, debug, run_mode)
 
-    _logger.info(f'To stop experiment run "nnictl stop {exp.id}" or "nnictl stop --all"')
-    _logger.info('Reference: https://nni.readthedocs.io/en/stable/reference/nnictl.html')
+    if foreground:
+        exp.run(port, debug=debug)
+
+    else:
+        exp.start(port, debug, RunMode.Detach)
+        _logger.info(f'To stop experiment run "nnictl stop {exp.id}" or "nnictl stop --all"')
+        _logger.info('Reference: https://nni.readthedocs.io/en/stable/reference/nnictl.html')
 
 def resume_experiment(args):
     exp_id = args.id

@@ -9,7 +9,6 @@ import base64
 
 from .runtime.msg_dispatcher import MsgDispatcher
 from .runtime.msg_dispatcher_base import MsgDispatcherBase
-from .runtime.protocol import connect_websocket
 from .tools.package_utils import create_builtin_class_instance, create_customized_class_instance
 
 logger = logging.getLogger('nni.main')
@@ -21,10 +20,6 @@ if os.environ.get('COVERAGE_PROCESS_START'):
 
 
 def main():
-    # the url should be "ws://localhost:{port}/tuner" or "ws://localhost:{port}/{url_prefix}/tuner"
-    ws_url = os.environ['NNI_TUNER_COMMAND_CHANNEL']
-    connect_websocket(ws_url)
-
     parser = argparse.ArgumentParser(description='Dispatcher command line parser')
     parser.add_argument('--exp_params', type=str, required=True)
     args, _ = parser.parse_known_args()
@@ -56,7 +51,10 @@ def main():
         assessor = _create_algo(exp_params['assessor'], 'assessor')
     else:
         assessor = None
-    dispatcher = MsgDispatcher(tuner, assessor)
+
+    # the url should be "ws://localhost:{port}/tuner" or "ws://localhost:{port}/{url_prefix}/tuner"
+    url = os.environ['NNI_TUNER_COMMAND_CHANNEL']
+    dispatcher = MsgDispatcher(url, tuner, assessor)
 
     try:
         dispatcher.run()
