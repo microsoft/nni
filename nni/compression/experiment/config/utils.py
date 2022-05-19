@@ -28,8 +28,10 @@ def _flops_theta_helper(target: int | float | str | None, origin: int) -> Tuple[
     elif isinstance(target, int):
         assert 0 < target < origin
         return (-0.1 - target / origin, -50.)
+    elif isinstance(target, str):
+        raise NotImplementedError('Currently only supports setting the upper bound with int/float.')
     else:
-        raise NotImplementedError('Currently only supports setting the upper limit.')
+        raise TypeError(f'Wrong target type: {type(target).__name__}, only support int/float/None.')
 
 # hard code and magic number for metric reward function
 def _metric_theta_helper(target: float | None, origin: float) -> Tuple[float, float]:
@@ -39,7 +41,7 @@ def _metric_theta_helper(target: float | None, origin: float) -> Tuple[float, fl
         assert 0. <= target <= 1.
         return (0.1 - target, 50.)
     else:
-        raise NotImplementedError('Currently only supports setting the lower limit.')
+        raise TypeError(f'Wrong target type: {type(target).__name__}, only support float/None.')
 
 def _summary_module_names(model: Module,
                           module_types: List[Type[Module] | str],
@@ -169,5 +171,5 @@ def parse_basic_pruner(pruner_config: Dict[str, str], config_list: List[Dict[str
                                             mode=pruner_config['mode'],
                                             dummy_input=dummy_input)
     else:
-        raise NotImplementedError('Unsupported basic pruner type {}'.format(pruner_config.pruner_type))
+        raise ValueError('Unsupported basic pruner type {}'.format(pruner_config.pruner_type))
     return basic_pruner, model, finetuner, evaluator, dummy_input, device
