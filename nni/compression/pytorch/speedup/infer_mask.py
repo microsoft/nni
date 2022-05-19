@@ -292,8 +292,16 @@ class AutoMaskInference:
         self.apply_mask()
         # Some operator may have the in_place operations, so we need to clone the input
         # before passing to the self.module
-        tmp_dummy_input = [x.clone() if isinstance(
-            x, torch.Tensor) else x for x in self.dummy_input]
+        # tmp_dummy_input = [x.clone() if isinstance(
+        #     x, torch.Tensor) else x for x in self.dummy_input]
+        tmp_dummy_input = []
+        for x in self.dummy_input:
+            if isinstance(x, torch.Tensor):
+                tmp_dummy_input.append(x.clone())
+                tmp_dummy_input[-1].retain_grad()
+            else:
+                tmp_dummy_input.append(x)
+
         output = self.module(*tmp_dummy_input)
 
         if output.grad_fn is None:
@@ -310,6 +318,12 @@ class AutoMaskInference:
         for para_name in self.weights:
             grad_zero = self.weights[para_name].grad.data == 0
             self.weight_mask[para_name][grad_zero] = 0
+
+        # update the sparsity of the input
+        for idx, x in enumerate(tmp_dummy_input):
+            if isinstance(x, torch.Tensor):
+                grad_zero = x.grad.data == 0
+                self.in_masks[idx][grad_zero] = 0
 
     def update_direct_sparsity(self):
         # we don't need the gradient in the forward inference
@@ -379,4 +393,3 @@ class AutoMaskInference:
 
     def get_masks(self):
         return (self.in_masks, self.output_mask, self.weight_mask)
-
