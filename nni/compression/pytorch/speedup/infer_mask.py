@@ -292,8 +292,6 @@ class AutoMaskInference:
         self.apply_mask()
         # Some operator may have the in_place operations, so we need to clone the input
         # before passing to the self.module
-        # tmp_dummy_input = [x.clone() if isinstance(
-        #     x, torch.Tensor) else x for x in self.dummy_input]
         tmp_dummy_input = []
         for x in self.dummy_input:
             if isinstance(x, torch.Tensor):
