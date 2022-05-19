@@ -12,5 +12,6 @@ graphviz
 gym
 tianshou >= 0.4.1
 timm >= 0.5.4
+ruamel.yaml >= 0.16
 azureml
 azureml-sdk
