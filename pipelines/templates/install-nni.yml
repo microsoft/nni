@@ -19,7 +19,7 @@ steps:
       echo "Working directory: $(pwd)"
       echo "Extra dependencies: ${{ parameters.extra_dep }}"
       echo "NNI release version: ${NNI_RELEASE}"
-      python test/vso_tools/install_nni.py $(NNI_RELEASE) ${{ parameters.extra_dep }}
+      python test/vso_tools/install_nni.py ${NNI_RELEASE} ${{ parameters.extra_dep }}
   ${{ elseif eq(parameters.user, true) }}:
     script: |
       echo "Install NNI (user)"
