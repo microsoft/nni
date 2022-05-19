@@ -11,7 +11,6 @@ from nni.experiment.config import ExperimentConfig
 from nni.experiment.config.base import ConfigBase
 from .pruner import PrunerConfig
 from .quantizer import QuantizerConfig
-from .common import ComparableType
 
 __all__ = ['CompressionConfig', 'CompressionExperimentConfig']
 
@@ -22,11 +21,17 @@ class CompressionConfig(ConfigBase):
     Attributes
     ----------
     params
-        The upper remaining ratio bound of the model params.
+        The upper bound of the ratio of remaining model parameters.
+        E.g., 0.6 means at most 60% parameters are kept while 40% parameters are pruned.
     flops
-        The upper remaining ratio bound of the model flops.
+        The upper bound of the ratio of remaining model flops.
+        E.g., 0.6 means at most 60% flops are kept while 40% flops are pruned.
     metric
-        The lower remaining ratio bound of the model metric.
+        The lower bound of the ratio of remaining model metric.
+        Metric is the evaluator's return value, usually it is a float number representing the model accuracy.
+        E.g., 0.9 means the compressed model should have at least 90% of the performance compared to the original model.
+        This means that if the accuracy of the original model is 80%, then the accuracy of the compressed model should
+        not be lower than 72% (0.9 * 80%).
     module_types
         The modules of the type in this list will be compressed.
     module_names
@@ -43,7 +48,7 @@ class CompressionConfig(ConfigBase):
     params: str | int | float | None = None
     flops: str | int | float | None = None
     # latency: float | None
-    metric: ComparableType | None = None
+    metric: float | None = None
 
     # compress scope description
     module_types: List[Type[Module] | str] | None = None

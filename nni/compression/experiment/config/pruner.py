@@ -8,6 +8,10 @@ from nni.experiment.config.base import ConfigBase
 
 @dataclass
 class PrunerConfig(ConfigBase):
+    """
+    Use to config the initialization parameters of a quantizer used in the compression experiment.
+    """
+
     pruner_type: Literal['Pruner']
 
     def json(self):

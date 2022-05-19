@@ -159,7 +159,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
 class Conv2dDependencyAwareAllocator(SparsityAllocator):
     """
-    A specify allocator for Conv2d with dependency-aware.
+    An allocator specific for Conv2d with dependency-aware.
     """
 
     def __init__(self, pruner: Pruner, dim: int, dummy_input: Any):

@@ -20,6 +20,13 @@ from nni.experiment.config.base import ConfigBase
 
 @dataclass(init=False)
 class CompressionVessel(ConfigBase):
+    """
+    This is an internal class that helps serialize model-related parameters during model compression.
+
+    # FIXME: In fact, it is not a `Config`, the only reason it is a `Config` right now is that its data attribute
+    # will go into the search space as a single choice field. Need to refactor after the experiment config is stable.
+    """
+
     model: str
     finetuner: str
     evaluator: str
@@ -34,15 +41,22 @@ class CompressionVessel(ConfigBase):
                  trainer: str, optimizer_helper: str, criterion: str, device: str):
         ...
 
-    def __init__(self,
-                 model: Module,
-                 finetuner: Callable[[Module], None],
-                 evaluator: Callable[[Module], float],
-                 dummy_input: Tensor,
-                 trainer: Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None] | None,
+    @overload
+    def __init__(self, model: Module, finetuner: Callable[[Module], None], evaluator: Callable[[Module], float],
+                 dummy_input: Tensor, trainer: Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None] | None,
                  optimizer_helper: Optimizer | OptimizerConstructHelper | None,
-                 criterion: Callable[[Any, Any], Any] | None,
-                 device: str | torch.device):
+                 criterion: Callable[[Any, Any], Any] | None, device: str | torch.device):
+        ...
+
+    def __init__(self,
+                 model: Module | str,
+                 finetuner: Callable[[Module], None] | str,
+                 evaluator: Callable[[Module], float] | str,
+                 dummy_input: Tensor | str,
+                 trainer: Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None] | None | str,
+                 optimizer_helper: Optimizer | OptimizerConstructHelper | None | str,
+                 criterion: Callable[[Any, Any], Any] | None | str,
+                 device: torch.device | str):
         self.model = dump(model) if not isinstance(model, str) else model
         self.finetuner = dump(finetuner) if not isinstance(finetuner, str) else finetuner
         self.evaluator = dump(evaluator) if not isinstance(evaluator, str) else evaluator

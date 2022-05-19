@@ -45,6 +45,10 @@ def _summary_module_names(model: Module,
                           module_types: List[Type[Module] | str],
                           module_names: List[str],
                           exclude_module_names: List[str]) -> List[str]:
+    # Return a list of module names that need to be compressed.
+    # Include all names of modules that specified in `module_types` and `module_names` at first,
+    # then remove the names specified in `exclude_module_names`.
+
     _module_types = set()
     _all_module_names = set()
     module_names_summary = set()
@@ -82,7 +86,11 @@ def _summary_module_names(model: Module,
 
     return list(module_names_summary)
 
-def generate_compression_search_space(config: CompressionConfig, vessel: CompressionVessel):
+def generate_compression_search_space(config: CompressionConfig, vessel: CompressionVessel) -> Dict[str, Dict]:
+    """
+    Using config (constraints & priori) and vessel (model-related) to generate the hpo search space.
+    """
+
     search_space = {}
     model, _, evaluator, dummy_input, _, _, _, _ = vessel.export()
     flops, params, results = count_flops_params(model, dummy_input, verbose=False, mode='full')
@@ -94,7 +102,7 @@ def generate_compression_search_space(config: CompressionConfig, vessel: Compres
 
     assert not config.pruners or not config.quantizers
 
-    # TODO: hard code for steo 1, need refactor
+    # TODO: hard code for step 1, need refactor
     search_space[KEY_PRUNERS] = {'_type': 'choice', '_value': [pruner_config.json() for pruner_config in config.pruners]}
 
     original_target = {'flops': flops, 'params': params, 'metric': metric, 'results': results}
@@ -110,15 +118,24 @@ def generate_compression_search_space(config: CompressionConfig, vessel: Compres
     search_space[KEY_THETAS] = {'_type': 'choice', '_value': [thetas]}
     return search_space
 
-def parse_params(kwargs: Dict[str, Any]):
-    pruner_config, vessel, original_target, thetas = None, None, None, None
+def parse_params(kwargs: Dict[str, Any]) -> Tuple[Dict[str, str], List[Dict[str, Any]], CompressionVessel, Dict[str, Any], Dict[str, Any]]:
+    """
+    Parse the parameters received by nni.get_next_parameter().
+
+    Returns
+    -------
+    Dict[str, str], List[Dict[str, Any]], CompressionVessel, Dict[str, Any], Dict[str, Any]
+        The compressor config, compressor config_list, model-related wrapper, evaluation value (flops, params, ...) for the original model,
+        parameters of the hpo objective function.
+    """
+    compressor_config, vessel, original_target, thetas = None, None, None, None
     config_list = []
 
     for key, value in kwargs.items():
         if key.startswith(KEY_MODULE_NAME):
             config_list.append({'op_names': [key.split(KEY_MODULE_NAME)[1]], 'sparsity_per_layer': float(value)})
         elif key == KEY_PRUNERS:
-            pruner_config = value
+            compressor_config = value
         elif key == KEY_VESSEL:
             vessel = CompressionVessel(**value)
         elif key == KEY_ORIGINAL_TARGET:
@@ -128,9 +145,12 @@ def parse_params(kwargs: Dict[str, Any]):
         else:
             raise KeyError('Unrecognized key {}'.format(key))
 
-    return pruner_config, config_list, vessel, original_target, thetas
+    return compressor_config, config_list, vessel, original_target, thetas
 
 def parse_basic_pruner(pruner_config: Dict[str, str], config_list: List[Dict[str, Any]], vessel: CompressionVessel):
+    """
+    Parse basic pruner and model-related obj used by pruning scheduler.
+    """
     model, finetuner, evaluator, dummy_input, trainer, optimizer_helper, criterion, device = vessel.export()
     if pruner_config['pruner_type'] == 'L1NormPruner':
         from nni.compression.pytorch.pruning import L1NormPruner
