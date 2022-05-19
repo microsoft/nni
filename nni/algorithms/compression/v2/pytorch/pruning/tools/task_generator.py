@@ -40,7 +40,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
         origin_masks
             The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
         log_dir
-            The log directory uses to save the task generator log.
+            The log directory used to save the task generator log.
         keep_intermediate_result
             If keeping the intermediate result, including intermediate model and masks during each iteration.
         skip_first_iteration

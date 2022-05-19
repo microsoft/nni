@@ -182,7 +182,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         # combine metrics with channel dependence
         for idx, names in enumerate(self.channel_depen):
             grouped_metric = {name: metrics[name] for name in names if name in metrics}
-            grouped_names.update(set(grouped_metric.keys()))
+            grouped_names.update(grouped_metric.keys())
             if self.continuous_mask:
                 for name, metric in grouped_metric.items():
                     metric *= self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)  # type: ignore

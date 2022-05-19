@@ -2,6 +2,9 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
+
+__all__ = ['CompressionConfig', 'CompressionExperimentConfig']
+
 from dataclasses import dataclass
 from typing import List, Type
 
@@ -11,8 +14,6 @@ from nni.experiment.config import ExperimentConfig
 from nni.experiment.config.base import ConfigBase
 from .pruner import PrunerConfig
 from .quantizer import QuantizerConfig
-
-__all__ = ['CompressionConfig', 'CompressionExperimentConfig']
 
 
 @dataclass
