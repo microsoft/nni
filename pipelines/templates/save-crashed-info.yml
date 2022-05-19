@@ -1,6 +1,8 @@
 # Upload crashed experiments to artifact,
 # so that further offline investigations are possible.
 
+steps:
+
 - script: |
     export EXPERIMENT_DIR=$(readlink -f ~/nni-experiments/_latest)
     echo "Latest experiment directory: ${EXPERIMENT_DIR}"
