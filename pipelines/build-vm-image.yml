@@ -10,8 +10,17 @@ jobs:
     displayName: Install azcli
 
   - script: |
-      az login --identity --allow-no-subscriptions --username "/subscriptions/5e859c85-6060-4b7c-a269-4ed15b684059/resourcegroups/nni/providers/Microsoft.ManagedIdentity/userAssignedIdentities/image-builder-identity"
+      export USERNAME="/subscriptions/$(subscription_id)/resourcegroups/nni/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(identity_name)"
+      az login --identity --allow-no-subscriptions --username $USERNAME
     displayName: az login
+
+  - script: |
+      az provider show -n Microsoft.VirtualMachineImages -o json
+      az provider show -n Microsoft.KeyVault -o json
+      az provider show -n Microsoft.Compute -o json
+      az provider show -n Microsoft.Storage -o json
+      az provider show -n Microsoft.Network -o json
+    displayName: Register features
 
   # - powershell: |
   #     cd test/vso_tools/build_vm
