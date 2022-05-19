@@ -870,10 +870,13 @@ class NNIManager implements Manager {
     }
 
     private logError(err: Error): void {
-        if (err.stack !== undefined) {
-            this.log.error(err.stack);
+        if (err !== undefined) {
+            // FIXME: I don't know why, but in some cases err could be undefined.
+            if (err.stack !== undefined) {
+                this.log.error(err.stack);
+            }
+            this.status.errors.push(err.message);
         }
-        this.status.errors.push(err.message);
         this.setEndtime();
         this.setStatus('ERROR');
     }
