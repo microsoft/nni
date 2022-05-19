@@ -90,6 +90,7 @@ class DARTS(OneShotStrategy):
         super().__init__(DartsLightningModule, **kwargs)
 
     def preprocess_dataloader(self, train_dataloaders, val_dataloaders):
+        # By returning a dict, we make a CombinedLoader (in Lightning)
         return {
             'train': train_dataloaders,
             'val': val_dataloaders
