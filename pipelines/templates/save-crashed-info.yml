@@ -1,0 +1,14 @@
+# Upload crashed experiments to artifact,
+# so that further offline investigations are possible.
+
+- script: |
+    export EXPERIMENT_DIR=$(readlink -f ~/nni-experiments/_latest)
+    echo "Latest experiment directory: ${EXPERIMENT_DIR}"
+    echo "##vso[task.setvariable variable=experiment_dir]${EXPERIMENT_DIR}"
+  condition: failed()
+  displayName: (failed) Compute latest experiment directory
+
+- publish: $(experiment_dir)
+  artifact: experiment
+  condition: variables['experiment_dir']
+  displayName: (failed) Upload experiment artifact

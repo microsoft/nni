@@ -90,14 +90,4 @@ jobs:
       python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
     displayName: Integration test
 
-  - script: |
-      export EXPERIMENT_DIR=$(readlink -f ~/nni-experiments/_latest)
-      echo "Latest experiment directory: ${EXPERIMENT_DIR}"
-      echo "##vso[task.setvariable variable=experiment_dir]${EXPERIMENT_DIR}"
-    condition: failed()
-    displayName: (failed) Compute latest experiment directory
-
-  - publish: $(experiment_dir)
-    artifact: experiment
-    condition: variables['experiment_dir']
-    displayName: (failed) Upload experiment artifact
+  - template: templates/save-crashed-info.yml
