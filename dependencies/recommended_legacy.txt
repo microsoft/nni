@@ -18,3 +18,4 @@ matplotlib
 # TODO: time to drop tensorflow 1.x
 keras
 tensorflow < 2.0
+timm >= 0.5.4

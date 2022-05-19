@@ -6,6 +6,13 @@ import { AppContext } from '@/App';
 import { getSearchInputValueBySearchList } from './searchFunction';
 
 // This file is for search trial ['Trial id', 'Trial No.']
+// you could use `filter` button -> `Trial id` or `Trial No.` to input value
+// if you want to input something in the search input, please follow this fomat
+// Trial id:r; // filter all trials that trial id include `r`
+// Trial No.:1;  // only filter one trial that trial no is 1.
+// And if you want to filter trials id|No by using simple function, you could use this:(nni version >= 2.8 support simple search)
+// 1 // only filter one trial that trial no is 1
+// bw // only filter that trial id include `bw`
 
 function GeneralSearch(props): any {
     const { updateDetailPage } = useContext(AppContext);

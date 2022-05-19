@@ -36,6 +36,8 @@ class Repeat(Mutable):
         meaning that the block will be repeated at least ``min`` times and at most ``max`` times.
         If a ValueChoice, it should choose from a series of positive integers.
 
+        *New in v2.8*: Minimum depth can be 0. But this feature is NOT supported on graph engine.
+
     Examples
     --------
     Block() will be deep copied and repeated 3 times. ::
@@ -123,7 +125,7 @@ class Repeat(Mutable):
             self.depth_choice = depth
         else:
             raise TypeError(f'Unsupported "depth" type: {type(depth)}')
-        assert self.max_depth >= self.min_depth > 0
+        assert self.max_depth >= self.min_depth >= 0 and self.max_depth >= 1, f'Depth of {self.min_depth} to {self.max_depth} is invalid.'
         self.blocks = nn.ModuleList(self._replicate_and_instantiate(blocks, self.max_depth))
 
     @property
@@ -139,13 +141,13 @@ class Repeat(Mutable):
     def _replicate_and_instantiate(blocks, repeat):
         if not isinstance(blocks, list):
             if isinstance(blocks, nn.Module):
-                blocks = [blocks] + [copy.deepcopy(blocks) for _ in range(repeat - 1)]
+                blocks = [blocks if i == 0 else copy.deepcopy(blocks) for i in range(repeat)]
             else:
                 blocks = [blocks for _ in range(repeat)]
-        assert len(blocks) > 0
         assert repeat <= len(blocks), f'Not enough blocks to be used. {repeat} expected, only found {len(blocks)}.'
-        blocks = blocks[:repeat]
-        if not isinstance(blocks[0], nn.Module):
+        if repeat < len(blocks):
+            blocks = blocks[:repeat]
+        if len(blocks) > 0 and not isinstance(blocks[0], nn.Module):
             blocks = [b(i) for i, b in enumerate(blocks)]
         return blocks
 

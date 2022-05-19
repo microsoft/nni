@@ -88,7 +88,7 @@ class GridSearchTuner(Tuner):
         config.tuner.name = 'GridSearch'
     """
 
-    def __init__(self):
+    def __init__(self, optimize_mode=None):
         self.space = None
 
         # the grid to search in this epoch
@@ -115,6 +115,9 @@ class GridSearchTuner(Tuner):
 
         # dumped JSON string of all tried parameters
         self.history = set()
+
+        if optimize_mode is not None:
+            _logger.info(f'Ignored optimize_mode "{optimize_mode}"')
 
     def update_search_space(self, space):
         self.space = format_search_space(space)

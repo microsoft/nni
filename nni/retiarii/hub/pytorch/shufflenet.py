@@ -7,6 +7,9 @@ import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
+from .utils.fixed import FixedFactory
+from .utils.pretrained import load_pretrained_weight
+
 
 class ShuffleNetBlock(nn.Module):
     """
@@ -130,13 +133,13 @@ class ShuffleNetSpace(nn.Module):
         Here, "k-x" means k times the number of default channels.
         Otherwise, 1.0x is used by default. Default: false.
     affine : bool
-        Apply affine to all batch norm. Default: false.
+        Apply affine to all batch norm. Default: true.
     """
 
     def __init__(self,
                  num_labels: int = 1000,
                  channel_search: bool = False,
-                 affine: bool = False):
+                 affine: bool = True):
         super().__init__()
 
         self.num_labels = num_labels
@@ -180,12 +183,12 @@ class ShuffleNetSpace(nn.Module):
 
                 mid_channels = cast(nn.MaybeChoice[int], mid_channels)
 
-                choice_block = nn.LayerChoice([
-                    ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=3, stride=stride, affine=affine),
-                    ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=5, stride=stride, affine=affine),
-                    ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=7, stride=stride, affine=affine),
-                    ShuffleXceptionBlock(in_channels, out_channels, mid_channels=mid_channels, stride=stride, affine=affine)
-                ], label=f'layer_{global_block_idx}')
+                choice_block = nn.LayerChoice(dict(
+                    k3=ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=3, stride=stride, affine=affine),
+                    k5=ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=5, stride=stride, affine=affine),
+                    k7=ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=7, stride=stride, affine=affine),
+                    xcep=ShuffleXceptionBlock(in_channels, out_channels, mid_channels=mid_channels, stride=stride, affine=affine)
+                ), label=f'layer_{global_block_idx}')
                 feature_blocks.append(choice_block)
 
         self.features = nn.Sequential(*feature_blocks)
@@ -244,3 +247,51 @@ class ShuffleNetSpace(nn.Module):
                 torch.nn.init.normal_(m.weight, 0, 0.01)
                 if m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0)
+
+    @classmethod
+    def fixed_arch(cls, arch: dict) -> FixedFactory:
+        return FixedFactory(cls, arch)
+
+    @classmethod
+    def load_searched_model(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+        if name == 'spos':
+            # NOTE: Need BGR tensor, with no normalization
+            # https://github.com/ultmaster/spacehub-conversion/blob/371a4fd6646b4e11eda3f61187f7c9a1d484b1ca/cutils.py#L63
+            arch = {
+                'layer_1': 'k7',
+                'layer_2': 'k5',
+                'layer_3': 'k3',
+                'layer_4': 'k5',
+                'layer_5': 'k7',
+                'layer_6': 'k3',
+                'layer_7': 'k7',
+                'layer_8': 'k3',
+                'layer_9': 'k7',
+                'layer_10': 'k3',
+                'layer_11': 'k7',
+                'layer_12': 'xcep',
+                'layer_13': 'k3',
+                'layer_14': 'k3',
+                'layer_15': 'k3',
+                'layer_16': 'k3',
+                'layer_17': 'xcep',
+                'layer_18': 'k7',
+                'layer_19': 'xcep',
+                'layer_20': 'xcep'
+            }
+
+        else:
+            raise ValueError(f'Unsupported architecture with name: {name}')
+
+        model_factory = cls.fixed_arch(arch)
+        model = model_factory()
+
+        if pretrained:
+            weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
+            model.load_state_dict(pretrained_weights)
+
+        return model

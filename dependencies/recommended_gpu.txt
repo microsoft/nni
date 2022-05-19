@@ -4,10 +4,13 @@
 tensorflow
 torch == 1.10.0+cu113
 torchvision == 0.11.1+cu113
-pytorch-lightning >= 1.5.0, < 1.6.0
+pytorch-lightning >= 1.6.1
 lightgbm
 onnx
 peewee
 graphviz
 gym
 tianshou >= 0.4.1
+timm >= 0.5.4
+azureml
+azureml-sdk

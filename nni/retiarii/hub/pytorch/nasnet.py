@@ -8,6 +8,7 @@ It's called ``nasnet.py`` simply because NASNet is the first to propose such str
 """
 
 from collections import OrderedDict
+from functools import partial
 from typing import Tuple, List, Union, Iterable, Dict, Callable, Optional, cast
 
 try:
@@ -19,6 +20,9 @@ import torch
 
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
+
+from .utils.fixed import FixedFactory
+from .utils.pretrained import load_pretrained_weight
 
 
 # the following are NAS operations from
@@ -300,15 +304,26 @@ class CellBuilder:
         self.last_cell_reduce = last_cell_reduce
         self._expect_idx = 0
 
+        # It takes an index that is the index in the repeat.
+        # Number of predecessors for each cell is fixed to 2.
+        self.num_predecessors = 2
+
+        # Number of ops per node is fixed to 2.
+        self.num_ops_per_node = 2
+
+    def op_factory(self, node_index: int, op_index: int, input_index: Optional[int], *,
+                   op: str, channels: int, is_reduction_cell: bool):
+        if is_reduction_cell and (
+            input_index is None or input_index < self.num_predecessors
+        ):  # could be none when constructing search sapce
+            stride = 2
+        else:
+            stride = 1
+        return OPS[op](channels, stride, True)
+
     def __call__(self, repeat_idx: int):
         if self._expect_idx != repeat_idx:
             raise ValueError(f'Expect index {self._expect_idx}, found {repeat_idx}')
-
-        # It takes an index that is the index in the repeat.
-        # Number of predecessors for each cell is fixed to 2.
-        num_predecessors = 2
-        # Number of ops per node is fixed to 2.
-        num_ops_per_node = 2
 
         # Reduction cell means stride = 2 and channel multiplied by 2.
         is_reduction_cell = repeat_idx == 0 and self.first_cell_reduce
@@ -316,16 +331,11 @@ class CellBuilder:
         # self.C_prev_in, self.C_in, self.last_cell_reduce are updated after each cell is built.
         preprocessor = CellPreprocessor(self.C_prev_in, self.C_in, self.C, self.last_cell_reduce)
 
-        ops_factory: Dict[str, Callable[[int, int, Optional[int]], nn.Module]] = {
-            op:  # make final chosen ops named with their aliases
-            lambda node_index, op_index, input_index:
-            OPS[op](self.C, 2 if is_reduction_cell and (
-                    input_index is None or input_index < num_predecessors  # could be none when constructing search sapce
-                    ) else 1, True)
-            for op in self.op_candidates
-        }
+        ops_factory: Dict[str, Callable[[int, int, Optional[int]], nn.Module]] = {}
+        for op in self.op_candidates:
+            ops_factory[op] = partial(self.op_factory, op=op, channels=cast(int, self.C), is_reduction_cell=is_reduction_cell)
 
-        cell = nn.Cell(ops_factory, self.num_nodes, num_ops_per_node, num_predecessors, self.merge_op,
+        cell = nn.Cell(ops_factory, self.num_nodes, self.num_ops_per_node, self.num_predecessors, self.merge_op,
                        preprocessor=preprocessor, postprocessor=CellPostprocessor(),
                        label='reduce' if is_reduction_cell else 'normal')
 
@@ -401,7 +411,7 @@ class NDS(nn.Module):
         self.num_cells: nn.MaybeChoice[int] = cast(int, num_cells)
         if isinstance(num_cells, Iterable):
             self.num_cells = nn.ValueChoice(list(num_cells), label='depth')
-        num_cells_per_stage = [i * self.num_cells // 3 - (i - 1) * self.num_cells // 3 for i in range(3)]
+        num_cells_per_stage = [(i + 1) * self.num_cells // 3 - i * self.num_cells // 3 for i in range(3)]
 
         # auxiliary head is different for network targetted at different datasets
         if dataset == 'imagenet':
@@ -500,6 +510,10 @@ class NDS(nn.Module):
         for module in self.modules():
             if isinstance(module, DropPath_):
                 module.drop_prob = drop_prob
+
+    @classmethod
+    def fixed_arch(cls, arch: dict) -> FixedFactory:
+        return FixedFactory(cls, arch)
 
 
 @model_wrapper
@@ -676,3 +690,64 @@ class DARTS(NDS):
                          num_cells=num_cells,
                          dataset=dataset,
                          auxiliary_loss=auxiliary_loss)
+
+    @classmethod
+    def load_searched_model(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+
+        init_kwargs = {}  # all default
+
+        if name == 'darts-v2':
+            init_kwargs.update(
+                num_cells=20,
+                width=36,
+            )
+            arch = {
+                'normal/op_2_0': 'sep_conv_3x3',
+                'normal/op_2_1': 'sep_conv_3x3',
+                'normal/input_2_0': 0,
+                'normal/input_2_1': 1,
+                'normal/op_3_0': 'sep_conv_3x3',
+                'normal/op_3_1': 'sep_conv_3x3',
+                'normal/input_3_0': 0,
+                'normal/input_3_1': 1,
+                'normal/op_4_0': 'sep_conv_3x3',
+                'normal/op_4_1': 'skip_connect',
+                'normal/input_4_0': 1,
+                'normal/input_4_1': 0,
+                'normal/op_5_0': 'skip_connect',
+                'normal/op_5_1': 'dil_conv_3x3',
+                'normal/input_5_0': 0,
+                'normal/input_5_1': 2,
+                'reduce/op_2_0': 'max_pool_3x3',
+                'reduce/op_2_1': 'max_pool_3x3',
+                'reduce/input_2_0': 0,
+                'reduce/input_2_1': 1,
+                'reduce/op_3_0': 'skip_connect',
+                'reduce/op_3_1': 'max_pool_3x3',
+                'reduce/input_3_0': 2,
+                'reduce/input_3_1': 1,
+                'reduce/op_4_0': 'max_pool_3x3',
+                'reduce/op_4_1': 'skip_connect',
+                'reduce/input_4_0': 0,
+                'reduce/input_4_1': 2,
+                'reduce/op_5_0': 'skip_connect',
+                'reduce/op_5_1': 'max_pool_3x3',
+                'reduce/input_5_0': 2,
+                'reduce/input_5_1': 1
+            }
+
+        else:
+            raise ValueError(f'Unsupported architecture with name: {name}')
+
+        model_factory = cls.fixed_arch(arch)
+        model = model_factory(**init_kwargs)
+
+        if pretrained:
+            weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
+            model.load_state_dict(pretrained_weights)
+
+        return model

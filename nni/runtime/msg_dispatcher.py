@@ -7,10 +7,10 @@ from collections import defaultdict
 from nni import NoMoreTrialError
 from nni.assessor import AssessResult
 
-from .common import multi_thread_enabled, multi_phase_enabled
+from .common import multi_phase_enabled
 from .env_vars import dispatcher_env_vars
 from .msg_dispatcher_base import MsgDispatcherBase
-from .protocol import CommandType, send
+from .tuner_command_channel import CommandType
 from ..common.serializer import dump, load
 from ..utils import MetricType
 
@@ -67,8 +67,8 @@ def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, p
 
 
 class MsgDispatcher(MsgDispatcherBase):
-    def __init__(self, tuner, assessor=None):
-        super(MsgDispatcher, self).__init__()
+    def __init__(self, command_channel_url, tuner, assessor=None):
+        super().__init__(command_channel_url)
         self.tuner = tuner
         self.assessor = assessor
         if assessor is None:
@@ -88,12 +88,12 @@ class MsgDispatcher(MsgDispatcherBase):
         """Data is search space
         """
         self.tuner.update_search_space(data)
-        send(CommandType.Initialized, '')
+        self.send(CommandType.Initialized, '')
 
     def send_trial_callback(self, id_, params):
         """For tuner to issue trial config when the config is generated
         """
-        send(CommandType.NewTrialJob, _pack_parameter(id_, params))
+        self.send(CommandType.NewTrialJob, _pack_parameter(id_, params))
 
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
@@ -102,10 +102,10 @@ class MsgDispatcher(MsgDispatcherBase):
         params_list = self.tuner.generate_multiple_parameters(ids, st_callback=self.send_trial_callback)
 
         for i, _ in enumerate(params_list):
-            send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
+            self.send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
         # when parameters is None.
         if len(params_list) < len(ids):
-            send(CommandType.NoMoreTrialJobs, _pack_parameter(ids[0], ''))
+            self.send(CommandType.NoMoreTrialJobs, _pack_parameter(ids[0], ''))
 
     def handle_update_search_space(self, data):
         self.tuner.update_search_space(data)
@@ -148,7 +148,7 @@ class MsgDispatcher(MsgDispatcherBase):
                 param = self.tuner.generate_parameters(param_id, trial_job_id=data['trial_job_id'])
             except NoMoreTrialError:
                 param = None
-            send(CommandType.SendTrialJobParameter, _pack_parameter(param_id, param, trial_job_id=data['trial_job_id'],
+            self.send(CommandType.SendTrialJobParameter, _pack_parameter(param_id, param, trial_job_id=data['trial_job_id'],
                                                                     parameter_index=data['parameter_index']))
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
@@ -222,7 +222,7 @@ class MsgDispatcher(MsgDispatcherBase):
 
         if result is AssessResult.Bad:
             _logger.debug('BAD, kill %s', trial_job_id)
-            send(CommandType.KillTrialJob, dump(trial_job_id))
+            self.send(CommandType.KillTrialJob, dump(trial_job_id))
             # notify tuner
             _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]',
                           dispatcher_env_vars.NNI_INCLUDE_INTERMEDIATE_RESULTS)
@@ -237,8 +237,5 @@ class MsgDispatcher(MsgDispatcherBase):
         """
         _logger.debug('Early stop notify tuner data: [%s]', data)
         data['type'] = MetricType.FINAL
-        if multi_thread_enabled():
-            self._handle_final_metric_data(data)
-        else:
-            data['value'] = dump(data['value'])
-            self.enqueue_command(CommandType.ReportMetricData, data)
+        data['value'] = dump(data['value'])
+        self.enqueue_command(CommandType.ReportMetricData, data)
