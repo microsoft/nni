@@ -26,6 +26,10 @@ jobs:
     parameters:
       platform: ubuntu-latest-gpu
 
+  - script: |
+      sudo docker images
+    displayName: Docker images
+
   # These parts are exactly same as remote.
   # Refactor these as templates when the refactor is done.
   - script: |
