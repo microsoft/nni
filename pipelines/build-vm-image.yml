@@ -10,7 +10,7 @@ jobs:
     displayName: Install azcli
 
   - script: |
-      az login --identity --username "/subscriptions/5e859c85-6060-4b7c-a269-4ed15b684059/resourcegroups/nni/providers/Microsoft.ManagedIdentity/userAssignedIdentities/image-builder-identity"
+      az login --identity --allow-no-subscriptions --username "/subscriptions/5e859c85-6060-4b7c-a269-4ed15b684059/resourcegroups/nni/providers/Microsoft.ManagedIdentity/userAssignedIdentities/image-builder-identity"
     displayName: az login
 
   # - powershell: |
