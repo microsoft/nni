@@ -38,7 +38,9 @@ class LightningModule(pl.LightningModule):
     """
 
     running_mode: Literal['multi', 'oneshot'] = 'multi'
-    """An indicator of whether current module is running in a multi-trial experiment or an one-shot."""
+    """An indicator of whether current module is running in a multi-trial experiment or an one-shot.
+    This flag should be automatically set by experiments when they start to run.
+    """
 
     def set_model(self, model: Union[Callable[[], nn.Module], nn.Module]) -> None:
         """Set the inner model (architecture) to train / evaluate.
@@ -108,12 +110,12 @@ class Lightning(Evaluator):
             assert (isinstance(trainer, pl.Trainer) and is_traceable(trainer)) or isinstance(trainer, cgo_trainer.Trainer), \
                 f'Trainer must be imported from {__name__} or nni.retiarii.evaluator.pytorch.cgo.trainer'
         if not _check_dataloader(train_dataloaders):
-            warnings.warn(f'Unexpected dataloader type: {type(train_dataloaders)}. '
-                          f'You might have forgotten to import DataLoader from {__name__}: {train_dataloaders}',
+            warnings.warn(f'Please try to wrap PyTorch DataLoader with nni.trace or '
+                          f'import DataLoader from {__name__}: {train_dataloaders}',
                           RuntimeWarning)
         if not _check_dataloader(val_dataloaders):
-            warnings.warn(f'Unexpected dataloader type: {type(val_dataloaders)}. '
-                          f'You might have forgotten to import DataLoader from {__name__}: {val_dataloaders}',
+            warnings.warn(f'Please try to wrap PyTorch DataLoader with nni.trace or '
+                          f'import DataLoader from {__name__}: {val_dataloaders}',
                           RuntimeWarning)
         self.module = lightning_module
         self.trainer = trainer
@@ -171,11 +173,14 @@ class Lightning(Evaluator):
 
 
 def _check_dataloader(dataloader):
-    if dataloader is None:
-        return True
+    # Check the type of dataloader recursively.
     if isinstance(dataloader, list):
         return all([_check_dataloader(d) for d in dataloader])
-    return isinstance(dataloader, torch_data.DataLoader) and is_traceable(dataloader)
+    if isinstance(dataloader, dict):
+        return all([_check_dataloader(v) for v in dataloader.values()])
+    if isinstance(dataloader, torch_data.DataLoader):
+        return is_traceable(dataloader)
+    return True
 
 
 ### The following are some commonly used Lightning modules ###
