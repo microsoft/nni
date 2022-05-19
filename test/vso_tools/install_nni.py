@@ -8,4 +8,5 @@ else:
     extra_dep = f'[{sys.argv[2]}]'
 
 wheel = build_wheel()
+run_command('ls -al dist')
 run_command(f'{sys.executable} -m pip install {wheel}{extra_dep}')
