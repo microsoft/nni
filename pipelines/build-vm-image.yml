@@ -2,27 +2,34 @@ trigger: none
 pr: none
 
 jobs:
-- job: windows
-  pool:
-    vmImage: windows-latest
+- job: linux
+  pool: nni-it
   steps:
-  - powershell: |
-      cd test/vso_tools/build_vm
-      $filePath = "windows.json"
-      (Get-Content $filePath).Replace("<client_id>", "$(client_id)") | Set-Content $filePath
-      (Get-Content $filePath).Replace("<client_secret>", "$(client_secret)") | Set-Content $filePath
-      (Get-Content $filePath).Replace("<tenant_id>", "$(tenant_id)") | Set-Content $filePath
-      (Get-Content $filePath).Replace("<subscription_id>", "$(subscription_id)") | Set-Content $filePath
-      (Get-Content $filePath).Replace("<object_id>", "$(object_id)") | Set-Content $filePath
+  - script: |
+      curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+    displayName: Install azcli
 
-      Get-Content $filePath
-    displayName: Prepare packer configuration
+  - script: |
+      az login --identity
+    displayName: az login
 
-  - powershell: |
-      az login --service-principal --username $(client_id) --password $(client_secret) --tenant $(tenant_id)
-    displayName: Try login
+  # - powershell: |
+  #     cd test/vso_tools/build_vm
+  #     $filePath = "windows.json"
+  #     (Get-Content $filePath).Replace("<client_id>", "$(client_id)") | Set-Content $filePath
+  #     (Get-Content $filePath).Replace("<client_secret>", "$(client_secret)") | Set-Content $filePath
+  #     (Get-Content $filePath).Replace("<tenant_id>", "$(tenant_id)") | Set-Content $filePath
+  #     (Get-Content $filePath).Replace("<subscription_id>", "$(subscription_id)") | Set-Content $filePath
+  #     (Get-Content $filePath).Replace("<object_id>", "$(object_id)") | Set-Content $filePath
 
-  - powershell: |
-      cd test/vso_tools/build_vm
-      packer build windows.json
-    displayName: Packer build
+  #     Get-Content $filePath
+  #   displayName: Prepare packer configuration
+
+  # - powershell: |
+  #     az login --service-principal --username $(client_id) --password $(client_secret) --tenant $(tenant_id)
+  #   displayName: Try login
+
+  # - powershell: |
+  #     cd test/vso_tools/build_vm
+  #     packer build windows.json
+  #   displayName: Packer build
