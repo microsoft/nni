@@ -7,7 +7,7 @@ steps:
 - script: |
     set -e
     sudo apt update
-    sudo apt install -y build-essential cmake uidmap
+    sudo apt install -y --no-cache build-essential cmake uidmap
   displayName: Install build essential
 
 
@@ -40,7 +40,7 @@ steps:
 
 - script: |
     set -e
-    sudo apt install -y nfs-kernel-server nfs-common
+    sudo apt install -y --no-cache nfs-kernel-server nfs-common
     sudo mkdir -p /var/nfs/general
     sudo chmod 777 /var/nfs/general
     echo "/var/nfs/general *(rw,sync,insecure,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
@@ -65,7 +65,7 @@ steps:
     sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
     sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
     sudo apt update
-    sudo apt install -y cuda-drivers
+    sudo apt install -y --no-cache cuda-drivers
   displayName: Install CUDA
 
 # Technically we need a reboot here, but looks like it also works without reboot.
@@ -96,7 +96,7 @@ steps:
 - script: |
     set -e
     sudo add-apt-repository ppa:deadsnakes/ppa
-    sudo apt install -y python3.7-dev python3.7-venv python3.9-dev python3.9-venv
+    sudo apt install -y --no-cache python3.7-dev python3.7-venv python3.9-dev python3.9-venv
     mkdir $(Agent.ToolsDirectory)/Python
   displayName: Download Python
 

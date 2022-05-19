@@ -27,6 +27,7 @@ steps:
     set -e
     azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
+    rm dependencies.zip
   displayName: (POSIX) Download cache
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
   continueOnError: true
@@ -34,6 +35,7 @@ steps:
 - powershell: |
     azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
+    Remove-Item dependencies.zip
   displayName: (Windows) Download cache
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
   continueOnError: true
