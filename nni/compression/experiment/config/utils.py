@@ -19,6 +19,9 @@ KEY_THETAS = '_thetas'
 
 
 # hard code and magic number for flops/params reward function
+# the reward function is: sigmoid(flops_retained) = 1 / (1 + exp(-theta1 * (flops_retained + theta0)))
+# this helper function return a theta pair (theta0, theta1) for building a suitable (maybe) function.
+# the lower evaluating result (flops/params) compressed model has, the higher reward it gets.
 def _flops_theta_helper(target: int | float | str | None, origin: int) -> Tuple[float, float]:
     if not target or (isinstance(target, (int, float)) and target == 0):
         return (0., 0.)
@@ -34,6 +37,8 @@ def _flops_theta_helper(target: int | float | str | None, origin: int) -> Tuple[
         raise TypeError(f'Wrong target type: {type(target).__name__}, only support int/float/None.')
 
 # hard code and magic number for metric reward function
+# only difference with `_flops_theta_helper` is the higher evaluating result (metric) compressed model has,
+# the higher reward it gets.
 def _metric_theta_helper(target: float | None, origin: float) -> Tuple[float, float]:
     if not target:
         return (-0.85, 50.)
