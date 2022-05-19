@@ -4,7 +4,7 @@ parameters:
 
 steps:
 
-- ${{ if contains(parameters.platform, 'windows')) }}:
+- ${{ if contains(parameters.platform, 'windows') }}:
     powershell: |
       cd examples/tuners/customized_tuner
       python setup.py develop --user
