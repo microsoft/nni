@@ -90,10 +90,10 @@ class CompressionExperiment(Experiment):
         # TODO: python3 is not robust, need support in nni manager
         self.config.trial_command = 'python3 -m nni.compression.experiment.trial_entry'
 
-        # copy files in temp directory to nni-checkpoints
+        # copy files in temp directory to nni_outputs/checkpoint
         # TODO: copy files to code dir is a temporary solution, need nnimanager support upload multi-directory,
         # or package additional files when uploading.
-        checkpoint_dir = Path(self.config.trial_code_directory, 'nni-checkpoints')
+        checkpoint_dir = Path(self.config.trial_code_directory, 'nni_outputs', 'checkpoint')
         shutil.copytree(self.temp_directory, checkpoint_dir, dirs_exist_ok=True)
 
         if self.config.search_space or self.config.search_space_file:

@@ -7,6 +7,8 @@ TODO: split this file to several modules
 """
 
 import math
+import os
+from pathlib import Path
 
 import nni
 from nni.algorithms.compression.v2.pytorch.pruning import PruningScheduler
@@ -24,8 +26,9 @@ if __name__ == '__main__':
     basic_pruner, model, finetuner, evaluator, dummy_input, device = parse_basic_pruner(pruner_config, config_list, vessel)
 
     # TODO: move following logic to excution engine
+    log_dir = Path(os.environ['NNI_OUTPUT_DIR']) if 'NNI_OUTPUT_DIR' in os.environ else Path('nni_outputs', 'log')
     task_generator = AGPTaskGenerator(total_iteration=3, origin_model=model, origin_config_list=config_list,
-                                      skip_zero_iteration=True, log_dir='nni-logs')
+                                      skip_zero_iteration=True, log_dir=log_dir)
     speedup = dummy_input is not None
     scheduler = PruningScheduler(pruner=basic_pruner, task_generator=task_generator, finetuner=finetuner, speedup=speedup,
                                  dummy_input=dummy_input, evaluator=None)
