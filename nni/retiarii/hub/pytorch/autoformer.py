@@ -72,8 +72,12 @@ class RelativePosition2D(nn.Module):
 
 class RelativePositionAttention(nn.Module):
     """
-    This class is designed to support the relative porision in attention.
+    This class is designed to support the relative position in attention.
     The pytorch built-in nn.MultiheadAttention() does not support relative position embedding.
+    Different from the absolute position embedding, the relative position embedding considers
+    encode the relative distance between input tokens and learn the pairwise relations of them.
+    It is commonly calculated via a look-up table with learnable parameters interacting with queries
+    and keys in self-attention modules.
     """
     def __init__(
             self,

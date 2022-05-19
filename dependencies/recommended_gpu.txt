@@ -11,4 +11,4 @@ peewee
 graphviz
 gym
 tianshou >= 0.4.1
-timm==0.5.4
+timm >= 0.5.4
