@@ -22,24 +22,14 @@ jobs:
     parameters:
       platform: ubuntu-latest-gpu
 
-  - script: |
-      export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
-      echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
-      echo "Working directory: ${PWD}"
-      echo "NNI version: ${NNI_RELEASE}"
-    displayName: Setup NNI release version
-
   - template: templates/install-nni.yml
     parameters:
       wheel: true
       extra_dep: SMAC,BOHB
 
-  - script: |
-      set -e
-      cd examples/tuners/customized_tuner
-      python setup.py develop
-      nnictl algo register --meta meta_file.yml
-    displayName: Install customized tuner
+  - template: templates/install-customized-tuner.yml
+    parameters:
+      platform: ubuntu-latest-gpu
 
   - script: |
       set -e

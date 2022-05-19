@@ -24,6 +24,13 @@ steps:
   displayName: Setup azcopy
 
 
+# Install azcli for Azure resources access and management.
+
+- script: |
+    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  displayName: Install azcli
+
+
 # Install NFS server / client
 # This should only be done when neceessary, but it doesn't harm to install it, nonetheless.
 

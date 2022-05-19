@@ -7,35 +7,32 @@ schedules:
 
 jobs:
 - job: aml
-  pool: NNI CI REMOTE CLI
+  pool:
+    vmImage: ubuntu-latest
   timeoutInMinutes: 120
 
   steps:
+
+  # Need to have a service principal (SP) to login to Azure services (e.g., AzureML).
+  # Refer to external account section in OneNote for how to generate / renew the authorization.
+  # According to docs, the secrets need to be refreshed at least once per year.
+  # After the tokens are updated, pipeline secret varibles should be updated correspondingly.
   - script: |
-      export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
-      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
-      echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
+      az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
+    displayName: Login to Azure
 
-      echo "Working directory: ${PWD}"
-      echo "NNI version: ${NNI_RELEASE}"
-      echo "Build docker image: $(build_docker_image)"
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: ubuntu-latest
 
-      python3 -m pip install --upgrade pip setuptools
-    displayName: Prepare
+  - template: templates/install-nni.yml
+    parameters:
+      wheel: true
+      extra_dep: SMAC,BOHB
 
-  - script: |
-      set -e
-      python3 setup.py build_ts
-      python3 setup.py bdist_wheel -p manylinux1_x86_64
-      python3 -m pip install dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl[SMAC,BOHB]
-    displayName: Build and install NNI
-
-  - script: |
-      set -e
-      cd examples/tuners/customized_tuner
-      python3 setup.py develop --user
-      nnictl algo register --meta meta_file.yml
-    displayName: Install customized tuner
+  - template: templates/install-customized-tuner.yml
+    parameters:
+      platform: ubuntu-latest
 
   - script: |
       set -e
@@ -50,8 +47,7 @@ jobs:
   - script: |
       set -e
       cd test
-      az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
-      python3 training_service/nnitest/generate_ts_config.py \
+      python training_service/nnitest/generate_ts_config.py \
           --ts aml \
           --subscription_id $(subscriptionId) \
           --resource_group $(resourceGroup) \
