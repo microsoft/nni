@@ -15,6 +15,10 @@ jobs:
     displayName: az login
 
   - script: |
+      set -e
+      # Make sure all these are registered.
+      # If not, might need az provider register -n xxx
+      # Need subscription-write access.
       az provider show -n Microsoft.VirtualMachineImages -o json
       az provider show -n Microsoft.KeyVault -o json
       az provider show -n Microsoft.Compute -o json
