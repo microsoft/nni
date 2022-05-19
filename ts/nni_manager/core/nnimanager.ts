@@ -725,7 +725,7 @@ class NNIManager implements Manager {
                 throw NNIError.FromError(err, 'Dispatcher error: ');
             }),
             this.trainingService.run(),
-            // FIXME: FromError is incorrect in that it will handle the real error.
+            // FIXME: FromError is incorrect in that it will hide the real error.
             // Disabled for now.
             // .catch((err: Error) => {
             //     throw NNIError.FromError(err, 'Training service error: ');
