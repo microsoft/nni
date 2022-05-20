@@ -36,6 +36,17 @@ jobs:
     parameters:
       platform: ubuntu-latest
 
+  # It's tricky to install Azure SDKs.
+  - script: |
+      # Separate installation in two steps for easy debugging
+      python -m pip install azureml-core
+      python -m pip install azure-cli-core
+      # Azure CLI and AzureML have conflicted requirements for msal-extensions.
+      python -m pip install msal-extensions==0.3.1
+      az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
+      python -c "from azureml.core.authentication import AzureCliAuthentication; AzureCliAuthentication().get_token()"
+    displayName: Install AzureML requirements
+
   - template: templates/install-nni.yml
     parameters:
       wheel: true
@@ -44,11 +55,6 @@ jobs:
   - template: templates/install-customized-tuner.yml
     parameters:
       platform: ubuntu-latest
-
-  - script: |
-      python -m pip install azure-cli-core
-      az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
-      python -c "from azureml.core.authentication import AzureCliAuthentication; AzureCliAuthentication().get_token()"
 
   - script: |
       python -c "from azureml.core.authentication import InteractiveLoginAuthentication; InteractiveLoginAuthentication()"
