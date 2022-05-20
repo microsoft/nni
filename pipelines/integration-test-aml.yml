@@ -25,6 +25,9 @@ jobs:
     parameters:
       platform: ubuntu-latest
 
+  - script: |
+      python -m pip install azureml azureml-sdk
+
   - template: templates/install-nni.yml
     parameters:
       wheel: true
