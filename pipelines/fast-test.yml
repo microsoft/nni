@@ -1,239 +1,41 @@
-trigger: none
+trigger:
+- none
+resources:
+  repositories:
+    - repository: azpfilter
+      type: github
+      name: microsoft/azure-pipeline-filter
+      endpoint: github-connection
 
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  nni.ci.file.globs: 'a/**/*.txt,a/**/*.js'
+  nni.ci.markdown.heading: '#### Test Options'
+  nni.ci.markdown.optionIndex: 0
 stages:
-- stage: lint
+- stage: Check
   jobs:
-
-  - job: copyright
-    pool:
-      vmImage: ubuntu-latest
+  - job: Check
     steps:
-    - script: python test/vso_tools/copyright_check.py
-      displayName: Check copyright header
-
-  - job: docs
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: ubuntu-latest
-
-    - script: |
-        cd docs
-        rstcheck -r source \
-          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs \
-          --ignore-roles githublink --ignore-substitutions release \
-          --report warning
-      displayName: rstcheck
-
-    - script: |
-        cd docs
-        sphinx-build -W --keep-going -T -q source build/html
-      displayName: Sphinx sanity check
-
-    - script: |
-        set -e
-        cd docs
-        sudo apt-get install -y gettext
-        python tools/translation_patch.py
-        sphinx-build -W --keep-going -T -q -D language=zh source build/html_zh
-      displayName: Sphinx sanity check (Chinese)
-
-    - script: |
-        set -e
-        cd docs
-        make i18n
-        git diff --exit-code source/locales
-      displayName: Translation up-to-date
-
-    - script: |
-        cd docs
-        sphinx-build -b linkcheck -W --keep-going -T -q source build/linkcheck
-      displayName: External links integrity check
-
-  - job: python
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: ubuntu-latest
-
-    - script: |
-        # pylint requires newer typing extension. Override requirements in tensorflow
-        python -m pip install "typing-extensions>=3.10"
-      displayName: Resolve dependency version
-
-    - script: python test/vso_tools/trigger_import.py
-      displayName: Trigger import
-
-    - script: |
-        python -m pylint --rcfile pylintrc nni
-      displayName: pylint
-
-    - script: |
-        set -e
-        python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
-        EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-        python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
-      displayName: flake8
-
-    - script: |
-        python -m pyright nni
-      displayName: Type Check
-
-  - job: typescript
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: ubuntu-latest
-
-    - script: |
-        set -e
-        yarn --cwd ts/nni_manager
-        yarn --cwd ts/nni_manager eslint
-      displayName: ESLint (NNI Manager)
-
-    - script: |
-        set -e
-        yarn --cwd ts/webui
-        yarn --cwd ts/webui sanity-check
-      displayName: Sanity check (WebUI)
-
-
-  # To reduce debug cost, steps are sorted differently on each platform,
-  # so that a bug in any module will cause at least one platform to fail quickly.
-- stage: test
+    - checkout: azpfilter
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '16.x'
+    - script: npm ci
+      workingDirectory: 'tools'
+      displayName: NPM Install
+    - script: node tools/main.mjs
+      env:
+        NNI_CI_GITHUBPAT: $(nni.ci.githubPAT)
+      name: execution
+      displayName: Execution
+- stage: Main
+  dependsOn: Check
+  condition: and(succeeded(), ne(dependencies.Check.outputs['Check.execution.skipsubsequent'], 'true'))
   jobs:
-  - job: ubuntu_latest
-    pool:
-      vmImage: ubuntu-latest
-
+  - job: Main
     steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: ubuntu-latest
-
-    - template: templates/install-nni.yml
-
-    - script: |
-        set -e
-        mkdir -p coverage
-        cd test
-        python -m pytest ut --cov-config=.coveragerc \
-          --ignore=ut/compression/v1/test_pruners.py \
-          --ignore=ut/compression/v1/test_compressor_tf.py \
-          --ignore=ut/compression/v1/test_compressor_torch.py \
-          --ignore=ut/compression/v1/test_model_speedup.py
-        python -m pytest ut/compression/v1/test_pruners.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/compression/v1/test_compressor_tf.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/compression/v1/test_compressor_torch.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/compression/v1/test_model_speedup.py --cov-config=.coveragerc --cov-append
-        cp coverage.xml ../coverage/python.xml
-      displayName: Python unit test
-
-    - script: |
-        yarn --cwd ts/nni_manager test
-        cp ts/nni_manager/coverage/cobertura-coverage.xml coverage/typescript.xml
-      displayName: TypeScript unit test
-
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testResultsFiles: '$(System.DefaultWorkingDirectory)/**/test-*.xml'
-        testRunTitle: 'Publish test results for Python $(python.version)'
-      displayName: Publish test results
-
-    - task: PublishCodeCoverageResults@1
-      inputs:
-        codeCoverageTool: Cobertura
-        summaryFileLocation: coverage/*
-      displayName: Publish code coverage results
-
-    - script: |
-        cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-      displayName: Simple integration test
-
-  - job: ubuntu_legacy
-    pool:
-      vmImage: ubuntu-18.04
-
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: ubuntu-legacy
-
-    - template: templates/install-nni.yml
-
-    - script: |
-        cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-      displayName: Simple integration test
-
-    - script: |
-        cd test
-        python -m pytest ut --ignore=ut/retiarii/test_convert_basic.py \
-          --ignore=ut/retiarii/test_convert_operators.py \
-          --ignore=ut/retiarii/test_convert_pytorch.py
-      displayName: Python unit test
-
-    - script: |
-        yarn --cwd ts/nni_manager test
-      displayName: TypeScript unit test
-
-  - job: windows
-    pool:
-      vmImage: windows-latest
-    timeoutInMinutes: 75
-
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: windows
-
-    - template: templates/install-nni.yml
-      parameters:
-        user: false
-
-    - script: |
-        cd test
-        python -m pytest ut
-      displayName: Python unit test
-
-    - script: |
-        yarn --cwd ts/nni_manager test
-      displayName: TypeScript unit test
-
-    - script: |
-        cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-      displayName: Simple integration test
-
-  - job: macos
-    pool:
-      vmImage: macOS-latest
-
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: macos
-
-    - template: templates/install-nni.yml
-
-    - script: |
-        CI=true yarn --cwd ts/nni_manager test --exclude test/core/nnimanager.test.ts
-      displayName: TypeScript unit test
-
-    - script: |
-        cd test
-        python -m pytest ut
-      displayName: Python unit test
-
-    - script: |
-        cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-      displayName: Simple integration test
+    - script: echo end
+      displayName: 'Run main test'
