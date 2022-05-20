@@ -18,20 +18,18 @@ jobs:
   # According to docs, the secrets need to be refreshed at least once per year.
   # After the tokens are updated, pipeline secret varibles should be updated correspondingly.
   - script: |
+      printenv
+
+  - script: |
       az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
     displayName: Login to Azure
+
+  - script: |
+      printenv
 
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest
-
-  # There are quite a lot of dependencies in AzureML Python SDK.
-  # Dependency disaster is likely to happen here.
-  # Thus, we only install azureml-core here. Seems working though.
-
-  - script: |
-      python -m pip install azureml-core
-    displayName: Install AzureML SDK
 
   - template: templates/install-nni.yml
     parameters:
