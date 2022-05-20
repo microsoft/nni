@@ -47,7 +47,7 @@ jobs:
 
   - script: |
       az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
-      python -c "from azureml.core.authentication import InteractiveLoginAuthentication; InteractiveLoginAuthentication(tenant_id='$(tenant_id)')"
+      python -c "from azureml.core.authentication import AzureCliAuthentication; AzureCliAuthentication().get_token()"
 
   - script: |
       python -c "from azureml.core.authentication import InteractiveLoginAuthentication; InteractiveLoginAuthentication()"
