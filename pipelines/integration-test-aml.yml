@@ -22,7 +22,12 @@ jobs:
 
   - script: |
       az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
+      printenv
     displayName: Login to Azure
+
+  - script: |
+      az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
+      az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
 
   - script: |
       printenv
