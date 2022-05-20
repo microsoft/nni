@@ -136,6 +136,8 @@ export class AMLClient {
     // Monitor error information in aml python shell client
     private monitorError(pythonShellClient: PythonShell, deferred: Deferred<any>): void {
         pythonShellClient.on('stderr', function (error: any) {
+            // FIXME: The error will only appear in console.
+            // Still need to find a way to put them into logs.
             console.error(`Python process stderr: ${error}`);
         });
         pythonShellClient.on('error', function (error: any) {
@@ -143,6 +145,7 @@ export class AMLClient {
             deferred.reject(error || new Error('AML client Python process unknown error.'));
         });
         pythonShellClient.on('close', function (error: any) {
+            // The error here could be undefined.
             console.error(`Python process fires unexpected close signal: ${error}`);
             deferred.reject(error || new Error('AML client Python process unknown error.'));
         });
