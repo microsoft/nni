@@ -56,6 +56,3 @@ class RetiariiExeConfig(ExperimentConfig):
             self.trial_command = 'python3 -m nni.retiarii.trial_entry ' + self.execution_engine.name
 
         super()._canonicalize([self])
-
-    def _validate_canonical(self):
-        super()._validate_canonical(False)

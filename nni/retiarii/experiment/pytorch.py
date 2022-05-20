@@ -310,7 +310,7 @@ class RetiariiExperiment(Experiment):
         Stop background experiment.
         """
         _logger.info('Stopping experiment, please wait...')
-        self._stop()
+        self._stop_impl()
         if self._dispatcher_thread:
             self._dispatcher_thread.join()
         self._dispatcher = cast(RetiariiAdvisor, None)
@@ -319,8 +319,6 @@ class RetiariiExperiment(Experiment):
 
     def export_top_models(self, top_k: int = 1, optimize_mode: str = 'maximize', formatter: str = 'dict') -> Any:
         """
-        TODO: the base class may also need this method
-
         Export several top performing models.
 
         For one-shot algorithms, only top-1 is supported. For others, ``optimize_mode`` and ``formatter`` are
@@ -338,6 +336,7 @@ class RetiariiExperiment(Experiment):
             If ``code``, the python code of model will be returned.
             If ``dict``, the mutation history will be returned.
         """
+        # TODO: the base class may also need this method
         if formatter == 'code':
             config = self.config.canonical_copy()
             assert not isinstance(config.execution_engine, PyEngineConfig), \

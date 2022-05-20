@@ -139,7 +139,7 @@ class Experiment:
         """
         self._start_impl(port, debug, run_mode, self.url_prefix, None, [])
 
-    def _stop(self) -> None:
+    def _stop_impl(self) -> None:
         atexit.unregister(self.stop)
 
         nni.runtime.log.stop_experiment_log(self.id)
@@ -160,7 +160,7 @@ class Experiment:
         Stop the experiment.
         """
         _logger.info('Stopping experiment, please wait...')
-        self._stop()
+        self._stop_impl()
         _logger.info('Experiment stopped')
 
     def _wait_completion(self) -> bool:
