@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import math
 import os
 import pickle
@@ -22,6 +23,18 @@ if True:  # prevent auto formatting
     # this test cannot be directly put in this file. It will cause syntax error for python <= 3.7.
     if tuple(sys.version_info) >= (3, 8):
         from imported._test_serializer_py38 import test_positional_only
+
+
+def test_ordered_json():
+    items = [
+        ('a', 1),
+        ('c', 3),
+        ('b', 2),
+    ]
+    orig = OrderedDict(items)
+    json = nni.dump(orig)
+    loaded = nni.load(json)
+    assert list(loaded.items()) == items
 
 
 @nni.trace

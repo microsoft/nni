@@ -171,7 +171,7 @@ class TpeTuner(Tuner):
     def generate_parameters(self, parameter_id, **kwargs):
         if self.liar and self._running_params:
             # give a fake loss for each concurrently running paramater set
-            history = {key: records.copy() for key, records in self._history.items()}  # copy history
+            history = defaultdict(list, {key: records.copy() for key, records in self._history.items()})  # copy history
             lie = self.liar.lie()
             for param in self._running_params.values():
                 for key, value in param.items():
