@@ -405,7 +405,9 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None,
     fp : str
         File path to load JSON from. Can be set to none if string is used.
     preserve_order : bool
-        Use ``OrderedDict`` instead of ``dict``. Note that the order is always preserved even when this is False.
+        `json_tricks parameter <https://json-tricks.readthedocs.io/en/latest/#order>`_
+        to use ``OrderedDict`` instead of ``dict``.
+        The order is in fact always preserved even when this is False.
     ignore_comments : bool
         Remove comments (starting with ``#`` or ``//``). Default is true.
 
