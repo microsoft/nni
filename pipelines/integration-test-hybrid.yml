@@ -31,11 +31,7 @@ jobs:
   - script: |
       df -h
       du -h -d 1 ~
-      sudo du -h -d 1 /
-
-  - script: |
       sudo docker images
-    displayName: Docker images
 
   # These parts are exactly same as remote.
   # Refactor these as templates when the refactor is done.

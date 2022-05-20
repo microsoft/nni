@@ -27,7 +27,7 @@ jobs:
 
   # There are quite a lot of dependencies in AzureML Python SDK.
   # Dependency disaster is likely to happen here.
-  # Need some hacks to get that ready.
+  # Thus, we only install azureml-core here. Seems working though.
 
   - script: |
       python -m pip install azureml-core
