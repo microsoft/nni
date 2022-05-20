@@ -348,11 +348,10 @@ class RetiariiExperiment(Experiment):
 
         self.id = management.generate_experiment_id()
 
-        if self.config.experiment_working_directory is not None:
-            log_dir = Path(self.config.experiment_working_directory, self.id, 'log')
-        else:
-            log_dir = Path.home() / f'nni-experiments/{self.id}/log'
-        nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
+        log_file = Path(self.config.experiment_working_directory, self.id, 'log', 'experiment.log')
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_level = 'debug' if (debug or self.config.log_level == 'trace') else self.config.log_level
+        nni.runtime.log.start_experiment_logging(self.id, log_file, cast(str, log_level))
 
         ws_url = f'ws://localhost:{port}/tuner'
         self._proc = launcher.start_experiment('create', self.id, self.config, port, debug,  # type: ignore
@@ -465,7 +464,7 @@ class RetiariiExperiment(Experiment):
             self._dispatcher_thread.join(timeout=1)
 
         if self.id is not None:
-            nni.runtime.log.stop_experiment_log(self.id)
+            nni.runtime.log.stop_experiment_logging(self.id)
         if self._proc is not None:
             try:
                 # this if is to deal with the situation that
