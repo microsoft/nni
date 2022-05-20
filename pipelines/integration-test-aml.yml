@@ -25,8 +25,13 @@ jobs:
     parameters:
       platform: ubuntu-latest
 
+  # There are quite a lot of dependencies in AzureML Python SDK.
+  # Dependency disaster is likely to happen here.
+  # Need some hacks to get that ready.
+
   - script: |
-      python -m pip install azureml azureml-sdk
+      python -m pip install azureml azureml-sdk "ruamel.yaml>=0.16"
+    displayName: Install AzureML SDK
 
   - template: templates/install-nni.yml
     parameters:
