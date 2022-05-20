@@ -483,7 +483,7 @@ class DifferentiableMixedCell(PathSamplingCell):
                 edge_sum = torch.sum(op_results * self._softmax(self._arch_alpha[f'{self.label}/{i}_{j}']).view(*alpha_shape), 0)
                 current_state.append(edge_sum)
 
-            states.append(sum(current_state))
+            states.append(sum(current_state))  # type: ignore
 
         # Always merge all
         this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)

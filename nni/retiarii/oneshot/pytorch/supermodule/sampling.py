@@ -364,7 +364,7 @@ class PathSamplingCell(BaseSuperNetModule):
                 op = op_candidates[cast(str, op_index)]
                 current_state.append(op(states[cast(int, input_index)]))
 
-            states.append(sum(current_state))
+            states.append(sum(current_state))  # type: ignore
 
         # Always merge all
         this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)
