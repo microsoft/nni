@@ -46,6 +46,7 @@ jobs:
       platform: ubuntu-latest
 
   - script: |
+      python -m pip install azure-cli-core
       az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
       python -c "from azureml.core.authentication import AzureCliAuthentication; AzureCliAuthentication().get_token()"
 
