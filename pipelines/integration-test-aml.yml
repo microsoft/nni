@@ -46,6 +46,13 @@ jobs:
       platform: ubuntu-latest
 
   - script: |
+      az login
+      python -c "from azureml.core.authentication import InteractiveLoginAuthentication; InteractiveLoginAuthentication()"
+
+  - script: |
+      python -c "from azureml.core.authentication import InteractiveLoginAuthentication; InteractiveLoginAuthentication()"
+
+  - script: |
       set -e
       docker login -u nnidev -p $(docker_hub_password)
       echo '## Build docker image ##'
