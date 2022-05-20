@@ -18,6 +18,7 @@ import nni.retiarii.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
+from nni.typehint import Literal
 from .supermodule.base import BaseSuperNetModule
 
 __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
@@ -334,21 +335,21 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return arc_optimizers + w_optimizers, lr_schedulers
 
     def on_train_start(self):
-        # redirect the access to trainer/log to this module
-        # but note that we might be missing other attributes,
-        # which could potentially be a problem
-        self.model.trainer = self.trainer  # type: ignore
-        self.model.log = self.log
         return self.model.on_train_start()
 
     def on_train_end(self):
         return self.model.on_train_end()
 
     def on_fit_start(self):
-        return self.model.on_train_start()
+        # redirect the access to trainer/log to this module
+        # but note that we might be missing other attributes,
+        # which could potentially be a problem
+        self.model.trainer = self.trainer  # type: ignore
+        self.model.log = self.log
+        return self.model.on_fit_start()
 
     def on_fit_end(self):
-        return self.model.on_train_end()
+        return self.model.on_fit_end()
 
     def on_train_batch_start(self, batch, batch_idx, unused=0):
         return self.model.on_train_batch_start(batch, batch_idx, unused)
@@ -356,6 +357,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_train_batch_end(self, outputs, batch, batch_idx, unused=0):
         return self.model.on_train_batch_end(outputs, batch, batch_idx, unused)
 
+    # Deprecated hooks in pytorch-lightning
     def on_epoch_start(self):
         return self.model.on_epoch_start()
 
@@ -427,7 +429,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             apply(lr_schedulers)
 
-    def call_weight_optimizers(self, method):
+    def call_weight_optimizers(self, method: Literal['step', 'zero_grad']):
         """
         Function that imitates lightning trainer's behavior of calling user's optimizers. Since auto_optimization is turned off by this
         class, you can use this function to make user optimizers behave as they were automatically handled by the lightning trainer.

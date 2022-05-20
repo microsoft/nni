@@ -75,8 +75,9 @@ class DartsLightningModule(BaseOneShotLightningModule):
         if not isinstance(arc_optim, optim.Optimizer):
             raise TypeError(f'Expect arc_optim to be a single Optimizer, but found: {arc_optim}')
 
-        # The InterleavedTrainValDataLoader yields both train and val data in a batch
-        trn_batch, val_batch = batch
+        # DARTS strategy makes sure that ``train`` and ``val`` must be in the batch
+        trn_batch = batch['train']
+        val_batch = batch['val']
 
         # phase 1: architecture step
         # The _resample hook is kept for some darts-based NAS methods like proxyless.
