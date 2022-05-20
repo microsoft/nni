@@ -17,20 +17,10 @@ jobs:
   # Refer to external account section in OneNote for how to generate / renew the authorization.
   # According to docs, the secrets need to be refreshed at least once per year.
   # After the tokens are updated, pipeline secret varibles should be updated correspondingly.
-  - script: |
-      printenv
 
   - script: |
       az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
-      az account show
-      printenv
     displayName: Login to Azure
-
-  - script: |
-      az account show
-
-  - script: |
-      printenv
 
   - template: templates/install-dependencies.yml
     parameters:
@@ -38,13 +28,12 @@ jobs:
 
   # It's tricky to install Azure SDKs.
   - script: |
+      set -e
       # Separate installation in two steps for easy debugging
       python -m pip install azureml-core
       python -m pip install azure-cli-core
       # Azure CLI and AzureML have conflicted requirements for msal-extensions.
       python -m pip install msal-extensions==0.3.1
-      az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
-      python -c "from azureml.core.authentication import AzureCliAuthentication; AzureCliAuthentication().get_token()"
     displayName: Install AzureML requirements
 
   - template: templates/install-nni.yml
@@ -55,9 +44,6 @@ jobs:
   - template: templates/install-customized-tuner.yml
     parameters:
       platform: ubuntu-latest
-
-  - script: |
-      python -c "from azureml.core.authentication import InteractiveLoginAuthentication; InteractiveLoginAuthentication()"
 
   - script: |
       set -e
