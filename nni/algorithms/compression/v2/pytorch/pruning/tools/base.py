@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -13,8 +14,8 @@ from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner, LayerInfo, Task, TaskResult
-from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
+from ...base import Pruner, LayerInfo, Task, TaskResult
+from ...utils import OptimizerConstructHelper, Scaling
 
 _logger = logging.getLogger(__name__)
 
@@ -313,40 +314,15 @@ class SparsityAllocator:
     ----------
     pruner
         The pruner that binded with this `SparsityAllocator`.
-    dim
-        The under pruning weight dimensions, which metric size should equal to the under pruning weight size on these dimensions.
-        None means one-to-one correspondence between pruned dimensions and metric, which equal to set `dim` as all under pruning weight dimensions.
-        The mask will expand to the weight size depend on `dim`.
-
-        Example:
-
-        The under pruning weight has size (2, 3, 4), and `dim=1` means the under pruning weight dimension is 1.
-        Then the metric should have a size (3,), i.e., `metric=[0.9, 0.1, 0.8]`.
-        Assuming by some kind of `SparsityAllocator` get the mask on weight dimension 1 `mask=[1, 0, 1]`,
-        then the dimension mask will expand to the final mask `[[[1, 1, 1, 1], [0, 0, 0, 0], [1, 1, 1, 1]], [[1, 1, 1, 1], [0, 0, 0, 0], [1, 1, 1, 1]]]`.
-    block_sparse_size
-        This used to describe the block size a metric value represented. By default, None means the block size is ones(len(dim)).
-        Make sure len(dim) == len(block_sparse_size), and the block_sparse_size dimension position is corresponding to dim.
-
-        Example:
-
-        The metric size is (12,), and block_sparse_size=[64], then the mask will expand to (768,) at first before expand with `dim`.
+    scalor
+        FIXME
     continuous_mask
         Inherit the mask already in the wrapper if set True.
     """
 
-    def __init__(self, pruner: Pruner, dim: Optional[Union[int, List[int]]] = None,
-                 block_sparse_size: Optional[Union[int, List[int]]] = None, continuous_mask: bool = True):
+    def __init__(self, pruner: Pruner, scalor: Scaling, continuous_mask: bool = True):
         self.pruner = pruner
-        self.dim = dim if not isinstance(dim, int) else [dim]
-        self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
-        if self.block_sparse_size is not None:
-            assert all(i >= 1 for i in self.block_sparse_size)
-        elif self.dim is not None:
-            self.block_sparse_size = [1] * len(self.dim)
-        if self.dim is not None:
-            assert all(i >= 0 for i in self.dim)
-            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))  # type: ignore
+        self.scalor = scalor
         self.continuous_mask = continuous_mask
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
@@ -372,39 +348,19 @@ class SparsityAllocator:
         Dict[str, Tensor]
             The key is `weight` or `bias`, value is the final mask.
         """
-        weight_mask = mask.clone()
-
-        if self.block_sparse_size is not None:
-            # expend mask with block_sparse_size
-            expand_size = list(weight_mask.size())
-            reshape_size = list(weight_mask.size())
-            for i, block_width in reversed(list(enumerate(self.block_sparse_size))):
-                weight_mask = weight_mask.unsqueeze(i + 1)
-                expand_size.insert(i + 1, block_width)
-                reshape_size[i] *= block_width
-            weight_mask = weight_mask.expand(expand_size).reshape(reshape_size)
-
         wrapper = self.pruner.get_modules_wrapper()[name]
-        weight_size = wrapper.weight.data.size()  # type: ignore
-
-        if self.dim is None:
-            assert weight_mask.size() == weight_size
-            expand_mask = {'weight': weight_mask}
-        else:
-            # expand mask to weight size with dim
-            assert len(weight_mask.size()) == len(self.dim)
-            assert all(weight_size[j] == weight_mask.size(i) for i, j in enumerate(self.dim))
-
-            idxs = list(range(len(weight_size)))
-            [idxs.pop(i) for i in reversed(self.dim)]
-            for i in idxs:
-                weight_mask = weight_mask.unsqueeze(i)
-            expand_mask = {'weight': weight_mask.expand(weight_size).clone()}
-            # NOTE: assume we only mask output, so the mask and bias have a one-to-one correspondence.
-            # If we support more kind of masks, this place need refactor.
-            if wrapper.bias_mask is not None and weight_mask.size() == wrapper.bias_mask.size():  # type: ignore
-                expand_mask['bias'] = weight_mask.clone()
-        return expand_mask
+        # expand a shrinked mask to weight shape.
+        weight_mask = self.scalor.expand(mask, getattr(wrapper, 'weight_mask').shape)
+        expanded_mask = {'weight': weight_mask}
+        old_bias_mask = getattr(wrapper, 'bias_mask')
+        if old_bias_mask is not None:
+            if getattr(wrapper, 'bias_mask').shape == getattr(wrapper, 'bias_mask').shape[0]:
+                # keep dim 0 and reduce all other dims by sum
+                reduce_dims = [reduce_dim for reduce_dim in range(1, len(weight_mask.shape))]
+                # count unmasked number of values on dim 0 (output channel) of weight
+                unmasked_num_on_dim0 = weight_mask.sum(reduce_dims) if reduce_dims else weight_mask
+                expanded_mask['bias'] = torch.where(unmasked_num_on_dim0 == 0, unmasked_num_on_dim0, torch.ones_like(unmasked_num_on_dim0))
+        return expanded_mask
 
     def _compress_mask(self, mask: Tensor) -> Tensor:
         """
