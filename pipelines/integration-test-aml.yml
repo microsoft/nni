@@ -30,7 +30,7 @@ jobs:
   # Need some hacks to get that ready.
 
   - script: |
-      python -m pip install azureml azureml-sdk "ruamel.yaml>=0.16"
+      python -m pip install azureml-core
     displayName: Install AzureML SDK
 
   - template: templates/install-nni.yml
