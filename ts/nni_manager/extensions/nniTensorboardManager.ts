@@ -81,7 +81,7 @@ class NNITensorboardManager implements TensorboardManager {
         return tensorboardTask;
     }
 
-    private async getTensorboardStartCommand(trialJobIdList: string[], trialLogDirectoryList: string[], port: number): Promise<string> {
+    private async getTensorboardStartCommand(trialJobIdList: string[], trialLogDirectoryList: string[], port: number): Promise<string[]> {
         if (this.tensorboardVersion === undefined) {
             this.setTensorboardVersion();
             if (this.tensorboardVersion === undefined) {
@@ -105,9 +105,8 @@ class NNITensorboardManager implements TensorboardManager {
                 const trialJob = await this.nniManager.getTrialJob(trialJobIdList[idx]);
                 logRealPaths.push(`${trialJob.sequenceId}-${trialJobIdList[idx]}:${realPath}`);
             }
-            const command = `tensorboard ${logdirCmd}=${logRealPaths.join(',')} --port=${port}`;
-            return command;
-        } catch (error){
+            return [ 'tensorboard', `${logdirCmd}=${logRealPaths.join(',')}`, `--port=${port}` ];
+        } catch (error) {
             throw new Error(`${error.message}`);
         }
     }

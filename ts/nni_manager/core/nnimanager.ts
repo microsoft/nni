@@ -178,7 +178,7 @@ class NNIManager implements Manager {
         }
 
         this.log.info('Setup tuner...');
-        const dispatcherCommand: string = getMsgDispatcherCommand(config);
+        const dispatcherCommand: string[] = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         await this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
@@ -211,7 +211,7 @@ class NNIManager implements Manager {
         }
 
         this.log.info('Setup tuner...');
-        const dispatcherCommand: string = getMsgDispatcherCommand(config);
+        const dispatcherCommand: string[] = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         await this.setupTuner(dispatcherCommand, undefined, 'resume', checkpointDir);
@@ -454,7 +454,7 @@ class NNIManager implements Manager {
         }
     }
 
-    private async setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): Promise<void> {
+    private async setupTuner(command: string[], cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): Promise<void> {
         if (this.dispatcher !== undefined) {
             return;
         }
