@@ -53,7 +53,7 @@ def test_kill_process_slow_no_patience():
     kill_command(process.pid, timeout=1)  # didn't wait long enough
     end_time = time.time()
     assert 0.5 < end_time - start_time < 2
-    if sys.platform != 'darwin':  # FIXME: on darwin, seems that the process is temrinated immediately
+    if sys.platform == 'linux':  # FIXME: on non-linux, seems that the time of termination can't be controlled
         assert process.poll() is None
         assert _check_pid_running(process.pid)
         time.sleep(2)   # wait 2 more seconds
