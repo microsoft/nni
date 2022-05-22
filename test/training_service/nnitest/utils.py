@@ -11,6 +11,7 @@ import requests
 import time
 import yaml
 import shlex
+import warnings
 
 EXPERIMENT_DONE_SIGNAL = 'Experiment done'
 
@@ -177,11 +178,11 @@ def detect_port(port):
 
 
 def wait_for_port_available(port, timeout):
-    begin_time = time.time()
-    while True:
+    for i in range(timeout):
         if not detect_port(port):
             return
-        if time.time() - begin_time > timeout:
-            msg = 'port {} is not available in {} seconds.'.format(port, timeout)
-            raise RuntimeError(msg)
+        warnings.warn("Port isn't available in {} seconds (patience: {})".format(i, timeout), RuntimeWarning)
         time.sleep(1)
+
+    msg = 'Port {} is not available in {} seconds. Maybe the previous experiment fails to stop?'.format(port, timeout)
+    raise RuntimeError(msg)

@@ -4,9 +4,11 @@
 from subprocess import call, check_output
 import sys
 import os
+import time
 import signal
+import warnings
 import psutil
-from .common_utils import print_error
+from .common_utils import print_error, print_warning
 
 
 def check_output_command(file_path, head=None, tail=None):
@@ -31,14 +33,22 @@ def check_output_command(file_path, head=None, tail=None):
         exit(1)
 
 
-def kill_command(pid):
-    """kill command"""
+def kill_command(pid, timeout=60):
+    """Kill the process of pid (with a terminate signal).
+    Waiting up to 60 seconds until the process is killed.
+    """
+    # TODO: The input argument should better be Popen rather than pid.
     if sys.platform == 'win32':
         process = psutil.Process(pid=pid)
         process.send_signal(signal.CTRL_BREAK_EVENT)
     else:
         cmds = ['kill', str(pid)]
         call(cmds)
+    if not _wait_till_process_killed(pid, timeout):
+        print_warning(
+            f'One subprocess (pid = {pid}) still exists after {timeout} seconds since sending the killing signal is sent. '
+            'Perhaps the shutdown of this process has hang for some reason. You might have to kill it by yourself.'
+        )
 
 
 def install_package_command(package_name):
@@ -63,6 +73,63 @@ def install_requirements_command(requirements_path):
         Path to the directory that contains `requirements.txt`.
     """
     return call(_get_pip_install() + ["-r", requirements_path], shell=False)
+
+
+def _wait_till_process_killed(pid, timeout):
+    keyboard_interrupted = False
+    time_count = 0
+    # Usually, a process is killed very quickly.
+    # This little nap will save 1 second.
+    time.sleep(0.01)
+    while True:
+        try:
+            # Implementation of waiting
+            while time_count < timeout:
+                pid_running = _check_pid_running(pid)
+                if not pid_running:
+                    return True
+                time.sleep(1)
+                time_count += 1
+            return False
+        except KeyboardInterrupt:
+            # Warn at the first keyboard interrupt and do nothing
+            # Stop at the second
+            if keyboard_interrupted:
+                print_warning('Wait of process killing cancelled.')
+                # I think throwing an exception is more reasonable.
+                # Another option is to return false here, which is also acceptable.
+                raise
+            print_warning(
+                f'Waiting for the cleanup of a process (pid = {pid}). '
+                'We suggest you waiting for it to complete. '
+                'Press Ctrl-C again if you intend to interrupt the cleanup.'
+            )
+            keyboard_interrupted = True
+
+    # Actually we will never reach here
+    return False
+
+
+def _check_pid_running(pid):
+    # Check whether process still running.
+    # FIXME: the correct impl should be using ``proc.poll()``
+    # Using pid here is unsafe.
+    # We should make Popen object directly accessible.
+    if sys.platform == 'win32':
+        try:
+            psutil.Process(pid).wait(timeout=0)
+            return False
+        except psutil.TimeoutExpired:
+            return True
+        except psutil.NoSuchProcess:
+            return False
+    else:
+        try:
+            indicator, _ = os.waitpid(pid, os.WNOHANG)
+            return indicator == 0
+        except ChildProcessError as e:
+            # There could be false positive, but I think it doesn't matter.
+            return False
 
 
 def _get_pip_install():

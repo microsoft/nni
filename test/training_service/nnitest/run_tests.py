@@ -294,12 +294,13 @@ def run(args):
                 name, args.ts, test_case_config['trainingService']))
             continue
 
+        if args.ts == 'remote':
+            if not match_remoteConfig(test_case_config, args.nni_source_dir):
+                print('skipped {}, remoteConfig not match.'.format(name))
+                continue
+
         # remote mode need more time to cleanup 
         if args.ts == 'remote' or args.ts == 'hybrid':
-            if args.ts == 'remote':
-                if not match_remoteConfig(test_case_config, args.nni_source_dir):
-                    print('skipped {}, remoteConfig not match.'.format(name))
-                    continue
             wait_for_port_available(8080, 240)
             wait_for_port_available(8081, 240)  # some training services need one more port to listen metrics
             # FIXME: I don't know why the port might be not properly released.
