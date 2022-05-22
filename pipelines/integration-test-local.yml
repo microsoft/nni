@@ -31,6 +31,8 @@ jobs:
       python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
     displayName: Integration test
 
+  - template: templates/save-crashed-info.yml
+
 # - job: windows
 #   pool: nni-it-windows
 #   timeoutInMinutes: 120
