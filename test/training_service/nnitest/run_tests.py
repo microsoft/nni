@@ -309,14 +309,19 @@ def run(args):
             wait_for_port_available(8080, 60)
             wait_for_port_available(8081, 60)
 
+        # FIXME: nnictl-resume-2's previous case could have status STOPPING if we don't have this if.
+        if name.startswith('nnictl-resume'):
+            time.sleep(10)
         # adl mode need more time to cleanup PVC
         if args.ts == 'adl' and name == 'nnictl-resume-2':
             time.sleep(30)
+
         print('## {}Testing: {}{} ##'.format(GREEN, name, CLEAR))
         begin_time = time.time()
 
         run_test_case(test_case_config, it_config, args)
         print('{}Test {}: TEST PASS IN {} SECONDS{}'.format(GREEN, name, int(time.time()-begin_time), CLEAR), flush=True)
+
 
 
 if __name__ == '__main__':
