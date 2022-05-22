@@ -56,8 +56,8 @@ def test_kill_process_slow_no_patience():
     if sys.platform == 'linux':  # FIXME: on non-linux, seems that the time of termination can't be controlled
         assert process.poll() is None
         assert _check_pid_running(process.pid)
-        time.sleep(2)   # wait 2 more seconds
-        assert not _check_pid_running(process.pid)
+    time.sleep(2)   # wait 2 more seconds
+    assert not _check_pid_running(process.pid)
 
 
 def test_kill_process_slow_patiently():
