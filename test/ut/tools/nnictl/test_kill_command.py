@@ -43,7 +43,7 @@ def test_kill_process():
     kill_command(process.pid)
     end_time = time.time()
     assert not _check_pid_running(process.pid)
-    assert end_time - start_time < 1
+    assert end_time - start_time < 2
 
 
 def test_kill_process_slow_no_patience():
@@ -52,6 +52,8 @@ def test_kill_process_slow_no_patience():
     start_time = time.time()
     kill_command(process.pid, timeout=1)  # didn't wait long enough
     end_time = time.time()
+    print('Waited time:', end_time - start_time)
+    assert process.poll() is None
     assert _check_pid_running(process.pid)
     assert 0.5 < end_time - start_time < 2
     time.sleep(2)   # wait 2 more seconds
@@ -82,7 +84,9 @@ def test_kill_process_interrupted():
     os.kill(process.pid, signal.SIGINT)
     time.sleep(0.5)
     assert not process.is_alive()
-    assert process.exitcode != 0
+    if sys.platform == 'linux':
+        # exit code could be different on non-linux platforms
+        assert process.exitcode != 0
 
 
 def start_new_process_group(cmd):
