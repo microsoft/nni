@@ -118,6 +118,8 @@ def _check_pid_running(pid):
     # Using pid here is unsafe.
     # We should make Popen object directly accessible.
     if sys.platform == 'win32':
+        # NOTE: windows didn't explicitly handle child / non-child process.
+        # This might be a potential problem.
         try:
             psutil.Process(pid).wait(timeout=0)
             return False
@@ -130,10 +132,14 @@ def _check_pid_running(pid):
             indicator, _ = os.waitpid(pid, os.WNOHANG)
             print(time.time(), 'check pid running', indicator, _)
             return indicator == 0
-        except ChildProcessError as e:
-            # There could be false positive, but I think it doesn't matter.
-            print(time.time(), 'check pid running', e)
-            return False
+        except ChildProcessError:
+            # One of the reasons we reach here is: pid may be not a child process.
+            # In that case, we can use the famous kill 0 to poll the process.
+            try:
+                os.kill(pid, 0)
+                return True
+            except OSError:
+                return False
 
 
 def _get_pip_install():
