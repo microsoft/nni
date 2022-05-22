@@ -6,7 +6,6 @@ import sys
 import os
 import time
 import signal
-import warnings
 import psutil
 from .common_utils import print_error, print_warning
 
@@ -127,7 +126,7 @@ def _check_pid_running(pid):
         try:
             indicator, _ = os.waitpid(pid, os.WNOHANG)
             return indicator == 0
-        except ChildProcessError as e:
+        except ChildProcessError:
             # There could be false positive, but I think it doesn't matter.
             return False
 
