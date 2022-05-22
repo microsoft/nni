@@ -128,7 +128,7 @@ def _check_pid_running(pid):
     else:
         try:
             indicator, _ = os.waitpid(pid, os.WNOHANG)
-            print(time.time(), 'check pid running' indicator, _)
+            print(time.time(), 'check pid running', indicator, _)
             return indicator == 0
         except ChildProcessError as e:
             # There could be false positive, but I think it doesn't matter.
