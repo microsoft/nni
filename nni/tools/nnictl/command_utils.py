@@ -37,6 +37,7 @@ def kill_command(pid, timeout=60):
     Waiting up to 60 seconds until the process is killed.
     """
     # TODO: The input argument should better be Popen rather than pid.
+    print('send kill command for', pid, flush=True)
     if sys.platform == 'win32':
         process = psutil.Process(pid=pid)
         process.send_signal(signal.CTRL_BREAK_EVENT)
@@ -48,6 +49,8 @@ def kill_command(pid, timeout=60):
             f'One subprocess (pid = {pid}) still exists after {timeout} seconds since sending the killing signal is sent. '
             'Perhaps the shutdown of this process has hang for some reason. You might have to kill it by yourself.'
         )
+    else:
+        print('process', pid, 'already killed', flush=True)
 
 
 def install_package_command(package_name):
