@@ -322,12 +322,6 @@ def run(args):
         run_test_case(test_case_config, it_config, args)
         print('{}Test {}: TEST PASS IN {} SECONDS{}'.format(GREEN, name, int(time.time()-begin_time), CLEAR), flush=True)
 
-        os.system('ps aux')
-        if name.startswith('nnictl-resume'):
-            time.sleep(10)
-            os.system('ps aux')
-
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
