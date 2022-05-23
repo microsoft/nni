@@ -122,8 +122,20 @@ class Scaling:
         unsqueezed_dims = [dim for (dim, step) in enumerate(kernel_size) if step == -1]
         new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [target] + unsqueezed_dims)
 
-        # step 2: expanding the new target to expand_size.
-        result = new_target.expand(expand_size)
+        # step 2: build the _expand_size and unsqueeze target tensor on each dim
+        _expand_size = []
+        for a, b in zip(kernel_size, expand_size):
+            if a == -1:
+                _expand_size.append(b)
+                _expand_size.append(1)
+            else:
+                assert b % a == 0
+                _expand_size.append(b // a)
+                _expand_size.append(a)
+        new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [new_target] + [2 * _ + 1 for _ in range(len(expand_size))])
+
+        # step 3: expanding the new target to _expand_size and reshape to expand_size.
+        result = new_target.expand(_expand_size).reshape(expand_size)
 
         return result
 
