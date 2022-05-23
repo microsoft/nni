@@ -18,11 +18,11 @@ KEY_ORIGINAL_TARGET = '_original_target'
 KEY_THETAS = '_thetas'
 
 
-# hard code and magic number for flops/params reward function
-# the reward function is: sigmoid(flops_retained) = 1 / (1 + exp(-theta1 * (flops_retained + theta0)))
-# this helper function return a theta pair (theta0, theta1) for building a suitable (maybe) function.
-# the lower evaluating result (flops/params) compressed model has, the higher reward it gets.
 def _flops_theta_helper(target: int | float | str | None, origin: int) -> Tuple[float, float]:
+    # hard code and magic number for flops/params reward function
+    # the reward function is: sigmoid(flops_retained) = 1 / (1 + exp(-theta1 * (flops_retained + theta0)))
+    # this helper function return a theta pair (theta0, theta1) for building a suitable (maybe) function.
+    # the lower evaluating result (flops/params) compressed model has, the higher reward it gets.
     if not target or (isinstance(target, (int, float)) and target == 0):
         return (0., 0.)
     elif isinstance(target, float):
@@ -36,10 +36,11 @@ def _flops_theta_helper(target: int | float | str | None, origin: int) -> Tuple[
     else:
         raise TypeError(f'Wrong target type: {type(target).__name__}, only support int/float/None.')
 
-# hard code and magic number for metric reward function
-# only difference with `_flops_theta_helper` is the higher evaluating result (metric) compressed model has,
-# the higher reward it gets.
+
 def _metric_theta_helper(target: float | None, origin: float) -> Tuple[float, float]:
+    # hard code and magic number for metric reward function
+    # only difference with `_flops_theta_helper` is the higher evaluating result (metric) compressed model has,
+    # the higher reward it gets.
     if not target:
         return (-0.85, 50.)
     elif isinstance(target, float):
@@ -47,6 +48,7 @@ def _metric_theta_helper(target: float | None, origin: float) -> Tuple[float, fl
         return (0.1 - target, 50.)
     else:
         raise TypeError(f'Wrong target type: {type(target).__name__}, only support float/None.')
+
 
 def _summary_module_names(model: Module,
                           module_types: List[Type[Module] | str],
@@ -93,6 +95,7 @@ def _summary_module_names(model: Module,
 
     return list(module_names_summary)
 
+
 def generate_compression_search_space(config: CompressionConfig, vessel: CompressionVessel) -> Dict[str, Dict]:
     """
     Using config (constraints & priori) and vessel (model-related) to generate the hpo search space.
@@ -125,6 +128,7 @@ def generate_compression_search_space(config: CompressionConfig, vessel: Compres
     search_space[KEY_THETAS] = {'_type': 'choice', '_value': [thetas]}
     return search_space
 
+
 def parse_params(kwargs: Dict[str, Any]) -> Tuple[Dict[str, str], List[Dict[str, Any]], CompressionVessel, Dict[str, Any], Dict[str, Any]]:
     """
     Parse the parameters received by nni.get_next_parameter().
@@ -153,6 +157,7 @@ def parse_params(kwargs: Dict[str, Any]) -> Tuple[Dict[str, str], List[Dict[str,
             raise KeyError('Unrecognized key {}'.format(key))
 
     return compressor_config, config_list, vessel, original_target, thetas
+
 
 def parse_basic_pruner(pruner_config: Dict[str, str], config_list: List[Dict[str, Any]], vessel: CompressionVessel):
     """
