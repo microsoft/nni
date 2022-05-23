@@ -1,12 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from __future__ import annotations
-
 __all__ = ['CompressionConfig', 'CompressionExperimentConfig']
 
 from dataclasses import dataclass
-from typing import List, Type
+from typing import List, Optional, Type, Union
 
 from torch.nn import Module
 
@@ -46,19 +44,19 @@ class CompressionConfig(ConfigBase):
     """
 
     # constraints
-    params: str | int | float | None = None
-    flops: str | int | float | None = None
+    params: Union[str, int, float, None] = None
+    flops: Union[str, int, float, None] = None
     # latency: float | None
-    metric: float | None = None
+    metric: Optional[float] = None
 
     # compress scope description
-    module_types: List[Type[Module] | str] | None = None
-    module_names: List[str] | None = None
-    exclude_module_names: List[str] | None = None
+    module_types: Optional[List[Union[Type[Module], str]]] = None
+    module_names: Optional[List[str]] = None
+    exclude_module_names: Optional[List[str]] = None
 
     # pruning algorithm description
-    pruners: List[PrunerConfig] | None = None
-    quantizers: List[QuantizerConfig] | None = None
+    pruners: Optional[List[PrunerConfig]] = None
+    quantizers: Optional[List[QuantizerConfig]] = None
 
 
 @dataclass(init=False)

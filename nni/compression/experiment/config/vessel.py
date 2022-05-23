@@ -1,12 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from __future__ import annotations
 import base64
 import io
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Callable, Tuple, overload
+from typing import Any, Callable, Optional, Tuple, Union, overload
 
 import torch
 from torch import Tensor
@@ -31,9 +30,9 @@ class CompressionVessel(ConfigBase):
     finetuner: str
     evaluator: str
     dummy_input: str
-    trainer: str | None
-    optimizer_helper: str | None
-    criterion: str | None
+    trainer: Optional[str]
+    optimizer_helper: Optional[str]
+    criterion: Optional[str]
     device: str
 
     @overload
@@ -43,20 +42,20 @@ class CompressionVessel(ConfigBase):
 
     @overload
     def __init__(self, model: Module, finetuner: Callable[[Module], None], evaluator: Callable[[Module], float],
-                 dummy_input: Tensor, trainer: Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None] | None,
-                 optimizer_helper: Optimizer | OptimizerConstructHelper | None,
-                 criterion: Callable[[Any, Any], Any] | None, device: str | torch.device):
+                 dummy_input: Tensor, trainer: Optional[Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None]],
+                 optimizer_helper: Union[Optimizer, OptimizerConstructHelper, None],
+                 criterion: Optional[Callable[[Any, Any], Any]], device: Union[str, torch.device]):
         ...
 
     def __init__(self,
-                 model: Module | str,
-                 finetuner: Callable[[Module], None] | str,
-                 evaluator: Callable[[Module], float] | str,
-                 dummy_input: Tensor | str,
-                 trainer: Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None] | None | str,
-                 optimizer_helper: Optimizer | OptimizerConstructHelper | None | str,
-                 criterion: Callable[[Any, Any], Any] | None | str,
-                 device: torch.device | str):
+                 model: Union[Module, str],
+                 finetuner: Union[Callable[[Module], None], str],
+                 evaluator: Union[Callable[[Module], float], str],
+                 dummy_input: Union[Tensor, str],
+                 trainer: Union[Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None], str, None],
+                 optimizer_helper: Union[Optimizer, OptimizerConstructHelper, str, None],
+                 criterion: Union[Callable[[Any, Any], Any], str, None],
+                 device: Union[torch.device, str]):
         self.model = dump(model) if not isinstance(model, str) else model
         self.finetuner = dump(finetuner) if not isinstance(finetuner, str) else finetuner
         self.evaluator = dump(evaluator) if not isinstance(evaluator, str) else evaluator
@@ -76,8 +75,8 @@ class CompressionVessel(ConfigBase):
         self.device = str(device)
 
     def export(self) -> Tuple[Module, Callable[[Module], None], Callable[[Module], float], Tensor,
-                              Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None] | None,
-                              OptimizerConstructHelper | None, Callable[[Any, Any], Any] | None, torch.device]:
+                              Optional[Callable[[Module, Optimizer, Callable[[Any, Any], Any]], None]],
+                              Optional[OptimizerConstructHelper], Optional[Callable[[Any, Any], Any]], torch.device]:
         device = torch.device(self.device)
         model = load(self.model)
         if Path('nni_outputs', 'checkpoint', 'model_state_dict.pth').exists():
