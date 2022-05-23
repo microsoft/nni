@@ -131,10 +131,16 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
 class ProxylessLightningModule(DartsLightningModule):
     _proxyless_note = """
-    Implementation of ProxylessNAS :cite:p:`cai2018proxylessnas`.
-    It's a DARTS-based method that resamples the architecture to reduce memory consumption.
+    A low-memory-consuming optimized version of differentiable architecture search. See `reference <https://arxiv.org/abs/1812.00332>`__.
+
+    This is a DARTS-based method that resamples the architecture to reduce memory consumption.
     Essentially, it samples one path on forward,
     and implements its own backward to update the architecture parameters based on only one path.
+
+    The supported mutation primitives of Proxyless are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
 
     {{module_notes}}
 
@@ -178,6 +184,15 @@ class GumbelDartsLightningModule(DartsLightningModule):
     *New in v2.8*: Supports searching for ValueChoices on operations, with the technique described in
     `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
 
+    The supported mutation primitives of GumbelDARTS are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in operations listed in :attr:`NATIVE_MIXED_OPERATIONS`).
+    * :class:`nni.retiarii.nn.pytorch.Repeat`.
+    * :class:`nni.retiarii.nn.pytorch.Cell`.
+    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
+
     {{module_notes}}
 
     Parameters
@@ -188,7 +203,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
         The initial temperature used in gumbel-softmax.
     use_temp_anneal : bool
         If true, a linear annealing will be applied to ``gumbel_temperature``.
-        Otherwise, run at a fixed temperature. See :cite:t:`xie2018snas` for details.
+        Otherwise, run at a fixed temperature. See `SNAS <https://arxiv.org/abs/1812.09926>`__ for details.
     min_temp : float
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float

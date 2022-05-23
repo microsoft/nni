@@ -9,6 +9,8 @@ import torch.nn as nn
 
 from nni.common.hpo_utils import ParameterSpec
 
+__all__ = ['BaseSuperNetModule']
+
 
 class BaseSuperNetModule(nn.Module):
     """

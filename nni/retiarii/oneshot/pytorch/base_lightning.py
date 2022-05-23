@@ -150,12 +150,13 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
 class BaseOneShotLightningModule(pl.LightningModule):
 
     _mutation_hooks_note = """mutation_hooks : list[MutationHook]
-        Mutation hooks are callable that inputs an Module and returns a :class:`BaseSuperNetModule`.
+        Mutation hooks are callable that inputs an Module and returns a
+        :class:`BaseSuperNetModule <nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule>`.
         They are invoked in :meth:`traverse_and_mutate_submodules`, on each submodules.
         For each submodule, the hook list are invoked subsequently,
         the later hooks can see the result from previous hooks.
         The modules that are processed by ``mutation_hooks`` will be replaced by the returned module,
-        stored in ``nas_modules``, and be the focus of the NAS algorithm.
+        stored in :attr:`nas_modules`, and be the focus of the NAS algorithm.
 
         The hook list will be appended by ``default_mutation_hooks`` in each one-shot module.
 
@@ -170,14 +171,16 @@ class BaseOneShotLightningModule(pl.LightningModule):
         There won't be any hooks called on root module.
         The returned arguments can be also one of the three kinds:
 
-        #. tuple of: :class:`BaseSuperNetModule` or None, and boolean,
+        #. tuple of: :class:`BaseSuperNetModule <nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule>` or None, and boolean,
         #. boolean,
-        #. :class:`BaseSuperNetModule` or None.
+        #. :class:`BaseSuperNetModule <nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule>` or None.
 
         The boolean value is ``suppress`` indicates whether the folliwng hooks should be called.
         When it's true, it suppresses the subsequent hooks, and they will never be invoked.
         Without boolean value specified, it's assumed to be false.
-        If a none value appears on the place of :class:`BaseSuperNetModule`, it means the hook suggests to
+        If a none value appears on the place of
+        :class:`BaseSuperNetModule <nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule>`,
+        it means the hook suggests to
         keep the module unchanged, and nothing will happen.
     """
 

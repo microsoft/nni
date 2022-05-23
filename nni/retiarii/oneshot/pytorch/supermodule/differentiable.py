@@ -19,6 +19,8 @@ from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingPolicy
 from ._valuechoice_utils import traverse_all_options
 
+__all__ = ['DifferentiableMixedLayer', 'DifferentiableMixedInput', 'MixedOpDifferentiablePolicy']
+
 
 class GumbelSoftmax(nn.Softmax):
     """Wrapper of ``F.gumbel_softmax``. dim = -1 by default."""

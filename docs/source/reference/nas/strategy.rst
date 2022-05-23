@@ -95,9 +95,20 @@ Multi-trial
 One-shot
 ^^^^^^^^
 
-..  automodule:: nni.retiarii.oneshot.base_lightning
+..  automodule:: nni.retiarii.oneshot.pytorch.base_lightning
     :members:
 
-..  autofunction:: nni.retiarii.oneshot.pytorch.utils.replace_layer_choice
+..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.differentiable
+    :members:
 
-..  autofunction:: nni.retiarii.oneshot.pytorch.utils.replace_input_choice
+..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.sampling
+    :members:
+
+..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.proxyless
+    :members:
+
+..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.operation
+    :members:
+
+..  automodule:: nni.retiarii.oneshot.pytorch.dataloader
+    :members:

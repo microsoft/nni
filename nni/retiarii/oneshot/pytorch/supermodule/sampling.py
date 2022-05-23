@@ -16,6 +16,8 @@ from .base import BaseSuperNetModule
 from ._valuechoice_utils import evaluate_value_choice_with_dict
 from .operation import MixedOperationSamplingPolicy, MixedOperation
 
+__all__ = ['PathSamplingLayer', 'PathSamplingInput', 'MixedOpPathSamplingPolicy']
+
 
 class PathSamplingLayer(BaseSuperNetModule):
     """

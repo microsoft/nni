@@ -19,7 +19,8 @@ from .enas import ReinforceController, ReinforceField
 
 class RandomSamplingLightningModule(BaseOneShotLightningModule):
     _random_note = """
-    Random Sampling NAS Algorithm.
+    Train a super-net with uniform path sampling. See `reference <https://arxiv.org/abs/1904.00420>`__.
+
     In each epoch, model parameters are trained after a uniformly random sampling of each choice.
     Notably, the exporting result is **also a random sample** of the search space.
 
@@ -61,9 +62,12 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
 
 class EnasLightningModule(RandomSamplingLightningModule):
     _enas_note = """
-    The implementation of ENAS :cite:p:`pham2018efficient`. There are 2 steps in an epoch.
-    Firstly, training model parameters.
-    Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
+    RL controller learns to generate the best network on a super-net. See `Reference <https://arxiv.org/abs/1802.03268>`__.
+
+    There are 2 steps in an epoch.
+
+    - Firstly, training model parameters.
+    - Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
 
     {{module_notes}}
 
