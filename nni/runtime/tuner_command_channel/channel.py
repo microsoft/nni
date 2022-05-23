@@ -7,12 +7,31 @@ Low level APIs for algorithms to communicate with NNI manager.
 
 from __future__ import annotations
 import json
+import logging
 
 __all__ = ['TunerCommandChannel']
 
 from .command_type import CommandType
 from .websocket import WebSocket
 from .semantic_command import BaseCommand
+
+old_to_new ={CommandType.Initialize: 'Initialize',
+CommandType.RequestTrialJobs: 'RequestTrialJobs',
+CommandType.ReportMetricData: 'ReportMetricData',
+CommandType.UpdateSearchSpace: 'UpdateSearchSpace',
+CommandType.ImportData: 'ImportData',
+CommandType.AddCustomizedTrialJob: 'AddCustomizedTrialJob',
+CommandType.TrialEnd: 'TrialEnd',
+CommandType.Terminate: 'Terminate',
+CommandType.Ping: 'Ping',
+CommandType.Initialized: 'Initialized',
+CommandType.NewTrialJob: 'NewTrialJob',
+CommandType.SendTrialJobParameter: 'SendTrialJobParameter',
+CommandType.NoMoreTrialJobs: 'NoMoreTrialJobs',
+CommandType.KillTrialJob: 'KillTrialJob'
+}
+
+_logger = logging.getLogger(__name__)
 
 class TunerCommandChannel:
     """
@@ -51,17 +70,21 @@ class TunerCommandChannel:
     # def receive(self) -> Command | None:
     #     ...
     def send(self, command: BaseCommand) -> None:
-        command_json = command.dump()
+        command_json = command._to_legacy_command_type()
         self._channel.send(command_json)
 
     def receive(self) -> BaseCommand | None:
         command_json = self._channel.receive()
         if command_json is None:
             raise RuntimeError('NNI manager closed connection')
-        command_dict = json.loads(command_json)
+        old_command_type = CommandType(command_json[:2].encode())
+        command_dict = json.loads(command_json[2:])
+        command_dict['command_type'] = old_to_new[old_command_type]
         for cls in BaseCommand.__subclasses__():
             if cls.__name__ == command_dict['command_type']:
-                return cls.load(command_dict)
+                command = cls.load(command_dict)
+                command.validate()
+                return command
         return None
 
     def _send(self, command_type: CommandType, data: str) -> None:
