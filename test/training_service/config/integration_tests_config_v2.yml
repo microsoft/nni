@@ -56,14 +56,14 @@ testCases:
 # nni features test
 #########################################################################
 - name: metrics-float
-  configFile: test/training_service/config/metrics_test/training_service/config-v2.yml
+  configFile: test/training_service/config/metrics_test/config-v2.yml
   validator:
     class: MetricsValidator
     kwargs:
       expected_result_file: expected_metrics.json
 
 - name: export-float
-  configFile: test/training_service/config/metrics_test/training_service/config-v2.yml
+  configFile: test/training_service/config/metrics_test/config-v2.yml
   validator:
     class: ExportValidator 
 
