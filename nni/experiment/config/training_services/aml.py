@@ -18,11 +18,13 @@ __all__ = ['AmlConfig']
 
 from dataclasses import dataclass
 
+from typing_extensions import Literal
+
 from ..training_service import TrainingServiceConfig
 
 @dataclass(init=False)
 class AmlConfig(TrainingServiceConfig):
-    platform: str = 'aml'
+    platform: Literal['aml'] = 'aml'
     subscription_id: str
     resource_group: str
     workspace_name: str
