@@ -16,7 +16,6 @@ import warnings
 from typing import Any, Type
 
 import torch.nn as nn
-from torch.utils.data import DataLoader
 
 from nni.retiarii.graph import Model
 from nni.retiarii.strategy.base import BaseStrategy
@@ -25,7 +24,6 @@ from nni.retiarii.evaluator.pytorch.lightning import Lightning, LightningModule
 from .base_lightning import BaseOneShotLightningModule
 from .differentiable import DartsLightningModule, ProxylessLightningModule, GumbelDartsLightningModule
 from .sampling import EnasLightningModule, RandomSamplingLightningModule
-from .utils import InterleavedTrainValDataLoader, ConcatenateTrainValDataLoader
 
 
 class OneShotStrategy(BaseStrategy):
@@ -37,15 +35,18 @@ class OneShotStrategy(BaseStrategy):
 
         self.model: BaseOneShotLightningModule | None = None
 
-    def _get_dataloader(self, train_dataloader: DataLoader, val_dataloaders: DataLoader | list[DataLoader]) \
-        -> DataLoader | tuple[DataLoader, DataLoader]:
+    def preprocess_dataloader(self, train_dataloaders: Any, val_dataloaders: Any) -> tuple[Any, Any]:
         """
-        One-shot strategy typically requires a customized dataloader.
+        One-shot strategy typically requires fusing train and validation dataloader in an ad-hoc way.
+        As one-shot strategy doesn't try to open the blackbox of a batch,
+        theoretically, these dataloader can be
+        `any dataloader types supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
 
-        If only train dataloader is produced, return one dataloader.
-        Otherwise, return train dataloader and valid loader as a tuple.
+        Returns
+        -------
+        A tuple of preprocessed train dataloaders and validation dataloaders.
         """
-        raise NotImplementedError()
+        return train_dataloaders, val_dataloaders
 
     def run(self, base_model: Model, applied_mutators):
         # one-shot strategy doesn't use ``applied_mutators``
@@ -64,18 +65,15 @@ class OneShotStrategy(BaseStrategy):
             raise TypeError('Evaluator needs to be a lightning evaluator to make one-shot strategy work.')
 
         evaluator_module: LightningModule = base_model.evaluator.module
+        evaluator_module.running_mode = 'oneshot'
         evaluator_module.set_model(py_model)
 
         self.model = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
         evaluator: Lightning = base_model.evaluator
-        if evaluator.train_dataloader is None or evaluator.val_dataloaders is None:
-            raise TypeError('Train or val dataloader is not set.')
-        dataloader = self._get_dataloader(evaluator.train_dataloader, evaluator.val_dataloaders)
-        if isinstance(dataloader, tuple):
-            dataloader, val_loader = dataloader
-            evaluator.trainer.fit(self.model, dataloader, val_loader)
-        else:
-            evaluator.trainer.fit(self.model, dataloader)
+        if evaluator.train_dataloaders is None or evaluator.val_dataloaders is None:
+            raise TypeError('Training and validation dataloader are both required to set in evaluator for one-shot strategy.')
+        train_loader, val_loader = self.preprocess_dataloader(evaluator.train_dataloaders, evaluator.val_dataloaders)
+        evaluator.trainer.fit(self.model, train_loader, val_loader)
 
     def export_top_models(self, top_k: int = 1) -> list[Any]:
         if self.model is None:
@@ -91,8 +89,12 @@ class DARTS(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(DartsLightningModule, **kwargs)
 
-    def _get_dataloader(self, train_dataloader, val_dataloaders):
-        return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
+    def preprocess_dataloader(self, train_dataloaders, val_dataloaders):
+        # By returning a dict, we make a CombinedLoader (in Lightning)
+        return {
+            'train': train_dataloaders,
+            'val': val_dataloaders
+        }, None
 
 
 class Proxyless(OneShotStrategy):
@@ -101,8 +103,11 @@ class Proxyless(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(ProxylessLightningModule, **kwargs)
 
-    def _get_dataloader(self, train_dataloader, val_dataloaders):
-        return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
+    def preprocess_dataloader(self, train_dataloaders, val_dataloaders):
+        return {
+            'train': train_dataloaders,
+            'val': val_dataloaders
+        }, None
 
 
 class GumbelDARTS(OneShotStrategy):
@@ -111,8 +116,11 @@ class GumbelDARTS(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(GumbelDartsLightningModule, **kwargs)
 
-    def _get_dataloader(self, train_dataloader, val_dataloaders):
-        return InterleavedTrainValDataLoader(train_dataloader, val_dataloaders)
+    def preprocess_dataloader(self, train_dataloaders, val_dataloaders):
+        return {
+            'train': train_dataloaders,
+            'val': val_dataloaders
+        }, None
 
 
 class ENAS(OneShotStrategy):
@@ -121,8 +129,13 @@ class ENAS(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(EnasLightningModule, **kwargs)
 
-    def _get_dataloader(self, train_dataloader, val_dataloaders):
-        return ConcatenateTrainValDataLoader(train_dataloader, val_dataloaders)
+    def preprocess_dataloader(self, train_dataloaders, val_dataloaders):
+        # Import locally to avoid import error on legacy PL version
+        from .dataloader import ConcatLoader
+        return ConcatLoader({
+            'train': train_dataloaders,
+            'val': val_dataloaders
+        }), None
 
 
 class RandomOneShot(OneShotStrategy):
@@ -130,6 +143,3 @@ class RandomOneShot(OneShotStrategy):
 
     def __init__(self, **kwargs):
         super().__init__(RandomSamplingLightningModule, **kwargs)
-
-    def _get_dataloader(self, train_dataloader, val_dataloaders):
-        return train_dataloader, val_dataloaders

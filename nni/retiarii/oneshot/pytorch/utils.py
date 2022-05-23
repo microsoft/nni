@@ -132,6 +132,7 @@ class AverageMeter:
 def _replace_module_with_type(root_module, init_fn, type_name, modules):
     if modules is None:
         modules = []
+
     def apply(m):
         for name, child in m.named_children():
             if isinstance(child, type_name):

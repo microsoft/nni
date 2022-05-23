@@ -16,3 +16,4 @@ graphviz
 gym
 tianshou >= 0.4.1
 matplotlib
+timm >= 0.5.4

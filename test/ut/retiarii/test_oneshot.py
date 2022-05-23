@@ -15,6 +15,9 @@ from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, ValueChoice
 from nni.retiarii.strategy import BaseStrategy
 
 
+pytestmark = pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
+
+
 class DepthwiseSeparableConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super().__init__()
@@ -171,7 +174,7 @@ class CustomOpValueChoiceNet(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-def _mnist_net(type_):
+def _mnist_net(type_, evaluator_kwargs):
     if type_ == 'simple':
         base_model = SimpleNet(False)
     elif type_ == 'simple_value_choice':
@@ -187,17 +190,18 @@ def _mnist_net(type_):
     
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = MNIST('data/mnist', train=True, download=True, transform=transform)
+    # Multi-GPU combined dataloader will break this subset sampler. Expected though.
     train_random_sampler = RandomSampler(train_dataset, True, int(len(train_dataset) / 20))
     train_loader = DataLoader(train_dataset, 64, sampler=train_random_sampler)
     valid_dataset = MNIST('data/mnist', train=False, download=True, transform=transform)
     valid_random_sampler = RandomSampler(valid_dataset, True, int(len(valid_dataset) / 20))
     valid_loader = DataLoader(valid_dataset, 64, sampler=valid_random_sampler)
-    evaluator = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, max_epochs=1)
+    evaluator = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **evaluator_kwargs)
 
     return base_model, evaluator
 
 
-def _multihead_attention_net():
+def _multihead_attention_net(evaluator_kwargs):
     base_model = MultiHeadAttentionNet(1)
 
     class AttentionRandDataset(Dataset):
@@ -222,19 +226,29 @@ def _multihead_attention_net():
     train_loader = DataLoader(train_set, batch_size=32)
     val_loader = DataLoader(val_set, batch_size=32)
 
-    evaluator = Regression(train_dataloader=train_loader, val_dataloaders=val_loader, max_epochs=1)
+    evaluator = Regression(train_dataloader=train_loader, val_dataloaders=val_loader, **evaluator_kwargs)
     return base_model, evaluator
 
 
-def _test_strategy(strategy_, support_value_choice=True):
+def _test_strategy(strategy_, support_value_choice=True, multi_gpu=False):
+    evaluator_kwargs = {
+        'max_epochs': 1
+    }
+    if multi_gpu:
+        evaluator_kwargs.update(
+            strategy='ddp',
+            accelerator='gpu',
+            devices=torch.cuda.device_count()
+        )
+
     to_test = [
         # (model, evaluator), support_or_net
-        (_mnist_net('simple'), True),
-        (_mnist_net('simple_value_choice'), support_value_choice),
-        (_mnist_net('value_choice'), support_value_choice),
-        (_mnist_net('repeat'), False),      # no strategy supports repeat currently
-        (_mnist_net('custom_op'), False),   # this is definitely a NO
-        (_multihead_attention_net(), support_value_choice),
+        (_mnist_net('simple', evaluator_kwargs), True),
+        (_mnist_net('simple_value_choice', evaluator_kwargs), support_value_choice),
+        (_mnist_net('value_choice', evaluator_kwargs), support_value_choice),
+        (_mnist_net('repeat', evaluator_kwargs), False),      # no strategy supports repeat currently
+        (_mnist_net('custom_op', evaluator_kwargs), False),   # this is definitely a NO
+        (_multihead_attention_net(evaluator_kwargs), support_value_choice),
     ]
 
     for (base_model, evaluator), support_or_not in to_test:
@@ -256,17 +270,19 @@ def _test_strategy(strategy_, support_value_choice=True):
                 experiment.run(config)
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_darts():
     _test_strategy(strategy.DARTS())
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
+@pytest.mark.skipif(not torch.cuda.is_available() or torch.cuda.device_count() <= 1, reason='Must have multiple GPUs.')
+def test_darts_multi_gpu():
+    _test_strategy(strategy.DARTS(), multi_gpu=True)
+
+
 def test_proxyless():
     _test_strategy(strategy.Proxyless(), False)
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_enas():
     def strategy_fn(base_model, evaluator):
         if isinstance(base_model, MultiHeadAttentionNet):
@@ -276,12 +292,20 @@ def test_enas():
     _test_strategy(strategy_fn)
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
+@pytest.mark.skipif(not torch.cuda.is_available() or torch.cuda.device_count() <= 1, reason='Must have multiple GPUs.')
+def test_enas_multi_gpu():
+    def strategy_fn(base_model, evaluator):
+        if isinstance(base_model, MultiHeadAttentionNet):
+            return strategy.ENAS(reward_metric_name='val_mse')
+        return strategy.ENAS(reward_metric_name='val_acc')
+
+    _test_strategy(strategy_fn, multi_gpu=True)
+
+
 def test_random():
     _test_strategy(strategy.RandomOneShot())
 
 
-@pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 def test_gumbel_darts():
     _test_strategy(strategy.GumbelDARTS())
 
