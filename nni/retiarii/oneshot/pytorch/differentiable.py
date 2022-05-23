@@ -20,8 +20,10 @@ from .supermodule.operation import NATIVE_MIXED_OPERATIONS
 
 class DartsLightningModule(BaseOneShotLightningModule):
     _darts_note = """
-    DARTS :cite:p:`liu2018darts` algorithm is one of the most fundamental one-shot algorithm.
+    Continuous relaxation of the architecture representation, allowing efficient search of the architecture using gradient descent.
+    `Reference <https://arxiv.org/abs/1806.09055>`__.
 
+    DARTS algorithm is one of the most fundamental one-shot algorithm.
     DARTS repeats iterations, where each iteration consists of 2 training phases.
     The phase 1 is architecture step, in which model parameters are frozen and the architecture parameters are trained.
     The phase 2 is model step, in which architecture parameters are frozen and model parameters are trained.
@@ -31,6 +33,15 @@ class DartsLightningModule(BaseOneShotLightningModule):
     *New in v2.8*: Supports searching for ValueChoices on operations, with the technique described in
     `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
     One difference is that, in DARTS, we are using Softmax instead of GumbelSoftmax.
+
+    The supported mutation primitives of DARTS are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in operations listed in :attr:`NATIVE_MIXED_OPERATIONS`).
+    * :class:`nni.retiarii.nn.pytorch.Repeat`.
+    * :class:`nni.retiarii.nn.pytorch.Cell`.
+    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
 
     {{module_notes}}
 
@@ -157,8 +168,10 @@ class ProxylessLightningModule(DartsLightningModule):
 
 class GumbelDartsLightningModule(DartsLightningModule):
     _gumbel_darts_note = """
-    Implementation of SNAS :cite:p:`xie2018snas`.
-    It's a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
+    Choose the best block by using Gumbel Softmax random sampling and differentiable training.
+    See `FBNet <https://arxiv.org/abs/1812.03443>`__ and `SNAS <https://arxiv.org/abs/1812.09926>`__.
+
+    This is a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
     Essentially, it samples one path on forward,
     and implements its own backward to update the architecture parameters based on only one path.
 

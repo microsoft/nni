@@ -28,6 +28,15 @@ from ._operation_utils import Slicable as _S, MaybeWeighted as _W, int_or_int_di
 
 T = TypeVar('T')
 
+__all__ = [
+    'MixedOperationSamplingPolicy',
+    'MixedOperation',
+    'MixedLinear',
+    'MixedConv2d',
+    'MixedBatchNorm2d',
+    'MixedMultiHeadAttention',
+    'NATIVE_MIXED_OPERATIONS',
+]
 
 class MixedOperationSamplingPolicy:
     """

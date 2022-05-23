@@ -21,7 +21,13 @@ from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from nni.typehint import Literal
 from .supermodule.base import BaseSuperNetModule
 
-__all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
+__all__ = [
+    'MutationHook',
+    'BaseSuperNetModule',
+    'BaseOneShotLightningModule',
+    'traverse_and_mutate_submodules',
+    'no_default_hook'
+]
 
 
 MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
@@ -115,7 +121,7 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
         nas_nn.ValueChoice,
         nas_nn.Repeat,
         nas_nn.NasBench101Cell,
-        # nas_nn.Cell,              # later
+        nas_nn.Cell,
         # nas_nn.NasBench201Cell,   # forward = supernet
     )
 
