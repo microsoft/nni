@@ -12,7 +12,8 @@ import torch.optim as optim
 from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
 from .supermodule.differentiable import (
     DifferentiableMixedLayer, DifferentiableMixedInput,
-    MixedOpDifferentiablePolicy, GumbelSoftmax
+    MixedOpDifferentiablePolicy, GumbelSoftmax,
+    DifferentiableMixedCell, DifferentiableMixedRepeat
 )
 from .supermodule.proxyless import ProxylessMixedInput, ProxylessMixedLayer
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS
@@ -52,6 +53,8 @@ class DartsLightningModule(BaseOneShotLightningModule):
         hooks = [
             DifferentiableMixedLayer.mutate,
             DifferentiableMixedInput.mutate,
+            DifferentiableMixedCell.mutate,
+            DifferentiableMixedRepeat.mutate,
         ]
         hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
         hooks.append(no_default_hook)
@@ -181,16 +184,6 @@ class GumbelDartsLightningModule(DartsLightningModule):
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
     """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
-
-    def default_mutation_hooks(self) -> list[MutationHook]:
-        """Replace modules with gumbel-differentiable versions"""
-        hooks = [
-            DifferentiableMixedLayer.mutate,
-            DifferentiableMixedInput.mutate,
-        ]
-        hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
-        hooks.append(no_default_hook)
-        return hooks
 
     def mutate_kwargs(self):
         """Use gumbel softmax."""

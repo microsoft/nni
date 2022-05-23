@@ -59,7 +59,8 @@ def traverse_and_mutate_submodules(
     module_list = []
 
     def apply(m):
-        for name, child in m.named_children():
+        # Need to call list() here because the loop body might replace some children in-place.
+        for name, child in list(m.named_children()):
             # post-order DFS
             if not topdown:
                 apply(child)
@@ -94,6 +95,8 @@ def traverse_and_mutate_submodules(
                     break
 
             if isinstance(mutate_result, BaseSuperNetModule):
+                # Replace child with the mutate result, and DFS this one
+                child = mutate_result
                 module_list.append(mutate_result)
 
             # pre-order DFS
@@ -112,9 +115,9 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
     primitive_list = (
         nas_nn.LayerChoice,
         nas_nn.InputChoice,
-        nas_nn.ValueChoice,
         nas_nn.Repeat,
         nas_nn.NasBench101Cell,
+        # nas_nn.ValueChoice,       # could be false positive
         # nas_nn.Cell,              # later
         # nas_nn.NasBench201Cell,   # forward = supernet
     )
@@ -321,9 +324,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
             # under v1.5
             w_optimizers, lr_schedulers, self.frequencies, monitor = \
                 self.trainer._configure_optimizers(self.model.configure_optimizers())  # type: ignore
-            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization) # type: ignore
+            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)  # type: ignore
 
-        if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers): # type: ignore
+        if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):  # type: ignore
             raise Exception(
                 "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
             )

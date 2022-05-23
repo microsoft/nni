@@ -247,7 +247,8 @@ class _SupervisedLearningModule(LightningModule):
         return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)  # type: ignore
 
     def on_validation_epoch_end(self):
-        if self.running_mode == 'multi':
+        if not self.trainer.sanity_checking and self.running_mode == 'multi':
+            # Don't report metric when sanity checking
             nni.report_intermediate_result(self._get_validation_metrics())
 
     def on_fit_end(self):
