@@ -1,7 +1,3 @@
-parameters:
-- name: platform
-  type: string
-
 steps:
 
 # Need to have a service principal (SP) to login to Azure services (e.g., AzureML).
