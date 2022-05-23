@@ -85,7 +85,7 @@ One-shot strategies only support a limited set of :ref:`mutation-primitives`, an
 One-shot strategy (legacy)
 --------------------------
 
-.. warning:: The following usages are deprecated and will be removed in future releases.
+.. warning:: The following usages are deprecated and will be removed in future releases. If you intend to use them, the references can be found :doc:`here </deprecated/oneshot_legacy>`.
 
 The usage of one-shot NAS strategy is a little different from multi-trial strategy. One-shot strategy is implemented with a special type of objects named *Trainer*. Following the common practice of one-shot NAS, *Trainer* trains the super-net and searches for the optimal architecture in a single run. For example,
 

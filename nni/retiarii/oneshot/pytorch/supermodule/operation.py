@@ -75,9 +75,11 @@ class MixedOperationSamplingPolicy:
 
 class MixedOperation(BaseSuperNetModule):
     """This is the base class for all mixed operations.
+    It's what you should inherit to support a new operation with ValueChoice.
 
     It contains commonly used utilities that will ease the effort to write customized mixed oeprations,
     i.e., operations with ValueChoice in its arguments.
+    To customize, please write your own mixed operation, and add the hook into ``mutation_hooks`` parameter when using the strategy.
 
     By design, for a mixed operation to work in a specific algorithm,
     at least two classes are needed.
@@ -583,3 +585,6 @@ NATIVE_MIXED_OPERATIONS: list[Type[MixedOperation]] = [
     MixedBatchNorm2d,
     MixedMultiHeadAttention,
 ]
+
+# For the supported operations to be properly rendered in documentation
+NATIVE_SUPPORTED_OP_NAMES: list[str] = [op.bound_type.__name__ for op in NATIVE_MIXED_OPERATIONS]

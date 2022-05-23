@@ -3,6 +3,8 @@
 One-shot Strategy (legacy)
 ==========================
 
+.. warning:: This page will be removed in future releases.
+
 .. _darts-strategy:
 
 DARTS

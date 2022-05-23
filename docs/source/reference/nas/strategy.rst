@@ -41,7 +41,7 @@ PolicyBasedRL
 One-shot Strategy
 -----------------
 
-.. note:: The usage of one-shot has been refreshed in v2.8. Please see :doc:`legacy one-shot trainers <oneshot_legacy>` for the old-style one-shot strategies.
+.. note:: The usage of one-shot has been refreshed in v2.8. Please see :doc:`legacy one-shot trainers </deprecated/oneshot_legacy>` for the old-style one-shot strategies.
 
 DARTS
 ^^^^^
@@ -53,6 +53,9 @@ ENAS
 ^^^^^
 
 .. autoclass:: nni.retiarii.strategy.ENAS
+   :members:
+
+.. autoclass:: nni.retiarii.oneshot.pytorch.enas.ReinforceController
    :members:
 
 GumbelDARTS
@@ -95,20 +98,38 @@ Multi-trial
 One-shot
 ^^^^^^^^
 
+base_lightning
+""""""""""""""
+
 ..  automodule:: nni.retiarii.oneshot.pytorch.base_lightning
     :members:
+
+dataloader
+""""""""""
+
+..  automodule:: nni.retiarii.oneshot.pytorch.dataloader
+    :members:
+
+supermodule.differentiable
+""""""""""""""""""""""""""
 
 ..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.differentiable
     :members:
 
+supermodule.sampling
+""""""""""""""""""""
+
 ..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.sampling
     :members:
+
+supermodule.proxyless
+"""""""""""""""""""""
 
 ..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.proxyless
     :members:
 
-..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.operation
-    :members:
+supermodule.operation
+"""""""""""""""""""""
 
-..  automodule:: nni.retiarii.oneshot.pytorch.dataloader
+..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.operation
     :members:

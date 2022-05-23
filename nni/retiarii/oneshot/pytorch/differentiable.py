@@ -15,7 +15,7 @@ from .supermodule.differentiable import (
     MixedOpDifferentiablePolicy, GumbelSoftmax
 )
 from .supermodule.proxyless import ProxylessMixedInput, ProxylessMixedLayer
-from .supermodule.operation import NATIVE_MIXED_OPERATIONS
+from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
 
 
 class DartsLightningModule(BaseOneShotLightningModule):
@@ -38,7 +38,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
     * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
     * :class:`nni.retiarii.nn.pytorch.InputChoice`.
-    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in operations listed in :attr:`NATIVE_MIXED_OPERATIONS`).
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
     * :class:`nni.retiarii.nn.pytorch.Repeat`.
     * :class:`nni.retiarii.nn.pytorch.Cell`.
     * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
@@ -51,7 +51,10 @@ class DartsLightningModule(BaseOneShotLightningModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+    """.format(
+        base_params=BaseOneShotLightningModule._mutation_hooks_note,
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+    )
 
     __doc__ = _darts_note.format(
         module_notes='The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.',
@@ -188,7 +191,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
 
     * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
     * :class:`nni.retiarii.nn.pytorch.InputChoice`.
-    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in operations listed in :attr:`NATIVE_MIXED_OPERATIONS`).
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
     * :class:`nni.retiarii.nn.pytorch.Repeat`.
     * :class:`nni.retiarii.nn.pytorch.Cell`.
     * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
@@ -208,7 +211,10 @@ class GumbelDartsLightningModule(DartsLightningModule):
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+    """.format(
+        base_params=BaseOneShotLightningModule._mutation_hooks_note,
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+    )
 
     def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with gumbel-differentiable versions"""
