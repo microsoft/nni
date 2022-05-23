@@ -118,7 +118,8 @@ def _check_pid_running(pid):
     # Using pid here is unsafe.
     # We should make Popen object directly accessible.
     if sys.platform == 'win32':
-        # NOTE: windows didn't explicitly handle child / non-child process.
+        # NOTE: Tests show that the behavior of psutil is unreliable, and varies from runs to runs.
+        # Also, Windows didn't explicitly handle child / non-child process.
         # This might be a potential problem.
         try:
             psutil.Process(pid).wait(timeout=0)
