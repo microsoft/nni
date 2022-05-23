@@ -137,7 +137,6 @@ def start_experiment(
         )
 
         _logger.info('Setting up...')
-        print('zql: ', config.json())
         rest.post(port, '/experiment', config.json(), url_prefix)
 
     except Exception as e:
