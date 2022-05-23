@@ -308,7 +308,7 @@ class MetricsCalculator:
 
 class SparsityAllocator:
     """
-    An abstract class for allocate mask based on metrics.
+    An abstract class for allocating mask based on metrics.
 
     Parameters
     ----------
@@ -320,9 +320,9 @@ class SparsityAllocator:
         Inherit the mask already in the wrapper if set True.
     """
 
-    def __init__(self, pruner: Pruner, scalor: Scaling | None = None, continuous_mask: bool = True):
+    def __init__(self, pruner: Pruner, scalors: Dict[Scaling] | Scaling | None = None, continuous_mask: bool = True):
         self.pruner = pruner
-        self.scalor = scalor if scalor else Scaling([1])
+        self.scalors = scalors if isinstance(scalors, dict) else {'_default': scalors if scalors else Scaling([1])}
         self.continuous_mask = continuous_mask
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
@@ -352,6 +352,7 @@ class SparsityAllocator:
         # expand a shrinked mask to weight shape.
         weight_mask = self.scalor.expand(mask, getattr(wrapper, 'weight_mask').shape)
         expanded_mask = {'weight': weight_mask}
+        # generate bias mask
         old_bias_mask = getattr(wrapper, 'bias_mask')
         if old_bias_mask is not None:
             if getattr(wrapper, 'bias_mask').shape == getattr(wrapper, 'bias_mask').shape[0]:
