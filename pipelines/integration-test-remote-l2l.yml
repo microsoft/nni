@@ -40,6 +40,7 @@ jobs:
       cp -r test/vso_tools/interim_patch.py /tmp/nnitest/$(Build.BuildId)
     displayName: Prepare for docker
 
+  # TODO: Delete variables on pipeline when the PR that introduced this is merged.
   - script: |
       set -e
       export worker_ip=localhost

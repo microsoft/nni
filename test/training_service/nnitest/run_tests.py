@@ -273,6 +273,8 @@ def run(args):
 
     for test_case_config in it_config['testCases']:
         name = test_case_config['name']
+        print(GREEN + '=' * 80 + CLEAR)
+        print('## {}Testing: {}{} ##'.format(GREEN, name, CLEAR))
         if case_excluded(name, args.exclude):
             print('{} excluded'.format(name))
             continue
@@ -308,7 +310,6 @@ def run(args):
         if args.ts == 'adl' and name == 'nnictl-resume-2':
             time.sleep(30)
 
-        print('## {}Testing: {}{} ##'.format(GREEN, name, CLEAR))
         begin_time = time.time()
 
         run_test_case(test_case_config, it_config, args)

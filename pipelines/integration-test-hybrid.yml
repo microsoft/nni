@@ -19,6 +19,8 @@ jobs:
     parameters:
       platform: ubuntu-latest
 
+  - template: templates/install-dependencies-aml.yml
+
   - template: templates/install-nni.yml
     parameters:
       wheel: true
@@ -49,13 +51,9 @@ jobs:
       export worker_ip=localhost
       export manager_ip=host.docker.internal
       export password_in_docker=123456
-      export NFS_IP=host.docker.internal
-      export Exported_Directory=/var/nfs/general
       echo "##vso[task.setvariable variable=worker_ip]${worker_ip}"
       echo "##vso[task.setvariable variable=manager_ip]${manager_ip}"
       echo "##vso[task.setvariable variable=password_in_docker]${password_in_docker}"
-      echo "##vso[task.setvariable variable=NFS_IP]${NFS_IP}"
-      echo "##vso[task.setvariable variable=Exported_Directory]${Exported_Directory}"
     displayName: Override environment variables
 
   - script: |
