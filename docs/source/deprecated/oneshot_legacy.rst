@@ -106,7 +106,7 @@ For the mobile application of facial landmark, based on the basic architecture o
 
 FBNet is a block-wise differentiable NAS method (Block-wise DNAS), where the best candidate building blocks can be chosen by using Gumbel Softmax random sampling and differentiable training. At each layer (or stage) to be searched, the diverse candidate blocks are side by side planned (just like the effectiveness of structural re-parameterization), leading to sufficient pre-training of the supernet. The pre-trained supernet is further sampled for finetuning of the subnet, to achieve better performance.
 
-.. image:: ../../../img/fbnet.png
+.. image:: ../../img/fbnet.png
    :width: 800
    :align: center
 
@@ -350,7 +350,7 @@ The official implementation supports different targeted hardware, including 'mob
 
 Below we will describe implementation details. Like other one-shot NAS algorithms on NNI, ProxylessNAS is composed of two parts: *search space* and *training approach*. For users to flexibly define their own search space and use built-in ProxylessNAS training approach, please refer to :githublink:`example code <examples/nas/oneshot/proxylessnas>` for a reference.
 
-.. image:: ../../../img/proxylessnas.png
+.. image:: ../../img/proxylessnas.png
    :width: 450
    :align: center
 
