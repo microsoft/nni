@@ -249,7 +249,7 @@ class RetiariiExperiment(Experiment):
             raise ValueError(f'Unsupported engine type: {config.execution_engine}')
         set_execution_engine(engine)
 
-    def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
+    def start(self, *args, **kwargs) -> None:
         """
         By design, the only different between `start` and `run` is that `start` is asynchronous,
         while `run` waits the experiment to complete. RetiariiExperiment always waits the experiment
@@ -289,10 +289,10 @@ class RetiariiExperiment(Experiment):
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
             ws_url = f'ws://localhost:{port}/tuner'
-            canonicalized_config = self._start_impl(port, debug, RunMode.Background, None, ws_url, ['retiarii'])
+            canonicalized_config = self._start_impl(port, debug, RunMode.Background, ws_url, ['retiarii'])
             canonicalized_config = cast(RetiariiExeConfig, canonicalized_config)
             self._dispatcher = RetiariiAdvisor(ws_url)
-            self._dispatcher_thread = Thread(target=self._dispatcher.run)
+            self._dispatcher_thread = Thread(target=self._dispatcher.run, daemon=True)
             self._dispatcher_thread.start()
             # FIXME: engine cannot be created twice
             self._create_execution_engine(canonicalized_config)

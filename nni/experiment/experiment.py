@@ -88,7 +88,6 @@ class Experiment:
             self.config = config_or_platform
 
     def _start_impl(self, port: int, debug: bool, run_mode: RunMode,
-                    url_prefix: str | None,
                     tuner_command_channel: str | None,
                     tags: list[str] = []) -> ExperimentConfig:
         assert self.config is not None
@@ -106,7 +105,7 @@ class Experiment:
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
         self._proc = launcher.start_experiment(self._action, self.id, config, port, debug, run_mode,
-                                               url_prefix, tuner_command_channel, tags)
+                                               self.url_prefix, tuner_command_channel, tags)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed
@@ -137,7 +136,7 @@ class Experiment:
         run_mode
             Running the experiment in foreground or background
         """
-        self._start_impl(port, debug, run_mode, self.url_prefix, None, [])
+        self._start_impl(port, debug, run_mode, None, [])
 
     def _stop_impl(self) -> None:
         atexit.unregister(self.stop)
