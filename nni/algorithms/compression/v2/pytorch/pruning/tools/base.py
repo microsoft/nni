@@ -320,9 +320,9 @@ class SparsityAllocator:
         Inherit the mask already in the wrapper if set True.
     """
 
-    def __init__(self, pruner: Pruner, scalor: Scaling, continuous_mask: bool = True):
+    def __init__(self, pruner: Pruner, scalor: Scaling | None = None, continuous_mask: bool = True):
         self.pruner = pruner
-        self.scalor = scalor
+        self.scalor = scalor if scalor else Scaling([1])
         self.continuous_mask = continuous_mask
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
@@ -370,8 +370,6 @@ class SparsityAllocator:
 
         Parameters
         ----------
-        name
-            The masked module name.
         mask
             The entire mask has the same size with weight.
 
@@ -380,24 +378,7 @@ class SparsityAllocator:
         Tensor
             Reduced mask.
         """
-        if self.dim is None or len(mask.size()) == 1:
-            mask = mask.clone()
-        else:
-            mask_dim = list(range(len(mask.size())))
-            for dim in self.dim:
-                mask_dim.remove(dim)
-            mask = torch.sum(mask, dim=mask_dim)
-
-        if self.block_sparse_size is not None:
-            # operation like pooling
-            lower_case_letters = 'abcdefghijklmnopqrstuvwxyz'
-            ein_expression = ''
-            for i, step in enumerate(self.block_sparse_size):
-                mask = mask.unfold(i, step, step)
-                ein_expression += lower_case_letters[i]
-            ein_expression = '...{},{}'.format(ein_expression, ein_expression)
-            mask = torch.einsum(ein_expression, mask, torch.ones(self.block_sparse_size).to(mask.device))
-
+        mask = self.scalor.shrink(mask)
         return (mask != 0).type_as(mask)
 
 

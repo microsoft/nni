@@ -13,6 +13,7 @@ from nni.algorithms.compression.v2.pytorch.base import Pruner
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
 from .base import SparsityAllocator
+from ...utils import Scaling
 
 
 class NormalSparsityAllocator(SparsityAllocator):
@@ -162,9 +163,8 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
     A specify allocator for Conv2d with dependency-aware.
     """
 
-    def __init__(self, pruner: Pruner, dim: int, dummy_input: Any):
-        assert isinstance(dim, int), 'Only support single dim in Conv2dDependencyAwareAllocator.'
-        super().__init__(pruner, dim=dim)
+    def __init__(self, pruner: Pruner, dummy_input: Any):
+        super().__init__(pruner, scalor=Scaling([1], padding_kernel=True))
         self.dummy_input = dummy_input
 
     def _get_dependency(self):
