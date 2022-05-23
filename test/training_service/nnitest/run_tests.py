@@ -270,11 +270,16 @@ def match_remoteConfig(test_case_config, nni_source_dir):
 
 def run(args):
     it_config = get_yml_content(args.config)
+    test_cases = it_config['testCases']
 
-    for test_case_config in it_config['testCases']:
+    for test_case_id, test_case_config in enumerate(test_cases, start=1):
         name = test_case_config['name']
         print(GREEN + '=' * 80 + CLEAR)
         print('## {}Testing: {}{} ##'.format(GREEN, name, CLEAR))
+
+        # Print progress on devops
+        print(f'##vso[task.setprogress value={int(test_case_id / len(test_cases) * 100)};]{name}')
+
         if case_excluded(name, args.exclude):
             print('{} excluded'.format(name))
             continue
