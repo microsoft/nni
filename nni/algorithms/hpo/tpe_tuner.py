@@ -24,6 +24,7 @@ import numpy as np
 from scipy.special import erf  # pylint: disable=no-name-in-module
 from typing_extensions import Literal
 
+import nni
 from nni.common.hpo_utils import Deduplicator, OptimizeMode, format_search_space, deformat_parameters, format_parameters
 from nni.tuner import Tuner
 from nni.utils import extract_scalar_reward
@@ -171,7 +172,7 @@ class TpeTuner(Tuner):
     def generate_parameters(self, parameter_id, **kwargs):
         if self.liar and self._running_params:
             # give a fake loss for each concurrently running paramater set
-            history = {key: records.copy() for key, records in self._history.items()}  # copy history
+            history = defaultdict(list, {key: records.copy() for key, records in self._history.items()})  # copy history
             lie = self.liar.lie()
             for param in self._running_params.values():
                 for key, value in param.items():
@@ -201,11 +202,17 @@ class TpeTuner(Tuner):
         self._running_params.pop(parameter_id, None)
 
     def import_data(self, data):  # for resuming experiment
+        if isinstance(data, str):
+            data = nni.load(data)
         for trial in data:
+            if isinstance(trial, str):
+                trial = nni.load(trial)
             param = format_parameters(trial['parameter'], self.space)
             loss = trial['value']
+            if isinstance(loss, dict) and 'default' in loss:
+                loss = loss['default']
             if self.optimize_mode is OptimizeMode.Maximize:
-                loss = -trial['value']
+                loss = -loss
             for key, value in param.items():
                 self._history[key].append(Record(value, loss))
         _logger.info(f'Replayed {len(data)} trials')

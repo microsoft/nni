@@ -392,7 +392,8 @@ def _dump(*, obj: Any, fp: Optional[Any], use_trace: bool, pickle_size_limit: in
         return json_tricks.dumps(obj, obj_encoders=encoders, **json_tricks_kwargs)
 
 
-def load(string: Optional[str] = None, *, fp: Optional[Any] = None, ignore_comments: bool = True, **json_tricks_kwargs) -> Any:
+def load(string: Optional[str] = None, *, fp: Optional[Any] = None,
+         preserve_order: bool = False, ignore_comments: bool = True, **json_tricks_kwargs) -> Any:
     """
     Load the string or from file, and convert it to a complex data structure.
     At least one of string or fp has to be not none.
@@ -403,6 +404,10 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None, ignore_comme
         JSON string to parse. Can be set to none if fp is used.
     fp : str
         File path to load JSON from. Can be set to none if string is used.
+    preserve_order : bool
+        `json_tricks parameter <https://json-tricks.readthedocs.io/en/latest/#order>`_
+        to use ``OrderedDict`` instead of ``dict``.
+        The order is in fact always preserved even when this is False.
     ignore_comments : bool
         Remove comments (starting with ``#`` or ``//``). Default is true.
 
@@ -427,6 +432,8 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None, ignore_comme
         _json_tricks_any_object_decode
     ]
 
+    # there was an issue that the user code does not accept ordered dict, and 3.7+ dict has guaranteed order
+    json_tricks_kwargs['preserve_order'] = preserve_order
     # to bypass a deprecation warning in json-tricks
     json_tricks_kwargs['ignore_comments'] = ignore_comments
 

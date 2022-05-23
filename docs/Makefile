@@ -1,24 +1,23 @@
-# Minimal makefile for Sphinx documentation
-#
+.PHONY: all
+all: en zh
 
-# You can set these variables from the command line.
-SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
-SOURCEDIR     = source
-BUILDDIR      = build
+.PHONY: en
+en:
+	## English ##
+	sphinx-build -T source build/html
 
-# Put it first so that "make" without argument is like "make help".
-help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+.PHONY: zh
+zh:
+	## Chinese ##
+	sphinx-build -T -D language=zh source build/html_zh
 
 # Build message catelogs for translation
+.PHONY: i18n
 i18n:
-	@$(SPHINXBUILD) -M getpartialtext "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	sphinx-intl update -p "$(BUILDDIR)/getpartialtext" -d "$(SOURCEDIR)/locales" -l zh
+	sphinx-build -b getpartialtext source build/i18n
+	sphinx-intl update -p build/i18n -d source/locales -l zh
 
-.PHONY: help Makefile
-
-# Catch-all target: route all unknown targets to Sphinx using the new
-# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+.PHONY: clean
+clean:
+	rm -rf build
+	rm -rf source/reference/_modules
