@@ -161,7 +161,7 @@ def parse_params(kwargs: Dict[str, Any]) -> Tuple[Dict[str, str], List[Dict[str,
 
 def parse_basic_pruner(pruner_config: Dict[str, str], config_list: List[Dict[str, Any]], vessel: CompressionVessel):
     """
-    Parse basic pruner and model-related obj used by pruning scheduler.
+    Parse basic pruner and model-related objects used by pruning scheduler.
     """
     model, finetuner, evaluator, dummy_input, trainer, optimizer_helper, criterion, device = vessel.export()
     if pruner_config['pruner_type'] == 'L1NormPruner':
