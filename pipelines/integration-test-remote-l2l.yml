@@ -18,9 +18,12 @@ jobs:
   steps:
   - template: templates/setup-non-ms-hosted-agent.yml
 
+  # FIXME: GPU is not supported yet.
+  # Change to ubuntu-latest-gpu when it's done.
+
   - template: templates/install-dependencies.yml
     parameters:
-      platform: ubuntu-latest-gpu
+      platform: ubuntu-latest
 
   - template: templates/install-nni.yml
     parameters:
@@ -29,7 +32,7 @@ jobs:
 
   - template: templates/install-customized-tuner.yml
     parameters:
-      platform: ubuntu-latest-gpu
+      platform: ubuntu-latest
 
   - script: |
       set -e
