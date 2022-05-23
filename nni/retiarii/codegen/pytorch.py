@@ -14,6 +14,8 @@ from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 
 _logger = logging.getLogger(__name__)
 
+__all__ = ['model_to_pytorch_script']
+
 
 def model_to_pytorch_script(model: Model, placement=None) -> str:
     graphs = []

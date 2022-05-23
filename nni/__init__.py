@@ -9,7 +9,7 @@ except ModuleNotFoundError:
 from .runtime.log import _init_logger
 _init_logger()
 
-from .common.env import get_default_framework, set_default_framework
+from .common.framework import *
 from .common.serializer import trace, dump, load
 from .experiment import Experiment
 from .runtime.env_vars import dispatcher_env_vars

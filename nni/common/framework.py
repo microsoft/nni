@@ -1,24 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import importlib
 import os
+import sys
+from typing import Optional
 
 from nni.typehint import Literal
 
+__all__ = ['set_default_framework', 'get_default_framework', 'shortcut_module', 'shortcut_framework']
+
 framework_type = Literal['pytorch', 'tensorflow', 'mxnet', 'none']
 """Supported framework types."""
-
-# Override these environment vars to move your cache.
-ENV_NNI_HOME = 'NNI_HOME'
-ENV_XDG_CACHE_HOME = 'XDG_CACHE_HOME'
-DEFAULT_CACHE_DIR = '~/.cache'
-
-
-def nni_cache_home() -> str:
-    return os.path.expanduser(
-        os.getenv(ENV_NNI_HOME,
-                  os.path.join(os.getenv(ENV_XDG_CACHE_HOME, DEFAULT_CACHE_DIR), 'nni')))
-
 
 ENV_NNI_FRAMEWORK = 'NNI_FRAMEWORK'
 
@@ -72,8 +65,8 @@ def set_default_framework(framework: framework_type) -> None:
     """
 
     # In case 'none' is written as None.
-    if framework_type is None:
-        framework_type = 'none'
+    if framework is None:
+        framework = 'none'
 
     global DEFAULT_FRAMEWORK
     DEFAULT_FRAMEWORK = framework
@@ -82,3 +75,19 @@ def set_default_framework(framework: framework_type) -> None:
 def get_default_framework() -> framework_type:
     """Retrieve default deep learning framework set either with env variables or manually."""
     return DEFAULT_FRAMEWORK
+
+
+def shortcut_module(current: str, target: str, package: Optional[str] = None) -> None:
+    """Make ``current`` module an alias of ``target`` module in ``package``."""
+    # Reference: https://github.com/dmlc/dgl/blob/d70a362dba8d46fd9838c79d76998a5e33f22cb7/python/dgl/nn/__init__.py#L27
+    mod = importlib.import_module(target, package)
+    thismod = sys.modules[current]
+    for api, obj in mod.__dict__.items():
+        setattr(thismod, api, obj)
+
+
+def shortcut_framework(current: str) -> None:
+    """Make ``current`` a shortcut of ``current.framework``."""
+    if get_default_framework() != 'none':
+        # Throw ModuleNotFoundError if framework is not supported
+        shortcut_module(current, '.' + get_default_framework(), current)

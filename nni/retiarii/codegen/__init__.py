@@ -1,11 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import nni
+from nni.common.framework import shortcut_framework
 
-if nni.get_default_framework() == 'pytorch':
-    from .pytorch import model_to_pytorch_script
-else:
-    raise NotImplementedError('Unsupported framework: ' + nni.get_default_framework())
+shortcut_framework(__name__)
 
-del nni
+del shortcut_framework
