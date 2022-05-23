@@ -13,22 +13,13 @@ from typing import Optional
 import requests
 import tqdm
 
+from .env import nni_cache_home
+
 __all__ = ['NNI_BLOB', 'load_or_download_file', 'upload_file', 'nni_cache_home']
 
 
 # Blob that contains some downloadable files.
 NNI_BLOB = 'https://nni.blob.core.windows.net'
-
-# Override these environment vars to move your cache.
-ENV_NNI_HOME = 'NNI_HOME'
-ENV_XDG_CACHE_HOME = 'XDG_CACHE_HOME'
-DEFAULT_CACHE_DIR = '~/.cache'
-
-
-def nni_cache_home() -> str:
-    return os.path.expanduser(
-        os.getenv(ENV_NNI_HOME,
-                  os.path.join(os.getenv(ENV_XDG_CACHE_HOME, DEFAULT_CACHE_DIR), 'nni')))
 
 
 def load_or_download_file(local_path: str, download_url: str, download: bool = False, progress: bool = True) -> None:
