@@ -24,9 +24,8 @@
       "storage_account_type": "Standard_LRS"
     },
 
-    "location": "West US 2",
     "build_resource_group_name": "nni",
-    "vm_size": "Standard_ND6s"
+    "vm_size": "Standard_NC6s_v3"
   }],
   "provisioners": [{
     "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
