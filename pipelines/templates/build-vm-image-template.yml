@@ -1,0 +1,89 @@
+parameters:
+- name: managed_image_name
+  type: str
+- name: image_name
+  type: str
+- name: packer_config
+  type: str
+
+steps:
+- script: |
+    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  displayName: Install azcli
+
+# Please follow the tutorial of [image builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview)
+# to set up a managed identity, and,
+# 1. Assign the role following the instruction.
+# 2. Assign contributor role of the resource group to the identity.
+# 3. Add the identity to VMSS.
+- script: |
+    az login --identity --allow-no-subscriptions --username $(identity_id)
+  displayName: Login to Azure
+
+# Make sure all these are registered.
+# If not, might need az provider register -n xxx
+# Need subscription-write access.
+
+- script: |
+    set -e
+    az provider show -n Microsoft.VirtualMachineImages -o json
+    az provider show -n Microsoft.KeyVault -o json
+    az provider show -n Microsoft.Compute -o json
+    az provider show -n Microsoft.Storage -o json
+    az provider show -n Microsoft.Network -o json
+  displayName: Register features
+
+# Need to create an image gallerybefore this.
+# Only need to create once.
+# az sig create --resource-group <resource_group> --gallery-name <sig_name>
+
+# Add a image definition (also only once).
+# az sig image-definition create -g <resource_group> \
+#   --gallery-name <sig_name> \
+#   --gallery-image-definition <image_def>
+#
+# For example,
+# az sig image-definition create -g nni --gallery-name nniImageGallery \
+#   --gallery-image-definition nniLinuxImage \
+#   --publisher NNI \
+#   --offer ubuntu \
+#   --sku 20_04-nni \
+#   --os-type Linux \
+#   --hyper-v-generation V2
+
+- script: |
+    set -e
+    set -x
+    az image list -g $(resource_group)
+    if az image list -g $(resource_group) --query [].'name' | grep -q ${{ managed_image_name }}; then
+      az image delete -n ${{ managed_image_name }} -g $(resource_group)
+    fi
+  displayName: List existing images (and delete)
+
+- script: |
+    set -e
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+    sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    sudo apt-get update && sudo apt-get install packer
+  displayName: Install packer
+
+- script: |
+    set -e
+    cd test/vso_tools/build_vm
+    export VERSION=$(date "+%Y").$(date "+%m%d").$(date "+%H%M%S")
+    sed -i -e "s/<client_id>/$(identity_id)/g" ${{ packer_config }}.json
+    sed -i -e "s/<subscription_id>/$(subscription_id)/g" ${{ packer_config }}.json
+    sed -i -e "s/<managed_image_name>/${{ managed_image_name }}/g" ${{ packer_config }}.json
+    sed -i -e "s/<resource_group>/$(resource_group)/g" ${{ packer_config }}.json
+    sed -i -e "s/<gallery_name>/$(gallery_name)/g" ${{ packer_config }}.json
+    sed -i -e "s/<image_name>/${{ image_name }}/g" ${{ packer_config }}.json
+    sed -i -e "s/<image_version>/${VERSION}/g" ${{ packer_config }}.json
+    cat ${{ packer_config }}.json
+  displayName: Prepare configuration
+
+# NOTE: sometimes the builder fails with SSH timeout. Don't worry. Just retry.
+
+- script: |
+    cd test/vso_tools/build_vm
+    packer build packer_linux.json
+  displayName: Packer build
