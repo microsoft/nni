@@ -66,7 +66,7 @@ class MsgDispatcherTestCase(TestCase):
         _restore_io()
 
         tuner = NaiveTuner()
-        dispatcher = MsgDispatcher('ws://_placeholder_', tuner)
+        dispatcher = MsgDispatcher('ws://_unittest_placeholder_', tuner)
         dispatcher._channel = LegacyCommandChannel()
         msg_dispatcher_base._worker_fast_exit_on_terminate = False
 

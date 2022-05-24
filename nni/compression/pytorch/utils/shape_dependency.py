@@ -20,7 +20,7 @@ MUL_TYPES = ['aten::mul', 'atem::mul_']
 CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
 RESHAPE_OPS = [CAT_TYPE, 'aten::view',
-               'aten::reshape', 'aten::flatten', 'aten::mean']
+               'aten::reshape', 'aten::flatten', 'aten::mean', 'aten::expand_as']
 
 
 def lcm_list(L):

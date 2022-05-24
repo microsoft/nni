@@ -107,6 +107,8 @@ linkcheck_ignore = [
     r'https://help\.aliyun\.com/document_detail/\d+\.html', # Aliyun
     r'http://www\.image-net\.org/',                         # ImageNet
     r'https://www\.msra\.cn/',                              # MSRA
+    r'https://1drv\.ms/',                                   # OneDrive (shortcut)
+    r'https://onedrive\.live\.com/',                        # OneDrive
 ]
 
 # Ignore all links located in release.rst

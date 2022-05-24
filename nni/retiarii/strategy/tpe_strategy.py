@@ -5,8 +5,6 @@ import logging
 import time
 from typing import Optional
 
-from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
-
 from .. import Sampler, submit_models, query_available_resources, is_stopped_exec, budget_exhausted
 from .base import BaseStrategy
 
@@ -15,6 +13,9 @@ _logger = logging.getLogger(__name__)
 
 class TPESampler(Sampler):
     def __init__(self, optimize_mode='minimize'):
+        # Move import here to eliminate some warning messages about dill.
+        from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
+
         self.tpe_tuner = HyperoptTuner('tpe', optimize_mode)
         self.cur_sample: Optional[dict] = None
         self.index: Optional[int] = None

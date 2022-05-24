@@ -4,20 +4,26 @@
 from __future__ import annotations
 
 import functools
+import logging
 import warnings
 
-from typing import Any, cast
+from typing import Any, Dict, Sequence, List, Tuple, cast
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from nni.common.hpo_utils import ParameterSpec
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
+from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, ChoiceOf, Repeat
+from nni.retiarii.nn.pytorch.api import ValueChoiceX
+from nni.retiarii.nn.pytorch.cell import preprocess_cell_inputs
 
 from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingPolicy
-from ._valuechoice_utils import traverse_all_options
+from .sampling import PathSamplingCell
+from ._valuechoice_utils import traverse_all_options, dedup_inner_choices
+
+_logger = logging.getLogger(__name__)
 
 
 class GumbelSoftmax(nn.Softmax):
@@ -284,10 +290,10 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
         return {}
 
     def export(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
-        """Export is also random for each leaf value choice."""
+        """Export is argmax for each leaf value choice."""
         result = {}
         for name, spec in operation.search_space_spec().items():
-            if name in result:
+            if name in memo:
                 continue
             chosen_index = int(torch.argmax(cast(dict, operation._arch_alpha)[name]).item())
             result[name] = spec.values[chosen_index]
@@ -300,3 +306,199 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
             }
             return dict(traverse_all_options(operation.mutable_arguments[name], weights=weights))
         return operation.init_arguments[name]
+
+
+class DifferentiableMixedRepeat(BaseSuperNetModule):
+    """
+    Implementaion of Repeat in a differentiable supernet.
+    Result is a weighted sum of possible prefixes, sliced by possible depths.
+    """
+
+    _arch_parameter_names: list[str] = ['_arch_alpha']
+
+    def __init__(self, blocks: list[nn.Module], depth: ChoiceOf[int], softmax: nn.Module, memo: dict[str, Any]):
+        super().__init__()
+        self.blocks = blocks
+        self.depth = depth
+        self._softmax = softmax
+        self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices([depth])
+        self._arch_alpha = nn.ParameterDict()
+
+        for name, spec in self._space_spec.items():
+            if name in memo:
+                alpha = memo[name]
+                if len(alpha) != spec.size:
+                    raise ValueError(f'Architecture parameter size of same label {name} conflict: {len(alpha)} vs. {spec.size}')
+            else:
+                alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
+            self._arch_alpha[name] = alpha
+
+    def resample(self, memo):
+        """Do nothing."""
+        return {}
+
+    def export(self, memo):
+        """Choose argmax for each leaf value choice."""
+        result = {}
+        for name, spec in self._space_spec.items():
+            if name in memo:
+                continue
+            chosen_index = int(torch.argmax(self._arch_alpha[name]).item())
+            result[name] = spec.values[chosen_index]
+        return result
+
+    def search_space_spec(self):
+        return self._space_spec
+
+    @classmethod
+    def mutate(cls, module, name, memo, mutate_kwargs):
+        if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
+            # Only interesting when depth is mutable
+            softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
+            return cls(cast(List[nn.Module], module.blocks), module.depth_choice, softmax, memo)
+
+    def parameters(self, *args, **kwargs):
+        for _, p in self.named_parameters(*args, **kwargs):
+            yield p
+
+    def named_parameters(self, *args, **kwargs):
+        arch = kwargs.pop('arch', False)
+        for name, p in super().named_parameters(*args, **kwargs):
+            if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
+                if arch:
+                    yield name, p
+            else:
+                if not arch:
+                    yield name, p
+
+    def forward(self, x):
+        weights: dict[str, torch.Tensor] = {
+            label: self._softmax(alpha) for label, alpha in self._arch_alpha.items()
+        }
+        depth_weights = dict(cast(List[Tuple[int, float]], traverse_all_options(self.depth, weights=weights)))
+
+        res: torch.Tensor | None = None
+        for i, block in enumerate(self.blocks, start=1):  # start=1 because depths are 1, 2, 3, 4...
+            x = block(x)
+            if i in depth_weights:
+                if res is None:
+                    res = depth_weights[i] * x
+                else:
+                    res = res + depth_weights[i] * x
+        return res
+
+
+class DifferentiableMixedCell(PathSamplingCell):
+    """Implementation of Cell under differentiable context.
+
+    An architecture parameter is created on each edge of the full-connected graph.
+    """
+
+    # TODO: It inherits :class:`PathSamplingCell` to reduce some duplicated code.
+    # Possibly need another refactor here.
+
+    def __init__(
+        self, op_factory, num_nodes, num_ops_per_node,
+        num_predecessors, preprocessor, postprocessor, concat_dim,
+        memo, mutate_kwargs, label
+    ):
+        super().__init__(
+            op_factory, num_nodes, num_ops_per_node,
+            num_predecessors, preprocessor, postprocessor,
+            concat_dim, memo, mutate_kwargs, label
+        )
+        self._arch_alpha = nn.ParameterDict()
+        for i in range(self.num_predecessors, self.num_nodes + self.num_predecessors):
+            for j in range(i):
+                edge_label = f'{label}/{i}_{j}'
+                op = cast(List[Dict[str, nn.Module]], self.ops[i - self.num_predecessors])[j]
+                if edge_label in memo:
+                    alpha = memo[edge_label]
+                    if len(alpha) != len(op):
+                        raise ValueError(
+                            f'Architecture parameter size of same label {edge_label} conflict: '
+                            f'{len(alpha)} vs. {len(op)}'
+                        )
+                else:
+                    alpha = nn.Parameter(torch.randn(len(op)) * 1E-3)
+                self._arch_alpha[edge_label] = alpha
+
+        self._softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
+
+    def resample(self, memo):
+        """Differentiable doesn't need to resample."""
+        return {}
+
+    def export(self, memo):
+        """Tricky export.
+
+        Reference: https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/model_search.py#L135
+        We don't avoid selecting operations like ``none`` here, because it looks like a different search space.
+        """
+        exported = {}
+        for i in range(self.num_predecessors, self.num_nodes + self.num_predecessors):
+            # Tuple of (weight, input_index, op_name)
+            all_weights: list[tuple[float, int, str]] = []
+            for j in range(i):
+                for k, name in enumerate(self.op_names):
+                    all_weights.append((
+                        float(self._arch_alpha[f'{self.label}/{i}_{j}'][k].item()),
+                        j, name,
+                    ))
+
+            all_weights.sort(reverse=True)
+            # We first prefer inputs from different input_index.
+            # If we have got no other choices, we start to accept duplicates.
+            # Therefore we gather first occurrences of distinct input_index to the front.
+            first_occurrence_index: list[int] = [
+                all_weights.index(                                      # The index of
+                    next(filter(lambda t: t[1] == j, all_weights))      # First occurence of j
+                )
+                for j in range(i)                                       # For j < i
+            ]
+            first_occurrence_index.sort()                               # Keep them ordered too.
+
+            all_weights = [all_weights[k] for k in first_occurrence_index] + \
+                [w for j, w in enumerate(all_weights) if j not in first_occurrence_index]
+
+            _logger.info('Sorted weights in differentiable cell export (node %d): %s', i, all_weights)
+
+            for k in range(self.num_ops_per_node):
+                # all_weights could be too short in case ``num_ops_per_node`` is too large.
+                _, j, op_name = all_weights[k % len(all_weights)]
+                exported[f'{self.label}/op_{i}_{k}'] = op_name
+                exported[f'{self.label}/input_{i}_{k}'] = j
+
+        return exported
+
+    def forward(self, *inputs: list[torch.Tensor] | torch.Tensor) -> tuple[torch.Tensor, ...] | torch.Tensor:
+        processed_inputs: list[torch.Tensor] = preprocess_cell_inputs(self.num_predecessors, *inputs)
+        states: list[torch.Tensor] = self.preprocessor(processed_inputs)
+        for i, ops in enumerate(cast(Sequence[Sequence[Dict[str, nn.Module]]], self.ops), start=self.num_predecessors):
+            current_state = []
+
+            for j in range(i):  # for every previous tensors
+                op_results = torch.stack([op(states[j]) for op in ops[j].values()])
+                alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
+                edge_sum = torch.sum(op_results * self._softmax(self._arch_alpha[f'{self.label}/{i}_{j}']).view(*alpha_shape), 0)
+                current_state.append(edge_sum)
+
+            states.append(sum(current_state))  # type: ignore
+
+        # Always merge all
+        this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)
+        return self.postprocessor(this_cell, processed_inputs)
+
+    def parameters(self, *args, **kwargs):
+        for _, p in self.named_parameters(*args, **kwargs):
+            yield p
+
+    def named_parameters(self, *args, **kwargs):
+        arch = kwargs.pop('arch', False)
+        for name, p in super().named_parameters(*args, **kwargs):
+            if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
+                if arch:
+                    yield name, p
+            else:
+                if not arch:
+                    yield name, p

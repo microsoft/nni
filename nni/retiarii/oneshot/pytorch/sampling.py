@@ -12,7 +12,10 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
-from .supermodule.sampling import PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy
+from .supermodule.sampling import (
+    PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy,
+    PathSamplingCell, PathSamplingRepeat
+)
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS
 from .enas import ReinforceController, ReinforceField
 
@@ -43,6 +46,8 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
         hooks = [
             PathSamplingLayer.mutate,
             PathSamplingInput.mutate,
+            PathSamplingRepeat.mutate,
+            PathSamplingCell.mutate,
         ]
         hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
         hooks.append(no_default_hook)
@@ -133,29 +138,30 @@ class EnasLightningModule(RandomSamplingLightningModule):
     def configure_architecture_optimizers(self):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
 
-    def training_step(self, batch, batch_idx):
-        # The ConcatenateTrainValDataloader yields both data and which dataloader it comes from.
-        batch, source = batch
+    def training_step(self, batch_packed, batch_idx):
+        batch, mode = batch_packed
 
-        if source == 'train':
-            # step 1: train model params
-            self.resample()
+        if mode == 'train':
+            # train model params
+            with torch.no_grad():
+                self.resample()
             self.call_weight_optimizers('zero_grad')
-            loss_and_metrics = self.model.training_step(batch, batch_idx)
-            w_step_loss = loss_and_metrics['loss'] \
-                if isinstance(loss_and_metrics, dict) else loss_and_metrics
+            step_output = self.model.training_step(batch, batch_idx)
+            w_step_loss = step_output['loss'] \
+                if isinstance(step_output, dict) else step_output
             self.manual_backward(w_step_loss)
             self.call_weight_optimizers('step')
-            return loss_and_metrics
 
-        if source == 'val':
-            # step 2: train ENAS agent
+        else:
+            # train ENAS agent
             arc_opt = self.architecture_optimizers()
             if not isinstance(arc_opt, optim.Optimizer):
                 raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
             arc_opt.zero_grad()
             self.resample()
-            self.model.validation_step(batch, batch_idx)
+
+            step_output = self.model.validation_step(batch, batch_idx)
+
             # use the default metric of self.model as reward function
             if len(self.trainer.callback_metrics) == 1:
                 _, metric = next(iter(self.trainer.callback_metrics.items()))
@@ -163,7 +169,9 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 metric_name = self.reward_metric_name or 'default'
                 if metric_name not in self.trainer.callback_metrics:
                     raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
-                                   f'found multiple metrics without default: {self.trainer.callback_metrics.keys()}')
+                                   f'found multiple (or zero) metrics without default: {list(self.trainer.callback_metrics.keys())}. '
+                                   f'Try to use self.log to report metrics with the specified key ``{metric_name}`` in validation_step, '
+                                   'and remember to set on_step=True.')
                 metric = self.trainer.callback_metrics[metric_name]
             reward: float = metric.item()
 
@@ -182,6 +190,8 @@ class EnasLightningModule(RandomSamplingLightningModule):
                     nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
                 arc_opt.step()
                 arc_opt.zero_grad()
+
+        return step_output
 
     def resample(self):
         """Resample the architecture with ENAS controller."""

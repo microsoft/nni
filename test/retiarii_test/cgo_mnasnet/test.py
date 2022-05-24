@@ -8,7 +8,7 @@ import nni.retiarii.evaluator.pytorch.cgo.evaluator as cgo
 from nni.retiarii import serialize
 from base_mnasnet import MNASNet
 from nni.experiment import RemoteMachineConfig
-from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
+from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig, CgoEngineConfig
 from nni.retiarii.strategy import TPEStrategy
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
@@ -59,8 +59,6 @@ if __name__ == '__main__':
     exp_config.max_trial_number = 10
     exp_config.trial_gpu_number = 1
     exp_config.training_service.reuse_mode = True
-    exp_config.max_concurrency_cgo = 3
-    exp_config.batch_waiting_time = 0
 
     rm_conf = RemoteMachineConfig()
     rm_conf.host = '127.0.0.1'
@@ -73,6 +71,6 @@ if __name__ == '__main__':
     rm_conf.max_trial_number_per_gpu = 3
     
     exp_config.training_service.machine_list = [rm_conf]
-    exp_config.execution_engine = 'cgo'
+    exp_config.execution_engine = CgoEngineConfig(max_concurrency_cgo = 3, batch_waiting_time = 0)
 
     exp.run(exp_config, 8099)
