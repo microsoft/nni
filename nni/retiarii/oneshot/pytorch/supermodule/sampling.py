@@ -19,7 +19,11 @@ from .base import BaseSuperNetModule
 from ._valuechoice_utils import evaluate_value_choice_with_dict, dedup_inner_choices
 from .operation import MixedOperationSamplingPolicy, MixedOperation
 
-__all__ = ['PathSamplingLayer', 'PathSamplingInput', 'MixedOpPathSamplingPolicy']
+__all__ = [
+    'PathSamplingLayer', 'PathSamplingInput',
+    'PathSamplingRepeat', 'PathSamplingCell',
+    'MixedOpPathSamplingPolicy'
+]
 
 
 class PathSamplingLayer(BaseSuperNetModule):
