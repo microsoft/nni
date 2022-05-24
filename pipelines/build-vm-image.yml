@@ -5,7 +5,7 @@ variables:
   managed_image_name: nni-linux-image
   resource_group: nni
   gallery_name: nniImageGallery
-  iamge_name: nniLinuxImage
+  image_name: nniLinuxImage
 
 jobs:
 - job: linux
