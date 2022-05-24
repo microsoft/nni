@@ -185,15 +185,6 @@ class Experiment:
                 _logger.warning('KeyboardInterrupt detected')
                 self.stop()
 
-    def _wait_completion(self) -> bool:
-        while True:
-            time.sleep(10)
-            status = self.get_status()
-            if status == 'DONE' or status == 'STOPPED':
-                return True
-            if status == 'ERROR':
-                return False
-
     @classmethod
     def connect(cls, port: int):
         """
