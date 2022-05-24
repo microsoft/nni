@@ -3,8 +3,6 @@
     "type": "azure-arm",
 
     "client_id": "<client_id>",
-    "resource_group_name": "nni",
-    "storage_account": "nni",
 
     "managed_image_name": "nni-test-image",
     "managed_image_resource_group_name": "nni",
