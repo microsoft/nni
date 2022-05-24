@@ -18,7 +18,7 @@
       "subscription": "<subscription_id>",
       "resource_group": "<resource_group>",
       "gallery_name": "<gallery_name>",
-      "image_name": "<iamge_name>",
+      "image_name": "<image_name>",
       "image_version": "<image_version>",
       "replication_regions": ["southeastasia", "westus2"],
       "storage_account_type": "Standard_LRS"
