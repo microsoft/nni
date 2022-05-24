@@ -4,8 +4,8 @@
 
     "client_id": "<client_id>",
 
-    "managed_image_name": "nni-linux-image",
-    "managed_image_resource_group_name": "nni",
+    "managed_image_name": "<managed_image_name>",
+    "managed_image_resource_group_name": "<resource_group>",
 
     "os_type": "Linux",
     "image_publisher": "Canonical",
@@ -16,9 +16,9 @@
 
     "shared_image_gallery_destination": {
       "subscription": "<subscription_id>",
-      "resource_group": "nni",
-      "gallery_name": "nniImageGallery",
-      "image_name": "nniLinuxImage",
+      "resource_group": "<resource_group>",
+      "gallery_name": "<gallery_name>",
+      "image_name": "<iamge_name>",
       "image_version": "<image_version>",
       "replication_regions": ["southeastasia", "westus2"],
       "storage_account_type": "Standard_LRS"
@@ -29,6 +29,7 @@
   }],
   "provisioners": [{
     "script": "setup_linux.sh",
-    "type": "shell"
+    "type": "shell",
+    "timeout": "30m"
   }]
 }

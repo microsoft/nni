@@ -1,6 +1,12 @@
 trigger: none
 pr: none
 
+variables:
+  managed_image_name: nni-linux-image
+  resource_group: nni
+  gallery_name: nniImageGallery
+  iamge_name: nniLinuxImage
+
 jobs:
 - job: linux
   pool: nni-it
@@ -9,13 +15,40 @@ jobs:
       curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
     displayName: Install azcli
 
-  # TODO: add comments
+  # Please follow the tutorial of [image builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview)
+  # to set up a managed identity, and,
+  # 1. Assign the role following the instruction.
+  # 2. Assign contributor role of the resource group to the identity.
+  # 3. Add the identity to VMSS.
   - script: |
       az login --identity --allow-no-subscriptions --username $(identity_id)
     displayName: Login to Azure
 
+  # Need to create an image gallery (and turn on Microsoft.VirtualMachineImages provider) before this.
+  # Only need to create once.
+  # az sig create --resource-group <resource_group> --gallery-name <sig_name>
+  
+  # Add a image definition (also only once).
+  # az sig image-definition create -g <resource_group> \
+  #   --gallery-name <sig_name> \
+  #   --gallery-image-definition <image_def>
+  #
+  # For example,
+  # az sig image-definition create -g nni --gallery-name nniImageGallery \
+  #   --gallery-image-definition nniLinuxImage \
+  #   --publisher NNI \
+  #   --offer ubuntu \
+  #   --sku 20_04-nni \
+  #   --os-type Linux \
+  #   --hyper-v-generation V2
+
   - script: |
-      az image list -g nni
+      set -e
+      set -x
+      az image list -g $(resource_group)
+      if az image list -g $(resource_group) --query [].'name' | grep -q $(managed_image_name); then
+        az image delete -n $(managed_image_name) -g $(resource_group)
+      fi
     displayName: List existing images (and delete)
 
   - script: |
@@ -31,9 +64,15 @@ jobs:
       export VERSION=$(date "+%Y").$(date "+%m%d").$(date "+%H%M%S")
       sed -i -e "s/<client_id>/$(identity_id)/g" packer_linux.json
       sed -i -e "s/<subscription_id>/$(subscription_id)/g" packer_linux.json
+      sed -i -e "s/<managed_image_name>/$(managed_image_name)/g" packer_linux.json
+      sed -i -e "s/<resource_group>/$(resource_group)/g" packer_linux.json
+      sed -i -e "s/<gallery_name>/$(gallery_name)/g" packer_linux.json
+      sed -i -e "s/<image_name>/$(image_name)/g" packer_linux.json
       sed -i -e "s/<image_version>/${VERSION}/g" packer_linux.json
       cat packer_linux.json
     displayName: Prepare configuration
+
+  # NOTE: sometimes the builder fails with SSH timeout. Don't worry. Just retry.
 
   - script: |
       cd test/vso_tools/build_vm
