@@ -69,7 +69,7 @@ jobs:
   - script: |
       az resource create \
         --resource-group nni \
-        --properties @linux.json \
+        --properties @test/vso_tools/build_vm/linux.json \
         --is-full-object \
         --resource-type Microsoft.VirtualMachineImages/imageTemplates \
         -n linuxImage001
