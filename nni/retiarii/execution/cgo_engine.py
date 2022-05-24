@@ -1,16 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import logging
 import os
 import random
 import string
 import time
 import threading
-from typing import Iterable, List, Dict, Tuple
+from typing import Iterable, List, Dict, Tuple, cast
 from dataclasses import dataclass
 
 from nni.common.device import GPUDevice, Device
+from nni.experiment.config.training_services import RemoteConfig
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
 from ..graph import Model, ModelStatus, MetricData, Node
@@ -31,7 +34,6 @@ class TrialSubmission:
     placement: Dict[Node, Device]
     grouped_models: List[Model]
 
-
 class CGOExecutionEngine(AbstractExecutionEngine):
     """
     The execution engine with Cross-Graph Optimization (CGO).
@@ -41,24 +43,35 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
     Parameters
     ----------
-    devices : List[Device]
-        Available devices for execution.
-    max_concurrency : int
+    training_service
+        The remote training service config.
+    max_concurrency
         The maximum number of trials to run concurrently.
-    batch_waiting_time: int
+    batch_waiting_time
         Seconds to wait for each batch of trial submission.
         The trials within one batch could apply cross-graph optimization.
+    rest_port
+        The port of the experiment's rest server
+    rest_url_prefix
+        The url prefix of the experiment's rest entry
     """
 
-    def __init__(self, devices: List[Device] = None,
+    def __init__(self, training_service: RemoteConfig,
                  max_concurrency: int = None,
                  batch_waiting_time: int = 60,
+                 rest_port: int | None = None,
+                 rest_url_prefix: str | None = None
                  ) -> None:
+        self.port = rest_port
+        self.url_prefix = rest_url_prefix
+
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
         self.available_devices: List[Device] = []
         self.max_concurrency: int = max_concurrency
+
+        devices = self._construct_devices(training_service)
         for device in devices:
             self.available_devices.append(device)
         self.all_devices = self.available_devices.copy()
@@ -87,6 +100,17 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._stopped = False
         self._consumer_thread = threading.Thread(target=self._consume_models)
         self._consumer_thread.start()
+
+    def _construct_devices(self, training_service):
+        devices = []
+        if hasattr(training_service, 'machine_list'):
+            for machine in cast(RemoteConfig, training_service).machine_list:
+                assert machine.gpu_indices is not None, \
+                    'gpu_indices must be set in RemoteMachineConfig for CGO execution engine'
+                assert isinstance(machine.gpu_indices, list), 'gpu_indices must be a list'
+                for gpu_idx in machine.gpu_indices:
+                    devices.append(GPUDevice(machine.host, gpu_idx))
+        return devices
 
     def join(self):
         self._stopped = True

@@ -18,8 +18,15 @@ _worker_fast_exit_on_terminate = True
 
 
 class MsgDispatcherBase(Recoverable):
-    """This is where tuners and assessors are not defined yet.
+    """
+    This is where tuners and assessors are not defined yet.
     Inherits this class to make your own advisor.
+
+    .. note::
+
+        The class inheriting MsgDispatcherBase should be instantiated
+        after nnimanager (rest server) is started, so that the object
+        is ready to use right after its instantiation.
     """
 
     def __init__(self, command_channel_url=None):
@@ -27,6 +34,16 @@ class MsgDispatcherBase(Recoverable):
         if command_channel_url is None:
             command_channel_url = dispatcher_env_vars.NNI_TUNER_COMMAND_CHANNEL
         self._channel = TunerCommandChannel(command_channel_url)
+        # NOTE: `connect()` should be put in __init__. First, this `connect()` affects nnimanager's
+        # starting process, without `connect()` nnimanager is blocked in `dispatcher.init()`.
+        # Second, nas experiment uses a thread to execute `run()` of this class, thus, there is
+        # no way to know when the websocket between nnimanager and dispatcher is built. The following
+        # logic may crash is websocket is not built. One example is updating search space. If updating
+        # search space too soon, as the websocket has not been built, the rest api of updating search
+        # space will timeout.
+        # FIXME: this is making unittest happy
+        if not command_channel_url.startswith('ws://_unittest_'):
+            self._channel.connect()
         self.default_command_queue = Queue()
         self.assessor_command_queue = Queue()
         self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))
@@ -39,7 +56,6 @@ class MsgDispatcherBase(Recoverable):
         """
         _logger.info('Dispatcher started')
 
-        self._channel.connect()
         self.default_worker.start()
         self.assessor_worker.start()
 

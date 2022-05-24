@@ -84,20 +84,9 @@ class Experiment:
         else:
             self.config = config_or_platform
 
-    def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
-        """
-        Start the experiment in background.
-
-        This method will raise exception on failure.
-        If it returns, the experiment should have been successfully started.
-
-        Parameters
-        ----------
-        port
-            The port of web UI.
-        debug
-            Whether to start in debug mode.
-        """
+    def _start_impl(self, port: int, debug: bool, run_mode: RunMode,
+                    tuner_command_channel: str | None,
+                    tags: list[str] = []) -> ExperimentConfig:
         assert self.config is not None
         if run_mode is not RunMode.Detach:
             atexit.register(self.stop)
@@ -111,7 +100,8 @@ class Experiment:
         log_level = 'debug' if (debug or config.log_level == 'trace') else config.log_level
         start_experiment_logging(self.id, log_file, cast(str, log_level))
 
-        self._proc = launcher.start_experiment(self._action, self.id, config, port, debug, run_mode, self.url_prefix)
+        self._proc = launcher.start_experiment(self._action, self.id, config, port, debug, run_mode,
+                                               self.url_prefix, tuner_command_channel, tags)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed
@@ -124,12 +114,27 @@ class Experiment:
         ips = [f'http://{ip}:{port}' for ip in ips if ip]
         msg = 'Web portal URLs: ${CYAN}' + ' '.join(ips)
         _logger.info(msg)
+        return config
 
-    def stop(self) -> None:
+    def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
         """
-        Stop the experiment.
+        Start the experiment in background.
+
+        This method will raise exception on failure.
+        If it returns, the experiment should have been successfully started.
+
+        Parameters
+        ----------
+        port
+            The port of web UI.
+        debug
+            Whether to start in debug mode.
+        run_mode
+            Running the experiment in foreground or background
         """
-        _logger.info('Stopping experiment, please wait...')
+        self._start_impl(port, debug, run_mode, None, [])
+
+    def _stop_impl(self) -> None:
         atexit.unregister(self.stop)
 
         stop_experiment_logging(self.id)
@@ -144,7 +149,23 @@ class Experiment:
         self.id = None  # type: ignore
         self.port = None
         self._proc = None
+
+    def stop(self) -> None:
+        """
+        Stop the experiment.
+        """
+        _logger.info('Stopping experiment, please wait...')
+        self._stop_impl()
         _logger.info('Experiment stopped')
+
+    def _wait_completion(self) -> bool:
+        while True:
+            status = self.get_status()
+            if status == 'DONE' or status == 'STOPPED':
+                return True
+            if status == 'ERROR':
+                return False
+            time.sleep(10)
 
     def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
         """
@@ -159,13 +180,7 @@ class Experiment:
         self.start(port, debug)
         if wait_completion:
             try:
-                while True:
-                    time.sleep(10)
-                    status = self.get_status()
-                    if status == 'DONE' or status == 'STOPPED':
-                        return True
-                    if status == 'ERROR':
-                        return False
+                self._wait_completion()
             except KeyboardInterrupt:
                 _logger.warning('KeyboardInterrupt detected')
                 self.stop()
