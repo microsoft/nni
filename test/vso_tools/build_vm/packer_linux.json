@@ -13,7 +13,7 @@
     "image_sku": "20_04-lts-gen2",
 
     "build_resource_group_name": "nni",
-    "vm_size": "Standard_A2"
+    "vm_size": "Standard_ND6s"
   }],
   "provisioners": [{
     "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
