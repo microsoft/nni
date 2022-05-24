@@ -1,0 +1,37 @@
+{
+  "builders": [{
+    "type": "azure-arm",
+
+    "client_id": "<client_id>",
+
+    "managed_image_name": "<managed_image_name>",
+    "managed_image_resource_group_name": "<resource_group>",
+
+    "os_type": "Windows",
+    "image_publisher": "MicrosoftWindowsServer",
+    "image_offer": "WindowsServer",
+    "image_sku": "2019-Datacenter",
+
+    "os_disk_size_gb": 50,
+
+    "shared_image_gallery_destination": {
+      "subscription": "<subscription_id>",
+      "resource_group": "<resource_group>",
+      "gallery_name": "<gallery_name>",
+      "image_name": "<image_name>",
+      "image_version": "<image_version>",
+      "replication_regions": ["southeastasia", "westus2"],
+      "storage_account_type": "Standard_LRS"
+    },
+
+    "build_resource_group_name": "nni",
+    "vm_size": "Standard_DS2_v2"
+  }],
+  "provisioners": [{
+    "script": "setup_windows.ps1",
+    "type": "powershell",
+    "elevated_user": "Administrator",
+    "elevated_password": "{{ build `Password` }}",
+    "timeout": "30m"
+  }]
+}

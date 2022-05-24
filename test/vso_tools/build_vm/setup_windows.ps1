@@ -1,7 +1,6 @@
 # Choco.
 # https://docs.chocolatey.org/en-us/choco/setup
 # Community version can't customize output directory.
-Set-ExecutionPolicy Bypass -Scope Process -Force
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
 iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
@@ -23,6 +22,13 @@ choco install -y --force swig --version=3.0.12
 swig -version
 
 # Install python.
+$PythonDir = "C:\Python"
+Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"
+Start-Process -FilePath .\python-installer.exe -NoNewWindow -Wait \
+    -ArgumentList "/quiet InstallAllUsers=1 TargetDir=C:\Python\ Include_launcher=0"
+
+# Here are some other comments that might be useful when installing python without elevation.
+#
 # Originally I tried to install the python by downloading from official, and run the installation.
 #
 #     Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"
@@ -48,9 +54,10 @@ swig -version
 # After all this struggle, the workaround here is simple:
 # to install with nuget, then don't use `UsePythonVersion` in the next step.
 # The workaround works because we actually never needs multiple python versions on windows.
-$PythonDir = "C:\Python"
-nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
-$env:path = "$env:path;$PythonDir\python.3.9.12\tools\"
+#
+# $PythonDir = "C:\Python"
+# nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
+# $env:path = "$env:path;$PythonDir\python.3.9.12\tools\"
 
 # Permanently update the PATHs
 # https://codingbee.net/powershell/powershell-make-a-permanent-change-to-the-path-environment-variable
