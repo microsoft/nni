@@ -12,6 +12,7 @@ jobs:
   # TODO: add comments
   - script: |
       export USERNAME="/subscriptions/$(subscription_id)/resourcegroups/nni/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(identity_name)"
+      echo "##vso[task.setvariable variable=username]${USERNAME}"
       az login --identity --allow-no-subscriptions --username $USERNAME
     displayName: az login
 
@@ -55,30 +56,34 @@ jobs:
   - script: |
       set -e
       cd test/vso_tools/build_vm
-      export imgBuilderId="/subscriptions/$(subscription_id)/resourcegroups/nni/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(identity_name)"
       sed -i -e "s/<subscriptionID>/$(subscription_id)/g" linux.json
       sed -i -e "s/<rgName>/nni/g" linux.json
       sed -i -e "s/<imageDefName>/nniLinuxImage/g" linux.json
       sed -i -e "s/<sharedImageGalName>/nniImageGallery/g" linux.json
       sed -i -e "s/<region1>/southeastasia/g" linux.json
       sed -i -e "s/<region2>/westus2/g" linux.json
-      sed -i -e "s%<imgBuilderId>%$imgBuilderId%g" linux.json
+      sed -i -e "s%<imgBuilderId>%$(username)%g" linux.json
       cat linux.json
     displayName: Configure json file
 
   - script: |
+      export TEMPLATE_NAME="linuxImage$(date "+%Y%m%d%H%M%S")"
+      echo "##vso[task.setvariable variable=TEMPLATE_NAME]${TEMPLATE_NAME}"
       az resource create \
         --resource-group nni \
         --properties @test/vso_tools/build_vm/linux.json \
         --is-full-object \
         --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-        -n linuxImage002
+        -n $TEMPLATE_NAME
     displayName: Submit image configuration
 
   - script: |
       az resource invoke-action \
         --resource-group nni \
         --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-        -n linuxImage002 \
+        -n $(template_name) \
         --action Run
     displayName: Start image build
+
+  # TODO: Automatically cleanup the generated configuration here
+  # It doesn't matter for now because we only run this occasionally

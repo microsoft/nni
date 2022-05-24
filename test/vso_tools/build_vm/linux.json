@@ -16,47 +16,30 @@
   "properties": {
     "buildTimeoutInMinutes": 80,
     "vmProfile": {
-      "vmSize": "Standard_D1_v2",
-      "osDiskSizeGB": 30
+      "vmSize": "Standard_ND6s",
+      "osDiskSizeGB": 50
     },
     "source": {
       "type": "PlatformImage",
       "publisher": "Canonical",
       "offer": "UbuntuServer",
-      "sku": "18.04-LTS",
+      "sku": "20.04-LTS",
       "version": "latest"
     },
     "customize": [
       {
         "type": "Shell",
-        "name": "RunScriptFromSource",
-        "scriptUri": "https://raw.githubusercontent.com/danielsollondon/azvmimagebuilder/master/quickquickstarts/customizeScript.sh"
-      },
-      {
-        "type": "Shell",
-        "name": "CheckSumCompareShellScript",
-        "scriptUri": "https://raw.githubusercontent.com/danielsollondon/azvmimagebuilder/master/quickquickstarts/customizeScript2.sh",
-        "sha256Checksum": "ade4c5214c3c675e92c66e2d067a870c5b81b9844b3de3cc72c49ff36425fc93"
-      },
-      {
-        "type": "File",
-        "name": "downloadBuildArtifacts",
-        "sourceUri": "https://raw.githubusercontent.com/danielsollondon/azvmimagebuilder/master/quickquickstarts/exampleArtifacts/buildArtifacts/index.html",
-        "destination": "/tmp/index.html"
-      },
-      {
-        "type": "Shell",
-        "name": "setupBuildPath",
+        "name": "InstallBuildEssentials",
         "inline": [
-          "sudo mkdir /buildArtifacts",
-          "sudo cp /tmp/index.html /buildArtifacts/index.html"
+          "sudo apt update",
+          "sudo apt install -y build-essential cmake uidmap"
         ]
       },
       {
         "type": "Shell",
-        "name": "InstallUpgrades",
+        "name": "InstallAzcli",
         "inline": [
-          "sudo apt install unattended-upgrades"
+          "curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash"
         ]
       }
     ],
@@ -65,10 +48,6 @@
         "type": "SharedImage",
         "galleryImageId": "/subscriptions/<subscriptionID>/resourceGroups/<rgName>/providers/Microsoft.Compute/galleries/<sharedImageGalName>/images/<imageDefName>",
         "runOutputName": "aibLinuxSIG",
-        "artifactTags": {
-          "source": "azureVmImageBuilder",
-          "baseosimg": "ubuntu1804"
-        },
         "replicationRegions": [
           "<region1>",
           "<region2>"
