@@ -25,16 +25,13 @@
     },
 
     "build_resource_group_name": "nni",
-    "vm_size": "Standard_NC6s_v3"
+    "vm_size": "Standard_DS2_v2"
   }],
   "provisioners": [{
     "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
     "inline": [
       "apt-get update",
-      "apt-get upgrade -y",
-      "apt-get -y install nginx",
-
-      "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
+      "sudo apt install -y build-essential cmake uidmap"
     ],
     "inline_shebang": "/bin/sh -x",
     "type": "shell"
