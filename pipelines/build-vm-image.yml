@@ -72,13 +72,13 @@ jobs:
         --properties @test/vso_tools/build_vm/linux.json \
         --is-full-object \
         --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-        -n linuxImage001
+        -n linuxImage002
     displayName: Submit image configuration
 
   - script: |
       az resource invoke-action \
         --resource-group nni \
         --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-        -n linuxImage001 \
+        -n linuxImage002 \
         --action Run
     displayName: Start image build
