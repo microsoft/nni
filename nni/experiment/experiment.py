@@ -10,13 +10,12 @@ from pathlib import Path
 import socket
 from subprocess import Popen
 import time
-from typing import Any
+from typing import Any, cast
 
-import colorama
 import psutil
 from typing_extensions import Literal
 
-import nni.runtime.log
+from nni.runtime.log import start_experiment_logging, stop_experiment_logging
 
 from .config import ExperimentConfig
 from .data import TrialJob, TrialMetricData, TrialResult
@@ -73,8 +72,6 @@ class Experiment:
     """
 
     def __init__(self, config_or_platform: ExperimentConfig | str | list[str] | None):
-        nni.runtime.log.init_logger_for_command_line()
-
         self.config: ExperimentConfig | None = None
         self.id: str = management.generate_experiment_id()
         self.port: int | None = None
@@ -86,6 +83,38 @@ class Experiment:
             self.config = ExperimentConfig(config_or_platform)
         else:
             self.config = config_or_platform
+
+    def _start_impl(self, port: int, debug: bool, run_mode: RunMode,
+                    tuner_command_channel: str | None,
+                    tags: list[str] = []) -> ExperimentConfig:
+        assert self.config is not None
+        if run_mode is not RunMode.Detach:
+            atexit.register(self.stop)
+
+        config = self.config.canonical_copy()
+        if config.use_annotation:
+            raise RuntimeError('NNI annotation is not supported by Python experiment API.')
+
+        log_file = Path(config.experiment_working_directory, self.id, 'log', 'experiment.log')
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        log_level = 'debug' if (debug or config.log_level == 'trace') else config.log_level
+        start_experiment_logging(self.id, log_file, cast(str, log_level))
+
+        self._proc = launcher.start_experiment(self._action, self.id, config, port, debug, run_mode,
+                                               self.url_prefix, tuner_command_channel, tags)
+        assert self._proc is not None
+
+        self.port = port  # port will be None if start up failed
+
+        ips = [config.nni_manager_ip]
+        for interfaces in psutil.net_if_addrs().values():
+            for interface in interfaces:
+                if interface.family == socket.AF_INET:
+                    ips.append(interface.address)
+        ips = [f'http://{ip}:{port}' for ip in ips if ip]
+        msg = 'Web portal URLs: ${CYAN}' + ' '.join(ips)
+        _logger.info(msg)
+        return config
 
     def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
         """
@@ -100,43 +129,15 @@ class Experiment:
             The port of web UI.
         debug
             Whether to start in debug mode.
+        run_mode
+            Running the experiment in foreground or background
         """
-        assert self.config is not None
-        if run_mode is not RunMode.Detach:
-            atexit.register(self.stop)
+        self._start_impl(port, debug, run_mode, None, [])
 
-        config = self.config.canonical_copy()
-        if config.use_annotation:
-            raise RuntimeError('NNI annotation is not supported by Python experiment API.')
-
-        if config.experiment_working_directory is not None:
-            log_dir = Path(config.experiment_working_directory, self.id, 'log')
-        else:  # this should never happen in latest version, keep it until v2.7 for potential compatibility
-            log_dir = Path.home() / f'nni-experiments/{self.id}/log'
-        nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
-
-        self._proc = launcher.start_experiment(self._action, self.id, config, port, debug, run_mode, self.url_prefix)
-        assert self._proc is not None
-
-        self.port = port  # port will be None if start up failed
-
-        ips = [config.nni_manager_ip]
-        for interfaces in psutil.net_if_addrs().values():
-            for interface in interfaces:
-                if interface.family == socket.AF_INET:
-                    ips.append(interface.address)
-        ips = [f'http://{ip}:{port}' for ip in ips if ip]
-        msg = 'Web portal URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
-        _logger.info(msg)
-
-    def stop(self) -> None:
-        """
-        Stop the experiment.
-        """
-        _logger.info('Stopping experiment, please wait...')
+    def _stop_impl(self) -> None:
         atexit.unregister(self.stop)
 
-        nni.runtime.log.stop_experiment_log(self.id)
+        stop_experiment_logging(self.id)
         if self._proc is not None:
             try:
                 rest.delete(self.port, '/experiment', self.url_prefix)
@@ -148,7 +149,23 @@ class Experiment:
         self.id = None  # type: ignore
         self.port = None
         self._proc = None
+
+    def stop(self) -> None:
+        """
+        Stop the experiment.
+        """
+        _logger.info('Stopping experiment, please wait...')
+        self._stop_impl()
         _logger.info('Experiment stopped')
+
+    def _wait_completion(self) -> bool:
+        while True:
+            status = self.get_status()
+            if status == 'DONE' or status == 'STOPPED':
+                return True
+            if status == 'ERROR':
+                return False
+            time.sleep(10)
 
     def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool | None:
         """

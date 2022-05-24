@@ -20,10 +20,6 @@ stages:
         platform: ubuntu-latest
 
     - script: |
-        sudo apt-get install -y pandoc
-      displayName: Install pandoc
-
-    - script: |
         cd docs
         rstcheck -r source \
           --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs \
@@ -33,30 +29,27 @@ stages:
 
     - script: |
         cd docs
-        make -e SPHINXOPTS="-W --keep-going -T -q" html
+        sphinx-build -W --keep-going -T -q source build/html
       displayName: Sphinx sanity check
 
     - script: |
         set -e
         cd docs
-        rm -rf build
         sudo apt-get install -y gettext
         python tools/translation_patch.py
-        make -e SPHINXOPTS="-W --keep-going -T -q -D language='zh'" html
+        sphinx-build -W --keep-going -T -q -D language=zh source build/html_zh
       displayName: Sphinx sanity check (Chinese)
 
     - script: |
         set -e
         cd docs
-        rm -rf build
         make i18n
         git diff --exit-code source/locales
       displayName: Translation up-to-date
 
     - script: |
         cd docs
-        rm -rf build
-        make -e SPHINXOPTS="-W -T -b linkcheck -q --keep-going" html
+        sphinx-build -b linkcheck -W --keep-going -T -q source build/linkcheck
       displayName: External links integrity check
 
   - job: python

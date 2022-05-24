@@ -303,8 +303,11 @@ class NNIManager implements Manager {
         }
 
         this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
+        // NOTE: this sending TERMINATE should be out of the if clause,
+        // because when python dispatcher is started before nnimanager
+        // this.dispatcherPid would not have a valid value (i.e., not >0).
+        this.dispatcher.sendCommand(TERMINATE);
         if (this.dispatcherPid > 0) {
-            this.dispatcher.sendCommand(TERMINATE);
             // gracefully terminate tuner and assessor here, wait at most 30 seconds.
             for (let i: number = 0; i < 30; i++) {
                 if (!await isAlive(this.dispatcherPid)) {

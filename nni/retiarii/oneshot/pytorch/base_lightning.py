@@ -18,6 +18,7 @@ import nni.retiarii.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
+from nni.typehint import Literal
 from .supermodule.base import BaseSuperNetModule
 
 __all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
@@ -58,7 +59,8 @@ def traverse_and_mutate_submodules(
     module_list = []
 
     def apply(m):
-        for name, child in m.named_children():
+        # Need to call list() here because the loop body might replace some children in-place.
+        for name, child in list(m.named_children()):
             # post-order DFS
             if not topdown:
                 apply(child)
@@ -93,6 +95,8 @@ def traverse_and_mutate_submodules(
                     break
 
             if isinstance(mutate_result, BaseSuperNetModule):
+                # Replace child with the mutate result, and DFS this one
+                child = mutate_result
                 module_list.append(mutate_result)
 
             # pre-order DFS
@@ -111,9 +115,9 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
     primitive_list = (
         nas_nn.LayerChoice,
         nas_nn.InputChoice,
-        nas_nn.ValueChoice,
         nas_nn.Repeat,
         nas_nn.NasBench101Cell,
+        # nas_nn.ValueChoice,       # could be false positive
         # nas_nn.Cell,              # later
         # nas_nn.NasBench201Cell,   # forward = supernet
     )
@@ -320,9 +324,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
             # under v1.5
             w_optimizers, lr_schedulers, self.frequencies, monitor = \
                 self.trainer._configure_optimizers(self.model.configure_optimizers())  # type: ignore
-            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization) # type: ignore
+            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)  # type: ignore
 
-        if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers): # type: ignore
+        if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):  # type: ignore
             raise Exception(
                 "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
             )
@@ -334,21 +338,21 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return arc_optimizers + w_optimizers, lr_schedulers
 
     def on_train_start(self):
-        # redirect the access to trainer/log to this module
-        # but note that we might be missing other attributes,
-        # which could potentially be a problem
-        self.model.trainer = self.trainer  # type: ignore
-        self.model.log = self.log
         return self.model.on_train_start()
 
     def on_train_end(self):
         return self.model.on_train_end()
 
     def on_fit_start(self):
-        return self.model.on_train_start()
+        # redirect the access to trainer/log to this module
+        # but note that we might be missing other attributes,
+        # which could potentially be a problem
+        self.model.trainer = self.trainer  # type: ignore
+        self.model.log = self.log
+        return self.model.on_fit_start()
 
     def on_fit_end(self):
-        return self.model.on_train_end()
+        return self.model.on_fit_end()
 
     def on_train_batch_start(self, batch, batch_idx, unused=0):
         return self.model.on_train_batch_start(batch, batch_idx, unused)
@@ -356,6 +360,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_train_batch_end(self, outputs, batch, batch_idx, unused=0):
         return self.model.on_train_batch_end(outputs, batch, batch_idx, unused)
 
+    # Deprecated hooks in pytorch-lightning
     def on_epoch_start(self):
         return self.model.on_epoch_start()
 
@@ -427,7 +432,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             apply(lr_schedulers)
 
-    def call_weight_optimizers(self, method):
+    def call_weight_optimizers(self, method: Literal['step', 'zero_grad']):
         """
         Function that imitates lightning trainer's behavior of calling user's optimizers. Since auto_optimization is turned off by this
         class, you can use this function to make user optimizers behave as they were automatically handled by the lightning trainer.

@@ -23,6 +23,10 @@ from nni.retiarii.nn.pytorch.mutator import process_evaluator_mutations, process
 from nni.retiarii.serializer import model_wrapper
 from nni.retiarii.utils import ContextStack, NoContextError, original_state_dict_hooks
 
+from .models import (
+    CellSimple, CellDefaultArgs, CellCustomProcessor, CellLooseEnd, CellOpFactory
+)
+
 
 class EnumerateSampler(Sampler):
     def __init__(self):
@@ -924,17 +928,7 @@ class Python(GraphIR):
             model = Net()
 
     def test_cell(self):
-        @model_wrapper
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)],
-                                    num_nodes=4, num_ops_per_node=2, num_predecessors=2, merge_op='all')
-
-            def forward(self, x, y):
-                return self.cell(x, y)
-
-        raw_model, mutators = self._get_model_with_mutators(Net())
+        raw_model, mutators = self._get_model_with_mutators(CellSimple())
         for _ in range(10):
             sampler = EnumerateSampler()
             model = raw_model
@@ -943,16 +937,7 @@ class Python(GraphIR):
             self.assertTrue(self._get_converted_pytorch_model(model)(
                 torch.randn(1, 16), torch.randn(1, 16)).size() == torch.Size([1, 64]))
 
-        @model_wrapper
-        class Net2(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], num_nodes=4)
-
-            def forward(self, x):
-                return self.cell(x)
-
-        raw_model, mutators = self._get_model_with_mutators(Net2())
+        raw_model, mutators = self._get_model_with_mutators(CellDefaultArgs())
         for _ in range(10):
             sampler = EnumerateSampler()
             model = raw_model
@@ -961,34 +946,7 @@ class Python(GraphIR):
             self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(1, 16)).size() == torch.Size([1, 64]))
 
     def test_cell_predecessors(self):
-        from typing import List, Tuple
-
-        class Preprocessor(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.linear = nn.Linear(3, 16)
-
-            def forward(self, x: List[torch.Tensor]) -> List[torch.Tensor]:
-                return [self.linear(x[0]), x[1]]
-
-        class Postprocessor(nn.Module):
-            def forward(self, this: torch.Tensor, prev: List[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
-                return prev[-1], this
-
-        @model_wrapper
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.cell = nn.Cell({
-                    'first': nn.Linear(16, 16),
-                    'second': nn.Linear(16, 16, bias=False)
-                }, num_nodes=4, num_ops_per_node=2, num_predecessors=2,
-                preprocessor=Preprocessor(), postprocessor=Postprocessor(), merge_op='all')
-
-            def forward(self, x, y):
-                return self.cell([x, y])
-
-        raw_model, mutators = self._get_model_with_mutators(Net())
+        raw_model, mutators = self._get_model_with_mutators(CellCustomProcessor())
         for _ in range(10):
             sampler = EnumerateSampler()
             model = raw_model
@@ -1000,17 +958,7 @@ class Python(GraphIR):
             self.assertTrue(result[1].size() == torch.Size([1, 64]))
 
     def test_cell_loose_end(self):
-        @model_wrapper
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)],
-                                    num_nodes=4, num_ops_per_node=2, num_predecessors=2, merge_op='loose_end')
-
-            def forward(self, x, y):
-                return self.cell([x, y])
-
-        raw_model, mutators = self._get_model_with_mutators(Net())
+        raw_model, mutators = self._get_model_with_mutators(CellLooseEnd())
         any_not_all = False
         for _ in range(10):
             sampler = EnumerateSampler()
@@ -1026,19 +974,7 @@ class Python(GraphIR):
         self.assertTrue(any_not_all)
 
     def test_cell_complex(self):
-        @model_wrapper
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.cell = nn.Cell({
-                    'first': lambda _, __, chosen: nn.Linear(3 if chosen == 0 else 16, 16),
-                    'second': lambda _, __, chosen: nn.Linear(3 if chosen == 0 else 16, 16, bias=False)
-                }, num_nodes=4, num_ops_per_node=2, num_predecessors=2, merge_op='all')
-
-            def forward(self, x, y):
-                return self.cell([x, y])
-
-        raw_model, mutators = self._get_model_with_mutators(Net())
+        raw_model, mutators = self._get_model_with_mutators(CellOpFactory())
         for _ in range(10):
             sampler = EnumerateSampler()
             model = raw_model
