@@ -4,6 +4,9 @@ set -e
 set -x
 
 # Build essentials are required.
+# But clean first...
+sudo rm /var/lib/apt/lists/* -vf
+sudo apt clean
 sudo apt update
 sudo apt install -y build-essential cmake uidmap
 
