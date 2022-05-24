@@ -11,23 +11,35 @@ jobs:
 
   # TODO: add comments
   - script: |
-      export USERNAME="/subscriptions/$(subscription_id)/resourcegroups/nni/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$(identity_name)"
-      echo "##vso[task.setvariable variable=username]${USERNAME}"
-      az login --identity --allow-no-subscriptions --username $USERNAME
+      az login --identity --allow-no-subscriptions --username $(identity_id)
     displayName: az login
+
+  - script: |
+      set -e
+      curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+      sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      sudo apt-get update && sudo apt-get install packer
+    displayName: Install packer
+
+  - script: |
+      cd test/vso_tools/build_vm
+      sed -i -e "s/<client_id>/$(identity_id)/g" packer_linux.json
+      cat packer_linux.json
+      packer build packer_linux.json
+    displayName: Packer build
 
   # Make sure all these are registered.
   # If not, might need az provider register -n xxx
   # Need subscription-write access.
 
-  - script: |
-      set -e
-      az provider show -n Microsoft.VirtualMachineImages -o json
-      az provider show -n Microsoft.KeyVault -o json
-      az provider show -n Microsoft.Compute -o json
-      az provider show -n Microsoft.Storage -o json
-      az provider show -n Microsoft.Network -o json
-    displayName: Register features
+  # - script: |
+  #     set -e
+  #     az provider show -n Microsoft.VirtualMachineImages -o json
+  #     az provider show -n Microsoft.KeyVault -o json
+  #     az provider show -n Microsoft.Compute -o json
+  #     az provider show -n Microsoft.Storage -o json
+  #     az provider show -n Microsoft.Network -o json
+  #   displayName: Register features
 
   # Need to create an image gallery before this.
   # Only need to create once.
@@ -36,54 +48,52 @@ jobs:
   # Add a image definition (also only once).
   # az sig image-definition create -g <resource_group> \
   #   --gallery-name <sig_name> \
-  #   --gallery-image-definition <image_def> \
-  #   --publisher <publisher> \
-  #   --offer <offer> \
-  #   --sku <sku> \
-  #   --os-type <os_type>
+  #   --gallery-image-definition <image_def>
+  #
   # For example,
   # az sig image-definition create -g nni --gallery-name nniImageGallery \
   #   --gallery-image-definition nniLinuxImage \
   #   --publisher NNI \
   #   --offer ubuntu \
-  #   --sku 18.04-nni \
-  #   --os-type Linux
+  #   --sku 20_04-nni \
+  #   --os-type Linux \
+  #   --hyper-v-generation V2
 
-  - script: |
-      az sig image-definition list --gallery-name nniImageGallery --resource-group nni
-    displayName: List image definitions
+  # - script: |
+  #     az sig image-definition list --gallery-name nniImageGallery --resource-group nni
+  #   displayName: List image definitions
 
-  - script: |
-      set -e
-      cd test/vso_tools/build_vm
-      sed -i -e "s/<subscriptionID>/$(subscription_id)/g" linux.json
-      sed -i -e "s/<rgName>/nni/g" linux.json
-      sed -i -e "s/<imageDefName>/nniLinuxImage/g" linux.json
-      sed -i -e "s/<sharedImageGalName>/nniImageGallery/g" linux.json
-      sed -i -e "s/<region1>/southeastasia/g" linux.json
-      sed -i -e "s/<region2>/westus2/g" linux.json
-      sed -i -e "s%<imgBuilderId>%$(username)%g" linux.json
-      cat linux.json
-    displayName: Configure json file
+  # - script: |
+  #     set -e
+  #     cd test/vso_tools/build_vm
+  #     sed -i -e "s/<subscriptionID>/$(subscription_id)/g" linux.json
+  #     sed -i -e "s/<rgName>/nni/g" linux.json
+  #     sed -i -e "s/<imageDefName>/nniLinuxImage/g" linux.json
+  #     sed -i -e "s/<sharedImageGalName>/nniImageGallery/g" linux.json
+  #     sed -i -e "s/<region1>/southeastasia/g" linux.json
+  #     sed -i -e "s/<region2>/westus2/g" linux.json
+  #     sed -i -e "s%<imgBuilderId>%$(username)%g" linux.json
+  #     cat linux.json
+  #   displayName: Configure json file
 
-  - script: |
-      export TEMPLATE_NAME="linuxImage$(date "+%Y%m%d%H%M%S")"
-      echo "##vso[task.setvariable variable=TEMPLATE_NAME]${TEMPLATE_NAME}"
-      az resource create \
-        --resource-group nni \
-        --properties @test/vso_tools/build_vm/linux.json \
-        --is-full-object \
-        --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-        -n $TEMPLATE_NAME
-    displayName: Submit image configuration
+  # - script: |
+  #     export TEMPLATE_NAME="linuxImage$(date "+%Y%m%d%H%M%S")"
+  #     echo "##vso[task.setvariable variable=TEMPLATE_NAME]${TEMPLATE_NAME}"
+  #     az resource create \
+  #       --resource-group nni \
+  #       --properties @test/vso_tools/build_vm/linux.json \
+  #       --is-full-object \
+  #       --resource-type Microsoft.VirtualMachineImages/imageTemplates \
+  #       -n $TEMPLATE_NAME
+  #   displayName: Submit image configuration
 
-  - script: |
-      az resource invoke-action \
-        --resource-group nni \
-        --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-        -n $(template_name) \
-        --action Run
-    displayName: Start image build
+  # - script: |
+  #     az resource invoke-action \
+  #       --resource-group nni \
+  #       --resource-type Microsoft.VirtualMachineImages/imageTemplates \
+  #       -n $(template_name) \
+  #       --action Run
+  #   displayName: Start image build
 
   # TODO: Automatically cleanup the generated configuration here
   # It doesn't matter for now because we only run this occasionally
