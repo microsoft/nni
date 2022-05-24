@@ -7,6 +7,7 @@
     "storage_account": "nni",
 
     "managed_image_name": "nni-test-image",
+    "managed_image_resource_group_name": "nni",
 
     "os_type": "Linux",
     "image_publisher": "Canonical",
