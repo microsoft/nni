@@ -12,7 +12,11 @@ jobs:
   # TODO: add comments
   - script: |
       az login --identity --allow-no-subscriptions --username $(identity_id)
-    displayName: az login
+    displayName: Login to Azure
+
+  - script: |
+      az image list -g nni
+    displayName: List existing images (and delete)
 
   - script: |
       set -e
@@ -28,6 +32,9 @@ jobs:
       sed -i -e "s/<subscription_id>/$(subscription_id)/g" packer_linux.json
       sed -i -e "s/<image_version>/${VERSION}/g" packer_linux.json
       cat packer_linux.json
+    displayName: Prepare configuration
+
+  - script: |
       packer build packer_linux.json
     displayName: Packer build
 

@@ -28,12 +28,7 @@
     "vm_size": "Standard_DS2_v2"
   }],
   "provisioners": [{
-    "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
-    "inline": [
-      "apt-get update",
-      "apt-get install -y build-essential cmake uidmap"
-    ],
-    "inline_shebang": "/bin/sh -x",
+    "script": "setup_linux.sh",
     "type": "shell"
   }]
 }
