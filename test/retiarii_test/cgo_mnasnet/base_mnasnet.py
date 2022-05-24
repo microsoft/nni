@@ -4,7 +4,6 @@ import warnings
 
 import torch
 import torch.nn as torch_nn
-from torchvision.models.utils import load_state_dict_from_url
 import torch.nn.functional as F
 
 import sys

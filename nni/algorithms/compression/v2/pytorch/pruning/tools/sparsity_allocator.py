@@ -159,7 +159,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
 class Conv2dDependencyAwareAllocator(SparsityAllocator):
     """
-    A specify allocator for Conv2d with dependency-aware.
+    An allocator specific for Conv2d with dependency-aware.
     """
 
     def __init__(self, pruner: Pruner, dim: int, dummy_input: Any):
@@ -178,26 +178,42 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         self._get_dependency()
         masks = {}
         grouped_metrics = {}
+        grouped_names = set()
+        # combine metrics with channel dependence
         for idx, names in enumerate(self.channel_depen):
             grouped_metric = {name: metrics[name] for name in names if name in metrics}
+            grouped_names.update(grouped_metric.keys())
             if self.continuous_mask:
                 for name, metric in grouped_metric.items():
                     metric *= self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)  # type: ignore
             if len(grouped_metric) > 0:
                 grouped_metrics[idx] = grouped_metric
+        # ungrouped metrics stand alone as a group
+        ungrouped_names = set(metrics.keys()).difference(grouped_names)
+        for name in ungrouped_names:
+            idx += 1  # type: ignore
+            grouped_metrics[idx] = {name: metrics[name]}
+
+        # generate masks
         for _, group_metric_dict in grouped_metrics.items():
             group_metric = self._group_metric_calculate(group_metric_dict)
 
             sparsities = {name: self.pruner.get_modules_wrapper()[name].config['total_sparsity'] for name in group_metric_dict.keys()}
             min_sparsity = min(sparsities.values())
 
-            conv2d_groups = [self.group_depen[name] for name in group_metric_dict.keys()]
-            max_conv2d_group = np.lcm.reduce(conv2d_groups)
+            # generate group mask
+            conv2d_groups, group_mask = [], []
+            for name in group_metric_dict.keys():
+                if name in self.group_depen:
+                    conv2d_groups.append(self.group_depen[name])
+                else:
+                    # not in group_depen means not a Conv2d layer, in this case, assume the group number is 1
+                    conv2d_groups.append(1)
 
+            max_conv2d_group = np.lcm.reduce(conv2d_groups)
             pruned_per_conv2d_group = int(group_metric.numel() / max_conv2d_group * min_sparsity)
             conv2d_group_step = int(group_metric.numel() / max_conv2d_group)
 
-            group_mask = []
             for gid in range(max_conv2d_group):
                 _start = gid * conv2d_group_step
                 _end = (gid + 1) * conv2d_group_step
@@ -209,11 +225,15 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
                 group_mask.append(conv2d_group_mask)
             group_mask = torch.cat(group_mask, dim=0)
 
+            # generate final mask
             for name, metric in group_metric_dict.items():
                 # We assume the metric value are all positive right now.
                 metric = metric * group_mask
                 pruned_num = int(sparsities[name] * len(metric))
-                threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
+                if pruned_num == 0:
+                    threshold = metric.min() - 1
+                else:
+                    threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
                 mask = torch.gt(metric, threshold).type_as(metric)
                 masks[name] = self._expand_mask(name, mask)
                 if self.continuous_mask:

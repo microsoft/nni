@@ -18,7 +18,7 @@ async function startProcess(): Promise<void> {
     // create fake assessor process
     const stdio: StdioOptions = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
 
-    const dispatcherCmd: string = getMsgDispatcherCommand(
+    const dispatcherCmd: string[] = getMsgDispatcherCommand(
         // Mock tuner config
         <any>{
             experimentName: 'exp1',

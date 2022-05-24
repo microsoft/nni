@@ -12,8 +12,11 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
-from .supermodule.sampling import PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
+from .supermodule.sampling import (
+    PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy,
+    PathSamplingCell, PathSamplingRepeat
+)
 from .enas import ReinforceController, ReinforceField
 
 
@@ -56,6 +59,8 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
         hooks = [
             PathSamplingLayer.mutate,
             PathSamplingInput.mutate,
+            PathSamplingRepeat.mutate,
+            PathSamplingCell.mutate,
         ]
         hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
         hooks.append(no_default_hook)
