@@ -26,6 +26,7 @@ jobs:
     displayName: Install packer
 
   - script: |
+      set -e
       cd test/vso_tools/build_vm
       export VERSION=1.0.$(date "+%Y%m%d%H%M%S")
       sed -i -e "s/<client_id>/$(identity_id)/g" packer_linux.json
@@ -35,6 +36,7 @@ jobs:
     displayName: Prepare configuration
 
   - script: |
+      cd test/vso_tools/build_vm
       packer build packer_linux.json
     displayName: Packer build
 
