@@ -84,7 +84,8 @@ def create_experiment(args):
     exp.url_prefix = url_prefix
 
     if foreground:
-        exp.run(port, debug=debug)
+        exp.start(port, debug, RunMode.Foreground)
+        exp._wait_completion()
 
     else:
         exp.start(port, debug, RunMode.Detach)
