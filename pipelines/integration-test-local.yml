@@ -6,64 +6,62 @@ schedules:
     include: [ master ]
 
 jobs:
-- job: linux
-  pool: nni-it
-  timeoutInMinutes: 120
-
-  steps:
-  - template: templates/setup-non-ms-hosted-agent.yml
-
-  - template: templates/install-dependencies.yml
-    parameters:
-      platform: ubuntu-latest-gpu
-
-  - template: templates/install-nni.yml
-
-  - script: |
-      set -e
-      cd examples/tuners/customized_tuner
-      python setup.py develop
-      nnictl algo register --meta meta_file.yml
-    displayName: Install customized tuner
-
-  - script: |
-      cd test
-      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
-    displayName: Integration test
-
-  - template: templates/save-crashed-info.yml
-
-# - job: windows
-#   pool: nni-it-windows
+# - job: linux
+#   pool: nni-it
 #   timeoutInMinutes: 120
 
 #   steps:
-#   - template: templates/setup-non-ms-hosted-agent-windows.yml
+#   - template: templates/setup-non-ms-hosted-agent.yml
 
 #   - template: templates/install-dependencies.yml
 #     parameters:
-#       platform: windows-gpu
+#       platform: ubuntu-latest-gpu
 
 #   - template: templates/install-nni.yml
-#     parameters:
-#       user: false
 
 #   - script: |
+#       set -e
 #       cd examples/tuners/customized_tuner
-#       python setup.py develop --user
+#       python setup.py develop
 #       nnictl algo register --meta meta_file.yml
-#     displayName: Install example customized tuner
-
-#   # TODO: remove unit test here
-
-#   - script: |
-#       cd test
-#       python -m pytest ut
-#       echo "TODO: TypeScript UT"
-#     displayName: Unit test
-#     continueOnError: true
+#     displayName: Install customized tuner
 
 #   - script: |
 #       cd test
 #       python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
 #     displayName: Integration test
+
+#   - template: templates/save-crashed-info.yml
+
+- job: windows
+  pool: nni-it-windows
+  timeoutInMinutes: 120
+
+  steps:
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: windows
+
+  - template: templates/install-nni.yml
+    parameters:
+      user: false
+
+  - script: |
+      cd examples/tuners/customized_tuner
+      python setup.py develop --user
+      nnictl algo register --meta meta_file.yml
+    displayName: Install example customized tuner
+
+  # TODO: remove unit test here
+
+  - script: |
+      cd test
+      python -m pytest ut
+      echo "TODO: TypeScript UT"
+    displayName: Unit test
+    continueOnError: true
+
+  - script: |
+      cd test
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
+    displayName: Integration test
