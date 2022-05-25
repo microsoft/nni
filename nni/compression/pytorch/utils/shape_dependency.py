@@ -85,6 +85,8 @@ def reshape_break_channel_dependency(op_node):
     """
     in_shape = op_node.auxiliary['in_shape']
     out_shape = op_node.auxiliary['out_shape']
+    if in_shape or out_shape:
+        return True
     in_channel = in_shape[1]
     out_channel = out_shape[1]
     return in_channel != out_channel
@@ -137,8 +139,10 @@ class ChannelDependency(Dependency):
         parent_layers = []
         queue = []
         queue.append(node)
+        viewed_nodes = set()
         while queue:
             curnode = queue.pop(0)
+            viewed_nodes.add(curnode.name)
             if curnode.op_type in self.target_types:
                 # find the first met conv
                 parent_layers.append(curnode.name)
@@ -147,7 +151,7 @@ class ChannelDependency(Dependency):
                 if reshape_break_channel_dependency(curnode):
                     continue
             parents = self.graph.find_predecessors(curnode.unique_name)
-            parents = [self.graph.name_to_node[name] for name in parents]
+            parents = [self.graph.name_to_node[name] for name in parents if name not in viewed_nodes]
             for parent in parents:
                 queue.append(parent)
 
