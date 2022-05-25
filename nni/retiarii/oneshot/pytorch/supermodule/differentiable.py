@@ -27,7 +27,7 @@ _logger = logging.getLogger(__name__)
 
 __all__ = [
     'DifferentiableMixedLayer', 'DifferentiableMixedInput',
-    'DifferentiableRepeat', 'DifferentiableCell',
+    'DifferentiableMixedRepeat', 'DifferentiableMixedCell',
     'MixedOpDifferentiablePolicy'
 ]
 
