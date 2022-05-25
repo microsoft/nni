@@ -120,7 +120,7 @@ class Scaling:
         """
         # step 1: unsqueeze the target tensor where -1 is located in kernel_size.
         unsqueezed_dims = [dim for (dim, step) in enumerate(kernel_size) if step == -1]
-        new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [target] + unsqueezed_dims)
+        new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [target] + unsqueezed_dims)  # type: ignore
 
         # step 2: build the _expand_size and unsqueeze target tensor on each dim
         _expand_size = []
@@ -132,7 +132,7 @@ class Scaling:
                 assert b % a == 0
                 _expand_size.append(b // a)
                 _expand_size.append(a)
-        new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [new_target] + [2 * _ + 1 for _ in range(len(expand_size))])
+        new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [new_target] + [2 * _ + 1 for _ in range(len(expand_size))])  # type: ignore
 
         # step 3: expanding the new target to _expand_size and reshape to expand_size.
         result = new_target.expand(_expand_size).reshape(expand_size)
@@ -173,6 +173,6 @@ class Scaling:
         That means the shape will not change after `shrink` then `expand`.
         """
         target = target if isinstance(target, Tensor) else torch.rand(target)
-        if self.expand((self.shrink(target)), target.shape).shape != target.shape:
+        if self.expand((self.shrink(target)), list(target.shape)).shape != target.shape:
             raise ValueError(f'The tensor with shape {target.shape}, can not shape-lossless scaling with ' +
                              f'kernel size is {self.kernel_size} and padding_kernel is {self.padding_kernel}.')

@@ -21,7 +21,7 @@ def get_nested_attr(__o: object, __name: str, *args) -> Any:
     """
     def _getattr(__o, __name):
         return getattr(__o, __name, *args)
-    return reduce(_getattr, [__o] + __name.split('.'))
+    return reduce(_getattr, [__o] + __name.split('.'))  # type: ignore
 
 
 def set_nested_attr(__obj: object, __name: str, __value: Any):
