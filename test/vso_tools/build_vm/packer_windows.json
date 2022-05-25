@@ -12,8 +12,6 @@
     "image_offer": "WindowsServer",
     "image_sku": "2019-Datacenter",
 
-    "os_disk_size_gb": 127,
-
     "shared_image_gallery_destination": {
       "subscription": "<subscription_id>",
       "resource_group": "<resource_group>",
@@ -27,9 +25,11 @@
     "build_resource_group_name": "nni",
     "vm_size": "Standard_D2_v2",
 
-    "winrm_use_ssl": true,
-    "winrm_insecure": true,
-    "winrm_timeout": "15m"
+    "communicator": "winrm",
+    "winrm_use_ssl": "true",
+    "winrm_insecure": "true",
+    "winrm_timeout": "10m",
+    "winrm_username": "packer"
   }],
   "provisioners": [{
     "script": "setup_windows.ps1",
