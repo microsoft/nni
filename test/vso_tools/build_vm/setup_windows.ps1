@@ -58,6 +58,7 @@ Write-Host "Installing Python..."
 $PythonDir = "C:\Python"
 Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"
 Start-Process -FilePath .\python-installer.exe -NoNewWindow -Wait -ArgumentList "/quiet InstallAllUsers=1 TargetDir=C:\Python\ Include_launcher=0"
+dir $PythonDir
 $env:path = "$env:path;$PythonDir"
 Remove-Item python-installer.exe
 Write-Host "Verify Python installation..."
