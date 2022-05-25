@@ -156,7 +156,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Extra mutation hooks to support customized mutation on primitives other than built-ins.
 
         Mutation hooks are callable that inputs an Module and returns a
-        :class:`BaseSuperNetModule <nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule>`.
+        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`.
         They are invoked in :meth:`traverse_and_mutate_submodules`, on each submodules.
         For each submodule, the hook list are invoked subsequently,
         the later hooks can see the result from previous hooks.
@@ -177,17 +177,22 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         The returned arguments can be also one of the three kinds:
 
-        1. tuple of: :class:`BaseSuperNetModule <nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule>` or None, and boolean,
+        1. tuple of: :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None, and boolean,
         2. boolean,
-        3. :class:`BaseSuperNetModule <nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule>` or None.
+        3. :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None.
 
-        The boolean value is ``suppress`` indicates whether the folliwng hooks should be called.
+        The boolean value is ``suppress`` indicates whether the following hooks should be called.
         When it's true, it suppresses the subsequent hooks, and they will never be invoked.
         Without boolean value specified, it's assumed to be false.
         If a none value appears on the place of
-        :class:`BaseSuperNetModule <nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule>`,
+        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
         it means the hook suggests to
         keep the module unchanged, and nothing will happen.
+
+        An example of mutation hook is given in :func:`no_default_hook`.
+        However it's recommended to implement mutation hooks by deriving
+        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
+        and add its classmethod ``mutate`` to this list.
     """
 
     _inner_module_note = """inner_module : pytorch_lightning.LightningModule

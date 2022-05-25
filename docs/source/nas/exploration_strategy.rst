@@ -53,7 +53,7 @@ Multi-trial strategy
 
 Multi-trial NAS means each sampled model from model space is trained independently. A typical multi-trial NAS is `NASNet <https://arxiv.org/abs/1707.07012>`__. In multi-trial NAS, users need model evaluator to evaluate the performance of each sampled model, and need an exploration strategy to sample models from a defined model space. Here, users could use NNI provided model evaluators or write their own model evalutor. They can simply choose a exploration strategy. Advanced users can also customize new exploration strategy.
 
-To use an exploration strategy, users simply instantiate an exploration strategy and pass the instantiated object to :class:`RetiariiExperiment <nni.retiarii.experiment.pytorch.RetiariiExperiment>`. Below is a simple example.
+To use an exploration strategy, users simply instantiate an exploration strategy and pass the instantiated object to :class:`~nni.retiarii.experiment.pytorch.RetiariiExperiment`. Below is a simple example.
 
 .. code-block:: python
 
@@ -69,7 +69,7 @@ One-shot strategy
 
 One-shot NAS algorithms leverage weight sharing among models in neural architecture search space to train a supernet, and use this supernet to guide the selection of better models. This type of algorihtms greatly reduces computational resource compared to independently training each model from scratch (which we call "Multi-trial NAS").
 
-Starting from v2.8, the usage of one-shot strategies are much alike to multi-trial strategies. Users simply need to create a strategy and run :class:`RetiariiExperiment <nni.retiarii.experiment.pytorch.RetiariiExperiment>`. Since one-shot strategies will manipulate the training recipe, to use a one-shot strategy, the evaluator needs to be one of the :ref:`PyTorch-Lightning evaluators <lightning-evaluator>`, either built-in or customized. Example follows:
+Starting from v2.8, the usage of one-shot strategies are much alike to multi-trial strategies. Users simply need to create a strategy and run :class:`~nni.retiarii.experiment.pytorch.RetiariiExperiment`. Since one-shot strategies will manipulate the training recipe, to use a one-shot strategy, the evaluator needs to be one of the :ref:`PyTorch-Lightning evaluators <lightning-evaluator>`, either built-in or customized. Example follows:
 
 .. code-block:: python
 
@@ -104,7 +104,7 @@ The usage of one-shot NAS strategy is a little different from multi-trial strate
    )
    trainer.fit()
 
-One-shot strategy can be used without :class:`RetiariiExperiment <nni.retiarii.experiment.pytorch.RetiariiExperiment>`. Thus, the ``trainer.fit()`` here runs the experiment locally.
+One-shot strategy can be used without :class:`~nni.retiarii.experiment.pytorch.RetiariiExperiment`. Thus, the ``trainer.fit()`` here runs the experiment locally.
 
 After ``trainer.fit()`` completes, we can use ``trainer.export()`` to export the searched architecture (a dict of choices) to a file.
 
