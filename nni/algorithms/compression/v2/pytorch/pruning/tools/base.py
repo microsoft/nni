@@ -328,7 +328,7 @@ class SparsityAllocator:
 
     def __init__(self, pruner: Pruner, scalors: Dict[str, Scaling] | Scaling | None = None, continuous_mask: bool = True):
         self.pruner = pruner
-        self.scalors: Dict[str, Scaling] | None = scalors if isinstance(scalors, (dict, None)) else {'_default': scalors}
+        self.scalors: Dict[str, Scaling] | None = scalors if isinstance(scalors, (dict, None)) else {'_default': scalors}  # type: ignore
         self.continuous_mask = continuous_mask
 
     def _get_scalor(self, module_name: str, target_name: str) -> Scaling | None:
