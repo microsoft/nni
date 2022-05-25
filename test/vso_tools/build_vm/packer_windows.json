@@ -29,13 +29,14 @@
     "winrm_use_ssl": "true",
     "winrm_insecure": "true",
     "winrm_timeout": "10m",
-    "winrm_username": "packer"
+    "winrm_username": "packer",
+    "winrm_password": "packer"
   }],
   "provisioners": [{
     "script": "setup_windows.ps1",
     "type": "powershell",
-    "elevated_user": "Administrator",
-    "elevated_password": "{{ build `Password` }}",
+    "elevated_user": "packer",
+    "elevated_password": "packer",
     "timeout": "30m"
   }]
 }

@@ -1,3 +1,6 @@
+Set-PSDebug -Trace 1
+$ErrorActionPreference = "Stop"
+
 # Choco.
 # https://docs.chocolatey.org/en-us/choco/setup
 # Community version can't customize output directory.
