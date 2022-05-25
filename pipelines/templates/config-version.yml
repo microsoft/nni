@@ -13,7 +13,7 @@ steps:
     ${{ else }}:
       versionSpec: 3.9
   displayName: Configure Python version
-  condition: and(succeeded(), ne(${{ parameters.use_global_python }}))
+  condition: and(succeeded(), not(${{ parameters.use_global_python }}))
 
 - task: NodeTool@0
   inputs:
