@@ -55,21 +55,9 @@ Set-PSDebug -Trace 1
 
 # Create a new user (for SSH login).
 $Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
-New-LocalUser "NNIUser" -Password $Password
+New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 
 # Install python.
-Write-Host "Installing Python..."
-$PythonDir = "C:\Python"
-Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"
-Start-Process -FilePath .\python-installer.exe -NoNewWindow -Wait -ArgumentList "/quiet InstallAllUsers=1 TargetDir=C:\Python\ Include_launcher=0"
-dir $PythonDir
-$env:path = "$env:path;$PythonDir"
-Remove-Item python-installer.exe
-Write-Host "Verify Python installation..."
-python --version
-
-# Here are some other comments, which might be useful when installing python without elevation.
-#
 # Originally I tried to install the python by downloading from official, and run the installation.
 #
 #     Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"
@@ -95,10 +83,12 @@ python --version
 # After all this struggle, the workaround here is simple:
 # to install with nuget, then don't use `UsePythonVersion` in the next step.
 # The workaround works because we actually never needs multiple python versions on windows.
-#
-# $PythonDir = "C:\Python"
-# nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
-# $env:path = "$env:path;$PythonDir\python.3.9.12\tools\"
+Write-Host "Installing Python..."
+$PythonDir = C:\Python
+nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
+$env:path = "$env:path;$PythonDir\python.3.9.12\tools\"
+Write-Host "Verify Python installation..."
+python --version
 
 # Permanently update the PATHs
 # https://codingbee.net/powershell/powershell-make-a-permanent-change-to-the-path-environment-variable

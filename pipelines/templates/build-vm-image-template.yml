@@ -82,8 +82,9 @@ steps:
     cat $CONFIG_PATH
   displayName: Prepare configuration
 
-# NOTE: sometimes the builder fails with SSH timeout. Don't worry. Just retry.
-
+# NOTE: Sometimes the builder fails with SSH / WinRM timeout.
+# It can be frustrating because the timeout just appear randomly.
+# No worry. Just retry.
 - script: |
     cd test/vso_tools/build_vm
     PACKER_LOG=1 packer build ${{ parameters.packer_config }}.json
