@@ -26,6 +26,10 @@ Remove-Item "cuda_installer.exe"
 
 Write-Host "Installing utilities..."
 
+# Visual Studio C++ Build tools (for Cython)
+Invoke-WebRequest "https://aka.ms/vs/17/release/vs_BuildTools.exe" -OutFile "vs_BuildTools.exe"
+Start-Process -FilePath "vs_BuildTools.exe" -ArgumentList "--quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" -Wait
+
 # Install azcopy for cache download.
 # Something wrong with the latest (10.15.0) checksum.
 choco install -y --force azcopy10 --version=10.14.1
