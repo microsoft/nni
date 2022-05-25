@@ -25,7 +25,7 @@ Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n" -Wait
 Remove-Item "cuda_installer.exe"
 # Verify CUDA.
 dir "C:\Program Files\NVIDIA Corporation\"
-dir "C:\Program Files\NVIDIA Corporation\NVSMI\"
+dir "c:\Windows\System32"
 
 Write-Host "Installing utilities..."
 
