@@ -55,8 +55,8 @@ steps:
     set -e
     set -x
     az image list -g $(resource_group)
-    if az image list -g $(resource_group) --query [].'name' | grep -q ${{ managed_image_name }}; then
-      az image delete -n ${{ managed_image_name }} -g $(resource_group)
+    if az image list -g $(resource_group) --query [].'name' | grep -q ${{ parameters.managed_image_name }}; then
+      az image delete -n ${{ parameters.managed_image_name }} -g $(resource_group)
     fi
   displayName: List existing images (and delete)
 
@@ -71,14 +71,15 @@ steps:
     set -e
     cd test/vso_tools/build_vm
     export VERSION=$(date "+%Y").$(date "+%m%d").$(date "+%H%M%S")
-    sed -i -e "s/<client_id>/$(identity_id)/g" ${{ packer_config }}.json
-    sed -i -e "s/<subscription_id>/$(subscription_id)/g" ${{ packer_config }}.json
-    sed -i -e "s/<managed_image_name>/${{ managed_image_name }}/g" ${{ packer_config }}.json
-    sed -i -e "s/<resource_group>/$(resource_group)/g" ${{ packer_config }}.json
-    sed -i -e "s/<gallery_name>/$(gallery_name)/g" ${{ packer_config }}.json
-    sed -i -e "s/<image_name>/${{ image_name }}/g" ${{ packer_config }}.json
-    sed -i -e "s/<image_version>/${VERSION}/g" ${{ packer_config }}.json
-    cat ${{ packer_config }}.json
+    export CONFIG_PATH=${{ parameters.packer_config }}.json
+    sed -i -e "s/<client_id>/$(identity_id)/g" $CONFIG_PATH
+    sed -i -e "s/<subscription_id>/$(subscription_id)/g" $CONFIG_PATH
+    sed -i -e "s/<managed_image_name>/${{ parameters.managed_image_name }}/g" $CONFIG_PATH
+    sed -i -e "s/<resource_group>/$(resource_group)/g" $CONFIG_PATH
+    sed -i -e "s/<gallery_name>/$(gallery_name)/g" $CONFIG_PATH
+    sed -i -e "s/<image_name>/${{ parameters.image_name }}/g" $CONFIG_PATH
+    sed -i -e "s/<image_version>/${VERSION}/g" $CONFIG_PATH
+    cat $CONFIG_PATH
   displayName: Prepare configuration
 
 # NOTE: sometimes the builder fails with SSH timeout. Don't worry. Just retry.
