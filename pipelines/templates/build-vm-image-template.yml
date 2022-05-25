@@ -86,5 +86,5 @@ steps:
 
 - script: |
     cd test/vso_tools/build_vm
-    packer build packer_linux.json
+    packer build ${{ parameters.packer_config }}.json
   displayName: Packer build
