@@ -8,7 +8,7 @@ parameters:
 steps:
 - task: UsePythonVersion@0
   inputs:
-    ${{ if contains(parameters.platform, 'legacy')) }}:
+    ${{ if contains(parameters.platform, 'legacy') }}:
       versionSpec: 3.7
     ${{ else }}:
       versionSpec: 3.9
