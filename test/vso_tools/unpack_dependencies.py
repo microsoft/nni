@@ -39,6 +39,9 @@ def extract_all(zf: ZipFile) -> None:
     # fix a bug in ZipFile.extractall()
     # see https://stackoverflow.com/questions/39296101
     for info in zf.infolist():
+        if sys.platform == 'win32' and info.is_dir():
+            # Remind the agent that I'm not dead.
+            print('Extracting', info.filename)
         path = zf.extract(info)
         if info.external_attr > 0xffff:
             os.chmod(path, info.external_attr >> 16)
