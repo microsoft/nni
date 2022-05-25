@@ -12,7 +12,7 @@ Set-PSDebug -Trace 1
 # Nuget.
 # Doesn't have azcopy.
 Write-Host "Installing Nuget..."
-$NugetDir = "C:\nuget"
+$NugetDir = "$env:SystemRoot\nuget"
 New-Item "$NugetDir" -ItemType Directory -Force | Out-Null
 Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
 $env:path = "$env:path;$NugetDir"
@@ -95,7 +95,7 @@ New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 # to install with nuget, then don't use `UsePythonVersion` in the next step.
 # The workaround works because we actually never needs multiple python versions on windows.
 Write-Host "Installing Python..."
-$PythonDir = "C:\Python"
+$PythonDir = "$env:SystemRoot\Python"
 nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
 $env:path = "$env:path;$PythonDir\python.3.9.12\tools\"
 Write-Host "Verify Python installation..."
@@ -105,4 +105,25 @@ python --version
 # https://codingbee.net/powershell/powershell-make-a-permanent-change-to-the-path-environment-variable
 Write-Host "Prepare PATHs..."
 Write-Host $env:path
-Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $env:path
+Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $env:path
+
+# Generalize VM with sysprep
+# https://docs.microsoft.com/en-us/azure/virtual-machines/windows/build-image-with-packer
+
+# NOTE: the following *3* lines are only needed if the you have installed the Guest Agent.
+while ((Get-Service RdAgent).Status -ne 'Running') { Start-Sleep -s 5 }
+while ((Get-Service WindowsAzureTelemetryService).Status -ne 'Running') { Start-Sleep -s 5 }
+while ((Get-Service WindowsAzureGuestAgent).Status -ne 'Running') { Start-Sleep -s 5 }
+
+if ( Test-Path $Env:SystemRoot\windows\system32\Sysprep\unattend.xml ) {
+    rm $Env:SystemRoot\windows\system32\Sysprep\unattend.xml -Force
+}
+& $env:SystemRoot\System32\Sysprep\Sysprep.exe /oobe /generalize /quiet /quit /mode:vm
+while ($true) {
+    $imageState = Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State | Select ImageState;
+    if ($imageState.ImageState -ne 'IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE') {
+        Write-Output $imageState.ImageState; Start-Sleep -s 10
+    } else {
+        break
+    }
+}
