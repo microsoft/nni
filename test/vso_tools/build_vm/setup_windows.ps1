@@ -53,6 +53,10 @@ if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyCon
 
 Set-PSDebug -Trace 1
 
+# Create a new user (for SSH login).
+$Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
+New-LocalUser "NNIUser" -Password $Password
+
 # Install python.
 Write-Host "Installing Python..."
 $PythonDir = "C:\Python"
