@@ -21,6 +21,24 @@ azcopy --version
 choco install -y --force swig --version=3.0.12
 swig -version
 
+# Install SSH.
+# https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
+Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
+# Install the OpenSSH Client
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+# Install the OpenSSH Server
+Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+# Start the sshd service
+Start-Service sshd
+Set-Service -Name sshd -StartupType 'Automatic'
+# Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
+if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue | Select-Object Name, Enabled)) {
+    Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
+    New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
+} else {
+    Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
+}
+
 # Install python.
 $PythonDir = "C:\Python"
 Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.9.12/python-3.9.12-amd64.exe" -OutFile "python-installer.exe"

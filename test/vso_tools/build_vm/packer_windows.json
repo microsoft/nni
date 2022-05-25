@@ -25,7 +25,11 @@
     },
 
     "build_resource_group_name": "nni",
-    "vm_size": "Standard_D2_v2"
+    "vm_size": "Standard_D2_v2",
+
+    "winrm_use_ssl": true,
+    "winrm_insecure": true,
+    "winrm_timeout": "15m"
   }],
   "provisioners": [{
     "script": "setup_windows.ps1",
