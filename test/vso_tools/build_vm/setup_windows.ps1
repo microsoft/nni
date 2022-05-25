@@ -24,8 +24,8 @@ Invoke-WebRequest $CudaUrl -OutFile "cuda_installer.exe"
 Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n" -Wait
 Remove-Item "cuda_installer.exe"
 # Verify CUDA.
-dir C:\Program Files\NVIDIA Corporation\
-dir C:\Program Files\NVIDIA Corporation\NVSMI\
+dir "C:\Program Files\NVIDIA Corporation\"
+dir "C:\Program Files\NVIDIA Corporation\NVSMI\"
 
 Write-Host "Installing utilities..."
 
