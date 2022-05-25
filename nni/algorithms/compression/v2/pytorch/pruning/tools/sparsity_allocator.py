@@ -135,7 +135,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
             expand_times = old_target_mask.numel() // target_metric.numel()
             metric_list.append(target_metric.reshape(-1).unsqueeze(0).expand(expand_times, -1).reshape(-1))
         global_metric = torch.cat(metric_list)
-        max_pruning_num = (global_metric != max_metric_value).sum().item()
+        max_pruning_num = int((global_metric != max_metric_value).sum().item())
         total_pruning_num = min(int(global_sparsity_rate * global_metric.numel()), max_pruning_num)
         global_threshold = torch.topk(global_metric.reshape(-1), total_pruning_num, largest=False)[0].max()
 
