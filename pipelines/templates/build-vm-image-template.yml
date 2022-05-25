@@ -1,10 +1,10 @@
 parameters:
 - name: managed_image_name
-  type: str
+  type: string
 - name: image_name
-  type: str
+  type: string
 - name: packer_config
-  type: str
+  type: string
 
 steps:
 - script: |

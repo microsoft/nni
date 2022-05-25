@@ -6,14 +6,14 @@ variables:
   gallery_name: nniImageGallery
 
 jobs:
-- job: linux
-  pool: nni-it
-  steps:
-  - template: templates/build-vm-image-template.yml
-    parameters:
-      managed_image_name: nni-linux-image
-      image_name: nniLinuxImage
-      packer_config: packer_linux
+# - job: linux
+#   pool: nni-it
+#   steps:
+#   - template: templates/build-vm-image-template.yml
+#     parameters:
+#       managed_image_name: nni-linux-image
+#       image_name: nniLinuxImage
+#       packer_config: packer_linux
 
 - job: windows
   pool: nni-it
