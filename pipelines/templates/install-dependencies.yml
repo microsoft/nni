@@ -1,11 +1,15 @@
 parameters:
 - name: platform
   type: string
+- name: use_global_python
+  type: boolean
+  default: false
 
 steps:
 - template: config-version.yml
   parameters:
     platform: ${{ parameters.platform }}
+    use_global_python: ${{ parameters.use_global_python }}
 
 - script: |
     set -e

@@ -41,6 +41,7 @@ jobs:
   - template: templates/install-dependencies.yml
     parameters:
       platform: windows
+      use_global_python: true
 
   - template: templates/install-nni.yml
     parameters:

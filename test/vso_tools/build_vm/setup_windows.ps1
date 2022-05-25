@@ -17,6 +17,13 @@ New-Item "$NugetDir" -ItemType Directory -Force | Out-Null
 Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
 $env:path = "$env:path;$NugetDir"
 
+# Install CUDA.
+Write-Host "Installing CUDA..."
+$CudaUrl = "https://developer.download.nvidia.com/compute/cuda/11.7.0/network_installers/cuda_11.7.0_windows_network.exe"
+Invoke-WebRequest $CudaUrl -OutFile "cuda_installer.exe"
+Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n" -Wait
+Remove-Item "cuda_installer.exe"
+
 Write-Host "Installing utilities..."
 
 # Install azcopy for cache download.

@@ -1,19 +1,19 @@
 parameters:
 - name: platform
   type: string
+- name: use_global_python
+  type: boolean
+  default: false
 
 steps:
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: 3.9
-  displayName: (latest) Configure Python version
-  condition: and(succeeded(), ne('${{ parameters.platform }}', 'windows-gpu'), not(contains('${{ parameters.platform }}', 'legacy')))
-
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: 3.7
-  displayName: (legacy) Configure Python version
-  condition: and(succeeded(), ne('${{ parameters.platform }}', 'windows-gpu'), contains('${{ parameters.platform }}', 'legacy'))
+    ${{ if contains('${{ parameters.platform }}', 'legacy')) }}:
+      versionSpec: 3.7
+    ${{ else }}:
+      versionSpec: 3.9
+  displayName: Configure Python version
+  condition: and(succeeded(), ne(${{ parameters.use_global_python }}))
 
 - task: NodeTool@0
   inputs:
