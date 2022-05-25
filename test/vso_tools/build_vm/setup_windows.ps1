@@ -84,7 +84,7 @@ New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 # to install with nuget, then don't use `UsePythonVersion` in the next step.
 # The workaround works because we actually never needs multiple python versions on windows.
 Write-Host "Installing Python..."
-$PythonDir = C:\Python
+$PythonDir = "C:\Python"
 nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
 $env:path = "$env:path;$PythonDir\python.3.9.12\tools\"
 Write-Host "Verify Python installation..."
