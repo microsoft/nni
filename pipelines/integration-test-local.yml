@@ -38,10 +38,6 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
-  - powershell: |
-      Get-ComputerInfo
-    displayName: Display machine info
-
   - template: templates/install-dependencies.yml
     parameters:
       platform: windows

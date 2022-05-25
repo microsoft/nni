@@ -38,10 +38,12 @@ def main() -> None:
 def extract_all(zf: ZipFile) -> None:
     # fix a bug in ZipFile.extractall()
     # see https://stackoverflow.com/questions/39296101
+    if sys.platform == 'win32':
+        print('Debug', 'extract', flush=True)
     for info in zf.infolist():
-        if sys.platform == 'win32' and info.is_dir():
+        if sys.platform == 'win32':
             # Remind the agent that I'm not dead.
-            print('Extracting', info.filename)
+            print('Extracting', info.filename, flush=True)
         path = zf.extract(info)
         if info.external_attr > 0xffff:
             os.chmod(path, info.external_attr >> 16)
