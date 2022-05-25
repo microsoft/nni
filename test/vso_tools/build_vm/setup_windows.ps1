@@ -23,6 +23,9 @@ $CudaUrl = "https://developer.download.nvidia.com/compute/cuda/11.7.0/network_in
 Invoke-WebRequest $CudaUrl -OutFile "cuda_installer.exe"
 Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n" -Wait
 Remove-Item "cuda_installer.exe"
+# Verify CUDA.
+dir C:\Program Files\NVIDIA Corporation\
+dir C:\Program Files\NVIDIA Corporation\NVSMI\
 
 Write-Host "Installing utilities..."
 
@@ -112,7 +115,8 @@ Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Co
 
 # NOTE: the following *3* lines are only needed if the you have installed the Guest Agent.
 while ((Get-Service RdAgent).Status -ne 'Running') { Start-Sleep -s 5 }
-while ((Get-Service WindowsAzureTelemetryService).Status -ne 'Running') { Start-Sleep -s 5 }
+# Seems we don't have this.
+# while ((Get-Service WindowsAzureTelemetryService).Status -ne 'Running') { Start-Sleep -s 5 }
 while ((Get-Service WindowsAzureGuestAgent).Status -ne 'Running') { Start-Sleep -s 5 }
 
 if ( Test-Path $Env:SystemRoot\windows\system32\Sysprep\unattend.xml ) {
