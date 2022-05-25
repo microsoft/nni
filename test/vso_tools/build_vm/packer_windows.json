@@ -30,13 +30,13 @@
     "winrm_insecure": "true",
     "winrm_timeout": "10m",
     "winrm_username": "packer",
-    "winrm_password": "packer"
+    "winrm_password": "Packer0!"
   }],
   "provisioners": [{
     "script": "setup_windows.ps1",
     "type": "powershell",
     "elevated_user": "packer",
-    "elevated_password": "packer",
+    "elevated_password": "Packer0!",
     "timeout": "30m"
   }]
 }
