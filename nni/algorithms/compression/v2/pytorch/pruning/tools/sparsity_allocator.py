@@ -1,18 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import math
 import itertools
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner
+from nni.common.graph_utils import TorchModuleGraph
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
 from .base import SparsityAllocator
+from ...base import Pruner
 from ...utils import Scaling
 
 
@@ -148,95 +148,69 @@ class GlobalSparsityAllocator(SparsityAllocator):
         return masks
 
 
-class Conv2dDependencyAwareAllocator(SparsityAllocator):
+class DependencyAwareAllocator(NormalSparsityAllocator):
     """
-    An allocator specific for Conv2d with dependency-aware.
+    An specific allocator for Conv2d & Linear module with dependency-aware.
+    It will generate a public mask for the modules that have dependencies,
+    then generate the part of the non-public mask for each module.
+    For other module types, the way to generate the mask is the same as `NormalSparsityAllocator`.
     """
 
     def __init__(self, pruner: Pruner, dummy_input: Any):
+        # Scaling([1], padding_kernel=True) means reducing a tensor to dim=0, which means pruning output channels if pruning target is weight.
         super().__init__(pruner, scalors=Scaling([1], padding_kernel=True))
-        self.dummy_input = dummy_input
+        self.channel_dependency, self.group_dependency = self._get_dependency(dummy_input)
 
-    def _get_dependency(self):
-        graph = self.pruner.generate_graph(dummy_input=self.dummy_input)
+    def _get_dependency(self, dummy_input: Any):
+        # get the channel dependency and group dependency
+        # channel dependency format: [[module_name1, module_name2], [module_name3], ...]
+        # group dependency format: {module_name: group_num}
         self.pruner._unwrap_model()
-        self.channel_depen = ChannelDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
-        self.group_depen = GroupDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
+        graph = TorchModuleGraph(model=self.pruner.bound_model, dummy_input=dummy_input)
+        channel_dependency = ChannelDependency(model=self.pruner.bound_model, dummy_input=dummy_input, traced_model=graph.trace).dependency_sets
+        group_dependency = GroupDependency(model=self.pruner.bound_model, dummy_input=dummy_input, traced_model=graph.trace).dependency_sets
         self.pruner._wrap_model()
+        return channel_dependency, group_dependency
 
-    def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
-        self._get_dependency()
-        masks = {}
-        grouped_metrics = {}
-        grouped_names = set()
-        # combine metrics with channel dependence
-        for idx, names in enumerate(self.channel_depen):
-            grouped_metric = {name: metrics[name] for name in names if name in metrics}
-            grouped_names.update(grouped_metric.keys())
-            if self.continuous_mask:
-                for name, metric in grouped_metric.items():
-                    metric *= self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)  # type: ignore
-            if len(grouped_metric) > 0:
-                grouped_metrics[idx] = grouped_metric
-        # ungrouped metrics stand alone as a group
-        ungrouped_names = set(metrics.keys()).difference(grouped_names)
-        for name in ungrouped_names:
-            idx += 1  # type: ignore
-            grouped_metrics[idx] = {name: metrics[name]}
+    def _metric_fuse(self, metrics: Union[Dict[str, Tensor], List[Tensor]]) -> Tensor:
+        # Sum all metric value in the same position.
+        metrics = list(metrics.values()) if isinstance(metrics, dict) else metrics
+        assert all(metrics[0].size() == metric.size() for metric in metrics), 'Metrics size do not match.'
+        fused_metric = torch.zeros_like(metrics[0])
+        for metric in metrics:
+            fused_metric += metric
+        return fused_metric
 
-        # generate masks
-        for _, group_metric_dict in grouped_metrics.items():
-            group_metric = self._group_metric_calculate(group_metric_dict)
+    def common_target_masks_generation(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
+        # generate public part for modules that have dependencies
+        for module_names in self.channel_dependency:
+            sub_metrics = {module_name: metrics[module_name] for module_name in module_names if module_name in metrics}
+            fused_metric = self._metric_fuse(sub_metrics)
 
-            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['total_sparsity'] for name in group_metric_dict.keys()}
-            min_sparsity = min(sparsities.values())
+            sparsity_rates = {module_name: self.pruner.get_modules_wrapper()[module_name].config['total_sparsity'] for module_name in sub_metrics.keys()}
+            min_sparsity_rate = min(sparsity_rates.values())
 
-            # generate group mask
-            conv2d_groups, group_mask = [], []
-            for name in group_metric_dict.keys():
-                if name in self.group_depen:
-                    conv2d_groups.append(self.group_depen[name])
+            group_nums = [self.group_dependency.get(module_name, 1) for module_name in sub_metrics.keys()]
+            max_group_nums = int(np.lcm.reduce(group_nums))
+            pruned_numel_per_group = int(fused_metric.numel() // max_group_nums * min_sparsity_rate)
+            group_step = fused_metric.shape[0] // max_group_nums
+
+            # get the public part of the mask of the module with dependencies
+            sub_masks = []
+            for gid in range(max_group_nums):
+                _start = gid * group_step
+                _end = (gid + 1) * group_step
+                if pruned_numel_per_group > 0:
+                    threshold = torch.topk(fused_metric[_start: _end].reshape(-1), pruned_numel_per_group, largest=False)[0].max()
+                    sub_mask = torch.gt(fused_metric[_start:_end], threshold).type_as(fused_metric)
                 else:
-                    # not in group_depen means not a Conv2d layer, in this case, assume the group number is 1
-                    conv2d_groups.append(1)
+                    sub_mask = torch.ones_like(fused_metric[_start:_end])
+                sub_masks.append(sub_mask)
+            dependency_mask = torch.cat(sub_masks, dim=0)
 
-            max_conv2d_group = np.lcm.reduce(conv2d_groups)
-            pruned_per_conv2d_group = int(group_metric.numel() / max_conv2d_group * min_sparsity)
-            conv2d_group_step = int(group_metric.numel() / max_conv2d_group)
+            # change the metric value corresponding to the public mask part to the minimum value
+            for module_name, target_metric in sub_metrics.items():
+                min_value = target_metric.min()
+                metrics[module_name] = torch.where(dependency_mask!=0, target_metric, min_value)
 
-            for gid in range(max_conv2d_group):
-                _start = gid * conv2d_group_step
-                _end = (gid + 1) * conv2d_group_step
-                if pruned_per_conv2d_group > 0:
-                    threshold = torch.topk(group_metric[_start: _end], pruned_per_conv2d_group, largest=False)[0].max()
-                    conv2d_group_mask = torch.gt(group_metric[_start:_end], threshold).type_as(group_metric)
-                else:
-                    conv2d_group_mask = torch.ones(conv2d_group_step, device=group_metric.device)
-                group_mask.append(conv2d_group_mask)
-            group_mask = torch.cat(group_mask, dim=0)
-
-            # generate final mask
-            for name, metric in group_metric_dict.items():
-                # We assume the metric value are all positive right now.
-                metric = metric * group_mask
-                pruned_num = int(sparsities[name] * len(metric))
-                if pruned_num == 0:
-                    threshold = metric.min() - 1
-                else:
-                    threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
-                mask = torch.gt(metric, threshold).type_as(metric)
-                masks[name] = self._expand_mask(name, mask)
-                if self.continuous_mask:
-                    masks[name]['weight'] *= self.pruner.get_modules_wrapper()[name].weight_mask
-        return masks
-
-    def _group_metric_calculate(self, group_metrics: Union[Dict[str, Tensor], List[Tensor]]) -> Tensor:
-        """
-        Add all metric value in the same position in one group.
-        """
-        group_metrics = list(group_metrics.values()) if isinstance(group_metrics, dict) else group_metrics
-        assert all(group_metrics[0].size() == group_metric.size() for group_metric in group_metrics), 'Metrics size do not match.'
-        group_sum_metric = torch.zeros(group_metrics[0].size(), device=group_metrics[0].device)
-        for group_metric in group_metrics:
-            group_sum_metric += group_metric
-        return group_sum_metric
+        return super().common_target_masks_generation(metrics)
