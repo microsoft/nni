@@ -1,3 +1,4 @@
+#Requires -RunAsAdministrator
 $ErrorActionPreference = "Stop"
 
 # Choco.
@@ -21,10 +22,13 @@ $env:path = "$env:path;$NugetDir"
 Write-Host "Installing CUDA..."
 $CudaUrl = "https://developer.download.nvidia.com/compute/cuda/11.7.0/network_installers/cuda_11.7.0_windows_network.exe"
 Invoke-WebRequest $CudaUrl -OutFile "cuda_installer.exe"
-Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s cudart_11.7 nvcc_11.7 cublas_11.7 Display.Driver" -Wait
+Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n cudart_11.7 nvcc_11.7 cublas_11.7 Display.Driver" -Wait
 Remove-Item "cuda_installer.exe"
 # Verify CUDA.
-dir "C:\Program Files\NVIDIA Corporation\"
+Write-Host "Verify CUDA installation..."
+$CudaDir = "$env:SystemRoot\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
+Get-ChildItem $CudaDir
+$env:path = "$env:path;$CudaDir"
 
 Write-Host "Installing utilities..."
 
