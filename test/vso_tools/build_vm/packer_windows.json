@@ -33,16 +33,16 @@
   }],
   "provisioners": [
     {
-      "type": "windows-restart",
-      "restart_timeout": "15m",
-      "pause_before": "1m"
-    },
-    {
       "script": "setup_windows_part1.ps1",
       "type": "powershell",
       "elevated_user": "packer",
       "elevated_password": "{{ build `Password` }}",
       "timeout": "10m"
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "15m",
+      "pause_before": "1m"
     },
     {
       "script": "setup_windows_part2.ps1",
