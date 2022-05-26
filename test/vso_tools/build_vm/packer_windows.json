@@ -37,7 +37,7 @@
       "type": "powershell",
       "elevated_user": "packer",
       "elevated_password": "{{ build `Password` }}",
-      "timeout": "30m"
+      "timeout": "40m"
     }
   ]
 }
