@@ -32,6 +32,34 @@ $CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
 Get-ChildItem $CudaDir
 $env:path = "$env:path;$CudaDir"
 
+# Install SSH.
+Write-Host "Installing SSH..."
+# https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
+Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
+# Install the OpenSSH Client
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+# Install the OpenSSH Server
+Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+# Start the sshd service
+Set-PSDebug -Trace 0
+Write-Host "Starting SSH service..."
+Start-Service sshd
+Set-Service -Name sshd -StartupType 'Automatic'
+Write-Host "Configure firewall for SSH..."
+# Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
+if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue | Select-Object Name, Enabled)) {
+    Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
+    New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
+} else {
+    Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
+}
+
+Set-PSDebug -Trace 1
+
+# Create a new user (for SSH login).
+$Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
+New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
+
 Write-Host "Installing utilities..."
 
 # These installation seems not working.
@@ -60,34 +88,6 @@ azcopy --version
 # Note that swig 4.0 is not compatible with ConfigSpace.
 choco install -y --force swig --version=3.0.12 --no-progress
 swig -version
-
-# Install SSH.
-Write-Host "Installing SSH..."
-# https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
-Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
-# Install the OpenSSH Client
-Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
-# Install the OpenSSH Server
-Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-# Start the sshd service
-Set-PSDebug -Trace 0
-Write-Host "Starting SSH service..."
-Start-Service sshd
-Set-Service -Name sshd -StartupType 'Automatic'
-Write-Host "Configure firewall for SSH..."
-# Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
-if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue | Select-Object Name, Enabled)) {
-    Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
-    New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
-} else {
-    Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
-}
-
-Set-PSDebug -Trace 1
-
-# Create a new user (for SSH login).
-$Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
-New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 
 # Install python.
 # Originally I tried to install the python by downloading from official, and run the installation.
