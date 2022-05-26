@@ -120,5 +120,3 @@ python --version
 Write-Host "Prepare PATHs..."
 Write-Host $env:path
 Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $env:path
-
-dir $Env:SystemRoot\System32
