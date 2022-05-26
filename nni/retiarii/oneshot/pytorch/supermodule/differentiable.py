@@ -25,6 +25,12 @@ from ._valuechoice_utils import traverse_all_options, dedup_inner_choices
 
 _logger = logging.getLogger(__name__)
 
+__all__ = [
+    'DifferentiableMixedLayer', 'DifferentiableMixedInput',
+    'DifferentiableMixedRepeat', 'DifferentiableMixedCell',
+    'MixedOpDifferentiablePolicy'
+]
+
 
 class GumbelSoftmax(nn.Softmax):
     """Wrapper of ``F.gumbel_softmax``. dim = -1 by default."""

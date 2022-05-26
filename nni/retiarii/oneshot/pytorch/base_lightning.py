@@ -21,7 +21,13 @@ from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from nni.typehint import Literal
 from .supermodule.base import BaseSuperNetModule
 
-__all__ = ['MutationHook', 'BaseSuperNetModule', 'BaseOneShotLightningModule', 'traverse_and_mutate_submodules']
+__all__ = [
+    'MutationHook',
+    'BaseSuperNetModule',
+    'BaseOneShotLightningModule',
+    'traverse_and_mutate_submodules',
+    'no_default_hook'
+]
 
 
 MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
@@ -147,35 +153,46 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
 class BaseOneShotLightningModule(pl.LightningModule):
 
     _mutation_hooks_note = """mutation_hooks : list[MutationHook]
-        Mutation hooks are callable that inputs an Module and returns a :class:`BaseSuperNetModule`.
+        Extra mutation hooks to support customized mutation on primitives other than built-ins.
+
+        Mutation hooks are callable that inputs an Module and returns a
+        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`.
         They are invoked in :meth:`traverse_and_mutate_submodules`, on each submodules.
         For each submodule, the hook list are invoked subsequently,
         the later hooks can see the result from previous hooks.
         The modules that are processed by ``mutation_hooks`` will be replaced by the returned module,
-        stored in ``nas_modules``, and be the focus of the NAS algorithm.
+        stored in :attr:`nas_modules`, and be the focus of the NAS algorithm.
 
         The hook list will be appended by ``default_mutation_hooks`` in each one-shot module.
 
         To be more specific, the input arguments are four arguments:
 
-        #. a module that might be processed,
-        #. name of the module in its parent module,
-        #. a memo dict whose usage depends on the particular algorithm.
-        #. keyword arguments (configurations).
+        1. a module that might be processed,
+        2. name of the module in its parent module,
+        3. a memo dict whose usage depends on the particular algorithm.
+        4. keyword arguments (configurations).
 
         Note that the memo should be read/written by hooks.
         There won't be any hooks called on root module.
+
         The returned arguments can be also one of the three kinds:
 
-        #. tuple of: :class:`BaseSuperNetModule` or None, and boolean,
-        #. boolean,
-        #. :class:`BaseSuperNetModule` or None.
+        1. tuple of: :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None, and boolean,
+        2. boolean,
+        3. :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None.
 
-        The boolean value is ``suppress`` indicates whether the folliwng hooks should be called.
+        The boolean value is ``suppress`` indicates whether the following hooks should be called.
         When it's true, it suppresses the subsequent hooks, and they will never be invoked.
         Without boolean value specified, it's assumed to be false.
-        If a none value appears on the place of :class:`BaseSuperNetModule`, it means the hook suggests to
+        If a none value appears on the place of
+        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
+        it means the hook suggests to
         keep the module unchanged, and nothing will happen.
+
+        An example of mutation hook is given in :func:`no_default_hook`.
+        However it's recommended to implement mutation hooks by deriving
+        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
+        and add its classmethod ``mutate`` to this list.
     """
 
     _inner_module_note = """inner_module : pytorch_lightning.LightningModule
@@ -203,6 +220,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
     ----------
     nas_modules : list[BaseSuperNetModule]
         Modules that have been mutated, which the search algorithms should care about.
+    model : pl.LightningModule
+        PyTorch lightning module. A model space with training recipe defined (wrapped by LightningModule in evaluator).
 
     Parameters
     ----------
@@ -235,7 +254,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             self.model, mutation_hooks, self.mutate_kwargs(), topdown=True)
 
     def search_space_spec(self) -> dict[str, ParameterSpec]:
-        """Get the search space specification from ``nas_module``.
+        """Get the search space specification from :attr:`nas_modules`.
 
         Returns
         -------
@@ -248,7 +267,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return result
 
     def resample(self) -> dict[str, Any]:
-        """Trigger the resample for each ``nas_module``.
+        """Trigger the resample for each :attr:`nas_modules`.
         Sometimes (e.g., in differentiable cases), it does nothing.
 
         Returns
@@ -263,8 +282,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def export(self) -> dict[str, Any]:
         """
-        Export the NAS result, ideally the best choice of each ``nas_module``.
-        You may implement an ``export`` method for your customized ``nas_module``.
+        Export the NAS result, ideally the best choice of each :attr:`nas_modules`.
+        You may implement an ``export`` method for your customized :attr:`nas_modules`.
 
         Returns
         --------
@@ -288,8 +307,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def configure_optimizers(self):
         """
         Combine architecture optimizers and user's model optimizers.
-        You can overwrite configure_architecture_optimizers if architecture optimizers are needed in your NAS algorithm.
-        For now ``self.model`` is tested against :class:`nni.retiarii.evaluator.pytorch.lightning._SupervisedLearningModule`
+        You can overwrite :meth:`configure_architecture_optimizers` if architecture optimizers are needed in your NAS algorithm.
+
+        For now :attr:`model` is tested against evaluators in :mod:`nni.retiarii.evaluator.pytorch.lightning`
         and it only returns 1 optimizer.
         But for extendibility, codes for other return value types are also implemented.
         """
@@ -468,12 +488,12 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def architecture_optimizers(self) -> list[Optimizer] | Optimizer | None:
         """
-        Get architecture optimizers from all optimizers. Use this to get your architecture optimizers in ``training_step``.
+        Get architecture optimizers from all optimizers. Use this to get your architecture optimizers in :meth:`training_step`.
 
         Returns
         ----------
         opts : list[Optimizer], Optimizer, None
-            Architecture optimizers defined in ``configure_architecture_optimizers``. This will be None if there is no
+            Architecture optimizers defined in :meth:`configure_architecture_optimizers`. This will be None if there is no
             architecture optimizers.
         """
         opts = self.optimizers()
@@ -490,7 +510,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def weight_optimizers(self) -> list[Optimizer] | Optimizer | None:
         """
-        Get user optimizers from all optimizers. Use this to get user optimizers in ``training_step``.
+        Get user optimizers from all optimizers. Use this to get user optimizers in :meth:`training_step`.
 
         Returns
         ----------

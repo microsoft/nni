@@ -16,13 +16,15 @@ from .supermodule.differentiable import (
     DifferentiableMixedCell, DifferentiableMixedRepeat
 )
 from .supermodule.proxyless import ProxylessMixedInput, ProxylessMixedLayer
-from .supermodule.operation import NATIVE_MIXED_OPERATIONS
+from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
 
 
 class DartsLightningModule(BaseOneShotLightningModule):
     _darts_note = """
-    DARTS :cite:p:`liu2018darts` algorithm is one of the most fundamental one-shot algorithm.
+    Continuous relaxation of the architecture representation, allowing efficient search of the architecture using gradient descent.
+    `Reference <https://arxiv.org/abs/1806.09055>`__.
 
+    DARTS algorithm is one of the most fundamental one-shot algorithm.
     DARTS repeats iterations, where each iteration consists of 2 training phases.
     The phase 1 is architecture step, in which model parameters are frozen and the architecture parameters are trained.
     The phase 2 is model step, in which architecture parameters are frozen and model parameters are trained.
@@ -33,6 +35,15 @@ class DartsLightningModule(BaseOneShotLightningModule):
     `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
     One difference is that, in DARTS, we are using Softmax instead of GumbelSoftmax.
 
+    The supported mutation primitives of DARTS are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
+    * :class:`nni.retiarii.nn.pytorch.Repeat`.
+    * :class:`nni.retiarii.nn.pytorch.Cell`.
+    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
+
     {{module_notes}}
 
     Parameters
@@ -41,7 +52,10 @@ class DartsLightningModule(BaseOneShotLightningModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+    """.format(
+        base_params=BaseOneShotLightningModule._mutation_hooks_note,
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+    )
 
     __doc__ = _darts_note.format(
         module_notes='The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.',
@@ -123,10 +137,16 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
 class ProxylessLightningModule(DartsLightningModule):
     _proxyless_note = """
-    Implementation of ProxylessNAS :cite:p:`cai2018proxylessnas`.
-    It's a DARTS-based method that resamples the architecture to reduce memory consumption.
+    A low-memory-consuming optimized version of differentiable architecture search. See `reference <https://arxiv.org/abs/1812.00332>`__.
+
+    This is a DARTS-based method that resamples the architecture to reduce memory consumption.
     Essentially, it samples one path on forward,
     and implements its own backward to update the architecture parameters based on only one path.
+
+    The supported mutation primitives of Proxyless are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
 
     {{module_notes}}
 
@@ -160,13 +180,24 @@ class ProxylessLightningModule(DartsLightningModule):
 
 class GumbelDartsLightningModule(DartsLightningModule):
     _gumbel_darts_note = """
-    Implementation of SNAS :cite:p:`xie2018snas`.
-    It's a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
+    Choose the best block by using Gumbel Softmax random sampling and differentiable training.
+    See `FBNet <https://arxiv.org/abs/1812.03443>`__ and `SNAS <https://arxiv.org/abs/1812.09926>`__.
+
+    This is a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
     Essentially, it samples one path on forward,
     and implements its own backward to update the architecture parameters based on only one path.
 
     *New in v2.8*: Supports searching for ValueChoices on operations, with the technique described in
     `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
+
+    The supported mutation primitives of GumbelDARTS are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
+    * :class:`nni.retiarii.nn.pytorch.Repeat`.
+    * :class:`nni.retiarii.nn.pytorch.Cell`.
+    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
 
     {{module_notes}}
 
@@ -178,12 +209,15 @@ class GumbelDartsLightningModule(DartsLightningModule):
         The initial temperature used in gumbel-softmax.
     use_temp_anneal : bool
         If true, a linear annealing will be applied to ``gumbel_temperature``.
-        Otherwise, run at a fixed temperature. See :cite:t:`xie2018snas` for details.
+        Otherwise, run at a fixed temperature. See `SNAS <https://arxiv.org/abs/1812.09926>`__ for details.
     min_temp : float
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+    """.format(
+        base_params=BaseOneShotLightningModule._mutation_hooks_note,
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+    )
 
     def mutate_kwargs(self):
         """Use gumbel softmax."""
