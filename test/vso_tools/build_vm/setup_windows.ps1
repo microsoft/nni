@@ -1,16 +1,6 @@
 #Requires -RunAsAdministrator
 $ErrorActionPreference = "Stop"
 
-# Visual Studio C++ Build tools (for Cython)
-Invoke-WebRequest "https://aka.ms/vs/17/release/vs_BuildTools.exe" -OutFile "vs_BuildTools.exe"
-Start-Process -FilePath "vs_BuildTools.exe" -ArgumentList "--quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" -Wait
-Remove-Item "vs_BuildTools.exe"
-
-# Microsoft Visual C++ Redistributable (for PyTorch)
-Invoke-WebRequest "https://aka.ms/vs/16/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"
-Start-Process -FilePath ".\vc_redist.x64.exe" -ArgumentList "/q /norestart" -Wait
-Remove-Item "vc_redist.x64.exe"
-
 # Choco.
 # https://docs.chocolatey.org/en-us/choco/setup
 # Community version can't customize output directory.
@@ -44,7 +34,17 @@ $env:path = "$env:path;$CudaDir"
 
 Write-Host "Installing utilities..."
 
+# Visual Studio C++ Build tools (for Cython)
+Invoke-WebRequest "https://aka.ms/vs/17/release/vs_BuildTools.exe" -OutFile "vs_BuildTools.exe"
+Start-Process -FilePath "vs_BuildTools.exe" -ArgumentList "--quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" -Wait
+Remove-Item "vs_BuildTools.exe"
 
+# Microsoft Visual C++ Redistributable (for PyTorch)
+# These installation seems not working.
+# Invoke-WebRequest "https://aka.ms/vs/16/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"
+# Start-Process -FilePath ".\vc_redist.x64.exe" -ArgumentList "/q /norestart" -Wait
+# Remove-Item "vc_redist.x64.exe"
+choco install -y --force vcredist-all --no-progress
 
 # Install azcopy for cache download.
 # Something wrong with the latest (10.15.0) checksum.
