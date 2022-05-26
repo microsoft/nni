@@ -89,3 +89,11 @@ steps:
     cd test/vso_tools/build_vm
     PACKER_LOG=1 packer build ${{ parameters.packer_config }}.json
   displayName: Packer build
+
+# TODO: Should delete the managed image after build is done.
+# Image gallery alone is enough. Keeping it for now for debugging purposes.
+
+# To deploy the image on VMSS, run this in Cloud Shell:
+# az vmss update --resource-group nni --name nni-windows-it \
+#   --set virtualMachineProfile.storageProfile.imageReference.id=/resourceGroups/nni/providers/Microsoft.Compute/galleries/nniImageGallery/images/nniWindowsImage/versions/Latest
+# No need to update the image every time, because it's already set to latest.

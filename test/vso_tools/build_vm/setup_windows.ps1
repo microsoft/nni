@@ -13,7 +13,7 @@ Set-PSDebug -Trace 1
 # Nuget.
 # Doesn't have azcopy.
 Write-Host "Installing Nuget..."
-$NugetDir = "$env:SystemRoot\nuget"
+$NugetDir = "$env:ProgramFiles\nuget"
 New-Item "$NugetDir" -ItemType Directory -Force | Out-Null
 Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
 $env:path = "$env:path;$NugetDir"
@@ -26,7 +26,7 @@ Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n cudart_11.7 nv
 Remove-Item "cuda_installer.exe"
 # Verify CUDA.
 Write-Host "Verify CUDA installation..."
-$CudaDir = "$env:SystemRoot\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
+$CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
 Get-ChildItem $CudaDir
 $env:path = "$env:path;$CudaDir"
 
@@ -101,7 +101,7 @@ New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 # to install with nuget, then don't use `UsePythonVersion` in the next step.
 # The workaround works because we actually never needs multiple python versions on windows.
 Write-Host "Installing Python..."
-$PythonDir = "$env:SystemRoot\Python"
+$PythonDir = "$env:SystemDrive\Python"  # try to avoid space in path
 nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
 $env:path = "$env:path;$PythonDir\python.3.9.12\tools\"
 Write-Host "Verify Python installation..."
