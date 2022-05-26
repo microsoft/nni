@@ -17,6 +17,7 @@ jobs:
 
 - job: windows
   pool: nni-it
+  timeoutInMinutes: 90
   steps:
   - template: templates/build-vm-image-template.yml
     parameters:

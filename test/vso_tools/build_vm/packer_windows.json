@@ -38,6 +38,17 @@
       "elevated_user": "packer",
       "elevated_password": "{{ build `Password` }}",
       "timeout": "40m"
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "15m"
+    },
+    {
+      "script": "setup_windows_finalize.ps1",
+      "type": "powershell",
+      "elevated_user": "packer",
+      "elevated_password": "{{ build `Password` }}",
+      "timeout": "15m"
     }
   ]
 }
