@@ -33,23 +33,23 @@
   }],
   "provisioners": [
     {
-      "type": "windows-restart",
-      "restart_timeout": "30m",
-      "pause_before": "2m"
-    },
-    {
       "script": "setup_windows_part1.ps1",
       "type": "powershell",
       "elevated_user": "packer",
       "elevated_password": "{{ build `Password` }}",
-      "timeout": "30m"
+      "timeout": "10m"
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "30m",
+      "pause_before": "2m"
     },
     {
       "script": "setup_windows_part2.ps1",
       "type": "powershell",
       "elevated_user": "packer",
       "elevated_password": "{{ build `Password` }}",
-      "timeout": "10m"
+      "timeout": "30m"
     }
   ]
 }
