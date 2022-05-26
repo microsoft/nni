@@ -46,12 +46,12 @@ Remove-Item "vc_redist.x64.exe"
 
 # Install azcopy for cache download.
 # Something wrong with the latest (10.15.0) checksum.
-choco install -y --force azcopy10 --version=10.14.1
+choco install -y --force azcopy10 --version=10.14.1 --no-progress
 azcopy --version
 
 # Install swig.
 # Note that swig 4.0 is not compatible with ConfigSpace.
-choco install -y --force swig --version=3.0.12
+choco install -y --force swig --version=3.0.12 --no-progress
 swig -version
 
 # Install SSH.

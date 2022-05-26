@@ -40,7 +40,8 @@
       "timeout": "30m"
     },
     {
-      "type": "windows-restart"
+      "type": "windows-restart",
+      "restart_timeout": "15m"
     },
     {
       "script": "setup_windows_part2.ps1",
