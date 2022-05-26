@@ -34,16 +34,21 @@ $env:path = "$env:path;$CudaDir"
 
 Write-Host "Installing utilities..."
 
+# These installation seems not working.
+
 # Visual Studio C++ Build tools (for Cython)
-Invoke-WebRequest "https://aka.ms/vs/17/release/vs_BuildTools.exe" -OutFile "vs_BuildTools.exe"
-Start-Process -FilePath "vs_BuildTools.exe" -ArgumentList "--quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" -Wait
-Remove-Item "vs_BuildTools.exe"
+# Invoke-WebRequest "https://aka.ms/vs/17/release/vs_BuildTools.exe" -OutFile "vs_BuildTools.exe"
+# Start-Process -FilePath "vs_BuildTools.exe" -ArgumentList "--quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" -Wait
+# Remove-Item "vs_BuildTools.exe"
 
 # Microsoft Visual C++ Redistributable (for PyTorch)
-# These installation seems not working.
 # Invoke-WebRequest "https://aka.ms/vs/16/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"
 # Start-Process -FilePath ".\vc_redist.x64.exe" -ArgumentList "/q /norestart" -Wait
 # Remove-Item "vc_redist.x64.exe"
+
+# Use choco instead.
+choco install -y --force visualstudio2019buildtools --no-progress
+choco install -y --force visualstudio2019-workload-vctools --no-progress
 choco install -y --force vcredist-all --no-progress
 
 # Install azcopy for cache download.
@@ -113,7 +118,7 @@ New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 Write-Host "Installing Python..."
 $PythonDir = "$env:ProgramData\Python"
 nuget install python -Version 3.9.12 -OutputDirectory "$PythonDir"
-$env:path = "$env:path;$PythonDir\python.3.9.12\tools\"
+$env:path = "$env:path;$PythonDir\python.3.9.12\tools\;$PythonDir\python.3.9.12\tools\Scripts"
 Write-Host "Verify Python installation..."
 python --version
 
