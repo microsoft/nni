@@ -48,7 +48,7 @@ class BaseCommand:
         return command_json
 
     @classmethod
-    def load(cls, command_dict: dict) -> 'BaseCommand':
+    def load(cls, command_dict: dict):
         return cls(**command_dict)
 
 @dataclass
@@ -63,7 +63,7 @@ class Initialize(BaseCommand):
         return command_json
 
     @classmethod
-    def load(cls, command_dict: dict) -> 'Initialize':
+    def load(cls, command_dict: dict):
         new_command_dict = {}
         new_command_dict['command_type'] = 'Initialize'
         new_command_dict['data'] = {key:val for key, val in command_dict.items() if key != 'command_type'}
