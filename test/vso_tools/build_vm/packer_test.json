@@ -10,7 +10,7 @@
     "os_type": "Windows",
     "image_publisher": "MicrosoftWindowsServer",
     "image_offer": "WindowsServer",
-    "image_sku": "2019-datacenter-core-g2",
+    "image_sku": "2019-datacenter-gensecond",
 
     "build_resource_group_name": "nni",
     "vm_size": "Standard_D2s_v4",
@@ -30,7 +30,8 @@
     },
     {
       "type": "windows-restart",
-      "restart_timeout": "15m"
+      "restart_timeout": "15m",
+      "restart_check_command": "powershell -command \"& {Write-Output 'restarted.'}\""
     }
   ]
 }
