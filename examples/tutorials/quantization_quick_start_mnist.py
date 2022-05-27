@@ -87,8 +87,8 @@ print("calibration_config: ", calibration_config)
 # %%
 # build tensorRT engine to make a real speedup, for more information about speedup, please refer :doc:`quantization_speedup`.
 
-# from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-# input_shape = (32, 1, 28, 28)
-# engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
-# engine.compress()
-# test_trt(engine)
+from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+input_shape = (32, 1, 28, 28)
+engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
+engine.compress()
+test_trt(engine)

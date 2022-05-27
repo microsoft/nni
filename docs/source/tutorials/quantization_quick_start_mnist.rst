@@ -73,9 +73,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.9101, Accuracy: 7650/10000 (76%)
-    Average test loss: 0.2572, Accuracy: 9233/10000 (92%)
-    Average test loss: 0.1803, Accuracy: 9478/10000 (95%)
+    Average test loss: 0.5901, Accuracy: 8293/10000 (83%)
+    Average test loss: 0.2469, Accuracy: 9245/10000 (92%)
+    Average test loss: 0.1586, Accuracy: 9531/10000 (95%)
 
 
 
@@ -195,9 +195,9 @@ QAT is a training-aware quantizer, it will update scale and zero point during tr
 
  .. code-block:: none
 
-    Average test loss: 0.1304, Accuracy: 9618/10000 (96%)
-    Average test loss: 0.1213, Accuracy: 9627/10000 (96%)
-    Average test loss: 0.1071, Accuracy: 9661/10000 (97%)
+    Average test loss: 0.1333, Accuracy: 9587/10000 (96%)
+    Average test loss: 0.1076, Accuracy: 9660/10000 (97%)
+    Average test loss: 0.0957, Accuracy: 9702/10000 (97%)
 
 
 
@@ -226,7 +226,9 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0039], device='cuda:0'), 'weight_zero_point': tensor([75.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0020], device='cuda:0'), 'weight_zero_point': tensor([113.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 15.726728439331055}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0'), 'weight_zero_point': tensor([128.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 23.760709762573242}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([122.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 22.26300048828125}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 15.794795036315918}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 23.963031768798828}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 22.807270050048828}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 19.158937454223633}}
+    INFO:nni.compression.pytorch.compressor:Model state_dict saved to ./log/mnist_model.pth
+    INFO:nni.compression.pytorch.compressor:Mask dict saved to ./log/mnist_calibration.pth
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0029], device='cuda:0'), 'weight_zero_point': tensor([96.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([101.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.014460563659668}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([118.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 25.994585037231445}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([120.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 21.589195251464844}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 10.066218376159668}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.317869186401367}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 21.97711944580078}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 17.56885528564453}}
 
 
 
@@ -240,14 +242,23 @@ build tensorRT engine to make a real speedup, for more information about speedup
 .. code-block:: default
 
 
-    # from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-    # input_shape = (32, 1, 28, 28)
-    # engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
-    # engine.compress()
-    # test_trt(engine)
+    from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+    input_shape = (32, 1, 28, 28)
+    engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
+    engine.compress()
+    test_trt(engine)
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Loss: 0.09545102081298829  Accuracy: 96.98%
+    Inference elapsed_time (whole dataset): 0.03549933433532715s
 
 
 
@@ -255,7 +266,7 @@ build tensorRT engine to make a real speedup, for more information about speedup
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  55.967 seconds)
+   **Total running time of the script:** ( 1 minutes  45.743 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start_mnist.py:
