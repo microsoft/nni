@@ -22,7 +22,10 @@ def get_advisor() -> 'RetiariiAdvisor':
 
 def register_advisor(advisor: 'RetiariiAdvisor'):
     global _advisor
-    assert _advisor is None
+    if _advisor is not None:
+        warnings.warn('Advisor is already set.'
+                      'You should avoid instantiating RetiariiExperiment twice in one proces.'
+                      'If you are running in a Jupyter notebook, please restart the kernel.')
     _advisor = advisor
 
 

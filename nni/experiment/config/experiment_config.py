@@ -164,10 +164,11 @@ class ExperimentConfig(ConfigBase):
         # currently I have only seen one issue of this kind
         #Path(self.experiment_working_directory).mkdir(parents=True, exist_ok=True)
 
-        utils.validate_gpu_indices(self.tuner_gpu_indices)
+        if type(self).__name__ != 'RetiariiExeConfig':
+            utils.validate_gpu_indices(self.tuner_gpu_indices)
 
-        if self.tuner is None:
-            raise ValueError('ExperimentConfig: tuner must be set')
+            if self.tuner is None:
+                raise ValueError('ExperimentConfig: tuner must be set')
 
 def _load_search_space_file(search_space_path):
     # FIXME

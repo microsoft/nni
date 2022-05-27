@@ -875,7 +875,7 @@ class ValueChoice(ValueChoiceX[_cand], Mutable):
         return value
 
     def __init__(self, candidates: List[_cand], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
-        super().__init__()
+        super().__init__()  # type: ignore
         self.candidates = candidates
         self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
         assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'

@@ -12,22 +12,38 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
-from .supermodule.sampling import PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy
-from .supermodule.operation import NATIVE_MIXED_OPERATIONS
+from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
+from .supermodule.sampling import (
+    PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy,
+    PathSamplingCell, PathSamplingRepeat
+)
 from .enas import ReinforceController, ReinforceField
 
 
 class RandomSamplingLightningModule(BaseOneShotLightningModule):
     _random_note = """
-    Random Sampling NAS Algorithm.
+    Train a super-net with uniform path sampling. See `reference <https://arxiv.org/abs/1904.00420>`__.
+
     In each epoch, model parameters are trained after a uniformly random sampling of each choice.
     Notably, the exporting result is **also a random sample** of the search space.
+
+    The supported mutation primitives of RandomOneShot are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
+    * :class:`nni.retiarii.nn.pytorch.Repeat`.
+    * :class:`nni.retiarii.nn.pytorch.Cell`.
+    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
 
     Parameters
     ----------
     {{module_params}}
     {base_params}
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+    """.format(
+        base_params=BaseOneShotLightningModule._mutation_hooks_note,
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+    )
 
     __doc__ = _random_note.format(
         module_params=BaseOneShotLightningModule._inner_module_note,
@@ -43,6 +59,8 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
         hooks = [
             PathSamplingLayer.mutate,
             PathSamplingInput.mutate,
+            PathSamplingRepeat.mutate,
+            PathSamplingCell.mutate,
         ]
         hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
         hooks.append(no_default_hook)
@@ -61,9 +79,24 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
 
 class EnasLightningModule(RandomSamplingLightningModule):
     _enas_note = """
-    The implementation of ENAS :cite:p:`pham2018efficient`. There are 2 steps in an epoch.
-    Firstly, training model parameters.
-    Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
+    RL controller learns to generate the best network on a super-net. See `ENAS paper <https://arxiv.org/abs/1802.03268>`__.
+
+    There are 2 steps in an epoch.
+
+    - Firstly, training model parameters.
+    - Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
+
+    ENAS requires the evaluator to report metrics via ``self.log`` in its ``validation_step``.
+    See explanation of ``reward_metric_name`` for details.
+
+    The supported mutation primitives of ENAS are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
+    * :class:`nni.retiarii.nn.pytorch.Repeat`.
+    * :class:`nni.retiarii.nn.pytorch.Cell`.
+    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
 
     {{module_notes}}
 
@@ -89,7 +122,10 @@ class EnasLightningModule(RandomSamplingLightningModule):
         If there are multiple, it will find the metric with key name ``reward_metric_name``,
         which is "default" by default.
         Otherwise it raises an exception indicating multiple metrics are found.
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+    """.format(
+        base_params=BaseOneShotLightningModule._mutation_hooks_note,
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+    )
 
     __doc__ = _enas_note.format(
         module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.',
@@ -133,29 +169,30 @@ class EnasLightningModule(RandomSamplingLightningModule):
     def configure_architecture_optimizers(self):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
 
-    def training_step(self, batch, batch_idx):
-        # The ConcatenateTrainValDataloader yields both data and which dataloader it comes from.
-        batch, source = batch
+    def training_step(self, batch_packed, batch_idx):
+        batch, mode = batch_packed
 
-        if source == 'train':
-            # step 1: train model params
-            self.resample()
+        if mode == 'train':
+            # train model params
+            with torch.no_grad():
+                self.resample()
             self.call_weight_optimizers('zero_grad')
-            loss_and_metrics = self.model.training_step(batch, batch_idx)
-            w_step_loss = loss_and_metrics['loss'] \
-                if isinstance(loss_and_metrics, dict) else loss_and_metrics
+            step_output = self.model.training_step(batch, batch_idx)
+            w_step_loss = step_output['loss'] \
+                if isinstance(step_output, dict) else step_output
             self.manual_backward(w_step_loss)
             self.call_weight_optimizers('step')
-            return loss_and_metrics
 
-        if source == 'val':
-            # step 2: train ENAS agent
+        else:
+            # train ENAS agent
             arc_opt = self.architecture_optimizers()
             if not isinstance(arc_opt, optim.Optimizer):
                 raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
             arc_opt.zero_grad()
             self.resample()
-            self.model.validation_step(batch, batch_idx)
+
+            step_output = self.model.validation_step(batch, batch_idx)
+
             # use the default metric of self.model as reward function
             if len(self.trainer.callback_metrics) == 1:
                 _, metric = next(iter(self.trainer.callback_metrics.items()))
@@ -163,7 +200,9 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 metric_name = self.reward_metric_name or 'default'
                 if metric_name not in self.trainer.callback_metrics:
                     raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
-                                   f'found multiple metrics without default: {self.trainer.callback_metrics.keys()}')
+                                   f'found multiple (or zero) metrics without default: {list(self.trainer.callback_metrics.keys())}. '
+                                   f'Try to use self.log to report metrics with the specified key ``{metric_name}`` in validation_step, '
+                                   'and remember to set on_step=True.')
                 metric = self.trainer.callback_metrics[metric_name]
             reward: float = metric.item()
 
@@ -182,6 +221,8 @@ class EnasLightningModule(RandomSamplingLightningModule):
                     nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
                 arc_opt.step()
                 arc_opt.zero_grad()
+
+        return step_output
 
     def resample(self):
         """Resample the architecture with ENAS controller."""

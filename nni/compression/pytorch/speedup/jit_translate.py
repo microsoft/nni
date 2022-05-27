@@ -537,6 +537,13 @@ def cat_python(node, speedup):
     return CatModule(dim)
 
 
+def expandas_python(node, speedup):
+    class ExpandasModule(torch.nn.Module):
+        def forward(self, x, y):
+            return x.expand_as(y).clone()
+    return ExpandasModule()
+
+
 trans_from_jit_to_python = {
     'aten::add': add_python,
     'aten::add_': add_python,
@@ -581,11 +588,11 @@ trans_from_jit_to_python = {
     'aten::unsqueeze': unsqueeze_python,
     'aten::constant_pad_nd': constant_pad_nd_python,
     'aten::silu': silu_python,
+    'aten::expand_as': expandas_python,
     'prim::TupleUnpack': tupleunpack_python,
     'prim::ListUnpack': tupleunpack_python,
     'prim::NumToTensor': num2tensor_python,
     'prim::GetAttr': getattr_python
-
 }
 
 

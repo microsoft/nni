@@ -25,7 +25,8 @@ _logger = logging.getLogger(__name__)
 
 class FunctionBasedTaskGenerator(TaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
-                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermediate_result: bool = False):
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 skip_first_iteration: bool = False):
         """
         Parameters
         ----------
@@ -39,16 +40,21 @@ class FunctionBasedTaskGenerator(TaskGenerator):
         origin_masks
             The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
         log_dir
-            The log directory use to saving the task generator log.
+            The log directory used to save the task generator log.
         keep_intermediate_result
             If keeping the intermediate result, including intermediate model and masks during each iteration.
+        skip_first_iteration
+            If skipping the first iteration, the iteration counter will start at 1.
+            In these function-based iterative pruning algorithms, iteration `0` means a warm up stage with `sparsity = 0`.
+            If the `original_model` is a pre-trained model, the first iteration is usually can be skipped.
         """
         self.total_iteration = total_iteration
+        self.skip_first_iteration = skip_first_iteration
         super().__init__(origin_model, origin_config_list=origin_config_list, origin_masks=origin_masks,
                          log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
 
     def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
-        self.current_iteration = 0
+        self.current_iteration = 1 if self.skip_first_iteration else 0
         self.target_sparsity = config_list_canonical(model, config_list)
         super().reset(model, config_list=config_list, masks=masks)
 

@@ -4,16 +4,22 @@ import numpy as np
 import torch
 import torch.nn as nn
 from nni.retiarii.nn.pytorch import ValueChoice, Conv2d, BatchNorm2d, Linear, MultiheadAttention
+from nni.retiarii.oneshot.pytorch.base_lightning import traverse_and_mutate_submodules
 from nni.retiarii.oneshot.pytorch.supermodule.differentiable import (
-    MixedOpDifferentiablePolicy, DifferentiableMixedLayer, DifferentiableMixedInput, GumbelSoftmax
+    MixedOpDifferentiablePolicy, DifferentiableMixedLayer, DifferentiableMixedInput, GumbelSoftmax,
+    DifferentiableMixedRepeat, DifferentiableMixedCell
 )
 from nni.retiarii.oneshot.pytorch.supermodule.sampling import (
-    MixedOpPathSamplingPolicy, PathSamplingLayer, PathSamplingInput
+    MixedOpPathSamplingPolicy, PathSamplingLayer, PathSamplingInput, PathSamplingRepeat, PathSamplingCell
 )
 from nni.retiarii.oneshot.pytorch.supermodule.operation import MixedConv2d, NATIVE_MIXED_OPERATIONS
 from nni.retiarii.oneshot.pytorch.supermodule.proxyless import ProxylessMixedLayer, ProxylessMixedInput
 from nni.retiarii.oneshot.pytorch.supermodule._operation_utils import Slicable as S, MaybeWeighted as W
 from nni.retiarii.oneshot.pytorch.supermodule._valuechoice_utils import *
+
+from .models import (
+    CellSimple, CellDefaultArgs, CellCustomProcessor, CellLooseEnd, CellOpFactory
+)
 
 
 def test_slice():
@@ -246,3 +252,113 @@ def test_proxyless_layer_input():
     assert input.resample({})['ddd'] in list(range(5))
     assert input([torch.randn(4, 2) for _ in range(5)]).size() == torch.Size([4, 2])
     assert input.export({})['ddd'] in list(range(5))
+
+
+def test_pathsampling_repeat():
+    op = PathSamplingRepeat([nn.Linear(16, 16), nn.Linear(16, 8), nn.Linear(8, 4)], ValueChoice([1, 2, 3], label='ccc'))
+    sample = op.resample({})
+    assert sample['ccc'] in [1, 2, 3]
+    for i in range(1, 4):
+        op.resample({'ccc': i})
+        out = op(torch.randn(2, 16))
+        assert out.shape[1] == [16, 8, 4][i - 1]
+
+    op = PathSamplingRepeat([nn.Linear(i + 1, i + 2) for i in range(7)], 2 * ValueChoice([1, 2, 3], label='ddd') + 1)
+    sample = op.resample({})
+    assert sample['ddd'] in [1, 2, 3]
+    for i in range(1, 4):
+        op.resample({'ddd': i})
+        out = op(torch.randn(2, 1))
+        assert out.shape[1] == (2 * i + 1) + 1
+
+
+def test_differentiable_repeat():
+    op = DifferentiableMixedRepeat(
+        [nn.Linear(8 if i == 0 else 16, 16) for i in range(4)],
+        ValueChoice([0, 1], label='ccc') * 2 + 1,
+        GumbelSoftmax(-1),
+        {}
+    )
+    op.resample({})
+    assert op(torch.randn(2, 8)).size() == torch.Size([2, 16])
+    sample = op.export({})
+    assert 'ccc' in sample and sample['ccc'] in [0, 1]
+
+
+def test_pathsampling_cell():
+    for cell_cls in [CellSimple, CellDefaultArgs, CellCustomProcessor, CellLooseEnd, CellOpFactory]:
+        model = cell_cls()
+        nas_modules = traverse_and_mutate_submodules(model, [
+            PathSamplingLayer.mutate,
+            PathSamplingInput.mutate,
+            PathSamplingCell.mutate,
+        ], {})
+        result = {}
+        for module in nas_modules:
+            result.update(module.resample(memo=result))
+        assert len(result) == model.cell.num_nodes * model.cell.num_ops_per_node * 2
+        result = {}
+        for module in nas_modules:
+            result.update(module.export(memo=result))
+        assert len(result) == model.cell.num_nodes * model.cell.num_ops_per_node * 2
+
+        if cell_cls in [CellLooseEnd, CellOpFactory]:
+            assert isinstance(model.cell, PathSamplingCell)
+        else:
+            assert not isinstance(model.cell, PathSamplingCell)
+
+        inputs = {
+            CellSimple: (torch.randn(2, 16), torch.randn(2, 16)),
+            CellDefaultArgs: (torch.randn(2, 16),),
+            CellCustomProcessor: (torch.randn(2, 3), torch.randn(2, 16)),
+            CellLooseEnd: (torch.randn(2, 16), torch.randn(2, 16)),
+            CellOpFactory: (torch.randn(2, 3), torch.randn(2, 16)),
+        }[cell_cls]
+
+        output = model(*inputs)
+        if cell_cls == CellCustomProcessor:
+            assert isinstance(output, tuple) and len(output) == 2 and \
+                output[1].shape == torch.Size([2, 16 * model.cell.num_nodes])
+        else:
+            # no loose-end support for now
+            assert output.shape == torch.Size([2, 16 * model.cell.num_nodes])
+
+
+def test_differentiable_cell():
+    for cell_cls in [CellSimple, CellDefaultArgs, CellCustomProcessor, CellLooseEnd, CellOpFactory]:
+        model = cell_cls()
+        nas_modules = traverse_and_mutate_submodules(model, [
+            DifferentiableMixedLayer.mutate,
+            DifferentiableMixedInput.mutate,
+            DifferentiableMixedCell.mutate,
+        ], {})
+        result = {}
+        for module in nas_modules:
+            result.update(module.export(memo=result))
+        assert len(result) == model.cell.num_nodes * model.cell.num_ops_per_node * 2
+
+        ctrl_params = []
+        for m in nas_modules:
+            ctrl_params += list(m.parameters(arch=True))
+        if cell_cls in [CellLooseEnd, CellOpFactory]:
+            assert len(ctrl_params) == model.cell.num_nodes * (model.cell.num_nodes + 3) // 2
+            assert isinstance(model.cell, DifferentiableMixedCell)
+        else:
+            assert not isinstance(model.cell, DifferentiableMixedCell)
+
+        inputs = {
+            CellSimple: (torch.randn(2, 16), torch.randn(2, 16)),
+            CellDefaultArgs: (torch.randn(2, 16),),
+            CellCustomProcessor: (torch.randn(2, 3), torch.randn(2, 16)),
+            CellLooseEnd: (torch.randn(2, 16), torch.randn(2, 16)),
+            CellOpFactory: (torch.randn(2, 3), torch.randn(2, 16)),
+        }[cell_cls]
+
+        output = model(*inputs)
+        if cell_cls == CellCustomProcessor:
+            assert isinstance(output, tuple) and len(output) == 2 and \
+                output[1].shape == torch.Size([2, 16 * model.cell.num_nodes])
+        else:
+            # no loose-end support for now
+            assert output.shape == torch.Size([2, 16 * model.cell.num_nodes])
+

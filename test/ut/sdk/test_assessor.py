@@ -57,7 +57,7 @@ class AssessorTestCase(TestCase):
         _restore_io()
 
         assessor = NaiveAssessor()
-        dispatcher = MsgDispatcher('ws://_placeholder_', None, assessor)
+        dispatcher = MsgDispatcher('ws://_unittest_placeholder_', None, assessor)
         dispatcher._channel = LegacyCommandChannel()
         msg_dispatcher_base._worker_fast_exit_on_terminate = False
 
