@@ -8,12 +8,10 @@ Write-Host "Installing Choco..."
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
 iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-Start-Sleep -Seconds 300
+# Install dotnetfx (and restart)
+choco install -y --no-progress dotnetfx
 
-# # Install dotnetfx (and restart)
-# choco install -y --no-progress dotnetfx
-
-# Set-PSDebug -Trace 1
+Set-PSDebug -Trace 1
 
 # # Nuget.
 # # Doesn't have azcopy.
