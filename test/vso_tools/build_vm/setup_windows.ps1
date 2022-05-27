@@ -1,22 +1,22 @@
 #Requires -RunAsAdministrator
 $ErrorActionPreference = "Stop"
 
-# Choco.
-# https://docs.chocolatey.org/en-us/choco/setup
-# Community version can't customize output directory.
-Write-Host "Installing Choco..."
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+# # Choco.
+# # https://docs.chocolatey.org/en-us/choco/setup
+# # Community version can't customize output directory.
+# Write-Host "Installing Choco..."
+# [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+# iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-Set-PSDebug -Trace 1
+# Set-PSDebug -Trace 1
 
-# Nuget.
-# Doesn't have azcopy.
-Write-Host "Installing Nuget..."
-$NugetDir = "$env:ProgramData\nuget"
-New-Item "$NugetDir" -ItemType Directory -Force | Out-Null
-Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
-$env:path = "$env:path;$NugetDir"
+# # Nuget.
+# # Doesn't have azcopy.
+# Write-Host "Installing Nuget..."
+# $NugetDir = "$env:ProgramData\nuget"
+# New-Item "$NugetDir" -ItemType Directory -Force | Out-Null
+# Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
+# $env:path = "$env:path;$NugetDir"
 
 # # Install CUDA.
 # Write-Host "Installing CUDA..."
@@ -54,7 +54,7 @@ Set-Service -Name sshd -StartupType 'Automatic'
 #     Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
 # }
 
-Set-PSDebug -Trace 1
+# Set-PSDebug -Trace 1
 
 # # Create a new user (for SSH login).
 # $Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
