@@ -1,9 +1,6 @@
 #Requires -RunAsAdministrator
 $ErrorActionPreference = "Stop"
 
-# Stops the windows update service
-net stop wuauserv
-
 # Choco.
 # https://docs.chocolatey.org/en-us/choco/setup
 # Community version can't customize output directory.
@@ -130,12 +127,3 @@ Set-PSDebug -Trace 1
 # Write-Host "Prepare PATHs..."
 # Write-Host $env:path
 # Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $env:path
-
-# Stops the windows update service
-net stop wuauserv
-
-# List pending updates
-$UpdateSession = New-Object -ComObject Microsoft.Update.Session
-$UpdateSearcher = $UpdateSession.CreateupdateSearcher()
-$Updates = @($UpdateSearcher.Search("IsHidden=0 and IsInstalled=0").Updates)
-$Updates | Select-Object Title
