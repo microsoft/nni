@@ -1,14 +1,14 @@
 #Requires -RunAsAdministrator
-# $ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
-# # Choco.
-# # https://docs.chocolatey.org/en-us/choco/setup
-# # Community version can't customize output directory.
-# Write-Host "Installing Choco..."
-# [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-# iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+# Choco.
+# https://docs.chocolatey.org/en-us/choco/setup
+# Community version can't customize output directory.
+Write-Host "Installing Choco..."
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-# Set-PSDebug -Trace 1
+Set-PSDebug -Trace 1
 
 # # Nuget.
 # # Doesn't have azcopy.
