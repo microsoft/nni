@@ -1,6 +1,9 @@
 #Requires -RunAsAdministrator
 $ErrorActionPreference = "Stop"
 
+# Stops the windows update service
+net stop wuauserv
+
 # Choco.
 # https://docs.chocolatey.org/en-us/choco/setup
 # Community version can't customize output directory.
@@ -10,51 +13,51 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocola
 
 Set-PSDebug -Trace 1
 
-# # Nuget.
-# # Doesn't have azcopy.
-# Write-Host "Installing Nuget..."
-# $NugetDir = "$env:ProgramData\nuget"
-# New-Item "$NugetDir" -ItemType Directory -Force | Out-Null
-# Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
-# $env:path = "$env:path;$NugetDir"
+# Nuget.
+# Doesn't have azcopy.
+Write-Host "Installing Nuget..."
+$NugetDir = "$env:ProgramData\nuget"
+New-Item "$NugetDir" -ItemType Directory -Force | Out-Null
+Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
+$env:path = "$env:path;$NugetDir"
 
-# # Install CUDA.
-# Write-Host "Installing CUDA..."
-# $CudaUrl = "https://developer.download.nvidia.com/compute/cuda/11.7.0/network_installers/cuda_11.7.0_windows_network.exe"
-# Invoke-WebRequest $CudaUrl -OutFile "cuda_installer.exe"
-# Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n" -Wait
-# Remove-Item "cuda_installer.exe"
-# # Verify CUDA.
-# Write-Host "Verify CUDA installation..."
-# $CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
-# # GPU driver can't be installed without a hardware
-# # Get-Command nvidia-smi
-# Get-ChildItem $CudaDir
-# $env:path = "$env:path;$CudaDir"
+# Install CUDA.
+Write-Host "Installing CUDA..."
+$CudaUrl = "https://developer.download.nvidia.com/compute/cuda/11.7.0/network_installers/cuda_11.7.0_windows_network.exe"
+Invoke-WebRequest $CudaUrl -OutFile "cuda_installer.exe"
+Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n" -Wait
+Remove-Item "cuda_installer.exe"
+# Verify CUDA.
+Write-Host "Verify CUDA installation..."
+$CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
+# GPU driver can't be installed without a hardware
+# Get-Command nvidia-smi
+Get-ChildItem $CudaDir
+$env:path = "$env:path;$CudaDir"
 
-# # Install SSH.
-# Write-Host "Installing SSH..."
-# # https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
-# Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
-# # Install the OpenSSH Client
-# Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
-# # Install the OpenSSH Server
-# Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-# # Start the sshd service
-# Set-PSDebug -Trace 0
-# Write-Host "Starting SSH service..."
-# Start-Service sshd
-# Set-Service -Name sshd -StartupType 'Automatic'
-# Write-Host "Configure firewall for SSH..."
-# # Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
-# if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue | Select-Object Name, Enabled)) {
-#     Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
-#     New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
-# } else {
-#     Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
-# }
+# Install SSH.
+Write-Host "Installing SSH..."
+# https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
+Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
+# Install the OpenSSH Client
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+# Install the OpenSSH Server
+Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+# Start the sshd service
+Set-PSDebug -Trace 0
+Write-Host "Starting SSH service..."
+Start-Service sshd
+Set-Service -Name sshd -StartupType 'Automatic'
+Write-Host "Configure firewall for SSH..."
+# Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
+if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue | Select-Object Name, Enabled)) {
+    Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
+    New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
+} else {
+    Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
+}
 
-# Set-PSDebug -Trace 1
+Set-PSDebug -Trace 1
 
 # # Create a new user (for SSH login).
 # $Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
