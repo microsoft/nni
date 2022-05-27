@@ -18,66 +18,66 @@ New-Item "$NugetDir" -ItemType Directory -Force | Out-Null
 Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
 $env:path = "$env:path;$NugetDir"
 
-# Install CUDA.
-Write-Host "Installing CUDA..."
-$CudaUrl = "https://developer.download.nvidia.com/compute/cuda/11.7.0/network_installers/cuda_11.7.0_windows_network.exe"
-Invoke-WebRequest $CudaUrl -OutFile "cuda_installer.exe"
-Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n" -Wait
-Remove-Item "cuda_installer.exe"
-# Verify CUDA.
-Write-Host "Verify CUDA installation..."
-$CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
-# GPU driver can't be installed without a hardware
-# Get-Command nvidia-smi
-Get-ChildItem $CudaDir
-$env:path = "$env:path;$CudaDir"
+# These installation seems not working.
 
-# Install SSH.
-Write-Host "Installing SSH..."
-# https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
-Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
-# Install the OpenSSH Client
-Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
-# Install the OpenSSH Server
-Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-# Start the sshd service
-Set-PSDebug -Trace 0
-Write-Host "Starting SSH service..."
-Start-Service sshd
-Set-Service -Name sshd -StartupType 'Automatic'
-Write-Host "Configure firewall for SSH..."
-# Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
-if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue | Select-Object Name, Enabled)) {
-    Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
-    New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
-} else {
-    Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
-}
+# Visual Studio C++ Build tools (for Cython)
+# Invoke-WebRequest "https://aka.ms/vs/17/release/vs_BuildTools.exe" -OutFile "vs_BuildTools.exe"
+# Start-Process -FilePath "vs_BuildTools.exe" -ArgumentList "--quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" -Wait
+# Remove-Item "vs_BuildTools.exe"
 
-Set-PSDebug -Trace 1
+# Microsoft Visual C++ Redistributable (for PyTorch)
+# Invoke-WebRequest "https://aka.ms/vs/16/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"
+# Start-Process -FilePath ".\vc_redist.x64.exe" -ArgumentList "/q /norestart" -Wait
+# Remove-Item "vc_redist.x64.exe"
+
+# Use choco instead.
+choco install -y --force visualstudio2019buildtools --no-progress
+choco install -y --force visualstudio2019-workload-vctools --no-progress
+choco install -y --force vcredist-all --no-progress
+
+# # Install CUDA.
+# Write-Host "Installing CUDA..."
+# $CudaUrl = "https://developer.download.nvidia.com/compute/cuda/11.7.0/network_installers/cuda_11.7.0_windows_network.exe"
+# Invoke-WebRequest $CudaUrl -OutFile "cuda_installer.exe"
+# Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n" -Wait
+# Remove-Item "cuda_installer.exe"
+# # Verify CUDA.
+# Write-Host "Verify CUDA installation..."
+# $CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
+# # GPU driver can't be installed without a hardware
+# # Get-Command nvidia-smi
+# Get-ChildItem $CudaDir
+# $env:path = "$env:path;$CudaDir"
+
+# # Install SSH.
+# Write-Host "Installing SSH..."
+# # https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
+# Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
+# # Install the OpenSSH Client
+# Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+# # Install the OpenSSH Server
+# Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+# # Start the sshd service
+# Set-PSDebug -Trace 0
+# Write-Host "Starting SSH service..."
+# Start-Service sshd
+# Set-Service -Name sshd -StartupType 'Automatic'
+# Write-Host "Configure firewall for SSH..."
+# # Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
+# if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue | Select-Object Name, Enabled)) {
+#     Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
+#     New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
+# } else {
+#     Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
+# }
+
+# Set-PSDebug -Trace 1
 
 # # Create a new user (for SSH login).
 # $Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
 # New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 
 # Write-Host "Installing utilities..."
-
-# # These installation seems not working.
-
-# # Visual Studio C++ Build tools (for Cython)
-# # Invoke-WebRequest "https://aka.ms/vs/17/release/vs_BuildTools.exe" -OutFile "vs_BuildTools.exe"
-# # Start-Process -FilePath "vs_BuildTools.exe" -ArgumentList "--quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended" -Wait
-# # Remove-Item "vs_BuildTools.exe"
-
-# # Microsoft Visual C++ Redistributable (for PyTorch)
-# # Invoke-WebRequest "https://aka.ms/vs/16/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"
-# # Start-Process -FilePath ".\vc_redist.x64.exe" -ArgumentList "/q /norestart" -Wait
-# # Remove-Item "vc_redist.x64.exe"
-
-# # Use choco instead.
-# choco install -y --force visualstudio2019buildtools --no-progress
-# choco install -y --force visualstudio2019-workload-vctools --no-progress
-# choco install -y --force vcredist-all --no-progress
 
 # # Install azcopy for cache download.
 # # Something wrong with the latest (10.15.0) checksum.
