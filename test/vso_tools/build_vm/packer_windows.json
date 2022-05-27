@@ -23,7 +23,7 @@
     },
 
     "build_resource_group_name": "nni",
-    "vm_size": "Standard_D2_v4",
+    "vm_size": "Standard_D2s_v4",
 
     "communicator": "winrm",
     "winrm_use_ssl": "true",
