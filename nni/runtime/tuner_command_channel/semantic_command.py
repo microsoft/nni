@@ -4,6 +4,7 @@
 from dataclasses import dataclass
 import dataclasses
 import json
+import re
 from typing import List, Literal
 import typeguard
 from nni.runtime.tuner_command_channel.command_type import CommandType
@@ -48,7 +49,13 @@ class BaseCommand:
         return command_json
 
     @classmethod
-    def load(cls, command_dict: dict):
+    def load(cls, command_type, command_json: str):
+        command_dict = {}
+        if len(command_json) == 0:
+            command_dict['command_type'] = command_type
+            return cls(**command_dict)
+        command_dict = json.loads(command_json)
+        command_dict['command_type'] = command_type
         return cls(**command_dict)
 
 @dataclass
@@ -57,17 +64,16 @@ class Initialize(BaseCommand):
 
     def _to_legacy_command_type(self) -> str:
         old_command_type = new_to_old[self.command_type].value.decode()
-        command_dict = self.data
-        command_json = json.dumps(command_dict)
+        command_json = json.dumps(self.data)
         command_json = old_command_type + command_json
         return command_json
 
     @classmethod
-    def load(cls, command_dict: dict):
-        new_command_dict = {}
-        new_command_dict['command_type'] = 'Initialize'
-        new_command_dict['data'] = {key:val for key, val in command_dict.items() if key != 'command_type'}
-        return super().load(new_command_dict)
+    def load(cls, command_type, command_json: str):
+        command_dict = {}
+        command_dict['data'] = json.loads(command_json)
+        command_dict['command_type'] = command_type
+        return cls(**command_dict)
 
 @dataclass
 class RequestTrialJobs(BaseCommand):
@@ -77,6 +83,13 @@ class RequestTrialJobs(BaseCommand):
         old_command_type = new_to_old[self.command_type].value.decode()
         command_json = old_command_type + repr(self.data)
         return command_json
+
+    @classmethod
+    def load(cls, command_type, command_json: str):
+        command_dict = {}
+        command_dict['data'] = json.loads(command_json)
+        command_dict['command_type'] = command_type
+        return cls(**command_dict)
 
 @dataclass
 class ReportMetricData(BaseCommand):
@@ -109,6 +122,17 @@ class TrialEnd(BaseCommand):
     event: str
     hyper_params: str
 
+    @classmethod
+    def load(cls, command_type, command_json: str):
+        hyper_params_json = command_json.split("hyper_params\":")[1][1:-2]
+        command_dict = {}
+        command_dict['hyper_params'] = eval('\''+hyper_params_json+'\'')
+        subcommand = re.findall(r':"(.*?)"', command_json.split("hyper_params\":")[0])
+        command_dict['trial_job_id'] = subcommand[0]
+        command_dict['event'] = subcommand[1]
+        command_dict['command_type'] = command_type
+        return cls(**command_dict)
+
 @dataclass
 class Terminate(BaseCommand):
     def _to_legacy_command_type(self) -> str:
@@ -131,7 +155,7 @@ class Initialized(BaseCommand):
 class NewTrialJob(BaseCommand):
     parameter_id: int
     parameter_source: str
-    parameters: str
+    parameters: dict
     parameter_index: int
 
 @dataclass

@@ -45,6 +45,10 @@ class NaiveTuner(Tuner):
 _command1 = 'KI{"trial_job_id": "1"}'
 _command2 = 'IN{"features":{"_type":"choice","_value":[128,256,512,1024]},"lr":{"_type":"loguniform","_value":[0.0001,0.1]},"momentum":{"_type":"uniform","_value":[0,1]}}'
 _command3 = 'GE2'
+_command4 = 'TR{"parameter_id": 0, "parameter_source": "algorithm", "parameters": {"features": 1024, "lr": 0.0006827054029247927, "momentum": 0.22591105939004463}, "parameter_index": 0}'
+_command5 = 'EN{"trial_job_id":"H6KgS","event":"FAILED","hyper_params":"{\"parameter_id\": 0, \"parameter_source\": \"algorithm\", \"parameters\": {\"features\": 1024, \"lr\": 0.0006827054029247927, \"momentum\": 0.22591105939004463}, \"parameter_index\": 0}"}'
+_command6 = 'EN{"trial_job_id":"HziT8","event":"FAILED","hyper_params":"{\"parameter_id\": 0, \"parameter_source\": \"algorithm\", \"parameters\": {\"features\": 1024, \"lr\": 0.02453788841851038, \"momentum\": 0.9868069807387571}, \"parameter_index\": 0}"}'
+_command7 = 'TE'
 class MsgDispatcherTestCase(TestCase):
     def test_msg_dispatcher(self):
         tuner = NaiveTuner()
@@ -55,14 +59,24 @@ class MsgDispatcherTestCase(TestCase):
         _server.stdin.write(_command1 + '\n')
         _server.stdin.flush()
         received1 = dispatcher._channel.receive()
-        assert received1._to_legacy_command_type() == _command1
         _server.stdin.write(_command2 + '\n')
         _server.stdin.flush()
         received2 = dispatcher._channel.receive()
         _server.stdin.write(_command3 + '\n')
         _server.stdin.flush()
         received3 = dispatcher._channel.receive()
-        assert received3._to_legacy_command_type() == _command3
+        _server.stdin.write(_command4 + '\n')
+        _server.stdin.flush()
+        received4 = dispatcher._channel.receive()
+        _server.stdin.write(_command5 + '\n')
+        _server.stdin.flush()
+        received5 = dispatcher._channel.receive()
+        _server.stdin.write(_command6 + '\n')
+        _server.stdin.flush()
+        received6 = dispatcher._channel.receive()
+        _server.stdin.write(_command7 + '\n')
+        _server.stdin.flush()
+        received7 = dispatcher._channel.receive()
 
 def _init():
     global _server
