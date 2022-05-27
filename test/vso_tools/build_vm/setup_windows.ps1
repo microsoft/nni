@@ -127,3 +127,5 @@ choco install -y --force vcredist-all --no-progress
 # Write-Host "Prepare PATHs..."
 # Write-Host $env:path
 # Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $env:path
+
+Write-Host "Setup complete!"
