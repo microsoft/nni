@@ -85,7 +85,6 @@ class MsgDispatcher(MsgDispatcherBase):
         """
         _logger.info('Dispatcher started')
 
-        self._channel.connect()
         self.default_worker.start()
         self.assessor_worker.start()
 
@@ -180,7 +179,7 @@ class MsgDispatcher(MsgDispatcherBase):
     def handle_initialize(self, command: Initialize):
         """Data is search space
         """
-        self.tuner.update_search_space(command.search_space)
+        self.tuner.update_search_space(command.data)
         new_command = Initialized('Initialized')
         self.send(new_command)
 

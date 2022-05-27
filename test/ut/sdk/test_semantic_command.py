@@ -3,6 +3,8 @@
 
 from unittest import TestCase, main
 
+from numpy import reciprocal
+
 from nni.runtime import msg_dispatcher_base
 from nni.runtime.msg_dispatcher import MsgDispatcher
 from nni.runtime.tuner_command_channel.legacy import *
@@ -41,7 +43,8 @@ class NaiveTuner(Tuner):
         self.search_space = search_space
 
 _command1 = 'KI{"trial_job_id": "1"}'
-
+_command2 = 'IN{"features":{"_type":"choice","_value":[128,256,512,1024]},"lr":{"_type":"loguniform","_value":[0.0001,0.1]},"momentum":{"_type":"uniform","_value":[0,1]}}'
+_command3 = 'GE2'
 class MsgDispatcherTestCase(TestCase):
     def test_msg_dispatcher(self):
         tuner = NaiveTuner()
@@ -53,6 +56,13 @@ class MsgDispatcherTestCase(TestCase):
         _server.stdin.flush()
         received1 = dispatcher._channel.receive()
         assert received1._to_legacy_command_type() == _command1
+        _server.stdin.write(_command2 + '\n')
+        _server.stdin.flush()
+        received2 = dispatcher._channel.receive()
+        _server.stdin.write(_command3 + '\n')
+        _server.stdin.flush()
+        received3 = dispatcher._channel.receive()
+        assert received3._to_legacy_command_type() == _command3
 
 def _init():
     global _server

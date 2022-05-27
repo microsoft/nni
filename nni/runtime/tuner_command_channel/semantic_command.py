@@ -32,20 +32,13 @@ class BaseCommand:
         command_dict = self.__dict__
         return json.dumps(command_dict)
 
+    def validate(self):
+        validate_type(self)
+
     def get_legacy_command_type(self) -> CommandType:
         if self.command_type not in new_to_old:
             raise AssertionError('Unsupported command type: {}'.format(self.command_type))
         return new_to_old[self.command_type]
-
-    def validate(self):
-        class_name = type(self).__name__
-        for field in dataclasses.fields(self):
-            value = getattr(self, field.name)
-            #check existense
-            if is_missing(value):
-                raise ValueError('%s: %s is not set'% (class_name, field.name))
-            if not is_instance(value, field.type):
-                raise ValueError('%s: type of %s (%s) is not %s'% (class_name, field.name, repr(value), field.type))
 
     def _to_legacy_command_type(self) -> str:
         old_command_type = new_to_old[self.command_type].value.decode()
@@ -55,16 +48,35 @@ class BaseCommand:
         return command_json
 
     @classmethod
-    def load(cls, command_dict: dict):
+    def load(cls, command_dict: dict) -> 'BaseCommand':
         return cls(**command_dict)
 
 @dataclass
 class Initialize(BaseCommand):
-    search_space: str
+    data: dict
+
+    def _to_legacy_command_type(self) -> str:
+        old_command_type = new_to_old[self.command_type].value.decode()
+        command_dict = self.data
+        command_json = json.dumps(command_dict)
+        command_json = old_command_type + command_json
+        return command_json
+
+    @classmethod
+    def load(cls, command_dict: dict) -> 'Initialize':
+        new_command_dict = {}
+        new_command_dict['command_type'] = 'Initialize'
+        new_command_dict['data'] = {key:val for key, val in command_dict.items() if key != 'command_type'}
+        return super().load(new_command_dict)
 
 @dataclass
 class RequestTrialJobs(BaseCommand):
     data: int
+
+    def _to_legacy_command_type(self) -> str:
+        old_command_type = new_to_old[self.command_type].value.decode()
+        command_json = old_command_type + repr(self.data)
+        return command_json
 
 @dataclass
 class ReportMetricData(BaseCommand):
@@ -87,7 +99,9 @@ class ImportData(BaseCommand):
 
 @dataclass
 class AddCustomizedTrialJob(BaseCommand):
-    command_type: str
+    def _to_legacy_command_type(self) -> str:
+        old_command_type = new_to_old[self.command_type].value.decode()
+        return old_command_type
 
 @dataclass
 class TrialEnd(BaseCommand):
@@ -97,21 +111,28 @@ class TrialEnd(BaseCommand):
 
 @dataclass
 class Terminate(BaseCommand):
-    command_type: str
+    def _to_legacy_command_type(self) -> str:
+        old_command_type = new_to_old[self.command_type].value.decode()
+        return old_command_type
 
 @dataclass
 class Ping(BaseCommand):
-    command_type: str
+    def _to_legacy_command_type(self) -> str:
+        old_command_type = new_to_old[self.command_type].value.decode()
+        return old_command_type
 
 @dataclass
 class Initialized(BaseCommand):
-    command_type: str
+    def _to_legacy_command_type(self) -> str:
+        old_command_type = new_to_old[self.command_type].value.decode()
+        return old_command_type
 
 @dataclass
 class NewTrialJob(BaseCommand):
     parameter_id: int
-    parameters: dict
     parameter_source: str
+    parameters: str
+    parameter_index: int
 
 @dataclass
 class SendTrialJobParameter(BaseCommand):
@@ -124,12 +145,22 @@ class SendTrialJobParameter(BaseCommand):
 @dataclass
 class NoMoreTrialJobs(BaseCommand):
     parameter_id: int
-    parameters: str
+    parameters: dict
     parameter_source: str
 
 @dataclass
 class KillTrialJob(BaseCommand):
     trial_job_id: str
+
+def validate_type(command):
+    class_name = type(command).__name__
+    for field in dataclasses.fields(command):
+        value = getattr(command, field.name)
+        #check existense
+        if is_missing(value):
+            raise ValueError(f'{class_name}: {field.name} is not set')
+        if not is_instance(value, field.type):
+            raise ValueError(f'{class_name}: type of {field.name} ({repr(value)}) is not {field.type}')
 
 def is_missing(value):
     """

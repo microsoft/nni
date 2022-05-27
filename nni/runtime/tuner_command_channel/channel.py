@@ -7,13 +7,12 @@ Low level APIs for algorithms to communicate with NNI manager.
 
 from __future__ import annotations
 import json
-import logging
 
 __all__ = ['TunerCommandChannel']
 
 from .command_type import CommandType
 from .websocket import WebSocket
-from .semantic_command import BaseCommand
+from .semantic_command import BaseCommand, RequestTrialJobs
 
 old_to_new ={CommandType.Initialize: 'Initialize',
 CommandType.RequestTrialJobs: 'RequestTrialJobs',
@@ -30,8 +29,6 @@ CommandType.SendTrialJobParameter: 'SendTrialJobParameter',
 CommandType.NoMoreTrialJobs: 'NoMoreTrialJobs',
 CommandType.KillTrialJob: 'KillTrialJob'
 }
-
-_logger = logging.getLogger(__name__)
 
 class TunerCommandChannel:
     """
@@ -78,7 +75,11 @@ class TunerCommandChannel:
         if command_json is None:
             raise RuntimeError('NNI manager closed connection')
         old_command_type = CommandType(command_json[:2].encode())
-        command_dict = json.loads(command_json[2:])
+        command_dict = {}
+        if len(command_json) > 2:
+            command_dict = json.loads(command_json[2:])
+            if type(command_dict) == int:
+                return RequestTrialJobs(command_type='RequestTrialJobs', data=command_dict)
         command_dict['command_type'] = old_to_new[old_command_type]
         for cls in BaseCommand.__subclasses__():
             if cls.__name__ == command_dict['command_type']:
