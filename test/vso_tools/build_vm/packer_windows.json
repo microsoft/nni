@@ -41,7 +41,8 @@
     },
     {
       "type": "windows-restart",
-      "restart_timeout": "15m"
+      "restart_timeout": "15m",
+      "check_registry": true
     },
     {
       "script": "setup_windows_finalize.ps1",
