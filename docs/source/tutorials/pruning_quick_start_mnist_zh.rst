@@ -1,4 +1,4 @@
-.. 5f266ace988c9ca9e44555fdc497e9ba
+.. b743ab67f64dd0a0688a8cb184e0e947
 
     .. note::
         :class: sphx-glr-download-link-note
@@ -13,6 +13,11 @@
 
 模型剪枝入门
 ============
+
+下面是一个三分钟快速入门模型剪枝的视频。
+
+..  youtube:: wKh51Jnr0a8
+    :align: center
 
 模型剪枝是一种通过减小模型权重规模或中间状态规模来减小模型大小和计算量的技术。
 修剪 DNN 模型有三种常见做法：
