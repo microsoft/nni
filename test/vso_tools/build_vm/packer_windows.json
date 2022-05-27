@@ -37,7 +37,8 @@
       "type": "powershell",
       "elevated_user": "packer",
       "elevated_password": "{{ build `Password` }}",
-      "timeout": "40m"
+      "timeout": "40m",
+      "valid_exit_codes": [0, 3010]
     },
     {
       "type": "windows-restart",
