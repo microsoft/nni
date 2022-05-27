@@ -21,6 +21,11 @@
 Pruning Quickstart
 ==================
 
+Here is a three-minute video to get you started with model pruning.
+
+..  youtube:: wKh51Jnr0a8
+    :align: center
+
 Model pruning is a technique to reduce the model size and computation by reducing model weight size or intermediate state size.
 There are three common practices for pruning a DNN model:
 
@@ -31,7 +36,7 @@ There are three common practices for pruning a DNN model:
 NNI supports all of the above pruning practices by working on the key pruning stage.
 Following this tutorial for a quick look at how to use NNI to prune a model in a common practice.
 
-.. GENERATED FROM PYTHON SOURCE LINES 17-22
+.. GENERATED FROM PYTHON SOURCE LINES 22-27
 
 Preparation
 -----------
@@ -39,7 +44,7 @@ Preparation
 In this tutorial, we use a simple model and pre-trained on MNIST dataset.
 If you are familiar with defining a model and training in pytorch, you can skip directly to `Pruning Model`_.
 
-.. GENERATED FROM PYTHON SOURCE LINES 22-35
+.. GENERATED FROM PYTHON SOURCE LINES 27-40
 
 .. code-block:: default
 
@@ -83,7 +88,7 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-47
+.. GENERATED FROM PYTHON SOURCE LINES 41-52
 
 .. code-block:: default
 
@@ -108,14 +113,14 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.5368, Accuracy: 8321/10000 (83%)
-    Average test loss: 0.3092, Accuracy: 9104/10000 (91%)
-    Average test loss: 0.2070, Accuracy: 9380/10000 (94%)
+    Average test loss: 0.4925, Accuracy: 8414/10000 (84%)
+    Average test loss: 0.2626, Accuracy: 9214/10000 (92%)
+    Average test loss: 0.2006, Accuracy: 9369/10000 (94%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 48-58
+.. GENERATED FROM PYTHON SOURCE LINES 53-63
 
 Pruning Model
 -------------
@@ -128,7 +133,7 @@ The following `config_list` means all layers whose type is `Linear` or `Conv2d` 
 except the layer named `fc3`, because `fc3` is `exclude`.
 The final sparsity ratio for each layer is 50%. The layer named `fc3` will not be pruned.
 
-.. GENERATED FROM PYTHON SOURCE LINES 58-67
+.. GENERATED FROM PYTHON SOURCE LINES 63-72
 
 .. code-block:: default
 
@@ -148,11 +153,11 @@ The final sparsity ratio for each layer is 50%. The layer named `fc3` will not b
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 68-69
+.. GENERATED FROM PYTHON SOURCE LINES 73-74
 
 Pruners usually require `model` and `config_list` as input arguments.
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-76
+.. GENERATED FROM PYTHON SOURCE LINES 74-81
 
 .. code-block:: default
 
@@ -198,7 +203,7 @@ Pruners usually require `model` and `config_list` as input arguments.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 77-84
+.. GENERATED FROM PYTHON SOURCE LINES 82-89
 
 .. code-block:: default
 
@@ -227,13 +232,13 @@ Pruners usually require `model` and `config_list` as input arguments.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 85-88
+.. GENERATED FROM PYTHON SOURCE LINES 90-93
 
 Speedup the original model with masks, note that `ModelSpeedup` requires an unwrapped model.
 The model becomes smaller after speedup,
 and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the masks across layers.
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-97
+.. GENERATED FROM PYTHON SOURCE LINES 93-102
 
 .. code-block:: default
 
@@ -258,17 +263,17 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 
     aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
     Note: .aten::log_softmax.12 does not have corresponding mask inference object
-    /home/nishang/anaconda3/envs/MCM/lib/python3.9/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  /opt/conda/conda-bld/pytorch_1640811803361/work/build/aten/src/ATen/core/TensorBody.h:417.)
+    /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
       return self._grad
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 98-99
+.. GENERATED FROM PYTHON SOURCE LINES 103-104
 
 the model will become real smaller after speedup
 
-.. GENERATED FROM PYTHON SOURCE LINES 99-101
+.. GENERATED FROM PYTHON SOURCE LINES 104-106
 
 .. code-block:: default
 
@@ -301,14 +306,14 @@ the model will become real smaller after speedup
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 102-106
+.. GENERATED FROM PYTHON SOURCE LINES 107-111
 
 Fine-tuning Compacted Model
 ---------------------------
 Note that if the model has been sped up, you need to re-initialize a new optimizer for fine-tuning.
 Because speedup will replace the masked big layers with dense small ones.
 
-.. GENERATED FROM PYTHON SOURCE LINES 106-110
+.. GENERATED FROM PYTHON SOURCE LINES 111-115
 
 .. code-block:: default
 
@@ -326,7 +331,7 @@ Because speedup will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  58.337 seconds)
+   **Total running time of the script:** ( 1 minutes  30.730 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:

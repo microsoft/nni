@@ -53,6 +53,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.bibtex',
+    'sphinxcontrib.youtube',
     # 'nbsphinx',  # nbsphinx has conflicts with sphinx-gallery.
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
