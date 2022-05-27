@@ -127,3 +127,9 @@ $env:path = "$env:path;$CudaDir"
 # Write-Host "Prepare PATHs..."
 # Write-Host $env:path
 # Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $env:path
+
+# List pending updates
+$UpdateSession = New-Object -ComObject Microsoft.Update.Session
+$UpdateSearcher = $UpdateSession.CreateupdateSearcher()
+$Updates = @($UpdateSearcher.Search("IsHidden=0 and IsInstalled=0").Updates)
+$Updates | Select-Object Title
