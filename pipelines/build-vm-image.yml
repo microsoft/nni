@@ -33,5 +33,5 @@ jobs:
   - template: templates/build-vm-image-template.yml
     parameters:
       managed_image_name: nni-linux-image
-      image_name: nniLinuxImage
+      image_name: nniWindowsImage
       packer_config: packer_test
