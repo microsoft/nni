@@ -16,10 +16,11 @@
     "vm_size": "Standard_D2s_v4",
 
     "communicator": "winrm",
-    "winrm_use_ssl": "true",
-    "winrm_insecure": "true",
+    "winrm_use_ssl": true,
+    "winrm_insecure": true,
     "winrm_timeout": "10m",
-    "winrm_username": "packer"
+    "winrm_username": "packer",
+    "winrm_port": 15986
   }],
   "provisioners": [
     {
