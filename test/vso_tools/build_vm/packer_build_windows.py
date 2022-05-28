@@ -3,7 +3,7 @@ import subprocess
 import sys
 import time
 
-BUILD_COMMAND = 'packer build packer_test.json'
+BUILD_COMMAND = 'PACKER_LOG=1 packer build packer_test.json'
 RESOURCE_GROUP = 'nni'
 
 
