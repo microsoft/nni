@@ -38,6 +38,12 @@
       ]
     },
     {
+      "type": "powershell",
+      "inline": [
+        "Write-Host Hello!"
+      ]
+    },
+    {
       "type": "windows-restart",
       "restart_timeout": "15m",
       "restart_check_command": "powershell -command \"& {Write-Output 'restarted.'}\""
