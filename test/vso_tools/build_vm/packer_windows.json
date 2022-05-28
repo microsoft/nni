@@ -25,23 +25,16 @@
     "build_resource_group_name": "nni",
     "vm_size": "Standard_D2s_v4",
 
+    "allowed_inbound_ip_addresses": ["<ip_address>"],
+
     "communicator": "winrm",
-    "winrm_use_ssl": "true",
-    "winrm_insecure": "true",
+    "winrm_use_ssl": true,
+    "winrm_insecure": true,
     "winrm_timeout": "10m",
-    "winrm_username": "packer"
+    "winrm_username": "packer",
+    "winrm_port": 15986
   }],
   "provisioners": [
-    {
-      "type": "powershell",
-      "inline": [
-        "Start-Sleep -Seconds 300"
-      ]
-    },
-    {
-      "type": "windows-restart",
-      "restart_timeout": "15m"
-    },
     {
       "script": "setup_windows.ps1",
       "type": "powershell",
@@ -49,6 +42,10 @@
       "elevated_password": "{{ build `Password` }}",
       "timeout": "40m",
       "valid_exit_codes": [0, 3010]
+    },
+    {
+      "type": "windows-restart",
+      "restart_timeout": "15m"
     },
     {
       "script": "setup_windows_finalize.ps1",

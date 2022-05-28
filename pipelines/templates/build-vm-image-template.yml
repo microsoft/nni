@@ -85,9 +85,18 @@ steps:
     cat $CONFIG_PATH
   displayName: Prepare configuration
 
-# NOTE: Sometimes the builder fails with SSH / WinRM timeout.
-# It can be frustrating because the timeout just appear randomly.
-# No worry. Just retry.
+# Microsoft has a security group for VM created under their subscriptions, that,
+# based on my observations (though I had no clearance to see it myself):
+# 1. A low priority deny all that denies all unintended incoming traffic.
+# 2. A medium-high priority denial for all traffic coming from small ports (lower than 8000 probably).
+# 3. A high priority allowance for traffics from Microsoft-internal IPs.
+#
+# We can only insert new rules below medium. Therefore,
+# 1. For Linux, we change the ssh port to 10022. This is done at provisioning by injecting user / custom data.
+# 2. For Windows, they can't execute the user data script: https://stackoverflow.com/questions/62888359/custom-data-with-azure-windows-vm-run-powersell-script
+#    We can't use custom script extensions either because it's not supported in packer.
+#    We also can't use shell-local provisioner to invoke command, because when the VM is ready, packer always try to connect to WinRM.
+#    The workaround here is to use a monitor to detect the machine ready signal and change its WinRM port.
 - script: |
     cd test/vso_tools/build_vm
     python3 packer_build_windows.py
