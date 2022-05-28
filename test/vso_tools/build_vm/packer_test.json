@@ -15,6 +15,9 @@
     "build_resource_group_name": "nni",
     "vm_size": "Standard_D2s_v4",
 
+    "allowed_inbound_ip_addresses": ["<ip_address>"],
+    "user_data_file": "change_winrm_port.ps1",
+
     "communicator": "winrm",
     "winrm_use_ssl": true,
     "winrm_insecure": true,
@@ -24,24 +27,12 @@
   }],
   "provisioners": [
     {
-      "type": "shell-local",
-      "inline": [
-        "az network nsg rule create -g <resource_group> --nsg-name <network_security_group> -n {{ build `PackerRunUUID` }} \\",
-        "  --priority 100 --source-address-prefixes $(curl ifconfig.me) --source-port-ranges '*' \\",
-        "  --destination-address-prefixes '*' --destination-port-ranges '*' --access Allow --protocol '*' \\",
-        "  --description 'Disposable rule for packer build {{ build `PackerRunUUID` }}'",
-        "export NIC=$(az network nic list -g <resource_group> --query [].'name' --output tsv | grep pkrni | head -1)",
-        "echo \"NIC Found: ${NIC}\"",
-        "az network nic update -n ${NIC} -g <resource_group> --network-security-group <network_security_group>"
-      ]
-    },
-    {
       "type": "powershell",
       "inline": [
         "tasklist /v",
         "tasklist /svc",
         "Get-ScheduledTask",
-        "Start-Sleep -Seconds 900",
+        "Start-Sleep -Seconds 300",
         "Get-ChildItem \"HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Component Based Servicing\\RebootPending\" -EA Ignore",
         "Get-Item \"HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\RebootRequired\" -EA Ignore",
         "Get-ItemProperty \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\" -Name PendingFileRenameOperations -EA Ignore",
