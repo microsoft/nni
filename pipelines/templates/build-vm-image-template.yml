@@ -70,6 +70,7 @@ steps:
 - script: |
     set -e
     cd test/vso_tools/build_vm
+    export IP_ADDRESS=$(curl -s ifconfig.me)
     export VERSION=$(date "+%Y").$(date "+%m%d").$(date "+%H%M%S")
     export CONFIG_PATH=${{ parameters.packer_config }}.json
     sed -i -e "s/<client_id>/$(identity_id)/g" $CONFIG_PATH
@@ -80,6 +81,7 @@ steps:
     sed -i -e "s/<gallery_name>/$(gallery_name)/g" $CONFIG_PATH
     sed -i -e "s/<image_name>/${{ parameters.image_name }}/g" $CONFIG_PATH
     sed -i -e "s/<image_version>/${VERSION}/g" $CONFIG_PATH
+    sed -i -e "s/<ip_address>/${IP_ADDRESS}/g" $CONFIG_PATH
     cat $CONFIG_PATH
   displayName: Prepare configuration
 

@@ -13,6 +13,10 @@
     "image_sku": "20_04-lts-gen2",
 
     "ssh_timeout": "5m",
+    "ssh_port": 10022,
+
+    "allowed_inbound_ip_addresses": ["<ip_address>"],
+    "user_data_file": "change_ssh_port.sh",
 
     "build_resource_group_name": "nni",
     "vm_size": "Standard_D2s_v4"
