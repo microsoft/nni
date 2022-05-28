@@ -18,6 +18,34 @@ New-Item "$NugetDir" -ItemType Directory -Force | Out-Null
 Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile "${NugetDir}\nuget.exe"
 $env:path = "$env:path;$NugetDir"
 
+# Install SSH.
+Write-Host "Installing SSH..."
+# https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
+Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
+# Install the OpenSSH Client
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+# Install the OpenSSH Server
+Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+# Start the sshd service
+Set-PSDebug -Trace 0
+Write-Host "Starting SSH service..."
+Start-Service sshd
+Set-Service -Name sshd -StartupType 'Automatic'
+Write-Host "Configure firewall for SSH..."
+# Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
+if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue | Select-Object Name, Enabled)) {
+    Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
+    New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
+} else {
+    Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
+}
+
+Set-PSDebug -Trace 1
+
+# Create a new user (for SSH login).
+$Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
+New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
+
 # These installation seems not working.
 
 # Visual Studio C++ Build tools (for Cython)
@@ -48,34 +76,6 @@ $CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
 # Get-Command nvidia-smi
 Get-ChildItem $CudaDir
 $env:path = "$env:path;$CudaDir"
-
-# Install SSH.
-Write-Host "Installing SSH..."
-# https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
-Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'
-# Install the OpenSSH Client
-Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
-# Install the OpenSSH Server
-Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-# Start the sshd service
-Set-PSDebug -Trace 0
-Write-Host "Starting SSH service..."
-Start-Service sshd
-Set-Service -Name sshd -StartupType 'Automatic'
-Write-Host "Configure firewall for SSH..."
-# Confirm the Firewall rule is configured. It should be created automatically by setup. Run the following to verify
-if (!(Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue | Select-Object Name, Enabled)) {
-    Write-Output "Firewall Rule 'OpenSSH-Server-In-TCP' does not exist, creating it..."
-    New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
-} else {
-    Write-Output "Firewall rule 'OpenSSH-Server-In-TCP' has been created and exists."
-}
-
-Set-PSDebug -Trace 1
-
-# Create a new user (for SSH login).
-$Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
-New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 
 Write-Host "Installing utilities..."
 

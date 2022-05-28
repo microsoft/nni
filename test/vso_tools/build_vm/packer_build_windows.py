@@ -67,6 +67,8 @@ def main():
                 )
                 if result.returncode != 0:
                     monitor_print('Return code of command invoking is non-zero:', result.returncode)
+                else:
+                    monitor_print('Command invocation successfully triggered.')
 
                 # To make the packer resource cleanup robust,
                 # WinRM is always finished regardless of subprocess status.
