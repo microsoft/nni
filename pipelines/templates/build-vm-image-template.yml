@@ -98,6 +98,7 @@ steps:
 #    We also can't use shell-local provisioner to invoke command, because when the VM is ready, packer always try to connect to WinRM.
 #    The workaround here is to use a monitor to detect the machine ready signal and change its WinRM port.
 - script: |
+    echo "##vso[task.logissue type=warning]During packer build, please avoid cancelling this task. Otherwise, created resources might need manual cleanup."
     cd test/vso_tools/build_vm
     python3 packer_build_windows.py
     # PACKER_LOG=1 packer build ${{ parameters.packer_config }}.json

@@ -34,4 +34,4 @@ jobs:
     parameters:
       managed_image_name: nni-linux-image
       image_name: nniWindowsImage
-      packer_config: packer_test
+      packer_config: packer_windows
