@@ -57,3 +57,6 @@ sudo apt install -y cuda-drivers
 # We only need Python 3.7 and 3.9 for now.
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt install -y python3.7-dev python3.7-venv python3.9-dev python3.9-venv
+
+# Deprovision
+/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync
