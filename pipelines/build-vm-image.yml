@@ -16,12 +16,22 @@ jobs:
 #       image_name: nniLinuxImage
 #       packer_config: packer_linux
 
-- job: windows
+# - job: windows
+#   pool: nni-it
+#   timeoutInMinutes: 90
+#   steps:
+#   - template: templates/build-vm-image-template.yml
+#     parameters:
+#       managed_image_name: nni-windows-image
+#       image_name: nniWindowsImage
+#       packer_config: packer_test
+
+- job: debug
   pool: nni-it
   timeoutInMinutes: 90
   steps:
   - template: templates/build-vm-image-template.yml
     parameters:
-      managed_image_name: nni-windows-image
-      image_name: nniWindowsImage
-      packer_config: packer_test
+      managed_image_name: nni-linux-image
+      image_name: nniLinuxImage
+      packer_config: packer_test-Linux
