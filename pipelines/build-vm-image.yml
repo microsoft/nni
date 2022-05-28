@@ -34,4 +34,4 @@ jobs:
     parameters:
       managed_image_name: nni-linux-image
       image_name: nniLinuxImage
-      packer_config: packer_test_linux
+      packer_config: packer_test
