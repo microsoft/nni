@@ -25,7 +25,19 @@
     {
       "type": "shell",
       "inline": [
-        "sleep 300"
+        "echo hello"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 600"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "echo hello"
       ]
     }
   ]
