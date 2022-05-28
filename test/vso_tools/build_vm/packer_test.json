@@ -27,6 +27,14 @@
   }],
   "provisioners": [
     {
+      "type": "shell-local",
+      "inline": [
+        "export VM=$(az vm list -g <resource_group> --query [].'name' --output tsv | grep pkrvm | head -1)",
+        "echo \"VM Found: ${VM}\"",
+        "az vm run-command invoke --command-id RunPowerShellScript --name ${VM} -g <resource_group> --scripts @change_winrm_port.ps1"
+      ]
+    },
+    {
       "type": "powershell",
       "inline": [
         "tasklist /v",
