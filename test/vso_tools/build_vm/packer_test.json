@@ -29,9 +29,9 @@
         "  --priority 100 --source-address-prefixes $(curl ifconfig.me) --source-port-ranges '*' \\",
         "  --destination-address-prefixes '*' --destination-port-ranges '*' --access Allow --protocol '*' \\",
         "  --description 'Disposable rule for packer build {{ build `PackerRunUUID` }}'",
-        "export NIC=az network nic list -g <resource_group> --query [].'name' --output tsv | grep pkrni | head -1",
-        "echo \"Found NIC: ${NIC}\"",
-        "az network nic update -n $NIC -g <resource_group> --network-security-group <network_security_group>"
+        "export NIC=$(az network nic list -g <resource_group> --query [].'name' --output tsv | grep pkrni | head -1)",
+        "echo \"NIC Found: ${NIC}\"",
+        "az network nic update -n ${NIC} -g <resource_group> --network-security-group <network_security_group>"
       ]
     },
     {
