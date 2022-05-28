@@ -76,6 +76,7 @@ steps:
     sed -i -e "s/<subscription_id>/$(subscription_id)/g" $CONFIG_PATH
     sed -i -e "s/<managed_image_name>/${{ parameters.managed_image_name }}/g" $CONFIG_PATH
     sed -i -e "s/<resource_group>/$(resource_group)/g" $CONFIG_PATH
+    sed -i -e "s/<network_security_group>/$(network_security_group)/g" $CONFIG_PATH
     sed -i -e "s/<gallery_name>/$(gallery_name)/g" $CONFIG_PATH
     sed -i -e "s/<image_name>/${{ parameters.image_name }}/g" $CONFIG_PATH
     sed -i -e "s/<image_version>/${VERSION}/g" $CONFIG_PATH

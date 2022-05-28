@@ -4,6 +4,7 @@ pr: none
 variables:
   resource_group: nni
   gallery_name: nniImageGallery
+  network_security_group: nni-image-builder-nsg
 
 jobs:
 # - job: linux
