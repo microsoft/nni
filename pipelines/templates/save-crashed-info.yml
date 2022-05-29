@@ -3,18 +3,20 @@
 
 steps:
 
-- ${{ if contains(variables['Agent.OS'], 'Windows') }}:
-    powershell: |
-      $latest_dir = (gci ~/nni-experiments | ? { $_.PSIsContainer } | sort CreationTime)[-1]
-      echo "Latest experiment directory: $latest_dir"
-      echo "##vso[task.setvariable variable=experiment_dir]$latest_dir"
-  ${{ else }}:
-    script: |
-      export EXPERIMENT_DIR=$(readlink -f ~/nni-experiments/_latest)
-      echo "Latest experiment directory: ${EXPERIMENT_DIR}"
-      echo "##vso[task.setvariable variable=experiment_dir]${EXPERIMENT_DIR}"
-  condition: failed()
-  displayName: (failed) Compute latest experiment directory
+- script: |
+    set -e
+    export EXPERIMENT_DIR=$(readlink -f ~/nni-experiments/_latest)
+    echo "Latest experiment directory: ${EXPERIMENT_DIR}"
+    echo "##vso[task.setvariable variable=experiment_dir]${EXPERIMENT_DIR}"
+  condition: and(failed(), not(contains(variables['Agent.OS'], 'Windows')))
+  displayName: (failed) (POSIX) Latest experiment directory
+
+- powershell: |
+    $latest_dir = (gci ~/nni-experiments | ? { $_.PSIsContainer } | sort CreationTime)[-1]
+    echo "Latest experiment directory: $latest_dir"
+    echo "##vso[task.setvariable variable=experiment_dir]$latest_dir"
+  condition: and(failed(), contains(variables['Agent.OS'], 'Windows'))
+  displayName: (failed) (Windows) Latest experiment directory
 
 - publish: $(experiment_dir)
   artifact: experiment
