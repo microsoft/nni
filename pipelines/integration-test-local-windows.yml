@@ -11,10 +11,6 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
-  - powershell:
-      python -m pip install python-certifi-win32
-    displayName: Install certificate
-
   - template: templates/install-dependencies.yml
     parameters:
       platform: windows
@@ -26,16 +22,18 @@ jobs:
 
   - template: templates/install-customized-tuner.yml
 
-  # TODO: remove unit test here
+  - powershell: |
+      python test/vso_tools/ssl_patch.py
+    displayName: SSL patch
 
-  - script: |
+  - powershell: |
       cd test
       python -m pytest ut
       echo "TODO: TypeScript UT"
     displayName: Unit test
     continueOnError: true
 
-  - script: |
+  - powershell: |
       cd test
       python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
     displayName: Integration test
