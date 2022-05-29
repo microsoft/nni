@@ -15,6 +15,7 @@ jobs:
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest
+      python: venv
 
   - template: templates/install-dependencies-aml.yml
 
@@ -46,7 +47,7 @@ jobs:
           --compute_target $(computeTarget) \
           --nni_manager_ip $(manager_ip) \
           --nni_docker_image nnidev/nni-nightly
-      python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts aml
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts aml
     displayName: Integration test
 
   - template: templates/save-crashed-info.yml
