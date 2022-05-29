@@ -24,11 +24,19 @@ steps:
   displayName: (failed) (POSIX) Harvest remote trial logs
 
 - powershell: |
-    $latest_dir = (gci ~/nni-experiments | ? { $_.PSIsContainer } | sort CreationTime)[-1]
+    $latest_dir = (gci ~/nni-experiments -exclude _latest | ? { $_.PSIsContainer } | sort CreationTime)[-1]
     echo "Latest experiment directory: $latest_dir"
     echo "##vso[task.setvariable variable=experiment_dir]$latest_dir"
   condition: and(failed(), contains(variables['Agent.OS'], 'Windows'))
   displayName: (failed) (Windows) Latest experiment directory
+
+- powershell: |
+    $latest_dir = gci $(experiment_dir)
+    $experiment_id = $latest_dir.name
+    Copy-Item -Path "C:\Users\nniuser\AppData\Local\Temp\nni-experiments\${experiment_id}" `
+      -Destination "${latest_dir}\remote" -Recurse
+  condition: and(variables['experiment_dir'], ${{ parameters.remote }}, contains(variables['Agent.OS'], 'Windows'))
+  displayName: (failed) (Windows) Harvest remote trial logs
 
 - publish: $(experiment_dir)
   artifact: experiment
