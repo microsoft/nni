@@ -1,6 +1,11 @@
 # Upload crashed experiments to artifact,
 # so that further offline investigations are possible.
 
+parameters:
+- name: remote
+  type: boolean
+  default: false
+
 steps:
 
 - script: |
@@ -10,6 +15,13 @@ steps:
     echo "##vso[task.setvariable variable=experiment_dir]${EXPERIMENT_DIR}"
   condition: and(failed(), not(contains(variables['Agent.OS'], 'Windows')))
   displayName: (failed) (POSIX) Latest experiment directory
+
+- script: |
+    set -e
+    export EXPERIMENT_ID=$(echo ${EXPERIMENT_DIR} | sed -e 's/\/.*\///g')
+    sudo docker cp $(Build.BuildId):/tmp/nni-experiments/${EXPERIMENT_ID} ${EXPERIMENT_DIR}/remote
+  condition: and(variables['experiment_dir'], ${{ parameters.remote }}, not(contains(variables['Agent.OS'], 'Windows')))
+  displayname: (failed) (POSIX) Harvest remote trial logs
 
 - powershell: |
     $latest_dir = (gci ~/nni-experiments | ? { $_.PSIsContainer } | sort CreationTime)[-1]

@@ -66,7 +66,7 @@ jobs:
 
   - script: |
       cd test
-      python3 training_service/nnitest/generate_ts_config.py \
+      python training_service/nnitest/generate_ts_config.py \
           --ts remote \
           --remote_reuse true \
           --remote_user nni \
@@ -96,3 +96,5 @@ jobs:
     displayName: Integration test
 
   - template: templates/save-crashed-info.yml
+    parameters:
+      remote: true
