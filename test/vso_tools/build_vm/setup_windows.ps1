@@ -89,6 +89,11 @@ azcopy --version
 choco install -y --force swig --version=3.0.12 --no-progress
 swig -version
 
+# Install cmake.
+choco install -y --no-progress cmake
+$env:path = "$env:path;$env:ProgramFiles\CMake\bin"
+cmake --version
+
 # Install python.
 # Originally I tried to install the python by downloading from official, and run the installation.
 #
