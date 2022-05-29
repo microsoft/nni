@@ -11,6 +11,12 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
+  - powershell: |
+      echo "$(Agent.OS)"
+      choco install -y --no-progress nvidia-display-driver
+      nvidia-smi
+    displayName: Install Nvidia GPU driver
+
   - template: templates/install-dependencies.yml
     parameters:
       platform: windows
