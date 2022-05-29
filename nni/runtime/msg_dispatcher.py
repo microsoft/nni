@@ -132,7 +132,7 @@ class MsgDispatcher(MsgDispatcherBase):
         """Enqueue command into command queues
         """
         if command.command_type == 'TrialEnd' or (
-                command.command_type == 'ReportMetricData' and ReportMetricData(**command.__dict__).type == 'PERIODICAL'):
+                command.command_type == 'ReportMetricData' and command.__dict__['type'] == 'PERIODICAL'):
             self.assessor_command_queue.put((command))
         else:
             self.default_command_queue.put((command))
@@ -179,7 +179,7 @@ class MsgDispatcher(MsgDispatcherBase):
     def handle_initialize(self, command: Initialize):
         """Data is search space
         """
-        self.tuner.update_search_space(command.data)
+        self.tuner.update_search_space(command.search_space)
         new_command = Initialized('Initialized')
         self.send(new_command)
 
@@ -193,24 +193,24 @@ class MsgDispatcher(MsgDispatcherBase):
 
     def handle_request_trial_jobs(self, command: RequestTrialJobs):
         # data: number or trial jobs
-        ids = [_create_parameter_id() for _ in range(command.data)]
+        ids = [_create_parameter_id() for _ in range(command.job_num)]
         _logger.debug("requesting for generating params of %s", ids)
         params_list = self.tuner.generate_multiple_parameters(ids, st_callback=self.send_trial_callback)
 
         for i, _ in enumerate(params_list):
+            command_dict ={}
             command_dict = _pack_parameter(ids[i], params_list[i])
             command_dict['command_type'] = 'NewTrialJob'
-            new_command = NewTrialJob(**command_dict)
-            self.send(new_command)
+            self.send(NewTrialJob(**command_dict))
         # when parameters is None.
         if len(params_list) < len(ids):
+            command_dict = {}
             command_dict = _pack_parameter(ids[0], '')
-            command_dict['command_type'] = 'NewTrialJob'
-            new_command = NoMoreTrialJobs(**command_dict)
-            self.send(new_command)
+            command_dict['command_type'] = 'NoMoreTrialJobs'
+            self.send(NoMoreTrialJobs(**command_dict))
 
     def handle_update_search_space(self, command: UpdateSearchSpace):
-        self.tuner.update_search_space(command.name)
+        self.tuner.update_search_space(command.search_space)
 
     def handle_import_data(self, command: ImportData):
         """Import additional data for tuning
@@ -234,7 +234,8 @@ class MsgDispatcher(MsgDispatcherBase):
               - 'type': report type, support {'FINAL', 'PERIODICAL'}
         """
         # metrics value is dumped as json string in trial, so we need to decode it here
-        command.value = load(command.value)
+        if command.value is not None:
+            command.value = load(command.value)
         if command.type == MetricType.FINAL:
             self._handle_final_metric_data(command)
         elif command.type == MetricType.PERIODICAL:
@@ -271,7 +272,7 @@ class MsgDispatcher(MsgDispatcherBase):
             if self.assessor is not None:
                 self.assessor.trial_end(trial_job_id, command.event == 'SUCCEEDED')
         if self.tuner is not None:
-            self.tuner.trial_end(load(command.hyper_params)['parameter_id'], command.event == 'SUCCEEDED')
+            self.tuner.trial_end(command.hyper_params['parameter_id'], command.event == 'SUCCEEDED')
 
     def _handle_final_metric_data(self, command: ReportMetricData):
         """Call tuner to process final results

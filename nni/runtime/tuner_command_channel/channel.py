@@ -66,18 +66,23 @@ class TunerCommandChannel:
     # def receive(self) -> Command | None:
     #     ...
     def send(self, command: BaseCommand) -> None:
-        command_json = command._to_legacy_command_type()
-        self._channel.send(command_json)
+        command_type, command_json = command._to_legacy_command_type()
+        self._send(command_type, command_json)
 
     def receive(self) -> BaseCommand | None:
-        command_json = self._channel.receive()
-        if command_json is None:
-            raise RuntimeError('NNI manager closed connection')
-        old_command_type = CommandType(command_json[:2].encode())
+        old_command_type, data = self._receive()
+        if old_command_type == None:
+             raise RuntimeError('NNI manager closed connection')
+
+        if old_command_type not in old_to_new:
+            raise AssertionError('Unsupported command: {}'.format(old_command_type))
         new_command_type = old_to_new[old_command_type]
+
+        if data is None:
+            data = ''
         for cls in BaseCommand.__subclasses__():
             if cls.__name__ == new_command_type:
-                command = cls.load(new_command_type, command_json[2:])
+                command = cls.load(new_command_type, data)
                 command.validate()
                 return command
         return None

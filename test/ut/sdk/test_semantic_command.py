@@ -2,8 +2,10 @@
 # Licensed under the MIT license.
 
 from unittest import TestCase, main
+from click import command
 
 from numpy import reciprocal
+from nni.common.serializer import load
 
 from nni.runtime import msg_dispatcher_base
 from nni.runtime.msg_dispatcher import MsgDispatcher
@@ -47,8 +49,7 @@ _command2 = 'IN{"features":{"_type":"choice","_value":[128,256,512,1024]},"lr":{
 _command3 = 'GE2'
 _command4 = 'TR{"parameter_id": 0, "parameter_source": "algorithm", "parameters": {"features": 1024, "lr": 0.0006827054029247927, "momentum": 0.22591105939004463}, "parameter_index": 0}'
 _command5 = 'EN{"trial_job_id":"H6KgS","event":"FAILED","hyper_params":"{\"parameter_id\": 0, \"parameter_source\": \"algorithm\", \"parameters\": {\"features\": 1024, \"lr\": 0.0006827054029247927, \"momentum\": 0.22591105939004463}, \"parameter_index\": 0}"}'
-_command6 = 'EN{"trial_job_id":"HziT8","event":"FAILED","hyper_params":"{\"parameter_id\": 0, \"parameter_source\": \"algorithm\", \"parameters\": {\"features\": 1024, \"lr\": 0.02453788841851038, \"momentum\": 0.9868069807387571}, \"parameter_index\": 0}"}'
-_command7 = 'TE'
+_command6 = 'TE'
 class MsgDispatcherTestCase(TestCase):
     def test_msg_dispatcher(self):
         tuner = NaiveTuner()
@@ -59,24 +60,27 @@ class MsgDispatcherTestCase(TestCase):
         _server.stdin.write(_command1 + '\n')
         _server.stdin.flush()
         received1 = dispatcher._channel.receive()
+        command_type1, command_json1 = received1._to_legacy_command_type()
         _server.stdin.write(_command2 + '\n')
         _server.stdin.flush()
         received2 = dispatcher._channel.receive()
+        command_type2, command_json2 = received2._to_legacy_command_type()
         _server.stdin.write(_command3 + '\n')
         _server.stdin.flush()
         received3 = dispatcher._channel.receive()
+        command_type3, command_json3 = received3._to_legacy_command_type()
         _server.stdin.write(_command4 + '\n')
         _server.stdin.flush()
         received4 = dispatcher._channel.receive()
+        command_type4, command_json4 = received4._to_legacy_command_type()
         _server.stdin.write(_command5 + '\n')
         _server.stdin.flush()
         received5 = dispatcher._channel.receive()
+        command_type5, command_json5 = received5._to_legacy_command_type()
         _server.stdin.write(_command6 + '\n')
         _server.stdin.flush()
         received6 = dispatcher._channel.receive()
-        _server.stdin.write(_command7 + '\n')
-        _server.stdin.flush()
-        received7 = dispatcher._channel.receive()
+        command_type6, command_json6 = received6._to_legacy_command_type()
 
 def _init():
     global _server
