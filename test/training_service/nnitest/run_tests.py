@@ -89,7 +89,8 @@ def prepare_config_file(test_case_config, it_config, args):
         deep_update(test_yml_config, test_case_config['config'])
 
     # hack for windows
-    if sys.platform == 'win32' and args.ts == 'local':
+    # We've only got windows local and remote win-to-win now.
+    if sys.platform == 'win32':
         test_yml_config['trial']['command'] = test_yml_config['trial']['command'].replace('python3', 'python')
 
     # apply training service config
