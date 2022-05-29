@@ -15,7 +15,6 @@ jobs:
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest
-      python: venv
 
   - template: templates/install-dependencies-aml.yml
 
