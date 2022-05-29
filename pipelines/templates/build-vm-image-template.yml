@@ -94,13 +94,13 @@ steps:
     cd test/vso_tools/build_vm
     python3 packer_build_windows.py
   displayName: (Windows) Packer build
-  condition: and(succeeded(), contains('${{ variables['packer_config'] }}', 'windows'))
+  condition: and(succeeded(), contains(variables['packer_config'], 'windows'))
 
 - script: |
     cd test/vso_tools/build_vm
     PACKER_LOG=1 packer build $(packer_config).json
   displayName: (Linux) Packer build
-  condition: and(succeeded(), contains('${{ variables['packer_config'] }}', 'linux'))
+  condition: and(succeeded(), contains(variables['packer_config'], 'linux'))
 
 # TODO: Should delete the managed image after build is done.
 # Image gallery alone is enough. Keeping it for now for debugging purposes.
