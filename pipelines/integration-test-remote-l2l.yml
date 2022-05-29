@@ -19,6 +19,17 @@ jobs:
   # FIXME: GPU is not supported yet.
   # Change to ubuntu-latest-gpu when it's done.
 
+  - script: |
+      set -e
+      sudo mkdir -p /nfs/general
+      sudo mount host_ip:/var/nfs/general /nfs/general
+      df -h
+      sudo touch /nfs/general/general.test
+      ls -l /nfs/general/general.test
+      ls -l /var/nfs/general
+      sudo umount /nfs/general
+    displayName: NFS test
+
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest
