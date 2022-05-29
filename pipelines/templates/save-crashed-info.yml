@@ -3,7 +3,7 @@
 
 steps:
 
-- ${{ if contains(variables['Agent.OS'] 'Windows') }}:
+- ${{ if contains(variables['Agent.OS'], 'Windows') }}:
     powershell: |
       $latest_dir = (gci ~/nni-experiments | ? { $_.PSIsContainer } | sort CreationTime)[-1]
       echo "Latest experiment directory: $latest_dir"
