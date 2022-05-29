@@ -11,12 +11,6 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
-  - script: |
-      nvidia-smi
-      sudo systemctl list-units --type=service
-      sudo systemctl restart nfs-kernel-server
-    displayName: Verify agent
-
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu

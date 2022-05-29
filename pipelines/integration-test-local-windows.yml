@@ -38,7 +38,7 @@ jobs:
   # We can't install it on-the-fly because we can't elevate the permission here.
   - powershell: |
       cd test
-      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local \
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local `
         --exclude mnist-pytorch-local-gpu
     displayName: Integration test
 

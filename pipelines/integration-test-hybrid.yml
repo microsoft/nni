@@ -11,8 +11,6 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
-  - template: templates/setup-non-ms-hosted-agent.yml
-
   # FIXME: should use GPU here
 
   - template: templates/install-dependencies.yml
@@ -27,11 +25,6 @@ jobs:
       extra_dep: SMAC,BOHB
 
   - template: templates/install-customized-tuner.yml
-
-  - script: |
-      df -h
-      du -h -d 1 ~
-      sudo docker images
 
   # These parts are exactly same as remote.
   # Refactor these as templates when the refactor is done.
@@ -62,7 +55,7 @@ jobs:
 
   - script: |
       cd test
-      python3 training_service/nnitest/generate_ts_config.py \
+      python training_service/nnitest/generate_ts_config.py \
           --ts hybrid \
           --remote_reuse true \
           --remote_user nni \
@@ -75,7 +68,7 @@ jobs:
           --workspace_name $(workspace_name) \
           --compute_target $(compute_target) \
           --config_version v2
-      python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests_config_v2.yml --ts hybrid
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests_config_v2.yml --ts hybrid
     displayName: Integration test
 
   - template: templates/save-crashed-info.yml
