@@ -61,5 +61,5 @@ sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get install -y python3.7-dev python3.7-venv python3.9-dev python3.9-venv
 
 # Deprovision
-sudo /usr/sbin/waagent -force -deprovision+user
+sudo /usr/sbin/waagent -force -deprovision
 sudo HISTSIZE=0 sync
