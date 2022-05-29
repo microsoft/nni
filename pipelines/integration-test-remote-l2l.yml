@@ -21,6 +21,8 @@ jobs:
 
   - script: |
       set -e
+      set -x
+      ps aux
       sudo mkdir -p /nfs/general
       sudo mount 127.0.0.1:/var/nfs/general /nfs/general
       df -h
