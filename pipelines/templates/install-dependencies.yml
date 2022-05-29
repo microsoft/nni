@@ -1,15 +1,19 @@
 parameters:
 - name: platform
   type: string
-- name: use_global_python
-  type: boolean
-  default: false
+- name: python
+  type: string
+  default: default
+  values:
+  - default
+  - noop
+  - venv
 
 steps:
 - template: config-version.yml
   parameters:
     platform: ${{ parameters.platform }}
-    use_global_python: ${{ parameters.use_global_python }}
+    python: ${{ parameters.python }}
 
 - script: |
     set -e
@@ -72,7 +76,7 @@ steps:
 - script: |
     ls -al ${HOME}/.local/bin
     echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-  displayName: Add .local/bin to PATH
+  displayName: Add local bin to PATH
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
 
 # TODO: Delete this after upgrading to PyTorch 1.11.

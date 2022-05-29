@@ -11,11 +11,15 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
-  - template: templates/setup-non-ms-hosted-agent.yml
+  - script: |
+      nvidia-smi
+      sudo systemctl list-units --type=service
+    displayName: Verify agent
 
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu
+      python: venv
 
   - template: templates/install-nni.yml
 
