@@ -1,11 +1,3 @@
-parameters:
-- name: managed_image_name
-  type: string
-- name: image_name
-  type: string
-- name: packer_config
-  type: string
-
 steps:
 - script: |
     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
