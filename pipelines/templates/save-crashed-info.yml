@@ -3,10 +3,16 @@
 
 steps:
 
-- script: |
-    export EXPERIMENT_DIR=$(readlink -f ~/nni-experiments/_latest)
-    echo "Latest experiment directory: ${EXPERIMENT_DIR}"
-    echo "##vso[task.setvariable variable=experiment_dir]${EXPERIMENT_DIR}"
+- ${{ if contains(Agent.OS, 'Windows') }}:
+    powershell: |
+      $latest_dir = (gci ~/nni-experiments | ? { $_.PSIsContainer } | sort CreationTime)[-1]
+      echo "Latest experiment directory: $latest_dir"
+      echo "##vso[task.setvariable variable=experiment_dir]$latest_dir"
+  ${{ else }}:
+    script: |
+      export EXPERIMENT_DIR=$(readlink -f ~/nni-experiments/_latest)
+      echo "Latest experiment directory: ${EXPERIMENT_DIR}"
+      echo "##vso[task.setvariable variable=experiment_dir]${EXPERIMENT_DIR}"
   condition: failed()
   displayName: (failed) Compute latest experiment directory
 

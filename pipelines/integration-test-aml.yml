@@ -24,8 +24,6 @@ jobs:
       extra_dep: SMAC,BOHB
 
   - template: templates/install-customized-tuner.yml
-    parameters:
-      platform: ubuntu-latest
 
   - script: |
       set -e

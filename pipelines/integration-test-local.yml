@@ -38,6 +38,10 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
+  - powershell:
+      python -m pip install python-certifi-win32
+    displayName: Install certificate
+
   - template: templates/install-dependencies.yml
     parameters:
       platform: windows
@@ -47,11 +51,7 @@ jobs:
     parameters:
       user: false
 
-  - script: |
-      cd examples/tuners/customized_tuner
-      python setup.py develop --user
-      nnictl algo register --meta meta_file.yml
-    displayName: Install example customized tuner
+  - template: templates/install-customized-tuner.yml
 
   # TODO: remove unit test here
 
@@ -66,3 +66,5 @@ jobs:
       cd test
       python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
     displayName: Integration test
+
+  - template: templates/save-crashed-info.yml

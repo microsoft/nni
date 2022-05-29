@@ -36,13 +36,13 @@ steps:
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
   continueOnError: true
 
-# - powershell: |
-#     azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
-#     python test/vso_tools/unpack_dependencies.py dependencies.zip
-#     Remove-Item dependencies.zip
-#   displayName: (Windows) Download cache
-#   condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
-#   continueOnError: true
+- powershell: |
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
+    python test/vso_tools/unpack_dependencies.py dependencies.zip
+    Remove-Item dependencies.zip
+  displayName: (Windows) Download cache
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
+  continueOnError: true
 
 - script: |
     mv dependencies/recommended_legacy.txt dependencies/recommended.txt
