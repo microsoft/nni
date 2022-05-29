@@ -22,7 +22,7 @@ jobs:
   - script: |
       set -e
       sudo mkdir -p /nfs/general
-      sudo mount host_ip:/var/nfs/general /nfs/general
+      sudo mount 127.0.0.1:/var/nfs/general /nfs/general
       df -h
       sudo touch /nfs/general/general.test
       ls -l /nfs/general/general.test
