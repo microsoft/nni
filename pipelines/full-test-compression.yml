@@ -11,11 +11,10 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
-  - template: templates/setup-non-ms-hosted-agent.yml
-
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu
+      python: venv
 
   - template: templates/install-nni.yml
 
