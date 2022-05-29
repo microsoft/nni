@@ -5,11 +5,11 @@ set -x
 
 # Build essentials are required.
 # But clean first...
-sudo apt clean
+sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/partial/
-sudo apt clean
-sudo apt update
-sudo apt install -y build-essential cmake uidmap
+sudo apt-get clean
+sudo apt-get update
+sudo apt-get install -y build-essential cmake uidmap
 
 # Install azcli for Azure resources access and management.
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
@@ -33,7 +33,7 @@ sudo systemctl --now enable docker
 # The NFS server can be accessed through the path: host.docker.internal
 # Added a host alias so that it can also be used outside the container
 # Inside the container they should use exactly the same uid/gid to read/write files.
-sudo apt install -y nfs-kernel-server nfs-common
+sudo apt-get install -y nfs-kernel-server nfs-common
 sudo mkdir -p /var/nfs/general
 sudo chmod 777 /var/nfs/general
 echo "/var/nfs/general *(rw,sync,insecure,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
@@ -44,19 +44,19 @@ sudo systemctl restart nfs-kernel-server
 # https://docs.microsoft.com/en-us/azure/virtual-machines/linux/n-series-driver-setup
 # https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
 # https://linuxhint.com/install-cuda-ubuntu/
-sudo apt install linux-headers-$(uname -r) -y
+sudo apt-get install linux-headers-$(uname -r) -y
 sudo wget -O /etc/apt/preferences.d/cuda-repository-pin-600 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
 sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
 sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
-sudo apt update
-sudo apt install -y cuda-drivers
+sudo apt-get update
+sudo apt-get install -y cuda-drivers
 
 # UsePythonVersion task only works when the specific Python version is already installed.
 # The following is for linux.
 # Reference: https://dev.to/akaszynski/create-an-azure-self-hosted-agent-without-going-insane-173g
 # We only need Python 3.7 and 3.9 for now.
 sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt install -y python3.7-dev python3.7-venv python3.9-dev python3.9-venv
+sudo apt-get install -y python3.7-dev python3.7-venv python3.9-dev python3.9-venv
 
 # Deprovision
 sudo /usr/sbin/waagent -force -deprovision+user
