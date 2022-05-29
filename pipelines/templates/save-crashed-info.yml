@@ -31,7 +31,7 @@ steps:
   displayName: (failed) (Windows) Latest experiment directory
 
 - powershell: |
-    $latestDir = gci $(experiment_dir)
+    $latestDir = Get-Item $(experiment_dir)
     $experimentId = $latestDir.name
     $remotePath = "C:\Users\nniuser\AppData\Local\Temp\nni-experiments\${experimentId}"
     $destPath = "${latestDir}\remote"
