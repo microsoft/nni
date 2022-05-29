@@ -55,8 +55,8 @@ steps:
     set -e
     set -x
     az image list -g $(resource_group)
-    if az image list -g $(resource_group) --query [].'name' | grep -q ${{ parameters.managed_image_name }}; then
-      az image delete -n ${{ parameters.managed_image_name }} -g $(resource_group)
+    if az image list -g $(resource_group) --query [].'name' | grep -q $(managed_image_name); then
+      az image delete -n $(managed_image_name) -g $(resource_group)
     fi
   displayName: List existing images (and delete)
 
@@ -72,17 +72,18 @@ steps:
     cd test/vso_tools/build_vm
     export IP_ADDRESS=$(curl -s ifconfig.me)
     export VERSION=$(date "+%Y").$(date "+%m%d").$(date "+%H%M%S")
-    export CONFIG_PATH=${{ parameters.packer_config }}.json
+    export CONFIG_PATH=$(packer_config).json
     sed -i -e "s/<client_id>/$(identity_id)/g" $CONFIG_PATH
     sed -i -e "s/<subscription_id>/$(subscription_id)/g" $CONFIG_PATH
-    sed -i -e "s/<managed_image_name>/${{ parameters.managed_image_name }}/g" $CONFIG_PATH
+    sed -i -e "s/<managed_image_name>/$(managed_image_name)/g" $CONFIG_PATH
     sed -i -e "s/<resource_group>/$(resource_group)/g" $CONFIG_PATH
     sed -i -e "s/<network_security_group>/$(network_security_group)/g" $CONFIG_PATH
     sed -i -e "s/<gallery_name>/$(gallery_name)/g" $CONFIG_PATH
-    sed -i -e "s/<image_name>/${{ parameters.image_name }}/g" $CONFIG_PATH
+    sed -i -e "s/<image_name>/$(image_definition_name)/g" $CONFIG_PATH
     sed -i -e "s/<image_version>/${VERSION}/g" $CONFIG_PATH
     sed -i -e "s/<ip_address>/${IP_ADDRESS}/g" $CONFIG_PATH
     cat $CONFIG_PATH
+    echo "##vso[task.logissue type=warning]During packer build, please avoid cancelling this task. Otherwise, created resources might need manual cleanup."
   displayName: Prepare configuration
 
 # Microsoft has a security group for VM created under their subscriptions, that,
@@ -98,11 +99,16 @@ steps:
 #    We also can't use shell-local provisioner to invoke command, because when the VM is ready, packer always try to connect to WinRM.
 #    The workaround here is to use a monitor to detect the machine ready signal and change its WinRM port.
 - script: |
-    echo "##vso[task.logissue type=warning]During packer build, please avoid cancelling this task. Otherwise, created resources might need manual cleanup."
     cd test/vso_tools/build_vm
     python3 packer_build_windows.py
-    # PACKER_LOG=1 packer build ${{ parameters.packer_config }}.json
-  displayName: Packer build
+  displayName: (Windows) Packer build
+  condition: and(succeeded(), contains('${{ variables['packer_config'] }}', 'windows'))
+
+- script: |
+    cd test/vso_tools/build_vm
+    PACKER_LOG=1 packer build $(packer_config).json
+  displayName: (Linux) Packer build
+  condition: and(succeeded(), contains('${{ variables['packer_config'] }}', 'linux'))
 
 # TODO: Should delete the managed image after build is done.
 # Image gallery alone is enough. Keeping it for now for debugging purposes.

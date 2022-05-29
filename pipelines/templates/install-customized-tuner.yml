@@ -1,6 +1,6 @@
 steps:
 
-- ${{ if contains(Agent.OS, 'Windows') }}:
+- ${{ if contains(variables['Agent.OS'], 'Windows') }}:
     powershell: |
       cd examples/tuners/customized_tuner
       python setup.py develop --user
