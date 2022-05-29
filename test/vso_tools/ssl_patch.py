@@ -8,6 +8,7 @@ import ssl
 from pathlib import Path
 
 ssl_file_path = ssl.__file__
+print('SSL file path:', ssl_file_path)
 
 # https://stackoverflow.com/questions/36600583/python-3-urllib-ignore-ssl-certificate-verification
 old_line = '_create_default_https_context = create_default_context'
