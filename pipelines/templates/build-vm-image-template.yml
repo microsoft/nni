@@ -108,4 +108,8 @@ steps:
 # To deploy the image on VMSS, run this in Cloud Shell:
 # az vmss update --resource-group nni --name nni-windows-it \
 #   --set virtualMachineProfile.storageProfile.imageReference.id=/subscriptions/{subscriptionId}/resourceGroups/nni/providers/Microsoft.Compute/galleries/nniImageGallery/images/nniWindowsImage/versions/Latest
+#
+# Probably need to enlarge the disk size, in case it's too small:
+# az vmss update -n nni-it -g nni --set virtualMachineProfile.storageProfile.osDisk.diskSizeGb=50
+#
 # No need to update the image every time, because it's already set to latest.
