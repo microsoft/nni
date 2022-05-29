@@ -27,6 +27,10 @@ jobs:
 
   - template: templates/install-customized-tuner.yml
 
+  - powershell: |
+      python test/vso_tools/ssl_patch.py
+    displayName: SSL patch
+
   # Connects to itself.
   # See username and password in test/vso_tools/build_vm
   - powershell: |
