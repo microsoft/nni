@@ -9,6 +9,7 @@ sudo apt-get clean
 sudo rm -rvf /var/lib/apt/lists/*
 sudo apt-get clean
 sudo apt-get update
+sudo apt-get upgrade
 sudo apt-get install -y build-essential cmake uidmap
 
 # Install azcli for Azure resources access and management.
