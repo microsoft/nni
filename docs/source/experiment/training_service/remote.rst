@@ -106,7 +106,7 @@ For example, with anaconda you can specify:
 Configure shared storage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Remote training service support shared storage, which can help use your own storage during using NNI. Follow the guide `here <./shared_storage.rst>`__ to learn how to use shared storage.
+Remote training service support shared storage, which can help use your own storage during using NNI. Follow the guide :doc:`here <./shared_storage>` to learn how to use shared storage.
 
 Monitor via TensorBoard
 ^^^^^^^^^^^^^^^^^^^^^^^
