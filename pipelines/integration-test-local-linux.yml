@@ -18,7 +18,11 @@ jobs:
 
   - template: templates/install-nni.yml
 
+  - template: templates/install-customized-tuner.yml
+
   - script: |
       cd test
-      source scripts/nas.sh
-    displayName: NAS test
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
+    displayName: Integration test
+
+  - template: templates/save-crashed-info.yml
