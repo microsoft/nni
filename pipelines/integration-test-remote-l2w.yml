@@ -66,14 +66,14 @@ jobs:
   - script: |
       set -e
       cd test
-      python3 nni_test/nnitest/generate_ts_config.py \
+      python3 training_service/nnitest/generate_ts_config.py \
           --ts remote \
           --remote_user AzureUser \
           --remote_host $(worker_ip) \
           --remote_port $(worker_port) \
           --remote_pwd $(worker_password) \
           --nni_manager_ip $(manager_ip)
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+      python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
     displayName: Integration test
 
   - task: SSH@0
