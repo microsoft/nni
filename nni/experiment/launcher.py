@@ -15,7 +15,6 @@ import sys
 import time
 from typing import Any, TYPE_CHECKING, cast
 
-import colorama
 from typing_extensions import Literal
 
 from .config import ExperimentConfig
@@ -118,9 +117,7 @@ def start_experiment(
 
     proc = None
     try:
-        _logger.info(
-            'Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL
-        )
+        _logger.info('Creating experiment, Experiment ID: ${CYAN}%s', exp_id)
         proc = _start_rest_server(nni_manager_args, run_mode)
         start_time = int(time.time() * 1000)
 
