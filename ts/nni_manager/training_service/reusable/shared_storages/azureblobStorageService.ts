@@ -35,7 +35,9 @@ version=$(lsb_release -r | cut -c9- | sed s/[[:space:]]//g)
 if [ "$id" = "Ubuntu" ]
 then
     wget https://packages.microsoft.com/config/ubuntu/$version/packages-microsoft-prod.deb
-    sudo DEBIAN_FRONTEND=noninteractive dpkg -i packages-microsoft-prod.deb
+    export DEBIAN_FRONTEND=noninteractive
+    sudo -E dpkg -i packages-microsoft-prod.deb
+    echo "dpkg success!"
     sudo apt-get update
     sudo apt-get install -y blobfuse fuse
 elif [ "$id" = "CentOS" ] || [ "$id" = "RHEL" ]
@@ -155,16 +157,17 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
             return Promise.reject(errorMessage);
         }
 
-        try {
-            this.log.debug(`Local mount command is: ${this.localMountCommand}`);
-            const result = await cpp.exec(this.localMountCommand);
-            if (result.stderr) {
-                throw new Error(result.stderr);
-            }
-        } catch (error) {
-            const errorMessage: string = `${this.storageType} Shared Storage: Mount ${this.storageAccountName}/${this.containerName} to ${this.localMountPoint} failed, error is ${error}`;
-            this.log.error(errorMessage);
-            return Promise.reject(errorMessage);
+        // FIXME: This has security risks. The command might contain secrets.
+        this.log.debug(`Local mount command is: ${this.localMountCommand}`);
+        const result = await cpp.exec(this.localMountCommand);
+        if (result.stderr) {
+            // FIXME: I don't know how to check whether it failed.
+            // But looking at stderr definitely isn't a good idea.
+            this.log.warning(
+                `${this.storageType} Shared Storage: Mount ${this.storageAccountName}/${this.containerName} to ${this.localMountPoint}. Stderr is not empty.`
+            );
+            this.log.warning(`Stdout: ${result.stdout}`);
+            this.log.warning(`Stderr: ${result.stderr}`);
         }
 
         return Promise.resolve();
