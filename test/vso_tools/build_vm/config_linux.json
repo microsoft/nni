@@ -1,0 +1,35 @@
+{
+  "builders": [{
+    "type": "azure-arm",
+
+    "client_id": "<client_id>",
+
+    "managed_image_name": "<managed_image_name>",
+    "managed_image_resource_group_name": "<resource_group>",
+
+    "os_type": "Linux",
+    "image_publisher": "Canonical",
+    "image_offer": "0001-com-ubuntu-server-focal",
+    "image_sku": "20_04-lts-gen2",
+
+    "os_disk_size_gb": 50,
+
+    "shared_image_gallery_destination": {
+      "subscription": "<subscription_id>",
+      "resource_group": "<resource_group>",
+      "gallery_name": "<gallery_name>",
+      "image_name": "<image_name>",
+      "image_version": "<image_version>",
+      "replication_regions": ["southeastasia", "westus2"],
+      "storage_account_type": "Standard_LRS"
+    },
+
+    "build_resource_group_name": "nni",
+    "vm_size": "Standard_DS2_v2"
+  }],
+  "provisioners": [{
+    "script": "setup_linux.sh",
+    "type": "shell",
+    "timeout": "30m"
+  }]
+}
