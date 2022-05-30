@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import
 from collections import deque, namedtuple
-from typing import Any, List
+from typing import Any, List, cast
 import warnings
 import random
 
@@ -174,7 +174,7 @@ class SequentialMemory(Memory):
             # to the right. Again, we need to be careful to not include an observation from the next
             # episode if the last state is terminal.
             state1 = [np.copy(x) for x in state0[1:]]
-            state1.append(self.observations[idx])
+            state1.append(cast(np.ndarray, self.observations[idx]))
 
             assert len(state0) == self.window_length
             assert len(state1) == len(state0)
