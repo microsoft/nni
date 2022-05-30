@@ -56,8 +56,8 @@ class Evaluator(abc.ABC):
                 if subclass.__name__ == evaluator_type:
                     evaluator_type = subclass
                     break
-        assert issubclass(evaluator_type, Evaluator)
-        return evaluator_type._load(ir)
+        assert issubclass(cast(type, evaluator_type), Evaluator)
+        return cast(Type[Evaluator], evaluator_type)._load(ir)
 
     @abc.abstractmethod
     def _dump(self) -> Any:
@@ -350,7 +350,7 @@ class Graph:
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
-            op = Operation.new(operation_or_type, parameters, name)
+            op = Operation.new(operation_or_type, cast(dict, parameters), name)
         return Node(self, uid(), name, op, _internal=True)._register()
 
     @overload
@@ -363,7 +363,7 @@ class Graph:
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
-            op = Operation.new(operation_or_type, parameters, name)
+            op = Operation.new(operation_or_type, cast(dict, parameters), name)
         new_node = Node(self, uid(), name, op, _internal=True)._register()
         # update edges
         self.add_edge((edge.head, edge.head_slot), (new_node, None))
