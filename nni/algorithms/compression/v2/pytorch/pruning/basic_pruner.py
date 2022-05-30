@@ -37,7 +37,7 @@ from .tools import (
     NormalSparsityAllocator,
     BankSparsityAllocator,
     GlobalSparsityAllocator,
-    Conv2dDependencyAwareAllocator
+    DependencyAwareAllocator
 )
 
 from ..utils import CompressorSchema, config_list_canonical, OptimizerConstructHelper, Scaling
@@ -279,9 +279,9 @@ class NormPruner(BasicPruner):
             self.metrics_calculator = NormMetricsCalculator(p=self.p, dim=0)
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling([1], padding_kernel=True))
+                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], padding_mode='back'))
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, self.dummy_input)
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input)
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
@@ -444,9 +444,9 @@ class FPGMPruner(BasicPruner):
             self.metrics_calculator = DistMetricsCalculator(p=2, dim=0)
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling([1], padding_kernel=True))
+                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], padding_mode='back'))
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, self.dummy_input)
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input)
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
@@ -692,9 +692,9 @@ class ActivationPruner(BasicPruner):
             self.metrics_calculator = self._get_metrics_calculator()
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling([1], padding_kernel=True))
+                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], padding_mode='back'))
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, self.dummy_input)
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input)
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
@@ -1013,11 +1013,11 @@ class TaylorFOWeightPruner(BasicPruner):
             self.metrics_calculator = MultiDataNormMetricsCalculator(p=1, dim=0)
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling([1], padding_kernel=True))
+                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], padding_mode='back'))
             elif self.mode == 'global':
-                self.sparsity_allocator = GlobalSparsityAllocator(self, Scaling([1], padding_kernel=True))
+                self.sparsity_allocator = GlobalSparsityAllocator(self, Scaling(kernel_size=[1], padding_mode='back'))
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, self.dummy_input)
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input)
             else:
                 raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
 
@@ -1152,7 +1152,7 @@ class ADMMPruner(BasicPruner):
             if self.granularity == 'fine-grained':
                 self.sparsity_allocator = NormalSparsityAllocator(self)
             elif self.granularity == 'coarse-grained':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling([1], padding_kernel=True))
+                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], padding_mode='back'))
 
     def compress(self) -> Tuple[Module, Dict]:
         """

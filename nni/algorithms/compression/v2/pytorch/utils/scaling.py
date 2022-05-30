@@ -51,15 +51,18 @@ class Scaling:
               [9, 9]]]
             # note that the original tensor with size (4, 3) will unsqueeze to size (4, 3, 1) at first
             # for the `-1` in kernel_size, then expand size (4, 3, 1) to size (4, 6, 2).
-    padding_kernel
-        Whether to pad `-1` at the back of kernel_size.
-        If set True, for a given tensor when shrinking, padding `-1` until `len(tensor.shape) == len(kernel_size)`;
-        for a given expand size when expanding, padding `-1` until `len(expand_size) == len(kernel_size)`.
+    padding_mode
+        'front' or 'back', default is 'front'.
+        If set 'front', for a given tensor when shrinking, padding `1` at front of kernel_size until `len(tensor.shape) == len(kernel_size)`;
+        for a given expand size when expanding, padding `1` at front of kernel_size until `len(expand_size) == len(kernel_size)`.
+        If set 'back', for a given tensor when shrinking, padding `-1` at back of kernel_size until `len(tensor.shape) == len(kernel_size)`;
+        for a given expand size when expanding, padding `-1` at back of kernel_size until `len(expand_size) == len(kernel_size)`.
     """
 
-    def __init__(self, kernel_size: List[int], padding_kernel: bool = False) -> None:
+    def __init__(self, kernel_size: List[int], padding_mode: Literal['front', 'back'] = 'front') -> None:
         self.kernel_size = kernel_size
-        self.padding_kernel = padding_kernel
+        assert padding_mode in ['front', 'back'], f"padding_mode should be one of ['front', 'back'], but get padding_mode={padding_mode}."
+        self.padding_mode = padding_mode
 
     def _padding(self, _list: List[int], length: int, padding_value: int = -1, padding_mode: Literal['front', 'back'] = 'back') -> List[int]:
         """
@@ -141,22 +144,26 @@ class Scaling:
 
     def shrink(self, target: Tensor) -> Tensor:
         # Canonicalize kernel_size to target size length at first.
-        # If padding_kernel is True, padding -1 at the back of `self.kernel_size`.
-        # e.g., padding kernel_size [1] to [1, -1, -1] when target size length is 3.
-        # If padding_kernel is False, padding 1 at the front of `self.kernel_size`.
+        # If padding_mode is 'front', padding 1 at the front of `self.kernel_size`.
         # e.g., padding kernel_size [2, 2] to [1, 2, 2] when target size length is 3.
-        if self.padding_kernel:
+        # If padding_mode is 'back', padding -1 at the back of `self.kernel_size`.
+        # e.g., padding kernel_size [1] to [1, -1, -1] when target size length is 3.
+        if self.padding_mode == 'front':
+            kernel_size = self._padding(self.kernel_size, len(target.shape), 1, 'front')
+        elif self.padding_mode == 'back':
             kernel_size = self._padding(self.kernel_size, len(target.shape), -1, 'back')
         else:
-            kernel_size = self._padding(self.kernel_size, len(target.shape), 1, 'front')
+            raise ValueError(f'Unsupported padding mode: {self.padding_mode}.')
         return self._shrink(target, kernel_size)
 
     def expand(self, target: Tensor, expand_size: List[int]):
         # Similar with `self.shrink`, canonicalize kernel_size to expand_size length at first.
-        if self.padding_kernel:
+        if self.padding_mode == 'front':
+            kernel_size = self._padding(self.kernel_size, len(expand_size), 1, 'front')
+        elif self.padding_mode == 'back':
             kernel_size = self._padding(self.kernel_size, len(expand_size), -1, 'back')
         else:
-            kernel_size = self._padding(self.kernel_size, len(expand_size), 1, 'front')
+            raise ValueError(f'Unsupported padding mode: {self.padding_mode}.')
         return self._expand(target, kernel_size, expand_size)
 
     @overload
@@ -175,4 +182,4 @@ class Scaling:
         target = target if isinstance(target, Tensor) else torch.rand(target)
         if self.expand((self.shrink(target)), list(target.shape)).shape != target.shape:
             raise ValueError(f'The tensor with shape {target.shape}, can not shape-lossless scaling with ' +
-                             f'kernel size is {self.kernel_size} and padding_kernel is {self.padding_kernel}.')
+                             f'kernel size is {self.kernel_size} and padding_mode is {self.padding_mode}.')

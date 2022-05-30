@@ -315,11 +315,11 @@ class SparsityAllocator:
     pruner
         The pruner that binded with this `SparsityAllocator`.
     scalors
-        Scalor is used to scale the mask. It shrinks the mask of the same size as the pruning target to the same size as the metric,
+        Scalor is used to scale the masks' size. It shrinks the mask of the same size as the pruning target to the same size as the metric,
         or expands the mask of the same size as the metric to the same size as the pruning target.
         If you want to use different scalors for different pruning targets, please use a dict `{target_name: scalor}`.
-        If allocator meets an unspecified target, it will use `scalors['_default']` to scale its mask.
-        Passing in scalor instead of a `dict` will be considered passed in `{'_default': scalor}`.
+        If allocator meets an unspecified target, it will try to use `scalors['_default']` to scale its mask.
+        Passing in a scalor instead of a `dict` of scalors will be treated as passed in `{'_default': scalor}`.
         Passing in `None` means no need to scale.
     continuous_mask
         If set True, the part that has been masked will be masked first.
@@ -328,11 +328,12 @@ class SparsityAllocator:
 
     def __init__(self, pruner: Pruner, scalors: Dict[str, Scaling] | Scaling | None = None, continuous_mask: bool = True):
         self.pruner = pruner
-        self.scalors: Dict[str, Scaling] | None = scalors if isinstance(scalors, (dict, None)) else {'_default': scalors}  # type: ignore
+        self.scalors: Dict[str, Scaling] | None = scalors if isinstance(scalors, (dict, type(None))) else {'_default': scalors}  # type: ignore
         self.continuous_mask = continuous_mask
 
     def _get_scalor(self, module_name: str, target_name: str) -> Scaling | None:
         # Get scalor for the specific target in the specific module. Return None if don't find it.
+        # `module_name` is not used in current version, will support different modules using different scalors in the future.
         if self.scalors:
             return self.scalors.get(target_name, self.scalors.get('_default', None))
         else:
@@ -357,19 +358,31 @@ class SparsityAllocator:
     def _mask_metrics(self, metrics: Dict[str, Tensor]) -> Dict[str, Tensor]:
         # Set the already masked part in the metric to the minimum value.
         target_name = 'weight'
-        for module_name, weight_metric in metrics.items():
+        for module_name, target_metric in metrics.items():
             wrapper = self.pruner.get_modules_wrapper()[module_name]
-            old_weight_mask = getattr(wrapper, f'{target_name}_mask', None)
-            if old_weight_mask:
-                shrinked_mask = self._shrink_mask(module_name, target_name, old_weight_mask)
+            old_target_mask = getattr(wrapper, f'{target_name}_mask', None)
+            if old_target_mask is not None:
+                shrinked_mask = self._shrink_mask(module_name, target_name, old_target_mask)
                 # ensure the already masked part has the minimum value.
-                min_val = weight_metric.min() - 1
-                metrics[module_name] = torch.where(shrinked_mask!=0, weight_metric, min_val)
+                min_val = target_metric.min() - 1
+                metrics[module_name] = torch.where(shrinked_mask!=0, target_metric, min_val)
         return metrics
 
     def common_target_masks_generation(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
         """
         Generate masks for metrics-dependent targets.
+
+        Parameters
+        ----------
+        metrics
+            The format is {module_name: weight_metric}.
+            The metric of `weight` usually has the same size with shrinked mask.
+        
+        Return
+        ------
+        Dict[str, Dict[str, Tensor]]
+            The format is {module_name: {target_name: mask}}.
+            Return the masks of the same size as its target. 
         """
         raise NotImplementedError()
 
@@ -381,14 +394,15 @@ class SparsityAllocator:
         Parameters
         ----------
         masks
-            The format is {module_name: {target_name: mask}}
+            The format is {module_name: {target_name: mask}}.
+            It is usually the return value of `common_target_masks_generation`.
         """
         for module_name, module_masks in masks.items():
-            # generate bias mask, this will move to wrapper in the future.
-            weight_mask = module_masks.get('weight_mask', None)
+            # generate bias mask, this may move to wrapper in the future
+            weight_mask = module_masks.get('weight', None)
             wrapper = self.pruner.get_modules_wrapper()[module_name]
             old_bias_mask = getattr(wrapper, 'bias_mask', None)
-            if weight_mask and old_bias_mask and weight_mask.shape[0] == old_bias_mask.shape[0]:
+            if weight_mask is not None and old_bias_mask is not None and weight_mask.shape[0] == old_bias_mask.shape[0]:
                 # keep dim 0 and reduce all other dims by sum
                 reduce_dims = [reduce_dim for reduce_dim in range(1, len(weight_mask.shape))]
                 # count unmasked number of values on dim 0 (output channel) of weight
@@ -398,6 +412,8 @@ class SparsityAllocator:
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         """
+        The main function of `SparsityAllocator`, generate a set of masks based on the given metrics.
+
         Parameters
         ----------
         metrics

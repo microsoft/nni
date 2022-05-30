@@ -157,8 +157,8 @@ class DependencyAwareAllocator(NormalSparsityAllocator):
     """
 
     def __init__(self, pruner: Pruner, dummy_input: Any):
-        # Scaling([1], padding_kernel=True) means reducing a tensor to dim=0, which means pruning output channels if pruning target is weight.
-        super().__init__(pruner, scalors=Scaling([1], padding_kernel=True))
+        # Scaling(kernel_size=[1], padding_mode='back') means output channel pruning.
+        super().__init__(pruner, scalors=Scaling(kernel_size=[1], padding_mode='back'))
         self.channel_dependency, self.group_dependency = self._get_dependency(dummy_input)
 
     def _get_dependency(self, dummy_input: Any):
