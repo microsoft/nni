@@ -3,7 +3,7 @@
 
 from copy import deepcopy
 from pathlib import Path
-from typing import Dict, List, Callable, Optional
+from typing import Dict, List, Callable, Optional, cast
 
 import json_tricks
 import torch
@@ -73,7 +73,8 @@ class AMCTaskGenerator(TaskGenerator):
         total_sparsity = config_list_copy[0]['total_sparsity']
         max_sparsity_per_layer = config_list_copy[0].get('max_sparsity_per_layer', 1.)
 
-        self.env = AMCEnv(origin_model, origin_config_list, self.dummy_input, total_sparsity, max_sparsity_per_layer, self.target)
+        self.env = AMCEnv(origin_model, origin_config_list, self.dummy_input, total_sparsity,
+                          cast(Dict[str, float], max_sparsity_per_layer), self.target)
         self.agent = DDPG(len(self.env.state_feature), 1, self.ddpg_params)
         self.agent.is_training = True
         task_result = TaskResult('origin', origin_model, origin_masks, origin_masks, None)

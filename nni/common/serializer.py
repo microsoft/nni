@@ -13,7 +13,7 @@ import sys
 import types
 import warnings
 from io import IOBase
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Type, TypeVar, Tuple, Union, cast
 
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
@@ -604,7 +604,7 @@ class _unwrap_metaclass(type):
 
     def __new__(cls, name, bases, dct):
         bases = tuple([getattr(base, '__wrapped__', base) for base in bases])
-        return super().__new__(cls, name, bases, dct)
+        return super().__new__(cls, name, cast(Tuple[type, ...], bases), dct)
 
     # Using a customized "bases" breaks default isinstance and issubclass.
     # We recover this by overriding the subclass and isinstance behavior, which conerns wrapped class only.
