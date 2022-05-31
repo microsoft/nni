@@ -7,7 +7,7 @@ jupyter
 jupyterlab == 3.0.9
 nbsphinx
 pylint
-pyright
+pyright == 1.1.250
 pytest
 pytest-cov
 rstcheck
