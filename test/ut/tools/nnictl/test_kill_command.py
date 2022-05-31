@@ -72,7 +72,7 @@ def test_kill_process_slow_patiently():
     kill_command(process.pid, timeout=3)  # wait long enough
     end_time = time.time()
     assert end_time - start_time < 5
-    if sys.platform != 'windows':
+    if sys.platform == 'linux':
         assert end_time - start_time > 1  # I don't know why windows is super fast
 
 
