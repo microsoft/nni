@@ -93,7 +93,7 @@ def create_validator_instance(algo_type, builtin_name):
     module_name, class_name = parse_full_class_name(meta['classArgsValidator'])
     assert module_name is not None
     class_module = importlib.import_module(module_name)
-    class_constructor = getattr(class_module, class_name)
+    class_constructor = getattr(class_module, class_name)  # type: ignore
 
     return class_constructor()
 
@@ -149,7 +149,7 @@ def create_builtin_class_instance(
         raise RuntimeError('Builtin module can not be loaded: {}'.format(module_name))
 
     class_module = importlib.import_module(module_name)
-    class_constructor = getattr(class_module, class_name)
+    class_constructor = getattr(class_module, class_name)  # type: ignore
 
     instance = class_constructor(**class_args)
 
