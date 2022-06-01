@@ -11,6 +11,9 @@ import pytest
 
 from nni.tools.nnictl.command_utils import kill_command, _check_pid_running
 
+# Windows sometimes fail with "Terminate batch job (Y/N)?"
+pytestmark = pytest.mark.skipif(sys.platform == 'win32', reason='Windows has confirmation upon process killing.')
+
 
 def process_normal():
     time.sleep(360)
@@ -77,7 +80,7 @@ def test_kill_process_slow_patiently():
         assert end_time - start_time > 1  # I don't know why windows is super fast
 
 
-@pytest.mark.skipif(sys.platform in ('win32', 'darwin'), reason='Signal issues on non-linux.')
+@pytest.mark.skipif(sys.platform != 'linux', reason='Signal issues on non-linux.')
 def test_kill_process_interrupted():
     # Launch a subprocess that launches and kills another subprocess
     process = multiprocessing.Process(target=process_patiently_kill)
