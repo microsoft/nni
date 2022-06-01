@@ -26,6 +26,7 @@ import {
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
+import { type } from 'os';
 
 /**
  * NNIManager which implements Manager interface
@@ -815,6 +816,10 @@ class NNIManager implements Manager {
                     this.setStatus('RUNNING');
                 }
                 const trialRequestContent: TrialCommandContent = JSON.parse(content);
+                assert(typeof trialRequestContent.parameter_id === 'number')
+                assert(typeof trialRequestContent.parameters === 'object')
+                assert(typeof trialRequestContent.parameter_source === 'string')
+
                 const noneConstraint: PlacementConstraint = {type: 'None', gpus: []};
                 const form: TrialJobApplicationForm = {
                     sequenceId: this.experimentProfile.nextSequenceId++,
@@ -856,7 +861,10 @@ class NNIManager implements Manager {
             }
             case KILL_TRIAL_JOB: {
                 this.log.info('cancelTrialJob:', content);
-                await this.trainingService.cancelTrialJob(JSON.parse(content), true);
+                const trialJobId = JSON.parse(content)
+                assert(typeof trialJobId === 'string')
+
+                await this.trainingService.cancelTrialJob(trialJobId, true);
                 break;
             }
             default:
