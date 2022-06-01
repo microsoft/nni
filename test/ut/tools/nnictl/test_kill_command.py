@@ -46,6 +46,7 @@ def test_kill_process():
     assert end_time - start_time < 2
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='Signal is tricky on windows.')
 def test_kill_process_slow_no_patience():
     process = subprocess.Popen([sys.executable, __file__, '--mode', 'kill_slow'])
     time.sleep(1)  # wait 1 second for the process to launch and register hooks
@@ -65,6 +66,7 @@ def test_kill_process_slow_no_patience():
             return
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason='Signal is tricky on windows.')
 def test_kill_process_slow_patiently():
     process = subprocess.Popen([sys.executable, __file__, '--mode', 'kill_slow'])
     time.sleep(1)  # wait 1 second for the process to launch and register hooks
@@ -76,7 +78,7 @@ def test_kill_process_slow_patiently():
         assert end_time - start_time > 1  # I don't know why windows is super fast
 
 
-@pytest.mark.skipif(sys.platform in ('win32', 'darwin'), reason='Signal is tricky on windows / MacOS.')
+@pytest.mark.skipif(sys.platform in ('win32', 'darwin'), reason='Signal issues on non-linux.')
 def test_kill_process_interrupted():
     # Launch a subprocess that launches and kills another subprocess
     process = multiprocessing.Process(target=process_patiently_kill)
