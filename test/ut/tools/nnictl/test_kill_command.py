@@ -39,6 +39,7 @@ def test_kill_process():
     process = multiprocessing.Process(target=process_normal)
     process.start()
 
+    time.sleep(0.5)
     start_time = time.time()
     kill_command(process.pid)
     end_time = time.time()
@@ -46,7 +47,6 @@ def test_kill_process():
     assert end_time - start_time < 2
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason='Signal is tricky on windows.')
 def test_kill_process_slow_no_patience():
     process = subprocess.Popen([sys.executable, __file__, '--mode', 'kill_slow'])
     time.sleep(1)  # wait 1 second for the process to launch and register hooks
@@ -66,7 +66,6 @@ def test_kill_process_slow_no_patience():
             return
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason='Signal is tricky on windows.')
 def test_kill_process_slow_patiently():
     process = subprocess.Popen([sys.executable, __file__, '--mode', 'kill_slow'])
     time.sleep(1)  # wait 1 second for the process to launch and register hooks
