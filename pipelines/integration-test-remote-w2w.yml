@@ -19,7 +19,7 @@ jobs:
   - template: templates/install-dependencies.yml
     parameters:
       platform: windows
-      python: noop
+      python_venv: noop
 
   - template: templates/install-nni.yml
     parameters:
