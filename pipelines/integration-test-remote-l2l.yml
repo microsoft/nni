@@ -22,7 +22,7 @@ jobs:
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest
-      python: venv
+      python_env: venv
 
   - template: templates/install-nni.yml
     parameters:
@@ -38,7 +38,7 @@ jobs:
   - script: |
       set -e
       mkdir -p /tmp/nnitest/$(Build.BuildId)
-      cp -r Dockerfile /tmp/nnitest/$(Build.BuildId)
+      cp Dockerfile /tmp/nnitest/$(Build.BuildId)
       cp -r dist /tmp/nnitest/$(Build.BuildId)
       cp -r test /tmp/nnitest/$(Build.BuildId)
       cp -r test/vso_tools/interim_patch.py /tmp/nnitest/$(Build.BuildId)

@@ -35,6 +35,8 @@ def main():
 
     run_command(f'{docker} build --build-arg NNI_RELEASE={version} -t nnidev/nni-nightly .')
     run_command(f'{docker} run --privileged -d -t -p {port}:22 --add-host=host.docker.internal:host-gateway --name {container} nnidev/nni-nightly')
+    # The user inside docker must have the same uid and gid as outside.
+    # Otherwise NFS will have permission errors.
     run_command(f'{docker} exec {container} groupadd -g {gid} nni')
     run_command(f'{docker} exec {container} useradd --create-home --password {password} -u {uid} -g {gid} nni')
     run_command(docker.split() + ['exec', container, 'bash', '-c', f'echo "nni:{password}" | chpasswd'])

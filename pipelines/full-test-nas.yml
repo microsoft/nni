@@ -14,7 +14,7 @@ jobs:
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu
-      python: venv
+      python_env: venv
 
   - template: templates/install-nni.yml
 
