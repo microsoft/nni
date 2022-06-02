@@ -596,7 +596,7 @@ def replace_layernorm(layernorm, masks):
 
 def replace_pixelshuffle(pixelshuffle, masks):
     """
-    This is a nearly `no_replace` function with errors.
+    This is a nearly `no_replace` function.
 
     We can not replace pixelshuffle easily right now, pixelshuffle is a kind of location mapping.
     It will map tensor with shape (r^2 * C, H, W) to (C, r * H, r* W). So we have a dependency here,

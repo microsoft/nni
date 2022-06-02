@@ -85,6 +85,10 @@ def reshape_break_channel_dependency(op_node):
     """
     in_shape = op_node.auxiliary['in_shape']
     out_shape = op_node.auxiliary['out_shape']
+    if not in_shape or not out_shape:
+        return True
+    if len(in_shape) <= 1 or len(out_shape) <= 1:
+        return True
     in_channel = in_shape[1]
     out_channel = out_shape[1]
     return in_channel != out_channel
