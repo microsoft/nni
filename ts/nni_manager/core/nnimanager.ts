@@ -875,8 +875,10 @@ class NNIManager implements Manager {
             // FIXME: I don't know why, but in some cases err could be undefined.
             if (err.stack !== undefined) {
                 this.log.error(err.stack);
+                this.status.errors.push(err.message);
+            } else {
+                this.status.errors.push(`Undefined error, stack: ${new Error().stack}`);
             }
-            this.status.errors.push(err.message);
         }
         this.setEndtime();
         this.setStatus('ERROR');
