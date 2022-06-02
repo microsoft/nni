@@ -1,7 +1,7 @@
 parameters:
 - name: platform
   type: string
-- name: python
+- name: python_env
   type: string
   default: default
   values:
@@ -13,7 +13,7 @@ steps:
 - template: config-version.yml
   parameters:
     platform: ${{ parameters.platform }}
-    python: ${{ parameters.python }}
+    python_env: ${{ parameters.python_env }}
 
 - script: |
     set -e

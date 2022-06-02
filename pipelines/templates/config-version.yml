@@ -1,7 +1,7 @@
 parameters:
 - name: platform
   type: string
-- name: python
+- name: python_env
   type: string
   default: default
   values:
@@ -41,7 +41,7 @@ steps:
       python3.9 -m venv x64 --system-site-packages
       touch x64.complete
     displayName: Create Python 3.9 venv
-  condition: and(succeeded(), eq('${{ parameters.python }}', 'venv'))
+  condition: and(succeeded(), eq('${{ parameters.python_env }}', 'venv'))
 
 - task: UsePythonVersion@0
   inputs:
@@ -50,7 +50,7 @@ steps:
     ${{ else }}:
       versionSpec: 3.9
   displayName: Configure Python version
-  condition: and(succeeded(), ne('${{ parameters.python }}', 'noop'))
+  condition: and(succeeded(), ne('${{ parameters.python_env }}', 'noop'))
 
 - task: NodeTool@0
   inputs:
