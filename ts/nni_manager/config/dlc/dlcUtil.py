@@ -2,7 +2,9 @@
 # Licensed under the MIT license.
 
 
+import logging
 import os
+import pathlib
 import sys
 import traceback
 from argparse import ArgumentParser
@@ -19,6 +21,7 @@ if __name__ == "__main__":
     parser.add_argument('--pod_count', type=int, default=1, help='pod count')
     parser.add_argument('--ecs_spec', help='ecs spec')
     parser.add_argument('--region', help='region')
+    parser.add_argument('--workspace_id', help='workspace id for your project')
     parser.add_argument('--nas_data_source_id', help='nas data_source_id of DLC dataset configuration')
     parser.add_argument('--oss_data_source_id', help='oss data_source_id of DLC dataset configuration')
     parser.add_argument('--access_key_id', help='access_key_id')
@@ -28,49 +31,56 @@ if __name__ == "__main__":
     parser.add_argument('--log_dir', help='exception log dir')
     args = parser.parse_args()
 
-    # init client
-    client = Client(
-        Config(
-            access_key_id=args.access_key_id,
-            access_key_secret=args.access_key_secret,
-            region_id=args.region,
-            endpoint=f'pai-dlc.{args.region}.aliyuncs.com'
-        )
-    )
-
-    nas_1 = DataSourceItem(
-        data_source_type='nas',
-        data_source_id=args.nas_data_source_id,
-    )
-
-    oss = None
-    if args.oss_data_source_id:
-        oss = DataSourceItem(
-            data_source_type='oss',
-            data_source_id=args.oss_data_source_id,
-        )
-
-    # job spec
-    spec = JobSpec(
-        type=args.type,
-        image=args.image,
-        pod_count=args.pod_count,
-        ecs_spec=args.ecs_spec,
-    )
-
-    data_sources = [nas_1]
-    if oss:
-        data_sources = [nas_1, oss]
-    req = CreateJobRequest(
-        display_name=args.experiment_name,
-        job_type=args.job_type,
-        job_specs=[spec],
-        data_sources=data_sources,
-        user_command=args.user_command
-    )
+    pathlib.Path(args.log_dir).mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(filename=os.path.join(args.log_dir, 'dlc_exception.log'),
+                        format='%(asctime)s %(message)s',
+                        level=logging.INFO)
 
     # DLC submit
     try:
+
+        # init client
+        client = Client(
+            Config(
+                access_key_id=args.access_key_id,
+                access_key_secret=args.access_key_secret,
+                region_id=args.region,
+                endpoint=f'pai-dlc.{args.region}.aliyuncs.com'
+            )
+        )
+
+        nas_1 = DataSourceItem(
+            data_source_type='nas',
+            data_source_id=args.nas_data_source_id,
+        )
+
+        oss = None
+        if args.oss_data_source_id:
+            oss = DataSourceItem(
+                data_source_type='oss',
+                data_source_id=args.oss_data_source_id,
+            )
+
+        # job spec
+        spec = JobSpec(
+            type=args.type,
+            image=args.image,
+            pod_count=args.pod_count,
+            ecs_spec=args.ecs_spec,
+        )
+
+        data_sources = [nas_1]
+        if oss:
+            data_sources = [nas_1, oss]
+        req = CreateJobRequest(
+            display_name=args.experiment_name,
+            job_type=args.job_type,
+            job_specs=[spec],
+            data_sources=data_sources,
+            user_command=args.user_command,
+            workspace_id=args.workspace_id,
+        )
+
         response = client.create_job(req)
         job_id = response.body.job_id
         print('job id: ' + job_id)
@@ -86,6 +96,5 @@ if __name__ == "__main__":
                 client.stop_job(job_id)
                 exit(0)
     except Exception as e:
-        with open(os.path.join(args.log_dir, 'dlc_exception.log'), 'w') as f:
-            f.write('DLC submit Exception: \n')
-            traceback.print_exc(file=f)
+        logging.error('DLC submit Exception: \n')
+        logging.error(e, exc_info=1)
