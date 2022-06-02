@@ -30,6 +30,8 @@ sudo chmod +x /usr/bin/azcopy
 curl -fsSL https://get.docker.com | sh
 sudo systemctl --now enable docker
 
+# TODO: nvidia-docker should be installed here.
+
 # Install NFS server / client
 # This should only be done when neceessary, but it doesn't harm to install it, nonetheless.
 # The NFS server can be accessed through the path: host.docker.internal
