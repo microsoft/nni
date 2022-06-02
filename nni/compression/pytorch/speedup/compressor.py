@@ -459,8 +459,10 @@ class ModelSpeedup:
                 self.bound_model, g_node.name)
             m_type = g_node.op_type
             if (not m_type in replace_module) and (m_type not in self.customized_replace_func):
-                err_msg = f"Has not supported replacing module with type: {m_type}, you could report an issue at https://github.com/microsoft/nni. "
-                err_msg += f"If you know how to replace {m_type}, you could implement module replacement by passing in `customized_replace_func` to `{self.__class__.__name__}`. "
+                err_msg = f"Has not supported replacing module with type: {m_type}, "
+                err_msg += f"you could report an issue at https://github.com/microsoft/nni. "
+                err_msg += f"If you know how to replace {m_type}, "
+                err_msg += f"you could implement module replacement by passing in `customized_replace_func` to `{self.__class__.__name__}`. "
                 err_msg += f"You are welcome to contribute back to nni as native support if you have implemented the replacement function, "
                 err_msg += f"so that more users can benefit from your contributions."
                 raise RuntimeError(err_msg)

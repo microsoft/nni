@@ -619,7 +619,8 @@ def replace_pixelshuffle(pixelshuffle, masks):
 
     if in_channel_num != out_channel_num * (upscale_factor * upscale_factor):
         err_msg = "Your speedup model may encounter shape mismatch error during inference. "
-        err_msg += f"PixelShuffle preserved input channel number is {in_channel_num}, preserved output channel number is {out_channel_num}, "
+        err_msg += f"PixelShuffle preserved input channel number is {in_channel_num}, "
+        err_msg += f"preserved output channel number is {out_channel_num}, "
         err_msg += "unable to find a suitable upscale_factor, keep it as it is, please replace this module manually, "
         err_msg += "or adjust the module sparsity ratio before this module to ensure that a suitable upscale_factor can be found."
         # Don't raise an error because the user maybe know how to manually replace this function.
