@@ -673,6 +673,7 @@ class ActivationPruner(BasicPruner):
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(output))
             if buffer[0] < self.training_batches:
+                buffer[1] = buffer[1].to(output.device)
                 buffer[1] += self._activation_trans(output)
                 buffer[0] += 1
         return collect_activation
