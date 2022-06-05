@@ -21,7 +21,7 @@ from nni.retiarii.nn.pytorch.cell import preprocess_cell_inputs
 from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingPolicy
 from .sampling import PathSamplingCell
-from ._valuechoice_utils import traverse_all_options, dedup_inner_choices
+from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, weighted_sum
 
 _logger = logging.getLogger(__name__)
 
@@ -318,6 +318,9 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
     """
     Implementaion of Repeat in a differentiable supernet.
     Result is a weighted sum of possible prefixes, sliced by possible depths.
+
+    If the output is not a single tensor, it will be summed at every independant dimension.
+    See :func:`weighted_sum` for details.
     """
 
     _arch_parameter_names: list[str] = ['_arch_alpha']
@@ -383,15 +386,16 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
         }
         depth_weights = dict(cast(List[Tuple[int, float]], traverse_all_options(self.depth, weights=weights)))
 
-        res: torch.Tensor | None = None
+        res: list[torch.Tensor] = []
+        weights: list[float] = []
         for i, block in enumerate(self.blocks, start=1):  # start=1 because depths are 1, 2, 3, 4...
             x = block(x)
             if i in depth_weights:
-                if res is None:
-                    res = depth_weights[i] * x
-                else:
-                    res = res + depth_weights[i] * x
-        return res
+                weights.append(depth_weights[i])
+                res.append(x)
+
+        # Use weighted_sum to handle complex cases where sequential output is not a single tensor
+        return weighted_sum(res, weights)
 
 
 class DifferentiableMixedCell(PathSamplingCell):

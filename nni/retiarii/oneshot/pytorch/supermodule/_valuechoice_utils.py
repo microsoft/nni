@@ -7,7 +7,7 @@ in the way that is most convenient to one-shot algorithms."""
 from __future__ import annotations
 
 import itertools
-from typing import Any, TypeVar, List, cast
+from typing import Any, TypeVar, List, cast, Mapping, Sequence
 
 import numpy as np
 import torch
@@ -138,3 +138,65 @@ def traverse_all_options(
         return sorted(result.keys())  # type: ignore
     else:
         return sorted(result.items())  # type: ignore
+
+
+def weighted_sum(items: list[T], weights: list[float]) -> T:
+    """Return a weighted sum of items.
+
+    Items can be list of tensors, numpy arrays, or nested lists / dicts.
+    """
+
+    assert len(items) == len(weights) > 0
+    elem = items[0]
+
+    try:
+        if isinstance(elem, (torch.Tensor, np.ndarray, float, int)):
+            res = items[0] * weights[0]
+            for it, weight in zip(items[1:], weights[1:]):
+                if type(it) != type(res):
+                    raise KeyError(f'Expect type {type(it)} but found {type(res)}. Can not be summed')
+                res = res + it * weight
+            return res
+        if isinstance(elem, Mapping):
+            for item in items:
+                if not isinstance(item, Mapping) or set(item) != set(elem):
+                    raise KeyError(f'Expect keys {elem.keys()} but found {item.keys()}')
+            return {key: weighted_sum([d[key] for d in items], weights) for key in elem}
+        if isinstance(elem, Sequence):
+            for item in items:
+                if not isinstance(item, Sequence) or len(item) != len(elem):
+                    raise ValueError(f'Expect length {len(item)} but found {len(elem)}')
+            transposed = zip(*items)
+            return [weighted_sum(column, weights) for column in transposed]
+    except (TypeError, ValueError, RuntimeError, KeyError):
+        raise ValueError(
+            'Error when summing items. Value format / shape does not match:' +
+            ''.join([
+                f'\n  {idx}: {_summarize_elem_format(it)}' for idx, it in enumerate(items)
+            ])
+        )
+
+
+def _summarize_elem_format(elem: Any) -> Any:
+    # Get a summary of one elem
+    # Helps generate human-readable error messages
+
+    class _repr_object:
+        # empty object is only repr
+        def __init__(self, representation):
+            self.representation = representation
+
+        def __repr__(self):
+            return self.representation
+
+    if isinstance(elem, torch.Tensor):
+        return _repr_object('torch.Tensor(' + ', '.join(map(str, elem.shape)) + ')')
+    if isinstance(elem, np.ndarray):
+        return _repr_object('np.array(' + ', '.join(map(str, elem.shape)) + ')')
+    if isinstance(elem, Mapping):
+        return {key: _summarize_elem_format(value) for key, value in elem.items()}
+    if isinstance(elem, Sequence):
+        return [_summarize_elem_format(value) for value in elem]
+
+    # fallback to original, for cases like float, int, ...
+    return elem

@@ -265,13 +265,17 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
 
     - ``in_channels``
     - ``out_channels``
-    - ``groups`` (only supported in path sampling)
+    - ``groups``
     - ``stride`` (only supported in path sampling)
     - ``kernel_size``
-    - ``padding`` (only supported in path sampling)
+    - ``padding``
     - ``dilation`` (only supported in path sampling)
 
     ``padding`` will be the "max" padding in differentiable mode.
+
+    Mutable ``groups`` is NOT supported in most cases of differentaible mode.
+    However, we do support one special case when the group number is proportional to ``in_channels``.
+    This is often the case of depth-wise convolutions.
 
     For channels, prefix will be sliced.
     For kernels, we take the small kernel from the center and round it to floor (left top). For example ::
@@ -325,11 +329,11 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                           stride: _int_or_tuple,
                           padding: scalar_or_scalar_dict[_int_or_tuple],
                           dilation: int,
-                          groups: int,
+                          groups: int_or_int_dict,
                           inputs: torch.Tensor) -> torch.Tensor:
 
-        if any(isinstance(arg, dict) for arg in [stride, dilation, groups]):
-            raise ValueError('stride, dilation, groups does not support weighted sampling.')
+        if any(isinstance(arg, dict) for arg in [stride, dilation]):
+            raise ValueError('stride, dilation does not support weighted sampling.')
 
         in_channels_ = _W(in_channels)
         out_channels_ = _W(out_channels)
@@ -337,7 +341,34 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         # slice prefix
         # For groups > 1, we use groups to slice input weights
         weight = _S(self.weight)[:out_channels_]
-        weight = _S(weight)[:, :in_channels_ // groups]
+
+        if not isinstance(groups, dict):
+            weight = _S(weight)[:, :in_channels_ // groups]
+        else:
+            assert 'groups' in self.mutable_arguments
+            err_message = 'For differentiable one-shot strategy, when groups is a ValueChoice, ' \
+                'in_channels should also be a ValueChoice. Also, the ratio of in_channels divided by groups ' \
+                'should be a constant.'
+            if 'in_channels' not in self.mutable_arguments:
+                raise ValueError(err_message)
+            all_options = traverse_all_options(self.mutable_arguments['in_channels'] / self.mutable_arguments['groups'])
+            if len(all_options) > 1:
+                raise ValueError(
+                    err_message +
+                    f" All possible ratios found between {self.mutable_arguments['in_channels']} "
+                    f"and {self.mutable_arguments['groups']} are: {all_options}"
+                )
+            groups_ratio = all_options[0]
+            if groups_ratio != int(groups_ratio):
+                raise ValueError(f'The ratio between in_channels and groups is not found to be an integer: {groups_ratio}')
+            if inputs.size(1) % groups_ratio != 0:
+                raise RuntimeError(
+                    f'The ratio between in_channels and groups is {groups_ratio}, but input size is {inputs.size()}'
+                )
+
+            # Compute sliced weights and groups (as an integer)
+            weight = _S(weight)[:, :groups_ratio]
+            groups = inputs.size(1) // groups_ratio
 
         # slice center
         if isinstance(kernel_size, dict):
