@@ -2,13 +2,30 @@ parameters:
 - name: user
   type: boolean
   default: true
+- name: wheel
+  type: boolean
+  default: false
+- name: extra_dep
+  type: string
+  default: ""
 
 steps:
 
-- ${{ if eq(parameters.user, true) }}:
+- ${{ if eq(parameters.wheel, true) }}:
     script: |
+      echo "Install NNI (wheel)"
+      export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
+      echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
+      echo "Working directory: $(pwd)"
+      echo "Extra dependencies: ${{ parameters.extra_dep }}"
+      echo "NNI release version: ${NNI_RELEASE}"
+      python test/vso_tools/install_nni.py ${NNI_RELEASE} ${{ parameters.extra_dep }}
+  ${{ elseif eq(parameters.user, true) }}:
+    script: |
+      echo "Install NNI (user)"
       python setup.py develop
   ${{ else }}:
     script: |
+      echo "Install NNI (no user)"
       python setup.py develop --no-user
   displayName: Install NNI
