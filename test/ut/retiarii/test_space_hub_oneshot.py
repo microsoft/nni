@@ -26,7 +26,7 @@ def _hub_factory(alias):
 
 
 def test_hub_oneshot():
-    model_space = ss.ENAS(width=16, num_cells=8)
+    model_space = ss.ENAS(width=16)
 
     normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
     train_loader = pl.DataLoader(
@@ -67,3 +67,5 @@ def test_hub_oneshot():
 # @pytest.mark.parametrize('replace_sampler_ddp', [False, True])
 # @pytest.mark.parametrize('is_min_size_mode', [True])
 # @pytest.mark.parametrize('num_devices', ['auto', 1, 3, 10])
+
+test_hub_oneshot()
