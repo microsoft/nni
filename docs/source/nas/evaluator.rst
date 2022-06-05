@@ -72,7 +72,7 @@ For example,
   test_dataset = nni.trace(MNIST, root='data/mnist', train=False, download=True, transform=transform)
 
   # pl.DataLoader and pl.Classification is already traced and supports serialization.
-  evaluator = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+  evaluator = pl.Classification(train_dataloaders=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=10)
 
@@ -143,6 +143,6 @@ Then, users need to wrap everything (including LightningModule, trainer and data
 
     lightning = pl.Lightning(AutoEncoder(),
                              pl.Trainer(max_epochs=10),
-                             train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                             train_dataloaders=pl.DataLoader(train_dataset, batch_size=100),
                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
     experiment = RetiariiExperiment(base_model, lightning, mutators, strategy)
