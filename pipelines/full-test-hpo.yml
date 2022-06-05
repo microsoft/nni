@@ -11,15 +11,10 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
-  - template: templates/setup-non-ms-hosted-agent.yml
-
-  - template: templates/config-version.yml
-    parameters:
-      platform: ubuntu-latest-gpu
-
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu
+      python_env: venv
 
   - template: templates/install-nni.yml
 
@@ -42,7 +37,7 @@ jobs:
 
   - script: |
       cd test
-      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
     displayName: Integration test
 
 # TODO: should add a test on platforms other than linux

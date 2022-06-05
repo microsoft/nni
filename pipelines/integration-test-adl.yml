@@ -53,11 +53,11 @@ jobs:
   - script: |
       set -e
       cd test
-      python3 nni_test/nnitest/generate_ts_config.py \
+      python3 training_service/nnitest/generate_ts_config.py \
           --ts adl \
           --nni_docker_image nnidev/nni-nightly \
           --checkpoint_storage_class $(checkpoint_storage_class) \
           --checkpoint_storage_size $(checkpoint_storage_size) \
           --nni_manager_ip $(nni_manager_ip)
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts adl --exclude multi-phase,multi-thread
+      python3 training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts adl --exclude multi-phase,multi-thread
     displayName: Integration test

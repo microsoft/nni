@@ -172,19 +172,19 @@ To run the tutorial, follow the steps below:
 
 2. **Search**: Based on the architecture of simplified PFLD, the setting of multi-stage search space and hyper-parameters for searching should be firstly configured to construct the supernet. For example,
 
-   .. code-block::
+   .. code-block:: python
 
       from lib.builder import search_space
       from lib.ops import PRIMITIVES
       from lib.supernet import PFLDInference, AuxiliaryNet
-      from nni.algorithms.nas.pytorch.fbnet import LookUpTable, NASConfig,
+      from nni.algorithms.nas.pytorch.fbnet import LookUpTable, NASConfig
 
       # configuration of hyper-parameters
       # search_space defines the multi-stage search space
       nas_config = NASConfig(
-         model_dir=^./ckpt_save^,
+         model_dir="./ckpt_save",
          nas_lr=0.01,
-         mode=^mul^,
+         mode="mul",
          alpha=0.25,
          beta=0.6,
          search_space=search_space,

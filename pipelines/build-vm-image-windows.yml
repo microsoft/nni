@@ -1,0 +1,17 @@
+trigger: none
+pr: none
+
+variables:
+  resource_group: nni
+  gallery_name: nniImageGallery
+  network_security_group: nni-image-builder-nsg
+  managed_image_name: nni-windows-image
+  image_name: nniWindowsImage
+  packer_config: config_windows
+
+jobs:
+- job: windows
+  pool: nni-it
+  timeoutInMinutes: 90
+  steps:
+  - template: templates/build-vm-image-template.yml
