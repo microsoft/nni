@@ -140,6 +140,8 @@ def test_mixed_conv2d():
     conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([2, 4, 8], label='out'), 1, stride=ValueChoice([1, 2], label='stride'))
     assert _mixed_operation_sampling_sanity_check(conv, {'in': 3, 'stride': 2}, torch.randn(2, 3, 10, 10)).size(2) == 5
     assert _mixed_operation_sampling_sanity_check(conv, {'in': 3, 'stride': 1}, torch.randn(2, 3, 10, 10)).size(2) == 10
+    with pytest.raises(ValueError, match='must not be ValueChoice'):
+        _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 9, 10, 10))
 
     # groups, dw conv
     conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 6, 9], label='in'))
