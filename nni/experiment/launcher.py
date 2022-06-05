@@ -222,6 +222,9 @@ def get_stopped_experiment_config_json(exp_id, exp_dir=None):
             _logger.error('Id %s not exist!', exp_id)
             return None
         if experiment_metadata['status'] != 'STOPPED':
-            _logger.error('Only stopped experiments can be resumed or viewed!')
+            _logger.error(
+                'Only stopped experiments can be resumed or viewed! But retrieved metadata for %s is:\n%s',
+                exp_id, experiment_metadata
+            )
             return None
         return Config(exp_id, experiment_metadata['logDir']).get_config()

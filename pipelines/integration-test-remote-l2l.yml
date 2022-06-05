@@ -13,7 +13,7 @@ pr: none
 jobs:
 - job: remote_linux2linux
   pool: nni-it
-  timeoutInMinutes: 140
+  timeoutInMinutes: 120
 
   steps:
   # FIXME: GPU is not supported yet.

@@ -110,7 +110,7 @@ def test_concat_loader_with_ddp(
     model = BoringModel()
     trainer = Trainer(
         strategy='ddp',
-        accelerator='auto',
+        accelerator='cpu',
         devices=num_devices,
         replace_sampler_ddp=replace_sampler_ddp,
     )

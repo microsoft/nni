@@ -12,14 +12,14 @@ variables:
 jobs:
 - job: remote_windows2windows
   pool: nni-it-windows
-  timeoutInMinutes: 60
+  timeoutInMinutes: 120
 
   steps:
   # FIXME: GPU is not supported yet.
   - template: templates/install-dependencies.yml
     parameters:
       platform: windows
-      python_venv: noop
+      python_env: noop
 
   - template: templates/install-nni.yml
     parameters:
