@@ -33,5 +33,5 @@ jobs:
   - script: |
       set -e
       cd test
-      python3 nni_test/nnitest/test_quantize_model_speedup.py
+      python3 training_service/nnitest/test_quantize_model_speedup.py
     displayName: Quantize model speedup test
