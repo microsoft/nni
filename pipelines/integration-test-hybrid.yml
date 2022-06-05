@@ -8,7 +8,7 @@ schedules:
 jobs:
 - job: hybrid
   pool: nni-it
-  timeoutInMinutes: 120
+  timeoutInMinutes: 90
 
   steps:
   # FIXME: should use GPU here

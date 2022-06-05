@@ -12,7 +12,7 @@ variables:
 jobs:
 - job: remote_windows2windows
   pool: nni-it-windows
-  timeoutInMinutes: 60
+  timeoutInMinutes: 120
 
   steps:
   # FIXME: GPU is not supported yet.

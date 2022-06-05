@@ -8,7 +8,7 @@ schedules:
 jobs:
 - job: linux
   pool: nni-it
-  timeoutInMinutes: 120
+  timeoutInMinutes: 60
 
   steps:
   - template: templates/install-dependencies.yml
