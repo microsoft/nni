@@ -4,11 +4,10 @@
 from dataclasses import dataclass
 import dataclasses
 import re
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal, Optional
 import typeguard
 import nni
 from nni.runtime.tuner_command_channel.command_type import CommandType
-from nni.typehint import _ParameterSearchSpace, TrialRecord
 
 new_to_old ={'Initialize': CommandType.Initialize,
 'RequestTrialJobs': CommandType.RequestTrialJobs,
@@ -58,7 +57,7 @@ class BaseCommand:
 
 @dataclass
 class Initialize(BaseCommand):
-    search_space: Dict[str, _ParameterSearchSpace]
+    search_space: dict
 
     def _to_legacy_command_type(self) -> tuple[CommandType, str]:
         old_command_type = new_to_old[self.command_type]
@@ -105,7 +104,7 @@ class UpdateSearchSpace(BaseCommand):
 
 @dataclass
 class ImportData(BaseCommand):
-    data:  list[TrialRecord]
+    data:  list[dict]
 
 @dataclass
 class AddCustomizedTrialJob(BaseCommand):
