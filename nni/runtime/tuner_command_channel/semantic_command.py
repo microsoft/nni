@@ -3,11 +3,12 @@
 
 from dataclasses import dataclass
 import dataclasses
-import json
 import re
-from typing import Any, List, Literal
+from typing import Any, Dict, Literal, Optional
 import typeguard
+import nni
 from nni.runtime.tuner_command_channel.command_type import CommandType
+from nni.typehint import _ParameterSearchSpace, TrialRecord
 
 new_to_old ={'Initialize': CommandType.Initialize,
 'RequestTrialJobs': CommandType.RequestTrialJobs,
@@ -31,7 +32,7 @@ class BaseCommand:
 
     def dump(self) -> str:
         command_dict = {key:val for key, val in self.__dict__.items() if key != 'command_type'}
-        return json.dumps(command_dict)
+        return nni.dump(command_dict)
 
     def validate(self):
         validate_type(self)
@@ -42,7 +43,7 @@ class BaseCommand:
         old_command_type = new_to_old[self.command_type]
 
         command_dict = {key:val for key, val in self.__dict__.items() if key != 'command_type'}
-        command_json = json.dumps(command_dict)
+        command_json = nni.dump(command_dict)
         return old_command_type, command_json
 
     @classmethod
@@ -51,23 +52,23 @@ class BaseCommand:
         if len(command_json) == 0:
             command_dict['command_type'] = command_type
             return cls(**command_dict)
-        command_dict = json.loads(command_json)
+        command_dict = nni.load(command_json)
         command_dict['command_type'] = command_type
         return cls(**command_dict)
 
 @dataclass
 class Initialize(BaseCommand):
-    search_space: dict
+    search_space: Dict[str, _ParameterSearchSpace]
 
     def _to_legacy_command_type(self) -> tuple[CommandType, str]:
         old_command_type = new_to_old[self.command_type]
-        command_json = json.dumps(self.search_space)
+        command_json = nni.dump(self.search_space)
         return old_command_type, command_json
 
     @classmethod
     def load(cls, command_type, command_json: str):
         command_dict = {}
-        command_dict['search_space'] = json.loads(command_json)
+        command_dict['search_space'] = nni.load(command_json)
         command_dict['command_type'] = command_type
         return cls(**command_dict)
 
@@ -83,7 +84,7 @@ class RequestTrialJobs(BaseCommand):
     @classmethod
     def load(cls, command_type, command_json: str):
         command_dict = {}
-        command_dict['job_num'] = json.loads(command_json)
+        command_dict['job_num'] = nni.load(command_json)
         command_dict['command_type'] = command_type
         return cls(**command_dict)
 
@@ -91,11 +92,12 @@ class RequestTrialJobs(BaseCommand):
 class ReportMetricData(BaseCommand):
     trial_job_id: str
     parameter_id: int
-    parameter_index: int
-    parameters: Any
+    sequence: int
     type: Literal['FINAL', 'PERIODICAL', 'REQUEST_PARAMETER']
     value: str
-    sequence: int
+    parameter_index: Optional[int] = None
+    parameters: Optional[Any] = None
+
 
 @dataclass
 class UpdateSearchSpace(BaseCommand):
@@ -103,8 +105,7 @@ class UpdateSearchSpace(BaseCommand):
 
 @dataclass
 class ImportData(BaseCommand):
-    command_type: str
-    data: List[dict]
+    data:  list[TrialRecord]
 
 @dataclass
 class AddCustomizedTrialJob(BaseCommand):
@@ -122,7 +123,7 @@ class TrialEnd(BaseCommand):
     def load(cls, command_type, command_json: str):
         hyper_params_json = command_json.split("hyper_params\":")[1][1:-2]
         command_dict = {}
-        command_dict['hyper_params'] = json.loads(eval('\''+hyper_params_json+'\''))
+        command_dict['hyper_params'] = nni.load(eval('\''+hyper_params_json+'\''))
         subcommand = re.findall(r':"(.*?)"', command_json.split("hyper_params\":")[0])
         command_dict['trial_job_id'] = subcommand[0]
         command_dict['event'] = subcommand[1]
@@ -152,26 +153,32 @@ class NewTrialJob(BaseCommand):
     parameter_id: int
     parameter_source: str
     parameters: Any
-    parameter_index: int
+    parameter_index: Optional[int] = None
+    placement_constraint: Optional[dict] = None
+    version_info: Optional[str] = None
 
 @dataclass
 class SendTrialJobParameter(BaseCommand):
-    trial_job_id: str
     parameter_id: int
-    parameter_index: int
-    parameters: Any
     parameter_source: str
+    parameters: Any
+    trial_job_id: Optional[str] = None
+    parameter_index: Optional[int] = None
 
 @dataclass
 class NoMoreTrialJobs(BaseCommand):
-    parameter_id: int
-    parameter_source: str
-    parameters: Any
-    parameter_index: int
+    parameter_id: Optional[int] = None
+    parameter_source: Optional[str] = None
+    parameters: Optional[Any] = None
+    parameter_index: Optional[int] = None
 
 @dataclass
 class KillTrialJob(BaseCommand):
     trial_job_id: str
+
+    def _to_legacy_command_type(self) -> tuple[CommandType, str]:
+        old_command_type = new_to_old[self.command_type]
+        return old_command_type, self.trial_job_id
 
 def validate_type(command):
     class_name = type(command).__name__
