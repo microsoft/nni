@@ -12,15 +12,15 @@ def _hub_factory(alias):
         return ss.NasBench101()
     if alias == 'nasbench201':
         return ss.NasBench201()
-    if alias == 'nasnet':
+    if alias.startswith('nasnet'):
         return ss.NASNet(width=16, num_cells=8)
-    if alias == 'enas':
+    if alias.startswith('enas'):
         return ss.ENAS(width=16, num_cells=8)
-    if alias == 'amoeba':
+    if alias.startswith('amoeba'):
         return ss.AmoebaNet(width=16, num_cells=8)
-    if alias == 'pnas':
+    if alias.startswith('pnas'):
         return ss.PNAS(width=16, num_cells=8)
-    if alias == 'darts':
+    if alias.startswith('darts'):
         return ss.DARTS(width=16, num_cells=8)
 
 
