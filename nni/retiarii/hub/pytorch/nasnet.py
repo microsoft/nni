@@ -21,6 +21,9 @@ import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
+from nni.retiarii.oneshot.pytorch.supermodule.sampling import PathSamplingRepeat
+from nni.retiarii.oneshot.pytorch.supermodule.differentiable import DifferentiableMixedRepeat
+
 from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
 
@@ -348,6 +351,59 @@ class CellBuilder:
         return cell
 
 
+class NDSStage(nn.Repeat):
+    """This class defines NDSStage, a special type of Repeat, for isinstance check, and shape alignment.
+
+    In NDS, we can't simply use Repeat to stack the blocks,
+    because the output shape of each stacked block can be different.
+    This is a problem for one-shot strategy because they assume every possible candidate
+    should return values of the same shape.
+
+    Therefore, we need :class:`NDSStagePathSampling` and :class:`NDSStageDifferentiable`
+    to manually align the shapes -- specifically, to transform the first block in each stage.
+
+    This is not required though, when depth is not changing, or the mutable depth causes no problem
+    (e.g., when the minimum depth is large enough).
+
+    .. attention::
+
+       Assumption: Loose end is treated as all in ``merge_op`` (the case in one-shot),
+       which enforces reduction cell and normal cells in the same stage to have the exact same output shape.
+    """
+
+    estimated_out_channels_prev: int
+    """Output channels of cells in last stage."""
+
+    estimated_out_channels: int
+    """Output channels of this stage. It's **estimated** because it assumes ``all`` as ``merge_op``."""
+
+    downsampling: bool
+    """This stage has downsampling"""
+
+    def first_cell_transformation_factory(self):
+        """To make the "previous cell" in first cell's output have the same shape as cells in this stage."""
+        if self.downsampling:
+            return FactorizedReduce(self.estimated_out_channels_prev, self.estimated_out_channels)
+        elif self.estimated_out_channels_prev != self.estimated_out_channels:
+            return ReLUConvBN(self.estimated_out_channels_prev, self.estimated_out_channels, 1, 1, 0)
+
+
+class NDSStagePathSampling(PathSamplingRepeat):
+    @classmethod
+    def mutate(cls, module, name, memo, mutate_kwargs):
+        if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.api.ValueChoiceX):
+            return cls(
+                cast(List[nn.Module], module.blocks),
+                module.depth_choice,
+                module.first_cell_transformation_factory()
+            )
+
+
+class NDSStageDifferentiable(DifferentiableMixedRepeat):
+    ...
+
+
+
 _INIT_PARAMETER_DOCS = """
 
     Parameters
@@ -448,8 +504,17 @@ class NDS(nn.Module):
             # C_out is usually `C * num_nodes_per_cell` because of concat operator.
             cell_builder = CellBuilder(op_candidates, C_pprev, C_prev, C_curr, num_nodes_per_cell,
                                        merge_op, stage_idx > 0, last_cell_reduce)
-            stage = nn.Repeat(cell_builder, num_cells_per_stage[stage_idx])
+            stage = NDSStage(cell_builder, num_cells_per_stage[stage_idx])
+
+            stage.estimated_out_channels_prev = C_prev
+            stage.estimated_out_channels = C_curr * num_nodes_per_cell
+            stage.downsampling = stage_idx > 0
+
             self.stages.append(stage)
+
+            # NOTE: output_node_indices will be computed on-the-fly in trial code.
+            # When constructing model space, it's just all the nodes in the cell,
+            # which happens to be the case of one-shot supernet.
 
             # C_pprev is output channel number of last second cell among all the cells already built.
             if len(stage) > 1:
