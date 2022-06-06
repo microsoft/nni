@@ -592,15 +592,16 @@ class NNIManager implements Manager {
             switch (trialJobDetail.status) {
                 case 'SUCCEEDED':
                 case 'USER_CANCELED':
-                case 'EARLY_STOPPED':
+                case 'EARLY_STOPPED': {
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     const earlyStoppedCommand = new TrialEnd(trialJobDetail.id, trialJobDetail.status, hyperParams);
                     this.dispatcher.sendCommand(earlyStoppedCommand);
                     break;
+                }
                 case 'FAILED':
-                case 'SYS_CANCELED':
+                case 'SYS_CANCELED': {
                     // In the current version, we do not retry
                     // TO DO: push this job to queue for retry
                     this.trialJobs.delete(trialJobId);
@@ -609,6 +610,7 @@ class NNIManager implements Manager {
                     const sysCanceledCommand = new TrialEnd(trialJobDetail.id, trialJobDetail.status, hyperParams);
                     this.dispatcher.sendCommand(sysCanceledCommand);
                     break;
+                }
                 case 'WAITING':
                 case 'RUNNING':
                 case 'UNKNOWN':
@@ -816,7 +818,6 @@ class NNIManager implements Manager {
             case NEW_TRIAL_JOB: {
                 const newTrialJobContent: NewTrialJobContent = JSON.parse(content);
                 const tunerCommand = new NewTrialJob(newTrialJobContent);
-                tunerCommand.validate();
 
                 if (this.status.status === 'TUNER_NO_MORE_TRIAL') {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
@@ -859,7 +860,6 @@ class NNIManager implements Manager {
             case NO_MORE_TRIAL_JOBS: {
                 const tunerCommandContent: NoMoreTrialJobsContent = JSON.parse(content);
                 const tunerCommand = new NoMoreTrialJobs(tunerCommandContent);
-                tunerCommand.validate();
 
                 if (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
                     this.setStatus('TUNER_NO_MORE_TRIAL');

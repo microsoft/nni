@@ -3,14 +3,12 @@
 
 import { PlacementConstraint } from "common/trainingService";
 import { assert } from "console";
-import { json } from "express";
-import { IMPORT_DATA, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING, 
+import { IMPORT_DATA, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, PING, 
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, 
-    SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE } from "./commands";
+    TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE } from "./commands";
 
 export abstract class BaseCommand {
     public abstract toLegacyCommand(): string;
-    public abstract validate(): void;
 }
 
 export class Initialize implements BaseCommand {
@@ -106,9 +104,9 @@ export class TrialEnd implements BaseCommand {
 
     public toLegacyCommand(): string {
         return TRIAL_END + JSON.stringify({
-            trial_job_id: this.trialJobId, 
+            trial_job_id: this.trialJobId, // eslint-disable-line @typescript-eslint/camelcase
             event: this.event, 
-            hyper_params: this.hyperParams});;
+            hyper_params: this.hyperParams});// eslint-disable-line @typescript-eslint/camelcase
     }
 
     public validate(): void {
@@ -122,26 +120,17 @@ export class Terminate implements BaseCommand {
     public toLegacyCommand(): string {
         return TERMINATE;
     }
-
-    public validate(): void {
-    }
 }
 
 export class Ping implements BaseCommand {
     public toLegacyCommand(): string {
         return PING;
     }
-
-    public validate(): void {
-    }
 }
 
 export class Initialized implements BaseCommand {
     public toLegacyCommand(): string {
         return INITIALIZED;
-    }
-
-    public validate(): void {
     }
 }
 
@@ -164,9 +153,6 @@ export class NewTrialJob implements BaseCommand {
 
     public toLegacyCommand(): string {
         throw new Error("Method not implemented.");
-    }
-
-    public validate(): void {
     }
 }
 
@@ -210,9 +196,6 @@ export class NoMoreTrialJobs implements BaseCommand {
 
     public toLegacyCommand(): string {
         throw new Error("Method not implemented.");
-    }
-
-    public validate(): void {
     }
 }
 
