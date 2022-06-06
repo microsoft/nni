@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { BaseCommand } from 'core/semanticCommand';
 import type { IpcInterface } from './common';
 import { WebSocketChannel, getWebSocketChannel } from './websocket_channel';
 
@@ -15,9 +16,11 @@ class WsIpcInterface implements IpcInterface {
         await this.channel.init();
     }
 
-    public sendCommand(commandType: string, content: string = ''): void {
+    public sendCommand(command: BaseCommand): void {
+        const legacyCommand = command.toLegacyCommand();
+        const commandType = legacyCommand.slice(0, 2);
         if (commandType !== 'PI') {  // ping is handled with WebSocket protocol
-            this.channel.sendCommand(commandType + content);
+            this.channel.sendCommand(legacyCommand);
             if (commandType === 'TE') {
                 this.channel.shutdown();
             }

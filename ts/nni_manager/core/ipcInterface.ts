@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { BaseCommand } from './semanticCommand';
 import { IpcInterface } from './tuner_command_channel/common';
 export { IpcInterface } from './tuner_command_channel/common';
 import * as shim from './tuner_command_channel/shim';
@@ -23,7 +24,7 @@ export function encodeCommand(commandType: string, content: string): Buffer {
 
 class DummyIpcInterface implements IpcInterface {
     public async init(): Promise<void> { /* empty */ }
-    public sendCommand(_commandType: string, _content?: string): void { /* empty */ }
+    public sendCommand(_command: BaseCommand): void { /* empty */ }
     public onCommand(_listener: (commandType: string, content: string) => void): void { /* empty */ }
     public onError(_listener: (error: Error) => void): void { /* empty */ }
 }
