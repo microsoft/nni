@@ -64,6 +64,8 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
         Tensor that stores the "learnable" weights.
     softmax : nn.Module
         Customizable softmax function. Usually ``nn.Softmax(-1)``.
+    auto_shape_alignment : bool
+        Pad zeros to align shapes from different outputs.
     label : str
         Name of the choice.
 
@@ -77,7 +79,12 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
 
     _arch_parameter_names: list[str] = ['_arch_alpha']
 
-    def __init__(self, paths: list[tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
+    def __init__(self,
+                 paths: list[tuple[str, nn.Module]],
+                 alpha: torch.Tensor,
+                 softmax: nn.Module,
+                 auto_shape_alignment: bool,
+                 label: str):
         super().__init__()
         self.op_names = []
         if len(alpha) != len(paths):
@@ -87,6 +94,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
             self.op_names.append(name)
         assert self.op_names, 'There has to be at least one op to choose from.'
         self.label = label
+        self.auto_shape_alignment = auto_shape_alignment
         self._arch_alpha = alpha
         self._softmax = softmax
 
@@ -116,13 +124,13 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
                 alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
 
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            return cls(list(module.named_children()), alpha, softmax, module.label)
+            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment', False)
+            return cls(list(module.named_children()), alpha, softmax, auto_shape_alignment, module.label)
 
     def forward(self, *args, **kwargs):
         """The forward of mixed layer accepts same arguments as its sub-layer."""
-        op_results = torch.stack([getattr(self, op)(*args, **kwargs) for op in self.op_names])
-        alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
-        return torch.sum(op_results * self._softmax(self._arch_alpha).view(*alpha_shape), 0)
+        all_op_results = [getattr(self, op)(*args, **kwargs) for op in self.op_names]
+        return weighted_sum(all_op_results, self._softmax(self._arch_alpha), self.auto_shape_alignment)
 
     def parameters(self, *args, **kwargs):
         """Parameters excluding architecture parameters."""
@@ -167,7 +175,13 @@ class DifferentiableMixedInput(BaseSuperNetModule):
 
     _arch_parameter_names: list[str] = ['_arch_alpha']
 
-    def __init__(self, n_candidates: int, n_chosen: int | None, alpha: torch.Tensor, softmax: nn.Module, label: str):
+    def __init__(self,
+                 n_candidates: int,
+                 n_chosen: int | None,
+                 alpha: torch.Tensor,
+                 softmax: nn.Module,
+                 auto_shape_alignment: bool,
+                 label: str):
         super().__init__()
         self.n_candidates = n_candidates
         if len(alpha) != n_candidates:
@@ -178,6 +192,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
             self.n_chosen = 1
         self.n_chosen = n_chosen
         self.label = label
+        self.auto_shape_alignment = auto_shape_alignment
         self._softmax = softmax
 
         self._arch_alpha = alpha
@@ -215,13 +230,12 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                 alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
 
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            return cls(module.n_candidates, module.n_chosen, alpha, softmax, module.label)
+            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment', False)
+            return cls(module.n_candidates, module.n_chosen, alpha, softmax, auto_shape_alignment, module.label)
 
     def forward(self, inputs):
         """Forward takes a list of input candidates."""
-        inputs = torch.stack(inputs)
-        alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
-        return torch.sum(inputs * self._softmax(self._arch_alpha).view(*alpha_shape), 0)
+        return weighted_sum(inputs, self._softmax(self._arch_alpha), self.auto_shape_alignment)
 
     def parameters(self, *args, **kwargs):
         """Parameters excluding architecture parameters."""
@@ -325,10 +339,16 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
 
     _arch_parameter_names: list[str] = ['_arch_alpha']
 
-    def __init__(self, blocks: list[nn.Module], depth: ChoiceOf[int], softmax: nn.Module, memo: dict[str, Any]):
+    def __init__(self,
+                 blocks: list[nn.Module],
+                 depth: ChoiceOf[int],
+                 softmax: nn.Module,
+                 auto_shape_alignment: bool,
+                 memo: dict[str, Any]):
         super().__init__()
         self.blocks = blocks
         self.depth = depth
+        self.auto_shape_alignment = auto_shape_alignment
         self._softmax = softmax
         self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices([depth])
         self._arch_alpha = nn.ParameterDict()
@@ -364,7 +384,8 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
         if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
             # Only interesting when depth is mutable
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            return cls(cast(List[nn.Module], module.blocks), module.depth_choice, softmax, memo)
+            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment', False)
+            return cls(cast(List[nn.Module], module.blocks), module.depth_choice, softmax, auto_shape_alignment, memo)
 
     def parameters(self, *args, **kwargs):
         for _, p in self.named_parameters(*args, **kwargs):
@@ -395,7 +416,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
                 res.append(x)
 
         # Use weighted_sum to handle complex cases where sequential output is not a single tensor
-        return weighted_sum(res, weights)
+        return weighted_sum(res, weights, self.auto_shape_alignment)
 
 
 class DifferentiableMixedCell(PathSamplingCell):

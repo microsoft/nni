@@ -11,6 +11,7 @@ from typing import Any, TypeVar, List, cast, Mapping, Sequence
 
 import numpy as np
 import torch
+from torch.nn.functional import pad as tensor_pad
 
 from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch.api import ChoiceOf, ValueChoiceX
@@ -149,10 +150,13 @@ def evaluate_constant(expr: Any) -> Any:
     return res
 
 
-def weighted_sum(items: list[T], weights: list[float]) -> T:
+def weighted_sum(items: list[T], weights: list[float], auto_shape_alignment: bool = False) -> T:
     """Return a weighted sum of items.
 
     Items can be list of tensors, numpy arrays, or nested lists / dicts.
+
+    ``auto_shape_alignment`` pads the shorter tensors to longer ones.
+    It doesn't, however, fill-in the missing keys or expand the shorter lists.
     """
 
     assert len(items) == len(weights) > 0
@@ -169,19 +173,29 @@ def weighted_sum(items: list[T], weights: list[float]) -> T:
             for it, weight in zip(items[1:], weights[1:]):
                 if type(it) != type(elem):
                     raise TypeError(f'Expect type {type(elem)} but found {type(it)}. Can not be summed')
+
+                if auto_shape_alignment and isinstance(res, (torch.Tensor, np.ndarray)):
+                    if len(res.shape) != len(it.shape):
+                        raise ValueError(
+                            f'Auto shape alignment failed because dimension does not match: {len(res.shape)} vs {len(it.shape)}'
+                        )
+                    target_shape = tuple(max(r, e) for r, e in zip(res.shape, it.shape))
+                    res = _pad(res, target_shape)
+                    it = _pad(it, target_shape)
+
                 res = res + it * weight
             return res
         if isinstance(elem, Mapping):
             for item in items:
                 if not isinstance(item, Mapping) or set(item) != set(elem):
                     raise KeyError(f'Expect keys {elem.keys()} but found {item.keys()}')
-            return {key: weighted_sum([d[key] for d in items], weights) for key in elem}
+            return {key: weighted_sum([d[key] for d in items], weights, auto_shape_alignment) for key in elem}
         if isinstance(elem, Sequence):
             for item in items:
                 if not isinstance(item, Sequence) or len(item) != len(elem):
                     raise ValueError(f'Expect length {len(item)} but found {len(elem)}')
             transposed = zip(*items)
-            return [weighted_sum(column, weights) for column in transposed]
+            return [weighted_sum(column, weights, auto_shape_alignment) for column in transposed]
     except (TypeError, ValueError, RuntimeError, KeyError):
         raise ValueError(
             'Error when summing items. Value format / shape does not match. See full traceback for details.' +
@@ -192,6 +206,22 @@ def weighted_sum(items: list[T], weights: list[float]) -> T:
 
     # Dealing with all unexpected types.
     raise TypeError(unsupported_msg)
+
+
+def _pad(arr: T, target_shape: tuple[int, ...]) -> T:
+    # Suffix padding for either torch tensor or numpy array
+    padding_sizes = []
+    if isinstance(arr, torch.Tensor):
+        for target_size, cur_size in zip(target_shape[::-1], arr.shape[::-1]):
+            assert cur_size <= target_size, f'{target_shape} if not valid for {arr.shape}'
+            padding_sizes += [0, target_size - cur_size]
+        return tensor_pad(arr, padding_sizes, mode='constant')
+    if isinstance(arr, np.ndarray):
+        for target_size, cur_size in zip(target_shape, arr.shape):
+            assert cur_size <= target_size, f'{target_shape} if not valid for {arr.shape}'
+            padding_sizes.append((0, target_size - cur_size))
+        return np.pad(arr, padding_sizes, mode='constant')
+    raise TypeError(f'Unsupported padding type: {type(arr)}')
 
 
 def _summarize_elem_format(elem: Any) -> Any:

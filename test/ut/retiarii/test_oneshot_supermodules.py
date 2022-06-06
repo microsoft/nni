@@ -102,6 +102,11 @@ def test_weighted_sum():
     with pytest.raises(ValueError, match=r'does not match.*\n.*torch\.Tensor\(2, 3, 1\)'):
         weighted_sum(items, weights)
 
+    assert weighted_sum(items, weights, True).shape == torch.Size([2, 3, 3])
+
+    items = [np.random.randn(2, 5 - i, i) for i in [1, 2, 3]]
+    assert weighted_sum(items, weights, True).shape == (2, 4, 3)
+
     items = [(1, 2), (3, 4), (5, 6)]
     res = weighted_sum(items, weights)
     assert len(res) == 2 and abs(res[0] - 4.2) < 1e-6 and abs(res[1] - 5.2) < 1e-6
@@ -289,12 +294,18 @@ def test_pathsampling_layer_input():
 
 
 def test_differentiable_layer_input():
-    op = DifferentiableMixedLayer([('a', Linear(2, 3, bias=False)), ('b', Linear(2, 3, bias=True))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), 'eee')
+    op = DifferentiableMixedLayer([('a', Linear(2, 3, bias=False)), ('b', Linear(2, 3, bias=True))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), False, 'eee')
     assert op(torch.randn(4, 2)).size(-1) == 3
     assert op.export({})['eee'] in ['a', 'b']
     assert len(list(op.parameters())) == 3
 
-    input = DifferentiableMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
+    with pytest.raises(ValueError):
+        op = DifferentiableMixedLayer([('a', Linear(2, 3)), ('b', Linear(2, 4))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), False, 'eee')
+        op(torch.randn(4, 2))
+    op = DifferentiableMixedLayer([('a', Linear(2, 3)), ('b', Linear(2, 4))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), True, 'eee')
+    assert op(torch.randn(4, 2)).size(-1) == 4
+
+    input = DifferentiableMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), False, 'ddd')
     assert input([torch.randn(4, 2) for _ in range(5)]).size(-1) == 2
     assert len(input.export({})['ddd']) == 2
 
@@ -335,6 +346,7 @@ def test_differentiable_repeat():
         [nn.Linear(8 if i == 0 else 16, 16) for i in range(4)],
         ValueChoice([0, 1], label='ccc') * 2 + 1,
         GumbelSoftmax(-1),
+        False,
         {}
     )
     op.resample({})
@@ -358,6 +370,7 @@ def test_differentiable_repeat():
         [TupleModule(i + 1) for i in range(4)],
         ValueChoice([1, 2, 4], label='ccc'),
         CustomSoftmax(),
+        False,
         {}
     )
     op.resample({})

@@ -52,8 +52,8 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
 
     _arch_parameter_names = ['_arch_alpha', '_binary_gates']
 
-    def __init__(self, paths: list[tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
-        super().__init__(paths, alpha, softmax, label)
+    def __init__(self, paths: list[tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, auto_shape_alignment: bool, label: str):
+        super().__init__(paths, alpha, softmax, auto_shape_alignment, label)
         self._binary_gates = nn.Parameter(torch.randn(len(paths)) * 1E-3)
 
         # like sampling-based methods, it has a ``_sampled``.
@@ -134,8 +134,9 @@ class ProxylessMixedInput(DifferentiableMixedInput):
 
     _arch_parameter_names = ['_arch_alpha', '_binary_gates']
 
-    def __init__(self, n_candidates: int, n_chosen: int | None, alpha: torch.Tensor, softmax: nn.Module, label: str):
-        super().__init__(n_candidates, n_chosen, alpha, softmax, label)
+    def __init__(self, n_candidates: int, n_chosen: int | None, alpha: torch.Tensor,
+                 softmax: nn.Module, auto_shape_alignment: bool, label: str):
+        super().__init__(n_candidates, n_chosen, alpha, softmax, auto_shape_alignment, label)
         self._binary_gates = nn.Parameter(torch.randn(n_candidates) * 1E-3)
         self._sampled: int | None = None
 
