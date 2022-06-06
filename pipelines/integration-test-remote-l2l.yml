@@ -1,9 +1,9 @@
 trigger: none
 pr: none
-schedules:
-- cron: 0 16 * * *
-  branches:
-    include: [ master ]
+# schedules:
+# - cron: 0 16 * * *
+#   branches:
+#     include: [ master ]
 
 # variables set on VSO: (for security concern)
 #   manager_ip
@@ -12,77 +12,61 @@ schedules:
 
 jobs:
 - job: remote_linux2linux
-  pool: NNI CI REMOTE CLI
-  timeoutInMinutes: 140
+  pool: nni-it
+  timeoutInMinutes: 120
 
   steps:
+  # FIXME: GPU is not supported yet.
+  # Change to ubuntu-latest-gpu when it's done.
+
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: ubuntu-latest
+      python_env: venv
+
+  - template: templates/install-nni.yml
+    parameters:
+      wheel: true
+      extra_dep: SMAC,BOHB
+
+  - template: templates/install-customized-tuner.yml
+
   - script: |
-      export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
-      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
-      echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
-
-      echo "Working directory: ${PWD}"
-      echo "NNI version: ${NNI_RELEASE}"
-
-      python3 -m pip install --upgrade pip setuptools
-    displayName: Prepare
+      sudo systemctl enable nfs-kernel-server
+    displayName: Enable NFS service
 
   - script: |
       set -e
-      python3 test/vso_tools/install_nni.py $(NNI_RELEASE) SMAC,BOHB
+      mkdir -p /tmp/nnitest/$(Build.BuildId)
+      cp Dockerfile /tmp/nnitest/$(Build.BuildId)
+      cp -r dist /tmp/nnitest/$(Build.BuildId)
+      cp -r test /tmp/nnitest/$(Build.BuildId)
+      cp -r test/vso_tools/interim_patch.py /tmp/nnitest/$(Build.BuildId)
+    displayName: Prepare for docker
 
-      cd examples/tuners/customized_tuner
-      python3 setup.py develop --user
-      nnictl algo register --meta meta_file.yml
-    displayName: Install NNI
+  # TODO: Delete variables on pipeline when the PR that introduced this is merged.
+  - script: |
+      set -e
+      export worker_ip=localhost
+      export manager_ip=host.docker.internal
+      export password_in_docker=123456
+      export NFS_IP=host.docker.internal
+      export Exported_Directory=/var/nfs/general
+      echo "##vso[task.setvariable variable=worker_ip]${worker_ip}"
+      echo "##vso[task.setvariable variable=manager_ip]${manager_ip}"
+      echo "##vso[task.setvariable variable=password_in_docker]${password_in_docker}"
+      echo "##vso[task.setvariable variable=NFS_IP]${NFS_IP}"
+      echo "##vso[task.setvariable variable=Exported_Directory]${Exported_Directory}"
+    displayName: Override environment variables
 
-  - task: CopyFilesOverSSH@0
-    inputs:
-      sshEndpoint: $(worker)
-      sourceFolder: dist
-      targetFolder: /tmp/nnitest/$(Build.BuildId)/dist
-      overwrite: true
-    displayName: Copy wheel to remote machine
-    timeoutInMinutes: 10
-
-  - task: CopyFilesOverSSH@0
-    inputs:
-      sshEndpoint: $(worker)
-      contents: Dockerfile
-      targetFolder: /tmp/nnitest/$(Build.BuildId)
-      overwrite: true
-    displayName: Copy dockerfile to remote machine
-    timeoutInMinutes: 10
-
-  - task: CopyFilesOverSSH@0
-    inputs:
-      sshEndpoint: $(worker)
-      sourceFolder: test
-      targetFolder: /tmp/nnitest/$(Build.BuildId)/test
-      overwrite: true
-    displayName: Copy test scripts to remote machine
-    timeoutInMinutes: 10
-
-  # Need del later
-  - task: CopyFilesOverSSH@0
-    inputs:
-      sshEndpoint: $(worker)
-      contents: test/vso_tools/interim_patch.py
-      targetFolder: /tmp/nnitest/$(Build.BuildId)
-      overwrite: true
-    displayName: Copy torch patch to remote machine
-    timeoutInMinutes: 10
-
-  - task: SSH@0
-    inputs:
-      sshEndpoint: $(worker)
-      runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
-    displayName: Install NNI and run docker on Linux worker
+  - script: |
+      set -e
+      python /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py --sudo $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
+    displayName: Run a worker in docker
 
   - script: |
       cd test
-      python3 nni_test/nnitest/generate_ts_config.py \
+      python training_service/nnitest/generate_ts_config.py \
           --ts remote \
           --remote_reuse true \
           --remote_user nni \
@@ -95,12 +79,12 @@ jobs:
           --local_mount_point $(LOCAL_MOUNT_POINT) \
           --remote_mount_point $(REMOTE_MOUNT_POINT) \
           --exported_directory $(Exported_Directory)
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
     displayName: Integration test (reuse mode)
 
   - script: |
       cd test
-      python3 nni_test/nnitest/generate_ts_config.py \
+      python training_service/nnitest/generate_ts_config.py \
           --ts remote \
           --remote_reuse false \
           --remote_user nni \
@@ -108,14 +92,9 @@ jobs:
           --remote_port $(docker_port) \
           --remote_pwd $(password_in_docker) \
           --nni_manager_ip $(manager_ip)
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
     displayName: Integration test
 
-
-  - task: SSH@0
-    inputs:
-      sshEndpoint: $(worker)
-      runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/stop_docker.py $(Build.BuildId)
-    condition: always()
-    displayName: Stop docker
+  - template: templates/save-crashed-info.yml
+    parameters:
+      remote: true

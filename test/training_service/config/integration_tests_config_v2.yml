@@ -1,0 +1,135 @@
+
+defaultTestCaseConfig:
+  launchCommand: nnictl create --config $configFile --debug
+  stopCommand: nnictl stop
+  experimentStatusCheck: True
+  platform: linux darwin win32
+  trainingService: all
+
+testCases:
+#######################################################################
+# nni examples test
+#######################################################################
+- name: sklearn-classification
+  # test case config yml file relative to nni source code directory
+  configFile: test/training_service/config/examples/sklearn-classification-v2.yml
+
+- name: sklearn-regression
+  configFile: test/training_service/config/examples/sklearn-regression-v2.yml
+
+- name: mnist-tensorflow
+  configFile: test/training_service/config/examples/mnist-tfv2-v2.yml
+  trainingService: local remote
+
+- name: mnist-pytorch-local
+  configFile: test/training_service/config/examples/mnist-pytorch-v2.yml
+  # download data first, to prevent concurrent issue.
+  launchCommand: python3 ../examples/trials/mnist-pytorch/mnist.py --epochs 1 --batch_num 0 --data_dir ../examples/trials/mnist-pytorch/data && nnictl create --config $configFile --debug
+  trainingService: local
+
+- name: mnist-pytorch-non-local
+  configFile: test/training_service/config/examples/mnist-pytorch-v2.yml
+  trainingService: remote pai kubeflow frameworkcontroller dlts hybrid
+
+- name: cifar10-pytorch
+  configFile: test/training_service/config/examples/cifar10-pytorch-v2.yml
+
+- name: cifar10-pytorch-adl
+  configFile: test/training_service/config/examples/cifar10-pytorch-adl.yml
+  trainingService: adl
+
+- name: classic-nas-gen-ss
+  configFile: test/training_service/config/examples/classic-nas-pytorch-v2.yml
+  launchCommand: nnictl ss_gen --trial_command="python3 mnist.py --epochs 1" --trial_dir=../examples/nas/legacy/classic_nas --file=training_service/config/examples/nni-nas-search-space.json
+  stopCommand:
+  experimentStatusCheck: False
+  trainingService: local
+
+- name: classic-nas-pytorch
+  configFile: test/training_service/config/examples/classic-nas-pytorch-v2.yml
+  # remove search space file
+  stopCommand: nnictl stop
+  onExitCommand: python3 -c "import os; os.remove('training_service/examples/nni-nas-search-space.json')"
+  trainingService: local
+
+#########################################################################
+# nni features test
+#########################################################################
+- name: metrics-float
+  configFile: test/training_service/config/metrics_test/config-v2.yml
+  validator:
+    class: MetricsValidator
+    kwargs:
+      expected_result_file: expected_metrics.json
+
+- name: export-float
+  configFile: test/training_service/config/metrics_test/config-v2.yml
+  validator:
+    class: ExportValidator 
+
+- name: metrics-dict
+  configFile: test/training_service/config/metrics_test/config_dict_metrics-v2.yml
+  validator:
+    class: MetricsValidator
+    kwargs:
+      expected_result_file: expected_metrics_dict.json
+
+- name: export-dict
+  configFile: test/training_service/config/metrics_test/config_dict_metrics-v2.yml
+  validator:
+    class: ExportValidator 
+
+- name: experiment-import
+  configFile: test/training_service/config/nnictl_experiment/sklearn-classification-v2.yml
+  validator:
+    class: ImportValidator
+    kwargs:
+      import_data_file_path: training_service/config/nnictl_experiment/test_import.json
+
+- name: foreground
+  configFile: test/training_service/config/examples/sklearn-regression-v2.yml
+  launchCommand: python3 training_service/nnitest/foreground.py --config $configFile --timeout 45
+  stopCommand:
+  experimentStatusCheck: False
+  platform: linux darwin
+
+# Experiment resume test part 1
+- name: nnictl-resume-1
+  configFile: test/training_service/config/examples/sklearn-regression-v2.yml
+  setExperimentIdtoVar: $resumeExpId
+  # for subfolder in codedir test
+  launchCommand: python3 -c "import os; os.makedirs('../examples/trials/sklearn/regression/subfolder', exist_ok=True); open('../examples/trials/sklearn/regression/subfolder/subfile', 'a').close()" && nnictl create --config $configFile --debug
+
+# Experiment resume test part 2
+- name: nnictl-resume-2
+  configFile: test/training_service/config/examples/sklearn-regression-v2.yml
+  launchCommand: nnictl resume $resumeExpId
+
+# Experiment view test
+- name: nnictl-view
+  configFile: test/training_service/config/examples/sklearn-regression-v2.yml
+  launchCommand: nnictl view $resumeExpId
+  experimentStatusCheck: False
+
+
+#########################################################################
+# nni assessor test
+#########################################################################
+- name: assessor-curvefitting
+  configFile: test/training_service/config/assessors/curvefitting-v2.yml
+
+- name: assessor-medianstop
+  configFile: test/training_service/config/assessors/medianstop-v2.yml
+
+#########################################################################
+# nni tuners test
+#########################################################################
+- name: tuner-regularized_evolution
+  configFile: test/training_service/config/tuners/regularized_evolution_tuner-v2.yml
+
+#########################################################################
+# nni customized-tuners test
+#########################################################################
+- name: customized-tuners-demotuner
+  configFile: test/training_service/config/customized_tuners/demotuner-sklearn-classification-v2.yml
+

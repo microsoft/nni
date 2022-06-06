@@ -24,7 +24,7 @@ stages:
         rstcheck -r source \
           --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs \
           --ignore-roles githublink --ignore-substitutions release \
-          --report warning
+          --report-level warning
       displayName: rstcheck
 
     - script: |
@@ -155,7 +155,7 @@ stages:
 
     - script: |
         cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+        python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
       displayName: Simple integration test
 
   - job: ubuntu_legacy
@@ -171,7 +171,7 @@ stages:
 
     - script: |
         cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+        python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
       displayName: Simple integration test
 
     - script: |
@@ -210,7 +210,7 @@ stages:
 
     - script: |
         cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+        python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
       displayName: Simple integration test
 
   - job: macos
@@ -235,5 +235,5 @@ stages:
 
     - script: |
         cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+        python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
       displayName: Simple integration test

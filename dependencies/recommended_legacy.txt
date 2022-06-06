@@ -14,9 +14,9 @@ graphviz
 gym
 tianshou >= 0.4.1
 matplotlib
+timm >= 0.5.4
 
 # TODO: time to drop tensorflow 1.x
 keras
 tensorflow < 2.0
 protobuf <= 3.20.1
-timm >= 0.5.4

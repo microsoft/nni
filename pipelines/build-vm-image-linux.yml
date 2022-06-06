@@ -1,0 +1,16 @@
+trigger: none
+pr: none
+
+variables:
+  resource_group: nni
+  gallery_name: nniImageGallery
+  network_security_group: nni-image-builder-nsg
+  managed_image_name: nni-linux-image
+  image_definition_name: nniLinuxImage
+  packer_config: config_linux
+
+jobs:
+- job: linux
+  pool: nni-it
+  steps:
+  - template: templates/build-vm-image-template.yml
