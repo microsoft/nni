@@ -34,6 +34,16 @@ from typing import Callable, Iterator, TypeVar, Any, Optional, Tuple, Union, Lis
 import numpy as np
 import torch
 
+__all__ = [
+    'slice_type',
+    'multidim_slice',
+    'scalar_or_scalar_dict',
+    'int_or_int_dict',
+    'zeros_like',
+    'Slicable',
+    'MaybeWeighted',
+]
+
 T = TypeVar('T')
 
 slice_type = Union[slice, List[slice]]

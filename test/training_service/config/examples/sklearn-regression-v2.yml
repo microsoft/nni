@@ -1,0 +1,17 @@
+experimentName: default_test
+searchSpaceFile: ../../../../examples/trials/sklearn/regression/search_space.json
+trialCommand: python3 main.py
+trialCodeDirectory: ../../../../examples/trials/sklearn/regression
+trialGpuNumber: 0
+trialConcurrency: 2
+maxExperimentDuration: 15m
+maxTrialNumber: 4
+tuner:
+  name: Random
+trainingService:
+  platform: local
+assessor:
+  name: Medianstop
+  classArgs:
+    optimize_mode: maximize
+

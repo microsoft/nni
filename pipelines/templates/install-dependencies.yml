@@ -1,11 +1,19 @@
 parameters:
 - name: platform
   type: string
+- name: python_env
+  type: string
+  default: default
+  values:
+  - default
+  - noop
+  - venv
 
 steps:
 - template: config-version.yml
   parameters:
     platform: ${{ parameters.platform }}
+    python_env: ${{ parameters.python_env }}
 
 - script: |
     set -e
@@ -27,6 +35,7 @@ steps:
     set -e
     azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
+    rm dependencies.zip
   displayName: (POSIX) Download cache
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
   continueOnError: true
@@ -34,6 +43,7 @@ steps:
 - powershell: |
     azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
+    Remove-Item dependencies.zip
   displayName: (Windows) Download cache
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
   continueOnError: true
@@ -43,8 +53,12 @@ steps:
   displayName: (legacy) Activate legacy dependencies
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
-- script: |
-    mv dependencies/recommended_gpu.txt dependencies/recommended.txt
+- ${{ if contains(parameters.platform, 'windows') }}:
+    powershell:
+      Move-Item -Force -Path dependencies/recommended_gpu.txt -Destination dependencies/recommended.txt
+  ${{ else }}:
+    script: |
+      mv dependencies/recommended_gpu.txt dependencies/recommended.txt
   displayName: (GPU) Activate CUDA dependencies
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu'))
 
@@ -62,7 +76,7 @@ steps:
 - script: |
     ls -al ${HOME}/.local/bin
     echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-  displayName: Add .local/bin to PATH
+  displayName: (POSIX) Add local bin to PATH
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
 
 # TODO: Delete this after upgrading to PyTorch 1.11.
@@ -71,5 +85,7 @@ steps:
   displayName: Torch utils tensorboard interim patch
 
 - script: |
-    pip list
+    python --version
+    python -m pip --version
+    python -m pip list
   displayName: List pip dependencies

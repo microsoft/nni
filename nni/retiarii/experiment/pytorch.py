@@ -351,7 +351,7 @@ class RetiariiExperiment(Experiment):
             # when strategy hasn't implemented its own export logic
             all_models = filter(lambda m: m.metric is not None, list_models())
             assert optimize_mode in ['maximize', 'minimize']
-            all_models = sorted(all_models, key=lambda m: m.metric, reverse=optimize_mode == 'maximize')
+            all_models = sorted(all_models, key=lambda m: cast(float, m.metric), reverse=optimize_mode == 'maximize')
             assert formatter in ['code', 'dict'], 'Export formatter other than "code" and "dict" is not supported yet.'
             if formatter == 'code':
                 return [model_to_pytorch_script(model) for model in all_models[:top_k]]

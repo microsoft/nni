@@ -247,7 +247,8 @@ class _SupervisedLearningModule(LightningModule):
         return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)  # type: ignore
 
     def on_validation_epoch_end(self):
-        if self.running_mode == 'multi':
+        if not self.trainer.sanity_checking and self.running_mode == 'multi':
+            # Don't report metric when sanity checking
             nni.report_intermediate_result(self._get_validation_metrics())
 
     def on_fit_end(self):
@@ -305,6 +306,18 @@ class Classification(Lightning):
     trainer_kwargs : dict
         Optional keyword arguments passed to trainer. See
         `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
+
+    Examples
+    --------
+    >>> evaluator = Classification()
+
+    To use customized criterion and optimizer:
+
+    >>> evaluator = Classification(nn.LabelSmoothingCrossEntropy, optimizer=torch.optim.SGD)
+
+    Extra keyword arguments will be passed to trainer, some of which might be necessary to enable GPU acceleration:
+
+    >>> evaluator = Classification(accelerator='gpu', devices=2, strategy='ddp')
     """
 
     def __init__(self, criterion: Type[nn.Module] = nn.CrossEntropyLoss,
@@ -362,6 +375,14 @@ class Regression(Lightning):
     trainer_kwargs : dict
         Optional keyword arguments passed to trainer. See
         `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
+
+    Examples
+    --------
+    >>> evaluator = Regression()
+
+    Extra keyword arguments will be passed to trainer, some of which might be necessary to enable GPU acceleration:
+
+    >>> evaluator = Regression(gpus=1)
     """
 
     def __init__(self, criterion: Type[nn.Module] = nn.MSELoss,

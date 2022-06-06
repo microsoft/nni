@@ -106,7 +106,7 @@ class Repeat(Mutable):
                     'In repeat, `depth` is already a ValueChoice, but `label` is still set. It will be ignored.',
                     RuntimeWarning
                 )
-            self.depth_choice = depth
+            self.depth_choice: Union[int, ChoiceOf[int]] = depth
             all_values = list(self.depth_choice.all_options())
             self.min_depth = min(all_values)
             self.max_depth = max(all_values)
@@ -117,12 +117,12 @@ class Repeat(Mutable):
         elif isinstance(depth, tuple):
             self.min_depth = depth if isinstance(depth, int) else depth[0]
             self.max_depth = depth if isinstance(depth, int) else depth[1]
-            self.depth_choice = ValueChoice(list(range(self.min_depth, self.max_depth + 1)), label=label)
+            self.depth_choice: Union[int, ChoiceOf[int]] = ValueChoice(list(range(self.min_depth, self.max_depth + 1)), label=label)
             self._label = self.depth_choice.label
 
         elif isinstance(depth, int):
             self.min_depth = self.max_depth = depth
-            self.depth_choice = depth
+            self.depth_choice: Union[int, ChoiceOf[int]] = depth
         else:
             raise TypeError(f'Unsupported "depth" type: {type(depth)}')
         assert self.max_depth >= self.min_depth >= 0 and self.max_depth >= 1, f'Depth of {self.min_depth} to {self.max_depth} is invalid.'

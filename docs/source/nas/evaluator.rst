@@ -42,6 +42,8 @@ The simplest way to customize a new evaluator is with :class:`FunctionalEvaluato
 
     If the conversion is successful, the model will be able to be visualized with powerful tools `Netron <https://netron.app/>`__.
 
+.. _lightning-evaluator:
+
 Evaluators with PyTorch-Lightning
 ---------------------------------
 
