@@ -189,8 +189,19 @@ def test_mixed_conv2d():
         assert _mixed_operation_sampling_sanity_check(conv, {'in': 6}, torch.randn(2, 6, 10, 10))
 
     # groups, differentiable
-    conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([2, 4, 8], label='out'), 1, groups=ValueChoice([3, 6, 9], label='in'))
+    conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='out'), 1, groups=ValueChoice([3, 6, 9], label='in'))
     _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 9, 3, 3))
+
+    conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 6, 9], label='in'))
+    _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 9, 3, 3))
+
+    with pytest.raises(ValueError):
+        conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 9], label='groups'))
+        _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 9, 3, 3))
+
+    with pytest.raises(RuntimeError):
+        conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 6, 9], label='in') // 3)
+        _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 10, 3, 3))
 
     # make sure kernel is sliced correctly
     conv = Conv2d(1, 1, ValueChoice([1, 3], label='k'), bias=False)

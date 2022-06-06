@@ -352,12 +352,12 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                 'should be constants.'
             if 'in_channels' not in self.mutable_arguments or 'out_channels' not in self.mutable_arguments:
                 raise ValueError(err_message)
-            in_channels_per_group = evaluate_constant(self.mutable_arguments['in_channels'] / self.mutable_arguments['groups'])
+            try:
+                in_channels_per_group = evaluate_constant(self.mutable_arguments['in_channels'] / self.mutable_arguments['groups'])
+            except ValueError:
+                raise ValueError(err_message)
             if in_channels_per_group != int(in_channels_per_group):
                 raise ValueError(f'Input channels per group is found to be a non-integer: {in_channels_per_group}')
-            out_channels_per_group = evaluate_constant(self.mutable_arguments['out_channels'] / self.mutable_arguments['groups'])
-            if out_channels_per_group != int(out_channels_per_group):
-                raise ValueError(f'Output channels per group is found to be a non-integer: {out_channels_per_group}')
             if inputs.size(1) % in_channels_per_group != 0:
                 raise RuntimeError(
                     f'Input channels must be divisible by in_channels_per_group, but the input shape is {inputs.size()}, '
@@ -365,8 +365,8 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                 )
 
             # Compute sliced weights and groups (as an integer)
-            weight = _S(weight)[:, :in_channels_per_group]
-            groups = inputs.size(1) // in_channels_per_group
+            weight = _S(weight)[:, :int(in_channels_per_group)]
+            groups = inputs.size(1) // int(in_channels_per_group)
 
         # slice center
         if isinstance(kernel_size, dict):
