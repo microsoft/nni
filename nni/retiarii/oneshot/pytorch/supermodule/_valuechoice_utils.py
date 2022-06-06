@@ -20,7 +20,7 @@ Choice = Any
 
 T = TypeVar('T')
 
-__all__ = ['dedup_inner_choices', 'evaluate_value_choice_with_dict', 'traverse_all_options']
+__all__ = ['dedup_inner_choices', 'evaluate_value_choice_with_dict', 'traverse_all_options', 'weighted_sum']
 
 
 def dedup_inner_choices(value_choices: list[ValueChoiceX]) -> dict[str, ParameterSpec]:
@@ -148,13 +148,18 @@ def weighted_sum(items: list[T], weights: list[float]) -> T:
 
     assert len(items) == len(weights) > 0
     elem = items[0]
+    unsupported_msg = f'Unsupported element type in weighted sum: {type(elem)}. Value is: {elem}'
+
+    if isinstance(elem, str):
+        # Need to check this first. Otherwise it goes into sequence and causes infinite recursion.
+        raise TypeError(unsupported_msg)
 
     try:
-        if isinstance(elem, (torch.Tensor, np.ndarray, float, int)):
+        if isinstance(elem, (torch.Tensor, np.ndarray, float, int, np.number)):
             res = items[0] * weights[0]
             for it, weight in zip(items[1:], weights[1:]):
-                if type(it) != type(res):
-                    raise KeyError(f'Expect type {type(it)} but found {type(res)}. Can not be summed')
+                if type(it) != type(elem):
+                    raise TypeError(f'Expect type {type(elem)} but found {type(it)}. Can not be summed')
                 res = res + it * weight
             return res
         if isinstance(elem, Mapping):
@@ -170,11 +175,14 @@ def weighted_sum(items: list[T], weights: list[float]) -> T:
             return [weighted_sum(column, weights) for column in transposed]
     except (TypeError, ValueError, RuntimeError, KeyError):
         raise ValueError(
-            'Error when summing items. Value format / shape does not match:' +
+            'Error when summing items. Value format / shape does not match. See full traceback for details.' +
             ''.join([
                 f'\n  {idx}: {_summarize_elem_format(it)}' for idx, it in enumerate(items)
             ])
         )
+
+    # Dealing with all unexpected types.
+    raise TypeError(unsupported_msg)
 
 
 def _summarize_elem_format(elem: Any) -> Any:
