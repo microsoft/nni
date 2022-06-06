@@ -23,7 +23,7 @@ from nni.common.serializer import is_traceable
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
 
 from .base import BaseSuperNetModule
-from ._valuechoice_utils import traverse_all_options, dedup_inner_choices
+from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, evaluate_constant
 from ._operation_utils import Slicable as _S, MaybeWeighted as _W, int_or_int_dict, scalar_or_scalar_dict
 
 T = TypeVar('T')
@@ -274,7 +274,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
     ``padding`` will be the "max" padding in differentiable mode.
 
     Mutable ``groups`` is NOT supported in most cases of differentaible mode.
-    However, we do support one special case when the group number is proportional to ``in_channels``.
+    However, we do support one special case when the group number is proportional to ``in_channels`` and ``out_channels``.
     This is often the case of depth-wise convolutions.
 
     For channels, prefix will be sliced.
@@ -347,28 +347,26 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         else:
             assert 'groups' in self.mutable_arguments
             err_message = 'For differentiable one-shot strategy, when groups is a ValueChoice, ' \
-                'in_channels should also be a ValueChoice. Also, the ratio of in_channels divided by groups ' \
-                'should be a constant.'
-            if 'in_channels' not in self.mutable_arguments:
+                'in_channels and out_channels should also be a ValueChoice. ' \
+                'Also, the ratios of in_channels divided by groups, and out_channels divided by groups ' \
+                'should be constants.'
+            if 'in_channels' not in self.mutable_arguments or 'out_channels' not in self.mutable_arguments:
                 raise ValueError(err_message)
-            all_options = traverse_all_options(self.mutable_arguments['in_channels'] / self.mutable_arguments['groups'])
-            if len(all_options) > 1:
-                raise ValueError(
-                    err_message +
-                    f" All possible ratios found between {self.mutable_arguments['in_channels']} "
-                    f"and {self.mutable_arguments['groups']} are: {all_options}"
-                )
-            groups_ratio = all_options[0]
-            if groups_ratio != int(groups_ratio):
-                raise ValueError(f'The ratio between in_channels and groups is not found to be an integer: {groups_ratio}')
-            if inputs.size(1) % groups_ratio != 0:
+            in_channels_per_group = evaluate_constant(self.mutable_arguments['in_channels'] / self.mutable_arguments['groups'])
+            if in_channels_per_group != int(in_channels_per_group):
+                raise ValueError(f'Input channels per group is found to be a non-integer: {in_channels_per_group}')
+            out_channels_per_group = evaluate_constant(self.mutable_arguments['out_channels'] / self.mutable_arguments['groups'])
+            if out_channels_per_group != int(out_channels_per_group):
+                raise ValueError(f'Output channels per group is found to be a non-integer: {out_channels_per_group}')
+            if inputs.size(1) % in_channels_per_group != 0:
                 raise RuntimeError(
-                    f'The ratio between in_channels and groups is {groups_ratio}, but input size is {inputs.size()}'
+                    f'Input channels must be divisible by in_channels_per_group, but the input shape is {inputs.size()}, '
+                    f'while in_channels_per_group = {in_channels_per_group}'
                 )
 
             # Compute sliced weights and groups (as an integer)
-            weight = _S(weight)[:, :groups_ratio]
-            groups = inputs.size(1) // groups_ratio
+            weight = _S(weight)[:, :in_channels_per_group]
+            groups = inputs.size(1) // in_channels_per_group
 
         # slice center
         if isinstance(kernel_size, dict):

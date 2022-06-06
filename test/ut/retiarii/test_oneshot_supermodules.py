@@ -78,6 +78,12 @@ def test_valuechoice_utils():
     for value, weight in ans.items():
         assert abs(weight - weights[value]) < 1e-6
 
+    assert evaluate_constant(ValueChoice([3, 4, 6], label='x') - ValueChoice([3, 4, 6], label='x')) == 0
+    with pytest.raises(ValueError):
+        evaluate_constant(ValueChoice([3, 4, 6]) - ValueChoice([3, 4, 6]))
+
+    assert evaluate_constant(ValueChoice([3, 4, 6], label='x') * 2 / ValueChoice([3, 4, 6], label='x')) == 2
+
 
 def test_weighted_sum():
     weights = [0.1, 0.2, 0.7]
@@ -176,6 +182,15 @@ def test_mixed_conv2d():
     # groups, dw conv
     conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 6, 9], label='in'))
     assert _mixed_operation_sampling_sanity_check(conv, {'in': 6}, torch.randn(2, 6, 10, 10)).size() == torch.Size([2, 6, 10, 10])
+
+    # groups, invalid case
+    conv = Conv2d(ValueChoice([9, 6, 3], label='in'), ValueChoice([9, 6, 3], label='in'), 1, groups=9)
+    with pytest.raises(RuntimeError):
+        assert _mixed_operation_sampling_sanity_check(conv, {'in': 6}, torch.randn(2, 6, 10, 10))
+
+    # groups, differentiable
+    conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([2, 4, 8], label='out'), 1, groups=ValueChoice([3, 6, 9], label='in'))
+    _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 9, 3, 3))
 
     # make sure kernel is sliced correctly
     conv = Conv2d(1, 1, ValueChoice([1, 3], label='k'), bias=False)

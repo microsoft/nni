@@ -20,7 +20,7 @@ Choice = Any
 
 T = TypeVar('T')
 
-__all__ = ['dedup_inner_choices', 'evaluate_value_choice_with_dict', 'traverse_all_options', 'weighted_sum']
+__all__ = ['dedup_inner_choices', 'evaluate_value_choice_with_dict', 'traverse_all_options', 'weighted_sum', 'evaluate_constant']
 
 
 def dedup_inner_choices(value_choices: list[ValueChoiceX]) -> dict[str, ParameterSpec]:
@@ -138,6 +138,15 @@ def traverse_all_options(
         return sorted(result.keys())  # type: ignore
     else:
         return sorted(result.items())  # type: ignore
+
+
+def evaluate_constant(expr: Any) -> Any:
+    """Evaluate a value choice expression to a constant. Raise ValueError if it's not a constant."""
+    all_options = traverse_all_options(expr)
+    if len(all_options) > 1:
+        raise ValueError(f'{expr} is not evaluated to a constant. All possible values are: {all_options}')
+    res = all_options[0]
+    return res
 
 
 def weighted_sum(items: list[T], weights: list[float]) -> T:
