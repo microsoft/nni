@@ -15,13 +15,23 @@ from torch.nn.functional import pad as tensor_pad
 
 from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch.api import ChoiceOf, ValueChoiceX
+from nni.typehint import Literal
 
 
 Choice = Any
 
+AutoShapeAlignmentType = Literal['largest', 'first', 'last']
+
 T = TypeVar('T')
 
-__all__ = ['dedup_inner_choices', 'evaluate_value_choice_with_dict', 'traverse_all_options', 'weighted_sum', 'evaluate_constant']
+__all__ = [
+    'dedup_inner_choices',
+    'evaluate_value_choice_with_dict',
+    'traverse_all_options',
+    'weighted_sum',
+    'evaluate_constant',
+    'AutoShapeAlignmentType'
+]
 
 
 def dedup_inner_choices(value_choices: list[ValueChoiceX]) -> dict[str, ParameterSpec]:
@@ -150,7 +160,7 @@ def evaluate_constant(expr: Any) -> Any:
     return res
 
 
-def weighted_sum(items: list[T], weights: list[float], auto_shape_alignment: bool = False) -> T:
+def weighted_sum(items: list[T], weights: list[float], auto_shape_alignment: AutoShapeAlignmentType | None = None) -> T:
     """Return a weighted sum of items.
 
     Items can be list of tensors, numpy arrays, or nested lists / dicts.
@@ -175,13 +185,24 @@ def weighted_sum(items: list[T], weights: list[float], auto_shape_alignment: boo
                     raise TypeError(f'Expect type {type(elem)} but found {type(it)}. Can not be summed')
 
                 if auto_shape_alignment and isinstance(res, (torch.Tensor, np.ndarray)):
-                    if len(res.shape) != len(it.shape):
-                        raise ValueError(
-                            f'Auto shape alignment failed because dimension does not match: {len(res.shape)} vs {len(it.shape)}'
-                        )
-                    target_shape = tuple(max(r, e) for r, e in zip(res.shape, it.shape))
-                    res = _pad(res, target_shape)
-                    it = _pad(it, target_shape)
+                    for x in items:
+                        if len(res.shape) != len(x.shape):
+                            raise ValueError(
+                                f'Auto shape alignment failed because dimension does not match: {len(res.shape)} vs {len(x.shape)}'
+                            )
+                    if auto_shape_alignment == 'largest':
+                        # Align to the largest tensor.
+                        target_shape = tuple(max(r, e) for r, e in zip(res.shape, it.shape))
+                    elif auto_shape_alignment == 'first':
+                        # Align to the first tensor. Crop if needed.
+                        target_shape = tuple(res.shape)
+                    elif auto_shape_alignment == 'last':
+                        # Align to the last tensor. Crop if needed.
+                        target_shape = tuple(items[-1].shape)
+                    else:
+                        raise ValueError(f'Unexpected auto shape alignment rule: {auto_shape_alignment}')
+                    res = _align_to(res, target_shape)
+                    it = _align_to(it, target_shape)
 
                 res = res + it * weight
             return res
@@ -208,20 +229,42 @@ def weighted_sum(items: list[T], weights: list[float], auto_shape_alignment: boo
     raise TypeError(unsupported_msg)
 
 
-def _pad(arr: T, target_shape: tuple[int, ...]) -> T:
-    # Suffix padding for either torch tensor or numpy array
-    padding_sizes = []
-    if isinstance(arr, torch.Tensor):
-        for target_size, cur_size in zip(target_shape[::-1], arr.shape[::-1]):
-            assert cur_size <= target_size, f'{target_shape} if not valid for {arr.shape}'
-            padding_sizes += [0, target_size - cur_size]
-        return tensor_pad(arr, padding_sizes, mode='constant')
-    if isinstance(arr, np.ndarray):
+def _align_to(arr: T, target_shape: tuple[int, ...]) -> T:
+    # Suffix padding / Prefix slicing for either torch tensor or numpy array
+
+    # 1. Padding
+    if any(target_size > cur_size for cur_size, target_size in zip(arr.shape, target_shape)):
+        padding_sizes = []
+        if isinstance(arr, torch.Tensor):
+            for target_size, cur_size in zip(target_shape[::-1], arr.shape[::-1]):
+                padding_sizes += [0, max(target_size - cur_size, 0)]
+            arr = tensor_pad(arr, padding_sizes, mode='constant')
+        elif isinstance(arr, np.ndarray):
+            for target_size, cur_size in zip(target_shape, arr.shape):
+                padding_sizes.append((0, max(target_size - cur_size, 0)))
+            arr = np.pad(arr, padding_sizes, mode='constant')
+        else:
+            raise TypeError(f'Unsupported padding type: {type(arr)}')
+
+    # 2. Slicing: when target_size is too small.
+    if any(target_size < cur_size for cur_size, target_size in zip(arr.shape, target_shape)):
+        slice_ = []
         for target_size, cur_size in zip(target_shape, arr.shape):
-            assert cur_size <= target_size, f'{target_shape} if not valid for {arr.shape}'
-            padding_sizes.append((0, target_size - cur_size))
-        return np.pad(arr, padding_sizes, mode='constant')
-    raise TypeError(f'Unsupported padding type: {type(arr)}')
+            if target_size < cur_size:
+                slice_.append(slice(target_size))
+            else:
+                slice_.append(slice(None))
+        return arr[tuple(slice_)]
+
+    # In case there is a bug...
+    if tuple(arr.shape) != target_shape:
+        raise RuntimeError(
+            'Unknown alignment error. '
+            f'A multi-dimensional array of shape {arr.shape} fails to align to target shape {target_shape}. '
+            'Please file an issue.'
+        )
+
+    return arr
 
 
 def _summarize_elem_format(elem: Any) -> Any:

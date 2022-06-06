@@ -21,14 +21,14 @@ from nni.retiarii.nn.pytorch.cell import preprocess_cell_inputs
 from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingPolicy
 from .sampling import PathSamplingCell
-from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, weighted_sum
+from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, weighted_sum, AutoShapeAlignmentType
 
 _logger = logging.getLogger(__name__)
 
 __all__ = [
     'DifferentiableMixedLayer', 'DifferentiableMixedInput',
     'DifferentiableMixedRepeat', 'DifferentiableMixedCell',
-    'MixedOpDifferentiablePolicy'
+    'MixedOpDifferentiablePolicy', 'AutoShapeAlignmentType',
 ]
 
 
@@ -64,8 +64,8 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
         Tensor that stores the "learnable" weights.
     softmax : nn.Module
         Customizable softmax function. Usually ``nn.Softmax(-1)``.
-    auto_shape_alignment : bool
-        Pad zeros to align shapes from different outputs.
+    auto_shape_alignment : AutoShapeAlignmentType
+        Pad zeros / slice prefixes to align shapes from different outputs.
     label : str
         Name of the choice.
 
@@ -83,7 +83,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
                  paths: list[tuple[str, nn.Module]],
                  alpha: torch.Tensor,
                  softmax: nn.Module,
-                 auto_shape_alignment: bool,
+                 auto_shape_alignment: AutoShapeAlignmentType,
                  label: str):
         super().__init__()
         self.op_names = []
@@ -124,7 +124,7 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
                 alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
 
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment', False)
+            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment')
             return cls(list(module.named_children()), alpha, softmax, auto_shape_alignment, module.label)
 
     def forward(self, *args, **kwargs):
@@ -180,7 +180,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                  n_chosen: int | None,
                  alpha: torch.Tensor,
                  softmax: nn.Module,
-                 auto_shape_alignment: bool,
+                 auto_shape_alignment: AutoShapeAlignmentType,
                  label: str):
         super().__init__()
         self.n_candidates = n_candidates
@@ -230,7 +230,7 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                 alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
 
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment', False)
+            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment')
             return cls(module.n_candidates, module.n_chosen, alpha, softmax, auto_shape_alignment, module.label)
 
     def forward(self, inputs):
@@ -343,7 +343,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
                  blocks: list[nn.Module],
                  depth: ChoiceOf[int],
                  softmax: nn.Module,
-                 auto_shape_alignment: bool,
+                 auto_shape_alignment: AutoShapeAlignmentType,
                  memo: dict[str, Any]):
         super().__init__()
         self.blocks = blocks
@@ -384,7 +384,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
         if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
             # Only interesting when depth is mutable
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment', False)
+            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment')
             return cls(cast(List[nn.Module], module.blocks), module.depth_choice, softmax, auto_shape_alignment, memo)
 
     def parameters(self, *args, **kwargs):

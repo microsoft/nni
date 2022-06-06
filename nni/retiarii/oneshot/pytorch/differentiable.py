@@ -13,7 +13,8 @@ from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default
 from .supermodule.differentiable import (
     DifferentiableMixedLayer, DifferentiableMixedInput,
     MixedOpDifferentiablePolicy, GumbelSoftmax,
-    DifferentiableMixedCell, DifferentiableMixedRepeat
+    DifferentiableMixedCell, DifferentiableMixedRepeat,
+    AutoShapeAlignmentType
 )
 from .supermodule.proxyless import ProxylessMixedInput, ProxylessMixedLayer
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
@@ -52,8 +53,8 @@ class DartsLightningModule(BaseOneShotLightningModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    auto_shape_alignment : bool
-        Automatically pad zeros to align output shapes from different candidates.
+    auto_shape_alignment : AutoShapeAlignmentType
+        Automatically pad zeros / slice prefixes to align output shapes from different candidates.
         Useful when modules like LayerChoice or Repeat does not guarantee steady output shapes.
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
@@ -87,7 +88,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
     def __init__(self, inner_module: pl.LightningModule,
                  mutation_hooks: list[MutationHook] | None = None,
                  arc_learning_rate: float = 3.0E-4,
-                 auto_shape_alignment: bool = False):
+                 auto_shape_alignment: AutoShapeAlignmentType | None = None):
         self.arc_learning_rate = arc_learning_rate
         self.auto_shape_alignment = auto_shape_alignment
         super().__init__(inner_module, mutation_hooks=mutation_hooks)
@@ -225,8 +226,8 @@ class GumbelDartsLightningModule(DartsLightningModule):
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    auto_shape_alignment : bool
-        Automatically pad zeros to align output shapes from different candidates.
+    auto_shape_alignment : AutoShapeAlignmentType
+        Automatically pad zeros / slice prefixes to align output shapes from different candidates.
         Useful when modules like LayerChoice or Repeat does not guarantee steady output shapes.
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
@@ -244,7 +245,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
     def __init__(self, inner_module,
                  mutation_hooks: list[MutationHook] | None = None,
                  arc_learning_rate: float = 3.0e-4,
-                 auto_shape_alignment: bool = False,
+                 auto_shape_alignment: AutoShapeAlignmentType | None = None,
                  gumbel_temperature: float = 1.,
                  use_temp_anneal: bool = False,
                  min_temp: float = .33):
