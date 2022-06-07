@@ -545,11 +545,12 @@ class NDS(nn.Module):
             # C_out is usually `C * num_nodes_per_cell` because of concat operator.
             cell_builder = CellBuilder(op_candidates, C_pprev, C_prev, C_curr, num_nodes_per_cell,
                                        merge_op, stage_idx > 0, last_cell_reduce)
-            stage = NDSStage(cell_builder, num_cells_per_stage[stage_idx])
+            stage: Union[NDSStage, nn.Sequential] = NDSStage(cell_builder, num_cells_per_stage[stage_idx])
 
-            stage.estimated_out_channels_prev = C_prev
-            stage.estimated_out_channels = C_curr * num_nodes_per_cell
-            stage.downsampling = stage_idx > 0
+            if isinstance(stage, NDSStage):
+                stage.estimated_out_channels_prev = C_prev
+                stage.estimated_out_channels = C_curr * num_nodes_per_cell
+                stage.downsampling = stage_idx > 0
 
             self.stages.append(stage)
 

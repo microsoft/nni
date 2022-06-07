@@ -78,7 +78,7 @@ def _strategy_factory(alias, space_type):
     if alias == 'proxyless':
         return stg.Proxyless()
     if alias == 'enas':
-        return stg.ENAS(mutation_hooks=extra_mutation_hooks)
+        return stg.ENAS(mutation_hooks=extra_mutation_hooks, reward_metric_name='val_acc')
     if alias == 'random':
         return stg.RandomOneShot(mutation_hooks=extra_mutation_hooks)
 
@@ -187,8 +187,8 @@ def test_hub_oneshot(space_type, strategy_type):
         dataset_type = 'imagenet'
 
     train_dataset, valid_dataset = _dataset_factory(dataset_type)
-    train_loader = pl.DataLoader(train_dataset, batch_size=4, num_workers=4, shuffle=True)
-    valid_loader = pl.DataLoader(valid_dataset, batch_size=4, num_workers=4, shuffle=False)
+    train_loader = pl.DataLoader(train_dataset, batch_size=1, num_workers=4, shuffle=True)
+    valid_loader = pl.DataLoader(valid_dataset, batch_size=1, num_workers=4, shuffle=False)
 
     evaluator = pl.Classification(
         train_dataloaders=train_loader,
@@ -206,4 +206,4 @@ def test_hub_oneshot(space_type, strategy_type):
     experiment.run(config)
 
 
-# test_hub_oneshot('enas', 'darts')
+# test_hub_oneshot('mobilenetv3', 'darts')
