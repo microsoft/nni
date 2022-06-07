@@ -384,7 +384,8 @@ class NDSStage(nn.Repeat):
         """To make the "previous cell" in first cell's output have the same shape as cells in this stage."""
         if self.downsampling:
             return FactorizedReduce(self.estimated_out_channels_prev, self.estimated_out_channels)
-        elif self.estimated_out_channels_prev != self.estimated_out_channels:
+        elif self.estimated_out_channels_prev is not self.estimated_out_channels:
+            # Can't use != here, ValueChoice doesn't support
             return ReLUConvBN(self.estimated_out_channels_prev, self.estimated_out_channels, 1, 1, 0)
         return None
 

@@ -1,8 +1,9 @@
 import nni
 import nni.retiarii.hub.pytorch as ss
 import nni.retiarii.evaluator.pytorch as pl
-from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 import nni.retiarii.strategy as stg
+from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
+from nni.retiarii.hub.pytorch.nasnet import NDSStagePathSampling, NDSStageDifferentiable
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
@@ -49,23 +50,31 @@ def _hub_factory(alias):
 
 
 def _strategy_factory(alias, space_type):
-    auto_shape_alignment = '_smalldepth' in space_type
+    # Some search space needs extra hooks
+    extra_mutation_hooks = []
+    nds_need_shape_alignment = '_smalldepth' in space_type
+    if nds_need_shape_alignment:
+        if alias in ['enas', 'random']:
+            extra_mutation_hooks.append(NDSStagePathSampling.mutate)
+        else:
+            extra_mutation_hooks.append(NDSStageDifferentiable.mutate)
+
     if alias == 'darts':
-        return stg.DARTS(auto_shape_alignment=auto_shape_alignment)
+        return stg.DARTS(mutation_hooks=extra_mutation_hooks)
     if alias == 'gumbel':
-        return stg.GumbelDARTS(auto_shape_alignment=auto_shape_alignment)
+        return stg.GumbelDARTS(mutation_hooks=extra_mutation_hooks)
     if alias == 'proxyless':
         return stg.Proxyless()
     if alias == 'enas':
-        return stg.ENAS()
+        return stg.ENAS(mutation_hooks=extra_mutation_hooks)
     if alias == 'random':
-        return stg.RandomOneShot()
+        return stg.RandomOneShot(mutation_hooks=extra_mutation_hooks)
 
     raise ValueError(f'Unrecognized strategy: {alias}')
 
 
 def test_hub_oneshot(space_type, strategy_type):
-    model_space = _hub_factory()
+    model_space = _hub_factory(space_type)
 
     normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
     train_loader = pl.DataLoader(
@@ -75,7 +84,7 @@ def test_hub_oneshot(space_type, strategy_type):
             transforms.ToTensor(),
             normalize,
         ])),
-        batch_size=16,
+        batch_size=4,
         shuffle=True
     )
 
@@ -84,7 +93,7 @@ def test_hub_oneshot(space_type, strategy_type):
             transforms.ToTensor(),
             normalize,
         ])),
-        batch_size=16,
+        batch_size=4,
         shuffle=False
     )
 
@@ -92,8 +101,8 @@ def test_hub_oneshot(space_type, strategy_type):
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader,
         max_epochs=1,
-        limit_train_batches=10,
-        limit_val_batches=10
+        limit_train_batches=50,
+        limit_val_batches=50
     )
 
     strategy = _strategy_factory(strategy_type, space_type)
@@ -109,4 +118,4 @@ def test_hub_oneshot(space_type, strategy_type):
 # @pytest.mark.parametrize('is_min_size_mode', [True])
 # @pytest.mark.parametrize('num_devices', ['auto', 1, 3, 10])
 
-test_hub_oneshot()
+test_hub_oneshot('enas_smalldepth_width', 'darts')
