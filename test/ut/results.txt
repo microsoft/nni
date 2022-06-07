@@ -1,0 +1,159 @@
+=================================== slowest 50 durations ===================================
+118.80s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-nasnet_width_smalldepth]
+109.27s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-nasnet_width_smalldepth]
+108.85s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-amoeba_width_smalldepth]
+102.50s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-nasnet]
+102.29s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-pnas_width_smalldepth]
+102.29s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-nasnet]
+100.99s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-amoeba_width_smalldepth]
+95.40s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-pnas_width_smalldepth]
+91.48s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-darts_width_depth]
+88.85s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-enas_width_depth]
+85.14s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-darts_width_depth]
+83.52s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-enas_width_depth]
+75.75s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-darts_width_smalldepth_imagenet]
+74.32s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-enas_width_smalldepth_imagenet]
+71.44s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-darts_width_smalldepth_imagenet]
+70.39s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-enas_width_smalldepth_imagenet]
+67.69s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-nasbench201]
+64.33s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-shufflenet]
+59.07s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-amoeba]
+59.03s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-amoeba]
+57.78s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-darts_depth]
+57.75s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-darts_depth]
+57.59s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-enas_depth]
+57.46s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-enas_depth]
+57.38s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-pnas]
+57.10s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-pnas]
+56.05s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-nasbench201]
+53.76s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-enas_smalldepth]
+53.67s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-darts_smalldepth]
+53.53s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-darts_smalldepth]
+53.45s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-enas_smalldepth]
+52.27s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-proxylessnas]
+52.17s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-proxylessnas]
+50.56s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-darts]
+50.28s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-enas]
+50.21s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-darts]
+50.19s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-enas]
+49.95s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-darts_imagenet]
+49.84s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-darts_imagenet]
+49.71s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-enas_imagenet]
+49.51s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-enas_imagenet]
+40.35s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-darts_width]
+35.94s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-darts_width_smalldepth]
+34.94s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-enas_width_smalldepth]
+33.69s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[random-nasbench201]
+32.06s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-darts_width_smalldepth]
+30.98s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-enas_width_smalldepth]
+29.68s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-nasnet_width_smalldepth]
+28.95s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-amoeba_width_smalldepth]
+28.76s call     ut/retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-nasbench201]
+================================= short test summary info ==================================
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-mobilenetv3] - TypeErro...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-darts_width] - Attribut...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[darts-enas_width] - Attribute...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-mobilenetv3] - TypeErr...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-darts_width] - Attribu...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[gumbel-enas_width] - Attribut...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[proxyless-pnas] - RuntimeErro...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[proxyless-darts] - RuntimeErr...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[proxyless-darts_imagenet] - R...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[proxyless-enas_imagenet] - Ty...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-nasbench201] - KeyError:...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-mobilenetv3] - TypeError...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-proxylessnas] - KeyError...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-shufflenet] - KeyError: ...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-nasnet] - KeyError: "Mod...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-enas] - KeyError: "Model...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-amoeba] - KeyError: "Mod...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-pnas] - KeyError: "Model...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-darts] - KeyError: "Mode...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-darts_smalldepth] - KeyE...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-darts_depth] - KeyError:...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-darts_width] - Attribute...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-darts_width_smalldepth]
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-darts_width_depth] - Key...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-darts_imagenet] - KeyErr...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-darts_width_smalldepth_imagenet]
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-enas_smalldepth] - KeyEr...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-enas_depth] - KeyError: ...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-enas_width] - AttributeE...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-enas_width_smalldepth]
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-enas_width_depth] - KeyE...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-enas_imagenet] - KeyErro...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-enas_width_smalldepth_imagenet]
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-pnas_width_smalldepth]
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-amoeba_width_smalldepth]
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[enas-nasnet_width_smalldepth]
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[random-mobilenetv3] - TypeErr...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[random-darts_width] - Attribu...
+FAILED retiarii/test_space_hub_oneshot.py::test_hub_oneshot[random-enas_width] - Attribut...
+
+
+../../nni/retiarii/hub/pytorch/nasnet.py:563: in __init__
+    C_pprev = len(cast(nn.Cell, stage[-2]).output_node_indices) * C_curr
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = 3 * ValueChoice([8, 16], label='width'), name = 'output_node_indices'
+                                                                                                                                                                                            def __getattr__(self, name: str) -> Union[Tensor, 'Module']:
+        if '_parameters' in self.__dict__:
+            _parameters = self.__dict__['_parameters']
+            if name in _parameters:
+                return _parameters[name]                                                                                                                                                        if '_buffers' in self.__dict__:                                                                                                                                                             _buffers = self.__dict__['_buffers']
+            if name in _buffers:
+                return _buffers[name]
+        if '_modules' in self.__dict__:
+            modules = self.__dict__['_modules']
+            if name in modules:                                                                                                                                                                         return modules[name]
+>       raise AttributeError("'{}' object has no attribute '{}'".format(
+            type(self).__name__, name))
+E       AttributeError: 'ValueChoiceX' object has no attribute 'output_node_indices'
+
+
+
+
+
+../../../miniconda3/envs/cu102/lib/python3.8/site-packages/torch/nn/modules/module.py:1051: in _call_impl
+    return forward_call(*input, **kwargs)
+../../nni/retiarii/evaluator/pytorch/lightning.py:211: in forward
+    y_hat = self.model(x)
+../../../miniconda3/envs/cu102/lib/python3.8/site-packages/torch/nn/modules/module.py:1051: in _call_impl
+    return forward_call(*input, **kwargs)
+../../nni/retiarii/hub/pytorch/mobilenetv3.py:250: in forward
+    x = self.stem(x)
+../../../miniconda3/envs/cu102/lib/python3.8/site-packages/torch/nn/modules/module.py:1051: in _call_impl
+    return forward_call(*input, **kwargs)
+../../../miniconda3/envs/cu102/lib/python3.8/site-packages/torch/nn/modules/container.py:139: in forward
+    input = module(input)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ((max(8)) + 8) if ((max(8)) < (0.9 * (ValueChoice([0.5, 0.625, 0.75, 1.0, 1.25, 1.5, 2.0], label='s0_width_mult') * 16))) else (max(8))
+input = (tensor([[[[-1.9035e-01,  8.8523e-02,  8.6230e-02,  ...,  1.2713e-01,
+            2.3846e-01, -1.4107e-01],                                                                                                                                                             ...-01,  ..., -1.7290e-01,
+           -1.5929e-01, -5.3993e-04]]]], device='cuda:0',
+       grad_fn=<HardswishBackward>),)
+kwargs = {}
+forward_call = <bound method ValueChoiceX.forward of ((max(8)) + 8) if ((max(8)) < (0.9 * (ValueChoice([0.5, 0.625, 0.75, 1.0, 1.25, 1.5, 2.0], label='s0_width_mult') * 16))) else (max(8))>
+                                                                                                                                                                                            def _call_impl(self, *input, **kwargs):
+        forward_call = (self._slow_forward if torch._C._get_tracing_state() else self.forward)
+        # If we don't have any hooks, we want to skip the rest of the logic in
+        # this function, and just call forward.
+        if not (self._backward_hooks or self._forward_hooks or self._forward_pre_hooks or _global_backward_hooks
+                or _global_forward_hooks or _global_forward_pre_hooks):
+>           return forward_call(*input, **kwargs)
+E           TypeError: forward() takes 1 positional argument but 2 were given
+
+
+
+
+            # use the default metric of self.model as reward function
+            if len(self.trainer.callback_metrics) == 1:
+                _, metric = next(iter(self.trainer.callback_metrics.items()))
+            else:
+                metric_name = self.reward_metric_name or 'default'
+                if metric_name not in self.trainer.callback_metrics:
+>                   raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
+                                   f'found multiple (or zero) metrics without default: {list(self.trainer.callback_metrics.keys())}. '
+                                   f'Try to use self.log to report metrics with the specified key ``{metric_name}`` in validation_step, '                                                                                  'and remember to set on_step=True.')
+E                   KeyError: "Model reported metrics should contain a ``default`` key but found multiple (or zero) metrics without default: ['train_loss', 'train_acc', 'val_loss', 'val_acc']. Try to use self.log to report metrics with the specified key ``default`` in validation_step, and remember to set on_step=True."
