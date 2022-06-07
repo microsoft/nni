@@ -46,8 +46,8 @@ class MsgDispatcherBase(Recoverable):
             self._channel.connect()
         self.default_command_queue = Queue()
         self.assessor_command_queue = Queue()
-        self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))
-        self.assessor_worker = threading.Thread(target=self.command_queue_worker, args=(self.assessor_command_queue,))
+        self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,), daemon=True)
+        self.assessor_worker = threading.Thread(target=self.command_queue_worker, args=(self.assessor_command_queue,), daemon=True)
         self.worker_exceptions = []
 
     def run(self):
