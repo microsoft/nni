@@ -1,5 +1,6 @@
 import pytest
 
+import numpy as np
 import torch
 
 import nni
@@ -8,10 +9,11 @@ import nni.retiarii.evaluator.pytorch as pl
 import nni.retiarii.strategy as stg
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.hub.pytorch.nasnet import NDSStagePathSampling, NDSStageDifferentiable
+from torch.utils.data import Subset
 from torchvision import transforms
 from torchvision.datasets import CIFAR10, ImageNet
 
-pytestmark = pytest.mark.skipif(not torch.cuda.is_available())
+pytestmark = pytest.mark.skipif(not torch.cuda.is_available(), reason='Too slow without CUDA.')
 
 def _hub_factory(alias):
     if alias == 'nasbench101':
@@ -43,7 +45,7 @@ def _hub_factory(alias):
     if '_imagenet' in alias:
         dataset = 'imagenet'
     else:
-        dataset = 'cifar10'
+        dataset = 'cifar'
 
     if alias.startswith('nasnet'):
         return ss.NASNet(width=width, num_cells=num_cells, dataset=dataset)
@@ -82,7 +84,8 @@ def _strategy_factory(alias, space_type):
 
     raise ValueError(f'Unrecognized strategy: {alias}')
 
-def _dataset_factory(dataset_type):
+
+def _dataset_factory(dataset_type, subset=20):
     if dataset_type == 'cifar10':
         normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
         train_dataset = nni.trace(CIFAR10)(
@@ -101,7 +104,6 @@ def _dataset_factory(dataset_type):
                 transforms.ToTensor(),
                 normalize,
             ]))
-        return train_dataset, valid_dataset
     elif dataset_type == 'imagenet':
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         train_dataset = nni.trace(ImageNet)(
@@ -124,6 +126,10 @@ def _dataset_factory(dataset_type):
             ]))
     else:
         raise ValueError(f'Unsupported dataset type: {dataset_type}')
+
+    if subset:
+        train_dataset = Subset(train_dataset, np.random.permutation(len(train_dataset))[:subset])
+        valid_dataset = Subset(valid_dataset, np.random.permutation(len(valid_dataset))[:subset])
 
     return train_dataset, valid_dataset
 
@@ -181,15 +187,14 @@ def test_hub_oneshot(space_type, strategy_type):
         dataset_type = 'imagenet'
 
     train_dataset, valid_dataset = _dataset_factory(dataset_type)
-    train_loader = pl.DataLoader(train_dataset, batch_size=4, shuffle=True)
-    valid_loader = pl.DataLoader(valid_dataset, batch_size=4, shuffle=False)
+    train_loader = pl.DataLoader(train_dataset, batch_size=4, num_workers=4, shuffle=True)
+    valid_loader = pl.DataLoader(valid_dataset, batch_size=4, num_workers=4, shuffle=False)
 
     evaluator = pl.Classification(
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader,
         max_epochs=1,
-        limit_train_batches=50,
-        limit_val_batches=50
+        gpus=1 if torch.cuda.is_available() else 0  # 0 for my debug
     )
 
     strategy = _strategy_factory(strategy_type, space_type)
@@ -201,4 +206,4 @@ def test_hub_oneshot(space_type, strategy_type):
     experiment.run(config)
 
 
-test_hub_oneshot('enas_width_smalldepth_imagenet', 'darts')
+# test_hub_oneshot('enas', 'darts')

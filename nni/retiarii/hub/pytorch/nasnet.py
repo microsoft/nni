@@ -532,6 +532,8 @@ class NDS(nn.Module):
             C_pprev = C_prev = 3 * C
             C_curr = C
             last_cell_reduce = False
+        else:
+            raise ValueError(f'Unsupported dataset: {dataset}')
 
         self.stages = nn.ModuleList()
         for stage_idx in range(3):
