@@ -199,8 +199,8 @@ def weighted_sum(items: list[T], weights: list[float] | None = None) -> T:
                     res = res + it
                 else:
                     res = res + it * weight
-
             return res
+
         if isinstance(elem, Mapping):
             for item in items:
                 if not isinstance(item, Mapping) or set(item) != set(elem):

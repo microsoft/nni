@@ -90,6 +90,8 @@ def test_weighted_sum():
     items = [1, 2, 3]
     assert abs(weighted_sum(items, weights) - 2.6) < 1e-6
 
+    assert weighted_sum(items) == 6
+
     with pytest.raises(TypeError, match='Unsupported'):
         weighted_sum(['a', 'b', 'c'], weights)
 
@@ -297,8 +299,6 @@ def test_differentiable_layer_input():
     with pytest.raises(ValueError):
         op = DifferentiableMixedLayer([('a', Linear(2, 3)), ('b', Linear(2, 4))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), 'eee')
         op(torch.randn(4, 2))
-    op = DifferentiableMixedLayer([('a', Linear(2, 3)), ('b', Linear(2, 4))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), 'eee')
-    assert op(torch.randn(4, 2)).size(-1) == 4
 
     input = DifferentiableMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
     assert input([torch.randn(4, 2) for _ in range(5)]).size(-1) == 2
@@ -342,7 +342,6 @@ def test_differentiable_repeat():
         [nn.Linear(8 if i == 0 else 16, 16) for i in range(4)],
         ValueChoice([0, 1], label='ccc') * 2 + 1,
         GumbelSoftmax(-1),
-        None,
         {}
     )
     op.resample({})
@@ -366,7 +365,6 @@ def test_differentiable_repeat():
         [TupleModule(i + 1) for i in range(4)],
         ValueChoice([1, 2, 4], label='ccc'),
         CustomSoftmax(),
-        None,
         {}
     )
     op.resample({})

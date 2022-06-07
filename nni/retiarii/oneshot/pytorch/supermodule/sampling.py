@@ -150,12 +150,13 @@ class PathSamplingInput(BaseSuperNetModule):
         if len(items) == 1:
             return items[0]
         else:
-            if self.reduction == 'sum':
+            if self.reduction_type == 'sum':
                 return sum(items)
-            elif self.reduction == 'mean':
+            elif self.reduction_type == 'mean':
                 return sum(items) / len(items)
-            elif self.reduction == 'concat':
+            elif self.reduction_type == 'concat':
                 return torch.cat(items, 1)
+            raise ValueError(f'Unsupported reduction type: {self.reduction_type}')
 
     def forward(self, input_tensors):
         if self._sampled is None:
@@ -275,7 +276,7 @@ class PathSamplingRepeat(BaseSuperNetModule):
         res = []
         for cur_depth, block in enumerate(self.blocks, start=1):
             x = block(x)
-            if cur_depth in self._sampled:
+            if cur_depth in sampled:
                 res.append(x)
             if not any(d > cur_depth for d in sampled):
                 break
