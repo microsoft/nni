@@ -1,3 +1,7 @@
+import pytest
+
+import torch
+
 import nni
 import nni.retiarii.hub.pytorch as ss
 import nni.retiarii.evaluator.pytorch as pl
@@ -5,8 +9,9 @@ import nni.retiarii.strategy as stg
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.hub.pytorch.nasnet import NDSStagePathSampling, NDSStageDifferentiable
 from torchvision import transforms
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import CIFAR10, ImageNet
 
+pytestmark = pytest.mark.skipif(not torch.cuda.is_available())
 
 def _hub_factory(alias):
     if alias == 'nasbench101':
@@ -35,16 +40,21 @@ def _hub_factory(alias):
     else:
         width = 16
 
+    if '_imagenet' in alias:
+        dataset = 'imagenet'
+    else:
+        dataset = 'cifar10'
+
     if alias.startswith('nasnet'):
-        return ss.NASNet(width=width, num_cells=num_cells)
+        return ss.NASNet(width=width, num_cells=num_cells, dataset=dataset)
     if alias.startswith('enas'):
-        return ss.ENAS(width=width, num_cells=num_cells)
+        return ss.ENAS(width=width, num_cells=num_cells, dataset=dataset)
     if alias.startswith('amoeba'):
-        return ss.AmoebaNet(width=width, num_cells=num_cells)
+        return ss.AmoebaNet(width=width, num_cells=num_cells, dataset=dataset)
     if alias.startswith('pnas'):
-        return ss.PNAS(width=width, num_cells=num_cells)
+        return ss.PNAS(width=width, num_cells=num_cells, dataset=dataset)
     if alias.startswith('darts'):
-        return ss.DARTS(width=width, num_cells=num_cells)
+        return ss.DARTS(width=width, num_cells=num_cells, dataset=dataset)
 
     raise ValueError(f'Unrecognized space: {alias}')
 
@@ -72,30 +82,107 @@ def _strategy_factory(alias, space_type):
 
     raise ValueError(f'Unrecognized strategy: {alias}')
 
+def _dataset_factory(dataset_type):
+    if dataset_type == 'cifar10':
+        normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        train_dataset = nni.trace(CIFAR10)(
+            '../data/cifar10',
+            train=True,
+            transform=transforms.Compose([
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomCrop(32, 4),
+                transforms.ToTensor(),
+                normalize,
+            ]))
+        valid_dataset = nni.trace(CIFAR10)(
+            '../data/cifar10',
+            train=False,
+            transform=transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ]))
+        return train_dataset, valid_dataset
+    elif dataset_type == 'imagenet':
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        train_dataset = nni.trace(ImageNet)(
+            '../data/imagenet',
+            split='val',  # no train data available in tests
+            transform=transforms.Compose([
+                transforms.RandomResizedCrop(224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]))
+        valid_dataset = nni.trace(ImageNet)(
+            '../data/imagenet',
+            split='val',
+            transform=transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                normalize,
+            ]))
+    else:
+        raise ValueError(f'Unsupported dataset type: {dataset_type}')
 
+    return train_dataset, valid_dataset
+
+
+@pytest.mark.parametrize('space_type', [
+    # 'nasbench101',
+    'nasbench201',
+    'mobilenetv3',
+    'proxylessnas',
+    'shufflenet',
+    # 'autoformer',
+    'nasnet',
+    'enas',
+    'amoeba',
+    'pnas',
+    'darts',
+
+    'darts_smalldepth',
+    'darts_depth',
+    'darts_width',
+    'darts_width_smalldepth',
+    'darts_width_depth',
+    'darts_imagenet',
+    'darts_width_smalldepth_imagenet',
+
+    'enas_smalldepth',
+    'enas_depth',
+    'enas_width',
+    'enas_width_smalldepth',
+    'enas_width_depth',
+    'enas_imagenet',
+    'enas_width_smalldepth_imagenet',
+
+    'pnas_width_smalldepth',
+    'amoeba_width_smalldepth',
+    'nasnet_width_smalldepth',
+])
+@pytest.mark.parametrize('strategy_type', [
+    'darts',
+    'gumbel',
+    'proxyless',
+    'enas',
+    'random'
+])
 def test_hub_oneshot(space_type, strategy_type):
+    if strategy_type == 'proxyless':
+        if 'width' in space_type or 'depth' in space_type or \
+                space_type in ['amoeba', 'enas', 'nasnet', 'proxylessnas', 'mobilenetv3']:
+            pytest.skip('The space has used unsupported APIs.')
+
     model_space = _hub_factory(space_type)
 
-    normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-    train_loader = pl.DataLoader(
-        nni.trace(CIFAR10)('../data/cifar10', train=True, transform=transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(32, 4),
-            transforms.ToTensor(),
-            normalize,
-        ])),
-        batch_size=4,
-        shuffle=True
-    )
+    dataset_type = 'cifar10'
+    if 'imagenet' in space_type or space_type in ['mobilenetv3', 'proxylessnas', 'shufflenet', 'autoformer']:
+        dataset_type = 'imagenet'
 
-    valid_loader = pl.DataLoader(
-        nni.trace(CIFAR10)('../data/cifar10', train=False, transform=transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
-        ])),
-        batch_size=4,
-        shuffle=False
-    )
+    train_dataset, valid_dataset = _dataset_factory(dataset_type)
+    train_loader = pl.DataLoader(train_dataset, batch_size=4, shuffle=True)
+    valid_loader = pl.DataLoader(valid_dataset, batch_size=4, shuffle=False)
 
     evaluator = pl.Classification(
         train_dataloaders=train_loader,
@@ -114,8 +201,4 @@ def test_hub_oneshot(space_type, strategy_type):
     experiment.run(config)
 
 
-# @pytest.mark.parametrize('replace_sampler_ddp', [False, True])
-# @pytest.mark.parametrize('is_min_size_mode', [True])
-# @pytest.mark.parametrize('num_devices', ['auto', 1, 3, 10])
-
-test_hub_oneshot('enas_smalldepth_width', 'darts')
+test_hub_oneshot('enas_width_smalldepth_imagenet', 'darts')
