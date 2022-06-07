@@ -23,6 +23,12 @@ def _hub_factory(alias):
 
     if alias == 'mobilenetv3':
         return ss.MobileNetV3Space()
+
+    if alias == 'mobilenetv3_small':
+        return ss.MobileNetV3Space(
+            width_multipliers=(0.75, 1, 1.5),
+            expand_ratios=(4, 6)    
+        )
     if alias == 'proxylessnas':
         return ss.ProxylessNAS()
     if alias == 'shufflenet':
@@ -138,6 +144,7 @@ def _dataset_factory(dataset_type, subset=20):
     # 'nasbench101',
     'nasbench201',
     'mobilenetv3',
+    'mobilenetv3_small',
     'proxylessnas',
     'shufflenet',
     # 'autoformer',
@@ -179,6 +186,9 @@ def test_hub_oneshot(space_type, strategy_type):
         if 'width' in space_type or 'depth' in space_type or \
                 space_type in ['amoeba', 'enas', 'nasnet', 'proxylessnas', 'mobilenetv3']:
             pytest.skip('The space has used unsupported APIs.')
+    if strategy_type in ['darts', 'gumbel']:
+        if space_type == 'mobilenetv3':
+            pytest.skip('Skip as it consumes too much memory.')
 
     model_space = _hub_factory(space_type)
 
@@ -210,4 +220,4 @@ def test_hub_oneshot(space_type, strategy_type):
     experiment.run(config)
 
 
-test_hub_oneshot('darts', 'mobilenetv3')
+test_hub_oneshot('mobilenetv3_small', 'darts')
