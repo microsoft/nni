@@ -9,12 +9,13 @@ import { IMPORT_DATA, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, PING,
 
 export abstract class BaseCommand {
     public abstract toLegacyCommand(): string;
+    public abstract validate(): void;
 }
 
 export class Initialize implements BaseCommand {
-    searchSpace: string;
+    searchSpace?: string;
 
-    constructor(searchSpace: string) {
+    constructor(searchSpace?: string) {
         this.searchSpace = searchSpace;
     }
 
@@ -23,7 +24,7 @@ export class Initialize implements BaseCommand {
     }
 
     public validate(): void {
-        assert(typeof this.searchSpace === 'string');
+        throw new Error("Method not implemented.");
     }
 }
 
@@ -120,17 +121,29 @@ export class Terminate implements BaseCommand {
     public toLegacyCommand(): string {
         return TERMINATE;
     }
+
+    public validate(): void {
+        throw new Error("Method not implemented.");
+    }
 }
 
 export class Ping implements BaseCommand {
     public toLegacyCommand(): string {
         return PING;
     }
+
+    public validate(): void {
+        throw new Error("Method not implemented.");
+    }
 }
 
 export class Initialized implements BaseCommand {
     public toLegacyCommand(): string {
         return INITIALIZED;
+    }
+
+    public validate(): void {
+        throw new Error("Method not implemented.");
     }
 }
 
@@ -152,6 +165,10 @@ export class NewTrialJob implements BaseCommand {
     }
 
     public toLegacyCommand(): string {
+        throw new Error("Method not implemented.");
+    }
+
+    public validate(): void {
         throw new Error("Method not implemented.");
     }
 }
@@ -197,12 +214,16 @@ export class NoMoreTrialJobs implements BaseCommand {
     public toLegacyCommand(): string {
         throw new Error("Method not implemented.");
     }
+
+    public validate(): void {
+        throw new Error("Method not implemented.");
+    }
 }
 
 export class KillTrialJob implements BaseCommand {
-    trialJobId: string;
+    trialJobId?: string;
 
-    constructor(trialJobId: string) {
+    constructor(trialJobId?: string) {
         this.trialJobId = trialJobId;
     }
 
@@ -211,7 +232,7 @@ export class KillTrialJob implements BaseCommand {
     }
 
     public validate(): void {
-        assert(typeof this.trialJobId === 'string');
+        throw new Error("Method not implemented.");
     }
 }
 

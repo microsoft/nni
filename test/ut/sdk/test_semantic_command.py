@@ -44,7 +44,7 @@ class NaiveTuner(Tuner):
     def update_search_space(self, search_space):
         self.search_space = search_space
 
-_command1 = 'KI{"trial_job_id": "1"}'
+_command1 = 'KIqQKkW'
 _command2 = 'IN{"features":{"_type":"choice","_value":[128,256,512,1024]},"lr":{"_type":"loguniform","_value":[0.0001,0.1]},"momentum":{"_type":"uniform","_value":[0,1]}}'
 _command3 = 'GE2'
 _command4 = 'TR{"parameter_id": 0, "parameter_source": "algorithm", "parameters": {"features": 1024, "lr": 0.0006827054029247927, "momentum": 0.22591105939004463}, "parameter_index": 0}'
@@ -60,27 +60,21 @@ class MsgDispatcherTestCase(TestCase):
         _server.stdin.write(_command1 + '\n')
         _server.stdin.flush()
         received1 = dispatcher._channel.receive()
-        command_type1, command_json1 = received1._to_legacy_command_type()
         _server.stdin.write(_command2 + '\n')
         _server.stdin.flush()
         received2 = dispatcher._channel.receive()
-        command_type2, command_json2 = received2._to_legacy_command_type()
         _server.stdin.write(_command3 + '\n')
         _server.stdin.flush()
         received3 = dispatcher._channel.receive()
-        command_type3, command_json3 = received3._to_legacy_command_type()
         _server.stdin.write(_command4 + '\n')
         _server.stdin.flush()
         received4 = dispatcher._channel.receive()
-        command_type4, command_json4 = received4._to_legacy_command_type()
         _server.stdin.write(_command5 + '\n')
         _server.stdin.flush()
         received5 = dispatcher._channel.receive()
-        command_type5, command_json5 = received5._to_legacy_command_type()
         _server.stdin.write(_command6 + '\n')
         _server.stdin.flush()
         received6 = dispatcher._channel.receive()
-        command_type6, command_json6 = received6._to_legacy_command_type()
 
 def _init():
     global _server

@@ -16,11 +16,9 @@ class WsIpcInterface implements IpcInterface {
         await this.channel.init();
     }
 
-    public sendCommand(command: BaseCommand): void {
-        const legacyCommand = command.toLegacyCommand();
-        const commandType = legacyCommand.slice(0, 2);
+    public sendCommand(commandType: string, content: string = ''): void {
         if (commandType !== 'PI') {  // ping is handled with WebSocket protocol
-            this.channel.sendCommand(legacyCommand);
+            this.channel.sendCommand(commandType + content);
             if (commandType === 'TE') {
                 this.channel.shutdown();
             }

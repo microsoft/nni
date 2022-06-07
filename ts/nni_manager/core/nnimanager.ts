@@ -106,7 +106,8 @@ class NNIManager implements Manager {
             );
         }
         const command = new ImportData(data);
-        this.dispatcher.sendCommand(command);
+        const legacyCommand = command.toLegacyCommand();
+        this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
 
         return this.dataStore.storeTrialJobEvent('IMPORT_DATA', '', data);
     }
@@ -308,7 +309,8 @@ class NNIManager implements Manager {
         // because when python dispatcher is started before nnimanager
         // this.dispatcherPid would not have a valid value (i.e., not >0).
         const command = new Terminate();
-        this.dispatcher.sendCommand(command);
+        const legacyCommand = command.toLegacyCommand();
+        this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
         if (this.dispatcherPid > 0) {
             // gracefully terminate tuner and assessor here, wait at most 30 seconds.
             for (let i: number = 0; i < 30; i++) {
@@ -520,7 +522,8 @@ class NNIManager implements Manager {
         }
         this.log.info(`Updated search space ${searchSpace}`);
         const command = new UpdateSearchSpace(JSON.stringify(searchSpace));
-        this.dispatcher.sendCommand(command);
+        const legacyCommand = command.toLegacyCommand();
+        this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
         this.experimentProfile.params.searchSpace = searchSpace;
 
         return;
@@ -546,7 +549,8 @@ class NNIManager implements Manager {
         }
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             const command = new Ping();
-            this.dispatcher.sendCommand(command);
+            const legacyCommand = command.toLegacyCommand();
+            this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
             await delay(1000 * 5);
         }
     }
@@ -597,7 +601,8 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     const earlyStoppedCommand = new TrialEnd(trialJobDetail.id, trialJobDetail.status, hyperParams);
-                    this.dispatcher.sendCommand(earlyStoppedCommand);
+                    const legacyCommand = earlyStoppedCommand.toLegacyCommand();
+                    this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
                     break;
                 }
                 case 'FAILED':
@@ -608,7 +613,8 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     const sysCanceledCommand = new TrialEnd(trialJobDetail.id, trialJobDetail.status, hyperParams);
-                    this.dispatcher.sendCommand(sysCanceledCommand);
+                    const legacyCommand = sysCanceledCommand.toLegacyCommand();
+                    this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
                     break;
                 }
                 case 'WAITING':
@@ -762,7 +768,8 @@ class NNIManager implements Manager {
         this.log.debug(`Send tuner command: INITIALIZE: ${this.experimentProfile.params.searchSpace}`);
         // Tuner need to be initialized with search space before generating any hyper parameters
         const command = new Initialize(JSON.stringify(this.experimentProfile.params.searchSpace));
-        this.dispatcher.sendCommand(command);
+        const legacyCommand = command.toLegacyCommand();
+        this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
     }
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
@@ -773,7 +780,8 @@ class NNIManager implements Manager {
                 throw new Error('Error: tuner has not been setup');
             }
             const command = new ReportMetricData(metric.data);
-            this.dispatcher.sendCommand(command);
+            const legacyCommand = command.toLegacyCommand();
+            this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
         } else {
             this.log.warning('NNIManager received non-existent trial job metrics:', metric);
         }
@@ -792,11 +800,13 @@ class NNIManager implements Manager {
             // sequentially.
             for (let i: number = 0; i < jobNum; i++) {
                 const command = new RequestTrialJobs(1);
-                this.dispatcher.sendCommand(command);
+                const legacyCommand = command.toLegacyCommand();
+                this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
             }
         } else {
             const command = new RequestTrialJobs(jobNum);
-            this.dispatcher.sendCommand(command);
+            const legacyCommand = command.toLegacyCommand();
+            this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
         }
     }
 
@@ -810,7 +820,8 @@ class NNIManager implements Manager {
                         throw new Error('Dispatcher error: tuner has not been setup');
                     }
                     const command = new ImportData(this.trialDataForTuner);
-                    this.dispatcher.sendCommand(command);
+                    const legacyCommand = command.toLegacyCommand();
+                    this.dispatcher.sendCommand(legacyCommand.slice(0,2), legacyCommand.slice(2));
                 }
                 this.requestTrialJobs(this.experimentProfile.params.trialConcurrency);
                 break;
@@ -870,7 +881,6 @@ class NNIManager implements Manager {
                 this.log.info('cancelTrialJob:', content);
                 const trialJobId = JSON.parse(content)
                 const tunerCommand = new KillTrialJob(trialJobId);
-                tunerCommand.validate();
 
                 await this.trainingService.cancelTrialJob(trialJobId, true);
                 break;

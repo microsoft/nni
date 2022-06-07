@@ -66,8 +66,8 @@ class TunerCommandChannel:
     # def receive(self) -> Command | None:
     #     ...
     def send(self, command: BaseCommand) -> None:
-        command_type, command_json = command._to_legacy_command_type()
-        self._send(command_type, command_json)
+        command_content= command._to_legacy_command_type()
+        self._channel.send(command_content)
 
     def receive(self) -> BaseCommand | None:
         old_command_type, data = self._receive()
