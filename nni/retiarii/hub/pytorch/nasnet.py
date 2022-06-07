@@ -380,12 +380,13 @@ class NDSStage(nn.Repeat):
     downsampling: bool
     """This stage has downsampling"""
 
-    def first_cell_transformation_factory(self):
+    def first_cell_transformation_factory(self) -> Optional[nn.Module]:
         """To make the "previous cell" in first cell's output have the same shape as cells in this stage."""
         if self.downsampling:
             return FactorizedReduce(self.estimated_out_channels_prev, self.estimated_out_channels)
         elif self.estimated_out_channels_prev != self.estimated_out_channels:
             return ReLUConvBN(self.estimated_out_channels_prev, self.estimated_out_channels, 1, 1, 0)
+        return None
 
 
 class NDSStagePathSampling(PathSamplingRepeat):
@@ -393,15 +394,52 @@ class NDSStagePathSampling(PathSamplingRepeat):
     def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.api.ValueChoiceX):
             return cls(
+                module.first_cell_transformation_factory(),
                 cast(List[nn.Module], module.blocks),
-                module.depth_choice,
-                module.first_cell_transformation_factory()
+                module.depth_choice
             )
+
+    def __init__(self, first_cell_transformation: Optional[nn.Module], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.first_cell_transformation = first_cell_transformation
+
+    def reduction(self, items: List[Tuple[torch.Tensor, torch.Tensor]], sampled: List[int]) -> Tuple[torch.Tensor, torch.Tensor]:
+        if 1 not in sampled or self.first_cell_transformation is None:
+            return super().reduction(items, sampled)
+        # items[0] must be the result of first cell
+        assert len(items[0]) == 2
+        # Only apply the transformation on "prev" output.
+        items[0] = (self.first_cell_transformation(items[0][0]), items[0][1])
+        return super().reduction(items, sampled)
 
 
 class NDSStageDifferentiable(DifferentiableMixedRepeat):
-    ...
+    @classmethod
+    def mutate(cls, module, name, memo, mutate_kwargs):
+        if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.api.ValueChoiceX):
+            # Only interesting when depth is mutable
+            softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
+            return cls(
+                module.first_cell_transformation_factory(),
+                cast(List[nn.Module], module.blocks),
+                module.depth_choice,
+                softmax,
+                memo
+            )
 
+    def __init__(self, first_cell_transformation: Optional[nn.Module], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.first_cell_transformation = first_cell_transformation
+
+    def reduction(
+        self, items: List[Tuple[torch.Tensor, torch.Tensor]], weights: List[float], depths: List[int]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        if 1 not in depths or self.first_cell_transformation is None:
+            return super().reduction(items, weights, depths)
+        # Same as NDSStagePathSampling
+        assert len(items[0]) == 2
+        items[0] = (self.first_cell_transformation(items[0][0]), items[0][1])
+        return super().reduction(items, weights, depths)
 
 
 _INIT_PARAMETER_DOCS = """

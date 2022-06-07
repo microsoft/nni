@@ -64,8 +64,6 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
         Tensor that stores the "learnable" weights.
     softmax : nn.Module
         Customizable softmax function. Usually ``nn.Softmax(-1)``.
-    auto_shape_alignment : AutoShapeAlignmentType
-        Pad zeros / slice prefixes to align shapes from different outputs.
     label : str
         Name of the choice.
 
@@ -83,7 +81,6 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
                  paths: list[tuple[str, nn.Module]],
                  alpha: torch.Tensor,
                  softmax: nn.Module,
-                 auto_shape_alignment: AutoShapeAlignmentType,
                  label: str):
         super().__init__()
         self.op_names = []
@@ -94,7 +91,6 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
             self.op_names.append(name)
         assert self.op_names, 'There has to be at least one op to choose from.'
         self.label = label
-        self.auto_shape_alignment = auto_shape_alignment
         self._arch_alpha = alpha
         self._softmax = softmax
 
@@ -124,13 +120,17 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
                 alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
 
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment')
-            return cls(list(module.named_children()), alpha, softmax, auto_shape_alignment, module.label)
+            return cls(list(module.named_children()), alpha, softmax, module.label)
+
+    def reduction(self, items: list[Any], weights: list[float]) -> Any:
+        """Override this for customized reduction."""
+        # Use weighted_sum to handle complex cases where sequential output is not a single tensor
+        return weighted_sum(items, weights)
 
     def forward(self, *args, **kwargs):
         """The forward of mixed layer accepts same arguments as its sub-layer."""
         all_op_results = [getattr(self, op)(*args, **kwargs) for op in self.op_names]
-        return weighted_sum(all_op_results, self._softmax(self._arch_alpha), self.auto_shape_alignment)
+        return self.reduction(all_op_results, self._softmax(self._arch_alpha))
 
     def parameters(self, *args, **kwargs):
         """Parameters excluding architecture parameters."""
@@ -180,7 +180,6 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                  n_chosen: int | None,
                  alpha: torch.Tensor,
                  softmax: nn.Module,
-                 auto_shape_alignment: AutoShapeAlignmentType,
                  label: str):
         super().__init__()
         self.n_candidates = n_candidates
@@ -192,7 +191,6 @@ class DifferentiableMixedInput(BaseSuperNetModule):
             self.n_chosen = 1
         self.n_chosen = n_chosen
         self.label = label
-        self.auto_shape_alignment = auto_shape_alignment
         self._softmax = softmax
 
         self._arch_alpha = alpha
@@ -230,12 +228,16 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                 alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
 
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment')
-            return cls(module.n_candidates, module.n_chosen, alpha, softmax, auto_shape_alignment, module.label)
+            return cls(module.n_candidates, module.n_chosen, alpha, softmax, module.label)
+
+    def reduction(self, items: list[Any], weights: list[float]) -> Any:
+        """Override this for customized reduction."""
+        # Use weighted_sum to handle complex cases where sequential output is not a single tensor
+        return weighted_sum(items, weights)
 
     def forward(self, inputs):
         """Forward takes a list of input candidates."""
-        return weighted_sum(inputs, self._softmax(self._arch_alpha), self.auto_shape_alignment)
+        return self.reduction(inputs, self._softmax(self._arch_alpha))
 
     def parameters(self, *args, **kwargs):
         """Parameters excluding architecture parameters."""
@@ -343,12 +345,10 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
                  blocks: list[nn.Module],
                  depth: ChoiceOf[int],
                  softmax: nn.Module,
-                 auto_shape_alignment: AutoShapeAlignmentType,
                  memo: dict[str, Any]):
         super().__init__()
         self.blocks = blocks
         self.depth = depth
-        self.auto_shape_alignment = auto_shape_alignment
         self._softmax = softmax
         self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices([depth])
         self._arch_alpha = nn.ParameterDict()
@@ -384,8 +384,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
         if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
             # Only interesting when depth is mutable
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            auto_shape_alignment = mutate_kwargs.get('auto_shape_alignment')
-            return cls(cast(List[nn.Module], module.blocks), module.depth_choice, softmax, auto_shape_alignment, memo)
+            return cls(cast(List[nn.Module], module.blocks), module.depth_choice, softmax, memo)
 
     def parameters(self, *args, **kwargs):
         for _, p in self.named_parameters(*args, **kwargs):
@@ -401,6 +400,11 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
                 if not arch:
                     yield name, p
 
+    def reduction(self, items: list[Any], weights: list[float], depths: list[int]) -> Any:
+        """Override this for customized reduction."""
+        # Use weighted_sum to handle complex cases where sequential output is not a single tensor
+        return weighted_sum(items, weights)
+
     def forward(self, x):
         weights: dict[str, torch.Tensor] = {
             label: self._softmax(alpha) for label, alpha in self._arch_alpha.items()
@@ -409,14 +413,15 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
 
         res: list[torch.Tensor] = []
         weights: list[float] = []
+        depths: list[int] = []
         for i, block in enumerate(self.blocks, start=1):  # start=1 because depths are 1, 2, 3, 4...
             x = block(x)
             if i in depth_weights:
                 weights.append(depth_weights[i])
                 res.append(x)
+                depths.append(i)
 
-        # Use weighted_sum to handle complex cases where sequential output is not a single tensor
-        return weighted_sum(res, weights, self.auto_shape_alignment)
+        return self.reduction(res, weights, depths)
 
 
 class DifferentiableMixedCell(PathSamplingCell):

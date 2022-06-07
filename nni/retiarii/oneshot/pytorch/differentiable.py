@@ -13,8 +13,7 @@ from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default
 from .supermodule.differentiable import (
     DifferentiableMixedLayer, DifferentiableMixedInput,
     MixedOpDifferentiablePolicy, GumbelSoftmax,
-    DifferentiableMixedCell, DifferentiableMixedRepeat,
-    AutoShapeAlignmentType
+    DifferentiableMixedCell, DifferentiableMixedRepeat
 )
 from .supermodule.proxyless import ProxylessMixedInput, ProxylessMixedLayer
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
@@ -53,9 +52,6 @@ class DartsLightningModule(BaseOneShotLightningModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    auto_shape_alignment : AutoShapeAlignmentType
-        Automatically pad zeros / slice prefixes to align output shapes from different candidates.
-        Useful when modules like LayerChoice or Repeat does not guarantee steady output shapes.
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
         supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
@@ -82,15 +78,12 @@ class DartsLightningModule(BaseOneShotLightningModule):
         """Use differentiable strategy for mixed operations."""
         return {
             'mixed_op_sampling': MixedOpDifferentiablePolicy,
-            'auto_shape_alignment': self.auto_shape_alignment
         }
 
     def __init__(self, inner_module: pl.LightningModule,
                  mutation_hooks: list[MutationHook] | None = None,
-                 arc_learning_rate: float = 3.0E-4,
-                 auto_shape_alignment: AutoShapeAlignmentType | None = None):
+                 arc_learning_rate: float = 3.0E-4):
         self.arc_learning_rate = arc_learning_rate
-        self.auto_shape_alignment = auto_shape_alignment
         super().__init__(inner_module, mutation_hooks=mutation_hooks)
 
     def training_step(self, batch, batch_idx):
@@ -170,11 +163,6 @@ class ProxylessLightningModule(DartsLightningModule):
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
-    def mutate_kwargs(self):
-        if self.auto_shape_alignment:
-            raise ValueError('auto_shape_alignment is not supported in ProxylessNAS.')
-        return super().mutate_kwargs()
-
     def default_mutation_hooks(self) -> list[MutationHook]:
         """Replace modules with gumbel-differentiable versions"""
         hooks = [
@@ -226,9 +214,6 @@ class GumbelDartsLightningModule(DartsLightningModule):
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
-    auto_shape_alignment : AutoShapeAlignmentType
-        Automatically pad zeros / slice prefixes to align output shapes from different candidates.
-        Useful when modules like LayerChoice or Repeat does not guarantee steady output shapes.
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
         supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
@@ -238,18 +223,16 @@ class GumbelDartsLightningModule(DartsLightningModule):
         """Use gumbel softmax."""
         return {
             'mixed_op_sampling': MixedOpDifferentiablePolicy,
-            'softmax': GumbelSoftmax(),
-            'auto_shape_alignment': self.auto_shape_alignment
+            'softmax': GumbelSoftmax()
         }
 
     def __init__(self, inner_module,
                  mutation_hooks: list[MutationHook] | None = None,
                  arc_learning_rate: float = 3.0e-4,
-                 auto_shape_alignment: AutoShapeAlignmentType | None = None,
                  gumbel_temperature: float = 1.,
                  use_temp_anneal: bool = False,
                  min_temp: float = .33):
-        super().__init__(inner_module, mutation_hooks, arc_learning_rate=arc_learning_rate, auto_shape_alignment=auto_shape_alignment)
+        super().__init__(inner_module, mutation_hooks, arc_learning_rate=arc_learning_rate)
         self.temp = gumbel_temperature
         self.init_temp = gumbel_temperature
         self.use_temp_anneal = use_temp_anneal
