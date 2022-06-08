@@ -3,13 +3,12 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-trigger: none
 pool: nni-it
 resources:
   pipelines:
   - pipeline: test
     source: test-trigger-stage2
-    trigger: true
+    trigger: True
 
 steps:
 - script: echo Hello, world!
