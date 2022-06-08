@@ -9,4 +9,4 @@ stages:
   jobs:
   - job: 
     steps:
-    - bash: exit 1
+    - bash: exit 2
