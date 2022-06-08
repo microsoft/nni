@@ -116,7 +116,7 @@ class ExperimentConfig(ConfigBase):
                 # the base class should have converted it to `_AlgorithmConfig` if feasible
                 # it is a `dict` here means an exception was raised during the convertion attempt
                 # we do the convertion again to show user the error message
-                _AlgorithmConfig(**algo)
+                _AlgorithmConfig(**algo)  # pylint: disable=not-a-mapping
 
             if algo is not None and algo.name == '_none_':
                 setattr(self, algo_type, None)
