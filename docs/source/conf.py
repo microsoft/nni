@@ -109,6 +109,7 @@ linkcheck_ignore = [
     r'https://www\.msra\.cn/',                              # MSRA
     r'https://1drv\.ms/',                                   # OneDrive (shortcut)
     r'https://onedrive\.live\.com/',                        # OneDrive
+    r'https://www\.openml\.org/',
 ]
 
 # Ignore all links located in release.rst
