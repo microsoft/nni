@@ -9,6 +9,12 @@ LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
 
 ENV DEBIAN_FRONTEND=noninteractive 
 
+# https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation
+RUN apt-key del 7fa2af80
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
+RUN dpkg -i cuda-keyring_1.0-1_all.deb
+RUN rm cuda-keyring_1.0-1_all.deb
+
 RUN apt-get -y update
 RUN apt-get -y install \
     automake \
