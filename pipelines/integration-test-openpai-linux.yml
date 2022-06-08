@@ -45,6 +45,7 @@ jobs:
 
   - script: |
       set -e
+      docker image pull nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04
       docker login -u nnidev -p $(docker_hub_password)
       echo '## Build docker image ##'
       docker build --build-arg NNI_RELEASE=${NNI_RELEASE} -t nnidev/nni-nightly .
