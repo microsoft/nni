@@ -5,11 +5,14 @@ import os
 import sys
 import time
 import json
+import warnings
 from argparse import ArgumentParser
-from azureml.core import Experiment, RunConfiguration, ScriptRunConfig
+from azureml.core import Experiment, RunConfiguration, ScriptRunConfig, Workspace
+from azureml.core.authentication import (
+    AzureCliAuthentication, InteractiveLoginAuthentication, AuthenticationException
+)
 from azureml.core.compute import ComputeTarget
 from azureml.core.run import RUNNING_STATES, RunStatus, Run
-from azureml.core import Workspace
 from azureml.core.conda_dependencies import CondaDependencies
 
 if __name__ == "__main__":
@@ -24,7 +27,18 @@ if __name__ == "__main__":
     parser.add_argument('--script_name', help='script name')
     args = parser.parse_args()
 
-    ws = Workspace(args.subscription_id, args.resource_group, args.workspace_name)
+    try:
+        auth = AzureCliAuthentication()
+        auth.get_token()
+    except AuthenticationException as e:
+        warnings.warn(
+            f'Azure-cli authentication failed: {e}',
+            RuntimeWarning
+        )
+        warnings.warn('Falling back to interactive authentication.', RuntimeWarning)
+        auth = InteractiveLoginAuthentication()
+
+    ws = Workspace(args.subscription_id, args.resource_group, args.workspace_name, auth=auth)
     compute_target = ComputeTarget(workspace=ws, name=args.compute_target)
     experiment = Experiment(ws, args.experiment_name)
     run_config = RunConfiguration()

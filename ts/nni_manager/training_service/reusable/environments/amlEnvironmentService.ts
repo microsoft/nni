@@ -109,6 +109,7 @@ export class AMLEnvironmentService extends EnvironmentService {
             'nni_script.py',
             environmentLocalTempFolder
         );
+        this.log.debug('aml: before amlClient submit');
         amlEnvironment.id = await amlClient.submit();
         this.log.debug('aml: before getTrackingUrl');
         amlEnvironment.trackingUrl = await amlClient.getTrackingUrl();

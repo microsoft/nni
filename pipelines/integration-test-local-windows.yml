@@ -1,0 +1,45 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+jobs:
+- job: windows
+  pool: nni-it-windows
+  timeoutInMinutes: 120
+
+  steps:
+
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: windows
+      python_env: noop
+
+  - template: templates/install-nni.yml
+    parameters:
+      user: false
+
+  - template: templates/install-customized-tuner.yml
+
+  - powershell: |
+      python test/vso_tools/ssl_patch.py
+    displayName: SSL patch
+
+  - powershell: |
+      cd test
+      python -m pytest ut
+      echo "TODO: TypeScript UT"
+    displayName: Unit test
+    continueOnError: true
+
+  # TODO: the agent has no GPU driver
+  # We can't install it on-the-fly because we can't elevate the permission here.
+  - powershell: |
+      cd test
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local `
+        --exclude mnist-pytorch-local-gpu
+    displayName: Integration test
+
+  - template: templates/save-crashed-info.yml
