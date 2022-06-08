@@ -9,10 +9,12 @@ LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
 
 ENV DEBIAN_FRONTEND=noninteractive 
 
+RUN apt-get --allow-unauthenticated update
+RUN apt-get -y install wget
+
 # https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation
 RUN apt-key del 7fa2af80
 #RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
-RUN apt-get -y install wget
 RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb
 RUN dpkg -i cuda-keyring_1.0-1_all.deb
 RUN rm cuda-keyring_1.0-1_all.deb
