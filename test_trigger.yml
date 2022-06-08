@@ -1,2 +1,12 @@
-steps:
-- bash: echo "The security-lib-ci pipeline runs first"
+trigger: none
+stages:
+- stage: s1
+  jobs:
+  - job: 
+    steps:
+    - bash: echo "Stage 1 pass"
+- stage: s2
+  jobs:
+  - job: 
+    steps:
+    - bash: exit 1
