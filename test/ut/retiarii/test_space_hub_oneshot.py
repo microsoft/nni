@@ -1,3 +1,4 @@
+import logging
 import pytest
 
 import numpy as np
@@ -173,7 +174,6 @@ def _dataset_factory(dataset_type, subset=20):
 
     'pnas_width_smalldepth',
     'amoeba_width_smalldepth',
-    'nasnet_width_smalldepth',
 ])
 @pytest.mark.parametrize('strategy_type', [
     'darts',
@@ -183,15 +183,13 @@ def _dataset_factory(dataset_type, subset=20):
     'random'
 ])
 def test_hub_oneshot(space_type, strategy_type):
+    NDS_SPACES = ['amoeba', 'darts', 'pnas', 'enas', 'nasnet']
     if strategy_type == 'proxyless':
         if 'width' in space_type or 'depth' in space_type or \
-                any(space_type.startswith(prefix) for prefix in [
-                    'amoeba', 'darts', 'pnas', 'enas', 'nasnet', 'proxylessnas', 'mobilenetv3'
-                ]):
+                any(space_type.startswith(prefix) for prefix in NDS_SPACES + ['proxylessnas', 'mobilenetv3']):
             pytest.skip('The space has used unsupported APIs.')
-    if strategy_type in ['darts', 'gumbel']:
-        if space_type == 'mobilenetv3':
-            pytest.skip('Skip as it consumes too much memory.')
+    if strategy_type in ['darts', 'gumbel'] and space_type == 'mobilenetv3':
+        pytest.skip('Skip as it consumes too much memory.')
 
     model_space = _hub_factory(space_type)
 
@@ -199,7 +197,11 @@ def test_hub_oneshot(space_type, strategy_type):
     if 'imagenet' in space_type or space_type in ['mobilenetv3', 'proxylessnas', 'shufflenet', 'autoformer']:
         dataset_type = 'imagenet'
 
-    train_dataset, valid_dataset = _dataset_factory(dataset_type)
+    subset_size = 4
+    if strategy_type in ['darts', 'gumbel'] and any(space_type.startswith(prefix) for prefix in NDS_SPACES) and '_' in space_type:
+        subset_size = 2
+
+    train_dataset, valid_dataset = _dataset_factory(dataset_type, subset=subset_size)
     train_loader = pl.DataLoader(train_dataset, batch_size=2, num_workers=2, shuffle=True)
     valid_loader = pl.DataLoader(valid_dataset, batch_size=2, num_workers=2, shuffle=False)
 
@@ -210,9 +212,12 @@ def test_hub_oneshot(space_type, strategy_type):
         export_onnx=False,
         gpus=1 if torch.cuda.is_available() else 0,  # 0 for my debug
         logger=False,  # disable logging and checkpoint to avoid too much log
-        checkpoint_callback=False
+        enable_checkpointing=False,
+        enable_model_summary=False
+        # profiler='advanced'
     )
 
+    # To test on final model:
     # model = type(model_space).load_searched_model('darts-v2')
     # evaluator.fit(model)
 
@@ -225,4 +230,13 @@ def test_hub_oneshot(space_type, strategy_type):
     experiment.run(config)
 
 
-test_hub_oneshot('mobilenetv3_small', 'darts')
+_original_loglevel = None
+
+def setup_module(module):
+    global _original_loglevel
+    _original_loglevel = logging.getLogger("pytorch_lightning").level
+    logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
+
+
+def teardown_module(module):
+    logging.getLogger("pytorch_lightning").setLevel(_original_loglevel)
