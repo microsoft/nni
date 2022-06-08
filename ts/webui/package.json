@@ -81,7 +81,7 @@
     "eslint-plugin-react": "^7.24.0",
     "eslint-plugin-react-hooks": "^4.2.0",
     "express": "^4.17.1",
-    "npm": ">=8.3.0",
+    "npm": ">=8.11.0",
     "prettier": "^2.3.1",
     "stylelint": "^13.7.0",
     "stylelint-config-standard": "^22.0.0",

@@ -5,9 +5,10 @@ Usage:
     python start_docker.py <nni-version> <container-name> <password-in-docker>
 """
 
+import argparse
+import os
 import random
 import socket
-import sys
 
 from _common import build_wheel, run_command, set_variable
 
@@ -20,14 +21,28 @@ while True:
     sock.close()
     port = random.randint(10000, 20000)
 
-version = sys.argv[1]
-container = sys.argv[2]
-password = sys.argv[3]
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('version', type=str)
+    parser.add_argument('container', type=str)
+    parser.add_argument('password', type=str)
+    parser.add_argument('--sudo', default=False, action='store_true')
 
-run_command(f'docker build --build-arg NNI_RELEASE={version} -t nnidev/nni-nightly .')
-run_command(f'docker run --privileged -d -t -p {port}:22 --name {container} nnidev/nni-nightly')
-run_command(f'docker exec {container} useradd --create-home --password {password} nni')
-run_command(['docker', 'exec', container, 'bash', '-c', f'echo "nni:{password}" | chpasswd'])
-run_command(['docker', 'exec', container, 'bash', '-c', 'echo "nni ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers'])
-run_command(f'docker exec {container} service ssh start')
-set_variable('docker_port', port)
+    args = parser.parse_args()
+    docker = 'sudo docker' if args.sudo else 'docker'
+    version, container, password = args.version, args.container, args.password
+    uid, gid = os.getuid(), os.getgid()
+
+    run_command(f'{docker} build --build-arg NNI_RELEASE={version} -t nnidev/nni-nightly .')
+    run_command(f'{docker} run --privileged -d -t -p {port}:22 --add-host=host.docker.internal:host-gateway --name {container} nnidev/nni-nightly')
+    # The user inside docker must have the same uid and gid as outside.
+    # Otherwise NFS will have permission errors.
+    run_command(f'{docker} exec {container} groupadd -g {gid} nni')
+    run_command(f'{docker} exec {container} useradd --create-home --password {password} -u {uid} -g {gid} nni')
+    run_command(docker.split() + ['exec', container, 'bash', '-c', f'echo "nni:{password}" | chpasswd'])
+    run_command(docker.split() + ['exec', container, 'bash', '-c', 'echo "nni ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers'])
+    run_command(f'{docker} exec {container} service ssh start')
+    set_variable('docker_port', port)
+
+if __name__ == '__main__':
+    main()

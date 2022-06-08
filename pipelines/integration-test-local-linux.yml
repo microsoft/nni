@@ -1,0 +1,28 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+jobs:
+- job: linux
+  pool: nni-it
+  timeoutInMinutes: 60
+
+  steps:
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: ubuntu-latest-gpu
+      python_env: venv
+
+  - template: templates/install-nni.yml
+
+  - template: templates/install-customized-tuner.yml
+
+  - script: |
+      cd test
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
+    displayName: Integration test
+
+  - template: templates/save-crashed-info.yml

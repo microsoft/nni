@@ -1,0 +1,20 @@
+steps:
+
+# Need to have a service principal (SP) to login to Azure services (e.g., AzureML).
+# Refer to external account section in OneNote for how to generate / renew the authorization.
+# According to docs, the secrets need to be refreshed at least once per year.
+# After the tokens are updated, pipeline secret varibles should be updated correspondingly.
+
+- script: |
+    az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
+  displayName: Login to Azure
+
+# It's tricky to install Azure SDKs.
+- script: |
+    set -e
+    # Separate installation in two steps for easy debugging
+    python -m pip install azureml-core
+    python -m pip install azure-cli-core
+    # Azure CLI and AzureML have conflicted requirements for msal-extensions.
+    python -m pip install msal-extensions==0.3.1
+  displayName: Install AzureML requirements
