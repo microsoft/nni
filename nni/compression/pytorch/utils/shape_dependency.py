@@ -85,6 +85,7 @@ def reshape_break_channel_dependency(op_node):
     """
     in_shape = op_node.auxiliary['in_shape']
     out_shape = op_node.auxiliary['out_shape']
+    # FIXME: e.g., in_shape will be None if the input comes from a buffer, should be fixed in next release
     if not in_shape or not out_shape:
         return True
     if len(in_shape) <= 1 or len(out_shape) <= 1:

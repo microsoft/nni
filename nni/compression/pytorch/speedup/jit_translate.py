@@ -507,7 +507,6 @@ def upsample_nearest2d_python(node, speedup):
             """
             return torch.nn.functional.upsample_nearest(args[0],
                                                         size=self.size_list, scale_factor=self.scale_list)
-    print(node)
     c_node = node.key_node
     inputs = list(c_node.inputs())
     size_list_node = inputs[1].node()
