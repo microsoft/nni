@@ -15,6 +15,7 @@ from torchvision.datasets import CIFAR10, ImageNet
 
 pytestmark = pytest.mark.skipif(not torch.cuda.is_available(), reason='Too slow without CUDA.')
 
+
 def _hub_factory(alias):
     if alias == 'nasbench101':
         return ss.NasBench101()
@@ -27,7 +28,7 @@ def _hub_factory(alias):
     if alias == 'mobilenetv3_small':
         return ss.MobileNetV3Space(
             width_multipliers=(0.75, 1, 1.5),
-            expand_ratios=(4, 6)    
+            expand_ratios=(4, 6)
         )
     if alias == 'proxylessnas':
         return ss.ProxylessNAS()
@@ -184,7 +185,9 @@ def _dataset_factory(dataset_type, subset=20):
 def test_hub_oneshot(space_type, strategy_type):
     if strategy_type == 'proxyless':
         if 'width' in space_type or 'depth' in space_type or \
-                space_type in ['amoeba', 'enas', 'nasnet', 'proxylessnas', 'mobilenetv3']:
+                any(space_type.startswith(prefix) for prefix in [
+                    'amoeba', 'darts', 'pnas', 'enas', 'nasnet', 'proxylessnas', 'mobilenetv3'
+                ]):
             pytest.skip('The space has used unsupported APIs.')
     if strategy_type in ['darts', 'gumbel']:
         if space_type == 'mobilenetv3':
@@ -205,7 +208,9 @@ def test_hub_oneshot(space_type, strategy_type):
         val_dataloaders=valid_loader,
         max_epochs=1,
         export_onnx=False,
-        gpus=1 if torch.cuda.is_available() else 0  # 0 for my debug
+        gpus=1 if torch.cuda.is_available() else 0,  # 0 for my debug
+        logger=False,  # disable logging and checkpoint to avoid too much log
+        checkpoint_callback=False
     )
 
     # model = type(model_space).load_searched_model('darts-v2')

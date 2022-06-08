@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import inspect
 import itertools
+import warnings
 from typing import Any, Type, TypeVar, cast, Union, Tuple
 
 import torch
@@ -316,6 +317,18 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                 return max(all_sizes)
 
         elif name == 'groups':
+            if 'in_channels' in self.mutable_arguments:
+                # If the ratio is constant, we don't need to try the maximum groups.
+                try:
+                    constant = evaluate_constant(self.mutable_arguments['in_channels'] / value_choice)
+                    return max(traverse_all_options(value_choice)) // int(constant)
+                except ValueError:
+                    warnings.warn(
+                        'Both input channels and groups are ValueChoice in a convolution, and their relative ratio is not a constant. '
+                        'This can be problemtic for most one-shot algorithms. Please check whether this is your intention.',
+                        RuntimeWarning
+                    )
+
             # minimum groups, maximum kernel
             return min(traverse_all_options(value_choice))
 
