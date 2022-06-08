@@ -118,7 +118,7 @@ class ExperimentConfig(ConfigBase):
                 # we do the convertion again to show user the error message
                 _AlgorithmConfig(**algo)  # pylint: disable=not-a-mapping
 
-            if algo is not None and algo.name == '_none_':
+            if algo is not None and algo.name == '_none_':  # type: ignore
                 setattr(self, algo_type, None)
 
         if self.advisor is not None:
