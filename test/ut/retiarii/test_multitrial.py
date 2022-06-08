@@ -1,5 +1,6 @@
 import argparse
-import torch.nn.functional as F
+import os
+from subprocess import Popen
 
 from nni.retiarii import strategy
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
@@ -28,9 +29,34 @@ def test_multi_trial():
         exp_config.trial_concurrency = 2
         exp_config.max_trial_number = 2
         exp_config.training_service.use_active_gpu = False
-        exp.run(exp_config, 8081)
+        exp.run(exp_config, 8080)
         assert isinstance(exp.export_top_models()[0], dict)
         exp.stop()
+
+python_script = """
+from nni.retiarii import strategy
+from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
+from test_oneshot import _mnist_net
+
+base_model, evaluator = _mnist_net('simple', {'max_epochs': 1})
+search_strategy = strategy.Random()
+exp = RetiariiExperiment(base_model, evaluator, strategy=search_strategy)
+exp_config = RetiariiExeConfig('local')
+exp_config.experiment_name = 'mnist_unittest'
+exp_config.trial_concurrency = 2
+exp_config.max_trial_number = 2
+exp_config.training_service.use_active_gpu = False
+exp.run(exp_config, 8080)
+assert isinstance(exp.export_top_models()[0], dict)
+"""
+
+def test_exp_exit_without_stop():
+    script_name = 'tmp_multi_trial.py'
+    with open(script_name, 'w') as f:
+        f.write(python_script)
+    proc = Popen(['python3', script_name])
+    proc.wait()
+    os.remove(script_name)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -40,5 +66,6 @@ if __name__ == '__main__':
 
     if args.exp == 'all':
         test_multi_trial()
+        test_exp_exit_without_stop()
     else:
         globals()[f'test_{args.exp}']()
