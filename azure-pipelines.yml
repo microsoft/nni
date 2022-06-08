@@ -8,7 +8,7 @@ resources:
   pipelines:
   - pipeline: test
     source: test-trigger-stage2
-    trigger: True
+    trigger: true
 
 steps:
 - script: echo Hello, world!
