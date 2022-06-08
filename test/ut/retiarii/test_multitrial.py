@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 from subprocess import Popen
 
 from nni.retiarii import strategy
@@ -54,7 +55,7 @@ def test_exp_exit_without_stop():
     script_name = 'tmp_multi_trial.py'
     with open(script_name, 'w') as f:
         f.write(python_script)
-    proc = Popen(['python3', script_name])
+    proc = Popen([sys.executable, script_name])
     proc.wait()
     os.remove(script_name)
 

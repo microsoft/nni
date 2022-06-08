@@ -46,6 +46,8 @@ class MsgDispatcherBase(Recoverable):
             self._channel.connect()
         self.default_command_queue = Queue()
         self.assessor_command_queue = Queue()
+        # here daemon should be True, because their parent thread is configured as daemon to enable smooth exit of NAS experiment.
+        # if daemon is not set, these threads will block the daemon effect of their parent thread.
         self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,), daemon=True)
         self.assessor_worker = threading.Thread(target=self.command_queue_worker, args=(self.assessor_command_queue,), daemon=True)
         self.worker_exceptions = []
