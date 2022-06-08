@@ -7,8 +7,8 @@ trigger: none
 pool: nni-it
 resources:
   pipelines:
-  - pipeline: fasttest
-    source: fast test
+  - pipeline: test
+    source: test-trigger-stage2
     trigger: true
 
 steps:
