@@ -7,7 +7,7 @@ pool: nni-it
 resources:
   pipelines:
   - pipeline: test
-    source: test-trigger-stage2
+    source: test-trigger-stage1
     trigger: true
 
 steps:
