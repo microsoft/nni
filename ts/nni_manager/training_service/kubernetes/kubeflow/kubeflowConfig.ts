@@ -18,8 +18,8 @@ export type OperatorApiVersion = 'v1alpha2' | 'v1beta1' | 'v1beta2' | 'v1';
  */
 export class KubeflowClusterConfig extends KubernetesClusterConfig {
     public readonly operator: KubeflowOperator;
-    constructor(apiVersion: string, operator: KubeflowOperator) {
-        super(apiVersion);
+    constructor(apiVersion: string, operator: KubeflowOperator, namespace?: string) {
+        super(apiVersion, undefined, namespace);
         this.operator = operator;
     }
 }
@@ -30,9 +30,10 @@ export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
             operator: KubeflowOperator,
             apiVersion: string,
             nfs: NFSConfig,
-            storage?: KubernetesStorageKind
+            storage?: KubernetesStorageKind,
+            namespace?: string
         ) {
-        super(apiVersion, nfs, storage);
+        super(apiVersion, nfs, storage, namespace);
         this.operator = operator;
     }
 
@@ -48,7 +49,8 @@ export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
             kubeflowClusterConfigObjectNFS.operator,
             kubeflowClusterConfigObjectNFS.apiVersion,
             kubeflowClusterConfigObjectNFS.nfs,
-            kubeflowClusterConfigObjectNFS.storage
+            kubeflowClusterConfigObjectNFS.storage,
+            kubeflowClusterConfigObjectNFS.namespace
         );
     }
 }
@@ -61,9 +63,10 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure {
             apiVersion: string,
             keyVault: KeyVaultConfig,
             azureStorage: AzureStorage,
-            storage?: KubernetesStorageKind
+            storage?: KubernetesStorageKind,
+            namespace?: string
         ) {
-        super(apiVersion, keyVault, azureStorage, storage);
+        super(apiVersion, keyVault, azureStorage, storage, undefined, namespace);
         this.operator = operator;
     }
 
@@ -79,7 +82,8 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure {
             kubeflowClusterConfigObjectAzure.apiVersion,
             kubeflowClusterConfigObjectAzure.keyVault,
             kubeflowClusterConfigObjectAzure.azureStorage,
-            kubeflowClusterConfigObjectAzure.storage
+            kubeflowClusterConfigObjectAzure.storage,
+            kubeflowClusterConfigObjectAzure.namespace
         );
     }
 }

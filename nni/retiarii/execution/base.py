@@ -1,11 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import logging
 import os
 import random
 import string
 from typing import Any, Dict, Iterable, List
+
+from nni.experiment import rest
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .utils import get_mutation_summary
@@ -17,6 +21,8 @@ _logger = logging.getLogger(__name__)
 
 class BaseGraphData:
     """
+    Data sent between strategy and trial, in graph-based execution engine.
+
     Attributes
     ----------
     model_script
@@ -52,12 +58,22 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     Resource management is implemented in this class.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, rest_port: int | None = None, rest_url_prefix: str | None = None) -> None:
         """
         Upon initialization, advisor callbacks need to be registered.
         Advisor will call the callbacks when the corresponding event has been triggered.
         Base execution engine will get those callbacks and broadcast them to graph listener.
+
+        Parameters
+        ----------
+        rest_port
+            The port of the experiment's rest server
+        rest_url_prefix
+            The url prefix of the experiment's rest entry
         """
+        self.port = rest_port
+        self.url_prefix = rest_url_prefix
+
         self._listeners: List[AbstractGraphListener] = []
 
         # register advisor callbacks
@@ -121,12 +137,13 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         return self.resources
 
     def budget_exhausted(self) -> bool:
-        advisor = get_advisor()
-        return advisor.stopping
+        resp = rest.get(self.port, '/check-status', self.url_prefix)
+        return resp['status'] == 'DONE'
 
     @classmethod
     def pack_model_data(cls, model: Model) -> Any:
         mutation_summary = get_mutation_summary(model)
+        assert model.evaluator is not None, 'Model evaluator can not be None'
         return BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator, mutation_summary)
 
     @classmethod

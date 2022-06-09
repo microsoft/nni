@@ -54,6 +54,11 @@ class ConfigBase:
     Config objects will remember where they are loaded; therefore relative paths can be resolved smartly.
     If a config object is created with constructor, the base path will be current working directory.
     If it is loaded with ``ConfigBase.load(path)``, the base path will be ``path``'s parent.
+
+    .. attention::
+
+        All the classes that inherit ``ConfigBase`` are not allowed to use ``from __future__ import annotations``,
+        because ``ConfigBase`` uses ``typeguard`` to perform runtime check and it does not support lazy annotations.
     """
 
     def __init__(self, **kwargs):

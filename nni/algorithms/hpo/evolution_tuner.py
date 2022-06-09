@@ -4,6 +4,7 @@
 """
 evolution_tuner.py
 """
+from __future__ import annotations
 
 import copy
 import random
@@ -22,28 +23,19 @@ logger = logging.getLogger(__name__)
 
 class Individual:
     """
-    Indicidual class to store the indv info.
+    Individual class to store the indv info.
 
-    Attributes
+    Parameters
     ----------
-    config : str
+    config : str, default = None
         Search space.
-    info : str
+    info : str, default = None
         The str to save information of individual.
-    result : float
+    result : float, None = None
         The final metric of a individual.
     """
 
     def __init__(self, config=None, info=None, result=None):
-        """
-        Parameters
-        ----------
-        config : str
-            A config to represent a group of parameters.
-        info : str
-        result : float
-        save_dir : str
-        """
         self.config = config
         self.result = result
         self.info = info
@@ -61,18 +53,36 @@ class EvolutionClassArgsValidator(ClassArgsValidator):
 
 class EvolutionTuner(Tuner):
     """
-    EvolutionTuner is tuner using navie evolution algorithm.
+    Naive Evolution comes from `Large-Scale Evolution of Image Classifiers <https://arxiv.org/pdf/1703.01041.pdf>`__
+    It randomly initializes a population based on the search space.
+    For each generation, it chooses better ones and does some mutation.
+    (e.g., changes a hyperparameter, adds/removes one layer, etc.) on them to get the next generation.
+    Naive Evolution requires many trials to works but it’s very simple and it’s easily expanded with new features.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.tuner.name = 'Evolution'
+        config.tuner.class_args = {
+                'optimize_mode': 'maximize',
+                'population_size': 100
+        }
+
+    Parameters
+    ----------
+    optimize_mode: str
+        Optimize mode, 'maximize' or 'minimize'.
+        If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+    population_size: int
+        The initial size of the population (trial num) in the evolution tuner(default=32).
+        The larger population size, the better evolution performance.
+        It's suggested that ``population_size`` be much larger than ``concurrency`` so users can get the most out of the algorithm.
+        And at least ``concurrency``, or the tuner will fail on its first generation of parameters.
     """
 
-    def __init__(self, optimize_mode="maximize", population_size=32):
-        """
-        Parameters
-        ----------
-        optimize_mode : str, default 'maximize'
-        population_size : int
-            initial population size. The larger population size,
-        the better evolution performance.
-        """
+    def __init__(self, optimize_mode='maximize', population_size=32):
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.population_size = population_size
 
@@ -89,11 +99,11 @@ class EvolutionTuner(Tuner):
     def update_search_space(self, search_space):
         """
         Update search space.
-
         Search_space contains the information that user pre-defined.
 
         Parameters
         ----------
+
         search_space : dict
         """
         self.searchspace_json = search_space
@@ -109,8 +119,10 @@ class EvolutionTuner(Tuner):
         """
         To deal with trial failure. If a trial fails,
         random generate the parameters and add into the population.
+
         Parameters
         ----------
+
         parameter_id : int
             Unique identifier for hyper-parameters used by this trial.
         success : bool
@@ -136,12 +148,15 @@ class EvolutionTuner(Tuner):
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """
         Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
+
         Parameters
         ----------
+
         parameter_id_list : list of int
             Unique identifiers for each set of requested hyper-parameters.
         **kwargs
             Not used
+
         Returns
         -------
         list
@@ -182,12 +197,13 @@ class EvolutionTuner(Tuner):
 
         Parameters
         ----------
+
         parameter_id : int
 
         Returns
         -------
         dict
-            A group of candaidte parameters that evolution tuner generated.
+            A group of candidate parameters that evolution tuner generated.
         """
         pos = -1
 
@@ -234,10 +250,12 @@ class EvolutionTuner(Tuner):
 
         Parameters
         ----------
+
         parameter_id : int
 
         Returns
         -------
+
         dict
             One newly generated configuration.
         """
@@ -258,6 +276,7 @@ class EvolutionTuner(Tuner):
 
         Parameters
         ----------
+
         parameter_id : int
         parameters : dict
         value : dict/float

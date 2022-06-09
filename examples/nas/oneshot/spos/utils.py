@@ -57,8 +57,13 @@ class ToBGRTensor(object):
 
 
 def get_archchoice_by_model(model):
+    """
+    For ``exp_config.execution_engine = 'base'``, the top model exported by ``exp.export_top_models`` is a dict with format as
+    ``"LayerChoice1": "layerchoice_LayerChoice1_0"``. However when loading architecture from ``fixed_arch``, the dict value is needed 
+    to be converted to int. This function removed "layerchoice" string in choice value to meet the requirement of ``fixed_arch``.
+    The output will be ``"LayerChoice1": "0"``.
+    """
     result = {}
     for k, v in model.items():
-        assert k in v
         result[k] = model[k].split("_")[-1]
     return result

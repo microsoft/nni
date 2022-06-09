@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import (Any, Iterable, List, Optional, Tuple)
+import warnings
+from typing import (Any, Iterable, List, Optional, Tuple, cast)
 
 from .graph import Model, Mutation, ModelStatus
 
@@ -32,8 +33,8 @@ class Mutator:
     Mutates graphs in model to generate new model.
     `Mutator` class will be used in two places:
 
-        1. Inherit `Mutator` to implement graph mutation logic.
-        2. Use `Mutator` subclass to implement NAS strategy.
+    1. Inherit `Mutator` to implement graph mutation logic.
+    2. Use `Mutator` subclass to implement NAS strategy.
 
     In scenario 1, the subclass should implement `Mutator.mutate()` interface with `Mutator.choice()`.
     In scenario 2, strategy should use constructor or `Mutator.bind_sampler()` to initialize subclass,
@@ -44,9 +45,11 @@ class Mutator:
     If mutator has a label, in most cases, it means that this mutator is applied to nodes with this label.
     """
 
-    def __init__(self, sampler: Optional[Sampler] = None, label: Optional[str] = None):
+    def __init__(self, sampler: Optional[Sampler] = None, label: str = cast(str, None)):
         self.sampler: Optional[Sampler] = sampler
-        self.label: Optional[str] = label
+        if label is None:
+            warnings.warn('Each mutator should have an explicit label. Mutator without label is deprecated.', DeprecationWarning)
+        self.label: str = label
         self._cur_model: Optional[Model] = None
         self._cur_choice_idx: Optional[int] = None
 

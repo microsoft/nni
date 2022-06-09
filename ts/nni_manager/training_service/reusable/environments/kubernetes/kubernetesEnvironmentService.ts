@@ -77,7 +77,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
             if (this.genericK8sClient === undefined) {
                 throw new Error("genericK8sClient undefined!");
             }
-            const namespace = this.genericK8sClient.getNamespace ? this.genericK8sClient.getNamespace : "default"
+            const namespace = this.genericK8sClient.getNamespace ?? "default";
             await this.genericK8sClient.createSecret(
                 {
                     apiVersion: 'v1',
@@ -180,7 +180,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
         const body = fs.readFileSync(filePath).toString('base64');
         const registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
             .toLowerCase());
-        const namespace = this.genericK8sClient.getNamespace ? this.genericK8sClient.getNamespace : "default"
+        const namespace = this.genericK8sClient.getNamespace ?? "default";
         await this.genericK8sClient.createSecret(
             {
                 apiVersion: 'v1',

@@ -507,6 +507,7 @@ class TrialDispatcher implements TrainingService {
                                 throw new Error(`${environment.id} does not has environment service!`);
                             }
                             await environment.environmentService.stopEnvironment(environment);
+                            liveEnvironmentsCount--;
                             continue;
                         }
 

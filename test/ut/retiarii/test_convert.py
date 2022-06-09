@@ -14,6 +14,7 @@ import torchvision
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import basic_unit
 from nni.retiarii.codegen import model_to_pytorch_script
+from nni.retiarii.utils import original_state_dict_hooks
 
 from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 
@@ -50,16 +51,6 @@ class Linear(nn.Module):
         return out.view(size[0], size[1], -1)
 
 class TestConvert(unittest.TestCase, ConvertMixin):
-    @staticmethod
-    def _match_state_dict(current_values, expected_format):
-        result = {}
-        for k, v in expected_format.items():
-            for idx, cv in enumerate(current_values):
-                if cv.shape == v.shape:
-                    result[k] = cv
-                    current_values.pop(idx)
-                    break
-        return result
 
     def checkExportImport(self, model, input):
         model_ir = self._convert_model(model, input)
@@ -68,9 +59,8 @@ class TestConvert(unittest.TestCase, ConvertMixin):
         exec_vars = {}
         exec(model_code + '\n\nconverted_model = _model()', exec_vars)
         converted_model = exec_vars['converted_model']
-        converted_state_dict = self._match_state_dict(list(model.state_dict().values()),
-                                                      dict(converted_model.state_dict()))
-        converted_model.load_state_dict(converted_state_dict)
+        with original_state_dict_hooks(converted_model):
+            converted_model.load_state_dict(dict(model.state_dict()))
         with torch.no_grad():
             expected_output = model.eval()(*input)
             converted_output = converted_model.eval()(*input)

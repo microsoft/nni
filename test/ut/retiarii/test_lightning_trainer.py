@@ -130,13 +130,16 @@ def test_fit_api():
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = nni.trace(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = nni.trace(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
-    lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                  val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
-                                  max_epochs=1, limit_train_batches=0.1,  # for faster training
-                                  progress_bar_refresh_rate=progress_bar_refresh_rate)
-    lightning.fit(lambda: MNISTModel())
-    lightning.fit(MNISTModel)
-    lightning.fit(MNISTModel())
+
+    def lightning(): return pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+                                              max_epochs=1, limit_train_batches=0.1,  # for faster training
+                                              progress_bar_refresh_rate=progress_bar_refresh_rate)
+    # Lightning will have some cache in models / trainers,
+    # which is problematic if we call fit multiple times.
+    lightning().fit(lambda: MNISTModel())
+    lightning().fit(MNISTModel)
+    lightning().fit(MNISTModel())
     _reset()
 
 

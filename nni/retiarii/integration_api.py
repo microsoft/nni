@@ -1,26 +1,33 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import warnings
 from typing import NewType, Any
 
 import nni
+from nni.common.version import version_check
 
 # NOTE: this is only for passing flake8, we cannot import RetiariiAdvisor
 # because it would induce cycled import
 RetiariiAdvisor = NewType('RetiariiAdvisor', Any)
 
-_advisor: 'RetiariiAdvisor' = None
+_advisor = None  # type is RetiariiAdvisor
 
 
-def get_advisor() -> 'RetiariiAdvisor':
+def get_advisor():
+    # return type: RetiariiAdvisor
     global _advisor
     assert _advisor is not None
     return _advisor
 
 
-def register_advisor(advisor: 'RetiariiAdvisor'):
+def register_advisor(advisor):
+    # type of advisor: RetiariiAdvisor
     global _advisor
-    assert _advisor is None
+    if _advisor is not None:
+        warnings.warn('Advisor is already set.'
+                      'You should avoid instantiating RetiariiExperiment twice in one proces.'
+                      'If you are running in a Jupyter notebook, please restart the kernel.')
     _advisor = advisor
 
 
@@ -37,6 +44,14 @@ def receive_trial_parameters() -> dict:
     Reload with our json loads because NNI didn't use Retiarii serializer to load the data.
     """
     params = nni.get_next_parameter()
+
+    # version check, optional
+    raw_params = nni.trial._params
+    if raw_params is not None and 'version_info' in raw_params:
+        version_check(raw_params['version_info'])
+    else:
+        warnings.warn('Version check failed because `version_info` is not found.')
+
     return params
 
 

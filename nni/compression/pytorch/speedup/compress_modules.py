@@ -13,11 +13,13 @@ _logger = logging.getLogger(__name__)
 replace_module = {
     'BatchNorm2d': lambda module, masks: replace_batchnorm2d(module, masks),
     'BatchNorm1d': lambda module, masks: replace_batchnorm1d(module, masks),
+    'InstanceNorm2d': lambda module, masks: replace_instancenorm2d(module, masks),
     'Conv2d': lambda module, masks: replace_conv2d(module, masks),
     'Linear': lambda module, masks: replace_linear(module, masks),
     'MaxPool2d': lambda module, masks: no_replace(module, masks),
     'AvgPool2d': lambda module, masks: no_replace(module, masks),
     'AdaptiveAvgPool2d': lambda module, masks: no_replace(module, masks),
+    'ZeroPad2d': lambda module, masks: no_replace(module, masks),
     'ReLU': lambda module, masks: no_replace(module, masks),
     'ReLU6': lambda module, masks: no_replace(module, masks),
     'LeakyReLU': lambda module, masks: no_replace(module, masks),
@@ -44,7 +46,9 @@ replace_module = {
     'Upsample': lambda module, masks: no_replace(module, masks),
     'LayerNorm': lambda module, masks: replace_layernorm(module, masks),
     'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
-    'Embedding': lambda module, masks: replace_embedding(module, masks)
+    'Embedding': lambda module, masks: replace_embedding(module, masks),
+    'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks),
+    'Flatten': lambda module, masks: no_replace(module, masks)
 }
 
 replace_func = {
@@ -311,6 +315,51 @@ def replace_batchnorm2d(norm, masks):
     return new_norm
 
 
+def replace_instancenorm2d(norm, masks):
+    """
+    Parameters
+    ----------
+    norm : torch.nn.InstanceNorm2d
+        The instancenorm module to be replace
+    masks : Tuple of the input masks, output masks and weight masks
+        Tuple of the masks, for example
+        ([input_m1, input_m2], [output_m], {'weight':weight_m})
+
+    Returns
+    -------
+    torch.nn.InstanceNorm2d
+        The new instancenorm module
+    """
+    in_masks, output_mask, _ = masks
+    assert isinstance(norm, nn.InstanceNorm2d)
+    in_mask = in_masks[0]
+
+    # N, C, H, W
+    _, remained_in = convert_to_coarse_mask(in_mask, 1)
+    _, remained_out = convert_to_coarse_mask(output_mask, 1)
+    if remained_in.size(0) != remained_out.size(0):
+        raise ShapeMisMatchError()
+
+    num_features = remained_in.size(0)
+    _logger.info("replace instancenorm2d with num_features: %d", num_features)
+    new_norm = torch.nn.InstanceNorm2d(num_features=num_features,
+                                       eps=norm.eps,
+                                       momentum=norm.momentum,
+                                       affine=norm.affine,
+                                       track_running_stats=norm.track_running_stats)
+    # assign weights
+    if norm.affine:
+        new_norm.weight.data = torch.index_select(norm.weight.data, 0, remained_in)
+        new_norm.bias.data = torch.index_select(norm.bias.data, 0, remained_in)
+
+    if norm.track_running_stats:
+        new_norm.running_mean.data = torch.index_select(
+            norm.running_mean.data, 0, remained_in)
+        new_norm.running_var.data = torch.index_select(
+            norm.running_var.data, 0, remained_in)
+    return new_norm
+
+
 def replace_conv2d(conv, masks):
     """
     Replace the original conv with a new one according to the infered
@@ -543,6 +592,7 @@ def replace_convtranspose2d(convtrans, masks):
                                              kernel_size=convtrans.kernel_size,
                                              stride=convtrans.stride,
                                              padding=convtrans.padding,
+                                             output_padding=convtrans.output_padding,
                                              dilation=convtrans.dilation,
                                              groups=new_groups,
                                              bias=convtrans.bias is not None,
@@ -578,76 +628,41 @@ def replace_embedding(embedding, masks):
     # currently we donnot support replace the embedding layer
     # because we donnot have the corressponding pruner
     return embedding
-    # in_masks, out_masks, weight_masks = masks
-    # w_mask = weight_masks['weight']
-    # # weight size [num_embeddings, embeddings_dim]
-    # # currently, only support the pruning on the embedding_dim
-    # # dimension.
-    # pruned_dim, remained_dim = convert_to_coarse_mask(w_mask, 1)
-
-    # n_remain_dim = remained_dim.size(0)
-    # num_embeddings = embedding.num_embeddings
-    # padding_idx = embedding.padding_idx
-    # max_norm = embedding.max_norm
-    # norm_type = embedding.norm_type
-    # scale_grad_by_freq = embedding.scale_grad_by_freq
-    # new_embedding = torch.nn.Embedding(num_embeddings, n_remain_dim, padding_idx=padding_idx,
-    #                                    max_norm=max_norm, norm_type=norm_type, scale_grad_by_freq=scale_grad_by_freq)
-    # new_embedding.weight.data = torch.index_select(embedding.weight.data, 1, remained_dim)
-    # return new_embedding
 
 
-def replace_view(trace_model, cpp_node, masks):
+def replace_pixelshuffle(pixelshuffle, masks):
     """
-    We cannot directly replace the view operator in the model
-    because it isn't a module(function call). But in some cases
-    we have to replace such funcions else the whole model cannot
-    run the inference successfully. So we propose a method that
-    we replace the forward function of the father module of the
-    view operator to replace the view function. This method is not
-    stable, so we replace the view function only when we found there
-    is a shape-related exception.
-
     Parameters
     ----------
-    trace_model: torch.jit._trace.TracedModule
-        The traced module that including this view operator.
-    cpp_node: torch._C.Node
-        The cpp node of the target view operator
-    masks: Tensor
-        The input, output, weight masks of the target module.
+    norm : torch.nn.PixelShuffle
+        The pixelshuffle module to be replace
+    masks : Tuple of the input masks, output masks and weight masks
+        Tuple of the masks, for example
+        ([input_m1, input_m2], [output_m], {'weight':weight_m})
 
-    Returns:
+    Returns
     -------
-    new_cpp_node: None or torch._C.Node
-        The new cpp node to be repalced with. If None then we donnot
-        need to replace this function.
+    torch.nn.PixelShuffle
+        The new pixelshuffle module
     """
+    in_masks, output_mask, _ = masks
+    assert isinstance(pixelshuffle, torch.nn.PixelShuffle)
+    if len(in_masks) != 1:
+        raise InputsNumberError()
 
-    in_masks, out_mask, _ = masks
+    in_mask = in_masks[0]
 
-    in_dense_shape = convert_dense_shape(in_masks[0])
-    out_dense_shape = convert_dense_shape(out_mask)
+    # N, C, H, W
+    _, remained_in = convert_to_coarse_mask(in_mask, 1)
+    _, remained_out = convert_to_coarse_mask(output_mask, 1)
+    upscale_factor = pixelshuffle.upscale_factor
+    if remained_in.size(0) % (upscale_factor * upscale_factor):
+        _logger.debug("Shape mismatch, remained_in:%d upscale_factor:%d",
+                      remained_in.size(0), remained_out.size(0))
+        raise ShapeMisMatchError()
+    if remained_out.size(0) * upscale_factor * upscale_factor != remained_in:
+        raise ShapeMisMatchError()
 
-    in_count = reduce(lambda x, y: x*y, list(in_dense_shape))
-    out_count = reduce(lambda x, y: x*y, list(out_dense_shape))
+    new_pixelshuffle = torch.nn.PixelShuffle(upscale_factor)
 
-    assert in_count == out_count, "In shape:" + str(in_dense_shape) + ", Out shape:" + str(out_dense_shape)
-    assert isinstance(trace_model, torch.jit._trace.TracedModule)
-    assert isinstance(cpp_node, torch._C.Node)
-    input_nodes = []
-    for _dim in out_dense_shape:
-        _tmp_constant = trace_model.graph.insertConstant(_dim)
-        _tmp_constant.node().moveBefore(cpp_node)
-        input_nodes.append(_tmp_constant)
-    out_shape_list_node = trace_model.graph.create(
-        'prim::ListConstruct', input_nodes)
-    trace_model.graph.insertNode(out_shape_list_node)
-    out_shape_list_node.moveBefore(cpp_node)
-
-    out_shape_list = list(out_shape_list_node.outputs())[0]
-    out_shape_list.setType(ListType.ofInts())
-
-    ori_inputs = list(cpp_node.inputs())
-    cpp_node.replaceInputWith(ori_inputs[1], out_shape_list)
-    return cpp_node
+    return new_pixelshuffle

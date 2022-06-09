@@ -47,7 +47,7 @@ class TorchGraph:
         Parameters
         ----------
         model : pytorch model
-            The model user wants to speed up
+            The model user wants to speedup
         dummy_input : pytorch tensor
             The dummy input for ```jit.trace```, users should put it on right device before pass in
         traced_model : torch._C.torch.jit.TopLevelTracedModule
@@ -57,7 +57,7 @@ class TorchGraph:
         assert torch.__version__ >= '1.3.1'
         # check if the input is legal
         if traced_model is not None:
-            assert isinstance(traced_model, torch.jit.TopLevelTracedModule)
+            assert isinstance(traced_model, torch.jit.TopLevelTracedModule) or isinstance(traced_model, torch.jit.RecursiveScriptModule)
             self.trace = traced_model
             # it's ok if the graph is already unpacked
             torch._C._jit_pass_inline(self.trace.graph)
@@ -709,7 +709,7 @@ class TorchModuleGraph(TorchGraph):
 
         self.leaf_modules = self._extract_leaf_modules()
         module_to_type = {name: parse_traced_name(
-            module._name) for name, module in self.trace.named_modules()}
+            module._name if hasattr(module, '_name') else module.original_name) for name, module in self.trace.named_modules()}
 
         # associate module name with their trace graph nodes
         for node in graph.nodes():
@@ -775,7 +775,7 @@ class TorchModuleGraph(TorchGraph):
         """
         # extract the input & output shape for the view and flatten
         for node_group in self.nodes_py.nodes_op:
-            if node_group.op_type in ['aten::view', 'aten::flatten', 'aten::mean', 'aten::reshape']:
+            if node_group.op_type in ['aten::view', 'aten::flatten', 'aten::mean', 'aten::reshape', 'aten::expand_as']:
                 # get shape infor for view (aten::view) func
                 cpp_node = list(filter(lambda x: x.kind() == node_group.op_type,
                                        node_group.node_cpps))[0]

@@ -14,11 +14,11 @@ let dispatcher: IpcInterface | undefined;
 let procExit: boolean = false;
 let procError: boolean = false;
 
-function startProcess(): void {
+async function startProcess(): Promise<void> {
     // create fake assessor process
     const stdio: StdioOptions = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
 
-    const dispatcherCmd: string = getMsgDispatcherCommand(
+    const dispatcherCmd: string[] = getMsgDispatcherCommand(
         // Mock tuner config
         <any>{
             experimentName: 'exp1',
@@ -53,7 +53,7 @@ function startProcess(): void {
     });
 
     // create IPC interface
-    dispatcher = createDispatcherInterface(proc);
+    dispatcher = await createDispatcherInterface();
     (<IpcInterface>dispatcher).onCommand((commandType: string, content: string): void => {
         console.log(commandType, content);
     });

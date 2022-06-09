@@ -93,6 +93,7 @@ export interface DlcConfig extends TrainingServiceConfig {
     ecsSpec: string;
     region: string;
     nasDataSourceId: string;
+    ossDataSourceId?: string;
     accessKeyId: string;
     accessKeySecret: string;
     localStorageMountPoint: string;
@@ -131,6 +132,7 @@ export interface KubeflowConfig extends TrainingServiceConfig {
     master?: KubeflowRoleConfig;
     reuseMode: boolean;
     maxTrialNumberPerGpu?: number;
+    namespace?: string;
 }
 
 export interface FrameworkControllerTaskRoleConfig {
@@ -155,7 +157,7 @@ export interface FrameworkControllerConfig extends TrainingServiceConfig {
     taskRoles: FrameworkControllerTaskRoleConfig[];
     reuseMode: boolean;
     maxTrialNumberPerGpu?: number;
-    namespace?: 'default';
+    namespace?: string;
     apiVersion?: string;
 }
 

@@ -1,18 +1,24 @@
 parameters:
 - name: platform
   type: string
-- name: useCache
-  type: boolean
+- name: python_env
+  type: string
+  default: default
+  values:
+  - default
+  - noop
+  - venv
 
 steps:
 - template: config-version.yml
   parameters:
     platform: ${{ parameters.platform }}
+    python_env: ${{ parameters.python_env }}
 
 - script: |
     set -e
     sudo apt-get install -y swig3.0
-    sudo rm /usr/bin/swig
+    sudo rm -f /usr/bin/swig
     sudo ln -s swig3.0 /usr/bin/swig
   displayName: (Ubuntu) Downgrade swig
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
@@ -25,23 +31,36 @@ steps:
   displayName: (macOS) Downgrade swig
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'macos'))
 
-- task: UniversalPackages@0
-  inputs:
-    vstsFeed: NNIOpenSource/dependencies
-    vstsFeedPackage: dependencies-${{ parameters.platform }}
-    vstsPackageVersion: "*"
-  displayName: Download cache
-  condition: and(succeeded(), ${{ parameters.useCache }})
-
 - script: |
-    python test/vso_tools/unpack_dependencies.py
-  displayName: Unpack cache
-  condition: and(succeeded(), ${{ parameters.useCache }})
+    set -e
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
+    python test/vso_tools/unpack_dependencies.py dependencies.zip
+    rm dependencies.zip
+  displayName: (POSIX) Download cache
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
+  continueOnError: true
+
+- powershell: |
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
+    python test/vso_tools/unpack_dependencies.py dependencies.zip
+    Remove-Item dependencies.zip
+  displayName: (Windows) Download cache
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
+  continueOnError: true
 
 - script: |
     mv dependencies/recommended_legacy.txt dependencies/recommended.txt
   displayName: (legacy) Activate legacy dependencies
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
+
+- ${{ if contains(parameters.platform, 'windows') }}:
+    powershell:
+      Move-Item -Force -Path dependencies/recommended_gpu.txt -Destination dependencies/recommended.txt
+  ${{ else }}:
+    script: |
+      mv dependencies/recommended_gpu.txt dependencies/recommended.txt
+  displayName: (GPU) Activate CUDA dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu'))
 
 - script: |
     echo '===== develop ====='
@@ -54,14 +73,19 @@ steps:
     python -m pip install -r dependencies/recommended.txt
   displayName: Install Python dependencies
 
-# FIXME: See cache-dependencies-template.yml on why it needs rebuild.
 - script: |
-    python -m pip uninstall -y ConfigSpaceNNI
-    python -m pip install --no-cache-dir ConfigSpaceNNI
-  displayName: Rebuild ConfigSpaceNNI
-  condition: and(succeeded(), not(${{ parameters.useCache }}), contains('${{ parameters.platform }}', 'ubuntu'))
+    ls -al ${HOME}/.local/bin
+    echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+  displayName: (POSIX) Add local bin to PATH
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
 
 # TODO: Delete this after upgrading to PyTorch 1.11.
 - script: |
     python test/vso_tools/interim_patch.py
   displayName: Torch utils tensorboard interim patch
+
+- script: |
+    python --version
+    python -m pip --version
+    python -m pip list
+  displayName: List pip dependencies

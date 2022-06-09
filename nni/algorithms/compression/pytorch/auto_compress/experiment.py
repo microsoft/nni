@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import inspect
 from pathlib import Path, PurePath
-from typing import overload, Union, List
 
 from nni.experiment import Experiment, ExperimentConfig
 from nni.algorithms.compression.pytorch.auto_compress.interface import AbstractAutoCompressionModule
@@ -11,49 +12,19 @@ from nni.algorithms.compression.pytorch.auto_compress.interface import AbstractA
 
 class AutoCompressionExperiment(Experiment):
 
-    @overload
-    def __init__(self, auto_compress_module: AbstractAutoCompressionModule, config: ExperimentConfig) -> None:
+    def __init__(self, auto_compress_module: AbstractAutoCompressionModule, config_or_platform: ExperimentConfig | str | list[str]) -> None:
         """
-        Prepare an experiment.
-
-        Use `Experiment.run()` to launch it.
+        Prepare an auto compression experiment.
 
         Parameters
         ----------
         auto_compress_module
             The module provided by the user implements the `AbstractAutoCompressionModule` interfaces.
             Remember put the module file under `trial_code_directory`.
-        config
-            Experiment configuration.
+        config_or_platform
+            Experiment configuration or training service name.
         """
-        ...
-
-    @overload
-    def __init__(self, auto_compress_module: AbstractAutoCompressionModule, training_service: Union[str, List[str]]) -> None:
-        """
-        Prepare an experiment, leaving configuration fields to be set later.
-
-        Example usage::
-
-            experiment = Experiment(auto_compress_module, 'remote')
-            experiment.config.trial_command = 'python3 trial.py'
-            experiment.config.machines.append(RemoteMachineConfig(ip=..., user_name=...))
-            ...
-            experiment.run(8080)
-
-        Parameters
-        ----------
-        auto_compress_module
-            The module provided by the user implements the `AbstractAutoCompressionModule` interfaces.
-            Remember put the module file under `trial_code_directory`.
-        training_service
-            Name of training service.
-            Supported value: "local", "remote", "openpai", "aml", "kubeflow", "frameworkcontroller", "adl" and hybrid training service.
-        """
-        ...
-
-    def __init__(self, auto_compress_module: AbstractAutoCompressionModule, config=None, training_service=None):
-        super().__init__(config, training_service)
+        super().__init__(config_or_platform)
 
         self.module_file_path = str(PurePath(inspect.getfile(auto_compress_module)))
         self.module_name = auto_compress_module.__name__

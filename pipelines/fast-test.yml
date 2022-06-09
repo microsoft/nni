@@ -1,10 +1,16 @@
-trigger:
-  branches:
-    exclude: [ l10n_master ]
+trigger: none
 
 stages:
 - stage: lint
   jobs:
+
+  - job: copyright
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - script: python test/vso_tools/copyright_check.py
+      displayName: Check copyright header
+
   - job: docs
     pool:
       vmImage: ubuntu-latest
@@ -12,21 +18,39 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
-
-    - script: |
-        sudo apt-get install -y pandoc
-      displayName: Install pandoc
 
     - script: |
         cd docs
-        python tools/chineselink.py check
+        rstcheck -r source \
+          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs,youtube \
+          --ignore-roles githublink --ignore-substitutions release \
+          --report-level warning
+      displayName: rstcheck
+
+    - script: |
+        cd docs
+        sphinx-build -W --keep-going -T -q source build/html
+      displayName: Sphinx sanity check
+
+    - script: |
+        set -e
+        cd docs
+        sudo apt-get install -y gettext
+        python tools/translation_patch.py
+        sphinx-build -W --keep-going -T -q -D language=zh source build/html_zh
+      displayName: Sphinx sanity check (Chinese)
+
+    - script: |
+        set -e
+        cd docs
+        make i18n
+        git diff --exit-code source/locales
       displayName: Translation up-to-date
 
     - script: |
-        cd docs/en_US
-        sphinx-build -M html . _build -W --keep-going -T
-      displayName: Sphinx  # TODO: rstcheck
+        cd docs
+        sphinx-build -b linkcheck -W --keep-going -T -q source build/linkcheck
+      displayName: External links integrity check
 
   - job: python
     pool:
@@ -35,12 +59,14 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         # pylint requires newer typing extension. Override requirements in tensorflow
         python -m pip install "typing-extensions>=3.10"
       displayName: Resolve dependency version
+
+    - script: python test/vso_tools/trigger_import.py
+      displayName: Trigger import
 
     - script: |
         python -m pylint --rcfile pylintrc nni
@@ -53,6 +79,10 @@ stages:
         python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
       displayName: flake8
 
+    - script: |
+        python -m pyright nni
+      displayName: Type Check
+
   - job: typescript
     pool:
       vmImage: ubuntu-latest
@@ -60,7 +90,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
     - script: |
         set -e
@@ -71,12 +100,8 @@ stages:
     - script: |
         set -e
         yarn --cwd ts/webui
-        yarn --cwd ts/webui eslint
-      displayName: ESLint (WebUI)
-
-    - script: |
-        yarn --cwd ts/webui tsc
-      displayName: Type Check (WebUI)
+        yarn --cwd ts/webui sanity-check
+      displayName: Sanity check (WebUI)
 
 
   # To reduce debug cost, steps are sorted differently on each platform,
@@ -91,12 +116,8 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
-    - script: |
-        python setup.py develop
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install NNI
+    - template: templates/install-nni.yml
 
     - script: |
         set -e
@@ -134,7 +155,7 @@ stages:
 
     - script: |
         cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+        python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
       displayName: Simple integration test
 
   - job: ubuntu_legacy
@@ -145,16 +166,12 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-legacy
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
-    - script: |
-        python setup.py develop
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install NNI
+    - template: templates/install-nni.yml
 
     - script: |
         cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+        python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
       displayName: Simple integration test
 
     - script: |
@@ -171,16 +188,16 @@ stages:
   - job: windows
     pool:
       vmImage: windows-latest
+    timeoutInMinutes: 75
 
     steps:
     - template: templates/install-dependencies.yml
       parameters:
         platform: windows
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
-    - script: |
-        python setup.py develop --no-user
-      displayName: Install NNI
+    - template: templates/install-nni.yml
+      parameters:
+        user: false
 
     - script: |
         cd test
@@ -193,7 +210,7 @@ stages:
 
     - script: |
         cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+        python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
       displayName: Simple integration test
 
   - job: macos
@@ -204,12 +221,8 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: macos
-        useCache: ${{ eq('$(USE_CACHE)', 'true') }}
 
-    - script: |
-        python setup.py develop
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install NNI
+    - template: templates/install-nni.yml
 
     - script: |
         CI=true yarn --cwd ts/nni_manager test --exclude test/core/nnimanager.test.ts
@@ -222,5 +235,5 @@ stages:
 
     - script: |
         cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+        python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
       displayName: Simple integration test

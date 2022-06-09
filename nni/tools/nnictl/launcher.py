@@ -11,7 +11,6 @@ import yaml
 
 from nni.experiment import Experiment, RunMode
 from nni.experiment.config import ExperimentConfig, convert, utils
-from nni.runtime.log import init_logger_for_command_line
 from nni.tools.annotation import expand_annotations, generate_search_space
 
 # used for v1-only legacy setup, remove them later
@@ -27,11 +26,6 @@ def create_experiment(args):
     debug = args.debug
     url_prefix = args.url_prefix
     foreground = args.foreground
-
-    # it should finally be done in nnictl main function
-    # but for now don't break routines without logging support
-    init_logger_for_command_line()
-    logging.getLogger('nni').setLevel(logging.INFO)
 
     if not config_file.is_file():
         _logger.error(f'"{config_file}" is not a valid file.')
@@ -88,11 +82,15 @@ def create_experiment(args):
 
     exp = Experiment(config)
     exp.url_prefix = url_prefix
-    run_mode = RunMode.Foreground if foreground else RunMode.Detach
-    exp.start(port, debug, run_mode)
 
-    _logger.info(f'To stop experiment run "nnictl stop {exp.id}" or "nnictl stop --all"')
-    _logger.info('Reference: https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html')
+    if foreground:
+        exp.start(port, debug, RunMode.Foreground)
+        exp._wait_completion()
+
+    else:
+        exp.start(port, debug, RunMode.Detach)
+        _logger.info(f'To stop experiment run "nnictl stop {exp.id}" or "nnictl stop --all"')
+        _logger.info('Reference: https://nni.readthedocs.io/en/stable/reference/nnictl.html')
 
 def resume_experiment(args):
     exp_id = args.id
@@ -100,9 +98,6 @@ def resume_experiment(args):
     debug = args.debug
     foreground = args.foreground
     exp_dir = args.experiment_dir
-
-    init_logger_for_command_line()
-    logging.getLogger('nni').setLevel(logging.INFO)
 
     config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
     if config_json.get('trainingServicePlatform'):
@@ -117,9 +112,6 @@ def view_experiment(args):
     exp_id = args.id
     port = args.port
     exp_dir = args.experiment_dir
-
-    init_logger_for_command_line()
-    logging.getLogger('nni').setLevel(logging.INFO)
 
     config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
     if config_json.get('trainingServicePlatform'):

@@ -9,8 +9,9 @@ from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.execution import set_execution_engine
 from nni.retiarii.execution.base import BaseExecutionEngine
 from nni.retiarii.execution.python import PurePythonExecutionEngine
+from nni.retiarii.graph import DebugEvaluator
 from nni.retiarii.integration import RetiariiAdvisor
-
+from nni.runtime.tuner_command_channel.legacy import *
 
 class EngineTest(unittest.TestCase):
     def test_codegen(self):
@@ -24,7 +25,11 @@ class EngineTest(unittest.TestCase):
     def test_base_execution_engine(self):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
+        advisor._channel = LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         set_execution_engine(BaseExecutionEngine())
         with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
             model = Model._load(json.load(f))
@@ -37,7 +42,11 @@ class EngineTest(unittest.TestCase):
     def test_py_execution_engine(self):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
-        advisor = RetiariiAdvisor()
+        advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
+        advisor._channel = LegacyCommandChannel()
+        advisor.default_worker.start()
+        advisor.assessor_worker.start()
+
         set_execution_engine(PurePythonExecutionEngine())
         model = Model._load({
             '_model': {
@@ -51,6 +60,7 @@ class EngineTest(unittest.TestCase):
                 'edges': []
             }
         })
+        model.evaluator = DebugEvaluator()
         model.python_class = object
         submit_models(model, model)
 
@@ -61,11 +71,9 @@ class EngineTest(unittest.TestCase):
     def setUp(self) -> None:
         self.enclosing_dir = Path(__file__).parent
         os.makedirs(self.enclosing_dir / 'generated', exist_ok=True)
-        from nni.runtime import protocol
-        protocol._out_file = open(self.enclosing_dir / 'generated/debug_protocol_out_file.py', 'wb')
+        _set_out_file(open(self.enclosing_dir / 'generated/debug_protocol_out_file.py', 'wb'))
 
     def tearDown(self) -> None:
-        from nni.runtime import protocol
-        protocol._out_file.close()
+        _get_out_file().close()
         nni.retiarii.execution.api._execution_engine = None
         nni.retiarii.integration_api._advisor = None

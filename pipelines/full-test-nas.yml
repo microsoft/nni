@@ -1,0 +1,24 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+jobs:
+- job: linux
+  pool: nni-it
+  timeoutInMinutes: 60
+
+  steps:
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: ubuntu-latest-gpu
+      python_env: venv
+
+  - template: templates/install-nni.yml
+
+  - script: |
+      cd test
+      source scripts/nas.sh
+    displayName: NAS test

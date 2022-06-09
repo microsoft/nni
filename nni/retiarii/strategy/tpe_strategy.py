@@ -3,8 +3,7 @@
 
 import logging
 import time
-
-from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
+from typing import Optional
 
 from .. import Sampler, submit_models, query_available_resources, is_stopped_exec, budget_exhausted
 from .base import BaseStrategy
@@ -14,9 +13,12 @@ _logger = logging.getLogger(__name__)
 
 class TPESampler(Sampler):
     def __init__(self, optimize_mode='minimize'):
+        # Move import here to eliminate some warning messages about dill.
+        from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
+
         self.tpe_tuner = HyperoptTuner('tpe', optimize_mode)
-        self.cur_sample = None
-        self.index = None
+        self.cur_sample: Optional[dict] = None
+        self.index: Optional[int] = None
         self.total_parameters = {}
 
     def update_sample_space(self, sample_space):
@@ -34,22 +36,21 @@ class TPESampler(Sampler):
         self.tpe_tuner.receive_trial_result(model_id, self.total_parameters[model_id], result)
 
     def choice(self, candidates, mutator, model, index):
+        assert isinstance(self.index, int) and isinstance(self.cur_sample, dict)
         chosen = self.cur_sample[str(self.index)]
         self.index += 1
         return chosen
 
 
-class TPEStrategy(BaseStrategy):
+class TPE(BaseStrategy):
     """
-    The Tree-structured Parzen Estimator (TPE) [bergstrahpo]_ is a sequential model-based optimization (SMBO) approach.
+    The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach.
+
+    Find the details in
+    `Algorithms for Hyper-Parameter Optimization <https://papers.nips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__.
+
     SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements,
     and then subsequently choose new hyperparameters to test based on this model.
-
-    References
-    ----------
-
-    .. [bergstrahpo] Bergstra et al., "Algorithms for Hyper-Parameter Optimization".
-        https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
     """
 
     def __init__(self):
@@ -92,3 +93,7 @@ class TPEStrategy(BaseStrategy):
                     to_be_deleted.append(_id)
             for _id in to_be_deleted:
                 del self.running_models[_id]
+
+
+# alias for backward compatibility
+TPEStrategy = TPE

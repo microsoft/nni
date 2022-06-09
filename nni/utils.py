@@ -229,18 +229,25 @@ def merge_parameter(base_params, override_params):
         if is_dict:
             if k not in base_params:
                 raise ValueError('Key \'%s\' not found in base parameters.' % k)
-            if type(base_params[k]) != type(v) and base_params[k] is not None:
-                raise TypeError('Expected \'%s\' in override parameters to have type \'%s\', but found \'%s\'.' %
-                                (k, type(base_params[k]), type(v)))
+            v = _ensure_compatible_type(k, base_params[k], v)
             base_params[k] = v
         else:
             if not hasattr(base_params, k):
                 raise ValueError('Key \'%s\' not found in base parameters.' % k)
-            if type(getattr(base_params, k)) != type(v) and getattr(base_params, k) is not None:
-                raise TypeError('Expected \'%s\' in override parameters to have type \'%s\', but found \'%s\'.' %
-                                (k, type(getattr(base_params, k)), type(v)))
+            v = _ensure_compatible_type(k, getattr(base_params, k), v)
             setattr(base_params, k, v)
     return base_params
+
+def _ensure_compatible_type(key, base, override):
+    if base is None:
+        return override
+    if isinstance(override, type(base)):
+        return override
+    if isinstance(base, float) and isinstance(override, int):
+        return float(override)
+    base_type = type(base).__name__
+    override_type = type(override).__name__
+    raise ValueError(f'Expected "{key}" in override parameters to have type {base_type}, but found {override_type}')
 
 class ClassArgsValidator(object):
     """

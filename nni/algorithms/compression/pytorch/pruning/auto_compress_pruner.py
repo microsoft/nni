@@ -201,7 +201,7 @@ class AutoCompressPruner(Pruner):
             ADMMpruner.export_model(os.path.join(self._experiment_data_dir, 'model_admm_masked.pth'), os.path.join(
                 self._experiment_data_dir, 'mask.pth'))
 
-            # use speed up to prune the model before next iteration,
+            # use speedup to prune the model before next iteration,
             # because SimulatedAnnealingPruner & ADMMPruner don't take masked models
             self._model_to_prune.load_state_dict(torch.load(os.path.join(
                 self._experiment_data_dir, 'model_admm_masked.pth')))

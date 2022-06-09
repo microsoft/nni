@@ -2,11 +2,13 @@
 
 -f https://download.pytorch.org/whl/torch_stable.html
 tensorflow
-torch == 1.10.0+cu111
-torchvision == 0.11.1+cu111
-pytorch-lightning >= 1.5.0
+torch == 1.10.0+cu113
+torchvision == 0.11.1+cu113
+pytorch-lightning >= 1.6.1
+lightgbm
 onnx
 peewee
 graphviz
 gym
 tianshou >= 0.4.1
+timm >= 0.5.4

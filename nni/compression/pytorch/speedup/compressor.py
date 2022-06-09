@@ -30,7 +30,7 @@ class ModelSpeedup:
     Parameters
     ----------
     model : pytorch model
-        The model user wants to speed up
+        The model user wants to speedup
     dummy_input : pytorch tensor, tuple of tensor, list of tensor
         Note: The first dimension of the dummy_input should be the batchsize.
         The dummy input for ```jit.trace```, users should put it on the right
@@ -43,10 +43,23 @@ class ModelSpeedup:
         the index of batch dimension in the dummy_input
     confidence: the confidence coefficient of the sparsity inference. This value is
         actually used as the batchsize of the dummy_input.
+    customized_replace_func: None/Dict
+        If `customized_replace_func` is not None, then we will use the given function to replace the
+        corresponding modules. The `key` of the dict is the opertor types and the `value`
+        is the replace function of corresponding opertor. The replace function should take
+        two input parameters, one is the original module, the second input parameter is tuple
+        of the input mask, output mask and weight mask. This replace function should prune the module
+        accordingly. Here is an example of the replace function(more examples can refer to compress_modules.py)::
+
+            def example_replace(ori_module, masks):
+                in_mask, out_mask, weight_mask = masks
+                # prune the ori_module to a new smaller module according to the mask
+                return new_small_module
+
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
-                 batch_dim=0, confidence=8):
+                 batch_dim=0, confidence=8, customized_replace_func=None):
         assert confidence > 1
         # The auto inference will change the values of the parameters in the model
         # so we need make a copy before the mask inference
@@ -78,6 +91,7 @@ class ModelSpeedup:
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
+        self.customized_replace_func = customized_replace_func if customized_replace_func is not None else {}
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         """
@@ -449,6 +463,9 @@ class ModelSpeedup:
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """
         Replace the submodule according to the inferred sparsity.
+
+        Parameters
+        ----------
         unique_name: str
             The unique_name of the submodule to replace.
         reindex_dim: int
@@ -499,13 +516,15 @@ class ModelSpeedup:
             super_module, leaf_module = get_module_by_name(
                 self.bound_model, g_node.name)
             m_type = g_node.op_type
-            if not m_type in replace_module:
+            if (not m_type in replace_module) and (m_type not in self.customized_replace_func):
                 raise RuntimeError(
                     "Has not supported replacing the module: `{}`".format(m_type))
             _logger.info("replace module (name: %s, op_type: %s)",
                          g_node.name, m_type)
-
-            compressed_module = replace_module[m_type](
+            replace_function = replace_module[m_type]
+            if m_type in self.customized_replace_func:
+                replace_function = self.customized_replace_func[m_type]
+            compressed_module = replace_function(
                 leaf_module, auto_infer.get_masks())
             new_submodule = compressed_module
             if reindex_dim is None:
@@ -580,7 +599,7 @@ class ModelSpeedup:
         second, replace modules.
         """
 
-        _logger.info("start to speed up the model")
+        _logger.info("start to speedup the model")
         self.initialize_speedup()
         training = self.bound_model.training
         # set to the evaluation mode

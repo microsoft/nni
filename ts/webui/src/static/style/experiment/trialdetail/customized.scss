@@ -1,0 +1,48 @@
+/* resubmit confirm modal style */
+.hyper-box {
+    padding: 16px 18px 16px 16px;
+}
+
+.hyper-form {
+    margin-bottom: 10px;
+
+    .title {
+        font-size: 14px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 40px;
+    }
+
+    .inputs {
+        height: 32px;
+    }
+
+    input {
+        padding-left: 5px;
+        height: 32px;
+    }
+}
+
+.icon-color {
+    i {
+        color: green;
+    }
+}
+
+.icon-error {
+    i {
+        color: red;
+    }
+}
+
+.icon-color,
+.icon-error {
+    i {
+        margin-right: 10px;
+        position: relative;
+        top: 5px;
+    }
+}
+
+.ms-Dialog-subText {
+    color: #333;
+}

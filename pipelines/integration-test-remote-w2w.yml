@@ -1,0 +1,52 @@
+trigger: none
+pr: none
+# schedules:
+# - cron: 0 16 * * *
+#   branches:
+#     include: [ master ]
+
+variables:
+  ssh_user: NNIUser
+  ssh_password: P@ssW0rD!
+
+jobs:
+- job: remote_windows2windows
+  pool: nni-it-windows
+  timeoutInMinutes: 120
+
+  steps:
+  # FIXME: GPU is not supported yet.
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: windows
+      python_env: noop
+
+  - template: templates/install-nni.yml
+    parameters:
+      user: false
+
+  - template: templates/install-customized-tuner.yml
+
+  - powershell: |
+      python test/vso_tools/ssl_patch.py
+    displayName: SSL patch
+
+  # Connects to itself.
+  # See username and password in test/vso_tools/build_vm
+  - powershell: |
+      cd test
+      python training_service/nnitest/generate_ts_config.py `
+          --ts remote `
+          --remote_reuse false `
+          --remote_user $(ssh_user) `
+          --remote_host localhost `
+          --remote_port 22 `
+          --remote_pwd "$(ssh_password)" `
+          --nni_manager_ip localhost
+      Get-Content training_service/config/training_service.yml
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
+    displayName: Integration test
+
+  - template: templates/save-crashed-info.yml
+    parameters:
+      remote: true
