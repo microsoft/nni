@@ -93,3 +93,59 @@ quant_start_step
 Specific key for ``QAT Quantizer``. Disable quantization until model are run by certain number of steps,
 this allows the network to enter a more stable.
 State where output quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0.
+
+Examples
+--------
+
+Suppose we want to compress the following model::
+
+    class Model(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.conv1 = nn.Conv2d(1, 32, 3, 1)
+            self.conv2 = nn.Conv2d(32, 64, 3, 1)
+            self.dropout1 = nn.Dropout2d(0.25)
+            self.dropout2 = nn.Dropout2d(0.5)
+            self.fc1 = nn.Linear(9216, 128)
+            self.fc2 = nn.Linear(128, 10)
+
+        def forward(self, x):
+            ...
+    
+First, we need to determine where to compress, use the following config list to specify all ``Conv2d`` modules and module named ``fc1``::
+
+    config_list = [{'op_types': ['Conv2d']}, {'op_names': ['fc1']}]
+
+Sometimes we may need to compress all modules of a certain type, except for a few special ones.
+Writing all the module names is laborious at this point, we can use ``exclude`` to quickly specify the compression target modules::
+
+    config_list = [{
+        'op_types': ['Conv2d', 'Linear']
+    }, {
+        'exclude': True,
+        'op_names': ['fc2']
+    }]
+
+The above two config lists are equivalent to the model we want to compress, they both use ``conv1``, ``conv2``, and ``fc1`` as compression targets.
+
+Let's take a simple pruning config list example, pruning all ``Conv2d`` modules with 50% sparsity, and pruning ``fc1`` with 80% sparsity::
+
+    config_list = [{
+        'op_types': ['Conv2d'],
+        'total_sparsity': 0.5
+    }, {
+        'op_names': ['fc1'],
+        'total_sparsity': 0.8
+    }]
+
+Then if you want to try model quantization, here is a simple config list example::
+
+    config_list = [{
+        'op_types': ['Conv2d'],
+        'quant_types': ['input', 'weight'],
+        'quant_bits': {'input': 8, 'weight': 8}
+    }, {
+        'op_names': ['fc1'],
+        'quant_types': ['input', 'weight'],
+        'quant_bits': {'input': 8, 'weight': 8}
+    }]

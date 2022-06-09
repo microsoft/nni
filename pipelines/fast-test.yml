@@ -22,7 +22,7 @@ stages:
     - script: |
         cd docs
         rstcheck -r source \
-          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs \
+          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs,youtube \
           --ignore-roles githublink --ignore-substitutions release \
           --report-level warning
       displayName: rstcheck
