@@ -1,12 +1,15 @@
 import argparse
 import os
 import sys
+import pytorch_lightning as pl
+import pytest
 from subprocess import Popen
 
 from nni.retiarii import strategy
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from .test_oneshot import _mnist_net
 
+pytestmark = pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 
 def test_multi_trial():
     evaluator_kwargs = {
@@ -31,7 +34,6 @@ def test_multi_trial():
         exp_config.max_trial_number = 1
         exp_config.training_service.use_active_gpu = False
         exp.run(exp_config, 8080)
-        print(exp.export_top_models())
         assert isinstance(exp.export_top_models()[0], dict)
         exp.stop()
 
