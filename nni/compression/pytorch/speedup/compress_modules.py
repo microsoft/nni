@@ -51,9 +51,6 @@ replace_module = {
     'Flatten': lambda module, masks: no_replace(module, masks)
 }
 
-replace_func = {
-    'aten::view': lambda father_module, cpp_node, masks: replace_view(father_module, cpp_node, masks)
-}
 
 def convert_to_coarse_mask(t_mask, dim):
     """
