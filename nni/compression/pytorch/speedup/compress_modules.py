@@ -625,8 +625,13 @@ def replace_pixelshuffle(pixelshuffle, masks):
         err_msg += "or adjust the module sparsity ratio before this module to ensure that a suitable upscale_factor can be found."
         # Don't raise an error because the user maybe know how to manually replace this function.
         _logger.error(err_msg)
-        # FIXME: no_replace, use the orignal upscale_factor if we can not find a suitable upscale_factor.
+        # NOTE: no_replace, use the orignal upscale_factor if we can not find a suitable upscale_factor.
         upscale_factor = pixelshuffle.upscale_factor
+
+    if upscale_factor != pixelshuffle.upscale_factor:
+        war_msg = f"Change PixelShuffle upscale_factor from {pixelshuffle.upscale_factor} to {upscale_factor}, "
+        war_msg += "subsequent computation semantics may have changed."
+        _logger.warning(war_msg)
 
     new_pixelshuffle = torch.nn.PixelShuffle(upscale_factor)
     return new_pixelshuffle
