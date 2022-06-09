@@ -27,10 +27,11 @@ def test_multi_trial():
         exp = RetiariiExperiment(base_model, evaluator, strategy=search_strategy)
         exp_config = RetiariiExeConfig('local')
         exp_config.experiment_name = 'mnist_unittest'
-        exp_config.trial_concurrency = 2
-        exp_config.max_trial_number = 2
+        exp_config.trial_concurrency = 1
+        exp_config.max_trial_number = 1
         exp_config.training_service.use_active_gpu = False
         exp.run(exp_config, 8080)
+        print(exp.export_top_models())
         assert isinstance(exp.export_top_models()[0], dict)
         exp.stop()
 
@@ -44,8 +45,8 @@ search_strategy = strategy.Random()
 exp = RetiariiExperiment(base_model, evaluator, strategy=search_strategy)
 exp_config = RetiariiExeConfig('local')
 exp_config.experiment_name = 'mnist_unittest'
-exp_config.trial_concurrency = 2
-exp_config.max_trial_number = 2
+exp_config.trial_concurrency = 1
+exp_config.max_trial_number = 1
 exp_config.training_service.use_active_gpu = False
 exp.run(exp_config, 8080)
 assert isinstance(exp.export_top_models()[0], dict)
