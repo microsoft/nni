@@ -391,6 +391,7 @@ class NDSStage(nn.Repeat):
 
 
 class NDSStagePathSampling(PathSamplingRepeat):
+    """The path-sampling implementation (for one-shot) of each NDS stage if depth is mutating."""
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.api.ValueChoiceX):
@@ -415,6 +416,7 @@ class NDSStagePathSampling(PathSamplingRepeat):
 
 
 class NDSStageDifferentiable(DifferentiableMixedRepeat):
+    """The differentiable implementation (for one-shot) of each NDS stage if depth is mutating."""
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
         if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.api.ValueChoiceX):

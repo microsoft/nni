@@ -77,7 +77,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
     def mutate_kwargs(self):
         """Use differentiable strategy for mixed operations."""
         return {
-            'mixed_op_sampling': MixedOpDifferentiablePolicy,
+            'mixed_op_sampling': MixedOpDifferentiablePolicy
         }
 
     def __init__(self, inner_module: pl.LightningModule,
@@ -223,7 +223,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
         """Use gumbel softmax."""
         return {
             'mixed_op_sampling': MixedOpDifferentiablePolicy,
-            'softmax': GumbelSoftmax()
+            'softmax': GumbelSoftmax(),
         }
 
     def __init__(self, inner_module,
