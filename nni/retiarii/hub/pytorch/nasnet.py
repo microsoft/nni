@@ -548,8 +548,8 @@ class NDS(nn.Module):
             stage: Union[NDSStage, nn.Sequential] = NDSStage(cell_builder, num_cells_per_stage[stage_idx])
 
             if isinstance(stage, NDSStage):
-                stage.estimated_out_channels_prev = C_prev
-                stage.estimated_out_channels = C_curr * num_nodes_per_cell
+                stage.estimated_out_channels_prev = cast(int, C_prev)
+                stage.estimated_out_channels = cast(int, C_curr * num_nodes_per_cell)
                 stage.downsampling = stage_idx > 0
 
             self.stages.append(stage)

@@ -16,7 +16,7 @@ from typing import cast
 import torch
 import torch.nn as nn
 
-from .differentiable import DifferentiableMixedLayer, DifferentiableMixedInput, AutoShapeAlignmentType
+from .differentiable import DifferentiableMixedLayer, DifferentiableMixedInput
 
 __all__ = ['ProxylessMixedLayer', 'ProxylessMixedInput']
 

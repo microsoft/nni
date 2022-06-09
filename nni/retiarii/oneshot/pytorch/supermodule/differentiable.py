@@ -21,14 +21,14 @@ from nni.retiarii.nn.pytorch.cell import preprocess_cell_inputs
 from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingPolicy
 from .sampling import PathSamplingCell
-from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, weighted_sum, AutoShapeAlignmentType
+from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, weighted_sum
 
 _logger = logging.getLogger(__name__)
 
 __all__ = [
     'DifferentiableMixedLayer', 'DifferentiableMixedInput',
     'DifferentiableMixedRepeat', 'DifferentiableMixedCell',
-    'MixedOpDifferentiablePolicy', 'AutoShapeAlignmentType',
+    'MixedOpDifferentiablePolicy',
 ]
 
 
@@ -412,16 +412,16 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
         depth_weights = dict(cast(List[Tuple[int, float]], traverse_all_options(self.depth, weights=weights)))
 
         res: list[torch.Tensor] = []
-        weights: list[float] = []
+        weight_list: list[float] = []
         depths: list[int] = []
         for i, block in enumerate(self.blocks, start=1):  # start=1 because depths are 1, 2, 3, 4...
             x = block(x)
             if i in depth_weights:
-                weights.append(depth_weights[i])
+                weight_list.append(depth_weights[i])
                 res.append(x)
                 depths.append(i)
 
-        return self.reduction(res, weights, depths)
+        return self.reduction(res, weight_list, depths)
 
 
 class DifferentiableMixedCell(PathSamplingCell):

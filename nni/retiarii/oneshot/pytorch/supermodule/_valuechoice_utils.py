@@ -7,20 +7,16 @@ in the way that is most convenient to one-shot algorithms."""
 from __future__ import annotations
 
 import itertools
-from typing import Any, TypeVar, List, cast, Mapping, Sequence
+from typing import Any, TypeVar, List, cast, Mapping, Sequence, Optional, Iterable
 
 import numpy as np
 import torch
-from torch.nn.functional import pad as tensor_pad
 
 from nni.common.hpo_utils import ParameterSpec
 from nni.retiarii.nn.pytorch.api import ChoiceOf, ValueChoiceX
-from nni.typehint import Literal
 
 
 Choice = Any
-
-AutoShapeAlignmentType = Literal['largest', 'first', 'last']
 
 T = TypeVar('T')
 
@@ -30,7 +26,6 @@ __all__ = [
     'traverse_all_options',
     'weighted_sum',
     'evaluate_constant',
-    'AutoShapeAlignmentType'
 ]
 
 
@@ -160,7 +155,7 @@ def evaluate_constant(expr: Any) -> Any:
     return res
 
 
-def weighted_sum(items: list[T], weights: list[float] | None = None) -> T:
+def weighted_sum(items: list[T], weights: Sequence[float | None] = cast(Sequence[Optional[float]], None)) -> T:
     """Return a weighted sum of items.
 
     Items can be list of tensors, numpy arrays, or nested lists / dicts.
@@ -175,12 +170,6 @@ def weighted_sum(items: list[T], weights: list[float] | None = None) -> T:
     elem = items[0]
     unsupported_msg = f'Unsupported element type in weighted sum: {type(elem)}. Value is: {elem}'
 
-    if len(items) == 1:
-        if weights[0] is None:
-            return elem
-        else:
-            return elem * weights[0]
-
     if isinstance(elem, str):
         # Need to check this first. Otherwise it goes into sequence and causes infinite recursion.
         raise TypeError(unsupported_msg)
@@ -188,30 +177,36 @@ def weighted_sum(items: list[T], weights: list[float] | None = None) -> T:
     try:
         if isinstance(elem, (torch.Tensor, np.ndarray, float, int, np.number)):
             if weights[0] is None:
-                res = items[0]
+                res = elem
             else:
-                res = items[0] * weights[0]
+                res = elem * weights[0]
             for it, weight in zip(items[1:], weights[1:]):
                 if type(it) != type(elem):
                     raise TypeError(f'Expect type {type(elem)} but found {type(it)}. Can not be summed')
 
                 if weight is None:
-                    res = res + it
+                    res = res + it  # type: ignore
                 else:
-                    res = res + it * weight
-            return res
+                    res = res + it * weight  # type: ignore
+            return cast(T, res)
 
         if isinstance(elem, Mapping):
             for item in items:
-                if not isinstance(item, Mapping) or set(item) != set(elem):
-                    raise KeyError(f'Expect keys {elem.keys()} but found {item.keys()}')
-            return {key: weighted_sum([d[key] for d in items], weights) for key in elem}
+                if not isinstance(item, Mapping):
+                    raise TypeError(f'Expect type {type(elem)} but found {type(item)}')
+                if set(item) != set(elem):
+                    raise KeyError(f'Expect keys {list(elem)} but found {list(item)}')
+            return cast(T, {
+                key: weighted_sum(cast(List[dict], [cast(Mapping, d)[key] for d in items]), weights) for key in elem
+            })
         if isinstance(elem, Sequence):
             for item in items:
-                if not isinstance(item, Sequence) or len(item) != len(elem):
+                if not isinstance(item, Sequence):
+                    raise TypeError(f'Expect type {type(elem)} but found {type(item)}')
+                if len(item) != len(elem):
                     raise ValueError(f'Expect length {len(item)} but found {len(elem)}')
-            transposed = zip(*items)
-            return [weighted_sum(column, weights) for column in transposed]
+            transposed = cast(Iterable[list], zip(*items))  # type: ignore
+            return cast(T, [weighted_sum(column, weights) for column in transposed])
     except (TypeError, ValueError, RuntimeError, KeyError):
         raise ValueError(
             'Error when summing items. Value format / shape does not match. See full traceback for details.' +
