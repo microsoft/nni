@@ -115,7 +115,13 @@ stages:
         yarn --cwd ts/webui sanity-check
       displayName: Sanity check (WebUI)
 
-- template: templates/stage-filter.yml
+- stage: filter
+  jobs:
+  - job: check
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - template: templates/stage-filter.yml
 
   # To reduce debug cost, steps are sorted differently on each platform,
   # so that a bug in any module will cause at least one platform to fail quickly.
