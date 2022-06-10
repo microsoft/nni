@@ -115,22 +115,7 @@ stages:
         yarn --cwd ts/webui sanity-check
       displayName: Sanity check (WebUI)
 
-- stage: filter
-  jobs:
-  - job: check
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - checkout: azpfilter
-      persistCredentials: true
-    - task: NodeTool@0
-      inputs:
-        versionSpec: '16.x'
-    - script: npm ci
-      displayName: NPM Install
-    - script: node src/main.mjs
-      name: execution
-      displayName: Execution
+- template: templates/stage-filter.yml
 
   # To reduce debug cost, steps are sorted differently on each platform,
   # so that a bug in any module will cause at least one platform to fail quickly.
