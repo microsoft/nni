@@ -69,7 +69,7 @@ One-shot strategy
 
 One-shot NAS algorithms leverage weight sharing among models in neural architecture search space to train a supernet, and use this supernet to guide the selection of better models. This type of algorihtms greatly reduces computational resource compared to independently training each model from scratch (which we call "Multi-trial NAS").
 
-Starting from v2.8, the usage of one-shot strategies are much alike to multi-trial strategies. Users simply need to create a strategy and run :class:`~nni.retiarii.experiment.pytorch.RetiariiExperiment`. Since one-shot strategies will manipulate the training recipe, to use a one-shot strategy, the evaluator needs to be one of the :ref:`PyTorch-Lightning evaluators <lightning-evaluator>`, either built-in or customized. Example follows:
+Starting from v2.8, the usage of one-shot strategies are much alike to multi-trial strategies. Users simply need to create a strategy and run :class:`~nni.retiarii.experiment.pytorch.RetiariiExperiment`. Since one-shot strategies will manipulate the training recipe, to use a one-shot strategy, the evaluator needs to be one of the :ref:`PyTorch-Lightning evaluators <lightning-evaluator>`, either built-in or customized. Last but not least, don't forget to set execution engine to ``oneshot``. Example follows:
 
 .. code-block:: python
 
@@ -78,14 +78,22 @@ Starting from v2.8, the usage of one-shot strategies are much alike to multi-tri
    evaluator = pl.Classification(...)
    exploration_strategy = strategy.DARTS()
 
+   exp_config.execution_engine = 'oneshot'
+
 One-shot strategies only support a limited set of :ref:`mutation-primitives`, and does not support :doc:`customizing mutators <mutator>` at all. See the :ref:`reference <one-shot-strategy-reference>` for the detailed support list of each algorithm.
 
-*New in v2.8*: One-shot strategy is now compatible with `Lightning accelerators <https://pytorch-lightning.readthedocs.io/en/stable/accelerators/gpu.html>`__. It means that, you can accelerate one-shot strategies on hardwares like multiple GPUs. To enable this feature, you only need to pass the keyword arguments which used to be set in ``pytorch_lightning.Trainer``, to your evaluator. See :doc:`this reference </reference/nas/evaluator>` for more details.
+.. versionadded:: 2.8
+
+   One-shot strategy is now compatible with `Lightning accelerators <https://pytorch-lightning.readthedocs.io/en/stable/accelerators/gpu.html>`__. It means that, you can accelerate one-shot strategies on hardwares like multiple GPUs. To enable this feature, you only need to pass the keyword arguments which used to be set in ``pytorch_lightning.Trainer``, to your evaluator. See :doc:`this reference </reference/nas/evaluator>` for more details.
 
 One-shot strategy (legacy)
 --------------------------
 
-.. warning:: The following usages are deprecated and will be removed in future releases. If you intend to use them, the references can be found :doc:`here </deprecated/oneshot_legacy>`.
+.. warning::
+
+   .. deprecated:: 2.8
+
+      The following usages are deprecated and will be removed in future releases. If you intend to use them, the references can be found :doc:`here </deprecated/oneshot_legacy>`.
 
 The usage of one-shot NAS strategy is a little different from multi-trial strategy. One-shot strategy is implemented with a special type of objects named *Trainer*. Following the common practice of one-shot NAS, *Trainer* trains the super-net and searches for the optimal architecture in a single run. For example,
 
