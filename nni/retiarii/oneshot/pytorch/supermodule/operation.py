@@ -274,7 +274,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
 
     ``padding`` will be the "max" padding in differentiable mode.
 
-    Mutable ``groups`` is NOT supported in most cases of differentaible mode.
+    Mutable ``groups`` is NOT supported in most cases of differentiable mode.
     However, we do support one special case when the group number is proportional to ``in_channels`` and ``out_channels``.
     This is often the case of depth-wise convolutions.
 
@@ -325,7 +325,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                 except ValueError:
                     warnings.warn(
                         'Both input channels and groups are ValueChoice in a convolution, and their relative ratio is not a constant. '
-                        'This can be problemtic for most one-shot algorithms. Please check whether this is your intention.',
+                        'This can be problematic for most one-shot algorithms. Please check whether this is your intention.',
                         RuntimeWarning
                     )
 
