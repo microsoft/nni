@@ -54,6 +54,7 @@ exp.run(exp_config, 8080)
 assert isinstance(exp.export_top_models()[0], dict)
 """
 
+@pytest.mark.timeout(600)
 def test_exp_exit_without_stop():
     script_name = 'tmp_multi_trial.py'
     with open(script_name, 'w') as f:
