@@ -129,8 +129,8 @@ class Scaling:
         _expand_size = []
         for a, b in zip(kernel_size, expand_size):
             if a == -1:
-                _expand_size.append(b)
                 _expand_size.append(1)
+                _expand_size.append(b)
             else:
                 assert b % a == 0
                 _expand_size.append(b // a)

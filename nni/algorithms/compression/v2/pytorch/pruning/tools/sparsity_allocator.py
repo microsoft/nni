@@ -185,6 +185,8 @@ class DependencyAwareAllocator(NormalSparsityAllocator):
         # generate public part for modules that have dependencies
         for module_names in self.channel_dependency:
             sub_metrics = {module_name: metrics[module_name] for module_name in module_names if module_name in metrics}
+            if not sub_metrics:
+                continue
             fused_metric = self._metric_fuse(sub_metrics)
 
             sparsity_rates = {module_name: self.pruner.get_modules_wrapper()[module_name].config['total_sparsity'] for module_name in sub_metrics.keys()}

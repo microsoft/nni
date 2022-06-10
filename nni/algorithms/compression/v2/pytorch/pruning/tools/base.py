@@ -355,18 +355,15 @@ class SparsityAllocator:
             mask = scalor.shrink(mask)
         return (mask != 0).type_as(mask)
 
-    def _mask_metrics(self, metrics: Dict[str, Tensor]) -> Dict[str, Tensor]:
+    def _continuous_mask(self, new_masks: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         # Set the already masked part in the metric to the minimum value.
         target_name = 'weight'
-        for module_name, target_metric in metrics.items():
+        for module_name, target_mask in new_masks.items():
             wrapper = self.pruner.get_modules_wrapper()[module_name]
             old_target_mask = getattr(wrapper, f'{target_name}_mask', None)
             if old_target_mask is not None:
-                shrinked_mask = self._shrink_mask(module_name, target_name, old_target_mask)
-                # ensure the already masked part has the minimum value.
-                min_val = target_metric.min() - 1
-                metrics[module_name] = torch.where(shrinked_mask!=0, target_metric, min_val)
-        return metrics
+                new_masks[module_name] = torch.min(target_mask, old_target_mask)
+        return new_masks
 
     def common_target_masks_generation(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
         """
@@ -377,12 +374,12 @@ class SparsityAllocator:
         metrics
             The format is {module_name: weight_metric}.
             The metric of `weight` usually has the same size with shrinked mask.
-        
+
         Return
         ------
         Dict[str, Dict[str, Tensor]]
             The format is {module_name: {target_name: mask}}.
-            Return the masks of the same size as its target. 
+            Return the masks of the same size as its target.
         """
         raise NotImplementedError()
 
@@ -424,10 +421,10 @@ class SparsityAllocator:
         Dict[str, Dict[str, Tensor]]
             The masks format is {module_name: {target_name: mask}}.
         """
-        if self.continuous_mask:
-            metrics = self._mask_metrics(metrics)
         masks = self.common_target_masks_generation(metrics)
         masks = self.special_target_masks_generation(masks)
+        if self.continuous_mask:
+            masks = self._continuous_mask(masks)
         return masks
 
 
