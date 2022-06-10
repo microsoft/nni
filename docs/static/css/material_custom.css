@@ -60,6 +60,11 @@ dl.field-list > dd {
     margin-left: 1.5em;
 }
 
+/* Version-related */
+span.versionmodified {
+    font-weight: 600;
+}
+
 /* show headerlink when hover/focus */
 dt.sig-object:focus .headerlink, dt.sig-object:hover .headerlink {
     -webkit-transform: translate(0);

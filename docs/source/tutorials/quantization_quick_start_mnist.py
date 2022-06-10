@@ -2,6 +2,11 @@
 Quantization Quickstart
 =======================
 
+Here is a four-minute video to get you started with model quantization.
+
+..  youtube:: MSfV7AyfiA4
+    :align: center
+
 Quantization reduces model size and speeds up inference time by reducing the number of bits required to represent weights or activations.
 
 In NNI, both post-training quantization algorithms and quantization-aware training algorithms are supported.

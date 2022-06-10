@@ -10,7 +10,7 @@ pylint
 pyright == 1.1.250
 pytest
 pytest-cov
-rstcheck
+rstcheck >= 6.0
 sphinx >= 4.5
 sphinx-argparse-nni >= 0.4.0
 sphinx-copybutton
@@ -18,4 +18,5 @@ sphinx-gallery
 sphinx-intl
 sphinx-tabs
 sphinxcontrib-bibtex
+sphinxcontrib-youtube
 git+https://github.com/bashtage/sphinx-material@6e0ef82#egg=sphinx_material

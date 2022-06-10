@@ -25,21 +25,21 @@ try:
     import torch
     TORCH_VERSION = _minor_version_tuple(torch.__version__)
 except ImportError:
-    logging.info("PyTorch is not installed.")
+    logging.getLogger(__name__).info("PyTorch is not installed.")
     TORCH_VERSION = None
 
 try:
     import pytorch_lightning
     PYTORCH_LIGHTNING_VERSION = _minor_version_tuple(pytorch_lightning.__version__)
 except ImportError:
-    logging.info("PyTorch Lightning is not installed.")
+    logging.getLogger(__name__).info("PyTorch Lightning is not installed.")
     PYTORCH_LIGHTNING_VERSION = None
 
 try:
     import tensorflow
     TENSORFLOW_VERSION = _minor_version_tuple(tensorflow.__version__)
 except ImportError:
-    logging.info("Tensorflow is not installed.")
+    logging.getLogger(__name__).info("Tensorflow is not installed.")
     TENSORFLOW_VERSION = None
 
 # Serialization version check are needed because they are prone to be inconsistent between versions

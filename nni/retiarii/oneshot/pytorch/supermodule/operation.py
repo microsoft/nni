@@ -39,6 +39,9 @@ __all__ = [
     'NATIVE_MIXED_OPERATIONS',
 ]
 
+_diff_not_compatible_error = 'To be compatible with differentiable one-shot strategy, {} in {} must not be ValueChoice.'
+
+
 class MixedOperationSamplingPolicy:
     """
     Algo-related part for mixed Operation.
@@ -183,7 +186,7 @@ class MixedOperation(BaseSuperNetModule):
             mixed_op = cls(cast(dict, module.trace_kwargs))
 
             if 'mixed_op_sampling' not in mutate_kwargs:
-                raise ValueError('Need to sampling policy of mixed op, but not found in `mutate_kwargs`.')
+                raise ValueError("Need a sampling policy for mixed op, but it's not found in `mutate_kwargs`.")
             policy_cls: Type[MixedOperationSamplingPolicy] = mutate_kwargs['mixed_op_sampling']
             # initialize policy class
             # this is put in mutate because we need to access memo
@@ -346,7 +349,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                           inputs: torch.Tensor) -> torch.Tensor:
 
         if any(isinstance(arg, dict) for arg in [stride, dilation]):
-            raise ValueError('stride, dilation does not support weighted sampling.')
+            raise ValueError(_diff_not_compatible_error.format('stride, dilation', 'Conv2d'))
 
         in_channels_ = _W(in_channels)
         out_channels_ = _W(out_channels)
@@ -436,7 +439,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
                           inputs: torch.Tensor) -> torch.Tensor:
 
         if any(isinstance(arg, dict) for arg in [eps, momentum]):
-            raise ValueError('eps, momentum do not support weighted sampling')
+            raise ValueError(_diff_not_compatible_error.format('eps and momentum', 'BatchNorm2d'))
 
         if isinstance(num_features, dict):
             num_features = self.num_features
@@ -553,7 +556,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
 
         if any(isinstance(arg, dict) for arg in [num_heads, dropout]):
-            raise ValueError('num_heads, dropout do not support weighted sampling.')
+            raise ValueError(_diff_not_compatible_error.format('num_heads and dropout', 'MultiHeadAttention'))
 
         # by default, kdim, vdim can be none
         if kdim is None:
