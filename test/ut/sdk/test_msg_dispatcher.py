@@ -4,6 +4,7 @@
 import json
 from io import BytesIO
 from unittest import TestCase, main
+import unittest
 
 from nni.runtime import msg_dispatcher_base
 from nni.runtime.msg_dispatcher import MsgDispatcher
@@ -55,6 +56,7 @@ def _restore_io():
 
 
 class MsgDispatcherTestCase(TestCase):
+    @unittest.skip
     def test_msg_dispatcher(self):
         _reverse_io()  # now we are sending to Tuner's incoming stream
         send(CommandType.RequestTrialJobs, '2')

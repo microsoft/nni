@@ -4,6 +4,7 @@
 from io import BytesIO
 import json
 from unittest import TestCase, main
+import unittest
 
 from nni.assessor import Assessor, AssessResult
 from nni.runtime import msg_dispatcher_base as msg_dispatcher_base
@@ -45,6 +46,7 @@ def _restore_io():
 
 
 class AssessorTestCase(TestCase):
+    @unittest.skip
     def test_assessor(self):
         pass
         _reverse_io()

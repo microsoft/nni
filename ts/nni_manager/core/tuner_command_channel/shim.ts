@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { BaseCommand } from 'core/semanticCommand';
 import type { IpcInterface } from './common';
 import { WebSocketChannel, getWebSocketChannel } from './websocket_channel';
 

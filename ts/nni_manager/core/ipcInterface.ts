@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { BaseCommand } from './semanticCommand';
 import { IpcInterface } from './tuner_command_channel/common';
 export { IpcInterface } from './tuner_command_channel/common';
 import * as shim from './tuner_command_channel/shim';
