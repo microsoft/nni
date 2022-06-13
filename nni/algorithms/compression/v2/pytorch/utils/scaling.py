@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from functools import reduce
-from typing import List, overload
+from typing import Callable, List, overload
 from typing_extensions import Literal
 
 import torch
@@ -95,24 +95,33 @@ class Scaling:
             raise ValueError(f'Unsupported padding mode: {padding_mode}.')
         return new_list
 
-    def _shrink(self, target: Tensor, kernel_size: List[int]) -> Tensor:
+    def _shrink(self, target: Tensor, kernel_size: List[int], reduce_func: Callable[[Tensor], Tensor] | None = None) -> Tensor:
         """
         Main logic about how to shrink target. Subclass could override this function to customize.
-        Add all values covered by the kernel as a simple implementation.
+        Sum all values covered by the kernel as a simple implementation.
         """
-        # step 1: reduce dimensions of the target tensor where -1 is located in kernel_size.
-        reduced_dims = [dim for (dim, step) in enumerate(kernel_size) if step == -1]
-        new_target = target.sum(reduced_dims) if len(reduced_dims) > 0 else target
+        # step 1: put the part covered by the kernel to the end of the converted target.
+        # e.g., target size is [10, 20], kernel_size is [2, 4], then new_target size is [5, 5, 8].
+        reshape_size = []
+        final_size = []
+        reduced_dims = []
+        for (dim, step) in enumerate(kernel_size):
+            if step == -1:
+                step = target.shape[dim]
+                reduced_dims.insert(0, dim)
+            assert target.shape[dim] % step == 0
+            reshape_size.append(target.shape[dim] // step)
+            final_size.append(target.shape[dim] // step)
+            reshape_size.append(step)
+        permute_dims = [2 * _ for _ in range(len(kernel_size))] + [2 * _ + 1 for _ in range(len(kernel_size))]
+        converted_target = target.reshape(reshape_size).permute(permute_dims).reshape(final_size + [-1])
 
-        # step 2: pooling the new target with remaining kernel_size.
-        remaining_kernel_size = [step for step in kernel_size if step != -1]
-        letter_candidates = 'abcdefghijklmnopqrstuvwxyz'
-        ein_expression = ''
-        for i, step in enumerate(remaining_kernel_size):
-            new_target = new_target.unfold(i, step, step)
-            ein_expression += letter_candidates[i]
-        ein_expression = '...{},{}'.format(ein_expression, ein_expression)
-        result = torch.einsum(ein_expression, new_target, torch.ones(remaining_kernel_size, dtype=new_target.dtype).to(new_target.device))
+        # step 2: reduce the converted_target last dim with a certain way, by default is converted_target.sum(-1).
+        result = reduce_func(converted_target) if reduce_func else converted_target.sum(-1)
+
+        # step 3: reduce the dims where kernel_size is -1.
+        # e.g., target size is [10, 40], kernel_size is [-1, 4], result size is [1, 10], then reduce result to size [10].
+        result = reduce(lambda t, dim: t.squeeze(dim), [result] + reduced_dims)
 
         return result
 
@@ -138,11 +147,12 @@ class Scaling:
         new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [new_target] + [2 * _ + 1 for _ in range(len(expand_size))])  # type: ignore
 
         # step 3: expanding the new target to _expand_size and reshape to expand_size.
+        # Note that we can also give an interface for how to expand the tensor, like `reduce_func` in `_shrink`, currently we don't have that need.
         result = new_target.expand(_expand_size).reshape(expand_size).clone()
 
         return result
 
-    def shrink(self, target: Tensor) -> Tensor:
+    def shrink(self, target: Tensor, reduce_func: Callable[[Tensor], Tensor] | None = None) -> Tensor:
         # Canonicalize kernel_size to target size length at first.
         # If kernel_padding_mode is 'front', padding 1 at the front of `self.kernel_size`.
         # e.g., padding kernel_size [2, 2] to [1, 2, 2] when target size length is 3.
@@ -154,7 +164,7 @@ class Scaling:
             kernel_size = self._padding(self.kernel_size, len(target.shape), -1, 'back')
         else:
             raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
-        return self._shrink(target, kernel_size)
+        return self._shrink(target, kernel_size, reduce_func)
 
     def expand(self, target: Tensor, expand_size: List[int]):
         # Similar with `self.shrink`, canonicalize kernel_size to expand_size length at first.
