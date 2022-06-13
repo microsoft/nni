@@ -51,7 +51,7 @@ class Scaling:
               [9, 9]]]
             # note that the original tensor with size (4, 3) will unsqueeze to size (4, 3, 1) at first
             # for the `-1` in kernel_size, then expand size (4, 3, 1) to size (4, 6, 2).
-    padding_mode
+    kernel_padding_mode
         'front' or 'back', default is 'front'.
         If set 'front', for a given tensor when shrinking, padding `1` at front of kernel_size until `len(tensor.shape) == len(kernel_size)`;
         for a given expand size when expanding, padding `1` at front of kernel_size until `len(expand_size) == len(kernel_size)`.
@@ -59,10 +59,10 @@ class Scaling:
         for a given expand size when expanding, padding `-1` at back of kernel_size until `len(expand_size) == len(kernel_size)`.
     """
 
-    def __init__(self, kernel_size: List[int], padding_mode: Literal['front', 'back'] = 'front') -> None:
+    def __init__(self, kernel_size: List[int], kernel_padding_mode: Literal['front', 'back'] = 'front') -> None:
         self.kernel_size = kernel_size
-        assert padding_mode in ['front', 'back'], f"padding_mode should be one of ['front', 'back'], but get padding_mode={padding_mode}."
-        self.padding_mode = padding_mode
+        assert kernel_padding_mode in ['front', 'back'], f"kernel_padding_mode should be one of ['front', 'back'], but get kernel_padding_mode={kernel_padding_mode}."
+        self.kernel_padding_mode = kernel_padding_mode
 
     def _padding(self, _list: List[int], length: int, padding_value: int = -1, padding_mode: Literal['front', 'back'] = 'back') -> List[int]:
         """
@@ -112,7 +112,7 @@ class Scaling:
             new_target = new_target.unfold(i, step, step)
             ein_expression += letter_candidates[i]
         ein_expression = '...{},{}'.format(ein_expression, ein_expression)
-        result = torch.einsum(ein_expression, new_target, torch.ones(remaining_kernel_size).to(new_target.device))
+        result = torch.einsum(ein_expression, new_target, torch.ones(remaining_kernel_size, dtype=new_target.dtype).to(new_target.device))
 
         return result
 
@@ -132,38 +132,38 @@ class Scaling:
                 _expand_size.append(1)
                 _expand_size.append(b)
             else:
-                assert b % a == 0
+                assert b % a == 0, f'Can not expand tensor with {target.shape} to {expand_size} with kernel size {kernel_size}.'
                 _expand_size.append(b // a)
                 _expand_size.append(a)
         new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [new_target] + [2 * _ + 1 for _ in range(len(expand_size))])  # type: ignore
 
         # step 3: expanding the new target to _expand_size and reshape to expand_size.
-        result = new_target.expand(_expand_size).reshape(expand_size)
+        result = new_target.expand(_expand_size).reshape(expand_size).clone()
 
         return result
 
     def shrink(self, target: Tensor) -> Tensor:
         # Canonicalize kernel_size to target size length at first.
-        # If padding_mode is 'front', padding 1 at the front of `self.kernel_size`.
+        # If kernel_padding_mode is 'front', padding 1 at the front of `self.kernel_size`.
         # e.g., padding kernel_size [2, 2] to [1, 2, 2] when target size length is 3.
-        # If padding_mode is 'back', padding -1 at the back of `self.kernel_size`.
+        # If kernel_padding_mode is 'back', padding -1 at the back of `self.kernel_size`.
         # e.g., padding kernel_size [1] to [1, -1, -1] when target size length is 3.
-        if self.padding_mode == 'front':
+        if self.kernel_padding_mode == 'front':
             kernel_size = self._padding(self.kernel_size, len(target.shape), 1, 'front')
-        elif self.padding_mode == 'back':
+        elif self.kernel_padding_mode == 'back':
             kernel_size = self._padding(self.kernel_size, len(target.shape), -1, 'back')
         else:
-            raise ValueError(f'Unsupported padding mode: {self.padding_mode}.')
+            raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
         return self._shrink(target, kernel_size)
 
     def expand(self, target: Tensor, expand_size: List[int]):
         # Similar with `self.shrink`, canonicalize kernel_size to expand_size length at first.
-        if self.padding_mode == 'front':
+        if self.kernel_padding_mode == 'front':
             kernel_size = self._padding(self.kernel_size, len(expand_size), 1, 'front')
-        elif self.padding_mode == 'back':
+        elif self.kernel_padding_mode == 'back':
             kernel_size = self._padding(self.kernel_size, len(expand_size), -1, 'back')
         else:
-            raise ValueError(f'Unsupported padding mode: {self.padding_mode}.')
+            raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
         return self._expand(target, kernel_size, expand_size)
 
     @overload
@@ -182,4 +182,4 @@ class Scaling:
         target = target if isinstance(target, Tensor) else torch.rand(target)
         if self.expand((self.shrink(target)), list(target.shape)).shape != target.shape:
             raise ValueError(f'The tensor with shape {target.shape}, can not shape-lossless scaling with ' +
-                             f'kernel size is {self.kernel_size} and padding_mode is {self.padding_mode}.')
+                             f'kernel size is {self.kernel_size} and kernel_padding_mode is {self.kernel_padding_mode}.')

@@ -349,11 +349,11 @@ class SparsityAllocator:
             return mask.clone()
 
     def _shrink_mask(self, module_name: str, target_name: str, mask: Tensor) -> Tensor:
-        # Shrink the mask by scalor, shrinked mask usually has the same size with metric. 
+        # Shrink the mask by scalor, shrinked mask usually has the same size with metric.
         scalor = self._get_scalor(module_name=module_name, target_name=target_name)
         if scalor:
-            mask = scalor.shrink(mask)
-        return (mask != 0).type_as(mask)
+            mask = (scalor.shrink(mask) != 0).type_as(mask)
+        return mask
 
     def _continuous_mask(self, new_masks: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         # Set the already masked part in the metric to the minimum value.
