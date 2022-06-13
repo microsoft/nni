@@ -362,7 +362,7 @@ class SparsityAllocator:
             wrapper = self.pruner.get_modules_wrapper()[module_name]
             old_target_mask = getattr(wrapper, f'{target_name}_mask', None)
             if old_target_mask is not None:
-                new_masks[module_name] = torch.min(target_mask, old_target_mask)
+                new_masks[module_name] = torch.min(target_mask[target_name], old_target_mask)
         return new_masks
 
     def common_target_masks_generation(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
