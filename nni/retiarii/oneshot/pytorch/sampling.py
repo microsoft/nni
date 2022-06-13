@@ -12,25 +12,38 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
+from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
 from .supermodule.sampling import (
     PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy,
     PathSamplingCell, PathSamplingRepeat
 )
-from .supermodule.operation import NATIVE_MIXED_OPERATIONS
 from .enas import ReinforceController, ReinforceField
 
 
 class RandomSamplingLightningModule(BaseOneShotLightningModule):
     _random_note = """
-    Random Sampling NAS Algorithm.
+    Train a super-net with uniform path sampling. See `reference <https://arxiv.org/abs/1904.00420>`__.
+
     In each epoch, model parameters are trained after a uniformly random sampling of each choice.
     Notably, the exporting result is **also a random sample** of the search space.
+
+    The supported mutation primitives of RandomOneShot are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
+    * :class:`nni.retiarii.nn.pytorch.Repeat`.
+    * :class:`nni.retiarii.nn.pytorch.Cell`.
+    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
 
     Parameters
     ----------
     {{module_params}}
     {base_params}
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+    """.format(
+        base_params=BaseOneShotLightningModule._mutation_hooks_note,
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+    )
 
     __doc__ = _random_note.format(
         module_params=BaseOneShotLightningModule._inner_module_note,
@@ -66,9 +79,24 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
 
 class EnasLightningModule(RandomSamplingLightningModule):
     _enas_note = """
-    The implementation of ENAS :cite:p:`pham2018efficient`. There are 2 steps in an epoch.
-    Firstly, training model parameters.
-    Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
+    RL controller learns to generate the best network on a super-net. See `ENAS paper <https://arxiv.org/abs/1802.03268>`__.
+
+    There are 2 steps in an epoch.
+
+    - Firstly, training model parameters.
+    - Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
+
+    ENAS requires the evaluator to report metrics via ``self.log`` in its ``validation_step``.
+    See explanation of ``reward_metric_name`` for details.
+
+    The supported mutation primitives of ENAS are:
+
+    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
+    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
+    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
+    * :class:`nni.retiarii.nn.pytorch.Repeat`.
+    * :class:`nni.retiarii.nn.pytorch.Cell`.
+    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
 
     {{module_notes}}
 
@@ -94,7 +122,10 @@ class EnasLightningModule(RandomSamplingLightningModule):
         If there are multiple, it will find the metric with key name ``reward_metric_name``,
         which is "default" by default.
         Otherwise it raises an exception indicating multiple metrics are found.
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+    """.format(
+        base_params=BaseOneShotLightningModule._mutation_hooks_note,
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+    )
 
     __doc__ = _enas_note.format(
         module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.',

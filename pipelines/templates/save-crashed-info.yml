@@ -1,0 +1,52 @@
+# Upload crashed experiments to artifact,
+# so that further offline investigations are possible.
+
+parameters:
+- name: remote
+  type: boolean
+  default: false
+
+steps:
+
+- script: |
+    set -e
+    export EXPERIMENT_DIR=$(readlink -f ~/nni-experiments/_latest)
+    echo "Latest experiment directory: ${EXPERIMENT_DIR}"
+    echo "##vso[task.setvariable variable=experiment_dir]${EXPERIMENT_DIR}"
+  condition: and(failed(), not(contains(variables['Agent.OS'], 'Windows')))
+  displayName: (failed) (POSIX) Latest experiment directory
+
+- script: |
+    set -e
+    export EXPERIMENT_ID=$(echo ${EXPERIMENT_DIR} | sed -e 's/\/.*\///g')
+    sudo docker cp $(Build.BuildId):/tmp/nni-experiments/${EXPERIMENT_ID} ${EXPERIMENT_DIR}/remote && echo "Copy successful" || echo "Copy failed"
+  condition: and(variables['experiment_dir'], ${{ parameters.remote }}, not(contains(variables['Agent.OS'], 'Windows')))
+  displayName: (failed) (POSIX) Harvest remote trial logs
+
+- powershell: |
+    $latestDir = (gci ~/nni-experiments -exclude _latest | ? { $_.PSIsContainer } | sort CreationTime)[-1]
+    echo "Latest experiment directory: $latestDir"
+    echo "##vso[task.setvariable variable=experiment_dir]$latestDir"
+  condition: and(failed(), contains(variables['Agent.OS'], 'Windows'))
+  displayName: (failed) (Windows) Latest experiment directory
+
+- powershell: |
+    $latestDir = Get-Item $(experiment_dir)
+    $experimentId = $latestDir.name
+    $remotePath = "C:\Users\nniuser\AppData\Local\Temp\nni-experiments\${experimentId}"
+    $destPath = "${latestDir}\remote"
+
+    if (Test-Path $remotePath) {
+      Write-Host "Copying $remotePath to $destPath"
+      Copy-Item $remotePath -Destination $destPath -Recurse
+    }
+    else {
+      Write-host "$remotePath doesn't exist"
+    }
+  condition: and(variables['experiment_dir'], ${{ parameters.remote }}, contains(variables['Agent.OS'], 'Windows'))
+  displayName: (failed) (Windows) Harvest remote trial logs
+
+- publish: $(experiment_dir)
+  artifact: experiment
+  condition: variables['experiment_dir']
+  displayName: (failed) Upload experiment artifact

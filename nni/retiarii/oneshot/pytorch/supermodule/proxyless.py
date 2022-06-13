@@ -18,6 +18,8 @@ import torch.nn as nn
 
 from .differentiable import DifferentiableMixedLayer, DifferentiableMixedInput
 
+__all__ = ['ProxylessMixedLayer', 'ProxylessMixedInput']
+
 
 class _ArchGradientFunction(torch.autograd.Function):
     @staticmethod

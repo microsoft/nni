@@ -7,6 +7,8 @@ from typing import Any
 
 from pytorch_lightning.trainer.supporters import CombinedLoader, CombinedLoaderIterator
 
+__all__ = ['ConcatLoader']
+
 
 class ConcatLoader(CombinedLoader):
     """This loader is same as CombinedLoader in PyTorch-Lightning, but concatenate sub-loaders

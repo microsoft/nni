@@ -92,6 +92,7 @@ export interface DlcConfig extends TrainingServiceConfig {
     podCount: number;
     ecsSpec: string;
     region: string;
+    workspaceId: string;
     nasDataSourceId: string;
     ossDataSourceId?: string;
     accessKeyId: string;

@@ -1,0 +1,115 @@
+steps:
+- script: |
+    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  displayName: Install azcli
+
+# Please follow the tutorial of [image builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview)
+# to set up a managed identity, and,
+# 1. Assign the role following the instruction.
+# 2. Assign contributor role of the resource group to the identity.
+# 3. Add the identity to VMSS.
+- script: |
+    az login --identity --allow-no-subscriptions --username $(identity_id)
+  displayName: Login to Azure
+
+# Make sure all these are registered.
+# If not, might need az provider register -n xxx
+# Need subscription-write access.
+
+- script: |
+    set -e
+    az provider show -n Microsoft.VirtualMachineImages -o json
+    az provider show -n Microsoft.KeyVault -o json
+    az provider show -n Microsoft.Compute -o json
+    az provider show -n Microsoft.Storage -o json
+    az provider show -n Microsoft.Network -o json
+  displayName: Register features
+
+# Need to create an image gallerybefore this.
+# Only need to create once.
+# az sig create --resource-group <resource_group> --gallery-name <sig_name>
+
+# Add a image definition (also only once).
+# az sig image-definition create -g <resource_group> \
+#   --gallery-name <sig_name> \
+#   --gallery-image-definition <image_def>
+#
+# For example,
+# az sig image-definition create -g nni --gallery-name nniImageGallery \
+#   --gallery-image-definition nniLinuxImage \
+#   --publisher NNI \
+#   --offer ubuntu \
+#   --sku 20_04-nni \
+#   --os-type Linux \
+#   --hyper-v-generation V2
+
+- script: |
+    set -e
+    set -x
+    az image list -g $(resource_group)
+    if az image list -g $(resource_group) --query [].'name' | grep -q $(managed_image_name); then
+      az image delete -n $(managed_image_name) -g $(resource_group)
+    fi
+  displayName: List existing images (and delete)
+
+- script: |
+    set -e
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+    sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    sudo apt-get update && sudo apt-get install packer
+  displayName: Install packer
+
+- script: |
+    set -e
+    cd test/vso_tools/build_vm
+    export IP_ADDRESS=$(curl -s ifconfig.me)
+    export VERSION=$(date "+%Y").$(date "+%m%d").$(date "+%H%M%S")
+    export CONFIG_PATH=$(packer_config).json
+    sed -i -e "s/<client_id>/$(identity_id)/g" $CONFIG_PATH
+    sed -i -e "s/<subscription_id>/$(subscription_id)/g" $CONFIG_PATH
+    sed -i -e "s/<managed_image_name>/$(managed_image_name)/g" $CONFIG_PATH
+    sed -i -e "s/<resource_group>/$(resource_group)/g" $CONFIG_PATH
+    sed -i -e "s/<network_security_group>/$(network_security_group)/g" $CONFIG_PATH
+    sed -i -e "s/<gallery_name>/$(gallery_name)/g" $CONFIG_PATH
+    sed -i -e "s/<image_name>/$(image_definition_name)/g" $CONFIG_PATH
+    sed -i -e "s/<image_version>/${VERSION}/g" $CONFIG_PATH
+    sed -i -e "s/<ip_address>/${IP_ADDRESS}/g" $CONFIG_PATH
+    cat $CONFIG_PATH
+    echo "##vso[task.logissue type=warning]During packer build, please avoid cancelling this task. Otherwise, created resources might need manual cleanup."
+  displayName: Prepare configuration
+
+# Microsoft has a security group for VM created under their subscriptions, that,
+# based on my observations (though I had no clearance to see it myself):
+# 1. A low priority deny all that denies all unintended incoming traffic.
+# 2. A medium-high priority denial for all traffic coming from small ports (lower than 8000 probably).
+# 3. A high priority allowance for traffics from Microsoft-internal IPs.
+#
+# We can only insert new rules below medium. Therefore,
+# 1. For Linux, we change the ssh port to 10022. This is done at provisioning by injecting user / custom data.
+# 2. For Windows, they can't execute the user data script: https://stackoverflow.com/questions/62888359/custom-data-with-azure-windows-vm-run-powersell-script
+#    We can't use custom script extensions either because it's not supported in packer.
+#    We also can't use shell-local provisioner to invoke command, because when the VM is ready, packer always try to connect to WinRM.
+#    The workaround here is to use a monitor to detect the machine ready signal and change its WinRM port.
+- script: |
+    cd test/vso_tools/build_vm
+    python3 packer_build_windows.py
+  displayName: (Windows) Packer build
+  condition: and(succeeded(), contains(variables['packer_config'], 'windows'))
+
+- script: |
+    cd test/vso_tools/build_vm
+    PACKER_LOG=1 packer build $(packer_config).json
+  displayName: (Linux) Packer build
+  condition: and(succeeded(), contains(variables['packer_config'], 'linux'))
+
+# TODO: Should delete the managed image after build is done.
+# Image gallery alone is enough. Keeping it for now for debugging purposes.
+
+# To deploy the image on VMSS, run this in Cloud Shell:
+# az vmss update --resource-group nni --name nni-windows-it \
+#   --set virtualMachineProfile.storageProfile.imageReference.id=/subscriptions/{subscriptionId}/resourceGroups/nni/providers/Microsoft.Compute/galleries/nniImageGallery/images/nniWindowsImage/versions/Latest
+#
+# Probably need to enlarge the disk size, in case it's too small:
+# az vmss update -n nni-it -g nni --set virtualMachineProfile.storageProfile.osDisk.diskSizeGb=50
+#
+# No need to update the image every time, because it's already set to latest.

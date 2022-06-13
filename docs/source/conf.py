@@ -53,6 +53,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.bibtex',
+    'sphinxcontrib.youtube',
     # 'nbsphinx',  # nbsphinx has conflicts with sphinx-gallery.
     'sphinx.ext.extlinks',
     'IPython.sphinxext.ipython_console_highlighting',
@@ -109,6 +110,7 @@ linkcheck_ignore = [
     r'https://www\.msra\.cn/',                              # MSRA
     r'https://1drv\.ms/',                                   # OneDrive (shortcut)
     r'https://onedrive\.live\.com/',                        # OneDrive
+    r'https://www\.openml\.org/',                           # OpenML
 ]
 
 # Ignore all links located in release.rst

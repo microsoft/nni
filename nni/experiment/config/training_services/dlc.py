@@ -17,6 +17,7 @@ class DlcConfig(TrainingServiceConfig):
     pod_count: int
     ecs_spec: str # e.g.,'ecs.c6.large'
     region: str
+    workspace_id: str
     nas_data_source_id: str
     oss_data_source_id: Optional[str] = None
     access_key_id: str

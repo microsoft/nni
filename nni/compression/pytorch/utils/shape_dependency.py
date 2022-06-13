@@ -20,7 +20,7 @@ MUL_TYPES = ['aten::mul', 'atem::mul_']
 CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
 RESHAPE_OPS = [CAT_TYPE, 'aten::view',
-               'aten::reshape', 'aten::flatten', 'aten::mean', 'aten::expand_as']
+               'aten::reshape', 'aten::flatten', 'aten::mean', 'aten::expand_as', 'aten::pixel_shuffle']
 
 
 def lcm_list(L):
@@ -85,6 +85,11 @@ def reshape_break_channel_dependency(op_node):
     """
     in_shape = op_node.auxiliary['in_shape']
     out_shape = op_node.auxiliary['out_shape']
+    # FIXME: e.g., in_shape will be None if the input comes from a buffer, should be fixed in next release
+    if not in_shape or not out_shape:
+        return True
+    if len(in_shape) <= 1 or len(out_shape) <= 1:
+        return True
     in_channel = in_shape[1]
     out_channel = out_shape[1]
     return in_channel != out_channel
