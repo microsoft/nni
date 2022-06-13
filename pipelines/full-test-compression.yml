@@ -1,26 +1,50 @@
 trigger: none
-pr: none
+
 # schedules:
 # - cron: 0 16 * * *
 #   branches:
 #     include: [ master ]
 
-jobs:
-- job: linux
-  pool: nni-it
-  timeoutInMinutes: 60
+resources:
+  repositories:
+    - repository: azpfilter
+      type: github
+      name: microsoft/azure-pipeline-filter
+      endpoint: github-filter-connection
 
-  steps:
-  - template: templates/install-dependencies.yml
-    parameters:
-      platform: ubuntu-latest-gpu
-      python_env: venv
+variables:
+  filter.modified.globs: 'examples/model_compress/**,nni/algorithms/compression/**,nni/compression/**'
+  filter.prbody.heading: '#### Test Options'
+  filter.prbody.optionIndex: 3
 
-  - template: templates/install-nni.yml
+stages:
+- stage: filter
+  jobs:
+  - job: check
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - template: templates/stage-filter.yml
 
-  - template: templates/download-test-data.yml
+- stage: test
+  # dependencies.$(StageName).outputs['$(JobName).$(TaskName).$(VariableName)']
+  condition: and(succeeded(), ne(dependencies.filter.outputs['check.execution.skipsubsequent'], 'true'))
+  jobs:
+  - job: linux
+    pool: nni-it
+    timeoutInMinutes: 60
 
-  - script: |
-      cd test
-      source scripts/model_compression.sh
-    displayName: Model compression test
+    steps:
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: ubuntu-latest-gpu
+        python_env: venv
+
+    - template: templates/install-nni.yml
+
+    - template: templates/download-test-data.yml
+
+    - script: |
+        cd test
+        source scripts/model_compression.sh
+      displayName: Model compression test
