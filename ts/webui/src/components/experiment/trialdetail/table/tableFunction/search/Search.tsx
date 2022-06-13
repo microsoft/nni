@@ -6,7 +6,8 @@ import {
     IContextualMenuProps,
     IContextualMenuItem,
     DirectionalHint,
-    SearchBox
+    SearchBox,
+    PrimaryButton
 } from '@fluentui/react';
 import { EXPERIMENT } from '@static/datamodel';
 import { SearchItems } from '@static/interface';
@@ -296,7 +297,7 @@ function Search(props): any {
                 <DefaultButton text='Filter' menuProps={searchMenuProps} />
                 {/* search input: store filter conditons, also, user could input filter conditions, could search */}
                 <SearchBox
-                    styles={{ root: { width: 530 } }}
+                    styles={{ root: { width: 400 } }}
                     placeholder='Search'
                     onChange={updateSearchText}
                     value={searchInputVal}
@@ -304,6 +305,7 @@ function Search(props): any {
                     onEscape={clearFliter}
                     onClear={clearFliter}
                 />
+                <PrimaryButton text='Search' onClick={startFilter} />
             </Stack>
         </div>
     );
