@@ -282,7 +282,6 @@ function Search(props): any {
             }
         }
 
-        console.info(newSearchFilter); // eslint-disable-line
         changeTableListPage(newSearchFilter);
     }
 
