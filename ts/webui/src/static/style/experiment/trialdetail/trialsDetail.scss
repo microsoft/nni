@@ -99,7 +99,7 @@
 }
 
 .default-metric {
-    width: 90%;
+    width: 93%;
     text-align: right;
     margin-top: 15px;
 
@@ -129,9 +129,13 @@
     .xAxis {
         position: absolute;
         left: 50%;
-        top: 88%;
+        top: 80%;
         transform: translate(-50%);
     }
+}
+
+.intermeidateconfirm .ms-Button-textContainer {
+    margin-top: -1px;
 }
 
 .detail-table {
