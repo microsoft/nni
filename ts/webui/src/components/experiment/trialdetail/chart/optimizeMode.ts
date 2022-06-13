@@ -1,10 +1,6 @@
 function optimizeModeValue(optimizeMode: string) {
-    if (optimizeMode === 'unknown') {
-        // this value is from experiment.ts file optimizeMode function
-        return 'maximize';
-    } else {
-        return optimizeMode;
-    }
+    // 'unknown' value is from experiment.ts file optimizeMode function
+    return optimizeMode === 'unknown' ? 'maximize' : optimizeMode;
 }
 
 export { optimizeModeValue };
