@@ -60,7 +60,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
     )
 
     __doc__ = _darts_note.format(
-        module_notes='The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.',
+        module_notes='The DARTS Module should be trained with :class:`pytorch_lightning.trainer.supporters.CombinedLoader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
@@ -161,7 +161,7 @@ class ProxylessLightningModule(DartsLightningModule):
     """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
     __doc__ = _proxyless_note.format(
-        module_notes='This module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.',
+        module_notes='This module should be trained with :class:`pytorch_lightning.trainer.supporters.CombinedLoader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 

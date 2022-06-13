@@ -115,7 +115,7 @@ def _slice_weight(weight: T, slice_: multidim_slice | list[tuple[multidim_slice,
         # this saves an op on computational graph, which will hopefully make training faster
 
         # Use a dummy array to check this. Otherwise it would be too complex.
-        dummy_arr = np.zeros(weight.shape, dtype=np.bool)  # type: ignore
+        dummy_arr = np.zeros(weight.shape, dtype=bool)  # type: ignore
         no_effect = cast(Any, _do_slice(dummy_arr, slice_)).shape == dummy_arr.shape
 
         if no_effect:

@@ -78,6 +78,46 @@ def test_valuechoice_utils():
     for value, weight in ans.items():
         assert abs(weight - weights[value]) < 1e-6
 
+    assert evaluate_constant(ValueChoice([3, 4, 6], label='x') - ValueChoice([3, 4, 6], label='x')) == 0
+    with pytest.raises(ValueError):
+        evaluate_constant(ValueChoice([3, 4, 6]) - ValueChoice([3, 4, 6]))
+
+    assert evaluate_constant(ValueChoice([3, 4, 6], label='x') * 2 / ValueChoice([3, 4, 6], label='x')) == 2
+
+
+def test_weighted_sum():
+    weights = [0.1, 0.2, 0.7]
+    items = [1, 2, 3]
+    assert abs(weighted_sum(items, weights) - 2.6) < 1e-6
+
+    assert weighted_sum(items) == 6
+
+    with pytest.raises(TypeError, match='Unsupported'):
+        weighted_sum(['a', 'b', 'c'], weights)
+
+    assert abs(weighted_sum(np.arange(3), weights).item() - 1.6) < 1e-6
+
+    items = [torch.full((2, 3, 5), i) for i in items]
+    assert abs(weighted_sum(items, weights).flatten()[0].item() - 2.6) < 1e-6
+
+    items = [torch.randn(2, 3, i) for i in [1, 2, 3]]
+    with pytest.raises(ValueError, match=r'does not match.*\n.*torch\.Tensor\(2, 3, 1\)'):
+        weighted_sum(items, weights)
+
+    items = [(1, 2), (3, 4), (5, 6)]
+    res = weighted_sum(items, weights)
+    assert len(res) == 2 and abs(res[0] - 4.2) < 1e-6 and abs(res[1] - 5.2) < 1e-6
+
+    items = [(1, 2), (3, 4), (5, 6, 7)]
+    with pytest.raises(ValueError):
+        weighted_sum(items, weights)
+
+    items = [{"a": i, "b": np.full((2, 3, 5), i)} for i in [1, 2, 3]]
+    res = weighted_sum(items, weights)
+    assert res['b'].shape == (2, 3, 5)
+    assert abs(res['b'][0][0][0] - res['a']) < 1e-6
+    assert abs(res['a'] - 2.6) < 1e-6
+
 
 def test_pathsampling_valuechoice():
     orig_conv = Conv2d(3, ValueChoice([3, 5, 7], label='123'), kernel_size=3)
@@ -146,6 +186,26 @@ def test_mixed_conv2d():
     # groups, dw conv
     conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 6, 9], label='in'))
     assert _mixed_operation_sampling_sanity_check(conv, {'in': 6}, torch.randn(2, 6, 10, 10)).size() == torch.Size([2, 6, 10, 10])
+
+    # groups, invalid case
+    conv = Conv2d(ValueChoice([9, 6, 3], label='in'), ValueChoice([9, 6, 3], label='in'), 1, groups=9)
+    with pytest.raises(RuntimeError):
+        assert _mixed_operation_sampling_sanity_check(conv, {'in': 6}, torch.randn(2, 6, 10, 10))
+
+    # groups, differentiable
+    conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='out'), 1, groups=ValueChoice([3, 6, 9], label='in'))
+    _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 9, 3, 3))
+
+    conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 6, 9], label='in'))
+    _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 9, 3, 3))
+
+    with pytest.raises(ValueError):
+        conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 9], label='groups'))
+        _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 9, 3, 3))
+
+    with pytest.raises(RuntimeError):
+        conv = Conv2d(ValueChoice([3, 6, 9], label='in'), ValueChoice([3, 6, 9], label='in'), 1, groups=ValueChoice([3, 6, 9], label='in') // 3)
+        _mixed_operation_differentiable_sanity_check(conv, torch.randn(2, 10, 3, 3))
 
     # make sure kernel is sliced correctly
     conv = Conv2d(1, 1, ValueChoice([1, 3], label='k'), bias=False)
@@ -238,13 +298,18 @@ def test_differentiable_layer_input():
     assert op.export({})['eee'] in ['a', 'b']
     assert len(list(op.parameters())) == 3
 
+    with pytest.raises(ValueError):
+        op = DifferentiableMixedLayer([('a', Linear(2, 3)), ('b', Linear(2, 4))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), 'eee')
+        op(torch.randn(4, 2))
+
     input = DifferentiableMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
     assert input([torch.randn(4, 2) for _ in range(5)]).size(-1) == 2
     assert len(input.export({})['ddd']) == 2
 
 
 def test_proxyless_layer_input():
-    op = ProxylessMixedLayer([('a', Linear(2, 3, bias=False)), ('b', Linear(2, 3, bias=True))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), 'eee')
+    op = ProxylessMixedLayer([('a', Linear(2, 3, bias=False)), ('b', Linear(2, 3, bias=True))], nn.Parameter(torch.randn(2)),
+                             nn.Softmax(-1), 'eee')
     assert op.resample({})['eee'] in ['a', 'b']
     assert op(torch.randn(4, 2)).size(-1) == 3
     assert op.export({})['eee'] in ['a', 'b']
@@ -285,6 +350,31 @@ def test_differentiable_repeat():
     assert op(torch.randn(2, 8)).size() == torch.Size([2, 16])
     sample = op.export({})
     assert 'ccc' in sample and sample['ccc'] in [0, 1]
+
+    class TupleModule(nn.Module):
+        def __init__(self, num):
+            super().__init__()
+            self.num = num
+
+        def forward(self, *args, **kwargs):
+            return torch.full((2, 3), self.num), torch.full((3, 5), self.num), {'a': 7, 'b': [self.num] * 11}
+
+    class CustomSoftmax(nn.Softmax):
+        def forward(self, *args, **kwargs):
+            return [0.3, 0.3, 0.4]
+
+    op = DifferentiableMixedRepeat(
+        [TupleModule(i + 1) for i in range(4)],
+        ValueChoice([1, 2, 4], label='ccc'),
+        CustomSoftmax(),
+        {}
+    )
+    op.resample({})
+    res = op(None)
+    assert len(res) == 3
+    assert res[0].shape == (2, 3) and res[0][0][0].item() == 2.5
+    assert res[2]['a'] == 7
+    assert len(res[2]['b']) == 11 and res[2]['b'][-1] == 2.5
 
 
 def test_pathsampling_cell():
@@ -363,4 +453,3 @@ def test_differentiable_cell():
         else:
             # no loose-end support for now
             assert output.shape == torch.Size([2, 16 * model.cell.num_nodes])
-
