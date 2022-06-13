@@ -77,7 +77,7 @@ class BankSparsityAllocator(SparsityAllocator):
                 index_str_list = [f"{iter_param * gran}:{(iter_param+1) * gran}"\
                      for iter_param, gran in zip(iter_params, balance_gran)]
                 index_str = ",".join(index_str_list)
-                sub_metric_str = "metric[{}]".format(index_str)
+                sub_metric_str = "target_metric[{}]".format(index_str)
                 sub_mask_str =  "shrinked_mask[{}] = mask_bank".format(index_str)
                 metric_bank: Tensor = eval(sub_metric_str)
                 prune_num = int(sparsity_rate * metric_bank.numel())
