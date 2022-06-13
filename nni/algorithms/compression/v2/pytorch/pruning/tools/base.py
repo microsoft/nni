@@ -317,25 +317,29 @@ class SparsityAllocator:
     scalors
         Scalor is used to scale the masks' size. It shrinks the mask of the same size as the pruning target to the same size as the metric,
         or expands the mask of the same size as the metric to the same size as the pruning target.
-        If you want to use different scalors for different pruning targets, please use a dict `{target_name: scalor}`.
-        If allocator meets an unspecified target, it will try to use `scalors['_default']` to scale its mask.
-        Passing in a scalor instead of a `dict` of scalors will be treated as passed in `{'_default': scalor}`.
+        If you want to use different scalors for different pruning targets in different modules, please use a dict `{module_name: {target_name: scalor}}`.
+        If allocator meets an unspecified module name, it will try to use `scalors['_default'][target_name]` to scale its mask.
+        If allocator meets an unspecified target name, it will try to use `scalors[module_name]['_default']` to scale its mask.
+        Passing in a scalor instead of a `dict` of scalors will be treated as passed in `{'_default': {'_default': scalors}}`.
         Passing in `None` means no need to scale.
     continuous_mask
         If set True, the part that has been masked will be masked first.
         If set False, the part that has been masked may be unmasked due to the increase of its corresponding metric.
     """
 
-    def __init__(self, pruner: Pruner, scalors: Dict[str, Scaling] | Scaling | None = None, continuous_mask: bool = True):
+    def __init__(self, pruner: Pruner, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None, continuous_mask: bool = True):
         self.pruner = pruner
-        self.scalors: Dict[str, Scaling] | None = scalors if isinstance(scalors, (dict, type(None))) else {'_default': scalors}  # type: ignore
+        self.scalors: Dict[str, Dict[str, Scaling]] | None = scalors if isinstance(scalors, (dict, type(None))) else {'_default': {'_default': scalors}}  # type: ignore
         self.continuous_mask = continuous_mask
 
     def _get_scalor(self, module_name: str, target_name: str) -> Scaling | None:
         # Get scalor for the specific target in the specific module. Return None if don't find it.
-        # `module_name` is not used in current version, will support different modules using different scalors in the future.
+        # `module_name` is not used in current nni version, will support different modules using different scalors in the future.
         if self.scalors:
-            return self.scalors.get(target_name, self.scalors.get('_default', None))
+            default_module_scalors = self.scalors.get('_default', {})
+            default_target_scalor = default_module_scalors.get(target_name, default_module_scalors.get('_default', None))
+            module_scalors = self.scalors.get(module_name, {})
+            return module_scalors.get(target_name, module_scalors.get('_default', default_target_scalor))
         else:
             return None
 
