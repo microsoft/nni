@@ -37,9 +37,9 @@ class NormMetricsCalculator(MetricsCalculator):
         super().__init__(scalors=scalors)
         self.p = p if p is not None else 'fro'
 
-    def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
+    def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
         def reduce_func(t: Tensor) -> Tensor:
-            return t.norm(p=self.p, dim=-1)
+            return t.norm(p=self.p, dim=-1)  # type: ignore
 
         metrics = {}
         target_name = 'weight'
@@ -76,7 +76,7 @@ class DistMetricsCalculator(MetricsCalculator):
             reshape_data = t.reshape(-1, t.shape[-1])
             metric = torch.zeros(reshape_data.shape[0], device=reshape_data.device)
             for i in range(reshape_data.shape[0]):
-                metric[i] = (reshape_data - reshape_data[i]).norm(p=self.p, dim=-1).sum()
+                metric[i] = (reshape_data - reshape_data[i]).norm(p=self.p, dim=-1).sum()  # type: ignore
             return metric.reshape(t.shape[:-1])
 
         metrics = {}

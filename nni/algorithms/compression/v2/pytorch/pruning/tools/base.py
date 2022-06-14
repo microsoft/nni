@@ -258,7 +258,7 @@ class MetricsCalculator:
     def __init__(self, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
         self.scalors: Dict[str, Dict[str, Scaling]] | None = scalors if isinstance(scalors, (dict, type(None))) else {'_default': {'_default': scalors}}  # type: ignore
 
-    def _get_scalor(self, module_name: str, target_name: str) -> Scaling | None:
+    def _get_scalor(self, module_name: str, target_name: str) -> Scaling:
         # Get scalor for the specific target in the specific module. Return Scaling([1]) (finegrained) if don't find it.
         # `module_name` is not used in current nni version, will support different modules using different scalors in the future.
         if self.scalors:
