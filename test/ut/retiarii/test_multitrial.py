@@ -97,20 +97,18 @@ def _test_dry_run(rootpath):
 
 
 def test_exp_exit_without_stop(pytestconfig):
-    # process = multiprocessing.Process(
-    #     target=_test_dry_run,
-    #     kwargs=dict(rootpath=pytestconfig.rootpath)
-    # )
-    # process.start()
-    # print('Waiting for first dry run in sub-process.')
-    # timeout = 300
-    # for _ in range(timeout):
-    #     if process.is_alive():
-    #         time.sleep(1)
-    #     else:
-    #         assert process.exitcode == 0
-    #         return
-    # process.kill()
+    process = multiprocessing.Process(
+        target=_test_dry_run,
+        kwargs=dict(rootpath=pytestconfig.rootpath)
+    )
+    process.start()
+    print('Waiting for first dry run in sub-process.')
+    while True:
+        if process.is_alive():
+            time.sleep(1)
+        else:
+            assert process.exitcode == 0
+            break
 
     process = multiprocessing.Process(
         target=_test_experiment_in_separate_process,
