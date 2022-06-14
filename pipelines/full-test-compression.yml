@@ -48,7 +48,7 @@ stages:
         set -e
         mkdir -p coverage
         cd test/algo
-        python -m pytest ut
+        python -m pytest compression
       displayName: compression unit test
 
     - script: |
