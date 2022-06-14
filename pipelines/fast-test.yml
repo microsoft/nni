@@ -13,6 +13,23 @@ variables:
   filter.prbody.optionIndex: 0
 
 stages:
+
+- stage: debug
+  jobs:
+
+  - job: debug
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: ubuntu-latest
+
+    - script: |
+        cd test
+        PYTHONPATH=.. python ut/retiarii/test_debug.py
+
+
 - stage: lint
   jobs:
 
