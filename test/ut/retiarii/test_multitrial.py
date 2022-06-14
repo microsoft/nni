@@ -12,6 +12,15 @@ from .test_oneshot import _mnist_net
 pytestmark = pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
 
 
+def _trial_params(rootpath):
+    params = {}
+    if sys.platform == 'windows':
+        params['envs'] = f'set PYTHONPATH={rootpath} && '
+    else:
+        params['envs'] = f'PYTHONPATH={rootpath}:$PYTHONPATH'
+    return params
+
+
 def ensure_success(exp: RetiariiExperiment):
     # check experiment directory exists
     exp_dir = os.path.join(
@@ -51,9 +60,7 @@ def test_multi_trial(model, pytestconfig):
     exp_config.experiment_name = 'mnist_unittest'
     exp_config.trial_concurrency = 1
     exp_config.max_trial_number = 1
-    exp_config.trial_command_params = {
-        'envs': f'PYTHONPATH={pytestconfig.rootpath}:$PYTHONPATH'
-    }
+    exp_config.trial_command_params = _trial_params(pytestconfig.rootpath)
     exp.run(exp_config)
     ensure_success(exp)
     assert isinstance(exp.export_top_models()[0], dict)
@@ -69,9 +76,7 @@ def _test_experiment_in_separate_process(rootpath):
         exp_config.experiment_name = 'mnist_unittest'
         exp_config.trial_concurrency = 1
         exp_config.max_trial_number = 1
-        exp_config.trial_command_params = {
-            'envs': f'PYTHONPATH={rootpath}:$PYTHONPATH'
-        }
+        exp_config.trial_command_params = _trial_params(rootpath)
         exp.run(exp_config)
         ensure_success(exp)
         assert isinstance(exp.export_top_models()[0], dict)
