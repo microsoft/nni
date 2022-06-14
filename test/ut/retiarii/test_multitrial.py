@@ -14,7 +14,7 @@ pytestmark = pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible API
 
 def _trial_params(rootpath):
     params = {}
-    if sys.platform == 'windows':
+    if sys.platform == 'win32':
         params['envs'] = f'set PYTHONPATH={rootpath} && '
     else:
         params['envs'] = f'PYTHONPATH={rootpath}:$PYTHONPATH'
@@ -94,7 +94,7 @@ def test_exp_exit_without_stop(pytestconfig):
     )
     process.start()
     print('Waiting for experiment in sub-process.')
-    for _ in range(600):
+    for _ in range(300):
         if process.is_alive():
             time.sleep(1)
         else:
