@@ -771,6 +771,11 @@ def _get_cls_or_func_name(cls_or_func: Any) -> str:
 
 
 def get_hybrid_cls_or_func_name(cls_or_func: Any, pickle_size_limit: int = 4096) -> str:
+    """Pickle a class or function object to a string.
+    
+    It will first try to picklize the object with an importable path.
+    If that doesn't work out, it fallbacks to cloudpickle.
+    """
     try:
         name = _get_cls_or_func_name(cls_or_func)
         # import success, use a path format
