@@ -121,7 +121,7 @@ class Scaling:
 
         # step 3: reduce the dims where kernel_size is -1.
         # e.g., target size is [10, 40], kernel_size is [-1, 4], result size is [1, 10], then reduce result to size [10].
-        result = reduce(lambda t, dim: t.squeeze(dim), [result] + reduced_dims)
+        result = reduce(lambda t, dim: t.squeeze(dim), [result] + reduced_dims)  # type: ignore
 
         return result
 
