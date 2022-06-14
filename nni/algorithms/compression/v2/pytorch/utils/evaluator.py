@@ -1,5 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from __future__ import annotations
 
+import logging
 import types
 from typing import Dict, List, Tuple, Union, Any, Callable, Optional
 
@@ -13,6 +17,8 @@ from pytorch_lightning.callbacks import Callback
 
 from nni.common import is_traceable
 from .constructor_helper import OptimizerConstructHelper
+
+_logger = logging.getLogger(__name__)
 
 
 class Hook:
@@ -28,16 +34,14 @@ class Hook:
 
     def register(self, buffer: List):
         if self.handle is not None:
-            # FIXME: use logger
-            print(f'{self.__class__.__name__} for {self.target_name} already has been registered.')
+            _logger.warning('%s for %s already has been registered.', self.__class__.__name__, self.target_name)
             return
         self.buffer = buffer
         self.handle = self._register(self.hook_factory(buffer))
 
     def remove(self):
         if self.handle is None:
-            # FIXME: use logger
-            print(f'{self.__class__.__name__} for {self.target_name} has not been registered yet.')
+            print('%s for %s has not been registered yet.', self.__class__.__name__, self.target_name)
             return
         self.handle.remove()
         self.handle = None
@@ -133,8 +137,7 @@ class LightningEvaluator(Evaluator):
             optimizer: Optimizer = pure_model.configure_optimizers()
             self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer)]
         else:
-            # FIXME: use logger
-            print(f'{self.__class__.__name__} already have initialized optimizer helpers.')
+            _logger.warning('%s already have initialized optimizer helpers.', self.__class__.__name__)
 
     def bind_model(self, model: pl.LightningModule, param_name_map: Optional[Dict[str, str]] = None):
         assert isinstance(model, pl.LightningModule)
@@ -282,8 +285,7 @@ class LegacyEvaluator(Evaluator):
             self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in self._traced_optimizers]
             self._traced_optimizers.clear()
         else:
-            # FIXME: use logger
-            print(f'{self.__class__.__name__} already have initialized optimizer helper.')
+            _logger.warning('%s already have initialized optimizer helper.', self.__class__.__name__)
 
     def bind_model(self, model: Module, param_name_map: Optional[Dict[str, str]] = None):
         assert isinstance(model, Module)
