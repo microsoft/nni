@@ -63,7 +63,7 @@ stages:
       parameters:
         user: false
 
-    - template: templates/download-test-data.yml
+    # - template: templates/download-test-data.yml
 
     - powershell: |
         python test/vso_tools/ssl_patch.py
