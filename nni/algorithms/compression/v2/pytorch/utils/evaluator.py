@@ -22,6 +22,20 @@ _logger = logging.getLogger(__name__)
 
 
 class Hook:
+    """
+    The base class used to generate, register and remove torch hook.
+
+    Parameters
+    ----------
+    target
+        The hook target, a torch.Tensor or a torch.nn.Module.
+    target_name
+        The name of the target, use periods to separate, e.g., 'model.layers.0.conv1.weight'.
+    hook_factory
+        A factory fucntion, input is a list buffer, output is a hook function.
+        The buffer is used to store some useful information in hook.
+    """
+
     def __init__(self, target: Module | Tensor, target_name: str, hook_factory: Callable[[List], Callable]):
         self.target = target
         self.target_name = target_name
@@ -107,7 +121,7 @@ class Evaluator:
     def finetune(self):
         raise NotImplementedError
 
-    def evaluate(self) -> Tuple[float, Any]:
+    def evaluate(self) -> float | Tuple[float, Any]:
         """
         Note that the first item of the returned value will be used as the default metric used by NNI.
         """
@@ -352,7 +366,7 @@ class LegacyEvaluator(Evaluator):
         optimizer = self._optimizers[0]
         self.trainer(self.model, optimizer, self._criterion)
 
-    def evaluate(self) -> Tuple[float, Any]:
+    def evaluate(self) -> float | Tuple[float, Any]:
         """
         Note that the first item of the returned value will be used as the default metric used by NNI.
         """
