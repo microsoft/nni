@@ -13,7 +13,7 @@ resources:
       endpoint: github-filter-connection
 
 variables:
-  filter.modified.globs: 'examples/nas/**,nni/algorithms/nas/**,nni/nas/**,nni/retiarii/**'
+  filter.modified.globs: 'examples/nas/**,nni/algorithms/nas/**,nni/nas/**,nni/retiarii/**,pipelines/full-test-nas.yml'
   filter.prbody.heading: '#### Test Options'
   filter.prbody.optionIndex: 2
 
@@ -44,5 +44,28 @@ stages:
 
     - script: |
         cd test
-        source scripts/nas.sh
+        python -m pytest ut/retiarii
+      displayName: NAS test
+
+  - job: windows
+    pool: nni-it-windows
+    timeoutInMinutes: 60
+
+    steps:
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: windows
+        python_env: noop
+
+    - template: templates/install-nni.yml
+      parameters:
+        user: false
+
+    - powershell: |
+        python test/vso_tools/ssl_patch.py
+      displayName: SSL patch
+
+    - powershell: |
+        cd test
+        python -m pytest ut/retiarii
       displayName: NAS test
