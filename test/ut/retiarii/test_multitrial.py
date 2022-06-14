@@ -87,18 +87,39 @@ def _test_experiment_in_separate_process(rootpath):
         atexit._run_exitfuncs()
 
 
+def _test_dry_run(rootpath):
+    print('dry run', rootpath)
+    time.sleep(10)
+
+
 def test_exp_exit_without_stop(pytestconfig):
     process = multiprocessing.Process(
-        target=_test_experiment_in_separate_process,
+        target=_test_dry_run,
         kwargs=dict(rootpath=pytestconfig.rootpath)
     )
     process.start()
-    print('Waiting for experiment in sub-process.')
-    for _ in range(300):
+    print('Waiting for first dry run in sub-process.')
+    timeout = 300
+    for _ in range(timeout):
         if process.is_alive():
             time.sleep(1)
         else:
             assert process.exitcode == 0
             return
     process.kill()
-    raise RuntimeError('Experiment fails to stop in 600 seconds.')
+
+    process = multiprocessing.Process(
+        target=_test_experiment_in_separate_process,
+        kwargs=dict(rootpath=pytestconfig.rootpath)
+    )
+    process.start()
+    print('Waiting for experiment in sub-process.')
+    timeout = 300
+    for _ in range(timeout):
+        if process.is_alive():
+            time.sleep(1)
+        else:
+            assert process.exitcode == 0
+            return
+    process.kill()
+    raise RuntimeError(f'Experiment fails to stop in {timeout} seconds.')
