@@ -77,6 +77,7 @@ def _test_experiment_in_separate_process(rootpath):
         exp_config.trial_concurrency = 1
         exp_config.max_trial_number = 1
         exp_config.trial_command_params = _trial_params(rootpath)
+        print('Prepared to run experiment.')
         exp.run(exp_config)
         ensure_success(exp)
         assert isinstance(exp.export_top_models()[0], dict)
@@ -92,6 +93,7 @@ def test_exp_exit_without_stop(pytestconfig):
         kwargs=dict(rootpath=pytestconfig.rootpath)
     )
     process.start()
+    print('Waiting for experiment in sub-process.')
     for _ in range(600):
         if process.is_alive():
             time.sleep(1)
