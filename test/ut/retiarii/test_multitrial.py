@@ -99,8 +99,13 @@ def _test_experiment_in_separate_process(rootpath):
         atexit._run_exitfuncs()
 
 
+import nni
+from torchvision.datasets import MNIST
+
 def _test_dry_run(rootpath):
     print('dry run', rootpath)
+    train_dataset = nni.trace(MNIST)('data/mnist', train=True, transform=None)
+    print('dry run complete')
     time.sleep(10)
 
 
