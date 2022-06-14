@@ -35,35 +35,32 @@ def ensure_success(exp: RetiariiExperiment):
         raise RuntimeError('Experiment jobs did not all succeed.')
 
 
-def test_multi_trial():
+@pytest.mark.parametrize('model', [
+    'simple', 'simple_value_choice', 'value_choice', 'repeat', 'custom_op'
+])
+def test_multi_trial(model, pytestconfig):
     evaluator_kwargs = {
         'max_epochs': 1
     }
 
-    to_test = [
-        # (model, evaluator)
-        _mnist_net('simple', evaluator_kwargs),
-        _mnist_net('simple_value_choice', evaluator_kwargs),
-        _mnist_net('value_choice', evaluator_kwargs),
-        _mnist_net('repeat', evaluator_kwargs),
-        _mnist_net('custom_op', evaluator_kwargs),
-    ]
+    base_model, evaluator = _mnist_net(model, evaluator_kwargs)
 
-    for base_model, evaluator in to_test:
-        search_strategy = strategy.Random()
-        exp = RetiariiExperiment(base_model, evaluator, strategy=search_strategy)
-        exp_config = RetiariiExeConfig('local')
-        exp_config.experiment_name = 'mnist_unittest'
-        exp_config.trial_concurrency = 1
-        exp_config.max_trial_number = 1
-        exp_config.training_service.use_active_gpu = False
-        exp.run(exp_config, 8080)
-        ensure_success(exp)
-        assert isinstance(exp.export_top_models()[0], dict)
-        exp.stop()
+    search_strategy = strategy.Random()
+    exp = RetiariiExperiment(base_model, evaluator, strategy=search_strategy)
+    exp_config = RetiariiExeConfig('local')
+    exp_config.experiment_name = 'mnist_unittest'
+    exp_config.trial_concurrency = 1
+    exp_config.max_trial_number = 1
+    exp_config.trial_command_params = {
+        'envs': f'PYTHONPATH={pytestconfig.rootpath}:$PYTHONPATH'
+    }
+    exp.run(exp_config)
+    ensure_success(exp)
+    assert isinstance(exp.export_top_models()[0], dict)
+    exp.stop()
 
 
-def test_experiment_in_separate_process(rootpath):
+def _test_experiment_in_separate_process(rootpath):
     try:
         base_model, evaluator = _mnist_net('simple', {'max_epochs': 1})
         search_strategy = strategy.Random()
@@ -75,7 +72,7 @@ def test_experiment_in_separate_process(rootpath):
         exp_config.trial_command_params = {
             'envs': f'PYTHONPATH={rootpath}:$PYTHONPATH'
         }
-        exp.run(exp_config, 8080)
+        exp.run(exp_config)
         ensure_success(exp)
         assert isinstance(exp.export_top_models()[0], dict)
     finally:
@@ -86,7 +83,7 @@ def test_experiment_in_separate_process(rootpath):
 
 def test_exp_exit_without_stop(pytestconfig):
     process = multiprocessing.Process(
-        target=test_experiment_in_separate_process,
+        target=_test_experiment_in_separate_process,
         kwargs=dict(rootpath=pytestconfig.rootpath)
     )
     process.start()
@@ -98,4 +95,3 @@ def test_exp_exit_without_stop(pytestconfig):
             return
     process.kill()
     raise RuntimeError('Experiment fails to stop in 600 seconds.')
-
