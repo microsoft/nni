@@ -13,12 +13,12 @@ class MyMNIST(MNIST):
     def _load_data(self):
         print('loading data', flush=True)
         image_file = f"{'train' if self.train else 't10k'}-images-idx3-ubyte"
-        assert os.path.exists(image_file)
+        assert os.path.exists(os.path.join(self.raw_folder, image_file))
         data = read_image_file(os.path.join(self.raw_folder, image_file))
         print('loading data complete', flush=True)
 
         label_file = f"{'train' if self.train else 't10k'}-labels-idx1-ubyte"
-        assert os.path.exists(label_file)
+        assert os.path.exists(os.path.join(self.raw_folder, label_file))
         targets = read_label_file(os.path.join(self.raw_folder, label_file))
         print('load targets complete', flush=True)
         return data, targets
