@@ -215,7 +215,7 @@ def _mnist_net(type_, evaluator_kwargs):
         base_model = CustomOpValueChoiceNet()
     else:
         raise ValueError(f'Unsupported type: {type_}')
-    
+
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = nni.trace(MNIST)('data/mnist', train=True, download=True, transform=transform)
     # Multi-GPU combined dataloader will break this subset sampler. Expected though.

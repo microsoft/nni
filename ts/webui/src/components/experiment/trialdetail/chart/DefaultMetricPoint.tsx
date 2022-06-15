@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { Toggle, Stack } from '@fluentui/react';
+import { Stack, Dropdown, Toggle, IDropdownOption } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import { Trial } from '@model/trial';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { TooltipForAccuracy, EventMap } from '@static/interface';
 import { reformatRetiariiParameter } from '@static/function';
+import { gap15 } from '@components/fluent/ChildrenGap';
 import 'echarts/lib/chart/scatter';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -34,6 +35,7 @@ interface DefaultPointState {
     bestCurveEnabled?: boolean | undefined;
     startY: number; // dataZoomY
     endY: number;
+    userSelectOptimizeMode: string;
 }
 
 class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState> {
@@ -42,7 +44,8 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         this.state = {
             bestCurveEnabled: false,
             startY: 0, // dataZoomY
-            endY: 100
+            endY: 100,
+            userSelectOptimizeMode: EXPERIMENT.optimizeMode || 'maximize'
         };
     }
 
@@ -124,6 +127,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     }
 
     generateBestCurveSeries(trials: Trial[]): any {
+        const { userSelectOptimizeMode } = this.state;
         let best = trials[0];
         const data = [[best.sequenceId, best.accuracy, best.id, best.description.parameters]];
 
@@ -131,7 +135,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             const trial = trials[i];
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const delta = trial.accuracy! - best.accuracy!;
-            const better = EXPERIMENT.optimizeMode === 'minimize' ? delta < 0 : delta > 0;
+            const better = userSelectOptimizeMode === 'minimize' ? delta < 0 : delta > 0;
             if (better) {
                 data.push([trial.sequenceId, trial.accuracy, best.id, trial.description.parameters]);
                 best = trial;
@@ -147,8 +151,16 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         };
     }
 
+    // get user mode number 'max' or 'min'
+    updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+        if (item !== undefined) {
+            this.setState({ userSelectOptimizeMode: item.key.toString() });
+        }
+    };
+
     render(): React.ReactNode {
         const { hasBestCurve, chartHeight } = this.props;
+        const { userSelectOptimizeMode } = this.state;
         const graph = this.generateGraph();
         const accNodata = graph === EmptyGraph ? 'No data' : '';
         const onEvents = { dataZoom: this.metricDataZoom, click: this.pointClick };
@@ -156,8 +168,18 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         return (
             <div>
                 {hasBestCurve && (
-                    <Stack horizontalAlign='end' className='default-metric'>
+                    <Stack horizontal reversed tokens={gap15} className='default-metric'>
                         <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
+                        <Dropdown
+                            selectedKey={userSelectOptimizeMode}
+                            onChange={this.updateUserOptimizeMode}
+                            options={[
+                                { key: 'maximize', text: 'Maximize' },
+                                { key: 'minimize', text: 'Minimize' }
+                            ]}
+                            styles={{ dropdown: { width: 100 } }}
+                            className='para-filter-percent'
+                        />
                     </Stack>
                 )}
                 <div className='default-metric-graph graph'>

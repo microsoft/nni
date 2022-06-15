@@ -7,7 +7,7 @@ in the way that is most convenient to one-shot algorithms."""
 from __future__ import annotations
 
 import itertools
-from typing import Any, TypeVar, List, cast
+from typing import Any, TypeVar, List, cast, Mapping, Sequence, Optional, Iterable
 
 import numpy as np
 import torch
@@ -20,7 +20,13 @@ Choice = Any
 
 T = TypeVar('T')
 
-__all__ = ['dedup_inner_choices', 'evaluate_value_choice_with_dict', 'traverse_all_options']
+__all__ = [
+    'dedup_inner_choices',
+    'evaluate_value_choice_with_dict',
+    'traverse_all_options',
+    'weighted_sum',
+    'evaluate_constant',
+]
 
 
 def dedup_inner_choices(value_choices: list[ValueChoiceX]) -> dict[str, ParameterSpec]:
@@ -138,3 +144,101 @@ def traverse_all_options(
         return sorted(result.keys())  # type: ignore
     else:
         return sorted(result.items())  # type: ignore
+
+
+def evaluate_constant(expr: Any) -> Any:
+    """Evaluate a value choice expression to a constant. Raise ValueError if it's not a constant."""
+    all_options = traverse_all_options(expr)
+    if len(all_options) > 1:
+        raise ValueError(f'{expr} is not evaluated to a constant. All possible values are: {all_options}')
+    res = all_options[0]
+    return res
+
+
+def weighted_sum(items: list[T], weights: Sequence[float | None] = cast(Sequence[Optional[float]], None)) -> T:
+    """Return a weighted sum of items.
+
+    Items can be list of tensors, numpy arrays, or nested lists / dicts.
+
+    If ``weights`` is None, this is simply an unweighted sum.
+    """
+
+    if weights is None:
+        weights = [None] * len(items)
+
+    assert len(items) == len(weights) > 0
+    elem = items[0]
+    unsupported_msg = f'Unsupported element type in weighted sum: {type(elem)}. Value is: {elem}'
+
+    if isinstance(elem, str):
+        # Need to check this first. Otherwise it goes into sequence and causes infinite recursion.
+        raise TypeError(unsupported_msg)
+
+    try:
+        if isinstance(elem, (torch.Tensor, np.ndarray, float, int, np.number)):
+            if weights[0] is None:
+                res = elem
+            else:
+                res = elem * weights[0]
+            for it, weight in zip(items[1:], weights[1:]):
+                if type(it) != type(elem):
+                    raise TypeError(f'Expect type {type(elem)} but found {type(it)}. Can not be summed')
+
+                if weight is None:
+                    res = res + it  # type: ignore
+                else:
+                    res = res + it * weight  # type: ignore
+            return cast(T, res)
+
+        if isinstance(elem, Mapping):
+            for item in items:
+                if not isinstance(item, Mapping):
+                    raise TypeError(f'Expect type {type(elem)} but found {type(item)}')
+                if set(item) != set(elem):
+                    raise KeyError(f'Expect keys {list(elem)} but found {list(item)}')
+            return cast(T, {
+                key: weighted_sum(cast(List[dict], [cast(Mapping, d)[key] for d in items]), weights) for key in elem
+            })
+        if isinstance(elem, Sequence):
+            for item in items:
+                if not isinstance(item, Sequence):
+                    raise TypeError(f'Expect type {type(elem)} but found {type(item)}')
+                if len(item) != len(elem):
+                    raise ValueError(f'Expect length {len(item)} but found {len(elem)}')
+            transposed = cast(Iterable[list], zip(*items))  # type: ignore
+            return cast(T, [weighted_sum(column, weights) for column in transposed])
+    except (TypeError, ValueError, RuntimeError, KeyError):
+        raise ValueError(
+            'Error when summing items. Value format / shape does not match. See full traceback for details.' +
+            ''.join([
+                f'\n  {idx}: {_summarize_elem_format(it)}' for idx, it in enumerate(items)
+            ])
+        )
+
+    # Dealing with all unexpected types.
+    raise TypeError(unsupported_msg)
+
+
+def _summarize_elem_format(elem: Any) -> Any:
+    # Get a summary of one elem
+    # Helps generate human-readable error messages
+
+    class _repr_object:
+        # empty object is only repr
+        def __init__(self, representation):
+            self.representation = representation
+
+        def __repr__(self):
+            return self.representation
+
+    if isinstance(elem, torch.Tensor):
+        return _repr_object('torch.Tensor(' + ', '.join(map(str, elem.shape)) + ')')
+    if isinstance(elem, np.ndarray):
+        return _repr_object('np.array(' + ', '.join(map(str, elem.shape)) + ')')
+    if isinstance(elem, Mapping):
+        return {key: _summarize_elem_format(value) for key, value in elem.items()}
+    if isinstance(elem, Sequence):
+        return [_summarize_elem_format(value) for value in elem]
+
+    # fallback to original, for cases like float, int, ...
+    return elem

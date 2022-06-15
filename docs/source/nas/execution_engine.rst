@@ -100,7 +100,7 @@ We have already implemented two trainers: :class:`nni.retiarii.evaluator.pytorch
 
   from nni.retiarii.evaluator.pytorch.cgo.evaluator import Classification
 
-  trainer = Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+  trainer = Classification(train_dataloaders=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=1, limit_train_batches=0.2)
 

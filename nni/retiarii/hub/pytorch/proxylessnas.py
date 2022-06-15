@@ -98,7 +98,6 @@ class ConvBNReLU(nn.Sequential):
         ]
 
         super().__init__(*simplify_sequential(blocks))
-        self.out_channels = out_channels
 
 
 class DepthwiseSeparableConv(nn.Sequential):
@@ -133,7 +132,8 @@ class DepthwiseSeparableConv(nn.Sequential):
             ConvBNReLU(in_channels, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
         ]
         super().__init__(*simplify_sequential(blocks))
-        self.has_skip = stride == 1 and in_channels == out_channels
+        # NOTE: "is" is used here instead of "==" to avoid creating a new value choice.
+        self.has_skip = stride == 1 and in_channels is out_channels
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.has_skip:
@@ -177,8 +177,8 @@ class InvertedResidual(nn.Sequential):
 
         hidden_ch = cast(int, make_divisible(in_channels * expand_ratio, 8))
 
-        # NOTE: this equivalence check should also work for ValueChoice
-        self.has_skip = stride == 1 and in_channels == out_channels
+        # NOTE: this equivalence check (==) does NOT work for ValueChoice, need to use "is"
+        self.has_skip = stride == 1 and in_channels is out_channels
 
         layers: List[nn.Module] = [
             # point-wise convolution

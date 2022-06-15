@@ -95,7 +95,7 @@ def test_nasbench101():
 
 
 def test_nasbench201():
-    ss = searchspace.NasBench101()
+    ss = searchspace.NasBench201()
     _test_searchspace_on_dataset(ss)
 
 

@@ -31,9 +31,11 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
     The current implementation is for DARTS in first order. Second order (unrolled) is not supported yet.
 
-    *New in v2.8*: Supports searching for ValueChoices on operations, with the technique described in
-    `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
-    One difference is that, in DARTS, we are using Softmax instead of GumbelSoftmax.
+    .. versionadded:: 2.8
+
+       Supports searching for ValueChoices on operations, with the technique described in
+       `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
+       One difference is that, in DARTS, we are using Softmax instead of GumbelSoftmax.
 
     The supported mutation primitives of DARTS are:
 
@@ -58,7 +60,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
     )
 
     __doc__ = _darts_note.format(
-        module_notes='The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.',
+        module_notes='The DARTS Module should be trained with :class:`pytorch_lightning.trainer.supporters.CombinedLoader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
@@ -159,7 +161,7 @@ class ProxylessLightningModule(DartsLightningModule):
     """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
     __doc__ = _proxyless_note.format(
-        module_notes='This module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.',
+        module_notes='This module should be trained with :class:`pytorch_lightning.trainer.supporters.CombinedLoader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
@@ -187,8 +189,10 @@ class GumbelDartsLightningModule(DartsLightningModule):
     Essentially, it samples one path on forward,
     and implements its own backward to update the architecture parameters based on only one path.
 
-    *New in v2.8*: Supports searching for ValueChoices on operations, with the technique described in
-    `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
+    .. versionadded:: 2.8
+    
+       Supports searching for ValueChoices on operations, with the technique described in
+       `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
 
     The supported mutation primitives of GumbelDARTS are:
 

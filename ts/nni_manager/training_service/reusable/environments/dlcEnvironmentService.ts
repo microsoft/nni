@@ -15,6 +15,7 @@ import { FileCommandChannel } from '../channels/fileCommandChannel';
 import { MountedStorageService } from '../storages/mountedStorageService';
 import { Scope } from 'typescript-ioc';
 import { StorageService } from '../storageService';
+import { getLogDir } from 'common/utils';
 
 /**
  * Collector DLC jobs info from DLC cluster, and update dlc job status locally
@@ -112,11 +113,12 @@ export class DlcEnvironmentService extends EnvironmentService {
             environment.id,
             this.config.ecsSpec,
             this.config.region,
+            this.config.workspaceId,
             this.config.nasDataSourceId,
             this.config.accessKeyId,
             this.config.accessKeySecret,
             environment.command,
-            dlcEnvironment.workingFolder,
+            path.join(getLogDir(), `envs/${environment.id}`),
             this.config.ossDataSourceId,
         );
 
