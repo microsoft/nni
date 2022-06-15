@@ -1,5 +1,6 @@
 import multiprocessing
 import time
+import inspect
 
 import nni
 from torchvision.datasets import MNIST
@@ -22,6 +23,10 @@ class MyMNIST(MNIST):
         print('target exist', flush=True)
         with open(os.path.join(self.raw_folder, label_file), 'rb') as f:
             print(len(f.read()), flush=True)
+        print(inspect.getsource(read_label_file))
+        from torchvision.datasets.mnist import read_sn3_pascalvincent_tensor
+        read_sn3_pascalvincent_tensor(os.path.join(self.raw_folder, label_file), strict=False)
+        print('read_sn3_pascalvincent_tensor complete')
         targets = read_label_file(os.path.join(self.raw_folder, label_file))
         print('load targets complete', flush=True)
         return data, targets
