@@ -8,7 +8,7 @@ from torchvision.datasets import MNIST
 class MyMNIST(MNIST):
 
     def _load_data(self):
-        print('loading data')
+        print('loading data', flush=True)
         return super()._load_data()
 
 
