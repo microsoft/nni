@@ -10,9 +10,9 @@ def test_main_process():
 
 
 def _test_dry_run():
-    print('dry run')
+    print('dry run', flush=True)
     MNIST('data/mnist', train=True, download=True, transform=None)
-    print('dry run complete')
+    print('dry run complete', flush=True)
 
 
 def test_exp_exit_without_stop():
@@ -31,5 +31,6 @@ def test_exp_exit_without_stop():
     raise ValueError()
 
 
+print('no trace', flush=True)
 test_main_process()
 test_exp_exit_without_stop()
