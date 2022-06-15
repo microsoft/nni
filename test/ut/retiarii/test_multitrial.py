@@ -2,7 +2,6 @@ import multiprocessing
 import os
 import sys
 import time
-import traceback
 
 import pytest
 import pytorch_lightning as pl
@@ -81,9 +80,6 @@ def _test_experiment_in_separate_process(rootpath):
         exp.run(exp_config)
         ensure_success(exp)
         assert isinstance(exp.export_top_models()[0], dict)
-    except:
-        traceback.print_exc()
-        raise
     finally:
         # https://stackoverflow.com/questions/34506638/how-to-register-atexit-function-in-pythons-multiprocessing-subprocess
         import atexit
