@@ -50,8 +50,6 @@ def ensure_success(exp: RetiariiExperiment):
     # 'simple', 'simple_value_choice', 'value_choice', 'repeat', 'custom_op'
 ])
 def test_multi_trial(model, pytestconfig):
-    nni.trace(MNIST)('data/mnist', train=True, download=True, transform=None)
-    return
     evaluator_kwargs = {
         'max_epochs': 1
     }
@@ -102,43 +100,24 @@ def _test_experiment_in_separate_process(rootpath):
         atexit._run_exitfuncs()
 
 
-import nni
-from torchvision.datasets import MNIST
-
-def _test_dry_run(rootpath):
-    print('dry run', rootpath)
-    train_dataset = nni.trace(MNIST)('data/mnist', train=True, download=True, transform=None)
-    print('dry run complete')
-    time.sleep(10)
-
-
 def test_exp_exit_without_stop(pytestconfig):
-    process = multiprocessing.Process(
-        target=_test_dry_run,
+    # NOTE: Multiprocessing has compatibility issue with OpenMP.
+    # It makes the MNIST dataset fails to load on pipeline.
+    # https://github.com/pytorch/pytorch/issues/50669
+    # Need to use spawn as a workaround of this issue.
+    ctx = multiprocessing.get_context('spawn')
+    process = ctx.Process(
+        target=_test_experiment_in_separate_process,
         kwargs=dict(rootpath=pytestconfig.rootpath)
     )
     process.start()
-    print('Waiting for first dry run in sub-process.')
-    timeout = 60
+    print('Waiting for experiment in sub-process.')
+    timeout = 180
     for _ in range(timeout):
         if process.is_alive():
             time.sleep(1)
         else:
             assert process.exitcode == 0
             return
-
-    # process = multiprocessing.Process(
-    #     target=_test_experiment_in_separate_process,
-    #     kwargs=dict(rootpath=pytestconfig.rootpath)
-    # )
-    # process.start()
-    # print('Waiting for experiment in sub-process.')
-    # timeout = 180
-    # for _ in range(timeout):
-    #     if process.is_alive():
-    #         time.sleep(1)
-    #     else:
-    #         assert process.exitcode == 0
-    #         return
     process.kill()
     raise RuntimeError(f'Experiment fails to stop in {timeout} seconds.')
