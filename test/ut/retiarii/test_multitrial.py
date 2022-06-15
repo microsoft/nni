@@ -104,7 +104,7 @@ from torchvision.datasets import MNIST
 
 def _test_dry_run(rootpath):
     print('dry run', rootpath)
-    train_dataset = nni.trace(MNIST)('data/mnist', train=True, transform=None)
+    train_dataset = nni.trace(MNIST)('data/mnist', train=True, download=True, transform=None)
     print('dry run complete')
     time.sleep(10)
 
