@@ -50,6 +50,7 @@ def ensure_success(exp: RetiariiExperiment):
     # 'simple', 'simple_value_choice', 'value_choice', 'repeat', 'custom_op'
 ])
 def test_multi_trial(model, pytestconfig):
+    nni.trace(MNIST)('data/mnist', train=True, download=True, transform=None)
     return
     evaluator_kwargs = {
         'max_epochs': 1
