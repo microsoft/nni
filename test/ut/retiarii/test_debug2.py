@@ -32,5 +32,6 @@ def test_exp_exit_without_stop():
 
 
 print('no trace', flush=True)
-test_main_process()
+# test_main_process()
+test_exp_exit_without_stop()
 test_exp_exit_without_stop()
