@@ -4,14 +4,24 @@ import time
 import nni
 from torchvision.datasets import MNIST
 
+import os
+from torchvision.datasets.mnist import read_image_file, read_label_file
+
 
 class MyMNIST(MNIST):
 
     def _load_data(self):
         print('loading data', flush=True)
-        res = super()._load_data()
-        print('load data complete', flush=True)
-        return res
+        image_file = f"{'train' if self.train else 't10k'}-images-idx3-ubyte"
+        assert os.path.exists(image_file)
+        data = read_image_file(os.path.join(self.raw_folder, image_file))
+        print('loading data complete', flush=True)
+
+        label_file = f"{'train' if self.train else 't10k'}-labels-idx1-ubyte"
+        assert os.path.exists(label_file)
+        targets = read_label_file(os.path.join(self.raw_folder, label_file))
+        print('load targets complete', flush=True)
+        return data, targets
 
 
 def test_main_process():
