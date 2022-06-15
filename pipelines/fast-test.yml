@@ -30,7 +30,6 @@ stages:
     - script: |
         cd test
         pytest --no-cov -rP "ut/retiarii/test_multitrial.py"
-        # PYTHONPATH=.. python ut/retiarii/test_debug.py
 
 
 - stage: lint
