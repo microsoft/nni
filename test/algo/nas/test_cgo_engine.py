@@ -306,7 +306,6 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_submit_models(self):
         _reset()
-        nni.retiarii.debug_configs.framework = 'pytorch'
         os.makedirs('generated', exist_ok=True)
         import nni.runtime.platform.test as tt
         protocol._set_out_file(open('generated/debug_protocol_out_file.py', 'wb'))
