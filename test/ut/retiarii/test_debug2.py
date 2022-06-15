@@ -9,7 +9,9 @@ class MyMNIST(MNIST):
 
     def _load_data(self):
         print('loading data', flush=True)
-        return super()._load_data()
+        res = super()._load_data()
+        print('load data complete', flush=True)
+        return res
 
 
 def test_main_process():
