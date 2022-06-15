@@ -57,6 +57,7 @@ class MyMNIST(MNIST):
         print('read_sn3_pascalvincent_tensor complete', flush=True)
         assert(x.dtype == torch.uint8)
         assert(x.ndimension() == 1)
+        print('assert complete', flush=True)
         x = x.long()
         print('fake load targets complete', flush=True)
         targets = read_label_file(os.path.join(self.raw_folder, label_file))
