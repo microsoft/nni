@@ -19,6 +19,9 @@ class MyMNIST(MNIST):
 
         label_file = f"{'train' if self.train else 't10k'}-labels-idx1-ubyte"
         assert os.path.exists(os.path.join(self.raw_folder, label_file))
+        print('target exist', flush=True)
+        with open(os.path.join(self.raw_folder, label_file), 'rb') as f:
+            print(len(f.read()), flush=True)
         targets = read_label_file(os.path.join(self.raw_folder, label_file))
         print('load targets complete', flush=True)
         return data, targets
