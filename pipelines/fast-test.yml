@@ -14,25 +14,6 @@ variables:
 
 stages:
 
-- stage: debug
-  jobs:
-
-  - job: debug
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: ubuntu-latest
-
-    # - template: templates/install-nni.yml
-
-    - script: |
-        cd test
-        PYTHONPATH=.. python ut/retiarii/test_debug2.py
-        # pytest --no-cov -rP "ut/retiarii/test_debug.py"
-
-
 - stage: lint
   jobs:
 

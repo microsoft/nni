@@ -46,8 +46,7 @@ def ensure_success(exp: RetiariiExperiment):
 
 
 @pytest.mark.parametrize('model', [
-    'simple',
-    # 'simple', 'simple_value_choice', 'value_choice', 'repeat', 'custom_op'
+    'simple', 'simple_value_choice', 'value_choice', 'repeat', 'custom_op'
 ])
 def test_multi_trial(model, pytestconfig):
     evaluator_kwargs = {
@@ -71,25 +70,15 @@ def test_multi_trial(model, pytestconfig):
 
 def _test_experiment_in_separate_process(rootpath):
     try:
-        print('inner', 1, flush=True)
         base_model, evaluator = _mnist_net('simple', {'max_epochs': 1})
-        print('inner', 2, flush=True)
         search_strategy = strategy.Random()
-        print('inner', 3, flush=True)
         exp = RetiariiExperiment(base_model, evaluator, strategy=search_strategy)
-        print('inner', 4, flush=True)
         exp_config = RetiariiExeConfig('local')
-        print('inner', 5, flush=True)
         exp_config.experiment_name = 'mnist_unittest'
         exp_config.trial_concurrency = 1
         exp_config.max_trial_number = 1
-        print('inner', 6, flush=True)
         exp_config.trial_command_params = _trial_params(rootpath)
-        print('Prepared to run experiment.', flush=True)
-        exp.run(exp_config)
-        print('inner', 7, flush=True)
         ensure_success(exp)
-        print('inner', 8, flush=True)
         assert isinstance(exp.export_top_models()[0], dict)
     except:
         traceback.print_exc()
