@@ -76,7 +76,8 @@ def _test_dry_run():
 
 
 def test_exp_exit_without_stop():
-    process = multiprocessing.Process(
+    ctx = multiprocessing.get_context('spawn')
+    process = ctx.Process(
         target=_test_dry_run,
     )
     process.start()
@@ -90,8 +91,8 @@ def test_exp_exit_without_stop():
 
     raise ValueError()
 
-
-print('no trace', flush=True)
-test_main_process()
-test_exp_exit_without_stop()
-test_exp_exit_without_stop()
+if __name__ == '__main__':
+    print('no trace', flush=True)
+    test_main_process()
+    test_exp_exit_without_stop()
+    test_exp_exit_without_stop()
