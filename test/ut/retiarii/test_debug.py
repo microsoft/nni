@@ -29,3 +29,7 @@ def test_exp_exit_without_stop():
             return
 
     raise ValueError()
+
+
+test_main_process()
+test_exp_exit_without_stop()
