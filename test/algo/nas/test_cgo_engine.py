@@ -162,7 +162,7 @@ def _new_trainer():
 
 
 def _load_mnist(n_models: int = 1):
-    path = Path(__file__).parent / 'mnist_pytorch.json'
+    path = Path('ut/nas/mnist_pytorch.json')
     with open(path) as f:
         mnist_model = Model._load(nni.load(fp=f))
         mnist_model.evaluator = _new_trainer()
