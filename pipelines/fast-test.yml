@@ -25,9 +25,12 @@ stages:
       parameters:
         platform: ubuntu-latest
 
+    - template: templates/install-nni.yml
+
     - script: |
         cd test
-        PYTHONPATH=.. python ut/retiarii/test_debug.py
+        pytest --no-cov -rP "ut/retiarii/test_multitrial.py::test_exp_exit_without_stop"
+        # PYTHONPATH=.. python ut/retiarii/test_debug.py
 
 
 - stage: lint

@@ -129,7 +129,7 @@ def test_exp_exit_without_stop(pytestconfig):
     )
     process.start()
     print('Waiting for experiment in sub-process.')
-    timeout = 300
+    timeout = 180
     for _ in range(timeout):
         if process.is_alive():
             time.sleep(1)
