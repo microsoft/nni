@@ -13,7 +13,6 @@ variables:
   filter.prbody.optionIndex: 0
 
 stages:
-
 - stage: lint
   jobs:
 
