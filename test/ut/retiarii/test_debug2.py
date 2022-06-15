@@ -2,11 +2,14 @@ import multiprocessing
 import time
 import inspect
 
+import torch
+import numpy as np
+
 import nni
 from torchvision.datasets import MNIST
 
 import os
-from torchvision.datasets.mnist import read_image_file, read_label_file, read_sn3_pascalvincent_tensor
+from torchvision.datasets.mnist import read_image_file, read_label_file, read_sn3_pascalvincent_tensor, get_int, SN3_PASCALVINCENT_TYPEMAP
 
 
 class MyMNIST(MNIST):
@@ -25,8 +28,33 @@ class MyMNIST(MNIST):
         with open(os.path.join(self.raw_folder, label_file), 'rb') as f:
             print(len(f.read()), flush=True)
         print('hello', flush=True)
+
+        path = os.path.join(self.raw_folder, label_file)
+
+        print('hello', 1, flush=True)
+        with open(path, "rb") as f:
+            data = f.read()
+        # parse
+        print('hello', 2, flush=True)
+        magic = get_int(data[0:4])
+        nd = magic % 256
+        ty = magic // 256
+        print('hello', 3, flush=True)
+        assert 1 <= nd <= 3
+        assert 8 <= ty <= 14
+        print('hello', 4, flush=True)
+        m = SN3_PASCALVINCENT_TYPEMAP[ty]
+        print('hello', 5, flush=True)
+        s = [get_int(data[4 * (i + 1): 4 * (i + 2)]) for i in range(nd)]
+        print('hello', 6, flush=True)
+        parsed = np.frombuffer(data, dtype=m[1], offset=(4 * (nd + 1)))
+        print('hello', 7, flush=True)
+        parsed = torch.from_numpy(parsed.astype(m[2])).view(*s)
+
+        print('hello', 'again', flush=True)
         read_sn3_pascalvincent_tensor(os.path.join(self.raw_folder, label_file), strict=False)
-        print('read_sn3_pascalvincent_tensor complete')
+
+        print('read_sn3_pascalvincent_tensor complete', flush=True)
         targets = read_label_file(os.path.join(self.raw_folder, label_file))
         print('load targets complete', flush=True)
         return data, targets
