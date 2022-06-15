@@ -5,13 +5,20 @@ import nni
 from torchvision.datasets import MNIST
 
 
+class MyMNIST(MNIST):
+
+    def _load_data(self):
+        print('loading data')
+        return super()._load_data()
+
+
 def test_main_process():
-    MNIST('data/mnist', train=True, download=True, transform=None)
+    MyMNIST('data/mnist', train=True, download=True, transform=None)
 
 
 def _test_dry_run():
     print('dry run', flush=True)
-    MNIST('data/mnist', train=True, download=True, transform=None)
+    MyMNIST('data/mnist', train=True, download=True, transform=None)
     print('dry run complete', flush=True)
 
 
@@ -32,6 +39,6 @@ def test_exp_exit_without_stop():
 
 
 print('no trace', flush=True)
-# test_main_process()
+test_main_process()
 test_exp_exit_without_stop()
 test_exp_exit_without_stop()
