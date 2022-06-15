@@ -6,7 +6,7 @@ import nni
 from torchvision.datasets import MNIST
 
 import os
-from torchvision.datasets.mnist import read_image_file, read_label_file
+from torchvision.datasets.mnist import read_image_file, read_label_file, read_sn3_pascalvincent_tensor
 
 
 class MyMNIST(MNIST):
@@ -21,11 +21,10 @@ class MyMNIST(MNIST):
         label_file = f"{'train' if self.train else 't10k'}-labels-idx1-ubyte"
         assert os.path.exists(os.path.join(self.raw_folder, label_file))
         print('target exist', flush=True)
-        print(inspect.getsource(read_label_file), flush=True)
+        print(inspect.getsource(read_sn3_pascalvincent_tensor), flush=True)
         with open(os.path.join(self.raw_folder, label_file), 'rb') as f:
             print(len(f.read()), flush=True)
         print('hello', flush=True)
-        from torchvision.datasets.mnist import read_sn3_pascalvincent_tensor
         read_sn3_pascalvincent_tensor(os.path.join(self.raw_folder, label_file), strict=False)
         print('read_sn3_pascalvincent_tensor complete')
         targets = read_label_file(os.path.join(self.raw_folder, label_file))
