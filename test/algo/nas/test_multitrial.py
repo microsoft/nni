@@ -7,41 +7,10 @@ import pytest
 import pytorch_lightning as pl
 from nni.retiarii import strategy
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
+from ut.nas.test_experiment import nas_experiment_trial_params, ensure_success
 from .test_oneshot import _mnist_net
 
 pytestmark = pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
-
-
-def _trial_params(rootpath):
-    params = {}
-    if sys.platform == 'win32':
-        params['envs'] = f'set PYTHONPATH={rootpath} && '
-    else:
-        params['envs'] = f'PYTHONPATH={rootpath}:$PYTHONPATH'
-    return params
-
-
-def ensure_success(exp: RetiariiExperiment):
-    # check experiment directory exists
-    exp_dir = os.path.join(
-        exp.config.canonical_copy().experiment_working_directory,
-        exp.id
-    )
-    assert os.path.exists(exp_dir) and os.path.exists(os.path.join(exp_dir, 'trials'))
-
-    # check job status
-    job_stats = exp.get_job_statistics()
-    if not (len(job_stats) == 1 and job_stats[0]['trialJobStatus'] == 'SUCCEEDED'):
-        print('Experiment jobs did not all succeed. Status is:', job_stats, file=sys.stderr)
-        print('Trying to fetch trial logs.', file=sys.stderr)
-
-        for root, _, files in os.walk(os.path.join(exp_dir, 'trials')):
-            for file in files:
-                fpath = os.path.join(root, file)
-                print('=' * 10 + ' ' + fpath + ' ' + '=' * 10, file=sys.stderr)
-                print(open(fpath).read(), file=sys.stderr)
-
-        raise RuntimeError('Experiment jobs did not all succeed.')
 
 
 @pytest.mark.parametrize('model', [
@@ -60,7 +29,7 @@ def test_multi_trial(model, pytestconfig):
     exp_config.experiment_name = 'mnist_unittest'
     exp_config.trial_concurrency = 1
     exp_config.max_trial_number = 1
-    exp_config.trial_command_params = _trial_params(pytestconfig.rootpath)
+    exp_config.trial_command_params = nas_experiment_trial_params(pytestconfig.rootpath)
     exp.run(exp_config)
     ensure_success(exp)
     assert isinstance(exp.export_top_models()[0], dict)
@@ -76,7 +45,7 @@ def _test_experiment_in_separate_process(rootpath):
         exp_config.experiment_name = 'mnist_unittest'
         exp_config.trial_concurrency = 1
         exp_config.max_trial_number = 1
-        exp_config.trial_command_params = _trial_params(rootpath)
+        exp_config.trial_command_params = nas_experiment_trial_params(rootpath)
         exp.run(exp_config)
         ensure_success(exp)
         assert isinstance(exp.export_top_models()[0], dict)
