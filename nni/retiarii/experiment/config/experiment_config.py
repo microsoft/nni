@@ -33,7 +33,7 @@ class RetiariiExeConfig(ExperimentConfig):
     trial_command: str = '_reserved'
     # new config field for NAS
     execution_engine: Union[str, ExecutionEngineConfig]
-    
+
     # Internal: to support customized fields in trial command
     # Useful when customized python / environment variables are needed
     _trial_command_params: Optional[Dict[str, Any]] = None
