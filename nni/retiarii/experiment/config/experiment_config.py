@@ -66,7 +66,7 @@ class RetiariiExeConfig(ExperimentConfig):
             'python': sys.executable,
             'execution_engine': self.execution_engine.name,
 
-            # Overridden by new
+            # This should override the parameters above.
             **(self._trial_command_params or {})
         }
 
