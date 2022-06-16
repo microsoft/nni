@@ -63,6 +63,8 @@ stages:
       parameters:
         user: false
 
+    # NOTE: Data needs to be downloaded if Windows has GPU.
+    # Also, the download template needs to be updated with powershell syntax.
     # - template: templates/download-test-data.yml
 
     - powershell: |

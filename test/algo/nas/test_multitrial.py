@@ -29,7 +29,7 @@ def test_multi_trial(model, pytestconfig):
     exp_config.experiment_name = 'mnist_unittest'
     exp_config.trial_concurrency = 1
     exp_config.max_trial_number = 1
-    exp_config.trial_command_params = nas_experiment_trial_params(pytestconfig.rootpath)
+    exp_config._trial_command_params = nas_experiment_trial_params(pytestconfig.rootpath)
     exp.run(exp_config)
     ensure_success(exp)
     assert isinstance(exp.export_top_models()[0], dict)
@@ -45,7 +45,7 @@ def _test_experiment_in_separate_process(rootpath):
         exp_config.experiment_name = 'mnist_unittest'
         exp_config.trial_concurrency = 1
         exp_config.max_trial_number = 1
-        exp_config.trial_command_params = nas_experiment_trial_params(rootpath)
+        exp_config._trial_command_params = nas_experiment_trial_params(rootpath)
         exp.run(exp_config)
         ensure_success(exp)
         assert isinstance(exp.export_top_models()[0], dict)

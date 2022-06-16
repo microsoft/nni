@@ -32,8 +32,11 @@ class RetiariiExeConfig(ExperimentConfig):
     trial_code_directory: utils.PathLike = '.'
     trial_command: str = '_reserved'
     # new config field for NAS
-    trial_command_params: Optional[Dict[str, Any]] = None
     execution_engine: Union[str, ExecutionEngineConfig]
+    
+    # Internal: to support customized fields in trial command
+    # Useful when customized python / environment variables are needed
+    _trial_command_params: Optional[Dict[str, Any]] = None
 
     def __init__(self, training_service_platform: Union[str, None] = None,
                  execution_engine: Union[str, ExecutionEngineConfig] = 'py',
@@ -56,7 +59,7 @@ class RetiariiExeConfig(ExperimentConfig):
         if isinstance(self.execution_engine, str):
             self.execution_engine = execution_engine_config_factory(self.execution_engine)
 
-        trial_command_params = {
+        _trial_command_params = {
             # Default variables
             'envs': '',
             # TODO: maybe use sys.executable rendered in trial side (e.g., trial_runner)
@@ -64,9 +67,9 @@ class RetiariiExeConfig(ExperimentConfig):
             'execution_engine': self.execution_engine.name,
 
             # Overridden by new
-            **(self.trial_command_params or {})
+            **(self._trial_command_params or {})
         }
 
-        self.trial_command = trial_command_tmpl.format(**trial_command_params).strip()
+        self.trial_command = trial_command_tmpl.format(**_trial_command_params).strip()
 
         super()._canonicalize([self])

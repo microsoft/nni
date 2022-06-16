@@ -10,7 +10,7 @@ import tkill from 'tree-kill';
 import { NNIError, NNIErrorNames } from 'common/errors';
 import { getExperimentId } from 'common/experimentStartupInfo';
 import { getLogger, Logger } from 'common/log';
-import { powershellString } from 'common/shellUtils';
+import { powershellString, shellString } from 'common/shellUtils';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
@@ -413,8 +413,8 @@ class LocalTrainingService implements TrainingService {
 
     private getScript(workingDirectory: string): string[] {
         const script: string[] = [];
+        const escapedCommand = shellString(this.config.trialCommand);
         if (process.platform === 'win32') {
-            const escapedCommand = this.config.trialCommand.replace('"', '`"');
             script.push(`$PSDefaultParameterValues = @{'Out-File:Encoding' = 'utf8'}`);
             script.push(`cd $env:NNI_CODE_DIR`);
             script.push(
@@ -423,7 +423,6 @@ class LocalTrainingService implements TrainingService {
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(workingDirectory, '.nni', 'state')}" -NoNewline -encoding utf8`);
         } else {
-            const escapedCommand = this.config.trialCommand.replace('"', '\\"');
             script.push(`cd $NNI_CODE_DIR`);
             script.push(`eval "${escapedCommand}" 1>${path.join(workingDirectory, 'stdout')} 2>${path.join(workingDirectory, 'stderr')}`);
             if (process.platform === 'darwin') {
