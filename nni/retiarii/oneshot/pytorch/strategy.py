@@ -76,6 +76,7 @@ class OneShotStrategy(BaseStrategy):
         evaluator.trainer.fit(self.model, train_loader, val_loader)
 
     def export_top_models(self, top_k: int = 1) -> list[Any]:
+        """The behavior of export top models in strategy depends on the implementation of inner one-shot module."""
         if self.model is None:
             raise RuntimeError('One-shot strategy needs to be run before export.')
         if top_k != 1:
