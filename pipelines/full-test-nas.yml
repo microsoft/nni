@@ -1,7 +1,7 @@
 trigger: none
 
 schedules:
-- cron: 0 16 * * *
+- cron: 0 18 * * *
   branches:
     include: [ master ]
 

@@ -1,5 +1,10 @@
 trigger: none
 
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
 resources:
   repositories:
     - repository: azpfilter
