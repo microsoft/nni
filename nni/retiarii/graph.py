@@ -45,7 +45,7 @@ class Evaluator(abc.ABC):
 
     def evaluate(self, model_cls: Union[Callable[[], Any], Any]) -> Any:
         """To run evaluation of a model. The model could be either a concrete model or a callable returning a model.
-        
+
         The concrete implementation of evaluate depends on the implementation of ``_execute()`` in sub-class.
         """
         return self._execute(model_cls)
@@ -362,6 +362,7 @@ class Graph:
 
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, operation: Operation) -> 'Node': ...
+
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str,
                             parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
