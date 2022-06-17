@@ -217,11 +217,11 @@ def _mnist_net(type_, evaluator_kwargs):
         raise ValueError(f'Unsupported type: {type_}')
 
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = nni.trace(MNIST)('data/mnist', train=True, download=True, transform=transform)
+    train_dataset = nni.trace(MNIST)('data/mnist', download=True, train=True, transform=transform)
     # Multi-GPU combined dataloader will break this subset sampler. Expected though.
     train_random_sampler = nni.trace(RandomSampler)(train_dataset, True, int(len(train_dataset) / 20))
     train_loader = nni.trace(DataLoader)(train_dataset, 64, sampler=train_random_sampler)
-    valid_dataset = nni.trace(MNIST)('data/mnist', train=False, download=True, transform=transform)
+    valid_dataset = nni.trace(MNIST)('data/mnist', download=True, train=False, transform=transform)
     valid_random_sampler = nni.trace(RandomSampler)(valid_dataset, True, int(len(valid_dataset) / 20))
     valid_loader = nni.trace(DataLoader)(valid_dataset, 64, sampler=valid_random_sampler)
     evaluator = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **evaluator_kwargs)

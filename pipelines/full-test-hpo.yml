@@ -1,9 +1,9 @@
 trigger: none
 
-# schedules:
-# - cron: 0 16 * * *
-#   branches:
-#     include: [ master ]
+schedules:
+- cron: 0 18 * * *
+  branches:
+    include: [ master ]
 
 resources:
   repositories:
