@@ -54,13 +54,15 @@ The usage is shown below:
 
 .. code-block:: python
 
-   class Model(nn.Module):
-       ...
+   # Class definition of single model, for example, ResNet.
+   class SingleModel(nn.Module):
+       def __init__():  # Can't have init parameters here.
+           ...
 
    # Use a callable returning a model
-   evaluator.evaluate(Model)
+   evaluator.evaluate(SingleModel)
    # Or initialize the model beforehand
-   evaluator.evaluate(Model())
+   evaluator.evaluate(SingleModel())
 
 The underlying implementation of :meth:`~nni.retiarii.Evaluator.evaluate` depends on concrete evaluator that you used.
 For example, if :class:`~nni.retiarii.evaluator.FunctionalEvaluator` is used, it will run your customized fit function.
@@ -69,7 +71,7 @@ If lightning evaluators like :class:`nni.retiarii.evaluator.pytorch.Classificati
 To evaluate an architecture that is exported from experiment (i.e., from :meth:`~nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models`), use :func:`nni.retiarii.fixed_arch` to instantiate the exported model::
 
     with fixed_arch(exported_model):
-        model = Model()
+        model = ModelSpace()
     # Then use evaluator.evaluate
     evaluator.evaluate(model)
 

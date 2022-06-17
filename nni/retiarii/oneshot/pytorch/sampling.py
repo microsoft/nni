@@ -83,7 +83,8 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
         """
         warnings.warn(
             'Direct export from RandomOneShot returns an arbitrary architecture. '
-            'You might want to use the checkpoint in another search.',
+            'Sampling the best architecture from this trained supernet is another search process. '
+            'Users need to do another search based on the checkpoint of the one-shot strategy.',
             UserWarning
         )
         return super().export()
@@ -126,7 +127,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
         Weight of skip penalty loss. See :class:`~nni.retiarii.oneshot.pytorch.enas.ReinforceController` for details.
     baseline_decay : float
         Decay factor of reward baseline, which is used to normalize the reward in RL.
-        At each step, the new ew baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
+        At each step, the new reward baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
     ctrl_steps_aggregate : int
         Number of steps for which the gradients will be accumulated,
         before updating the weights of RL controller.
