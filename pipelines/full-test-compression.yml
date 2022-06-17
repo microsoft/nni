@@ -45,8 +45,6 @@ stages:
     - template: templates/download-test-data.yml
 
     - script: |
-        set -e
-        mkdir -p coverage
         cd test/algo
         python -m pytest compression
       displayName: compression unit test
