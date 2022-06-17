@@ -21,14 +21,11 @@ def process_normal():
 
 def process_kill_slow(kill_time=2):
     def handler_stop_signals(signum, frame):
-        print('debug proceess kill: signal received')
         time.sleep(kill_time)
-        print('debug proceess kill: signal processed')
         sys.exit(0)
 
     signal.signal(signal.SIGINT, handler_stop_signals)
     signal.signal(signal.SIGTERM, handler_stop_signals)
-    print('debug process kill: sleep')
     time.sleep(360)
 
 

@@ -162,7 +162,7 @@ def _new_trainer():
 
 
 def _load_mnist(n_models: int = 1):
-    path = Path(__file__).parent / 'mnist_pytorch.json'
+    path = Path('ut/nas/mnist_pytorch.json')
     with open(path) as f:
         mnist_model = Model._load(nni.load(fp=f))
         mnist_model.evaluator = _new_trainer()
@@ -306,7 +306,6 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_submit_models(self):
         _reset()
-        nni.retiarii.debug_configs.framework = 'pytorch'
         os.makedirs('generated', exist_ok=True)
         import nni.runtime.platform.test as tt
         protocol._set_out_file(open('generated/debug_protocol_out_file.py', 'wb'))

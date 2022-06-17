@@ -17,7 +17,7 @@ from nni.retiarii.oneshot.pytorch.supermodule.proxyless import ProxylessMixedLay
 from nni.retiarii.oneshot.pytorch.supermodule._operation_utils import Slicable as S, MaybeWeighted as W
 from nni.retiarii.oneshot.pytorch.supermodule._valuechoice_utils import *
 
-from .models import (
+from ut.nas.models import (
     CellSimple, CellDefaultArgs, CellCustomProcessor, CellLooseEnd, CellOpFactory
 )
 
