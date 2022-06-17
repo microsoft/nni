@@ -16,7 +16,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import Callback
 
 from nni.common import is_traceable
-from .constructor_helper import OptimizerConstructHelper
+from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
 
 _logger = logging.getLogger(__name__)
 
@@ -89,12 +89,18 @@ class BackwardHook(ModuleHook):
 
 class Evaluator:
     def init_optimizer_helpers(self, pure_model: Module | pl.LightningModule):
+        # Note for developer, please make sure you can get pure_model (which means the unwrapped model) from other place.
+        # This function should be called before bind_model().
         raise NotImplementedError
 
-    def bind_model(self, model: Module | pl.LightningModule, param_name_map: Optional[Dict[str, str]] = None):
+    def bind_model(self, model: Module | pl.LightningModule, param_names_map: Optional[Dict[str, str]] = None):
+        # param_names_map maps the names of the parameters in the pure_model to the names of the parameters in the binded model.
+        # The format of param_names_map is {pure_model_param_name: binded_model_param_name}.
+        # param_names_map is for initializing the optimizers for the binded model.
         raise NotImplementedError
 
     def unbind_model(self):
+        # Evaluator can be reused by `unbind_model` then bind a new model by `bind_model`.
         raise NotImplementedError
 
     def patch_criterion(self, patch: Callable[[Tensor], Tensor]):
@@ -104,6 +110,9 @@ class Evaluator:
         raise NotImplementedError
 
     def patch_optimizer(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
+        # Run tasks in `before_step_tasks` before `optimizer.step()` each time.
+        # Run tasks in `after_step_tasks` after `optimizer.step()` each time.
+        # NOTE: we only patch these tasks to the first optimizer right now.
         raise NotImplementedError
 
     def revert_optimizer(self):
@@ -122,9 +131,7 @@ class Evaluator:
         raise NotImplementedError
 
     def evaluate(self) -> float | Tuple[float, Any]:
-        """
-        Note that the first item of the returned value will be used as the default metric used by NNI.
-        """
+        # Note that the first item of the returned value will be used as the default metric used by NNI.
         raise NotImplementedError
 
     def get_dummy_input(self) -> Any:
@@ -143,7 +150,8 @@ class LightningEvaluator(Evaluator):
         self._hooks: List[Hook] = []
         self._ori_model_attr = {}
         self._optimizer_helpers: Optional[List[OptimizerConstructHelper]] = None
-        self._param_name_map: Optional[Dict[str, str]] = None
+        self._lr_scheduler_helpers: Optional[List[LRSchedulerConstructHelper]] = None
+        self._param_names_map: Optional[Dict[str, str]] = None
 
     def init_optimizer_helpers(self, pure_model: pl.LightningModule):
         if self._optimizer_helpers is None:
@@ -153,7 +161,7 @@ class LightningEvaluator(Evaluator):
         else:
             _logger.warning('%s already have initialized optimizer helpers.', self.__class__.__name__)
 
-    def bind_model(self, model: pl.LightningModule, param_name_map: Optional[Dict[str, str]] = None):
+    def bind_model(self, model: pl.LightningModule, param_names_map: Optional[Dict[str, str]] = None):
         assert isinstance(model, pl.LightningModule)
         assert self._optimizer_helpers is not None
         self.model = model
@@ -162,7 +170,7 @@ class LightningEvaluator(Evaluator):
             'configure_optimizers': model.configure_optimizers,
             'configure_callbacks': model.configure_callbacks
         })
-        self._param_name_map = param_name_map
+        self._param_names_map = param_names_map
         self._patch_configure_optimizers()
 
     def unbind_model(self):
@@ -170,19 +178,19 @@ class LightningEvaluator(Evaluator):
         self.revert_optimizer()
         self.remove_all_hooks()
         self._revert_configure_optimizers()
-        self._param_name_map = None
+        self._param_names_map = None
         self._ori_model_attr.clear()
         self.model = None
 
     def _patch_configure_optimizers(self):
         assert self._optimizer_helpers is not None
-        assert self._param_name_map is not None
+        assert self._param_names_map is not None
 
         # FIXME: add scheduler
         def new_configure_optimizers(_):
             optimizers = []
             for optimizer_helper in self._optimizer_helpers:
-                optimizers.append(optimizer_helper.call(self.model, self._param_name_map))
+                optimizers.append(optimizer_helper.call(self.model, self._param_names_map))
             return optimizers
 
         self.model.configure_optimizers = types.MethodType(new_configure_optimizers, self.model)
@@ -292,7 +300,7 @@ class LegacyEvaluator(Evaluator):
         self._optimizer_helpers: Optional[List[OptimizerConstructHelper]] = None
         self._optimizers: Optional[List[Optimizer]] = None
         self._first_optimizer_step: Optional[Callable] = None
-        self._param_name_map: Optional[Dict[str, str]] = None
+        self._param_names_map: Optional[Dict[str, str]] = None
 
     def init_optimizer_helpers(self, pure_model: Module):
         if self._optimizer_helpers:
@@ -301,12 +309,12 @@ class LegacyEvaluator(Evaluator):
         else:
             _logger.warning('%s already have initialized optimizer helper.', self.__class__.__name__)
 
-    def bind_model(self, model: Module, param_name_map: Optional[Dict[str, str]] = None):
+    def bind_model(self, model: Module, param_names_map: Optional[Dict[str, str]] = None):
         assert isinstance(model, Module)
         assert self._optimizer_helpers is not None
         self.model = model
-        self._param_name_map = param_name_map
-        self._optimizers = [helper.call(model, param_name_map) for helper in self._optimizer_helpers]
+        self._param_names_map = param_names_map
+        self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
         self._first_optimizer_step = self._optimizers[0].step
 
     def unbind_model(self):
@@ -315,7 +323,7 @@ class LegacyEvaluator(Evaluator):
         self.remove_all_hooks()
         self._first_optimizer_step = None
         self._optimizers = None
-        self._param_name_map = None
+        self._param_names_map = None
         self.model = None
 
     def patch_criterion(self, patch: Callable[[Tensor], Tensor]):
