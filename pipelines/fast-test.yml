@@ -150,15 +150,7 @@ stages:
         set -e
         mkdir -p coverage
         cd test
-        python -m pytest ut --cov-config=.coveragerc \
-          --ignore=ut/compression/v1/test_pruners.py \
-          --ignore=ut/compression/v1/test_compressor_tf.py \
-          --ignore=ut/compression/v1/test_compressor_torch.py \
-          --ignore=ut/compression/v1/test_model_speedup.py
-        python -m pytest ut/compression/v1/test_pruners.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/compression/v1/test_compressor_tf.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/compression/v1/test_compressor_torch.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/compression/v1/test_model_speedup.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut --cov-config=.coveragerc
         cp coverage.xml ../coverage/python.xml
       displayName: Python unit test
 
