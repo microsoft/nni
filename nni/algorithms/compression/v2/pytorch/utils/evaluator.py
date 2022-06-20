@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
+from copy import deepcopy
 
 import logging
 import types
@@ -32,8 +33,8 @@ class Hook:
     target_name
         The name of the target, use periods to separate, e.g., 'model.layers.0.conv1.weight'.
     hook_factory
-        A factory fucntion, input is a list buffer, output is a hook function.
-        The buffer is used to store some useful information in hook.
+        A factory fucntion, input is an empty list, output is a hook function.
+        The empty list is used to store some useful information in hook.
     """
 
     def __init__(self, target: Module | Tensor, target_name: str, hook_factory: Callable[[List], Callable]):
@@ -55,7 +56,7 @@ class Hook:
 
     def remove(self):
         if self.handle is None:
-            print('%s for %s has not been registered yet.', self.__class__.__name__, self.target_name)
+            _logger.warning('%s for %s has not been registered yet.', self.__class__.__name__, self.target_name)
             return
         self.handle.remove()
         self.handle = None
@@ -149,15 +150,70 @@ class LightningEvaluator(Evaluator):
         self._dummy_input = dummy_input
         self._hooks: List[Hook] = []
         self._ori_model_attr = {}
-        self._optimizer_helpers: Optional[List[OptimizerConstructHelper]] = None
-        self._lr_scheduler_helpers: Optional[List[LRSchedulerConstructHelper]] = None
+        self._optimizer_helpers: Optional[Dict[int, OptimizerConstructHelper]] = None
+        self._lr_scheduler_helpers: Optional[Dict[int, LRSchedulerConstructHelper]] = None
+        self._lr_scheduler_optimizer_map: Optional[Dict[int, int]] = None
+        self._configure_optimizers_returned_dicts: Optional[List[Dict]] = None
         self._param_names_map: Optional[Dict[str, str]] = None
 
     def init_optimizer_helpers(self, pure_model: pl.LightningModule):
         if self._optimizer_helpers is None:
-            # FIXME: support more return type
-            optimizer: Optimizer = pure_model.configure_optimizers()
-            self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer)]
+            # The return value of `configure_optimizers` may one of the following six options:
+            # Single optimizer.
+            # List or Tuple of optimizers.
+            # Two lists - the first list has multiple optimizers, and the second has multiple LR schedulers (or multiple lr_scheduler_config).
+            # Dictionary, with an "optimizer" key, and (optionally) a "lr_scheduler" key whose value is a single LR scheduler or lr_scheduler_config.
+            # Tuple of dictionaries as described above, with an optional "frequency" key.
+            # None - Fit will run without any optimizer.
+            optimizers_lr_schedulers: Any = pure_model.configure_optimizers()
+            if optimizers_lr_schedulers is None:
+                err_msg = 'NNI does not support `LightningModule.configure_optimizers` returned None, '
+                err_msg += 'if you have a reason why you must, please file an issue at https://github.com/microsoft/nni/issues'
+                raise ValueError(err_msg)
+            elif isinstance(optimizers_lr_schedulers, Optimizer):
+                self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizers_lr_schedulers)]
+            elif isinstance(optimizers_lr_schedulers, dict):
+                self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizers_lr_schedulers['optimizer'])]
+                optimizers_lr_schedulers['optimizer'] = 0
+                lr_scheduler = optimizers_lr_schedulers.get('lr_scheduler', {}).get('scheduler', None)
+                if lr_scheduler is not None:
+                    self._lr_scheduler_helpers = [LRSchedulerConstructHelper.from_trace(lr_scheduler)]
+                    optimizers_lr_schedulers['lr_scheduler']['scheduler'] = 0
+                self._lr_scheduler_optimizer_map = {0: 0}
+                self._configure_optimizers_returned_dicts = [deepcopy(optimizers_lr_schedulers)]
+            elif isinstance(optimizers_lr_schedulers, (list, tuple)):
+                if isinstance(optimizers_lr_schedulers[0], (list, tuple)):
+                    optimizers, lr_schedulers = optimizers_lr_schedulers
+                    self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in optimizers]
+                    self._lr_scheduler_helpers = [LRSchedulerConstructHelper.from_trace(lr_scheduler) for lr_scheduler in lr_schedulers]
+                    optimizer_ids_map = {id(optimizer): i for i, optimizer in enumerate(optimizers)}
+                    self._lr_scheduler_optimizer_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)] for i, lr_scheduler in enumerate(lr_schedulers)}
+                elif isinstance(optimizers_lr_schedulers[0], Optimizer):
+                    self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in optimizers_lr_schedulers]
+                elif isinstance(optimizers_lr_schedulers[0], dict):
+                    self._optimizer_helpers = []
+                    self._lr_scheduler_helpers = []
+                    self._configure_optimizers_returned_dicts = []
+                    optimizer_ids_map = {}
+                    lr_scheduler_opt_ids_map = {}
+                    optimizer_count = 0
+                    scheduler_count = 0
+                    for opt_dict in optimizers_lr_schedulers:
+                        opt_dict: Dict
+                        self._optimizer_helpers.append(OptimizerConstructHelper.from_trace(pure_model, opt_dict['optimizer']))
+                        optimizer_ids_map[id(opt_dict['optimizer'])] = optimizer_count
+                        opt_dict['optimizer'] = optimizer_count
+                        optimizer_count += 1
+
+                        lr_scheduler = opt_dict.get('lr_scheduler', {}).get('scheduler', None)
+                        if lr_scheduler is not None:
+                            self._lr_scheduler_helpers.append(LRSchedulerConstructHelper.from_trace(lr_scheduler))
+                            lr_scheduler_opt_ids_map[scheduler_count] = id(lr_scheduler.optimizer)
+                            opt_dict['lr_scheduler']['scheduler'] = scheduler_count
+                            scheduler_count += 1
+                        self._configure_optimizers_returned_dicts.append(opt_dict)
+                    self._lr_scheduler_optimizer_map = {scheduler_count: optimizer_ids_map[opt_id] for scheduler_count, opt_id in lr_scheduler_opt_ids_map.items()}
+
         else:
             _logger.warning('%s already have initialized optimizer helpers.', self.__class__.__name__)
 
