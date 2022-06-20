@@ -131,7 +131,7 @@ stages:
   # To reduce debug cost, steps are sorted differently on each platform,
   # so that a bug in any module will cause at least one platform to fail quickly.
 - stage: test
-  dependsOn: lint
+  # dependsOn: lint
   # dependencies.$(StageName).outputs['$(JobName).$(TaskName).$(VariableName)']
   condition: and(succeeded(), ne(dependencies.filter.outputs['check.execution.skipsubsequent'], 'true'))
   jobs:
