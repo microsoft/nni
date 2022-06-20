@@ -18,107 +18,107 @@ variables:
   filter.prbody.optionIndex: 0
 
 stages:
-- stage: lint
-  jobs:
+# - stage: lint
+#   jobs:
 
-  - job: copyright
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - script: python test/vso_tools/copyright_check.py
-      displayName: Check copyright header
+#   - job: copyright
+#     pool:
+#       vmImage: ubuntu-latest
+#     steps:
+#     - script: python test/vso_tools/copyright_check.py
+#       displayName: Check copyright header
 
-  - job: docs
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: ubuntu-latest
+#   - job: docs
+#     pool:
+#       vmImage: ubuntu-latest
+#     steps:
+#     - template: templates/install-dependencies.yml
+#       parameters:
+#         platform: ubuntu-latest
 
-    - script: |
-        cd docs
-        rstcheck -r source \
-          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs,youtube \
-          --ignore-roles githublink --ignore-substitutions release \
-          --report-level warning
-      displayName: rstcheck
+#     - script: |
+#         cd docs
+#         rstcheck -r source \
+#           --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs,youtube \
+#           --ignore-roles githublink --ignore-substitutions release \
+#           --report-level warning
+#       displayName: rstcheck
 
-    - script: |
-        cd docs
-        sphinx-build -W --keep-going -T -q source build/html
-      displayName: Sphinx sanity check
+#     - script: |
+#         cd docs
+#         sphinx-build -W --keep-going -T -q source build/html
+#       displayName: Sphinx sanity check
 
-    - script: |
-        set -e
-        cd docs
-        sudo apt-get install -y gettext
-        python tools/translation_patch.py
-        sphinx-build -W --keep-going -T -q -D language=zh source build/html_zh
-      displayName: Sphinx sanity check (Chinese)
+#     - script: |
+#         set -e
+#         cd docs
+#         sudo apt-get install -y gettext
+#         python tools/translation_patch.py
+#         sphinx-build -W --keep-going -T -q -D language=zh source build/html_zh
+#       displayName: Sphinx sanity check (Chinese)
 
-    - script: |
-        set -e
-        cd docs
-        make i18n
-        git diff --exit-code source/locales
-      displayName: Translation up-to-date
+#     - script: |
+#         set -e
+#         cd docs
+#         make i18n
+#         git diff --exit-code source/locales
+#       displayName: Translation up-to-date
 
-    - script: |
-        cd docs
-        sphinx-build -b linkcheck -W --keep-going -T -q source build/linkcheck
-      displayName: External links integrity check
+#     - script: |
+#         cd docs
+#         sphinx-build -b linkcheck -W --keep-going -T -q source build/linkcheck
+#       displayName: External links integrity check
 
-  - job: python
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: ubuntu-latest
+#   - job: python
+#     pool:
+#       vmImage: ubuntu-latest
+#     steps:
+#     - template: templates/install-dependencies.yml
+#       parameters:
+#         platform: ubuntu-latest
 
-    - script: |
-        # pylint requires newer typing extension. Override requirements in tensorflow
-        python -m pip install "typing-extensions>=3.10"
-      displayName: Resolve dependency version
+#     - script: |
+#         # pylint requires newer typing extension. Override requirements in tensorflow
+#         python -m pip install "typing-extensions>=3.10"
+#       displayName: Resolve dependency version
 
-    - script: python test/vso_tools/trigger_import.py
-      displayName: Trigger import
+#     - script: python test/vso_tools/trigger_import.py
+#       displayName: Trigger import
 
-    - script: |
-        python -m pylint --rcfile pylintrc nni
-      displayName: pylint
+#     - script: |
+#         python -m pylint --rcfile pylintrc nni
+#       displayName: pylint
 
-    - script: |
-        set -e
-        python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
-        EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-        python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
-      displayName: flake8
+#     - script: |
+#         set -e
+#         python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+#         EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
+#         python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+#       displayName: flake8
 
-    - script: |
-        python -m pyright nni
-      displayName: Type Check
+#     - script: |
+#         python -m pyright nni
+#       displayName: Type Check
 
-  - job: typescript
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: ubuntu-latest
+#   - job: typescript
+#     pool:
+#       vmImage: ubuntu-latest
+#     steps:
+#     - template: templates/install-dependencies.yml
+#       parameters:
+#         platform: ubuntu-latest
 
-    - script: |
-        set -e
-        yarn --cwd ts/nni_manager
-        yarn --cwd ts/nni_manager eslint
-      displayName: ESLint (NNI Manager)
+#     - script: |
+#         set -e
+#         yarn --cwd ts/nni_manager
+#         yarn --cwd ts/nni_manager eslint
+#       displayName: ESLint (NNI Manager)
 
-    - script: |
-        set -e
-        yarn --cwd ts/webui
-        yarn --cwd ts/webui sanity-check
-      displayName: Sanity check (WebUI)
+#     - script: |
+#         set -e
+#         yarn --cwd ts/webui
+#         yarn --cwd ts/webui sanity-check
+#       displayName: Sanity check (WebUI)
 
 - stage: filter
   jobs:
@@ -155,10 +155,6 @@ stages:
           --ignore=ut/compression/v1/test_compressor_tf.py \
           --ignore=ut/compression/v1/test_compressor_torch.py \
           --ignore=ut/compression/v1/test_model_speedup.py
-        python -m pytest ut/compression/v1/test_pruners.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/compression/v1/test_compressor_tf.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/compression/v1/test_compressor_torch.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/compression/v1/test_model_speedup.py --cov-config=.coveragerc --cov-append
         cp coverage.xml ../coverage/python.xml
       displayName: Python unit test
 
