@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from copy import deepcopy
 from typing import Callable, Dict, List, Type
 
@@ -9,7 +11,6 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
-from nni.common.serializer import _trace_cls
 from nni.common.serializer import Traceable, is_traceable
 
 __all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper']
@@ -60,14 +61,15 @@ class OptimizerConstructHelper(ConstructHelper):
 
         return param_groups
 
-    def names2params(self, wrapped_model: Module, origin2wrapped_name_map: Dict, params: List[Dict]) -> List[Dict]:
+    def names2params(self, wrapped_model: Module, origin2wrapped_name_map: Dict | None, params: List[Dict]) -> List[Dict]:
         param_groups = deepcopy(params)
+        origin2wrapped_name_map = origin2wrapped_name_map if origin2wrapped_name_map else {}
         for param_group in param_groups:
             wrapped_names = [origin2wrapped_name_map.get(name, name) for name in param_group['params']]
             param_group['params'] = [p for name, p in wrapped_model.named_parameters() if name in wrapped_names]
         return param_groups
 
-    def call(self, wrapped_model: Module, origin2wrapped_name_map: Dict) -> Optimizer:
+    def call(self, wrapped_model: Module, origin2wrapped_name_map: Dict | None) -> Optimizer:
         args = deepcopy(self.args)
         kwargs = deepcopy(self.kwargs)
 
