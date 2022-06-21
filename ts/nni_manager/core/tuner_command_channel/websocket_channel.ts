@@ -55,14 +55,14 @@ class WebSocketChannelImpl implements WebSocketChannel {
     private ws!: WebSocket;
 
     public setWebSocket(ws: WebSocket): void {
-        if (this.deferredInit === null) {
-            logger.error('Connection timed out.');
-            ws.close(4080, 'Timeout');
-            return;
-        }
         if (this.ws !== undefined) {
             logger.error('A second client is trying to connect.');
             ws.close(4030, 'Already serving a tuner');
+            return;
+        }
+        if (this.deferredInit === null) {
+            logger.error('Connection timed out.');
+            ws.close(4080, 'Timeout');
             return;
         }
 
