@@ -29,11 +29,14 @@ class DartsLightningModule(BaseOneShotLightningModule):
     The phase 1 is architecture step, in which model parameters are frozen and the architecture parameters are trained.
     The phase 2 is model step, in which architecture parameters are frozen and model parameters are trained.
 
-    The current implementation is for DARTS in first order. Second order (unrolled) is not supported yet.
+    The current implementation corresponds to DARTS (1st order) in paper.
+    Second order (unrolled 2nd-order derivatives) is not supported yet.
 
-    *New in v2.8*: Supports searching for ValueChoices on operations, with the technique described in
-    `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
-    One difference is that, in DARTS, we are using Softmax instead of GumbelSoftmax.
+    .. versionadded:: 2.8
+
+       Supports searching for ValueChoices on operations, with the technique described in
+       `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
+       One difference is that, in DARTS, we are using Softmax instead of GumbelSoftmax.
 
     The supported mutation primitives of DARTS are:
 
@@ -58,7 +61,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
     )
 
     __doc__ = _darts_note.format(
-        module_notes='The DARTS Module should be trained with :class:`nni.retiarii.oneshot.utils.InterleavedTrainValDataLoader`.',
+        module_notes='The DARTS Module should be trained with :class:`pytorch_lightning.trainer.supporters.CombinedLoader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
@@ -159,7 +162,7 @@ class ProxylessLightningModule(DartsLightningModule):
     """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
     __doc__ = _proxyless_note.format(
-        module_notes='This module should be trained with :class:`nni.retiarii.oneshot.pytorch.utils.InterleavedTrainValDataLoader`.',
+        module_notes='This module should be trained with :class:`pytorch_lightning.trainer.supporters.CombinedLoader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
@@ -184,11 +187,14 @@ class GumbelDartsLightningModule(DartsLightningModule):
     See `FBNet <https://arxiv.org/abs/1812.03443>`__ and `SNAS <https://arxiv.org/abs/1812.09926>`__.
 
     This is a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
-    Essentially, it samples one path on forward,
-    and implements its own backward to update the architecture parameters based on only one path.
+    Essentially, it tries to mimick the behavior of sampling one path on forward by gradually
+    cool down the temperature, aiming to bridge the gap between differentiable architecture weights and
+    discretization of architectures.
 
-    *New in v2.8*: Supports searching for ValueChoices on operations, with the technique described in
-    `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
+    .. versionadded:: 2.8
+    
+       Supports searching for ValueChoices on operations, with the technique described in
+       `FBNetV2: Differentiable Neural Architecture Search for Spatial and Channel Dimensions <https://arxiv.org/abs/2004.05565>`__.
 
     The supported mutation primitives of GumbelDARTS are:
 

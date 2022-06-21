@@ -16,7 +16,7 @@ from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from nni.retiarii.nn.pytorch.cell import CellOpFactory, create_cell_op_candidates, preprocess_cell_inputs
 
 from .base import BaseSuperNetModule
-from ._valuechoice_utils import evaluate_value_choice_with_dict, dedup_inner_choices
+from ._valuechoice_utils import evaluate_value_choice_with_dict, dedup_inner_choices, weighted_sum
 from .operation import MixedOperationSamplingPolicy, MixedOperation
 
 __all__ = [
@@ -72,6 +72,10 @@ class PathSamplingLayer(BaseSuperNetModule):
         if isinstance(module, LayerChoice):
             return cls(list(module.named_children()), module.label)
 
+    def reduction(self, items: list[Any], sampled: list[Any]):
+        """Override this to implement customized reduction."""
+        return weighted_sum(items)
+
     def forward(self, *args, **kwargs):
         if self._sampled is None:
             raise RuntimeError('At least one path needs to be sampled before fprop.')
@@ -79,10 +83,7 @@ class PathSamplingLayer(BaseSuperNetModule):
 
         # str(samp) is needed here because samp can sometimes be integers, but attr are always str
         res = [getattr(self, str(samp))(*args, **kwargs) for samp in sampled]
-        if len(res) == 1:
-            return res[0]
-        else:
-            return sum(res)
+        return self.reduction(res, sampled)
 
 
 class PathSamplingInput(BaseSuperNetModule):
@@ -95,11 +96,11 @@ class PathSamplingInput(BaseSuperNetModule):
         Sampled input indices.
     """
 
-    def __init__(self, n_candidates: int, n_chosen: int, reduction: str, label: str):
+    def __init__(self, n_candidates: int, n_chosen: int, reduction_type: str, label: str):
         super().__init__()
         self.n_candidates = n_candidates
         self.n_chosen = n_chosen
-        self.reduction = reduction
+        self.reduction_type = reduction_type
         self._sampled: list[int] | int | None = None
         self.label = label
 
@@ -144,6 +145,19 @@ class PathSamplingInput(BaseSuperNetModule):
                 raise ValueError('n_chosen is None is not supported yet.')
             return cls(module.n_candidates, module.n_chosen, module.reduction, module.label)
 
+    def reduction(self, items: list[Any], sampled: list[Any]) -> Any:
+        """Override this to implement customized reduction."""
+        if len(items) == 1:
+            return items[0]
+        else:
+            if self.reduction_type == 'sum':
+                return sum(items)
+            elif self.reduction_type == 'mean':
+                return sum(items) / len(items)
+            elif self.reduction_type == 'concat':
+                return torch.cat(items, 1)
+            raise ValueError(f'Unsupported reduction type: {self.reduction_type}')
+
     def forward(self, input_tensors):
         if self._sampled is None:
             raise RuntimeError('At least one path needs to be sampled before fprop.')
@@ -151,15 +165,7 @@ class PathSamplingInput(BaseSuperNetModule):
             raise ValueError(f'Expect {self.n_candidates} input tensors, found {len(input_tensors)}.')
         sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
         res = [input_tensors[samp] for samp in sampled]
-        if len(res) == 1:
-            return res[0]
-        else:
-            if self.reduction == 'sum':
-                return sum(res)
-            elif self.reduction == 'mean':
-                return sum(res) / len(res)
-            elif self.reduction == 'concat':
-                return torch.cat(res, 1)
+        return self.reduction(res, sampled)
 
 
 class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
@@ -202,6 +208,7 @@ class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
         return result
 
     def forward_argument(self, operation: MixedOperation, name: str) -> Any:
+        # NOTE: we don't support sampling a list here.
         if self._sampled is None:
             raise ValueError('Need to call resample() before running forward')
         if name in operation.mutable_arguments:
@@ -257,20 +264,23 @@ class PathSamplingRepeat(BaseSuperNetModule):
             # Only interesting when depth is mutable
             return cls(cast(List[nn.Module], module.blocks), module.depth_choice)
 
+    def reduction(self, items: list[Any], sampled: list[Any]):
+        """Override this to implement customized reduction."""
+        return weighted_sum(items)
+
     def forward(self, x):
         if self._sampled is None:
             raise RuntimeError('At least one depth needs to be sampled before fprop.')
-        if isinstance(self._sampled, list):
-            res = []
-            for i, block in enumerate(self.blocks):
-                x = block(x)
-                if i in self._sampled:
-                    res.append(x)
-                return sum(res)
-        else:
-            for block in self.blocks[:self._sampled]:
-                x = block(x)
-            return x
+        sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
+
+        res = []
+        for cur_depth, block in enumerate(self.blocks, start=1):
+            x = block(x)
+            if cur_depth in sampled:
+                res.append(x)
+            if not any(d > cur_depth for d in sampled):
+                break
+        return self.reduction(res, sampled)
 
 
 class PathSamplingCell(BaseSuperNetModule):

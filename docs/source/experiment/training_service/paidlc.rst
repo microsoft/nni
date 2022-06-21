@@ -51,6 +51,7 @@ Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML file's 
     podCount: 1
     ecsSpec: ecs.c6.large
     region: cn-hangzhou
+    workspaceId: ${your_workspace_id}
     accessKeyId: ${your_ak_id}
     accessKeySecret: ${your_ak_key}
     nasDataSourceId: ${your_nas_data_source_id}     # NAS datasource ID, e.g., datat56by9n1xt0a

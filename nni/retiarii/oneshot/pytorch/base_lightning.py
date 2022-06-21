@@ -157,7 +157,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         Mutation hooks are callable that inputs an Module and returns a
         :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`.
-        They are invoked in :meth:`traverse_and_mutate_submodules`, on each submodules.
+        They are invoked in :func:`~nni.retiarii.oneshot.pytorch.base_lightning.traverse_and_mutate_submodules`, on each submodules.
         For each submodule, the hook list are invoked subsequently,
         the later hooks can see the result from previous hooks.
         The modules that are processed by ``mutation_hooks`` will be replaced by the returned module,
@@ -189,7 +189,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         it means the hook suggests to
         keep the module unchanged, and nothing will happen.
 
-        An example of mutation hook is given in :func:`no_default_hook`.
+        An example of mutation hook is given in :func:`~nni.retiarii.oneshot.pytorch.base_lightning.no_default_hook`.
         However it's recommended to implement mutation hooks by deriving
         :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
         and add its classmethod ``mutate`` to this list.

@@ -459,13 +459,17 @@ class ModelSpeedup:
                 self.bound_model, g_node.name)
             m_type = g_node.op_type
             if (not m_type in replace_module) and (m_type not in self.customized_replace_func):
-                raise RuntimeError(
-                    "Has not supported replacing the module: `{}`".format(m_type))
+                err_msg = f"Has not supported replacing module with type: {m_type}, "
+                err_msg += f"you could report an issue at https://github.com/microsoft/nni. "
+                err_msg += f"If you know how to replace {m_type}, "
+                err_msg += f"you could implement module replacement by passing in"
+                err_msg += f"`customized_replace_func` to `{self.__class__.__name__}`. "
+                err_msg += f"You are welcome to contribute back to nni as native support if you have implemented the replacement function, "
+                err_msg += f"so that more users can benefit from your contributions."
+                raise RuntimeError(err_msg)
             _logger.info("replace module (name: %s, op_type: %s)",
                          g_node.name, m_type)
-            replace_function = replace_module[m_type]
-            if m_type in self.customized_replace_func:
-                replace_function = self.customized_replace_func[m_type]
+            replace_function = self.customized_replace_func.get(m_type, replace_module.get(m_type, None))
             compressed_module = replace_function(
                 leaf_module, auto_infer.get_masks())
             new_submodule = compressed_module

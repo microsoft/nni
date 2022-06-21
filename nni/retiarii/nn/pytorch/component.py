@@ -36,7 +36,9 @@ class Repeat(Mutable):
         meaning that the block will be repeated at least ``min`` times and at most ``max`` times.
         If a ValueChoice, it should choose from a series of positive integers.
 
-        *New in v2.8*: Minimum depth can be 0. But this feature is NOT supported on graph engine.
+        .. versionadded:: 2.8
+
+           Minimum depth can be 0. But this feature is NOT supported on graph engine.
 
     Examples
     --------

@@ -79,6 +79,11 @@ class Lightning(Evaluator):
     in trainer. Two hooks are added at the end of validation epoch and the end of ``fit``, respectively. The metric name
     and type depend on the specific task.
 
+    .. warning::
+
+       The Lightning evaluator are stateful. If you try to use a previous Lightning evaluator,
+       please note that the inner ``lightning_module`` and ``trainer`` will be reused.
+
     Parameters
     ----------
     lightning_module

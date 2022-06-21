@@ -50,14 +50,16 @@ def prepare_imagenet_subset(data_dir: Path, imagenet_dir: Path):
     # Target root dir
     subset_dir = data_dir / 'imagenet'
     shutil.rmtree(subset_dir, ignore_errors=True)
+    subset_dir.mkdir(parents=True)
+    shutil.copyfile(imagenet_dir / 'meta.bin', subset_dir / 'meta.bin')
     copied_count = 0
     for category_id, imgs in images.items():
         random_state.shuffle(imgs)
         for img in imgs[:len(imgs) // 10]:
             folder_name = Path(img).parent.name
             file_name = Path(img).name
-            (subset_dir / folder_name).mkdir(exist_ok=True, parents=True)
-            shutil.copyfile(img, subset_dir / folder_name / file_name)
+            (subset_dir / 'val' / folder_name).mkdir(exist_ok=True, parents=True)
+            shutil.copyfile(img, subset_dir / 'val' / folder_name / file_name)
             copied_count += 1
     print(f'Generated a subset of {copied_count} images.')
 

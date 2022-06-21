@@ -110,7 +110,15 @@ class ExperimentConfig(ConfigBase):
 
         for algo_type in ['tuner', 'assessor', 'advisor']:
             algo = getattr(self, algo_type)
-            if algo is not None and algo.name == '_none_':
+
+            # TODO: need a more universal solution for similar problems
+            if isinstance(algo, dict):
+                # the base class should have converted it to `_AlgorithmConfig` if feasible
+                # it is a `dict` here means an exception was raised during the convertion attempt
+                # we do the convertion again to show user the error message
+                _AlgorithmConfig(**algo)  # pylint: disable=not-a-mapping
+
+            if algo is not None and algo.name == '_none_':  # type: ignore
                 setattr(self, algo_type, None)
 
         if self.advisor is not None:

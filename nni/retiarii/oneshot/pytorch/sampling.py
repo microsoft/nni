@@ -4,6 +4,7 @@
 """Experimental version of sampling-based one-shot implementation."""
 
 from __future__ import annotations
+import warnings
 from typing import Any
 
 import pytorch_lightning as pl
@@ -76,6 +77,18 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
         self.resample()
         return self.model.training_step(batch, batch_idx)
 
+    def export(self) -> dict[str, Any]:
+        """
+        Export of Random one-shot. It will return an arbitrary architecture.
+        """
+        warnings.warn(
+            'Direct export from RandomOneShot returns an arbitrary architecture. '
+            'Sampling the best architecture from this trained supernet is another search process. '
+            'Users need to do another search based on the checkpoint of the one-shot strategy.',
+            UserWarning
+        )
+        return super().export()
+
 
 class EnasLightningModule(RandomSamplingLightningModule):
     _enas_note = """
@@ -86,8 +99,10 @@ class EnasLightningModule(RandomSamplingLightningModule):
     - Firstly, training model parameters.
     - Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
 
-    ENAS requires the evaluator to report metrics via ``self.log`` in its ``validation_step``.
-    See explanation of ``reward_metric_name`` for details.
+    .. note::
+
+       ENAS requires the evaluator to report metrics via ``self.log`` in its ``validation_step``.
+       See explanation of ``reward_metric_name`` for details.
 
     The supported mutation primitives of ENAS are:
 
@@ -105,22 +120,24 @@ class EnasLightningModule(RandomSamplingLightningModule):
     {{module_params}}
     {base_params}
     ctrl_kwargs : dict
-        Optional kwargs that will be passed to :class:`ReinforceController`.
+        Optional kwargs that will be passed to :class:`~nni.retiarii.oneshot.pytorch.enas.ReinforceController`.
     entropy_weight : float
-        Weight of sample entropy loss.
+        Weight of sample entropy loss in RL.
     skip_weight : float
-        Weight of skip penalty loss.
+        Weight of skip penalty loss. See :class:`~nni.retiarii.oneshot.pytorch.enas.ReinforceController` for details.
     baseline_decay : float
-        Decay factor of baseline. New baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
+        Decay factor of reward baseline, which is used to normalize the reward in RL.
+        At each step, the new reward baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
     ctrl_steps_aggregate : int
-        Number of steps that will be aggregated into one mini-batch for RL controller.
+        Number of steps for which the gradients will be accumulated,
+        before updating the weights of RL controller.
     ctrl_grad_clip : float
         Gradient clipping value of controller.
     reward_metric_name : str or None
         The name of the metric which is treated as reward.
         This will be not effective when there's only one metric returned from evaluator.
-        If there are multiple, it will find the metric with key name ``reward_metric_name``,
-        which is "default" by default.
+        If there are multiple, by default, it will find the metric with key name ``default``.
+        If reward_metric_name is specified, it will find reward_metric_name.
         Otherwise it raises an exception indicating multiple metrics are found.
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,

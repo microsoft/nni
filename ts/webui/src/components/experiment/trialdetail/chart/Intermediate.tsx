@@ -261,14 +261,16 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                                 // placeholder="range"
                                 ref={(input): any => (this.maxValInput = input)}
                             />
-                            <PrimaryButton text='Confirm' onClick={this.filterLines} disabled={isLoadconfirmBtn} />
+                            <PrimaryButton
+                                className='intermeidateconfirm'
+                                text='Confirm'
+                                onClick={this.filterLines}
+                                disabled={isLoadconfirmBtn}
+                            />
                         </div>
                     ) : null}
                     {/* filter message */}
-                    <Stack horizontal className='filter-toggle'>
-                        <span>Filter</span>
-                        <Toggle onChange={this.switchTurn} />
-                    </Stack>
+                    <Toggle label='Filter' inlineLabel onChange={this.switchTurn} />
                 </Stack>
                 <div className='intermediate-graph graph'>
                     <ReactEcharts
@@ -277,7 +279,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         notMerge={true} // update now
                         onEvents={IntermediateEvents}
                     />
-                    <div className='fontColor333'># Intermediate result</div>
+                    <div className='fontColor333 xAxis'># Intermediate result</div>
                 </div>
             </div>
         );
