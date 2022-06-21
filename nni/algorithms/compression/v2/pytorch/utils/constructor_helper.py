@@ -81,15 +81,12 @@ class OptimizerConstructHelper(ConstructHelper):
         return self.callable_obj(*args, **kwargs)
 
     @staticmethod
-    def from_trace(model: Module, optimizer_trace: Traceable):
+    def from_trace(model: Module, optimizer_trace: Optimizer):
         assert is_traceable(optimizer_trace), \
             'Please use nni.trace to wrap the optimizer class before initialize the optimizer.'
         assert isinstance(optimizer_trace, Optimizer), \
             'It is not an instance of torch.nn.Optimizer.'
-        return OptimizerConstructHelper(model,
-                                        optimizer_trace.trace_symbol,
-                                        *optimizer_trace.trace_args,
-                                        **optimizer_trace.trace_kwargs)
+        return OptimizerConstructHelper(model, optimizer_trace.trace_symbol, *optimizer_trace.trace_args, **optimizer_trace.trace_kwargs)  # type: ignore
 
 
 class LRSchedulerConstructHelper(ConstructHelper):
@@ -113,11 +110,9 @@ class LRSchedulerConstructHelper(ConstructHelper):
         return self.callable_obj(*args, **kwargs)
 
     @staticmethod
-    def from_trace(lr_scheduler_trace: Traceable):
+    def from_trace(lr_scheduler_trace: _LRScheduler):
         assert is_traceable(lr_scheduler_trace), \
             'Please use nni.trace to wrap the lr scheduler class before initialize the scheduler.'
         assert isinstance(lr_scheduler_trace, _LRScheduler), \
             'It is not an instance of torch.nn.lr_scheduler._LRScheduler.'
-        return LRSchedulerConstructHelper(lr_scheduler_trace.trace_symbol,
-                                          *lr_scheduler_trace.trace_args,
-                                          **lr_scheduler_trace.trace_kwargs)
+        return LRSchedulerConstructHelper(lr_scheduler_trace.trace_symbol, *lr_scheduler_trace.trace_args, **lr_scheduler_trace.trace_kwargs)  # type: ignore

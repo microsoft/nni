@@ -42,18 +42,17 @@ class Hook:
         self.target = target
         self.target_name = target_name
         self.hook_factory = hook_factory
-        self.buffer: List | None = None
+        self.buffer: List = []
         self.handle: RemovableHandle | None = None
 
     def _register(self, hook_func: Callable) -> RemovableHandle:
         raise NotImplementedError
 
-    def register(self, buffer: List):
+    def register(self):
         if self.handle is not None:
             _logger.warning('%s for %s already has been registered.', self.__class__.__name__, self.target_name)
             return
-        self.buffer = buffer
-        self.handle = self._register(self.hook_factory(buffer))
+        self.handle = self._register(self.hook_factory(self.buffer))
 
     def remove(self):
         if self.handle is None:
@@ -61,7 +60,7 @@ class Hook:
             return
         self.handle.remove()
         self.handle = None
-        self.buffer = None
+        self.buffer = []
 
 
 class TensorHook(Hook):
@@ -70,7 +69,7 @@ class TensorHook(Hook):
         super().__init__(target, target_name, hook_factory)
 
     def _register(self, hook_func: Callable[[Tensor], Any]) -> RemovableHandle:
-        return self.target.register_hook(hook_func)
+        return self.target.register_hook(hook_func)  # type: ignore
 
 
 class ModuleHook(Hook):
@@ -81,12 +80,12 @@ class ModuleHook(Hook):
 
 class ForwardHook(ModuleHook):
     def _register(self, hook_func: Callable[[Module, Tensor, Tensor], Any]):
-        return self.target.register_forward_hook(hook_func)
+        return self.target.register_forward_hook(hook_func)  # type: ignore
 
 
 class BackwardHook(ModuleHook):
     def _register(self, hook_func: Callable[[Module, Tensor, Tensor], Any]):
-        return self.target.register_backward_hook(hook_func)
+        return self.target.register_backward_hook(hook_func)  # type: ignore
 
 
 class Evaluator:
@@ -239,34 +238,37 @@ class LightningEvaluator(Evaluator):
         self.model = None
 
     def _patch_configure_optimizers(self):
+        assert self.model is not None
         assert self._optimizer_helpers is not None, 'Please call `LightningEvaluator.init_optimizer_helpers` first.'
 
         if self._configure_optimizers_returned_dicts:
-            def new_configure_optimizers(_):
-                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]
-                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
+            def new_configure_optimizers(_):  # type: ignore
+                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
+                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]  # type: ignore
                 opt_lrs_dicts = deepcopy(self._configure_optimizers_returned_dicts)
-                for opt_lrs_dict in opt_lrs_dicts:
+                for opt_lrs_dict in opt_lrs_dicts:  # type: ignore
                     opt_lrs_dict['optimizer'] = optimizers[opt_lrs_dict['optimizer']]
                     if 'lr_scheduler' in opt_lrs_dict:
                         opt_lrs_dict['lr_scheduler']['scheduler'] = lr_schedulers[opt_lrs_dict['lr_scheduler']['scheduler']]
                 return opt_lrs_dicts
         elif self._lr_scheduler_helpers:
-            def new_configure_optimizers(_):
-                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]
-                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
+            def new_configure_optimizers(_):  # type: ignore
+                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
+                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]  # type: ignore
                 return optimizers, lr_schedulers
         else:
             def new_configure_optimizers(_):
-                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]
+                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
                 return optimizers
 
         self.model.configure_optimizers = types.MethodType(new_configure_optimizers, self.model)
 
     def _revert_configure_optimizers(self):
+        assert self.model is not None
         self.model.configure_optimizers = self._ori_model_attr['configure_optimizers']
 
     def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+        assert self.model is not None
         old_training_step = self.model.training_step
 
         def patched_training_step(_, *args, **kwargs):
@@ -280,9 +282,12 @@ class LightningEvaluator(Evaluator):
         self.model.training_step = types.MethodType(patched_training_step, self.model)
 
     def revert_loss(self):
+        assert self.model is not None
         self.model.training_step = self._ori_model_attr['training_step']
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
+        assert self.model is not None
+
         class OptimizerCallback(Callback):
             def on_before_optimizer_step(self, trainer: pl.Trainer, pl_module: pl.LightningModule, optimizer: Optimizer, opt_idx: int) -> None:
                 for task in before_step_tasks:
@@ -302,6 +307,7 @@ class LightningEvaluator(Evaluator):
         self.model.configure_callbacks = types.MethodType(patched_configure_callbacks, self.model)
 
     def revert_optimizer_step(self):
+        assert self.model is not None
         self.model.configure_callbacks = self._ori_model_attr['configure_callbacks']
 
     def register_hooks(self, hooks: List[Hook]):
@@ -315,6 +321,7 @@ class LightningEvaluator(Evaluator):
         self._hooks.clear()
 
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
+        assert self.model is not None
         ori_max_steps, ori_max_epochs = self.trainer.fit_loop.max_steps, self.trainer.fit_loop.max_epochs
         if max_steps:
             self.trainer.fit_loop.max_steps = max_steps
@@ -326,7 +333,7 @@ class LightningEvaluator(Evaluator):
     def finetune(self):
         self.train()
 
-    def evaluate(self) -> Tuple[float, List[Dict[str, float]]]:
+    def evaluate(self) -> Tuple[float | None, List[Dict[str, float]]]:
         """
         NNI will use metric with key `NNI_METRIC` for evaluating model, please make sure you have this key in your `Trainer.test()` returned metric dicts.
         If `Trainer.test()` returned list contains multiple dicts with key `NNI_METRIC`, NNI will take their average as the final metric.
@@ -344,7 +351,7 @@ class LightningEvaluator(Evaluator):
     def get_dummy_input(self) -> Any:
         if self._dummy_input:
             return self._dummy_input
-        return next(iter(self.data_module.train_dataloader))
+        return next(iter(self.data_module.train_dataloader()))
 
 
 _CRITERION = Callable[[Any, Any], Any]
@@ -361,7 +368,7 @@ class LegacyEvaluator(Evaluator):
         self._ori_criterion = criterion
 
         self._traced_lr_schedulers = lr_schedulers if isinstance(lr_schedulers, (list, tuple)) else [lr_schedulers] if lr_schedulers else []
-        assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in lr_schedulers)
+        assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in self._traced_lr_schedulers)
         self.dummy_input = dummy_input
         self.evaluator = evaluator
 
@@ -383,7 +390,7 @@ class LegacyEvaluator(Evaluator):
             self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in self._traced_optimizers]
             self._lr_scheduler_helpers = [LRSchedulerConstructHelper.from_trace(lr_scheduler) for lr_scheduler in self._traced_lr_schedulers]
             optimizer_ids_map = {id(optimizer): i for i, optimizer in enumerate(self._traced_optimizers)}
-            self._lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)] for i, lr_scheduler in enumerate(self._traced_lr_schedulers)}
+            self._lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)] for i, lr_scheduler in enumerate(self._traced_lr_schedulers)}  # type: ignore
             self._traced_optimizers.clear()
             self._traced_lr_schedulers.clear()
         else:
@@ -392,6 +399,8 @@ class LegacyEvaluator(Evaluator):
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
         assert isinstance(model, Module)
         assert self._optimizer_helpers is not None
+        assert self._lr_scheduler_helpers is not None
+        assert self._lrs_opt_map is not None
         self.model = model
         self._param_names_map = param_names_map
         self._criterion = self._ori_criterion
@@ -411,6 +420,7 @@ class LegacyEvaluator(Evaluator):
         self.model = None
 
     def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+        assert self._criterion is not None
         old_criterion = self._criterion
 
         def patched_criterion(*args, **kwargs):
@@ -423,6 +433,7 @@ class LegacyEvaluator(Evaluator):
         self._criterion = self._ori_criterion
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
+        assert self._optimizers is not None
         old_step = self._optimizers[0].step
 
         def patched_step(_, *args, **kwargs):
@@ -437,6 +448,7 @@ class LegacyEvaluator(Evaluator):
         self._optimizers[0].step = types.MethodType(patched_step, self._optimizers[0])
 
     def revert_optimizer_step(self):
+        assert self._optimizers is not None
         if self._first_optimizer_step:
             self._optimizers[0].step = self._first_optimizer_step
 
@@ -451,15 +463,20 @@ class LegacyEvaluator(Evaluator):
         self._hooks.clear()
 
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
+        assert self.model is not None
+        assert self._optimizers is not None
+        assert self._criterion is not None
         self.trainer(self.model, self._optimizers, self._criterion, self._lr_schedulers, max_steps, max_epochs)
 
     def finetune(self):
-        self.trainer(self.model, self._optimizers, self._criterion, self._lr_schedulers)
+        self.train()
 
     def evaluate(self) -> float | Tuple[float, Any]:
         """
         Note that the first item of the returned value will be used as the default metric used by NNI.
         """
+        assert self.model is not None
+        assert self.evaluator is not None
         return self.evaluator(self.model)
 
     def get_dummy_input(self) -> Any:
