@@ -11,9 +11,9 @@ Release 2.8 - 6/21/2022
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Align user experience of one-shot NAS with multi-trial NAS, i.e., users can use one-shot NAS by specifying the corresponding strategy
+* Align user experience of one-shot NAS with multi-trial NAS, i.e., users can use one-shot NAS by specifying the corresponding strategy (`doc <https://nni.readthedocs.io/en/v2.8/nas/exploration_strategy.html#one-shot-strategy>`__)
 * Support multi-GPU training of one-shot NAS
-* *Preview* Support load/retrain the pre-searched model of some search spaces, i.e., 18 models in 4 different search spaces
+* *Preview* Support load/retrain the pre-searched model of some search spaces, i.e., 18 models in 4 different search spaces (`doc <https://github.com/microsoft/nni/tree/v2.8/nni/retiarii/hub>`__)
 * Support AutoFormer search space in search space hub, thanks our collaborators @nbl97 and @penghouwen
 * One-shot NAS supports the NAS API ``repeat`` and ``cell``
 * Refactor of RetiariiExperiment to share the common implementation with HPO experiment
@@ -55,7 +55,7 @@ Documentation
 ^^^^^^^^^^^^^
 
 * A new translation framework for document
-* Add a new quantization demo (`doc <>`__)
+* Add a new quantization demo (`doc <https://nni.readthedocs.io/en/v2.8/tutorials/quantization_quick_start_mnist.html>`__)
 
 Notable Bugfixes
 ^^^^^^^^^^^^^^^^
