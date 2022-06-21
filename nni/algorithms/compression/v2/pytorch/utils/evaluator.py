@@ -238,7 +238,7 @@ class LightningEvaluator(Evaluator):
 
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]
+                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
                 lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
                 opt_lrs_dicts = deepcopy(self._opt_returned_dicts)
                 for opt_lrs_dict in opt_lrs_dicts:
@@ -248,12 +248,12 @@ class LightningEvaluator(Evaluator):
                 return opt_lrs_dicts
         elif self._lr_scheduler_helpers:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]
+                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
                 lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
                 return optimizers, lr_schedulers
         else:
             def new_configure_optimizers(_):
-                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]
+                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
                 return optimizers
 
         self.model.configure_optimizers = types.MethodType(new_configure_optimizers, self.model)
@@ -296,7 +296,7 @@ class LightningEvaluator(Evaluator):
 
         def patched_configure_callbacks(_):
             callbacks = old_configure_callbacks()
-            callbacks.append(OptimizerCallback())
+            callbacks.append(OptimizerCallback())  # type: ignore
             return callbacks
 
         self.model.configure_callbacks = types.MethodType(patched_configure_callbacks, self.model)
