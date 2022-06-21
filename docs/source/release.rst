@@ -5,43 +5,45 @@
 Change Log
 ==========
 
-Release 2.8 - 6/16/2022
+Release 2.8 - 6/21/2022
 -----------------------
 
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Align user experience of one-shot NAS with multi-trial NAS, i.e., users can use one-shot NAS by specifying the corresponding strategy
-* *Preview* Support load/retrain the pre-searched model of some search spaces, i.e., 18 models in 4 different search spaces
-* Support AutoFormer search space in search space hub, thanks our collaborators xxx, xxx
 * Support multi-GPU training of one-shot NAS
-* One-shot NAS supports the NAS API `repeat` and `cell`
+* *Preview* Support load/retrain the pre-searched model of some search spaces, i.e., 18 models in 4 different search spaces
+* Support AutoFormer search space in search space hub, thanks our collaborators @nbl97 and @penghouwen
+* One-shot NAS supports the NAS API ``repeat`` and ``cell``
 * Refactor of RetiariiExperiment to share the common implementation with HPO experiment
 * CGO supports pytorch-lightning 1.6
 
 Model Compression
 ^^^^^^^^^^^^^^^^^
 
-* *Preview* Refactor and improvement of automatic model compress with a new `CompressionExperiment`
+* *Preview* Refactor and improvement of automatic model compress with a new ``CompressionExperiment``
 * Support customizating module replacement function for unsupported modules in model speedup
 * Support the module replacement function for some user mentioned modules
-* Support output_padding for contransposed2d in model speedup, thanks external contributor xxx
+* Support output_padding for contransposed2d in model speedup, thanks external contributor @haoshuai-orka
 
 Hyper-Parameter Optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Make config.tuner.name case insensitive
+* Make ``config.tuner.name`` case insensitive
 * Allow writing configurations of advisor in tuner format, i.e., aligning the configuration of advisor and tuner
 
 Experiment
 ^^^^^^^^^^
 
 * Support launching multiple HPO experiments in one process
-* Refactor of the logging mechanism in NNI
-* Refactor of NNI manager globals for flexible and high externsibility
-* Migrate dispatcher IPC to WebSocket
-* Decouple lock stuffs from experiments manager logic
-* Use launcher's sys.executable to detect Python interpreter
+* Internal refactors and improvements
+
+  * Refactor of the logging mechanism in NNI
+  * Refactor of NNI manager globals for flexible and high extensibility
+  * Migrate dispatcher IPC to WebSocket
+  * Decouple lock stuffs from experiments manager logic
+  * Use launcher's sys.executable to detect Python interpreter
 
 WebUI
 ^^^^^
@@ -53,13 +55,14 @@ Documentation
 ^^^^^^^^^^^^^
 
 * A new translation framework for document
+* Add a new quantization demo (`doc <>`__)
 
 Notable Bugfixes
 ^^^^^^^^^^^^^^^^
 
 * Fix TPE import issue for old metrics
 * Fix the issue in TPE nested search space
-* Support `RecursiveScriptModule` in speedup
+* Support ``RecursiveScriptModule`` in speedup
 * Fix the issue of failed "implicit type cast" in merge_parameter()
 
 Release 2.7 - 4/18/2022
