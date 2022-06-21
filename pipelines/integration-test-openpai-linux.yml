@@ -1,9 +1,10 @@
 trigger: none
 pr: none
-schedules:
-- cron: 0 16 * * *
-  branches:
-    include: [ master ]
+# Unstable. Disable trigger.
+# schedules:
+# - cron: 0 16 * * *
+#   branches:
+#     include: [ master ]
 
 # variables set on VSO: (mostly for security concern)
 #   pai_user

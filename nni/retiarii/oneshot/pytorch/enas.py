@@ -68,7 +68,9 @@ class ReinforceController(nn.Module):
     tanh_constant : float
         Logits will be equal to ``tanh_constant * tanh(logits)``. Don't use ``tanh`` if this value is ``None``.
     skip_target : float
-        Target probability that skipconnect will appear.
+        Target probability that skipconnect (chosen by InputChoice) will appear.
+        If the chosen number of inputs is away from the ``skip_connect``, there will be
+        a sample skip penalty which is a KL divergence added.
     temperature : float
         Temperature constant that divides the logits.
     entropy_reduction : str

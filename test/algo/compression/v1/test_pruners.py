@@ -15,8 +15,8 @@ from nni.algorithms.compression.pytorch.pruning import LevelPruner, SlimPruner, 
     TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, \
     AutoCompressPruner, AMCPruner
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from sdk.models.pytorch_models.mobilenet import MobileNet
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+from ut.sdk.models.pytorch_models.mobilenet import MobileNet
 
 def validate_sparsity(wrapper, sparsity, bias=False):
     masks = [wrapper.weight_mask]

@@ -29,7 +29,8 @@ class DartsLightningModule(BaseOneShotLightningModule):
     The phase 1 is architecture step, in which model parameters are frozen and the architecture parameters are trained.
     The phase 2 is model step, in which architecture parameters are frozen and model parameters are trained.
 
-    The current implementation is for DARTS in first order. Second order (unrolled) is not supported yet.
+    The current implementation corresponds to DARTS (1st order) in paper.
+    Second order (unrolled 2nd-order derivatives) is not supported yet.
 
     .. versionadded:: 2.8
 
@@ -186,8 +187,9 @@ class GumbelDartsLightningModule(DartsLightningModule):
     See `FBNet <https://arxiv.org/abs/1812.03443>`__ and `SNAS <https://arxiv.org/abs/1812.09926>`__.
 
     This is a DARTS-based method that uses gumbel-softmax to simulate one-hot distribution.
-    Essentially, it samples one path on forward,
-    and implements its own backward to update the architecture parameters based on only one path.
+    Essentially, it tries to mimick the behavior of sampling one path on forward by gradually
+    cool down the temperature, aiming to bridge the gap between differentiable architecture weights and
+    discretization of architectures.
 
     .. versionadded:: 2.8
     
