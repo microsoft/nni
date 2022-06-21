@@ -1,7 +1,7 @@
 trigger: none
 
 schedules:
-- cron: 0 16 * * *
+- cron: 0 18 * * *
   branches:
     include: [ master ]
 
@@ -13,7 +13,7 @@ resources:
       endpoint: github-filter-connection
 
 variables:
-  filter.modified.globs: 'examples/nas/**,nni/algorithms/nas/**,nni/nas/**,nni/retiarii/**'
+  filter.modified.globs: 'examples/nas/**,nni/algorithms/nas/**,nni/nas/**,nni/retiarii/**,pipelines/full-test-nas.yml,test/ut/nas/**,test/algo/nas/**'
   filter.prbody.heading: '#### Test Options'
   filter.prbody.optionIndex: 2
 
@@ -42,7 +42,36 @@ stages:
 
     - template: templates/install-nni.yml
 
+    - template: templates/download-test-data.yml
+
     - script: |
         cd test
-        source scripts/nas.sh
+        python -m pytest algo/nas
+      displayName: NAS test
+
+  - job: windows
+    pool: nni-it-windows
+    timeoutInMinutes: 60
+
+    steps:
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: windows
+        python_env: noop
+
+    - template: templates/install-nni.yml
+      parameters:
+        user: false
+
+    # NOTE: Data needs to be downloaded if Windows has GPU.
+    # Also, the download template needs to be updated with powershell syntax.
+    # - template: templates/download-test-data.yml
+
+    - powershell: |
+        python test/vso_tools/ssl_patch.py
+      displayName: SSL patch
+
+    - powershell: |
+        cd test
+        python -m pytest algo/nas
       displayName: NAS test

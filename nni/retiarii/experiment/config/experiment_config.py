@@ -2,8 +2,9 @@
 # Licensed under the MIT license.
 
 import os
+import sys
 from dataclasses import dataclass
-from typing import Any, Union
+from typing import Any, Dict, Union, Optional
 
 from nni.experiment.config import utils, ExperimentConfig
 
@@ -33,6 +34,10 @@ class RetiariiExeConfig(ExperimentConfig):
     # new config field for NAS
     execution_engine: Union[str, ExecutionEngineConfig]
 
+    # Internal: to support customized fields in trial command
+    # Useful when customized python / environment variables are needed
+    _trial_command_params: Optional[Dict[str, Any]] = None
+
     def __init__(self, training_service_platform: Union[str, None] = None,
                  execution_engine: Union[str, ExecutionEngineConfig] = 'py',
                  **kwargs):
@@ -46,15 +51,25 @@ class RetiariiExeConfig(ExperimentConfig):
         # TODO: maybe we should also allow users to specify trial_code_directory
         if str(self.trial_code_directory) != '.' and not os.path.isabs(self.trial_code_directory):
             raise ValueError(msg.format('trial_code_directory', self.trial_code_directory))
-        if self.trial_command != '_reserved' and \
-            not self.trial_command.startswith('python3 -m nni.retiarii.trial_entry '):
+
+        trial_command_tmpl = '{envs} {python} -m nni.retiarii.trial_entry {execution_engine}'
+        if self.trial_command != '_reserved' and '-m nni.retiarii.trial_entry' not in self.trial_command:
             raise ValueError(msg.format('trial_command', self.trial_command))
 
         if isinstance(self.execution_engine, str):
             self.execution_engine = execution_engine_config_factory(self.execution_engine)
-        if self.execution_engine.name in ('py', 'base', 'cgo'):
-            # TODO: replace python3 with more elegant approach
-            # maybe use sys.executable rendered in trial side (e.g., trial_runner)
-            self.trial_command = 'python3 -m nni.retiarii.trial_entry ' + self.execution_engine.name
+
+        _trial_command_params = {
+            # Default variables
+            'envs': '',
+            # TODO: maybe use sys.executable rendered in trial side (e.g., trial_runner)
+            'python': sys.executable,
+            'execution_engine': self.execution_engine.name,
+
+            # This should override the parameters above.
+            **(self._trial_command_params or {})
+        }
+
+        self.trial_command = trial_command_tmpl.format(**_trial_command_params).strip()
 
         super()._canonicalize([self])

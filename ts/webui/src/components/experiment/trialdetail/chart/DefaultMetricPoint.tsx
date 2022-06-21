@@ -6,6 +6,7 @@ import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { TooltipForAccuracy, EventMap } from '@static/interface';
 import { reformatRetiariiParameter } from '@static/function';
 import { gap15 } from '@components/fluent/ChildrenGap';
+import { optimizeModeValue } from './optimizeMode';
 import 'echarts/lib/chart/scatter';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -45,7 +46,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             bestCurveEnabled: false,
             startY: 0, // dataZoomY
             endY: 100,
-            userSelectOptimizeMode: EXPERIMENT.optimizeMode || 'maximize'
+            userSelectOptimizeMode: optimizeModeValue(EXPERIMENT.optimizeMode)
         };
     }
 

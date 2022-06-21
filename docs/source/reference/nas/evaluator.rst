@@ -29,9 +29,14 @@ Utilities
 Customization
 -------------
 
+..  autoclass:: nni.retiarii.Evaluator
+    :members:
+
 ..  autoclass:: nni.retiarii.evaluator.pytorch.Lightning
+    :members:
 
 ..  autoclass:: nni.retiarii.evaluator.pytorch.LightningModule
+    :members:
 
 Cross-graph Optimization (experimental)
 ---------------------------------------

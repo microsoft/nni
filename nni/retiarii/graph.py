@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 from .operation import Cell, Operation, _IOPseudoOperation
 from .utils import uid
 
-__all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData']
+__all__ = ['Evaluator', 'Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData']
 
 
 MetricData = Any
@@ -42,6 +42,13 @@ class Evaluator(abc.ABC):
     Each config should define how it is interpreted in ``_execute()``, taking only one argument which is the mutated model class.
     For example, functional evaluator might directly import the function and call the function.
     """
+
+    def evaluate(self, model_cls: Union[Callable[[], Any], Any]) -> Any:
+        """To run evaluation of a model. The model could be either a concrete model or a callable returning a model.
+
+        The concrete implementation of evaluate depends on the implementation of ``_execute()`` in sub-class.
+        """
+        return self._execute(model_cls)
 
     def __repr__(self):
         items = ', '.join(['%s=%r' % (k, v) for k, v in self.__dict__.items()])
@@ -355,6 +362,7 @@ class Graph:
 
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, operation: Operation) -> 'Node': ...
+
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str,
                             parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...

@@ -6,11 +6,19 @@ from nni.retiarii import *
 
 # FIXME
 import nni.retiarii.debug_configs
-nni.retiarii.debug_configs.framework = 'tensorflow'
+original_framework = nni.retiarii.debug_configs.framework
 
 max_pool = Operation.new('MaxPool2D', {'pool_size': 2})
 avg_pool = Operation.new('AveragePooling2D', {'pool_size': 2})
 global_pool = Operation.new('GlobalAveragePooling2D')
+
+
+def setup_module(module):
+    nni.retiarii.debug_configs.framework = 'tensorflow'
+
+
+def teardown_module(module):
+    nni.retiarii.debug_configs.framework = original_framework
 
 
 class DebugSampler(Sampler):
@@ -79,5 +87,7 @@ def _get_pools(model):
 
 
 if __name__ == '__main__':
+    setup_module(None)
     test_dry_run()
     test_mutation()
+    teardown_module(None)

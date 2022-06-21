@@ -8,7 +8,7 @@ A model evaluator is for training and validating each generated model. They are 
 Customize Evaluator with Any Function
 -------------------------------------
 
-The simplest way to customize a new evaluator is with :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>` as its initialization parameters (note that they will be :doc:`serialized <./serialization>`). In this way, users get everything under their control, but expose less information to the framework and as a result, further optimizations like :ref:`CGO <cgo-execution-engine>` might be not feasible. An example is as belows:
+The simplest way to customize a new evaluator is with :class:`~nni.retiarii.evaluator.FunctionalEvaluator`, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to :class:`~nni.retiarii.evaluator.FunctionalEvaluator` as its initialization parameters (note that they will be :doc:`serialized <./serialization>`). In this way, users get everything under their control, but expose less information to the framework and as a result, further optimizations like :ref:`CGO <cgo-execution-engine>` might be not feasible. An example is as belows:
 
 .. code-block:: python
 
@@ -41,6 +41,41 @@ The simplest way to customize a new evaluator is with :class:`FunctionalEvaluato
             # the rest of training code here
 
     If the conversion is successful, the model will be able to be visualized with powerful tools `Netron <https://netron.app/>`__.
+
+Use Evaluators to Train and Evaluate Models
+-------------------------------------------
+
+Users can use evaluators to train or evaluate a single, concrete architecture. This is very useful when:
+
+* Debugging your evaluator against a baseline model.
+* Fully train, validate and test your model after the search process is complete.
+
+The usage is shown below:
+
+.. code-block:: python
+
+   # Class definition of single model, for example, ResNet.
+   class SingleModel(nn.Module):
+       def __init__():  # Can't have init parameters here.
+           ...
+
+   # Use a callable returning a model
+   evaluator.evaluate(SingleModel)
+   # Or initialize the model beforehand
+   evaluator.evaluate(SingleModel())
+
+The underlying implementation of :meth:`~nni.retiarii.Evaluator.evaluate` depends on concrete evaluator that you used.
+For example, if :class:`~nni.retiarii.evaluator.FunctionalEvaluator` is used, it will run your customized fit function.
+If lightning evaluators like :class:`nni.retiarii.evaluator.pytorch.Classification` are used, it will invoke the ``trainer.fit()`` of Lightning.
+
+To evaluate an architecture that is exported from experiment (i.e., from :meth:`~nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models`), use :func:`nni.retiarii.fixed_arch` to instantiate the exported model::
+
+    with fixed_arch(exported_model):
+        model = ModelSpace()
+    # Then use evaluator.evaluate
+    evaluator.evaluate(model)
+
+.. tip:: There is a way to port the trained checkpoint of super-net produced by one-shot strategies, to the concrete chosen architecture, thanks to :func:`nni.retiarii.utils.original_state_dict_hooks`. This is helpful in implementing recent multi-stage NAS algorithms like `SPOS <https://arxiv.org/abs/1904.00420>`__.
 
 .. _lightning-evaluator:
 
@@ -133,6 +168,10 @@ An example is as follows:
         def teardown(self, stage):
             if stage == 'fit':
                 nni.report_final_result(self.trainer.callback_metrics['val_loss'].item())
+
+.. note::
+
+   If you are trying to use your customized evaluator with one-shot strategy, bear in mind that your defined methods will be reassembled into another LightningModule, which might result in extra constraints when writing the LightningModule. For example, your validation step could appear else where (e.g., in ``training_step``). This prohibits you from returning arbitrary object in ``validation_step``.
 
 Then, users need to wrap everything (including LightningModule, trainer and dataloaders) into a :class:`nni.retiarii.evaluator.pytorch.Lightning` object, and pass this object into a Retiarii experiment.
 

@@ -97,7 +97,7 @@ def _dataset_factory(dataset_type, subset=20):
     if dataset_type == 'cifar10':
         normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
         train_dataset = nni.trace(CIFAR10)(
-            '../data/cifar10',
+            'data/cifar10',
             train=True,
             transform=transforms.Compose([
                 transforms.RandomHorizontalFlip(),
@@ -106,7 +106,7 @@ def _dataset_factory(dataset_type, subset=20):
                 normalize,
             ]))
         valid_dataset = nni.trace(CIFAR10)(
-            '../data/cifar10',
+            'data/cifar10',
             train=False,
             transform=transforms.Compose([
                 transforms.ToTensor(),
@@ -115,7 +115,7 @@ def _dataset_factory(dataset_type, subset=20):
     elif dataset_type == 'imagenet':
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         train_dataset = nni.trace(ImageNet)(
-            '../data/imagenet',
+            'data/imagenet',
             split='val',  # no train data available in tests
             transform=transforms.Compose([
                 transforms.RandomResizedCrop(224),
@@ -124,7 +124,7 @@ def _dataset_factory(dataset_type, subset=20):
                 normalize,
             ]))
         valid_dataset = nni.trace(ImageNet)(
-            '../data/imagenet',
+            'data/imagenet',
             split='val',
             transform=transforms.Compose([
                 transforms.Resize(256),

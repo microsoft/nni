@@ -7,6 +7,7 @@ import { filterByStatus } from '@static/function';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { TableObj, SingleAxis, MultipleAxes } from '@static/interface';
 import ChangeColumnComponent from '../ChangeColumnComponent';
+import { optimizeModeValue } from './optimizeMode';
 
 import 'parcoord-es/dist/parcoords.css';
 import '@style/button.scss';
@@ -50,7 +51,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             dimName: [],
             primaryMetricKey: 'default',
             selectedPercent: '1',
-            userSelectOptimizeMode: EXPERIMENT.optimizeMode || 'maximize',
+            userSelectOptimizeMode: optimizeModeValue(EXPERIMENT.optimizeMode),
             noChart: true,
             customizeColumnsDialogVisible: false,
             availableDimensions: [],

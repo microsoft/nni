@@ -75,7 +75,15 @@ Starting from v2.8, the usage of one-shot strategies are much alike to multi-tri
 
    import nni.retiarii.strategy as strategy
    import nni.retiarii.evaluator.pytorch.lightning as pl
-   evaluator = pl.Classification(...)
+   evaluator = pl.Classification(
+     # Need to use `pl.DataLoader` instead of `torch.utils.data.DataLoader` here,
+     # or use `nni.trace` to wrap `torch.utils.data.DataLoader`.
+     train_dataloaders=pl.DataLoader(train_dataset, batch_size=100),
+     val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+     # Other keyword arguments passed to pytorch_lightning.Trainer.
+     max_epochs=10,
+     gpus=1,
+   )
    exploration_strategy = strategy.DARTS()
 
    exp_config.execution_engine = 'oneshot'
