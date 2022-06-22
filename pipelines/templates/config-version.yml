@@ -48,15 +48,15 @@ steps:
     ${{ if contains(parameters.platform, 'legacy') }}:
       versionSpec: 3.7
     ${{ else }}:
-      versionSpec: 3.9
+      versionSpec: 3.10
   displayName: Configure Python version
   condition: and(succeeded(), ne('${{ parameters.python_env }}', 'noop'))
 
 - task: NodeTool@0
   inputs:
-    versionSpec: 16.13.2
+    versionSpec: 16.15.1
   displayName: Configure Node.js version
 
 - script: |
-    python -m pip install pip==22.0.4 setuptools==62.1.0 wheel==0.37.1
+    python -m pip install pip==22.1.2 setuptools==62.6.0 wheel==0.37.1
   displayName: Install PyPA tools

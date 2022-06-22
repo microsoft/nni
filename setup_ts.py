@@ -24,7 +24,7 @@ import traceback
 from zipfile import ZipFile
 
 
-node_version = 'v16.14.2'
+node_version = 'v16.15.1'
 yarn_version = 'v1.22.10'
 
 def _get_jupyter_lab_version():
