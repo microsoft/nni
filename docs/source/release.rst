@@ -5,7 +5,7 @@
 Change Log
 ==========
 
-Release 2.8 - 6/21/2022
+Release 2.8 - 6/22/2022
 -----------------------
 
 Neural Architecture Search
@@ -23,9 +23,9 @@ Model Compression
 ^^^^^^^^^^^^^^^^^
 
 * *Preview* Refactor and improvement of automatic model compress with a new ``CompressionExperiment``
-* Support customizating module replacement function for unsupported modules in model speedup
+* Support customizating module replacement function for unsupported modules in model speedup (`doc <https://nni.readthedocs.io/en/v2.8/reference/compression/pruning_speedup.html#nni.compression.pytorch.speedup.ModelSpeedup>`__)
 * Support the module replacement function for some user mentioned modules
-* Support output_padding for contransposed2d in model speedup, thanks external contributor @haoshuai-orka
+* Support output_padding for convtranspose2d in model speedup, thanks external contributor @haoshuai-orka
 
 Hyper-Parameter Optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
