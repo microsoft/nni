@@ -20,8 +20,8 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 
 ## What's NEW! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 
-* **New release**: [v2.7 is available](https://github.com/microsoft/nni/releases/tag/v2.7) - _released on Apr-18-2022_
-* **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on Apr-18-2022_
+* **New release**: [v2.8 is available](https://github.com/microsoft/nni/releases/tag/v2.8) - _released on June-22-2022_
+* **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on June-22-2022_
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **Newly upgraded documentation**: [Doc upgraded](https://nni.readthedocs.io/en/stable)
 
