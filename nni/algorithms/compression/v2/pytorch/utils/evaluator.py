@@ -89,6 +89,9 @@ class BackwardHook(ModuleHook):
 
 
 class Evaluator:
+    def _init_optimizer_helpers(self, pure_model: Module | pl.LightningModule):
+        # NOTE: this is a part of Evaluator initialization, please make sure this function has been called before using evaluator.
+        raise NotImplementedError
 
     def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None):
         # param_names_map maps the names of the parameters in the pure_model to the names of the parameters in the binded model.
@@ -136,29 +139,30 @@ class Evaluator:
 
 
 class LightningEvaluator(Evaluator):
-    def __init__(self, pure_model: pl.LightningModule, trainer: pl.Trainer, data_module: pl.LightningDataModule,
+    def __init__(self, trainer: pl.Trainer, data_module: pl.LightningDataModule,
                  dummy_input: Any | None = None):
-        assert isinstance(trainer, pl.Trainer)
+        assert isinstance(trainer, pl.Trainer) and is_traceable(trainer)
         assert isinstance(data_module, pl.LightningDataModule)
         self.trainer = trainer
         self.data_module = data_module
         self._dummy_input = dummy_input
-
-        self._optimizer_helpers, self._lr_scheduler_helpers, self._lrs_opt_map, self._opt_returned_dicts = \
-            self._init_optimizer_helpers(pure_model)
 
         self.model: pl.LightningModule | None = None
         self._hooks: List[Hook] = []
         self._ori_model_attr = {}
         self._param_names_map: Dict[str, str] | None = None
 
+        self._initialization_complete = False
+
     def _init_optimizer_helpers(self, pure_model: pl.LightningModule):
-        optimizer_helpers = []
-        lr_scheduler_helpers = []
+        assert self._initialization_complete is False, 'Evaluator initialization is already complete.'
+
+        self._optimizer_helpers = []
+        self._lr_scheduler_helpers = []
         # record i-th lr_scheduler scheduling j-th optimizer lr
-        lrs_opt_map = {}
+        self._lrs_opt_map = {}
         # record `LightningModule.configure_optimizers` 6-th option returned dict information
-        opt_returned_dicts = []
+        self._opt_returned_dicts = []
 
         # The return value of `configure_optimizers` may one of the following six options:
         optimizers_lr_schedulers: Any = pure_model.configure_optimizers()
@@ -178,13 +182,13 @@ class LightningEvaluator(Evaluator):
         # 4. Two lists - the first list has multiple optimizers, and the second has multiple LR schedulers (or multiple lr_scheduler_config).
         if isinstance(optimizers_lr_schedulers[0], (list, tuple)):
             optimizers, lr_schedulers = optimizers_lr_schedulers
-            optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in optimizers]
-            lr_scheduler_helpers = [LRSchedulerConstructHelper.from_trace(lr_scheduler) for lr_scheduler in lr_schedulers]
+            self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in optimizers]
+            self._lr_scheduler_helpers = [LRSchedulerConstructHelper.from_trace(lr_scheduler) for lr_scheduler in lr_schedulers]
             optimizer_ids_map = {id(optimizer): i for i, optimizer in enumerate(optimizers)}
-            lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)] for i, lr_scheduler in enumerate(lr_schedulers)}
+            self._lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)] for i, lr_scheduler in enumerate(lr_schedulers)}
         # 5. List or Tuple of optimizers.
         elif isinstance(optimizers_lr_schedulers[0], Optimizer):
-            optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in optimizers_lr_schedulers]
+            self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in optimizers_lr_schedulers]
         # 6. Tuple of dictionaries as described above, with an optional "frequency" key.
         elif isinstance(optimizers_lr_schedulers[0], dict):
             optimizer_ids_map = {}
@@ -193,27 +197,28 @@ class LightningEvaluator(Evaluator):
             scheduler_count = 0
             for opt_dict in optimizers_lr_schedulers:
                 opt_dict: Dict
-                optimizer_helpers.append(OptimizerConstructHelper.from_trace(pure_model, opt_dict['optimizer']))
+                self._optimizer_helpers.append(OptimizerConstructHelper.from_trace(pure_model, opt_dict['optimizer']))
                 optimizer_ids_map[id(opt_dict['optimizer'])] = optimizer_count
                 opt_dict['optimizer'] = optimizer_count
                 optimizer_count += 1
 
                 lr_scheduler = opt_dict.get('lr_scheduler', {}).get('scheduler', None)
                 if lr_scheduler is not None:
-                    lr_scheduler_helpers.append(LRSchedulerConstructHelper.from_trace(lr_scheduler))
+                    self._lr_scheduler_helpers.append(LRSchedulerConstructHelper.from_trace(lr_scheduler))
                     lr_scheduler_opt_ids_map[scheduler_count] = id(lr_scheduler.optimizer)
                     opt_dict['lr_scheduler']['scheduler'] = scheduler_count
                     scheduler_count += 1
-                opt_returned_dicts.append(opt_dict)
-            lrs_opt_map = {scheduler_count: optimizer_ids_map[opt_id] for scheduler_count, opt_id in lr_scheduler_opt_ids_map.items()}
+                self._opt_returned_dicts.append(opt_dict)
+            self._lrs_opt_map = {scheduler_count: optimizer_ids_map[opt_id] for scheduler_count, opt_id in lr_scheduler_opt_ids_map.items()}
         else:
             err_msg = 'Got an wrong returned value type of `LightningModule.configure_optimizers`: '
             err_msg += f'list or tuple of {type(optimizers_lr_schedulers[0]).__name__}'
             raise TypeError(err_msg)
 
-        return optimizer_helpers, lr_scheduler_helpers, lrs_opt_map, opt_returned_dicts
+        self._initialization_complete = True
 
     def bind_model(self, model: pl.LightningModule, param_names_map: Dict[str, str] | None = None):
+        assert self._initialization_complete is True, 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert isinstance(model, pl.LightningModule)
         self.model = model
         self._ori_model_attr.update({
@@ -317,6 +322,8 @@ class LightningEvaluator(Evaluator):
 
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
         assert isinstance(self.model, pl.LightningModule)
+        # reset trainer
+        self.trainer = self.trainer.trace_copy().get()
         ori_max_steps, ori_max_epochs = self.trainer.fit_loop.max_steps, self.trainer.fit_loop.max_epochs
         if max_steps:
             self.trainer.fit_loop.max_steps = max_steps
@@ -336,6 +343,8 @@ class LightningEvaluator(Evaluator):
         NNI will take the final metric `(0.8 + 0.6 + 0.7) / 3 = 0.7`.
         """
         assert isinstance(self.model, pl.LightningModule)
+        # reset trainer
+        self.trainer = self.trainer.trace_copy().get()
         original_results = self.trainer.test(self.model, self.data_module)
         nni_metrics_list = [metrics['NNI_METRIC'] for metrics in original_results if 'NNI_METRIC' in metrics]
         if nni_metrics_list:
@@ -356,16 +365,13 @@ _TRAINER = Callable[[Module, Union[Optimizer, List[Optimizer]], _CRITERION, Unio
 
 
 class LegacyEvaluator(Evaluator):
-    def __init__(self, pure_model: Module, trainer: _TRAINER, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
+    def __init__(self, trainer: _TRAINER, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
                  lr_schedulers: _LRScheduler | List[_LRScheduler] | None = None, dummy_input: Any | None = None, evaluator: _EVALUATOR | None = None):
         self.trainer = trainer
         self._ori_criterion = criterion
         self._criterion = self._ori_criterion
         self.dummy_input = dummy_input
         self.evaluator = evaluator
-
-        self._optimizer_helpers, self._lr_scheduler_helpers, self._lrs_opt_map = \
-            self._init_optimizer_helpers(pure_model, optimizers, lr_schedulers)
 
         self.model: Module | None = None
         self._optimizers: List[Optimizer] | None = None
@@ -374,21 +380,28 @@ class LegacyEvaluator(Evaluator):
         self._param_names_map: Dict[str, str] | None = None
         self._hooks: List[Hook] = []
 
-    def _init_optimizer_helpers(self, pure_model: Module, optimizers: Optimizer | List[Optimizer], lr_schedulers: _LRScheduler | List[_LRScheduler] | None):
-        traced_optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
-        assert all(isinstance(optimizer, Optimizer) and is_traceable(optimizer) for optimizer in traced_optimizers)
-        traced_lr_schedulers = lr_schedulers if isinstance(lr_schedulers, (list, tuple)) else [lr_schedulers] if lr_schedulers else []
-        assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in traced_lr_schedulers)
+        # will del self._tmp_optimizers and self._tmp_lr_schedulers in `_init_optimizer_helpers`
+        self._tmp_optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
+        assert all(isinstance(optimizer, Optimizer) and is_traceable(optimizer) for optimizer in self._tmp_optimizers)
+        self._tmp_lr_schedulers = lr_schedulers if isinstance(lr_schedulers, (list, tuple)) else [lr_schedulers] if lr_schedulers else []
+        assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers)
+        self._initialization_complete = False
 
-        optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in traced_optimizers]
-        lr_scheduler_helpers = [LRSchedulerConstructHelper.from_trace(lr_scheduler) for lr_scheduler in traced_lr_schedulers]
-        optimizer_ids_map = {id(optimizer): i for i, optimizer in enumerate(traced_optimizers)}
+    def _init_optimizer_helpers(self, pure_model: Module):
+        assert self._initialization_complete is False, 'Evaluator initialization is already complete.'
+
+        self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in self._tmp_optimizers]
+        self._lr_scheduler_helpers = [LRSchedulerConstructHelper.from_trace(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers]
+        optimizer_ids_map = {id(optimizer): i for i, optimizer in enumerate(self._tmp_optimizers)}
         # record i-th lr_scheduler scheduling j-th optimizer lr
-        lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)] for i, lr_scheduler in enumerate(traced_lr_schedulers)}  # type: ignore
+        self._lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)] for i, lr_scheduler in enumerate(self._tmp_lr_schedulers)}  # type: ignore
 
-        return optimizer_helpers, lr_scheduler_helpers, lrs_opt_map
+        delattr(self, '_tmp_optimizers')
+        delattr(self, '_tmp_lr_schedulers')
+        self._initialization_complete = True
 
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
+        assert self._initialization_complete is True, 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert isinstance(model, Module)
         self.model = model
         self._param_names_map = param_names_map
@@ -458,9 +471,6 @@ class LegacyEvaluator(Evaluator):
         self.train()
 
     def evaluate(self) -> float | Tuple[float, Any]:
-        """
-        Note that the first item of the returned value will be used as the default metric used by NNI.
-        """
         assert self.model is not None
         assert self.evaluator is not None
         return self.evaluator(self.model)
