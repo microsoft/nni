@@ -398,7 +398,7 @@ class PathSamplingCell(BaseSuperNetModule):
                 op_candidates_lc = module.ops[-1][-1]  # type: ignore
                 assert isinstance(op_candidates_lc, LayerChoice)
                 op_factory = {  # create a factory
-                    name: lambda _, __, ___: copy.deepcopy(op_candidates_lc[name])
+                    name: lambda _, __, ___: copy.deepcopy(op_candidates_lc[name])  # type: ignore
                     for name in op_candidates_lc.names
                 }
             if op_factory is not None:
