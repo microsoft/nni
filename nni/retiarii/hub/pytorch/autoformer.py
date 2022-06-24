@@ -11,6 +11,10 @@ import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
 
+from .utils.fixed import FixedFactory
+from .utils.pretrained import load_pretrained_weight
+
+
 class RelativePosition2D(nn.Module):
     def __init__(self, head_embed_dim, length=14,) -> None:
         super().__init__()
@@ -55,14 +59,8 @@ class RelativePosition2D(nn.Module):
         final_mat_h = F.pad(
             final_mat_h, (1, 0, 1, 0), "constant", 0)
 
-        final_mat_v = torch.tensor(
-            final_mat_v,
-            dtype=torch.long,
-            device=self.embeddings_table_v.device)
-        final_mat_h = torch.tensor(
-            final_mat_h,
-            dtype=torch.long,
-            device=self.embeddings_table_v.device)
+        final_mat_v = final_mat_v.clone().long().to(self.embeddings_table_v.device)
+        final_mat_h = final_mat_h.clone().long().to(self.embeddings_table_v.device)
         # get the embeddings with the corresponding distance
         embeddings = self.embeddings_table_v[final_mat_v] + \
             self.embeddings_table_h[final_mat_h]
@@ -92,27 +90,27 @@ class RelativePositionAttention(nn.Module):
             rpe_length=14) -> None:
         super().__init__()
         self.num_heads = num_heads
-        head_dim = embed_dim // num_heads
+        # head_dim = embed_dim // num_heads
+        head_dim = 64
         self.scale = qk_scale or head_dim ** -0.5
-        self.qkv = nn.Linear(embed_dim, embed_dim * 3, bias=qkv_bias)
+        self.qkv = nn.Linear(embed_dim, (head_dim * num_heads) * 3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(embed_dim, embed_dim)
+        self.proj = nn.Linear(head_dim * num_heads, embed_dim)
         self.proj_drop = nn.Dropout(proj_drop)
         self.rpe = rpe
         if rpe:
-            self.rel_pos_embed_k = RelativePosition2D(
-                fixed_embed_dim // num_heads, rpe_length)
-            self.rel_pos_embed_v = RelativePosition2D(
-                fixed_embed_dim // num_heads, rpe_length)
+            self.rel_pos_embed_k = RelativePosition2D(head_dim, rpe_length)
+            self.rel_pos_embed_v = RelativePosition2D(head_dim, rpe_length)
 
     def forward(self, x):
         B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B,N,3,self.num_heads,C//self.num_heads).permute(
-            2,0,3,1,4)
+        qkv = self.qkv(x)
+        qkv = qkv.reshape(B,N,3,self.num_heads, -1).permute(2,0,3,1,4)
         # make torchscript happy (cannot use tensor as tuple)
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
+
         if self.rpe:
             r_p_k = self.rel_pos_embed_k(N, N)
             attn = attn + (
@@ -124,7 +122,8 @@ class RelativePositionAttention(nn.Module):
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
 
-        x = (attn @ v).transpose(1, 2).reshape(B, N, C)
+        x = (attn @ v).transpose(1, 2).reshape(B, N, -1)
+        
         if self.rpe:
             r_p_v = self.rel_pos_embed_v(N, N)
             attn_1 = attn.permute(
@@ -133,8 +132,7 @@ class RelativePositionAttention(nn.Module):
             # The size of attention is (B, num_heads, N, N), reshape it to (N, B*num_heads, N) and do batch matmul with
             # the relative position embedding of V (N, N, head_dim) get shape like (N, B*num_heads, head_dim). We reshape it to the
             # same size as x (B, num_heads, N, hidden_dim)
-            x = x + (attn_1 @ r_p_v).transpose(1, 0).reshape(B,
-                                                             self.num_heads, N, -1).transpose(2, 1).reshape(B, N, -1)
+            x = x + (attn_1 @ r_p_v).transpose(1, 0).reshape(B, self.num_heads, N, -1).transpose(2, 1).reshape(B, N, -1)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
@@ -193,7 +191,6 @@ class TransformerEncoderLayer(nn.Module):
         """
         Args:
             x (Tensor): input to the layer of shape `(batch, patch_num , sample_embed_dim)`
-
         Returns:
             encoded output of shape `(batch, patch_num, sample_embed_dim)`
         """
@@ -204,7 +201,7 @@ class TransformerEncoderLayer(nn.Module):
         x = self.drop_path(x)
         x = residual + x
         x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
-
+        
         residual = x
         x = self.maybe_layer_norm(self.ffn_layer_norm, x, before=True)
         x = self.fc1(x)
@@ -215,6 +212,7 @@ class TransformerEncoderLayer(nn.Module):
         x = self.drop_path(x)
         x = residual + x
         x = self.maybe_layer_norm(self.ffn_layer_norm, x, after=True)
+
         return x
 
     def maybe_layer_norm(self, layer_norm, x, before=False, after=False):
@@ -230,7 +228,6 @@ class AutoformerSpace(nn.Module):
     """
     The search space that is proposed in `Autoformer <https://arxiv.org/abs/2107.00651>`__.
     There are four searchable variables: depth, embedding dimension, heads number and MLP ratio.
-
     Parameters
     ----------
     search_embed_dim : list of int
@@ -267,13 +264,12 @@ class AutoformerSpace(nn.Module):
         The scaler on score map in self-attention.
     rpe : bool
         Whether to use relative position encoding.
-
     """
 
     def __init__(
             self,
             search_embed_dim: Tuple[int, ...] = (192, 216, 240),
-            search_mlp_ratio: Tuple[float, ...] = (3.5, 4.0),
+            search_mlp_ratio: Tuple[float, ...] = (3.0, 3.5, 4.0),
             search_num_heads: Tuple[int, ...] = (3, 4),
             search_depth: Tuple[int, ...] = (12, 13, 14),
             img_size: int = 224,
@@ -293,8 +289,7 @@ class AutoformerSpace(nn.Module):
         super().__init__()
 
         embed_dim = nn.ValueChoice(list(search_embed_dim), label="embed_dim")
-        fixed_embed_dim = nn.ModelParameterChoice(
-            list(search_embed_dim), label="embed_dim")
+        fixed_embed_dim = nn.ModelParameterChoice(list(search_embed_dim), label="embed_dim")
         depth = nn.ValueChoice(list(search_depth), label="depth")
         self.patch_embed = nn.Conv2d(
             in_chans,
@@ -356,3 +351,98 @@ class AutoformerSpace(nn.Module):
         x = self.head(x)
 
         return x
+
+    @classmethod
+    def load_searched_model(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+
+        init_kwargs = {"qkv_bias": True, "drop_rate": 0.0, "drop_path_rate": 0.1, "global_pool": True}
+
+        if name == "autoformer-tiny":
+            arch = {
+                'embed_dim': 192, 
+                'depth': 13, 
+                'layer0': '2',
+                'layer1': '2',
+                'layer2': '0',
+                'layer3': '2',
+                'layer4': '0',
+                'layer5': '0',
+                'layer6': '4',
+                'layer7': '4',
+                'layer8': '2',
+                'layer9': '4',
+                'layer10': '3',
+                'layer11': '4',
+                'layer12': '2'
+            }
+            init_kwargs.update({
+                "search_embed_dim": (192, 216, 240),
+                "search_mlp_ratio": (3.0, 3.5, 4.0),
+                "search_num_heads": (3, 4),
+                "search_depth": (12, 13, 14),
+            })
+        elif name == "autoformer-small":
+            arch = {
+                'embed_dim': 384, 
+                'depth': 13, 
+                'layer0': '1',
+                'layer1': '4',
+                'layer2': '0',
+                'layer3': '5',
+                'layer4': '6',
+                'layer5': '6',
+                'layer6': '6',
+                'layer7': '7',
+                'layer8': '7',
+                'layer9': '8',
+                'layer10': '8',
+                'layer11': '4',
+                'layer12': '8'
+            }
+            init_kwargs.update({
+                "search_embed_dim": (320, 384, 448),
+                "search_mlp_ratio": (3.0, 3.5, 4.0),
+                "search_num_heads": (5, 6, 7),
+                "search_depth": (12, 13, 14),
+            })
+        elif name == "autoformer-base":
+            arch = {
+                'embed_dim': 576, 
+                'depth': 14, 
+                'layer0': '4',
+                'layer1': '4',
+                'layer2': '7',
+                'layer3': '4',
+                'layer4': '7',
+                'layer5': '5',
+                'layer6': '4',
+                'layer7': '1',
+                'layer8': '8',
+                'layer9': '7',
+                'layer10': '2',
+                'layer11': '7',
+                'layer12': '1',
+                'layer13': '5'
+            }
+            init_kwargs.update({
+                "search_embed_dim": (528, 576, 624),
+                "search_mlp_ratio": (3.0, 3.5, 4.0),
+                "search_num_heads": (8, 9, 10),
+                "search_depth": (14, 15, 16),
+            })
+
+        else:
+            raise ValueError(f'Unsupported architecture with name: {name}')
+
+        model_factory = FixedFactory(cls, arch)
+        model = model_factory(**init_kwargs)
+
+        if pretrained:
+            weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
+            model.load_state_dict(pretrained_weights)
+
+        return model
