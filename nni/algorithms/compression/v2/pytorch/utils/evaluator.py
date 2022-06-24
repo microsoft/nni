@@ -142,7 +142,7 @@ class LightningEvaluator(Evaluator):
     def __init__(self, trainer: pl.Trainer, data_module: pl.LightningDataModule,
                  dummy_input: Any | None = None):
         assert isinstance(trainer, pl.Trainer) and is_traceable(trainer)
-        assert isinstance(data_module, pl.LightningDataModule)
+        assert isinstance(data_module, pl.LightningDataModule) and is_traceable(data_module)
         self.trainer = trainer
         self.data_module = data_module
         self._dummy_input = dummy_input
@@ -323,7 +323,12 @@ class LightningEvaluator(Evaluator):
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
         assert isinstance(self.model, pl.LightningModule)
         # reset trainer
-        self.trainer = self.trainer.trace_copy().get()
+        self.trainer: pl.Trainer = self.trainer.trace_copy().get()  # type: ignore
+        # NOTE: lightning may dry run some steps at first for sanity check in Trainer.fit() by default,
+        # If we want to record some information in the forward hook, we may get some additional information,
+        # so using Trainer.num_sanity_val_steps = 0 disable sanity check.
+        self.trainer.num_sanity_val_steps = 0
+
         ori_max_steps, ori_max_epochs = self.trainer.fit_loop.max_steps, self.trainer.fit_loop.max_epochs
         if max_steps:
             self.trainer.fit_loop.max_steps = max_steps
@@ -344,7 +349,7 @@ class LightningEvaluator(Evaluator):
         """
         assert isinstance(self.model, pl.LightningModule)
         # reset trainer
-        self.trainer = self.trainer.trace_copy().get()
+        self.trainer = self.trainer.trace_copy().get()  # type: ignore
         original_results = self.trainer.test(self.model, self.data_module)
         nni_metrics_list = [metrics['NNI_METRIC'] for metrics in original_results if 'NNI_METRIC' in metrics]
         if nni_metrics_list:
@@ -372,6 +377,9 @@ class LegacyEvaluator(Evaluator):
         self._criterion = self._ori_criterion
         self.dummy_input = dummy_input
         self.evaluator = evaluator
+
+        self._train_with_single_optimizer = isinstance(optimizers, Optimizer)
+        self._train_with_single_scheduler = isinstance(lr_schedulers, _LRScheduler)
 
         self.model: Module | None = None
         self._optimizers: List[Optimizer] | None = None
@@ -465,7 +473,9 @@ class LegacyEvaluator(Evaluator):
         assert self.model is not None
         assert self._optimizers is not None
         assert self._criterion is not None
-        self.trainer(self.model, self._optimizers, self._criterion, self._lr_schedulers, max_steps, max_epochs)
+        optimizers = self._optimizers[0] if self._train_with_single_optimizer else self._optimizers
+        lr_schedulers = self._lr_schedulers[0] if self._train_with_single_scheduler else self._lr_schedulers  # type: ignore
+        self.trainer(self.model, optimizers, self._criterion, lr_schedulers, max_steps, max_epochs)
 
     def finetune(self):
         self.train()

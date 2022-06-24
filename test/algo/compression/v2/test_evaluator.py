@@ -4,17 +4,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-import pickle
-
+from typing import Callable
 import pytest
 
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
-pl.seed_everything(10)
 
 import torch
+from torch.nn import Module
 import torch.nn.functional as F
-from torch.optim.lr_scheduler import ExponentialLR
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import ExponentialLR, _LRScheduler
 from torch.utils.data import random_split, DataLoader
 from torchmetrics.functional import accuracy
 from torchvision.datasets import MNIST
@@ -22,7 +22,6 @@ from torchvision import transforms
 
 import nni
 from nni.algorithms.compression.v2.pytorch.utils.evaluator import (
-    Evaluator,
     LegacyEvaluator,
     LightningEvaluator,
     TensorHook,
@@ -48,6 +47,60 @@ class SimpleTorchModel(torch.nn.Module):
         x = self.bn2(self.conv2(x)) + self.bn3(self.conv3(x))
         x = self.fc2(self.fc1(x.reshape(x.shape[0], -1)))
         return F.log_softmax(x, -1)
+
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def training_model(model: Module, optimizer: Optimizer, criterion: Callable, scheduler: _LRScheduler,
+                   max_steps: int | None = None, max_epochs: int | None = None):
+    model.train()
+
+    # prepare data
+    data_dir = Path(__file__).parent / 'data'
+    MNIST(data_dir, train=True, download=True)
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    mnist_train = MNIST(data_dir, train=True, transform=transform)
+    train_dataloader = DataLoader(mnist_train, batch_size=32)
+
+    max_epochs = max_epochs if max_epochs else 1
+    max_steps = max_steps if max_steps else 10
+    current_steps = 0
+
+    # training
+    for _ in range(max_epochs):
+        for x, y in train_dataloader:
+            optimizer.zero_grad()
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            loss: torch.Tensor = criterion(logits, y)
+            loss.backward()
+            optimizer.step()
+            current_steps += 1
+            if max_steps and current_steps == max_steps:
+                return
+        scheduler.step()
+
+
+def evaluating_model(model: Module):
+    model.eval()
+
+    # prepare data
+    data_dir = Path(__file__).parent / 'data'
+    MNIST(data_dir, train=False, download=True)
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    mnist_test = MNIST(data_dir, train=False, transform=transform)
+    test_dataloader = DataLoader(mnist_test, batch_size=32)
+
+    # testing
+    correct = 0
+    with torch.no_grad():
+        for x, y in test_dataloader:
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            preds = torch.argmax(logits, dim=1)
+            correct += preds.eq(y.view_as(preds)).sum().item()
+    return correct / len(mnist_test)
 
 
 class SimpleLightningModel(pl.LightningModule):
@@ -184,24 +237,47 @@ def assert_flags():
     assert loss_flag, 'Evaluator patch loss failed.'
 
 
-def test_lightning_evaluator():
+def create_lighting_evaluator():
     pl_model = SimpleLightningModel()
     pl_trainer = nni.trace(pl.Trainer)(
         max_epochs=1,
         max_steps=10,
         logger=TensorBoardLogger(Path(__file__).parent / 'lightning_logs', name="resnet"),
     )
-    pl_data = MNISTDataModule(data_dir=Path(__file__).parent / 'data')
+    pl_trainer.num_sanity_val_steps = 0
+    pl_data = nni.trace(MNISTDataModule)(data_dir=Path(__file__).parent / 'data')
     evaluator = LightningEvaluator(pl_trainer, pl_data)
     evaluator._init_optimizer_helpers(pl_model)
+    return evaluator
 
-    # test evaluator reuse
-    new_pl_model = SimpleLightningModel()
-    evaluator.bind_model(new_pl_model)
 
-    tensor_hook = TensorHook(new_pl_model.model.conv1.weight, 'model.conv1.weight', tensor_hook_factory)
-    forward_hook = ForwardHook(new_pl_model.model.conv1, 'model.conv1', forward_hook_factory)
-    backward_hook = BackwardHook(new_pl_model.model.conv1, 'model.conv1', backward_hook_factory)
+def create_legacy_evaluator():
+    model = SimpleTorchModel()
+    optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    lr_scheduler = nni.trace(ExponentialLR)(optimizer, 0.1)
+    evaluator = LegacyEvaluator(training_model, optimizer, F.nll_loss, lr_scheduler, evaluator=evaluating_model)
+    evaluator._init_optimizer_helpers(model)
+    return evaluator
+
+
+@pytest.mark.parametrize("evaluator_type", ['lightning', 'legacy'])
+def test_evaluator(evaluator_type: str):
+    if evaluator_type == 'lightning':
+        evaluator = create_lighting_evaluator()
+        model = SimpleLightningModel()
+        evaluator.bind_model(model)
+        tensor_hook = TensorHook(model.model.conv1.weight, 'model.conv1.weight', tensor_hook_factory)
+        forward_hook = ForwardHook(model.model.conv1, 'model.conv1', forward_hook_factory)
+        backward_hook = BackwardHook(model.model.conv1, 'model.conv1', backward_hook_factory)
+    elif evaluator_type == 'legacy':
+        evaluator = create_legacy_evaluator()
+        model = SimpleTorchModel().to(device)
+        evaluator.bind_model(model)
+        tensor_hook = TensorHook(model.conv1.weight, 'conv1.weight', tensor_hook_factory)
+        forward_hook = ForwardHook(model.conv1, 'conv1', forward_hook_factory)
+        backward_hook = BackwardHook(model.conv1, 'conv1', backward_hook_factory)
+    else:
+        raise ValueError(f'wrong evaluator_type: {evaluator_type}')
 
     # test train with patch & hook
     reset_flags()
@@ -211,9 +287,7 @@ def test_lightning_evaluator():
 
     evaluator.train(max_steps=1)
     assert_flags()
-    # `len(forward_hook.buffer) == 3` is because lightning will dry run two steps at first for sanity check
-    # pl_trainer.num_sanity_val_steps = 0 can drop sanity check
-    assert all([len(tensor_hook.buffer) == 1, len(forward_hook.buffer) == 3, len(backward_hook.buffer) == 1])
+    assert all([len(hook.buffer) == 1 for hook in [tensor_hook, forward_hook, backward_hook]])
 
     # test finetune with patch & hook
     reset_flags()
@@ -222,8 +296,4 @@ def test_lightning_evaluator():
 
     evaluator.finetune()
     assert_flags()
-    assert all([len(tensor_hook.buffer) == 10, len(forward_hook.buffer) == 12, len(backward_hook.buffer) == 10])
-
-
-def test_legacy_evaluator():
-    pass
+    assert all([len(hook.buffer) == 10 for hook in [tensor_hook, forward_hook, backward_hook]])
