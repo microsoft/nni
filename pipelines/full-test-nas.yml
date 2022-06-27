@@ -31,7 +31,9 @@ stages:
   condition: and(succeeded(), ne(dependencies.filter.outputs['check.execution.skipsubsequent'], 'true'))
   jobs:
   - job: linux
-    pool: nni-it
+    # move back after we complete the 1ES pool...
+    pool:
+      vmImage: ubuntu-latest
     timeoutInMinutes: 60
 
     steps:
@@ -50,7 +52,9 @@ stages:
       displayName: NAS test
 
   - job: windows
-    pool: nni-it-windows
+    # move back after we complete the 1ES pool...
+    pool:
+      vmImage: ubuntu-latest
     timeoutInMinutes: 60
 
     steps:

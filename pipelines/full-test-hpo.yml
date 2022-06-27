@@ -13,7 +13,7 @@ resources:
       endpoint: github-filter-connection
 
 variables:
-  filter.modified.globs: 'examples/tuners/**,nni/algorithms/hpo/**'
+  filter.modified.globs: 'examples/tuners/**,nni/algorithms/hpo/**,pipelines/full-test-hpo.yml,'
   filter.prbody.heading: '#### Test Options'
   filter.prbody.optionIndex: 1
 
@@ -31,7 +31,9 @@ stages:
   condition: and(succeeded(), ne(dependencies.filter.outputs['check.execution.skipsubsequent'], 'true'))
   jobs:
   - job: linux
-    pool: nni-it
+    # move back after we complete the 1ES pool...
+    pool:
+      vmImage: ubuntu-latest
     timeoutInMinutes: 60
 
     steps:
