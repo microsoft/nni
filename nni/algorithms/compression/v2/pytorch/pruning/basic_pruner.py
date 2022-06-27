@@ -281,7 +281,7 @@ class NormPruner(BasicPruner):
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input)
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
@@ -446,7 +446,7 @@ class FPGMPruner(BasicPruner):
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input)
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
@@ -689,16 +689,16 @@ class ActivationPruner(BasicPruner):
         else:
             self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
         if self.metrics_calculator is None:
-            self.metrics_calculator = self._get_metrics_calculator()
+            self.metrics_calculator = self._create_metrics_calculator()
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input)
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
-    def _get_metrics_calculator(self) -> MetricsCalculator:
+    def _create_metrics_calculator(self) -> MetricsCalculator:
         raise NotImplementedError()
 
 
@@ -783,7 +783,7 @@ class ActivationAPoZRankPruner(ActivationPruner):
         # return a matrix that the position of zero in `output` is one, others is zero.
         return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output)
 
-    def _get_metrics_calculator(self) -> MetricsCalculator:
+    def _create_metrics_calculator(self) -> MetricsCalculator:
         return APoZRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
 
 
@@ -866,7 +866,7 @@ class ActivationMeanRankPruner(ActivationPruner):
         # return the activation of `output` directly.
         return self._activation(output.detach())
 
-    def _get_metrics_calculator(self) -> MetricsCalculator:
+    def _create_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
 
 
@@ -1017,7 +1017,7 @@ class TaylorFOWeightPruner(BasicPruner):
             elif self.mode == 'global':
                 self.sparsity_allocator = GlobalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input)
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             else:
                 raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
 

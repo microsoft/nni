@@ -31,6 +31,13 @@ class NormMetricsCalculator(MetricsCalculator):
     """
     Calculate the specify norm for each tensor in data.
     L1, L2, Level, Slim pruner use this to calculate metric.
+
+    Parameters
+    ----------
+    p
+        The order of norm. None means Frobenius norm.
+    scalors
+        Please view the base class `MetricsCalculator` docstring.
     """
 
     def __init__(self, p: int | float | None = None, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
@@ -65,6 +72,13 @@ class DistMetricsCalculator(MetricsCalculator):
     """
     Calculate the sum of specify distance for each element with all other elements in specify `dim` in each tensor in data.
     FPGM pruner uses this to calculate metric.
+
+    Parameters
+    ----------
+    p
+        The order of norm. None means Frobenius norm.
+    scalors
+        Please view the base class `MetricsCalculator` docstring.
     """
 
     def __init__(self, p: int | float | None = None, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None):

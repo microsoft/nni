@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import itertools
 from typing import Any, Dict, List, Union
 
@@ -156,9 +158,10 @@ class DependencyAwareAllocator(NormalSparsityAllocator):
     For other module types, the way to generate the mask is the same as `NormalSparsityAllocator`.
     """
 
-    def __init__(self, pruner: Pruner, dummy_input: Any):
+    def __init__(self, pruner: Pruner, dummy_input: Any, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
         # Scaling(kernel_size=[1], kernel_padding_mode='back') means output channel pruning.
-        super().__init__(pruner, scalors=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+        scalors = scalors if scalors else Scaling(kernel_size=[1], kernel_padding_mode='back')
+        super().__init__(pruner, scalors=scalors)
         self.channel_dependency, self.group_dependency = self._get_dependency(dummy_input)
 
     def _get_dependency(self, dummy_input: Any):

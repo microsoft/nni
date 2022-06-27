@@ -20,6 +20,15 @@ from ...utils import OptimizerConstructHelper, Scaling
 _logger = logging.getLogger(__name__)
 
 
+def _get_scalor(scalors: Dict[str, Dict[str, Scaling]], module_name: str, target_name: str) -> Scaling | None:
+    # Get scalor for the specific target in the specific module. Return None if don't find it.
+    # `module_name` is not used in current nni version, will support different modules using different scalors in the future.
+    default_module_scalors = scalors.get('_default', {})
+    default_target_scalor = default_module_scalors.get(target_name, default_module_scalors.get('_default', None))
+    module_scalors = scalors.get(module_name, {})
+    return module_scalors.get(target_name, module_scalors.get('_default', default_target_scalor))
+
+
 class DataCollector:
     """
     An abstract class for collect the data needed by the compressor.
@@ -259,15 +268,8 @@ class MetricsCalculator:
         self.scalors: Dict[str, Dict[str, Scaling]] | None = scalors if isinstance(scalors, (dict, type(None))) else {'_default': {'_default': scalors}}  # type: ignore
 
     def _get_scalor(self, module_name: str, target_name: str) -> Scaling:
-        # Get scalor for the specific target in the specific module. Return Scaling([1]) (finegrained) if don't find it.
-        # `module_name` is not used in current nni version, will support different modules using different scalors in the future.
-        if self.scalors:
-            default_module_scalors = self.scalors.get('_default', {})
-            default_target_scalor = default_module_scalors.get(target_name, default_module_scalors.get('_default', Scaling([1])))
-            module_scalors = self.scalors.get(module_name, {})
-            return module_scalors.get(target_name, module_scalors.get('_default', default_target_scalor))
-        else:
-            return Scaling([1])
+        scalor = _get_scalor(self.scalors, module_name, target_name)
+        return scalor if scalor else Scaling([1])
 
     def calculate_metrics(self, data: Dict) -> Dict[str, Tensor]:
         """
@@ -311,16 +313,8 @@ class SparsityAllocator:
         self.scalors: Dict[str, Dict[str, Scaling]] | None = scalors if isinstance(scalors, (dict, type(None))) else {'_default': {'_default': scalors}}  # type: ignore
         self.continuous_mask = continuous_mask
 
-    def _get_scalor(self, module_name: str, target_name: str) -> Scaling | None:
-        # Get scalor for the specific target in the specific module. Return None if don't find it.
-        # `module_name` is not used in current nni version, will support different modules using different scalors in the future.
-        if self.scalors:
-            default_module_scalors = self.scalors.get('_default', {})
-            default_target_scalor = default_module_scalors.get(target_name, default_module_scalors.get('_default', None))
-            module_scalors = self.scalors.get(module_name, {})
-            return module_scalors.get(target_name, module_scalors.get('_default', default_target_scalor))
-        else:
-            return None
+    def _get_scalor(self, module_name: str, target_name: str) -> Scaling:
+        return _get_scalor(self.scalors, module_name, target_name)
 
     def _expand_mask(self, module_name: str, target_name: str, mask: Tensor) -> Tensor:
         # Expand the shrinked mask to the pruning target size.
