@@ -57,7 +57,10 @@ stages:
 
     - script: |
         cd test
-        python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
+        python training_service/nnitest/run_tests.py \
+          --config training_service/config/integration_tests.yml \
+          --ts local \
+          --exclude mnist-pytorch-local-gpu
       displayName: Integration test
 
   # TODO: should add a test on platforms other than linux

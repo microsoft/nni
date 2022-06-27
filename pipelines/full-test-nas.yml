@@ -60,7 +60,6 @@ stages:
     - template: templates/install-dependencies.yml
       parameters:
         platform: windows
-        python_env: noop
 
     - template: templates/install-nni.yml
       parameters:
