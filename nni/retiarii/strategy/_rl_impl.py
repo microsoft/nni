@@ -89,7 +89,7 @@ class ObservationType(TypedDict):
     action_dim: int
 
 
-class ModelEvaluationEnv(gym.Env):
+class ModelEvaluationEnv(gym.Env[ObservationType, int]):
     def __init__(self, base_model, mutators, search_space):
         self.base_model = base_model
         self.mutators = mutators

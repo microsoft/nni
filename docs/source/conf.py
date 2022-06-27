@@ -196,7 +196,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # Translation related settings
 locale_dir = ['locales']
@@ -406,5 +406,5 @@ epub_exclude_files = ['search.html']
 # external links (for github code)
 # Reference the code via :githublink:`path/to/your/example/code.py`
 extlinks = {
-    'githublink': ('https://github.com/microsoft/nni/blob/' + git_commit_id + '/%s', 'Github link: ')
+    'githublink': ('https://github.com/microsoft/nni/blob/' + git_commit_id + '/%s', 'Github link: %s')
 }
