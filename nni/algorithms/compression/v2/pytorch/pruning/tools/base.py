@@ -20,13 +20,16 @@ from ...utils import OptimizerConstructHelper, Scaling
 _logger = logging.getLogger(__name__)
 
 
-def _get_scalor(scalors: Dict[str, Dict[str, Scaling]], module_name: str, target_name: str) -> Scaling | None:
+def _get_scalor(scalors: Dict[str, Dict[str, Scaling]] | None, module_name: str, target_name: str) -> Scaling | None:
     # Get scalor for the specific target in the specific module. Return None if don't find it.
     # `module_name` is not used in current nni version, will support different modules using different scalors in the future.
-    default_module_scalors = scalors.get('_default', {})
-    default_target_scalor = default_module_scalors.get(target_name, default_module_scalors.get('_default', None))
-    module_scalors = scalors.get(module_name, {})
-    return module_scalors.get(target_name, module_scalors.get('_default', default_target_scalor))
+    if scalors:
+        default_module_scalors = scalors.get('_default', {})
+        default_target_scalor = default_module_scalors.get(target_name, default_module_scalors.get('_default', None))
+        module_scalors = scalors.get(module_name, {})
+        return module_scalors.get(target_name, module_scalors.get('_default', default_target_scalor))
+    else:
+        return None
 
 
 class DataCollector:
@@ -313,7 +316,7 @@ class SparsityAllocator:
         self.scalors: Dict[str, Dict[str, Scaling]] | None = scalors if isinstance(scalors, (dict, type(None))) else {'_default': {'_default': scalors}}  # type: ignore
         self.continuous_mask = continuous_mask
 
-    def _get_scalor(self, module_name: str, target_name: str) -> Scaling:
+    def _get_scalor(self, module_name: str, target_name: str) -> Scaling | None:
         return _get_scalor(self.scalors, module_name, target_name)
 
     def _expand_mask(self, module_name: str, target_name: str, mask: Tensor) -> Tensor:
