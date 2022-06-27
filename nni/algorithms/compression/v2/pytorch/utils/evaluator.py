@@ -139,6 +139,18 @@ class Evaluator:
 
 
 class LightningEvaluator(Evaluator):
+    """
+    Parameters
+    ----------
+    trainer
+        Pytorch-Lightning Trainer.
+        If the test metric is needed by nni, please make sure log metric with key ``NNI_METRIC``.
+    data_module
+        Pytorch-Lightning LightningDataModule.
+    dummy_input
+        The dummy_input is used to trace the graph. If dummy_input is not given, will use the data in data_module.train_dataloader().
+    """
+
     def __init__(self, trainer: pl.Trainer, data_module: pl.LightningDataModule,
                  dummy_input: Any | None = None):
         assert isinstance(trainer, pl.Trainer) and is_traceable(trainer)
@@ -342,10 +354,10 @@ class LightningEvaluator(Evaluator):
 
     def evaluate(self) -> Tuple[float | None, List[Dict[str, float]]]:
         """
-        NNI will use metric with key `NNI_METRIC` for evaluating model, please make sure you have this key in your `Trainer.test()` returned metric dicts.
-        If `Trainer.test()` returned list contains multiple dicts with key `NNI_METRIC`, NNI will take their average as the final metric.
-        E.g., if `Trainer.test()` returned `[{'NNI_METRIC': 0.8, 'loss': 2.3}, {'NNI_METRIC': 0.6, 'loss': 2.4}, {'NNI_METRIC': 0.7, 'loss': 2.3}]`,
-        NNI will take the final metric `(0.8 + 0.6 + 0.7) / 3 = 0.7`.
+        NNI will use metric with key ``NNI_METRIC`` for evaluating model, please make sure you have this key in your ``Trainer.test()`` returned metric dicts.
+        If ``Trainer.test()`` returned list contains multiple dicts with key ``NNI_METRIC``, NNI will take their average as the final metric.
+        E.g., if ``Trainer.test()`` returned ``[{'NNI_METRIC': 0.8, 'loss': 2.3}, {'NNI_METRIC': 0.6, 'loss': 2.4}, {'NNI_METRIC': 0.7, 'loss': 2.3}]``,
+        NNI will take the final metric ``(0.8 + 0.6 + 0.7) / 3 = 0.7``.
         """
         assert isinstance(self.model, pl.LightningModule)
         # reset trainer
@@ -365,18 +377,98 @@ class LightningEvaluator(Evaluator):
 
 
 _CRITERION = Callable[[Any, Any], Any]
-_EVALUATOR = Union[Callable[[Module], float], Callable[[Module], Tuple[float, Any]]]
-_TRAINER = Callable[[Module, Union[Optimizer, List[Optimizer]], _CRITERION, Union[None, _LRScheduler, List[_LRScheduler]], Optional[int], Optional[int]], None]
+_EVALUATING_FUNC = Union[Callable[[Module], float], Callable[[Module], Tuple[float, Any]]]
+_TRAINING_FUNC = Callable[[Module, Union[Optimizer, List[Optimizer]], _CRITERION, Union[None, _LRScheduler, List[_LRScheduler]], Optional[int], Optional[int]], None]
 
 
-class LegacyEvaluator(Evaluator):
-    def __init__(self, trainer: _TRAINER, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
-                 lr_schedulers: _LRScheduler | List[_LRScheduler] | None = None, dummy_input: Any | None = None, evaluator: _EVALUATOR | None = None):
-        self.trainer = trainer
+class TorchEvaluator(Evaluator):
+    """
+    Parameters
+    ----------
+    training_func
+        The training function is used to train the model, note that this a entire optimization training loop.
+        It should have three required parameters [model, optimizers, criterion] and three optional parameters [schedulers, max_steps, max_epochs].
+        ``optimizers`` can be an instance of ``torch.optim.Optimizer`` or a list of ``torch.optim.Optimizer``, it belongs to the ``optimizers`` pass to ``TorchEvaluator``.
+        ``criterion`` and ``schedulers`` are also belonging to the ``criterion`` and ``schedulers`` pass to ``TorchEvaluator``.
+        ``max_steps`` and ``max_epochs`` are used to control the training duration.
+
+        Example::
+
+            def training_func(model: Module, optimizer: Optimizer, criterion: Callable, scheduler: _LRScheduler,
+                              max_steps: int | None = None, max_epochs: int | None = None, *args, **kwargs):
+                model.train()
+
+                # prepare data
+                data_dir = Path(__file__).parent / 'data'
+                MNIST(data_dir, train=True, download=True)
+                transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+                mnist_train = MNIST(data_dir, train=True, transform=transform)
+                train_dataloader = DataLoader(mnist_train, batch_size=32)
+
+                max_epochs = max_epochs if max_epochs else 3
+                max_steps = max_steps if max_steps else 6000
+                current_steps = 0
+
+                # training
+                for _ in range(max_epochs):
+                    for x, y in train_dataloader:
+                        optimizer.zero_grad()
+                        x, y = x.to(device), y.to(device)
+                        logits = model(x)
+                        loss: torch.Tensor = criterion(logits, y)
+                        loss.backward()
+                        optimizer.step()
+                        current_steps += 1
+                        if max_steps and current_steps == max_steps:
+                            return
+                    scheduler.step()
+
+    optimziers
+        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
+    criterion
+        The criterion function used in trainer. Take model output and target as input, and return the loss.
+        E.g. ``criterion = torch.nn.functional.nll_loss``.
+    lr_schedulers
+        Optional. The traced _LRScheduler instance which the lr scheduler class is wrapped by nni.trace.
+        E.g. ``traced_lr_scheduler = nni.trace(ExponentialLR)(optimizer, 0.1)``.
+    dummy_input
+        Optional. The dummy_input is used to trace the graph.
+    evaluating_func
+        Optional. A function that input is model and return the evaluation metric.
+        The return value can be a single float or a tuple (float, Any).
+
+        Example::
+
+            def evaluating_func(model: Module):
+                model.eval()
+
+                # prepare data
+                data_dir = Path(__file__).parent / 'data'
+                MNIST(data_dir, train=False, download=True)
+                transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+                mnist_test = MNIST(data_dir, train=False, transform=transform)
+                test_dataloader = DataLoader(mnist_test, batch_size=32)
+
+                # testing
+                correct = 0
+                with torch.no_grad():
+                    for x, y in test_dataloader:
+                        x, y = x.to(device), y.to(device)
+                        logits = model(x)
+                        preds = torch.argmax(logits, dim=1)
+                        correct += preds.eq(y.view_as(preds)).sum().item()
+                return correct / len(mnist_test)
+    """
+
+    def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
+                 lr_schedulers: _LRScheduler | List[_LRScheduler] | None = None, dummy_input: Any | None = None,
+                 evaluating_func: _EVALUATING_FUNC | None = None):
+        self.training_func = training_func
         self._ori_criterion = criterion
         self._criterion = self._ori_criterion
         self.dummy_input = dummy_input
-        self.evaluator = evaluator
+        self.evaluating_func = evaluating_func
 
         self._train_with_single_optimizer = isinstance(optimizers, Optimizer)
         self._train_with_single_scheduler = isinstance(lr_schedulers, _LRScheduler)
@@ -475,15 +567,15 @@ class LegacyEvaluator(Evaluator):
         assert self._criterion is not None
         optimizers = self._optimizers[0] if self._train_with_single_optimizer else self._optimizers
         lr_schedulers = self._lr_schedulers[0] if self._train_with_single_scheduler else self._lr_schedulers  # type: ignore
-        self.trainer(self.model, optimizers, self._criterion, lr_schedulers, max_steps, max_epochs)
+        self.training_func(self.model, optimizers, self._criterion, lr_schedulers, max_steps, max_epochs)
 
     def finetune(self):
         self.train()
 
     def evaluate(self) -> float | Tuple[float, Any]:
         assert self.model is not None
-        assert self.evaluator is not None
-        return self.evaluator(self.model)
+        assert self.evaluating_func is not None
+        return self.evaluating_func(self.model)
 
     def get_dummy_input(self) -> Any:
         return self.dummy_input

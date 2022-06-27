@@ -22,7 +22,7 @@ from torchvision import transforms
 
 import nni
 from nni.algorithms.compression.v2.pytorch.utils.evaluator import (
-    LegacyEvaluator,
+    TorchEvaluator,
     LightningEvaluator,
     TensorHook,
     ForwardHook,
@@ -251,16 +251,16 @@ def create_lighting_evaluator():
     return evaluator
 
 
-def create_legacy_evaluator():
+def create_pytorch_evaluator():
     model = SimpleTorchModel()
     optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     lr_scheduler = nni.trace(ExponentialLR)(optimizer, 0.1)
-    evaluator = LegacyEvaluator(training_model, optimizer, F.nll_loss, lr_scheduler, evaluator=evaluating_model)
+    evaluator = TorchEvaluator(training_model, optimizer, F.nll_loss, lr_scheduler, evaluating_func=evaluating_model)
     evaluator._init_optimizer_helpers(model)
     return evaluator
 
 
-@pytest.mark.parametrize("evaluator_type", ['lightning', 'legacy'])
+@pytest.mark.parametrize("evaluator_type", ['lightning', 'pytorch'])
 def test_evaluator(evaluator_type: str):
     if evaluator_type == 'lightning':
         evaluator = create_lighting_evaluator()
@@ -270,7 +270,7 @@ def test_evaluator(evaluator_type: str):
         forward_hook = ForwardHook(model.model.conv1, 'model.conv1', forward_hook_factory)
         backward_hook = BackwardHook(model.model.conv1, 'model.conv1', backward_hook_factory)
     elif evaluator_type == 'legacy':
-        evaluator = create_legacy_evaluator()
+        evaluator = create_pytorch_evaluator()
         model = SimpleTorchModel().to(device)
         evaluator.bind_model(model)
         tensor_hook = TensorHook(model.conv1.weight, 'conv1.weight', tensor_hook_factory)
