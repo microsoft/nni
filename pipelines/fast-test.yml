@@ -46,7 +46,7 @@ stages:
 
     - script: |
         cd docs
-        sphinx-build -W --keep-going -T -q source build/html
+        sphinx-build -W --keep-going -T -q language=en source build/html
       displayName: Sphinx sanity check
 
     - script: |
