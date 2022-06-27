@@ -79,11 +79,6 @@ steps:
   displayName: (POSIX) Add local bin to PATH
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
 
-# TODO: Delete this after upgrading to PyTorch 1.11.
-- script: |
-    python test/vso_tools/interim_patch.py
-  displayName: Torch utils tensorboard interim patch
-
 - script: |
     python --version
     python -m pip --version
