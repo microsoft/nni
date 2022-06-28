@@ -31,14 +31,15 @@ stages:
   condition: and(succeeded(), ne(dependencies.filter.outputs['check.execution.skipsubsequent'], 'true'))
   jobs:
   - job: linux
-    pool: nni-it
+    # move back after we complete the 1ES pool...
+    pool:
+      vmImage: ubuntu-latest
     timeoutInMinutes: 60
 
     steps:
     - template: templates/install-dependencies.yml
       parameters:
-        platform: ubuntu-latest-gpu
-        python_env: venv
+        platform: ubuntu-latest
 
     - template: templates/install-nni.yml
 
@@ -49,7 +50,8 @@ stages:
         python -m pytest compression
       displayName: compression unit test
 
-    - script: |
-        cd test
-        source scripts/model_compression.sh
-      displayName: Model compression test
+    # add back after we complete the 1ES pool...
+    # - script: |
+    #     cd test
+    #     source scripts/model_compression.sh
+    #   displayName: Model compression test
