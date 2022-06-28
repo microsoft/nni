@@ -269,7 +269,7 @@ def test_evaluator(evaluator_type: str):
         tensor_hook = TensorHook(model.model.conv1.weight, 'model.conv1.weight', tensor_hook_factory)
         forward_hook = ForwardHook(model.model.conv1, 'model.conv1', forward_hook_factory)
         backward_hook = BackwardHook(model.model.conv1, 'model.conv1', backward_hook_factory)
-    elif evaluator_type == 'legacy':
+    elif evaluator_type == 'pytorch':
         evaluator = create_pytorch_evaluator()
         model = SimpleTorchModel().to(device)
         evaluator.bind_model(model)
