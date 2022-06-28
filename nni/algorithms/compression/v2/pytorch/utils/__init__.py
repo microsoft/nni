@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from .common import (
+from .attr import (
     get_nested_attr,
     set_nested_attr
 )

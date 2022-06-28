@@ -276,7 +276,7 @@ class NormPruner(BasicPruner):
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
-            self.metrics_calculator = NormMetricsCalculator(p=self.p, scalors=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+            self.metrics_calculator = NormMetricsCalculator(p=self.p, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
@@ -441,7 +441,7 @@ class FPGMPruner(BasicPruner):
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
-            self.metrics_calculator = DistMetricsCalculator(p=2, scalors=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+            self.metrics_calculator = DistMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
@@ -1010,7 +1010,7 @@ class TaylorFOWeightPruner(BasicPruner):
         else:
             self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
         if self.metrics_calculator is None:
-            self.metrics_calculator = MultiDataNormMetricsCalculator(p=1, scalors=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+            self.metrics_calculator = MultiDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
@@ -1147,7 +1147,7 @@ class ADMMPruner(BasicPruner):
             if self.granularity == 'fine-grained':
                 self.metrics_calculator = NormMetricsCalculator(p=1)
             elif self.granularity == 'coarse-grained':
-                self.metrics_calculator = NormMetricsCalculator(p=1, scalors=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.metrics_calculator = NormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         if self.sparsity_allocator is None:
             if self.granularity == 'fine-grained':
                 self.sparsity_allocator = NormalSparsityAllocator(self)

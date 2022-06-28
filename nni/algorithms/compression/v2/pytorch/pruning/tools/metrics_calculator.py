@@ -36,12 +36,12 @@ class NormMetricsCalculator(MetricsCalculator):
     ----------
     p
         The order of norm. None means Frobenius norm.
-    scalors
+    scalers
         Please view the base class `MetricsCalculator` docstring.
     """
 
-    def __init__(self, p: int | float | None = None, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
-        super().__init__(scalors=scalors)
+    def __init__(self, p: int | float | None = None, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
+        super().__init__(scalers=scalers)
         self.p = p if p is not None else 'fro'
 
     def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
@@ -51,8 +51,8 @@ class NormMetricsCalculator(MetricsCalculator):
         metrics = {}
         target_name = 'weight'
         for module_name, target_data in data.items():
-            scalor = self._get_scalor(module_name, target_name)
-            metrics[module_name] = scalor.shrink(target_data, reduce_func)
+            scaler = self._get_scaler(module_name, target_name)
+            metrics[module_name] = scaler.shrink(target_data, reduce_func)
         return metrics
 
 
@@ -77,12 +77,12 @@ class DistMetricsCalculator(MetricsCalculator):
     ----------
     p
         The order of norm. None means Frobenius norm.
-    scalors
+    scalers
         Please view the base class `MetricsCalculator` docstring.
     """
 
-    def __init__(self, p: int | float | None = None, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
-        super().__init__(scalors=scalors)
+    def __init__(self, p: int | float | None = None, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
+        super().__init__(scalers=scalers)
         self.p = p if p is not None else 'fro'
 
     def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
@@ -96,8 +96,8 @@ class DistMetricsCalculator(MetricsCalculator):
         metrics = {}
         target_name = 'weight'
         for module_name, target_data in data.items():
-            scalor = self._get_scalor(module_name, target_name)
-            metrics[module_name] = scalor.shrink(target_data, reduce_func)
+            scaler = self._get_scaler(module_name, target_name)
+            metrics[module_name] = scaler.shrink(target_data, reduce_func)
         return metrics
 
 
@@ -116,8 +116,8 @@ class APoZRankMetricsCalculator(MetricsCalculator):
         target_name = 'weight'
         for module_name, target_data in data.items():
             target_data = target_data[1] / target_data[0]
-            scalor = self._get_scalor(module_name, target_name)
-            metrics[module_name] = scalor.shrink(target_data, reduce_func)
+            scaler = self._get_scaler(module_name, target_name)
+            metrics[module_name] = scaler.shrink(target_data, reduce_func)
         return metrics
 
 
@@ -135,6 +135,6 @@ class MeanRankMetricsCalculator(MetricsCalculator):
         target_name = 'weight'
         for module_name, target_data in data.items():
             target_data = target_data[1] / target_data[0]
-            scalor = self._get_scalor(module_name, target_name)
-            metrics[module_name] = scalor.shrink(target_data, reduce_func)
+            scaler = self._get_scaler(module_name, target_name)
+            metrics[module_name] = scaler.shrink(target_data, reduce_func)
         return metrics

@@ -113,7 +113,7 @@ class PruningToolsTestCase(unittest.TestCase):
 
     def test_metrics_calculator(self):
         # Test NormMetricsCalculator
-        metrics_calculator = NormMetricsCalculator(p=2, scalors=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+        metrics_calculator = NormMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         data = {
             '1': torch.ones(3, 3, 3),
             '2': torch.ones(4, 4) * 2
@@ -126,7 +126,7 @@ class PruningToolsTestCase(unittest.TestCase):
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
 
         # Test DistMetricsCalculator
-        metrics_calculator = DistMetricsCalculator(p=2, scalors=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+        metrics_calculator = DistMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         data = {
             '1': torch.tensor([[1, 2], [4, 6]], dtype=torch.float32),
             '2': torch.tensor([[0, 0], [1, 1]], dtype=torch.float32)
@@ -139,7 +139,7 @@ class PruningToolsTestCase(unittest.TestCase):
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
 
         # Test MultiDataNormMetricsCalculator
-        metrics_calculator = MultiDataNormMetricsCalculator(p=1, scalors=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+        metrics_calculator = MultiDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         data = {
             '1': [2, torch.ones(3, 3, 3) * 2],
             '2': [2, torch.ones(4, 4) * 2]

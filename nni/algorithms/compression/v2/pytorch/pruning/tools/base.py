@@ -20,14 +20,14 @@ from ...utils import OptimizerConstructHelper, Scaling
 _logger = logging.getLogger(__name__)
 
 
-def _get_scalor(scalors: Dict[str, Dict[str, Scaling]] | None, module_name: str, target_name: str) -> Scaling | None:
-    # Get scalor for the specific target in the specific module. Return None if don't find it.
-    # `module_name` is not used in current nni version, will support different modules using different scalors in the future.
-    if scalors:
-        default_module_scalors = scalors.get('_default', {})
-        default_target_scalor = default_module_scalors.get(target_name, default_module_scalors.get('_default', None))
-        module_scalors = scalors.get(module_name, {})
-        return module_scalors.get(target_name, module_scalors.get('_default', default_target_scalor))
+def _get_scaler(scalers: Dict[str, Dict[str, Scaling]] | None, module_name: str, target_name: str) -> Scaling | None:
+    # Get scaler for the specific target in the specific module. Return None if don't find it.
+    # `module_name` is not used in current nni version, will support different modules using different scalers in the future.
+    if scalers:
+        default_module_scalers = scalers.get('_default', {})
+        default_target_scaler = default_module_scalers.get(target_name, default_module_scalers.get('_default', None))
+        module_scalers = scalers.get(module_name, {})
+        return module_scalers.get(target_name, module_scalers.get('_default', default_target_scaler))
     else:
         return None
 
@@ -258,21 +258,21 @@ class MetricsCalculator:
 
     Parameters
     ----------
-    scalors
-        Scalor is used to scale the metrics' size. It scaling metric to the same size as the shrinked mask in the sparsity allocator.
-        If you want to use different scalors for different pruning targets in different modules, please use a dict `{module_name: {target_name: scalor}}`.
-        If allocator meets an unspecified module name, it will try to use `scalors['_default'][target_name]` to scale its mask.
-        If allocator meets an unspecified target name, it will try to use `scalors[module_name]['_default']` to scale its mask.
-        Passing in a scalor instead of a `dict` of scalors will be treated as passed in `{'_default': {'_default': scalors}}`.
+    scalers
+        Scaler is used to scale the metrics' size. It scaling metric to the same size as the shrinked mask in the sparsity allocator.
+        If you want to use different scalers for different pruning targets in different modules, please use a dict `{module_name: {target_name: scaler}}`.
+        If allocator meets an unspecified module name, it will try to use `scalers['_default'][target_name]` to scale its mask.
+        If allocator meets an unspecified target name, it will try to use `scalers[module_name]['_default']` to scale its mask.
+        Passing in a scaler instead of a `dict` of scalers will be treated as passed in `{'_default': {'_default': scalers}}`.
         Passing in `None` means no need to scale.
     """
 
-    def __init__(self, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
-        self.scalors: Dict[str, Dict[str, Scaling]] | None = scalors if isinstance(scalors, (dict, type(None))) else {'_default': {'_default': scalors}}  # type: ignore
+    def __init__(self, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
+        self.scalers: Dict[str, Dict[str, Scaling]] | None = scalers if isinstance(scalers, (dict, type(None))) else {'_default': {'_default': scalers}}  # type: ignore
 
-    def _get_scalor(self, module_name: str, target_name: str) -> Scaling:
-        scalor = _get_scalor(self.scalors, module_name, target_name)
-        return scalor if scalor else Scaling([1])
+    def _get_scaler(self, module_name: str, target_name: str) -> Scaling:
+        scaler = _get_scaler(self.scalers, module_name, target_name)
+        return scaler if scaler else Scaling([1])
 
     def calculate_metrics(self, data: Dict) -> Dict[str, Tensor]:
         """
@@ -298,41 +298,41 @@ class SparsityAllocator:
     ----------
     pruner
         The pruner that binded with this `SparsityAllocator`.
-    scalors
-        Scalor is used to scale the masks' size. It shrinks the mask of the same size as the pruning target to the same size as the metric,
+    scalers
+        Scaler is used to scale the masks' size. It shrinks the mask of the same size as the pruning target to the same size as the metric,
         or expands the mask of the same size as the metric to the same size as the pruning target.
-        If you want to use different scalors for different pruning targets in different modules, please use a dict `{module_name: {target_name: scalor}}`.
-        If allocator meets an unspecified module name, it will try to use `scalors['_default'][target_name]` to scale its mask.
-        If allocator meets an unspecified target name, it will try to use `scalors[module_name]['_default']` to scale its mask.
-        Passing in a scalor instead of a `dict` of scalors will be treated as passed in `{'_default': {'_default': scalors}}`.
+        If you want to use different scalers for different pruning targets in different modules, please use a dict `{module_name: {target_name: scaler}}`.
+        If allocator meets an unspecified module name, it will try to use `scalers['_default'][target_name]` to scale its mask.
+        If allocator meets an unspecified target name, it will try to use `scalers[module_name]['_default']` to scale its mask.
+        Passing in a scaler instead of a `dict` of scalers will be treated as passed in `{'_default': {'_default': scalers}}`.
         Passing in `None` means no need to scale.
     continuous_mask
         If set True, the part that has been masked will be masked first.
         If set False, the part that has been masked may be unmasked due to the increase of its corresponding metric.
     """
 
-    def __init__(self, pruner: Pruner, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None, continuous_mask: bool = True):
+    def __init__(self, pruner: Pruner, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None, continuous_mask: bool = True):
         self.pruner = pruner
-        self.scalors: Dict[str, Dict[str, Scaling]] | None = scalors if isinstance(scalors, (dict, type(None))) else {'_default': {'_default': scalors}}  # type: ignore
+        self.scalers: Dict[str, Dict[str, Scaling]] | None = scalers if isinstance(scalers, (dict, type(None))) else {'_default': {'_default': scalers}}  # type: ignore
         self.continuous_mask = continuous_mask
 
-    def _get_scalor(self, module_name: str, target_name: str) -> Scaling | None:
-        return _get_scalor(self.scalors, module_name, target_name)
+    def _get_scaler(self, module_name: str, target_name: str) -> Scaling | None:
+        return _get_scaler(self.scalers, module_name, target_name)
 
     def _expand_mask(self, module_name: str, target_name: str, mask: Tensor) -> Tensor:
         # Expand the shrinked mask to the pruning target size.
-        scalor = self._get_scalor(module_name=module_name, target_name=target_name)
-        if scalor:
+        scaler = self._get_scaler(module_name=module_name, target_name=target_name)
+        if scaler:
             wrapper = self.pruner.get_modules_wrapper()[module_name]
-            return scalor.expand(mask, getattr(wrapper, f'{target_name}_mask').shape)
+            return scaler.expand(mask, getattr(wrapper, f'{target_name}_mask').shape)
         else:
             return mask.clone()
 
     def _shrink_mask(self, module_name: str, target_name: str, mask: Tensor) -> Tensor:
-        # Shrink the mask by scalor, shrinked mask usually has the same size with metric.
-        scalor = self._get_scalor(module_name=module_name, target_name=target_name)
-        if scalor:
-            mask = (scalor.shrink(mask) != 0).type_as(mask)
+        # Shrink the mask by scaler, shrinked mask usually has the same size with metric.
+        scaler = self._get_scaler(module_name=module_name, target_name=target_name)
+        if scaler:
+            mask = (scaler.shrink(mask) != 0).type_as(mask)
         return mask
 
     def _continuous_mask(self, new_masks: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:

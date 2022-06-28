@@ -158,10 +158,10 @@ class DependencyAwareAllocator(NormalSparsityAllocator):
     For other module types, the way to generate the mask is the same as `NormalSparsityAllocator`.
     """
 
-    def __init__(self, pruner: Pruner, dummy_input: Any, scalors: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
+    def __init__(self, pruner: Pruner, dummy_input: Any, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
         # Scaling(kernel_size=[1], kernel_padding_mode='back') means output channel pruning.
-        scalors = scalors if scalors else Scaling(kernel_size=[1], kernel_padding_mode='back')
-        super().__init__(pruner, scalors=scalors)
+        scalers = scalers if scalers else Scaling(kernel_size=[1], kernel_padding_mode='back')
+        super().__init__(pruner, scalers=scalers)
         self.channel_dependency, self.group_dependency = self._get_dependency(dummy_input)
 
     def _get_dependency(self, dummy_input: Any):
