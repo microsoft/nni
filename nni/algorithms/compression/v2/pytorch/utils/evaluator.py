@@ -119,9 +119,17 @@ class Evaluator:
         raise NotImplementedError
 
     def register_hooks(self, hooks: List[Hook]):
+        """
+        The input is a list of ``TensorHook``, ``ForwardHook``, ``BackwardHook``,
+        please view how to use ``TensorHook``, ``ForwardHook``, ``BackwardHook``.
+        This function will apply hook.register() in ``hooks``.
+        """
         raise NotImplementedError
 
     def remove_all_hooks(self):
+        """
+        Remove all hooks registered by ``register_hooks``.
+        """
         raise NotImplementedError
 
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
@@ -140,21 +148,23 @@ class Evaluator:
 
 class LightningEvaluator(Evaluator):
     """
+    NOTE: If the the test metric is needed by nni, please make sure log metric with key ``default`` in LightningModule.test_step().
+
     Parameters
     ----------
     trainer
-        Pytorch-Lightning Trainer.
-        If the test metric is needed by nni, please make sure log metric with key ``NNI_METRIC``.
+        Pytorch-Lightning Trainer. It should be traced by nni, e.g., ``trainer = nni.trace(pl.Trainer)(...)``.
     data_module
-        Pytorch-Lightning LightningDataModule.
+        Pytorch-Lightning LightningDataModule. It should be traced by nni, e.g., ``data_module = nni.trace(pl.LightningDataModule)(...)``.
     dummy_input
         The dummy_input is used to trace the graph. If dummy_input is not given, will use the data in data_module.train_dataloader().
     """
 
     def __init__(self, trainer: pl.Trainer, data_module: pl.LightningDataModule,
                  dummy_input: Any | None = None):
-        assert isinstance(trainer, pl.Trainer) and is_traceable(trainer)
-        assert isinstance(data_module, pl.LightningDataModule) and is_traceable(data_module)
+        err_msg = 'Only support traced {}, please use nni.trace({}) to initialize the trainer.'
+        assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), err_msg.format('pytorch_lightning.Trainer', 'pytorch_lightning.Trainer')
+        assert isinstance(data_module, pl.LightningDataModule) and is_traceable(data_module), err_msg.format('pytorch_lightning.LightningDataModule', 'pytorch_lightning.LightningDataModule')
         self.trainer = trainer
         self.data_module = data_module
         self._dummy_input = dummy_input
@@ -354,16 +364,16 @@ class LightningEvaluator(Evaluator):
 
     def evaluate(self) -> Tuple[float | None, List[Dict[str, float]]]:
         """
-        NNI will use metric with key ``NNI_METRIC`` for evaluating model, please make sure you have this key in your ``Trainer.test()`` returned metric dicts.
-        If ``Trainer.test()`` returned list contains multiple dicts with key ``NNI_METRIC``, NNI will take their average as the final metric.
-        E.g., if ``Trainer.test()`` returned ``[{'NNI_METRIC': 0.8, 'loss': 2.3}, {'NNI_METRIC': 0.6, 'loss': 2.4}, {'NNI_METRIC': 0.7, 'loss': 2.3}]``,
+        NNI will use metric with key ``default`` for evaluating model, please make sure you have this key in your ``Trainer.test()`` returned metric dicts.
+        If ``Trainer.test()`` returned list contains multiple dicts with key ``default``, NNI will take their average as the final metric.
+        E.g., if ``Trainer.test()`` returned ``[{'default': 0.8, 'loss': 2.3}, {'default': 0.6, 'loss': 2.4}, {'default': 0.7, 'loss': 2.3}]``,
         NNI will take the final metric ``(0.8 + 0.6 + 0.7) / 3 = 0.7``.
         """
         assert isinstance(self.model, pl.LightningModule)
         # reset trainer
         self.trainer = self.trainer.trace_copy().get()  # type: ignore
         original_results = self.trainer.test(self.model, self.data_module)
-        nni_metrics_list = [metrics['NNI_METRIC'] for metrics in original_results if 'NNI_METRIC' in metrics]
+        nni_metrics_list = [metrics['default'] for metrics in original_results if 'default' in metrics]
         if nni_metrics_list:
             nni_metric = sum(nni_metrics_list) / len(nni_metrics_list)
         else:
