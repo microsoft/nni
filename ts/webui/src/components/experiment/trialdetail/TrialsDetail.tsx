@@ -48,8 +48,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     render(): React.ReactNode {
         const { whichChart } = this.state;
         const source = TRIALS.toArray();
-        const trialIds = TRIALS.toArray().map(trial => trial.id);
-
+        const trialIds = TRIALS.succeededTrials().map(trial => trial.id);
         return (
             <AppContext.Consumer>
                 {(_value): React.ReactNode => (

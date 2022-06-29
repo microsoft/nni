@@ -159,8 +159,7 @@ class Trial implements TableObj {
             intermediateCount: this.intermediates.length,
             accuracy: accuracy,
             latestAccuracy: this.latestAccuracy,
-            formattedLatestAccuracy: this.formatLatestAccuracy(),
-            accDictionary: this.acc
+            formattedLatestAccuracy: this.formatLatestAccuracy()
         };
     }
 
@@ -191,6 +190,22 @@ class Trial implements TableObj {
             return undefined;
         }
         return getFinal(this.info.finalMetricData);
+    }
+
+    get accuracyNumberTypeDictKeys(): string[] {
+        let accuracyTypeList: string[] = [];
+
+        if (this.acc !== undefined) {
+            for (const [item, value] of Object.entries(this.acc)) {
+                if (typeof value === 'number') {
+                    accuracyTypeList.push(item);
+                }
+            }
+        } else {
+            accuracyTypeList = ['default'];
+        }
+
+        return accuracyTypeList;
     }
 
     get description(): Parameters {
@@ -270,10 +285,6 @@ class Trial implements TableObj {
             throw unexpectedEntries;
         }
         return ret;
-    }
-
-    get color(): string | undefined {
-        return undefined;
     }
 
     public finalKeys(): string[] {
