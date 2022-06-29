@@ -89,7 +89,7 @@ class ConfigBase:
         """
         self._base_path = utils.get_base_path()
         args = {utils.case_insensitive(key): value for key, value in kwargs.items()}
-        for field in dataclasses.fields(self):
+        for field in utils.fields(self):
             value = args.pop(utils.case_insensitive(field.name), field.default)
             setattr(self, field.name, value)
         if args:  # maybe a key is misspelled
@@ -98,7 +98,7 @@ class ConfigBase:
             raise AttributeError(f'{class_name} does not have field(s) {fields}')
 
         # try to unpack nested config
-        for field in dataclasses.fields(self):
+        for field in utils.fields(self):
             value = getattr(self, field.name)
             if utils.is_instance(value, field.type):
                 continue  # already accepted by subclass, don't touch it
@@ -214,7 +214,7 @@ class ConfigBase:
             For example local training service's ``trialGpuNumber`` will be copied from top level when not set,
             in this case it will be invoked like ``localConfig._canonicalize([experimentConfig])``.
         """
-        for field in dataclasses.fields(self):
+        for field in utils.fields(self):
             value = getattr(self, field.name)
             if isinstance(value, (Path, str)) and utils.is_path_like(field.type):
                 setattr(self, field.name, utils.resolve_path(value, self._base_path))
@@ -235,7 +235,7 @@ class ConfigBase:
         2. Call ``_validate_canonical()`` on children config objects, including those inside list and dict
         """
         utils.validate_type(self)
-        for field in dataclasses.fields(self):
+        for field in utils.fields(self):
             value = getattr(self, field.name)
             _recursive_validate_child(value)
 
@@ -247,7 +247,7 @@ class ConfigBase:
         if hasattr(self, name) or name.startswith('_'):
             super().__setattr__(name, value)
             return
-        if name in [field.name for field in dataclasses.fields(self)]:  # might happend during __init__
+        if name in [field.name for field in utils.fields(self)]:  # might happend during __init__
             super().__setattr__(name, value)
             return
         raise AttributeError(f'{type(self).__name__} does not have field {name}')

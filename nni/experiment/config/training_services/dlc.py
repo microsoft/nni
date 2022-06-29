@@ -4,13 +4,15 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from typing_extensions import Literal
+
 from ..training_service import TrainingServiceConfig
 
 __all__ = ['DlcConfig']
 
 @dataclass(init=False)
 class DlcConfig(TrainingServiceConfig):
-    platform: str = 'dlc'
+    platform: Literal['dlc'] = 'dlc'
     type: str = 'Worker'
     image: str # 'registry-vpc.{region}.aliyuncs.com/pai-dlc/tensorflow-training:1.15.0-cpu-py36-ubuntu18.04',
     job_type: str = 'TFJob'
