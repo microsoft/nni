@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -13,10 +14,22 @@ from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner, LayerInfo, Task, TaskResult
-from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
+from ...base import Pruner, LayerInfo, Task, TaskResult
+from ...utils import OptimizerConstructHelper, Scaling
 
 _logger = logging.getLogger(__name__)
+
+
+def _get_scaler(scalers: Dict[str, Dict[str, Scaling]] | None, module_name: str, target_name: str) -> Scaling | None:
+    # Get scaler for the specific target in the specific module. Return None if don't find it.
+    # `module_name` is not used in current nni version, will support different modules using different scalers in the future.
+    if scalers:
+        default_module_scalers = scalers.get('_default', {})
+        default_target_scaler = default_module_scalers.get(target_name, default_module_scalers.get('_default', None))
+        module_scalers = scalers.get(module_name, {})
+        return module_scalers.get(target_name, module_scalers.get('_default', default_target_scaler))
+    else:
+        return None
 
 
 class DataCollector:
@@ -245,49 +258,21 @@ class MetricsCalculator:
 
     Parameters
     ----------
-    dim
-        The dimensions that corresponding to the under pruning weight dimensions in collected data.
-        None means one-to-one correspondence between pruned dimensions and data, which equal to set `dim` as all data dimensions.
-        Only these `dim` will be kept and other dimensions of the data will be reduced.
-
-        Example:
-
-        If you want to prune the Conv2d weight in filter level, and the weight size is (32, 16, 3, 3) [out-channel, in-channel, kernal-size-1, kernal-size-2].
-        Then the under pruning dimensions is [0], which means you want to prune the filter or out-channel.
-
-            Case 1: Directly collect the conv module weight as data to calculate the metric.
-            Then the data has size (32, 16, 3, 3).
-            Mention that the dimension 0 of the data is corresponding to the under pruning weight dimension 0.
-            So in this case, `dim=0` will set in `__init__`.
-
-            Case 2: Use the output of the conv module as data to calculate the metric.
-            Then the data has size (batch_num, 32, feature_map_size_1, feature_map_size_2).
-            Mention that the dimension 1 of the data is corresponding to the under pruning weight dimension 0.
-            So in this case, `dim=1` will set in `__init__`.
-
-        In both of these two case, the metric of this module has size (32,).
-
-    block_sparse_size
-        This used to describe the block size a metric value represented. By default, None means the block size is ones(len(dim)).
-        Make sure len(dim) == len(block_sparse_size), and the block_sparse_size dimension position is corresponding to dim.
-
-        Example:
-
-        The under pruning weight size is (768, 768), and you want to apply a block sparse on dim=[0] with block size [64, 768],
-        then you can set block_sparse_size=[64]. The final metric size is (12,).
+    scalers
+        Scaler is used to scale the metrics' size. It scaling metric to the same size as the shrinked mask in the sparsity allocator.
+        If you want to use different scalers for different pruning targets in different modules, please use a dict `{module_name: {target_name: scaler}}`.
+        If allocator meets an unspecified module name, it will try to use `scalers['_default'][target_name]` to scale its mask.
+        If allocator meets an unspecified target name, it will try to use `scalers[module_name]['_default']` to scale its mask.
+        Passing in a scaler instead of a `dict` of scalers will be treated as passed in `{'_default': {'_default': scalers}}`.
+        Passing in `None` means no need to scale.
     """
 
-    def __init__(self, dim: Optional[Union[int, List[int]]] = None,
-                 block_sparse_size: Optional[Union[int, List[int]]] = None):
-        self.dim = dim if not isinstance(dim, int) else [dim]
-        self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
-        if self.block_sparse_size is not None:
-            assert all(i >= 1 for i in self.block_sparse_size)
-        elif self.dim is not None:
-            self.block_sparse_size = [1] * len(self.dim)
-        if self.dim is not None:
-            assert all(i >= 0 for i in self.dim)
-            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))  # type: ignore
+    def __init__(self, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
+        self.scalers: Dict[str, Dict[str, Scaling]] | None = scalers if isinstance(scalers, (dict, type(None))) else {'_default': {'_default': scalers}}  # type: ignore
+
+    def _get_scaler(self, module_name: str, target_name: str) -> Scaling:
+        scaler = _get_scaler(self.scalers, module_name, target_name)
+        return scaler if scaler else Scaling([1])
 
     def calculate_metrics(self, data: Dict) -> Dict[str, Tensor]:
         """
@@ -307,142 +292,120 @@ class MetricsCalculator:
 
 class SparsityAllocator:
     """
-    An abstract class for allocate mask based on metrics.
+    A base class for allocating mask based on metrics.
 
     Parameters
     ----------
     pruner
         The pruner that binded with this `SparsityAllocator`.
-    dim
-        The under pruning weight dimensions, which metric size should equal to the under pruning weight size on these dimensions.
-        None means one-to-one correspondence between pruned dimensions and metric, which equal to set `dim` as all under pruning weight dimensions.
-        The mask will expand to the weight size depend on `dim`.
-
-        Example:
-
-        The under pruning weight has size (2, 3, 4), and `dim=1` means the under pruning weight dimension is 1.
-        Then the metric should have a size (3,), i.e., `metric=[0.9, 0.1, 0.8]`.
-        Assuming by some kind of `SparsityAllocator` get the mask on weight dimension 1 `mask=[1, 0, 1]`,
-        then the dimension mask will expand to the final mask `[[[1, 1, 1, 1], [0, 0, 0, 0], [1, 1, 1, 1]], [[1, 1, 1, 1], [0, 0, 0, 0], [1, 1, 1, 1]]]`.
-    block_sparse_size
-        This used to describe the block size a metric value represented. By default, None means the block size is ones(len(dim)).
-        Make sure len(dim) == len(block_sparse_size), and the block_sparse_size dimension position is corresponding to dim.
-
-        Example:
-
-        The metric size is (12,), and block_sparse_size=[64], then the mask will expand to (768,) at first before expand with `dim`.
+    scalers
+        Scaler is used to scale the masks' size. It shrinks the mask of the same size as the pruning target to the same size as the metric,
+        or expands the mask of the same size as the metric to the same size as the pruning target.
+        If you want to use different scalers for different pruning targets in different modules, please use a dict `{module_name: {target_name: scaler}}`.
+        If allocator meets an unspecified module name, it will try to use `scalers['_default'][target_name]` to scale its mask.
+        If allocator meets an unspecified target name, it will try to use `scalers[module_name]['_default']` to scale its mask.
+        Passing in a scaler instead of a `dict` of scalers will be treated as passed in `{'_default': {'_default': scalers}}`.
+        Passing in `None` means no need to scale.
     continuous_mask
-        Inherit the mask already in the wrapper if set True.
+        If set True, the part that has been masked will be masked first.
+        If set False, the part that has been masked may be unmasked due to the increase of its corresponding metric.
     """
 
-    def __init__(self, pruner: Pruner, dim: Optional[Union[int, List[int]]] = None,
-                 block_sparse_size: Optional[Union[int, List[int]]] = None, continuous_mask: bool = True):
+    def __init__(self, pruner: Pruner, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None, continuous_mask: bool = True):
         self.pruner = pruner
-        self.dim = dim if not isinstance(dim, int) else [dim]
-        self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
-        if self.block_sparse_size is not None:
-            assert all(i >= 1 for i in self.block_sparse_size)
-        elif self.dim is not None:
-            self.block_sparse_size = [1] * len(self.dim)
-        if self.dim is not None:
-            assert all(i >= 0 for i in self.dim)
-            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))  # type: ignore
+        self.scalers: Dict[str, Dict[str, Scaling]] | None = scalers if isinstance(scalers, (dict, type(None))) else {'_default': {'_default': scalers}}  # type: ignore
         self.continuous_mask = continuous_mask
 
-    def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
+    def _get_scaler(self, module_name: str, target_name: str) -> Scaling | None:
+        return _get_scaler(self.scalers, module_name, target_name)
+
+    def _expand_mask(self, module_name: str, target_name: str, mask: Tensor) -> Tensor:
+        # Expand the shrinked mask to the pruning target size.
+        scaler = self._get_scaler(module_name=module_name, target_name=target_name)
+        if scaler:
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            return scaler.expand(mask, getattr(wrapper, f'{target_name}_mask').shape)
+        else:
+            return mask.clone()
+
+    def _shrink_mask(self, module_name: str, target_name: str, mask: Tensor) -> Tensor:
+        # Shrink the mask by scaler, shrinked mask usually has the same size with metric.
+        scaler = self._get_scaler(module_name=module_name, target_name=target_name)
+        if scaler:
+            mask = (scaler.shrink(mask) != 0).type_as(mask)
+        return mask
+
+    def _continuous_mask(self, new_masks: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+        # Set the already masked part in the metric to the minimum value.
+        target_name = 'weight'
+        for module_name, target_mask in new_masks.items():
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            old_target_mask = getattr(wrapper, f'{target_name}_mask', None)
+            if old_target_mask is not None:
+                new_masks[module_name][target_name] = torch.min(target_mask[target_name], old_target_mask)
+        return new_masks
+
+    def common_target_masks_generation(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
         """
+        Generate masks for metrics-dependent targets.
+
         Parameters
         ----------
         metrics
-            A metric dict. The key is the name of layer, the value is its metric.
+            The format is {module_name: weight_metric}.
+            The metric of `weight` usually has the same size with shrinked mask.
+
+        Return
+        ------
+        Dict[str, Dict[str, Tensor]]
+            The format is {module_name: {target_name: mask}}.
+            Return the masks of the same size as its target.
         """
         raise NotImplementedError()
 
-    def _expand_mask(self, name: str, mask: Tensor) -> Dict[str, Tensor]:
+    def special_target_masks_generation(self, masks: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         """
-        Parameters
-        ----------
-        name
-            The masked module name.
-        mask
-            The reduced mask with `self.dim` and `self.block_sparse_size`.
-
-        Returns
-        -------
-        Dict[str, Tensor]
-            The key is `weight` or `bias`, value is the final mask.
-        """
-        weight_mask = mask.clone()
-
-        if self.block_sparse_size is not None:
-            # expend mask with block_sparse_size
-            expand_size = list(weight_mask.size())
-            reshape_size = list(weight_mask.size())
-            for i, block_width in reversed(list(enumerate(self.block_sparse_size))):
-                weight_mask = weight_mask.unsqueeze(i + 1)
-                expand_size.insert(i + 1, block_width)
-                reshape_size[i] *= block_width
-            weight_mask = weight_mask.expand(expand_size).reshape(reshape_size)
-
-        wrapper = self.pruner.get_modules_wrapper()[name]
-        weight_size = wrapper.weight.data.size()  # type: ignore
-
-        if self.dim is None:
-            assert weight_mask.size() == weight_size
-            expand_mask = {'weight': weight_mask}
-        else:
-            # expand mask to weight size with dim
-            assert len(weight_mask.size()) == len(self.dim)
-            assert all(weight_size[j] == weight_mask.size(i) for i, j in enumerate(self.dim))
-
-            idxs = list(range(len(weight_size)))
-            [idxs.pop(i) for i in reversed(self.dim)]
-            for i in idxs:
-                weight_mask = weight_mask.unsqueeze(i)
-            expand_mask = {'weight': weight_mask.expand(weight_size).clone()}
-            # NOTE: assume we only mask output, so the mask and bias have a one-to-one correspondence.
-            # If we support more kind of masks, this place need refactor.
-            if wrapper.bias_mask is not None and weight_mask.size() == wrapper.bias_mask.size():  # type: ignore
-                expand_mask['bias'] = weight_mask.clone()
-        return expand_mask
-
-    def _compress_mask(self, mask: Tensor) -> Tensor:
-        """
-        This function will reduce the mask with `self.dim` and `self.block_sparse_size`.
-        e.g., a mask tensor with size [50, 60, 70], self.dim is (0, 1), self.block_sparse_size is [10, 10].
-        Then, the reduced mask size is [50 / 10, 60 / 10] => [5, 6].
+        Some pruning targets' mask generation depends on other targets, i.e., bias mask depends on weight mask.
+        This function is used to generate these masks, and it be called at the end of `generate_sparsity`.
 
         Parameters
         ----------
-        name
-            The masked module name.
-        mask
-            The entire mask has the same size with weight.
+        masks
+            The format is {module_name: {target_name: mask}}.
+            It is usually the return value of `common_target_masks_generation`.
+        """
+        for module_name, module_masks in masks.items():
+            # generate bias mask, this may move to wrapper in the future
+            weight_mask = module_masks.get('weight', None)
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            old_bias_mask = getattr(wrapper, 'bias_mask', None)
+            if weight_mask is not None and old_bias_mask is not None and weight_mask.shape[0] == old_bias_mask.shape[0]:
+                # keep dim 0 and reduce all other dims by sum
+                reduce_dims = [reduce_dim for reduce_dim in range(1, len(weight_mask.shape))]
+                # count unmasked number of values on dim 0 (output channel) of weight
+                unmasked_num_on_dim0 = weight_mask.sum(reduce_dims) if reduce_dims else weight_mask
+                module_masks['bias'] = (unmasked_num_on_dim0 != 0).type_as(old_bias_mask)
+        return masks
+
+    def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
+        """
+        The main function of `SparsityAllocator`, generate a set of masks based on the given metrics.
+
+        Parameters
+        ----------
+        metrics
+            A metric dict with format {module_name: weight_metric}
 
         Returns
         -------
-        Tensor
-            Reduced mask.
+        Dict[str, Dict[str, Tensor]]
+            The masks format is {module_name: {target_name: mask}}.
         """
-        if self.dim is None or len(mask.size()) == 1:
-            mask = mask.clone()
-        else:
-            mask_dim = list(range(len(mask.size())))
-            for dim in self.dim:
-                mask_dim.remove(dim)
-            mask = torch.sum(mask, dim=mask_dim)
-
-        if self.block_sparse_size is not None:
-            # operation like pooling
-            lower_case_letters = 'abcdefghijklmnopqrstuvwxyz'
-            ein_expression = ''
-            for i, step in enumerate(self.block_sparse_size):
-                mask = mask.unfold(i, step, step)
-                ein_expression += lower_case_letters[i]
-            ein_expression = '...{},{}'.format(ein_expression, ein_expression)
-            mask = torch.einsum(ein_expression, mask, torch.ones(self.block_sparse_size).to(mask.device))
-
-        return (mask != 0).type_as(mask)
+        masks = self.common_target_masks_generation(metrics)
+        masks = self.special_target_masks_generation(masks)
+        if self.continuous_mask:
+            masks = self._continuous_mask(masks)
+        return masks
 
 
 class TaskGenerator:
