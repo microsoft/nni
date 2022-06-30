@@ -97,7 +97,7 @@ def debug_mutated_model(base_model, evaluator, applied_mutators):
         a list of mutators that will be applied on the base model for generating a new model
     """
     base_model_ir, applied_mutators = preprocess_model(base_model, evaluator, applied_mutators)
-    from ..strategy import _LocalDebugStrategy
+    from ..strategy.local_debug_strategy import _LocalDebugStrategy
     strategy = _LocalDebugStrategy()
     strategy.run(base_model_ir, applied_mutators)
     _logger.info('local debug completed!')
