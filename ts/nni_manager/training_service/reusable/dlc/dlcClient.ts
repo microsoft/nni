@@ -13,6 +13,7 @@ export class DlcClient {
     public podCount: number;
     public ecsSpec: string;
     public region: string;
+    public workspaceId: string;
     // e.g., data1e6vg1tu0zi7, to generate it, go to 'Dataset Config' page of DLC
     //       create a NAS data and copy the 'DataSet ConfigurationID'
     public nasDataSourceId: string;
@@ -35,6 +36,7 @@ export class DlcClient {
         environmentId: string,
         ecsSpec: string,
         region: string,
+        workspaceId: string,
         nasDataSourceId: string,
         accessKeyId: string,
         accessKeySecret: string,
@@ -50,6 +52,7 @@ export class DlcClient {
         this.ecsSpec = ecsSpec;
         this.image = image;
         this.region = region;
+        this.workspaceId = workspaceId;
         this.nasDataSourceId = nasDataSourceId;
         if (ossDataSourceId !== undefined) {
             this.ossDataSourceId = ossDataSourceId;
@@ -77,6 +80,7 @@ export class DlcClient {
                 '--pod_count', String(this.podCount),
                 '--ecs_spec', this.ecsSpec,
                 '--region', this.region,
+                '--workspace_id', this.workspaceId,
                 '--nas_data_source_id', this.nasDataSourceId,
                 '--oss_data_source_id', this.ossDataSourceId,
                 '--access_key_id', this.accessKeyId,

@@ -43,9 +43,9 @@ RUN python3 -m pip --no-cache-dir install \
     torchvision==0.11.3+cu113 \
     torchaudio==0.10.2+cu113 \
     -f https://download.pytorch.org/whl/cu113/torch_stable.html
-RUN python3 -m pip --no-cache-dir install pytorch-lightning==1.5.10
+RUN python3 -m pip --no-cache-dir install pytorch-lightning==1.6.1
 
-RUN python3 -m pip --no-cache-dir install tensorflow==2.8.0
+RUN python3 -m pip --no-cache-dir install tensorflow==2.9.1
 
 RUN python3 -m pip --no-cache-dir install azureml==0.2.7 azureml-sdk==1.38.0
 

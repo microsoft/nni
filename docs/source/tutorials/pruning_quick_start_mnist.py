@@ -2,6 +2,11 @@
 Pruning Quickstart
 ==================
 
+Here is a three-minute video to get you started with model pruning.
+
+..  youtube:: wKh51Jnr0a8
+    :align: center
+
 Model pruning is a technique to reduce the model size and computation by reducing model weight size or intermediate state size.
 There are three common practices for pruning a DNN model:
 

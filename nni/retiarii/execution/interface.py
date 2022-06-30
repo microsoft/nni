@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from abc import ABC, abstractmethod, abstractclassmethod
-from typing import Any, Iterable, NewType, List, Union
+from typing import Any, Iterable, NewType, List, Union, Type
 
 from ..graph import Model, MetricData
 
@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 
-GraphData = NewType('GraphData', Any)
+GraphData: Type[Any] = NewType('GraphData', Any)
 """
 A _serializable_ internal data type defined by execution engine.
 
@@ -26,7 +26,7 @@ See `AbstractExecutionEngine` for details.
 """
 
 
-WorkerInfo = NewType('WorkerInfo', Any)
+WorkerInfo: Type[Any] = NewType('WorkerInfo', Any)
 """
 To be designed.  Discussion needed.
 
@@ -114,7 +114,7 @@ class AbstractExecutionEngine(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def query_available_resource(self) -> Union[List[WorkerInfo], int]:
+    def query_available_resource(self) -> Union[List[WorkerInfo], int]:  # type: ignore
         """
         Returns information of all idle workers.
         If no details are available, this may returns a list of "empty" objects, reporting the number of idle workers.

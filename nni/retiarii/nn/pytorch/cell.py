@@ -30,8 +30,50 @@ class _DefaultPostprocessor(nn.Module):
         return this_cell
 
 
-_cell_op_factory_type = Callable[[int, int, Optional[int]], nn.Module]
+CellOpFactory = Callable[[int, int, Optional[int]], nn.Module]
 
+
+def create_cell_op_candidates(
+    op_candidates, node_index, op_index, chosen
+) -> Tuple[Dict[str, nn.Module], bool]:
+    has_factory = False
+
+    # convert the complex type into the type that is acceptable to LayerChoice
+    def convert_single_op(op):
+        nonlocal has_factory
+
+        if isinstance(op, nn.Module):
+            return copy.deepcopy(op)
+        elif callable(op):
+            # Yes! It's using factory to create operations now.
+            has_factory = True
+            # FIXME: I don't know how to check whether we are in graph engine.
+            return op(node_index, op_index, chosen)
+        else:
+            raise TypeError(f'Unrecognized type {type(op)} for op {op}')
+
+    if isinstance(op_candidates, list):
+        res = {str(i): convert_single_op(op) for i, op in enumerate(op_candidates)}
+    elif isinstance(op_candidates, dict):
+        res = {key: convert_single_op(op) for key, op in op_candidates.items()}
+    elif callable(op_candidates):
+        warnings.warn(f'Directly passing a callable into Cell is deprecated. Please consider migrating to list or dict.',
+                      DeprecationWarning)
+        res = op_candidates()
+        has_factory = True
+    else:
+        raise TypeError(f'Unrecognized type {type(op_candidates)} for {op_candidates}')
+
+    return res, has_factory
+
+
+def preprocess_cell_inputs(num_predecessors: int, *inputs: Union[List[torch.Tensor], torch.Tensor]) -> List[torch.Tensor]:
+    if len(inputs) == 1 and isinstance(inputs[0], list):
+        processed_inputs = list(inputs[0])  # shallow copy
+    else:
+        processed_inputs = cast(List[torch.Tensor], list(inputs))
+    assert len(processed_inputs) == num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
+    return processed_inputs
 
 class Cell(nn.Module):
     """
@@ -108,6 +150,9 @@ class Cell(nn.Module):
         The index are enumerated for all nodes including predecessors from 0.
         When first created, the input index is ``None``, meaning unknown.
         Note that in graph execution engine, support of function in ``op_candidates`` is limited.
+        Please also note that, to make :class:`Cell` work with one-shot strategy,
+        ``op_candidates``, in case it's a callable, should not depend on the second input argument,
+        i.e., ``op_index`` in current node.
     num_nodes : int
         Number of nodes in the cell.
     num_ops_per_node: int
@@ -191,15 +236,19 @@ class Cell(nn.Module):
 
         When ``merge_op`` is ``loose_end``, ``output_node_indices`` is useful to compute the shape of this cell's output,
         because the output shape depends on the connection in the cell, and which nodes are "loose ends" depends on mutation.
+
+    op_candidates_factory : CellOpFactory or None
+        If the operations are created with a factory (callable), this is to be set with the factory.
+        One-shot algorithms will use this to make each node a cartesian product of operations and inputs.
     """
 
     def __init__(self,
                  op_candidates: Union[
                      Callable[[], List[nn.Module]],
                      List[nn.Module],
-                     List[_cell_op_factory_type],
+                     List[CellOpFactory],
                      Dict[str, nn.Module],
-                     Dict[str, _cell_op_factory_type]
+                     Dict[str, CellOpFactory]
                  ],
                  num_nodes: int,
                  num_ops_per_node: int = 1,
@@ -232,6 +281,8 @@ class Cell(nn.Module):
 
         self.concat_dim = concat_dim
 
+        self.op_candidates_factory: Union[List[CellOpFactory], Dict[str, CellOpFactory], None] = None  # set later
+
         # fill-in the missing modules
         self._create_modules(op_candidates)
 
@@ -253,7 +304,9 @@ class Cell(nn.Module):
 
                 # this is needed because op_candidates can be very complex
                 # the type annoation and docs for details
-                ops = self._convert_op_candidates(op_candidates, i, k, chosen)
+                ops, has_factory = create_cell_op_candidates(op_candidates, i, k, chosen)
+                if has_factory:
+                    self.op_candidates_factory = op_candidates
 
                 # though it's layer choice and input choice here, in fixed mode, the chosen module will be created.
                 cast(ModuleList, self.ops[-1]).append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
@@ -279,12 +332,7 @@ class Cell(nn.Module):
             By default, it's the output of ``merge_op``, which is a contenation (on ``concat_dim``)
             of some of (possibly all) the nodes' outputs in the cell.
         """
-        processed_inputs: List[torch.Tensor]
-        if len(inputs) == 1 and isinstance(inputs[0], list):
-            processed_inputs = list(inputs[0])  # shallow copy
-        else:
-            processed_inputs = cast(List[torch.Tensor], list(inputs))
-        assert len(processed_inputs) == self.num_predecessors, 'The number of inputs must be equal to `num_predecessors`.'
+        processed_inputs: List[torch.Tensor] = preprocess_cell_inputs(self.num_predecessors, *inputs)
         states: List[torch.Tensor] = self.preprocessor(processed_inputs)
         for ops, inps in zip(
             cast(Sequence[Sequence[LayerChoice]], self.ops),
@@ -301,26 +349,3 @@ class Cell(nn.Module):
         else:
             this_cell = torch.cat([states[k] for k in self.output_node_indices], self.concat_dim)
         return self.postprocessor(this_cell, processed_inputs)
-
-    @staticmethod
-    def _convert_op_candidates(op_candidates, node_index, op_index, chosen) -> Union[Dict[str, nn.Module], List[nn.Module]]:
-        # convert the complex type into the type that is acceptable to LayerChoice
-        def convert_single_op(op):
-            if isinstance(op, nn.Module):
-                return copy.deepcopy(op)
-            elif callable(op):
-                # FIXME: I don't know how to check whether we are in graph engine.
-                return op(node_index, op_index, chosen)
-            else:
-                raise TypeError(f'Unrecognized type {type(op)} for op {op}')
-
-        if isinstance(op_candidates, list):
-            return [convert_single_op(op) for op in op_candidates]
-        elif isinstance(op_candidates, dict):
-            return {key: convert_single_op(op) for key, op in op_candidates.items()}
-        elif callable(op_candidates):
-            warnings.warn(f'Directly passing a callable into Cell is deprecated. Please consider migrating to list or dict.',
-                          DeprecationWarning)
-            return op_candidates()
-        else:
-            raise TypeError(f'Unrecognized type {type(op_candidates)} for {op_candidates}')

@@ -53,7 +53,7 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Quantization reduces model size and speeds up inference time by reducing the number of bits req...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Here is a four-minute video to get you started with model quantization.">
 
 .. only:: html
 
@@ -74,7 +74,7 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Model pruning is a technique to reduce the model size and computation by reducing model weight ...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Here is a three-minute video to get you started with model pruning.">
 
 .. only:: html
 

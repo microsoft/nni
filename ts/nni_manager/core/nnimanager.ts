@@ -178,7 +178,7 @@ class NNIManager implements Manager {
         }
 
         this.log.info('Setup tuner...');
-        const dispatcherCommand: string = getMsgDispatcherCommand(config);
+        const dispatcherCommand: string[] = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         await this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
@@ -211,7 +211,7 @@ class NNIManager implements Manager {
         }
 
         this.log.info('Setup tuner...');
-        const dispatcherCommand: string = getMsgDispatcherCommand(config);
+        const dispatcherCommand: string[] = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         await this.setupTuner(dispatcherCommand, undefined, 'resume', checkpointDir);
@@ -303,8 +303,11 @@ class NNIManager implements Manager {
         }
 
         this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
+        // NOTE: this sending TERMINATE should be out of the if clause,
+        // because when python dispatcher is started before nnimanager
+        // this.dispatcherPid would not have a valid value (i.e., not >0).
+        this.dispatcher.sendCommand(TERMINATE);
         if (this.dispatcherPid > 0) {
-            this.dispatcher.sendCommand(TERMINATE);
             // gracefully terminate tuner and assessor here, wait at most 30 seconds.
             for (let i: number = 0; i < 30; i++) {
                 if (!await isAlive(this.dispatcherPid)) {
@@ -454,7 +457,7 @@ class NNIManager implements Manager {
         }
     }
 
-    private async setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): Promise<void> {
+    private async setupTuner(command: string[], cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): Promise<void> {
         if (this.dispatcher !== undefined) {
             return;
         }
@@ -725,6 +728,7 @@ class NNIManager implements Manager {
                 throw NNIError.FromError(err, 'Dispatcher error: ');
             }),
             this.trainingService.run().catch((err: Error) => {
+                // FIXME: The error handling here could crash when err is undefined.
                 throw NNIError.FromError(err, 'Training service error: ');
             }),
             this.manageTrials().catch((err: Error) => {
@@ -867,10 +871,15 @@ class NNIManager implements Manager {
     }
 
     private logError(err: Error): void {
-        if (err.stack !== undefined) {
-            this.log.error(err.stack);
+        if (err !== undefined) {
+            // FIXME: I don't know why, but in some cases err could be undefined.
+            if (err.stack !== undefined) {
+                this.log.error(err.stack);
+                this.status.errors.push(err.message);
+            } else {
+                this.status.errors.push(`Undefined error, stack: ${new Error().stack}`);
+            }
         }
-        this.status.errors.push(err.message);
         this.setEndtime();
         this.setStatus('ERROR');
     }

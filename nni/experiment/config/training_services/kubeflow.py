@@ -19,6 +19,8 @@ __all__ = ['KubeflowConfig', 'KubeflowRoleConfig']
 from dataclasses import dataclass
 from typing import Optional, Union
 
+from typing_extensions import Literal
+
 from ..base import ConfigBase
 from ..training_service import TrainingServiceConfig
 from .k8s_storage import K8sStorageConfig
@@ -35,7 +37,7 @@ class KubeflowRoleConfig(ConfigBase):
 
 @dataclass(init=False)
 class KubeflowConfig(TrainingServiceConfig):
-    platform: str = 'kubeflow'
+    platform: Literal['kubeflow'] = 'kubeflow'
     operator: str
     api_version: str
     storage: K8sStorageConfig

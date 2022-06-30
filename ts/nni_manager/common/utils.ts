@@ -105,10 +105,10 @@ function randomSelect<T>(a: T[]): T {
  * @param expParams: experiment startup parameters
  *
  */
-function getMsgDispatcherCommand(expParams: ExperimentConfig): string {
+function getMsgDispatcherCommand(expParams: ExperimentConfig): string[] {
     const clonedParams = Object.assign({}, expParams);
     delete clonedParams.searchSpace;
-    return `${globals.args.pythonInterpreter} -m nni --exp_params ${Buffer.from(JSON.stringify(clonedParams)).toString('base64')}`;
+    return [ globals.args.pythonInterpreter, '-m', 'nni', '--exp_params', Buffer.from(JSON.stringify(clonedParams)).toString('base64') ];
 }
 
 /**
@@ -249,16 +249,13 @@ async function getVersion(): Promise<string> {
 /**
  * run command as ChildProcess
  */
-function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any, newShell: boolean = true, isDetached: boolean = false): ChildProcess {
-    let cmd: string = command;
-    let arg: string[] = [];
+function getTunerProc(command: string[], stdio: StdioOptions, newCwd: string, newEnv: any, newShell: boolean = true, isDetached: boolean = false): ChildProcess {
+    // FIXME: TensorBoard has no reason to use get TUNER proc
     if (process.platform === "win32") {
-        cmd = command.split(" ", 1)[0];
-        arg = command.substr(cmd.length + 1).split(" ");
         newShell = false;
         isDetached = true;
     }
-    const tunerProc: ChildProcess = spawn(cmd, arg, {
+    const tunerProc: ChildProcess = spawn(command[0], command.slice(1), {
         stdio,
         cwd: newCwd,
         env: newEnv,

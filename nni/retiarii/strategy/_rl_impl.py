@@ -141,7 +141,7 @@ class ModelEvaluationEnv(gym.Env[ObservationType, int]):
             wait_models(model)
             if model.status == ModelStatus.Failed:
                 return self.reset(), 0., False, {}
-            rew = float(model.metric)
+            rew = float(model.metric)  # type: ignore
             _logger.info(f'Model metric received as reward: {rew}')
             return obs, rew, True, {}
         else:

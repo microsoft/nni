@@ -22,7 +22,7 @@ async function runProcess(): Promise<Error | null> {
 
     // create fake assessor process
     const stdio: StdioOptions = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
-    const command: string = 'python assessor.py';
+    const command: string[] = [ 'python',  'assessor.py' ];
     const proc: ChildProcess = getTunerProc(command, stdio,  'core/test', process.env);
     // record its sent/received commands on exit
     proc.on('error', (error: Error): void => { deferred.resolve(error); });

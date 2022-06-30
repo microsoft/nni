@@ -492,6 +492,35 @@ def upsample_bilinear2d_python(node, speedup):
     return UpsampleModule(size_list, scale_list)
 
 
+def upsample_nearest2d_python(node, speedup):
+    class UpsampleModule(torch.nn.Module):
+        def __init__(self, size_list, scale_list):
+            super(UpsampleModule, self).__init__()
+            self.size_list = size_list
+            self.scale_list = scale_list
+
+        def forward(self, *args):
+            """
+            The first input of args is the target tensor to upsample
+            , the following parameters is useless, because we already
+            get the size_list and the scale_list by parsing the cpp_nodes.
+            """
+            return torch.nn.functional.upsample_nearest(args[0],
+                                                        size=self.size_list, scale_factor=self.scale_list)
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    size_list_node = inputs[1].node()
+    scale_list_node = inputs[2].node()
+    size_list = None
+    scale_list = None
+
+    if size_list_node.kind() == 'prim::ListConstruct':
+        size_list = translate_list(inputs[1], speedup)
+    if scale_list_node.kind() == 'prim::ListConstruct':
+        scale_list = translate_list(inputs[2], speedup)
+    return UpsampleModule(size_list, scale_list)
+
+
 def typeas_python(node, speedup):
     """
     currently only support type_as float.
@@ -583,6 +612,7 @@ trans_from_jit_to_python = {
     'aten::to': to_python,
     'aten::type_as': typeas_python,
     'aten::upsample_bilinear2d': upsample_bilinear2d_python,
+    'aten::upsample_nearest2d': upsample_nearest2d_python,
     'aten::exp': exp_python,
     'aten::squeeze': squeeze_python,
     'aten::unsqueeze': unsqueeze_python,

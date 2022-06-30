@@ -10,7 +10,7 @@ import tkill from 'tree-kill';
 import { NNIError, NNIErrorNames } from 'common/errors';
 import { getExperimentId } from 'common/experimentStartupInfo';
 import { getLogger, Logger } from 'common/log';
-import { powershellString } from 'common/shellUtils';
+import { powershellString, shellString } from 'common/shellUtils';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
@@ -413,17 +413,18 @@ class LocalTrainingService implements TrainingService {
 
     private getScript(workingDirectory: string): string[] {
         const script: string[] = [];
+        const escapedCommand = shellString(this.config.trialCommand);
         if (process.platform === 'win32') {
             script.push(`$PSDefaultParameterValues = @{'Out-File:Encoding' = 'utf8'}`);
             script.push(`cd $env:NNI_CODE_DIR`);
             script.push(
-                `cmd.exe /c ${this.config.trialCommand} 1>${path.join(workingDirectory, 'stdout')} 2>${path.join(workingDirectory, 'stderr')}`,
+                `cmd.exe /c ${escapedCommand} 1>${path.join(workingDirectory, 'stdout')} 2>${path.join(workingDirectory, 'stderr')}`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(workingDirectory, '.nni', 'state')}" -NoNewline -encoding utf8`);
         } else {
             script.push(`cd $NNI_CODE_DIR`);
-            script.push(`eval ${this.config.trialCommand} 1>${path.join(workingDirectory, 'stdout')} 2>${path.join(workingDirectory, 'stderr')}`);
+            script.push(`eval ${escapedCommand} 1>${path.join(workingDirectory, 'stdout')} 2>${path.join(workingDirectory, 'stderr')}`);
             if (process.platform === 'darwin') {
                 // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
                 // Considering the worst case, write 999 to avoid negative duration

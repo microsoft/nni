@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 from .operation import Cell, Operation, _IOPseudoOperation
 from .utils import uid
 
-__all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData']
+__all__ = ['Evaluator', 'Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData']
 
 
 MetricData = Any
@@ -43,6 +43,13 @@ class Evaluator(abc.ABC):
     For example, functional evaluator might directly import the function and call the function.
     """
 
+    def evaluate(self, model_cls: Union[Callable[[], Any], Any]) -> Any:
+        """To run evaluation of a model. The model could be either a concrete model or a callable returning a model.
+
+        The concrete implementation of evaluate depends on the implementation of ``_execute()`` in sub-class.
+        """
+        return self._execute(model_cls)
+
     def __repr__(self):
         items = ', '.join(['%s=%r' % (k, v) for k, v in self.__dict__.items()])
         return f'{self.__class__.__name__}({items})'
@@ -56,8 +63,8 @@ class Evaluator(abc.ABC):
                 if subclass.__name__ == evaluator_type:
                     evaluator_type = subclass
                     break
-        assert issubclass(evaluator_type, Evaluator)
-        return evaluator_type._load(ir)
+        assert issubclass(cast(type, evaluator_type), Evaluator)
+        return cast(Type[Evaluator], evaluator_type)._load(ir)
 
     @abc.abstractmethod
     def _dump(self) -> Any:
@@ -350,11 +357,12 @@ class Graph:
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
-            op = Operation.new(operation_or_type, parameters, name)
+            op = Operation.new(operation_or_type, cast(dict, parameters), name)
         return Node(self, uid(), name, op, _internal=True)._register()
 
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, operation: Operation) -> 'Node': ...
+
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str,
                             parameters: Dict[str, Any] = cast(Dict[str, Any], None)) -> 'Node': ...
@@ -363,7 +371,7 @@ class Graph:
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
-            op = Operation.new(operation_or_type, parameters, name)
+            op = Operation.new(operation_or_type, cast(dict, parameters), name)
         new_node = Node(self, uid(), name, op, _internal=True)._register()
         # update edges
         self.add_edge((edge.head, edge.head_slot), (new_node, None))

@@ -1,0 +1,12 @@
+steps:
+
+- checkout: azpfilter
+  persistCredentials: true
+- task: NodeTool@0
+  inputs:
+    versionSpec: '16.x'
+- script: npm ci
+  displayName: NPM Install
+- script: node src/main.mjs
+  name: execution
+  displayName: Execution

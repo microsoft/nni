@@ -13,7 +13,7 @@ import sys
 import types
 import warnings
 from io import IOBase
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Type, TypeVar, Tuple, Union, cast
 
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
@@ -503,8 +503,18 @@ def _trace_cls(base, kw_only, call_super=True, inheritable=False):
             # store a copy of initial parameters
             args, kwargs = _formulate_arguments(base.__init__, args, kwargs, kw_only, is_class_init=True)
 
-            # calling serializable object init to initialize the full object
-            super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=call_super)
+            try:
+                # calling serializable object init to initialize the full object
+                super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=call_super)
+            except RecursionError as e:
+                warnings.warn(
+                    'Recursion error detected in initialization of wrapped object. '
+                    'Did you use `super(MyClass, self).__init__()` rather than `super().__init__()`? '
+                    'Please use `super().__init__()` and try again. '
+                    f'Original error: {e}',
+                    RuntimeWarning
+                )
+                raise
 
         def __reduce__(self):
             # The issue that decorator and pickler doesn't play well together is well known.
@@ -604,7 +614,7 @@ class _unwrap_metaclass(type):
 
     def __new__(cls, name, bases, dct):
         bases = tuple([getattr(base, '__wrapped__', base) for base in bases])
-        return super().__new__(cls, name, bases, dct)
+        return super().__new__(cls, name, cast(Tuple[type, ...], bases), dct)
 
     # Using a customized "bases" breaks default isinstance and issubclass.
     # We recover this by overriding the subclass and isinstance behavior, which conerns wrapped class only.
@@ -771,6 +781,11 @@ def _get_cls_or_func_name(cls_or_func: Any) -> str:
 
 
 def get_hybrid_cls_or_func_name(cls_or_func: Any, pickle_size_limit: int = 4096) -> str:
+    """Pickle a class or function object to a string.
+
+    It will first try to picklize the object with an importable path.
+    If that doesn't work out, it fallbacks to cloudpickle.
+    """
     try:
         name = _get_cls_or_func_name(cls_or_func)
         # import success, use a path format

@@ -1,48 +1,66 @@
 trigger: none
-pr: none
-# schedules:
-# - cron: 0 16 * * *
-#   branches:
-#     include: [ master ]
 
-jobs:
-- job: linux
-  pool: nni-it
-  timeoutInMinutes: 120
+schedules:
+- cron: 0 18 * * *
+  branches:
+    include: [ master ]
 
-  steps:
-  - template: templates/setup-non-ms-hosted-agent.yml
+resources:
+  repositories:
+    - repository: azpfilter
+      type: github
+      name: microsoft/azure-pipeline-filter
+      endpoint: github-filter-connection
 
-  - template: templates/config-version.yml
-    parameters:
-      platform: ubuntu-latest-gpu
+variables:
+  filter.modified.globs: 'examples/tuners/**,nni/algorithms/hpo/**,pipelines/full-test-hpo.yml,'
+  filter.prbody.heading: '#### Test Options'
+  filter.prbody.optionIndex: 1
 
-  - template: templates/install-dependencies.yml
-    parameters:
-      platform: ubuntu-latest-gpu
+stages:
+- stage: filter
+  jobs:
+  - job: check
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - template: templates/stage-filter.yml
 
-  - template: templates/install-nni.yml
+- stage: test
+  # dependencies.$(StageName).outputs['$(JobName).$(TaskName).$(VariableName)']
+  condition: and(succeeded(), ne(dependencies.filter.outputs['check.execution.skipsubsequent'], 'true'))
+  jobs:
+  - job: linux
+    # move back after we complete the 1ES pool...
+    pool:
+      vmImage: ubuntu-latest
+    timeoutInMinutes: 60
 
-  - script: |
-      set -e
-      cd examples/tuners/customized_tuner
-      python setup.py develop
-      nnictl algo register --meta meta_file.yml
-    displayName: Install customized tuner
+    steps:
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: ubuntu-latest
 
-  - script: |
-      set -e
-      (cd test && python -m pytest ut)
-      export PATH=$PATH:$PWD/toolchain/yarn/bin
-      export CI=true
-      (cd ts/nni_manager && yarn test)
-    displayName: SDK unit test
+    - template: templates/install-nni.yml
 
-  # TODO: this should be replaced with a dedicated HPO algo test suite
+    - template: templates/install-customized-tuner.yml
 
-  - script: |
-      cd test
-      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
-    displayName: Integration test
+    - script: |
+        set -e
+        (cd test && python -m pytest ut)
+        export PATH=$PATH:$PWD/toolchain/yarn/bin
+        export CI=true
+        (cd ts/nni_manager && yarn test)
+      displayName: SDK unit test
 
-# TODO: should add a test on platforms other than linux
+    # TODO: this should be replaced with a dedicated HPO algo test suite
+
+    - script: |
+        cd test
+        python training_service/nnitest/run_tests.py \
+          --config training_service/config/integration_tests.yml \
+          --ts local \
+          --exclude mnist-pytorch-local-gpu
+      displayName: Integration test
+
+  # TODO: should add a test on platforms other than linux

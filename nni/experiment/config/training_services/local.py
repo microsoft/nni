@@ -19,12 +19,14 @@ __all__ = ['LocalConfig']
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
+from typing_extensions import Literal
+
 from ..training_service import TrainingServiceConfig
 from .. import utils
 
 @dataclass(init=False)
 class LocalConfig(TrainingServiceConfig):
-    platform: str = 'local'
+    platform: Literal['local'] = 'local'
     use_active_gpu: Optional[bool] = None
     max_trial_number_per_gpu: int = 1
     gpu_indices: Union[List[int], int, str, None] = None

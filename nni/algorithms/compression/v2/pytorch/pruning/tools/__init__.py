@@ -25,7 +25,7 @@ from .sparsity_allocator import (
     NormalSparsityAllocator,
     BankSparsityAllocator,
     GlobalSparsityAllocator,
-    Conv2dDependencyAwareAllocator
+    DependencyAwareAllocator
 )
 from .task_generator import (
     AGPTaskGenerator,

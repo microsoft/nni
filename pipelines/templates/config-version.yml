@@ -1,19 +1,56 @@
 parameters:
 - name: platform
   type: string
+- name: python_env
+  type: string
+  default: default
+  values:
+  - default
+  - noop
+  - venv
 
 steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: 3.9
-  displayName: (latest) Configure Python version
-  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'legacy')))
+
+# UsePythonVersion task only works when the specific Python version is already installed.
+
+# The following is for linux.
+# Reference: https://dev.to/akaszynski/create-an-azure-self-hosted-agent-without-going-insane-173g
+# We only need Python 3.7 and 3.9 for now.
+# --system-site-packages is required to make packages installed with --user visible to virtualenv.
+- ${{ if contains(parameters.platform, 'legacy') }}:
+    script: |
+      set -e
+      mkdir -p $(Agent.ToolsDirectory)/Python
+      cd $(Agent.ToolsDirectory)/Python
+      PY37_VER=$(python3.7 -c "import sys; print('.'.join([f'{val}' for val in sys.version_info[:3]]))")
+      mkdir $PY37_VER
+      ln -s $PY37_VER 3.7
+      cd $PY37_VER
+      python3.7 -m venv x64 --system-site-packages
+      touch x64.complete
+    displayName: Create Python 3.7 venv
+  ${{ else }}:
+    script: |
+      set -e
+      mkdir -p $(Agent.ToolsDirectory)/Python
+      cd $(Agent.ToolsDirectory)/Python
+      PY39_VER=$(python3.9 -c "import sys; print('.'.join([f'{val}' for val in sys.version_info[:3]]))")
+      mkdir $PY39_VER
+      ln -s $PY39_VER 3.9
+      cd $PY39_VER
+      python3.9 -m venv x64 --system-site-packages
+      touch x64.complete
+    displayName: Create Python 3.9 venv
+  condition: and(succeeded(), eq('${{ parameters.python_env }}', 'venv'))
 
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: 3.7
-  displayName: (legacy) Configure Python version
-  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
+    ${{ if contains(parameters.platform, 'legacy') }}:
+      versionSpec: 3.7
+    ${{ else }}:
+      versionSpec: 3.9
+  displayName: Configure Python version
+  condition: and(succeeded(), ne('${{ parameters.python_env }}', 'noop'))
 
 - task: NodeTool@0
   inputs:

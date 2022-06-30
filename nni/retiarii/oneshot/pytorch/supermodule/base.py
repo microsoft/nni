@@ -9,6 +9,8 @@ import torch.nn as nn
 
 from nni.common.hpo_utils import ParameterSpec
 
+__all__ = ['BaseSuperNetModule']
+
 
 class BaseSuperNetModule(nn.Module):
     """
@@ -88,6 +90,6 @@ class BaseSuperNetModule(nn.Module):
         -------
         Union[BaseSuperNetModule, bool, tuple[BaseSuperNetModule, bool]]
             The mutation result, along with an optional boolean flag indicating whether to suppress follow-up mutation hooks.
-            See :class:`nni.retiarii.oneshot.pytorch.base.BaseOneShotLightningModule` for details.
+            See :class:`BaseOneShotLightningModule <nni.retiarii.oneshot.pytorch.base_lightning.BaseOneShotLightningModule>` for details.
         """
         raise NotImplementedError()

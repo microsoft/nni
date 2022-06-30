@@ -1,0 +1,14 @@
+steps:
+
+- ${{ if contains(variables['Agent.OS'], 'Windows') }}:
+    powershell: |
+      cd examples/tuners/customized_tuner
+      python setup.py develop --user
+      nnictl algo register --meta meta_file.yml
+  ${{ else }}:
+    script: |
+      set -e
+      cd examples/tuners/customized_tuner
+      python setup.py develop
+      nnictl algo register --meta meta_file.yml
+  displayName: Install customized tuner

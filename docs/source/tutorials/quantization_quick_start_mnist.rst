@@ -21,12 +21,17 @@
 Quantization Quickstart
 =======================
 
+Here is a four-minute video to get you started with model quantization.
+
+..  youtube:: MSfV7AyfiA4
+    :align: center
+
 Quantization reduces model size and speeds up inference time by reducing the number of bits required to represent weights or activations.
 
 In NNI, both post-training quantization algorithms and quantization-aware training algorithms are supported.
 Here we use `QAT_Quantizer` as an example to show the usage of quantization in NNI.
 
-.. GENERATED FROM PYTHON SOURCE LINES 12-17
+.. GENERATED FROM PYTHON SOURCE LINES 17-22
 
 Preparation
 -----------
@@ -34,7 +39,7 @@ Preparation
 In this tutorial, we use a simple model and pre-train on MNIST dataset.
 If you are familiar with defining a model and training in pytorch, you can skip directly to `Quantizing Model`_.
 
-.. GENERATED FROM PYTHON SOURCE LINES 17-37
+.. GENERATED FROM PYTHON SOURCE LINES 22-42
 
 .. code-block:: default
 
@@ -68,14 +73,14 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.7073, Accuracy: 7624/10000 (76%)
-    Average test loss: 0.2776, Accuracy: 9122/10000 (91%)
-    Average test loss: 0.1907, Accuracy: 9412/10000 (94%)
+    Average test loss: 0.5901, Accuracy: 8293/10000 (83%)
+    Average test loss: 0.2469, Accuracy: 9245/10000 (92%)
+    Average test loss: 0.1586, Accuracy: 9531/10000 (95%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 38-43
+.. GENERATED FROM PYTHON SOURCE LINES 43-48
 
 Quantizing Model
 ----------------
@@ -83,7 +88,7 @@ Quantizing Model
 Initialize a `config_list`.
 Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-58
+.. GENERATED FROM PYTHON SOURCE LINES 48-63
 
 .. code-block:: default
 
@@ -109,11 +114,11 @@ Detailed about how to write ``config_list`` please refer :doc:`compression confi
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 59-60
+.. GENERATED FROM PYTHON SOURCE LINES 64-65
 
 finetuning the model by using QAT
 
-.. GENERATED FROM PYTHON SOURCE LINES 60-65
+.. GENERATED FROM PYTHON SOURCE LINES 65-70
 
 .. code-block:: default
 
@@ -165,13 +170,13 @@ finetuning the model by using QAT
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 66-69
+.. GENERATED FROM PYTHON SOURCE LINES 71-74
 
 The model has now been wrapped, and quantization targets ('quant_types' setting in `config_list`)
 will be quantized & dequantized for simulated quantization in the wrapped layers.
 QAT is a training-aware quantizer, it will update scale and zero point during training.
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-74
+.. GENERATED FROM PYTHON SOURCE LINES 74-79
 
 .. code-block:: default
 
@@ -190,18 +195,18 @@ QAT is a training-aware quantizer, it will update scale and zero point during tr
 
  .. code-block:: none
 
-    Average test loss: 0.1542, Accuracy: 9529/10000 (95%)
-    Average test loss: 0.1133, Accuracy: 9664/10000 (97%)
-    Average test loss: 0.0919, Accuracy: 9726/10000 (97%)
+    Average test loss: 0.1333, Accuracy: 9587/10000 (96%)
+    Average test loss: 0.1076, Accuracy: 9660/10000 (97%)
+    Average test loss: 0.0957, Accuracy: 9702/10000 (97%)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-76
+.. GENERATED FROM PYTHON SOURCE LINES 80-81
 
 export model and get calibration_config
 
-.. GENERATED FROM PYTHON SOURCE LINES 76-82
+.. GENERATED FROM PYTHON SOURCE LINES 81-87
 
 .. code-block:: default
 
@@ -221,16 +226,18 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0031], device='cuda:0'), 'weight_zero_point': tensor([76.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0018], device='cuda:0'), 'weight_zero_point': tensor([113.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 12.42452621459961}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0011], device='cuda:0'), 'weight_zero_point': tensor([124.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 31.650196075439453}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0013], device='cuda:0'), 'weight_zero_point': tensor([122.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 25.805370330810547}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 12.499907493591309}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 32.0243034362793}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.491384506225586}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 17.662996292114258}}
+    INFO:nni.compression.pytorch.compressor:Model state_dict saved to ./log/mnist_model.pth
+    INFO:nni.compression.pytorch.compressor:Mask dict saved to ./log/mnist_calibration.pth
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0029], device='cuda:0'), 'weight_zero_point': tensor([96.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([101.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.014460563659668}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([118.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 25.994585037231445}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([120.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 21.589195251464844}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 10.066218376159668}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.317869186401367}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 21.97711944580078}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 17.56885528564453}}
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 83-84
+.. GENERATED FROM PYTHON SOURCE LINES 88-89
 
 build tensorRT engine to make a real speedup, for more information about speedup, please refer :doc:`quantization_speedup`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 84-90
+.. GENERATED FROM PYTHON SOURCE LINES 89-95
 
 .. code-block:: default
 
@@ -250,8 +257,8 @@ build tensorRT engine to make a real speedup, for more information about speedup
 
  .. code-block:: none
 
-    Loss: 0.09358334274291992  Accuracy: 97.21%
-    Inference elapsed_time (whole dataset): 0.04445981979370117s
+    Loss: 0.09545102081298829  Accuracy: 96.98%
+    Inference elapsed_time (whole dataset): 0.03549933433532715s
 
 
 
@@ -259,7 +266,7 @@ build tensorRT engine to make a real speedup, for more information about speedup
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  36.499 seconds)
+   **Total running time of the script:** ( 1 minutes  45.743 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start_mnist.py:

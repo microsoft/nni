@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+import math
 import torch
 import torch.nn as nn
 from .error_code import EmptyLayerError, ShapeMisMatchError, InputsNumberError, OutputTypeError, UnBalancedGroupError
@@ -595,37 +596,42 @@ def replace_layernorm(layernorm, masks):
 
 def replace_pixelshuffle(pixelshuffle, masks):
     """
-    Parameters
-    ----------
-    norm : torch.nn.PixelShuffle
-        The pixelshuffle module to be replace
-    masks : Tuple of the input masks, output masks and weight masks
-        Tuple of the masks, for example
-        ([input_m1, input_m2], [output_m], {'weight':weight_m})
+    This is a nearly `no_replace` function.
 
-    Returns
-    -------
-    torch.nn.PixelShuffle
-        The new pixelshuffle module
+    We can not replace pixelshuffle easily right now, pixelshuffle is a kind of location mapping.
+    It will map tensor with shape (r^2 * C, H, W) to (C, r * H, r* W). So we have a dependency here,
+    the preserved input channel number should be a multiple of C, and the multiple can be squared to positive integer.
+    This dependence is similar to the group dependency in ConvXD, but more restrictive,
+    i.e., each `r^2 input channels` group can not be free to preserve any number of channels, must be a number in [1, 4, 9, 16, ... , r^2].
     """
     in_masks, output_mask, _ = masks
     assert isinstance(pixelshuffle, torch.nn.PixelShuffle)
     if len(in_masks) != 1:
         raise InputsNumberError()
-
     in_mask = in_masks[0]
 
-    # N, C, H, W
+    # FIXME: This should be a correct replacement logic, but since we can't correctly generate qualified masks,
+    # most of the time this is a no_replace.
     _, remained_in = convert_to_coarse_mask(in_mask, 1)
     _, remained_out = convert_to_coarse_mask(output_mask, 1)
-    upscale_factor = pixelshuffle.upscale_factor
-    if remained_in.size(0) % (upscale_factor * upscale_factor):
-        _logger.debug("Shape mismatch, remained_in:%d upscale_factor:%d",
-                      remained_in.size(0), remained_out.size(0))
-        raise ShapeMisMatchError()
-    if remained_out.size(0) * upscale_factor * upscale_factor != remained_in:
-        raise ShapeMisMatchError()
+    in_channel_num, out_channel_num = remained_in.size(0), remained_out.size(0)
+    upscale_factor = math.floor(math.sqrt(in_channel_num / out_channel_num))
+
+    if in_channel_num != out_channel_num * (upscale_factor * upscale_factor):
+        err_msg = "Your speedup model may encounter shape mismatch error during inference. "
+        err_msg += f"PixelShuffle preserved input channel number is {in_channel_num}, "
+        err_msg += f"preserved output channel number is {out_channel_num}, "
+        err_msg += "unable to find a suitable upscale_factor, keep it as it is, please replace this module manually, "
+        err_msg += "or adjust the module sparsity ratio before this module to ensure that a suitable upscale_factor can be found."
+        # Don't raise an error because the user maybe know how to manually replace this function.
+        _logger.error(err_msg)
+        # NOTE: no_replace, use the orignal upscale_factor if we can not find a suitable upscale_factor.
+        upscale_factor = pixelshuffle.upscale_factor
+
+    if upscale_factor != pixelshuffle.upscale_factor:
+        war_msg = f"Change PixelShuffle upscale_factor from {pixelshuffle.upscale_factor} to {upscale_factor}, "
+        war_msg += "subsequent computation semantics may have changed."
+        _logger.warning(war_msg)
 
     new_pixelshuffle = torch.nn.PixelShuffle(upscale_factor)
-
     return new_pixelshuffle

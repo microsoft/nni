@@ -11,18 +11,23 @@ from nni.common.version import version_check
 # because it would induce cycled import
 RetiariiAdvisor = NewType('RetiariiAdvisor', Any)
 
-_advisor: 'RetiariiAdvisor' = None
+_advisor = None  # type is RetiariiAdvisor
 
 
-def get_advisor() -> 'RetiariiAdvisor':
+def get_advisor():
+    # return type: RetiariiAdvisor
     global _advisor
     assert _advisor is not None
     return _advisor
 
 
-def register_advisor(advisor: 'RetiariiAdvisor'):
+def register_advisor(advisor):
+    # type of advisor: RetiariiAdvisor
     global _advisor
-    assert _advisor is None
+    if _advisor is not None:
+        warnings.warn('Advisor is already set.'
+                      'You should avoid instantiating RetiariiExperiment twice in one proces.'
+                      'If you are running in a Jupyter notebook, please restart the kernel.')
     _advisor = advisor
 
 

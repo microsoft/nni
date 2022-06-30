@@ -25,8 +25,8 @@ class AMCEnv:
         for i, (name, layer) in enumerate(model.named_modules()):
             if name in pruning_op_names:
                 op_type = type(layer).__name__
-                stride = np.power(np.prod(layer.stride), 1 / len(layer.stride)) if hasattr(layer, 'stride') else 0
-                kernel_size = np.power(np.prod(layer.kernel_size), 1 / len(layer.kernel_size)) if hasattr(layer, 'kernel_size') else 1
+                stride = np.power(np.prod(layer.stride), 1 / len(layer.stride)) if hasattr(layer, 'stride') else 0  # type: ignore
+                kernel_size = np.power(np.prod(layer.kernel_size), 1 / len(layer.kernel_size)) if hasattr(layer, 'kernel_size') else 1  # type: ignore
                 self.pruning_ops[name] = (i, op_type, stride, kernel_size)
                 self.pruning_types.append(op_type)
         self.pruning_types = list(set(self.pruning_types))

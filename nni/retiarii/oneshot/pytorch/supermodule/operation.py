@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import inspect
 import itertools
-from typing import Any, Type, TypeVar, cast, Union, Tuple
+import warnings
+from typing import Any, Type, TypeVar, cast, Union, Tuple, List
 
 import torch
 import torch.nn as nn
@@ -23,10 +24,22 @@ from nni.common.serializer import is_traceable
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
 
 from .base import BaseSuperNetModule
-from ._valuechoice_utils import traverse_all_options, dedup_inner_choices
+from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, evaluate_constant
 from ._operation_utils import Slicable as _S, MaybeWeighted as _W, int_or_int_dict, scalar_or_scalar_dict
 
 T = TypeVar('T')
+
+__all__ = [
+    'MixedOperationSamplingPolicy',
+    'MixedOperation',
+    'MixedLinear',
+    'MixedConv2d',
+    'MixedBatchNorm2d',
+    'MixedMultiHeadAttention',
+    'NATIVE_MIXED_OPERATIONS',
+]
+
+_diff_not_compatible_error = 'To be compatible with differentiable one-shot strategy, {} in {} must not be ValueChoice.'
 
 
 class MixedOperationSamplingPolicy:
@@ -66,9 +79,11 @@ class MixedOperationSamplingPolicy:
 
 class MixedOperation(BaseSuperNetModule):
     """This is the base class for all mixed operations.
+    It's what you should inherit to support a new operation with ValueChoice.
 
     It contains commonly used utilities that will ease the effort to write customized mixed oeprations,
     i.e., operations with ValueChoice in its arguments.
+    To customize, please write your own mixed operation, and add the hook into ``mutation_hooks`` parameter when using the strategy.
 
     By design, for a mixed operation to work in a specific algorithm,
     at least two classes are needed.
@@ -171,7 +186,7 @@ class MixedOperation(BaseSuperNetModule):
             mixed_op = cls(cast(dict, module.trace_kwargs))
 
             if 'mixed_op_sampling' not in mutate_kwargs:
-                raise ValueError('Need to sampling policy of mixed op, but not found in `mutate_kwargs`.')
+                raise ValueError("Need a sampling policy for mixed op, but it's not found in `mutate_kwargs`.")
             policy_cls: Type[MixedOperationSamplingPolicy] = mutate_kwargs['mixed_op_sampling']
             # initialize policy class
             # this is put in mutate because we need to access memo
@@ -254,13 +269,17 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
 
     - ``in_channels``
     - ``out_channels``
-    - ``groups`` (only supported in path sampling)
+    - ``groups``
     - ``stride`` (only supported in path sampling)
     - ``kernel_size``
-    - ``padding`` (only supported in path sampling)
+    - ``padding``
     - ``dilation`` (only supported in path sampling)
 
     ``padding`` will be the "max" padding in differentiable mode.
+
+    Mutable ``groups`` is NOT supported in most cases of differentiable mode.
+    However, we do support one special case when the group number is proportional to ``in_channels`` and ``out_channels``.
+    This is often the case of depth-wise convolutions.
 
     For channels, prefix will be sliced.
     For kernels, we take the small kernel from the center and round it to floor (left top). For example ::
@@ -301,6 +320,18 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                 return max(all_sizes)
 
         elif name == 'groups':
+            if 'in_channels' in self.mutable_arguments:
+                # If the ratio is constant, we don't need to try the maximum groups.
+                try:
+                    constant = evaluate_constant(self.mutable_arguments['in_channels'] / value_choice)
+                    return max(cast(List[float], traverse_all_options(value_choice))) // int(constant)
+                except ValueError:
+                    warnings.warn(
+                        'Both input channels and groups are ValueChoice in a convolution, and their relative ratio is not a constant. '
+                        'This can be problematic for most one-shot algorithms. Please check whether this is your intention.',
+                        RuntimeWarning
+                    )
+
             # minimum groups, maximum kernel
             return min(traverse_all_options(value_choice))
 
@@ -314,11 +345,11 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                           stride: _int_or_tuple,
                           padding: scalar_or_scalar_dict[_int_or_tuple],
                           dilation: int,
-                          groups: int,
+                          groups: int_or_int_dict,
                           inputs: torch.Tensor) -> torch.Tensor:
 
-        if any(isinstance(arg, dict) for arg in [stride, dilation, groups]):
-            raise ValueError('stride, dilation, groups does not support weighted sampling.')
+        if any(isinstance(arg, dict) for arg in [stride, dilation]):
+            raise ValueError(_diff_not_compatible_error.format('stride, dilation', 'Conv2d'))
 
         in_channels_ = _W(in_channels)
         out_channels_ = _W(out_channels)
@@ -326,7 +357,32 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         # slice prefix
         # For groups > 1, we use groups to slice input weights
         weight = _S(self.weight)[:out_channels_]
-        weight = _S(weight)[:, :in_channels_ // groups]
+
+        if not isinstance(groups, dict):
+            weight = _S(weight)[:, :in_channels_ // groups]
+        else:
+            assert 'groups' in self.mutable_arguments
+            err_message = 'For differentiable one-shot strategy, when groups is a ValueChoice, ' \
+                'in_channels and out_channels should also be a ValueChoice. ' \
+                'Also, the ratios of in_channels divided by groups, and out_channels divided by groups ' \
+                'should be constants.'
+            if 'in_channels' not in self.mutable_arguments or 'out_channels' not in self.mutable_arguments:
+                raise ValueError(err_message)
+            try:
+                in_channels_per_group = evaluate_constant(self.mutable_arguments['in_channels'] / self.mutable_arguments['groups'])
+            except ValueError:
+                raise ValueError(err_message)
+            if in_channels_per_group != int(in_channels_per_group):
+                raise ValueError(f'Input channels per group is found to be a non-integer: {in_channels_per_group}')
+            if inputs.size(1) % in_channels_per_group != 0:
+                raise RuntimeError(
+                    f'Input channels must be divisible by in_channels_per_group, but the input shape is {inputs.size()}, '
+                    f'while in_channels_per_group = {in_channels_per_group}'
+                )
+
+            # Compute sliced weights and groups (as an integer)
+            weight = _S(weight)[:, :int(in_channels_per_group)]
+            groups = inputs.size(1) // int(in_channels_per_group)
 
         # slice center
         if isinstance(kernel_size, dict):
@@ -383,7 +439,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
                           inputs: torch.Tensor) -> torch.Tensor:
 
         if any(isinstance(arg, dict) for arg in [eps, momentum]):
-            raise ValueError('eps, momentum do not support weighted sampling')
+            raise ValueError(_diff_not_compatible_error.format('eps and momentum', 'BatchNorm2d'))
 
         if isinstance(num_features, dict):
             num_features = self.num_features
@@ -500,7 +556,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
 
         if any(isinstance(arg, dict) for arg in [num_heads, dropout]):
-            raise ValueError('num_heads, dropout do not support weighted sampling.')
+            raise ValueError(_diff_not_compatible_error.format('num_heads and dropout', 'MultiHeadAttention'))
 
         # by default, kdim, vdim can be none
         if kdim is None:
@@ -574,3 +630,6 @@ NATIVE_MIXED_OPERATIONS: list[Type[MixedOperation]] = [
     MixedBatchNorm2d,
     MixedMultiHeadAttention,
 ]
+
+# For the supported operations to be properly rendered in documentation
+NATIVE_SUPPORTED_OP_NAMES: list[str] = [op.bound_type.__name__ for op in NATIVE_MIXED_OPERATIONS]
