@@ -22,12 +22,12 @@ ReactDOM.render(
     >
         <Router basename={path === undefined ? '' : path}>
             <Routes>
-                <Route path='/' element={App} />
-                <Route path='/oview' element={Overview} />
-                <Route path='/detail' element={TrialsDetail} />
-                <Route path='/*' element={<Navigate to='/oview' />} />
-                <Route />
-                <Route path='/experiment' element={ExperimentManagerIndex} />
+                <Route path='/' element={<App/>}>
+                    <Route path='/oview' element={<Overview/>} />
+                    <Route path='/detail' element={<TrialsDetail/>} />
+                    <Route path='/*' element={<Navigate to='/oview' />} />
+                </Route>
+                <Route path='/experiment' element={<ExperimentManagerIndex/>} />
             </Routes>
         </Router>
     </Suspense>,
