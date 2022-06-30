@@ -12,7 +12,6 @@ import torch.nn.functional as F
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.common.serializer import Traceable
 from ..base import Pruner
 
 from .tools import (

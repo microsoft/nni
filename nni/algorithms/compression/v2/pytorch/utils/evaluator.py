@@ -126,6 +126,9 @@ class Evaluator:
         """
         raise NotImplementedError
 
+    def get_all_hooks(self) -> List[Hook]:
+        raise NotImplementedError
+
     def remove_all_hooks(self):
         """
         Remove all hooks registered by ``register_hooks``.
@@ -336,6 +339,9 @@ class LightningEvaluator(Evaluator):
         for hook in hooks:
             hook.register()
             self._hooks.append(hook)
+
+    def get_all_hooks(self) -> List[Hook]:
+        return self._hooks
 
     def remove_all_hooks(self):
         for hook in self._hooks:
@@ -565,6 +571,9 @@ class TorchEvaluator(Evaluator):
         for hook in hooks:
             hook.register()
             self._hooks.append(hook)
+
+    def get_all_hooks(self) -> List[Hook]:
+        return self._hooks
 
     def remove_all_hooks(self):
         for hook in self._hooks:
