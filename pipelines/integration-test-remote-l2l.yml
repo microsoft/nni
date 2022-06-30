@@ -12,7 +12,7 @@ schedules:
 
 jobs:
 - job: remote_linux2linux
-  pool: nni-it
+  pool: nni-it-1es-11
   timeoutInMinutes: 120
 
   steps:

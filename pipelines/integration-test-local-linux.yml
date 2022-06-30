@@ -13,6 +13,7 @@ jobs:
   steps:
   - script: |
       nvidia-smi
+    displayName: Check GPU status
 
   - template: templates/install-dependencies.yml
     parameters:
