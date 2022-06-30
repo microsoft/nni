@@ -25,6 +25,10 @@ jobs:
   - template: templates/install-customized-tuner.yml
 
   - script: |
+      METRIC_OUTPUT_DIR=. python -m nni.tools.gpu_tool.gpu_metrics_collector
+    displayName: Debug
+
+  - script: |
       cd test
       python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
     displayName: Integration test
