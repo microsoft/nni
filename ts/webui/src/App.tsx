@@ -145,7 +145,6 @@ class App extends React.Component<{}, AppState> {
                                     </div>
                                 )}
                                 {/* <AppContext.Provider */}
-                                <Outlet />
                                 <AppContext.Provider
                                     value={{
                                         interval,
@@ -168,6 +167,7 @@ class App extends React.Component<{}, AppState> {
                                         closeTimer: this.closeTimer
                                     }}
                                 >
+                                    <Outlet />
                                     {this.props.children}
                                 </AppContext.Provider>
                             </Stack>

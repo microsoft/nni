@@ -5,13 +5,13 @@ import { getPrefix } from '@static/function';
 const activeClassName = 'selected';
 
 const OVERVIEWTABS = (
-    <NavLink to='/oview' className={({ isActive }) => (isActive ? activeClassName : undefined)}>
+    <NavLink to='/oview' className={({ isActive }) => (isActive ? `${activeClassName} link` : 'link')}>
         <span className='common-tabs'>Overview</span>
     </NavLink>
 );
 
 const DETAILTABS = (
-    <NavLink to='/detail' className={({ isActive }) => (isActive ? activeClassName : undefined)}>
+    <NavLink to='/detail' className={({ isActive }) => (isActive ? `${activeClassName} link` : 'link')}>
         <span className='common-tabs'>Trials detail</span>
     </NavLink>
 );
