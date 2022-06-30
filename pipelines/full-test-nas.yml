@@ -31,14 +31,15 @@ stages:
   condition: and(succeeded(), ne(dependencies.filter.outputs['check.execution.skipsubsequent'], 'true'))
   jobs:
   - job: linux
-    pool: nni-it
+    # move back after we complete the 1ES pool...
+    pool:
+      vmImage: ubuntu-latest
     timeoutInMinutes: 60
 
     steps:
     - template: templates/install-dependencies.yml
       parameters:
-        platform: ubuntu-latest-gpu
-        python_env: venv
+        platform: ubuntu-latest
 
     - template: templates/install-nni.yml
 
@@ -50,14 +51,15 @@ stages:
       displayName: NAS test
 
   - job: windows
-    pool: nni-it-windows
+    # move back after we complete the 1ES pool...
+    pool:
+      vmImage: windows-latest
     timeoutInMinutes: 60
 
     steps:
     - template: templates/install-dependencies.yml
       parameters:
         platform: windows
-        python_env: noop
 
     - template: templates/install-nni.yml
       parameters:

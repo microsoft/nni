@@ -21,6 +21,8 @@ from pathlib import Path
 from typing import List, Optional, Union
 import warnings
 
+from typing_extensions import Literal
+
 from ..base import ConfigBase
 from ..training_service import TrainingServiceConfig
 from .. import utils
@@ -60,7 +62,7 @@ class RemoteMachineConfig(ConfigBase):
 
 @dataclass(init=False)
 class RemoteConfig(TrainingServiceConfig):
-    platform: str = 'remote'
+    platform: Literal['remote'] = 'remote'
     machine_list: List[RemoteMachineConfig]
     reuse_mode: bool = True
 

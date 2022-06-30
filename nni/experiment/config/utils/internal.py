@@ -7,12 +7,25 @@ Utility functions for experiment config classes, internal part.
 If you are implementing a config class for a training service, it's unlikely you will need these.
 """
 
+from __future__ import annotations
+
+__all__ = [
+    'get_base_path', 'set_base_path', 'unset_base_path', 'resolve_path',
+    'case_insensitive', 'camel_case',
+    'fields', 'is_instance', 'validate_type', 'is_path_like',
+    'guess_config_type', 'guess_list_config_type',
+    'training_service_config_factory', 'load_training_service_config',
+    'get_ipv4_address'
+]
+
+import copy
 import dataclasses
 import importlib
 import json
 import os.path
 from pathlib import Path
 import socket
+import typing
 
 import typeguard
 
@@ -20,36 +33,30 @@ import nni.runtime.config
 
 from .public import is_missing
 
-__all__ = [
-    'get_base_path', 'set_base_path', 'unset_base_path', 'resolve_path',
-    'case_insensitive', 'camel_case',
-    'is_instance', 'validate_type', 'is_path_like',
-    'guess_config_type', 'guess_list_config_type',
-    'training_service_config_factory', 'load_training_service_config',
-    'get_ipv4_address'
-]
+if typing.TYPE_CHECKING:
+    from ..base import ConfigBase
+    from ..training_service import TrainingServiceConfig
 
 ## handle relative path ##
 
-_current_base_path = None
+_current_base_path: Path | None = None
 
-def get_base_path():
+def get_base_path() -> Path:
     if _current_base_path is None:
         return Path()
     return _current_base_path
 
-def set_base_path(path):
+def set_base_path(path: Path) -> None:
     global _current_base_path
     assert _current_base_path is None
     _current_base_path = path
 
-def unset_base_path():
+def unset_base_path() -> None:
     global _current_base_path
     _current_base_path = None
 
-def resolve_path(path, base_path):
-    if path is None:
-        return None
+def resolve_path(path: Path | str, base_path: Path) -> str:
+    assert path is not None
     # Path.resolve() does not work on Windows when file not exist, so use os.path instead
     path = os.path.expanduser(path)
     if not os.path.isabs(path):
@@ -58,23 +65,32 @@ def resolve_path(path, base_path):
 
 ## field name case convertion ##
 
-def case_insensitive(key):
+def case_insensitive(key: str) -> str:
     return key.lower().replace('_', '')
 
-def camel_case(key):
+def camel_case(key: str) -> str:
     words = key.strip('_').split('_')
     return words[0] + ''.join(word.title() for word in words[1:])
 
 ## type hint utils ##
 
-def is_instance(value, type_hint):
+def fields(config: ConfigBase) -> list[dataclasses.Field]:
+    # Similar to `dataclasses.fields()`, but use `typing.get_types_hints()` to get `field.type`.
+    # This is useful when postponed evaluation is enabled.
+    ret = [copy.copy(field) for field in dataclasses.fields(config)]
+    types = typing.get_type_hints(type(config))
+    for field in ret:
+        field.type = types[field.name]
+    return ret
+
+def is_instance(value, type_hint) -> bool:
     try:
         typeguard.check_type('_', value, type_hint)
     except TypeError:
         return False
     return True
 
-def validate_type(config):
+def validate_type(config: ConfigBase) -> None:
     class_name = type(config).__name__
     for field in dataclasses.fields(config):
         value = getattr(config, field.name)
@@ -84,17 +100,17 @@ def validate_type(config):
         if not is_instance(value, field.type):
             raise ValueError(f'{class_name}: type of {field.name} ({repr(value)}) is not {field.type}')
 
-def is_path_like(type_hint):
+def is_path_like(type_hint) -> bool:
     # only `PathLike` and `Any` accepts `Path`; check `int` to make sure it's not `Any`
     return is_instance(Path(), type_hint) and not is_instance(1, type_hint)
 
 ## type inference ##
 
-def guess_config_type(obj, type_hint):
+def guess_config_type(obj, type_hint) -> ConfigBase | None:
     ret = guess_list_config_type([obj], type_hint, _hint_list_item=True)
     return ret[0] if ret else None
 
-def guess_list_config_type(objs, type_hint, _hint_list_item=False):
+def guess_list_config_type(objs, type_hint, _hint_list_item=False) -> list[ConfigBase] | None:
     # avoid circular import
     from ..base import ConfigBase
     from ..training_service import TrainingServiceConfig
@@ -144,20 +160,20 @@ def _all_subclasses(cls):
     subclasses = set(cls.__subclasses__())
     return subclasses.union(*[_all_subclasses(subclass) for subclass in subclasses])
 
-def training_service_config_factory(platform):
+def training_service_config_factory(platform: str) -> TrainingServiceConfig:
     cls = _get_ts_config_class(platform)
     if cls is None:
         raise ValueError(f'Bad training service platform: {platform}')
     return cls()
 
-def load_training_service_config(config):
+def load_training_service_config(config) -> TrainingServiceConfig:
     if isinstance(config, dict) and 'platform' in config:
         cls = _get_ts_config_class(config['platform'])
         if cls is not None:
             return cls(**config)
     return config  # not valid json, don't touch
 
-def _get_ts_config_class(platform):
+def _get_ts_config_class(platform: str) -> type[TrainingServiceConfig] | None:
     from ..training_service import TrainingServiceConfig  # avoid circular import
 
     # import all custom config classes so they can be found in TrainingServiceConfig.__subclasses__()
@@ -175,7 +191,7 @@ def _get_ts_config_class(platform):
 
 ## misc ##
 
-def get_ipv4_address():
+def get_ipv4_address() -> str:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(('192.0.2.0', 80))
     addr = s.getsockname()[0]

@@ -47,7 +47,7 @@ export function serveWebSocket(ws: WebSocket): void {
 }
 
 class WebSocketChannelImpl implements WebSocketChannel {
-    private deferredInit: Deferred<void> = new Deferred<void>();
+    private deferredInit: Deferred<void> | null = new Deferred<void>();
     private emitter: EventEmitter = new EventEmitter();
     private heartbeatTimer!: NodeJS.Timer;
     private serving: boolean = false;
@@ -56,8 +56,13 @@ class WebSocketChannelImpl implements WebSocketChannel {
 
     public setWebSocket(ws: WebSocket): void {
         if (this.ws !== undefined) {
-            logger.error('A second client is trying to connect');
-            ws.close(4030, 'Already serving a tuner.');
+            logger.error('A second client is trying to connect.');
+            ws.close(4030, 'Already serving a tuner');
+            return;
+        }
+        if (this.deferredInit === null) {
+            logger.error('Connection timed out.');
+            ws.close(4080, 'Timeout');
             return;
         }
 
@@ -72,11 +77,26 @@ class WebSocketChannelImpl implements WebSocketChannel {
 
         this.heartbeatTimer = setInterval(this.heartbeat.bind(this), heartbeatInterval);
         this.deferredInit.resolve();
+        this.deferredInit = null;
     }
 
     public init(): Promise<void> {
-        logger.debug(this.ws === undefined ? 'Waiting connection...' : 'Initialized.');
-        return this.deferredInit.promise;
+        if (this.ws === undefined) {
+            logger.debug('Waiting connection...');
+            // TODO: This is a quick fix. It should check tuner's process status instead.
+            setTimeout(() => {
+                if (this.deferredInit !== null) {
+                    const msg = 'Tuner did not connect in 10 seconds. Please check tuner (dispatcher) log.';
+                    this.deferredInit.reject(new Error('tuner_command_channel: ' + msg));
+                    this.deferredInit = null;
+                }
+            }, 10000);
+            return this.deferredInit!.promise;
+
+        } else {
+            logger.debug('Initialized.');
+            return Promise.resolve();
+        }
     }
 
     public async shutdown(): Promise<void> {
