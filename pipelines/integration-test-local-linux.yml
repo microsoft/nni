@@ -11,6 +11,9 @@ jobs:
   timeoutInMinutes: 60
 
   steps:
+  - script: |
+      nvidia-smi
+
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu
