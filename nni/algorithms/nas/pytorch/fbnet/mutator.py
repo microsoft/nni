@@ -148,7 +148,7 @@ class FBNetMutator(BaseMutator):
 
             for i in range(left, left + right):
                 ops_names_mutable[i] = ops_names
-            left = right
+            left += right
 
         # Create the mixed op
         for i, mutable in enumerate(self.undedup_mutables):
