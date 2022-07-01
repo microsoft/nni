@@ -35,6 +35,7 @@ __all__ = [
     'MixedLinear',
     'MixedConv2d',
     'MixedBatchNorm2d',
+    'MixedLayerNorm',
     'MixedMultiHeadAttention',
     'NATIVE_MIXED_OPERATIONS',
 ]
@@ -472,6 +473,44 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
             eps,
         )
 
+class MixedLayerNorm(MixedOperation, nn.LayerNorm):
+    """
+    Mixed LayerNorm operation.
+    Supported arguments are:
+    - ``normalized_shape ``
+    - ``eps`` (only supported in path sampling)
+    For path-sampling, prefix of ``weight`` and ``bias`` are sliced. For weighted cases, the maximum ``normalized_shape`` is used directly.
+    """
+
+    bound_type = retiarii_nn.LayerNorm
+    argument_list = ['normalized_shape', 'eps']
+
+    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
+        return max(traverse_all_options(value_choice))
+
+    def forward_with_args(self,
+                          normalized_shape,
+                          eps: float,
+                          inputs: torch.Tensor) -> torch.Tensor:
+        # make it as tuple
+        if isinstance(normalized_shape, int):
+            normalized_shape = (normalized_shape, )
+        if isinstance(self.normalized_shape, int):
+            normalized_shape = (self.normalized_shape, )
+        
+        indices = [slice(0, min(i, j)) for i, j in zip(normalized_shape, self.normalized_shape)]
+
+        weight = self.weight[indices]
+        bias = self.bias[indices]
+
+        return F.layer_norm(
+            inputs,
+            normalized_shape,
+            weight,
+            bias,
+            eps
+        )
+
 
 class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     """
@@ -628,6 +667,7 @@ NATIVE_MIXED_OPERATIONS: list[Type[MixedOperation]] = [
     MixedLinear,
     MixedConv2d,
     MixedBatchNorm2d,
+    MixedLayerNorm,
     MixedMultiHeadAttention,
 ]
 

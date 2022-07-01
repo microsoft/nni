@@ -8,7 +8,10 @@ import torch
 import torch.nn.functional as F
 from timm.models.layers import trunc_normal_, DropPath
 import nni.retiarii.nn.pytorch as nn
+
+
 from nni.retiarii import model_wrapper
+from nni.retiarii.hub.pytorch.utils.fixed import FixedFactory
 
 
 class RelativePosition2D(nn.Module):
@@ -16,10 +19,8 @@ class RelativePosition2D(nn.Module):
         super().__init__()
         self.head_embed_dim = head_embed_dim
         self.legnth = length
-        self.embeddings_table_v = nn.Parameter(
-            torch.randn(length * 2 + 2, head_embed_dim))
-        self.embeddings_table_h = nn.Parameter(
-            torch.randn(length * 2 + 2, head_embed_dim))
+        self.embeddings_table_v = nn.Parameter(torch.randn(length * 2 + 2, head_embed_dim))
+        self.embeddings_table_h = nn.Parameter(torch.randn(length * 2 + 2, head_embed_dim))
 
         trunc_normal_(self.embeddings_table_v, std=.02)
         trunc_normal_(self.embeddings_table_h, std=.02)
@@ -28,44 +29,26 @@ class RelativePosition2D(nn.Module):
         # remove the first cls token distance computation
         length_q = length_q - 1
         length_k = length_k - 1
-        range_vec_q = torch.arange(length_q)
-        range_vec_k = torch.arange(length_k)
+        range_vec_q = torch.arange(length_q, device=self.embeddings_table_v.device)
+        range_vec_k = torch.arange(length_k, device=self.embeddings_table_v.device)
         # compute the row and column distance
-        distance_mat_v = (range_vec_k[None, :] //
-                          int(length_q ** 0.5) -
-                          range_vec_q[:, None] //
-                          int(length_q ** 0.5))
-        distance_mat_h = (range_vec_k[None, :] %
-                          int(length_q ** 0.5) -
-                          range_vec_q[:, None] %
-                          int(length_q ** 0.5))
+        distance_mat_v = (range_vec_k[None, :] // int(length_q ** 0.5) - range_vec_q[:, None] // int(length_q ** 0.5))
+        distance_mat_h = (range_vec_k[None, :] % int(length_q ** 0.5) - range_vec_q[:, None] % int(length_q ** 0.5))
         # clip the distance to the range of [-legnth, legnth]
-        distance_mat_clipped_v = torch.clamp(
-            distance_mat_v, -self.legnth, self.legnth)
-        distance_mat_clipped_h = torch.clamp(
-            distance_mat_h, -self.legnth, self.legnth)
+        distance_mat_clipped_v = torch.clamp(distance_mat_v, -self.legnth, self.legnth)
+        distance_mat_clipped_h = torch.clamp(distance_mat_h, -self.legnth, self.legnth)
 
-        # translate the distance from [1, 2 * legnth + 1], 0 is for the cls
-        # token
+        # translate the distance from [1, 2 * legnth + 1], 0 is for the cls token
         final_mat_v = distance_mat_clipped_v + self.legnth + 1
         final_mat_h = distance_mat_clipped_h + self.legnth + 1
         # pad the 0 which represent the cls token
-        final_mat_v = F.pad(
-            final_mat_v, (1, 0, 1, 0), "constant", 0)
-        final_mat_h = F.pad(
-            final_mat_h, (1, 0, 1, 0), "constant", 0)
+        final_mat_v = F.pad(final_mat_v, (1, 0, 1, 0), "constant", 0)
+        final_mat_h = F.pad(final_mat_h, (1, 0, 1, 0), "constant", 0)
 
-        final_mat_v = torch.tensor(
-            final_mat_v,
-            dtype=torch.long,
-            device=self.embeddings_table_v.device)
-        final_mat_h = torch.tensor(
-            final_mat_h,
-            dtype=torch.long,
-            device=self.embeddings_table_v.device)
+        final_mat_v = final_mat_v.long()
+        final_mat_h = final_mat_h.long()
         # get the embeddings with the corresponding distance
-        embeddings = self.embeddings_table_v[final_mat_v] + \
-            self.embeddings_table_h[final_mat_h]
+        embeddings = self.embeddings_table_v[final_mat_v] + self.embeddings_table_h[final_mat_h]
 
         return embeddings
 
@@ -80,61 +63,66 @@ class RelativePositionAttention(nn.Module):
     and keys in self-attention modules.
     """
     def __init__(
-            self,
-            embed_dim,
-            fixed_embed_dim,
-            num_heads,
-            attn_drop=0.,
-            proj_drop=0,
-            rpe=False,
-            qkv_bias=False,
-            qk_scale=None,
-            rpe_length=14) -> None:
+            self, embed_dim, num_heads,
+            attn_drop=0., proj_drop=0.,
+            qkv_bias = False, qk_scale = None,
+            rpe_length = 14, rpe = False,
+            head_dim = 64):
         super().__init__()
+        head_dim = head_dim or (embed_dim // num_heads)
         self.num_heads = num_heads
-        head_dim = embed_dim // num_heads
+        self.head_dim = head_dim
         self.scale = qk_scale or head_dim ** -0.5
-        self.qkv = nn.Linear(embed_dim, embed_dim * 3, bias=qkv_bias)
+        """
+        When head nums increase from 2 to 3. 
+        For nn.Linear(embed_dim, (head_dim * num_heads) * 3), 
+        the activate(o) weight distribute: ■■■■■■□□□□□□ -> ■■■■■■■■■□□□. not suitable.
+        when use three split nn.Linear(embed_dim, (head_dim * num_heads)).
+        the activate(o) weight distribute: ■■□□■■□□■■□□ -> ■■■□■■■□■■■□
+        """
+        self.q = nn.Linear(embed_dim, head_dim * num_heads, bias=qkv_bias)
+        self.k = nn.Linear(embed_dim, head_dim * num_heads, bias=qkv_bias)
+        self.v = nn.Linear(embed_dim, head_dim * num_heads, bias=qkv_bias)
+
         self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(embed_dim, embed_dim)
+        self.proj = nn.Linear(head_dim * num_heads, embed_dim)
         self.proj_drop = nn.Dropout(proj_drop)
         self.rpe = rpe
         if rpe:
-            self.rel_pos_embed_k = RelativePosition2D(
-                fixed_embed_dim // num_heads, rpe_length)
-            self.rel_pos_embed_v = RelativePosition2D(
-                fixed_embed_dim // num_heads, rpe_length)
+            self.rel_pos_embed_k = RelativePosition2D(head_dim, rpe_length)
+            self.rel_pos_embed_v = RelativePosition2D(head_dim, rpe_length)
 
     def forward(self, x):
         B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B,N,3,self.num_heads,C//self.num_heads).permute(
-            2,0,3,1,4)
-        # make torchscript happy (cannot use tensor as tuple)
-        q, k, v = qkv[0], qkv[1], qkv[2]
+        head_dim = self.head_dim
+        num_heads = -1
+        # [B, N, C] -> [B, N, heads, head_dim] -> [B, heads, N, head_dim]
+        q = self.q(x).reshape(B, N, num_heads, head_dim).permute(0, 2, 1, 3)
+        k = self.k(x).reshape(B, N, num_heads, head_dim).permute(0, 2, 1, 3)
+        v = self.v(x).reshape(B, N, num_heads, head_dim).permute(0, 2, 1, 3)
+        num_heads = q.size(1)
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
+
         if self.rpe:
             r_p_k = self.rel_pos_embed_k(N, N)
             attn = attn + (
-                q.permute(2, 0, 1, 3).reshape(
-                    N, self.num_heads * B, -1) @ r_p_k.transpose(
-                    2, 1)) .transpose(1, 0).reshape(
-                        B, self.num_heads, N, N) * self.scale
+                q.permute(2, 0, 1, 3).reshape(N, num_heads * B, head_dim) @ r_p_k.transpose(2, 1)
+            ).transpose(1, 0).reshape(B, num_heads, N, N) * self.scale
 
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
 
-        x = (attn @ v).transpose(1, 2).reshape(B, N, C)
+        x = (attn @ v).transpose(1, 2).reshape(B, N, num_heads * head_dim)
+        
         if self.rpe:
+            attn_1 = attn.permute(2, 0, 1, 3).reshape(N, B * num_heads, N)
             r_p_v = self.rel_pos_embed_v(N, N)
-            attn_1 = attn.permute(
-                2, 0, 1, 3).reshape(
-                N, B * self.num_heads, -1)
             # The size of attention is (B, num_heads, N, N), reshape it to (N, B*num_heads, N) and do batch matmul with
             # the relative position embedding of V (N, N, head_dim) get shape like (N, B*num_heads, head_dim). We reshape it to the
             # same size as x (B, num_heads, N, hidden_dim)
-            x = x + (attn_1 @ r_p_v).transpose(1, 0).reshape(B,
-                                                             self.num_heads, N, -1).transpose(2, 1).reshape(B, N, -1)
+            x = x + (attn_1 @ r_p_v).transpose(1, 0).reshape(B, num_heads, N, head_dim).transpose(2, 1).reshape(B, N, num_heads * head_dim)
+        
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
@@ -148,7 +136,6 @@ class TransformerEncoderLayer(nn.Module):
     def __init__(
         self,
         embed_dim,
-        fixed_embed_dim,
         num_heads,
         mlp_ratio=4.,
         qkv_bias=False,
@@ -160,62 +147,38 @@ class TransformerEncoderLayer(nn.Module):
         drop_path=0.,
         pre_norm=True,
         rpe_length=14,
+        head_dim=64
     ):
         super().__init__()
 
         self.normalize_before = pre_norm
-        self.drop_path = DropPath(
-            drop_path) if drop_path > 0. else nn.Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.dropout = drop_rate
         self.attn = RelativePositionAttention(
-            embed_dim=embed_dim,
-            fixed_embed_dim=fixed_embed_dim,
-            num_heads=num_heads,
-            attn_drop=attn_drop,
+            embed_dim = embed_dim,
+            num_heads = num_heads,
+            attn_drop = attn_drop,
             proj_drop=proj_drop,
             rpe=rpe,
             qkv_bias=qkv_bias,
             qk_scale=qk_scale,
-            rpe_length=rpe_length)
+            rpe_length=rpe_length,
+            head_dim = head_dim
+        )
 
         self.attn_layer_norm = nn.LayerNorm(embed_dim)
         self.ffn_layer_norm = nn.LayerNorm(embed_dim)
+
         self.activation_fn = nn.GELU()
+
         self.fc1 = nn.Linear(
-            cast(int, embed_dim), cast(int, nn.ValueChoice.to_int(
-                embed_dim * mlp_ratio)))
+            cast(int, embed_dim), 
+            cast(int, nn.ValueChoice.to_int(embed_dim * mlp_ratio))
+        )
         self.fc2 = nn.Linear(
-            cast(int, nn.ValueChoice.to_int(
-                embed_dim * mlp_ratio)),
-            cast(int, embed_dim))
-
-    def forward(self, x):
-        """
-        Args:
-            x (Tensor): input to the layer of shape `(batch, patch_num , sample_embed_dim)`
-
-        Returns:
-            encoded output of shape `(batch, patch_num, sample_embed_dim)`
-        """
-        residual = x
-        x = self.maybe_layer_norm(self.attn_layer_norm, x, before=True)
-        x = self.attn(x)
-        x = nn.functional.dropout(x, p=self.dropout, training=self.training)
-        x = self.drop_path(x)
-        x = residual + x
-        x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
-
-        residual = x
-        x = self.maybe_layer_norm(self.ffn_layer_norm, x, before=True)
-        x = self.fc1(x)
-        x = self.activation_fn(x)
-        x = nn.functional.dropout(x, p=self.dropout, training=self.training)
-        x = self.fc2(x)
-        x = nn.functional.dropout(x, p=self.dropout, training=self.training)
-        x = self.drop_path(x)
-        x = residual + x
-        x = self.maybe_layer_norm(self.ffn_layer_norm, x, after=True)
-        return x
+            cast(int, nn.ValueChoice.to_int(embed_dim * mlp_ratio)),
+            cast(int, embed_dim)
+        )
 
     def maybe_layer_norm(self, layer_norm, x, before=False, after=False):
         assert before ^ after
@@ -224,13 +187,69 @@ class TransformerEncoderLayer(nn.Module):
         else:
             return x
 
+    def forward(self, x):
+        """
+        Args:
+            x (Tensor): input to the layer of shape `(batch, patch_num , sample_embed_dim)`
+        Returns:
+            encoded output of shape `(batch, patch_num, sample_embed_dim)`
+        """
+        residual = x
+        x = self.maybe_layer_norm(self.attn_layer_norm, x, before=True)
+        x = self.attn(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.drop_path(x)
+        x = residual + x
+        x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
+        
+        residual = x
+        x = self.maybe_layer_norm(self.ffn_layer_norm, x, before=True)
+        x = self.fc1(x)
+        x = self.activation_fn(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.fc2(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.drop_path(x)
+        x = residual + x
+        x = self.maybe_layer_norm(self.ffn_layer_norm, x, after=True)
+
+        return x
+
+
+class ClsToken(nn.Module):
+    """ Concat class token before patch embedding.
+    """
+    def __init__(self, embed_dim):
+        super(ClsToken, self).__init__()
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        trunc_normal_(self.cls_token, std=.02)
+    
+    def forward(self, x):
+        B, N, C = x.shape
+        cls_token = self.cls_token[..., :C].expand(B, -1, -1)
+        x = torch.cat((cls_token, x), dim=1)
+        return x
+
+class AbsPosEmbed(nn.Module):
+    """ Add absolute position for patch embedding.
+    """
+    def __init__(self, length, embed_dim, enable = False):
+        super(AbsPosEmbed, self).__init__()
+        self.enable = enable
+        self.pos_embed = nn.Parameter(torch.zeros(1, length, embed_dim))
+        trunc_normal_(self.pos_embed, std=.02)
+
+    def forward(self, x):
+        if not self.enable:
+            return x
+        B, N, C = x.shape
+        return x + self.pos_embed[..., :C]
 
 @model_wrapper
 class AutoformerSpace(nn.Module):
     """
     The search space that is proposed in `Autoformer <https://arxiv.org/abs/2107.00651>`__.
     There are four searchable variables: depth, embedding dimension, heads number and MLP ratio.
-
     Parameters
     ----------
     search_embed_dim : list of int
@@ -267,13 +286,12 @@ class AutoformerSpace(nn.Module):
         The scaler on score map in self-attention.
     rpe : bool
         Whether to use relative position encoding.
-
     """
 
     def __init__(
             self,
             search_embed_dim: Tuple[int, ...] = (192, 216, 240),
-            search_mlp_ratio: Tuple[float, ...] = (3.5, 4.0),
+            search_mlp_ratio: Tuple[float, ...] = (3.0, 3.5, 4.0),
             search_num_heads: Tuple[int, ...] = (3, 4),
             search_depth: Tuple[int, ...] = (12, 13, 14),
             img_size: int = 224,
@@ -293,61 +311,136 @@ class AutoformerSpace(nn.Module):
         super().__init__()
 
         embed_dim = nn.ValueChoice(list(search_embed_dim), label="embed_dim")
-        fixed_embed_dim = nn.ModelParameterChoice(
-            list(search_embed_dim), label="embed_dim")
         depth = nn.ValueChoice(list(search_depth), label="depth")
+        mlp_ratios = [nn.ValueChoice(list(search_mlp_ratio), label=f"mlp_ratio_{i}") for i in range(max(search_depth))]
+        num_heads = [nn.ValueChoice(list(search_num_heads), label=f"num_head_{i}") for i in range(max(search_depth))]
+
         self.patch_embed = nn.Conv2d(
-            in_chans,
-            cast(int, embed_dim),
-            kernel_size=patch_size,
-            stride=patch_size)
+            in_chans, cast(int, embed_dim),
+            kernel_size = patch_size,
+            stride = patch_size
+        )
         self.patches_num = int((img_size // patch_size) ** 2)
         self.global_pool = global_pool
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, cast(int, fixed_embed_dim)))
-        trunc_normal_(self.cls_token, std=.02)
 
-        dpr = [
-            x.item() for x in torch.linspace(
-                0,
-                drop_path_rate,
-                max(search_depth))]  # stochastic depth decay rule
+        self.cls_token = ClsToken(max(search_embed_dim))
+        self.pos_embed = AbsPosEmbed(self.patches_num+1, max(search_embed_dim), abs_pos)
 
-        self.abs_pos = abs_pos
-        if self.abs_pos:
-            self.pos_embed = nn.Parameter(torch.zeros(
-                1, self.patches_num + 1, cast(int, fixed_embed_dim)))
-            trunc_normal_(self.pos_embed, std=.02)
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, max(search_depth))]  # stochastic depth decay rule
 
-        self.blocks = nn.Repeat(lambda index: nn.LayerChoice([
-            TransformerEncoderLayer(embed_dim=embed_dim,
-                                    fixed_embed_dim=fixed_embed_dim,
-                                    num_heads=num_heads, mlp_ratio=mlp_ratio,
-                                    qkv_bias=qkv_bias, drop_rate=drop_rate,
-                                    attn_drop=attn_drop_rate,
-                                    drop_path=dpr[index],
-                                    rpe_length=img_size // patch_size,
-                                    qk_scale=qk_scale, rpe=rpe,
-                                    pre_norm=pre_norm,)
-            for mlp_ratio, num_heads in itertools.product(search_mlp_ratio, search_num_heads)
-        ], label=f'layer{index}'), depth)
-        self.pre_norm = pre_norm
-        if self.pre_norm:
-            self.norm = nn.LayerNorm(cast(int, embed_dim))
-        self.head = nn.Linear(
-            cast(int, embed_dim),
-            num_classes) if num_classes > 0 else nn.Identity()
+        self.blocks = nn.Repeat(
+            lambda index: TransformerEncoderLayer(
+                embed_dim = embed_dim, num_heads = num_heads[index], mlp_ratio=mlp_ratios[index],
+                qkv_bias = qkv_bias, drop_rate = drop_rate, attn_drop = attn_drop_rate, drop_path=dpr[index],
+                rpe_length=img_size // patch_size, qk_scale=qk_scale, rpe=rpe, pre_norm=pre_norm, head_dim = 64
+            ), depth
+        )
+
+        self.norm = nn.LayerNorm(cast(int, embed_dim)) if pre_norm else nn.Identity()
+        self.head = nn.Linear(cast(int, embed_dim), num_classes) if num_classes > 0 else nn.Identity()
+
+    @classmethod
+    def fixed_model(cls, name: str = "small") -> nn.Module:
+        init_kwargs = {"qkv_bias": True, "drop_rate": 0.0, "drop_path_rate": 0.1, "global_pool": True, "num_classes": 3}
+        if name == "small":
+            arch = {
+                'embed_dim': 64, 
+                'depth': 2, 
+                "mlp_ratio_0": 1.0,
+                "mlp_ratio_1": 1.0,
+                "num_head_0": 2,
+                "num_head_1": 2
+            }
+            init_kwargs.update({
+                "search_embed_dim": (64, 128),
+                "search_mlp_ratio": (1.0, 1.5),
+                "search_num_heads": (2, 3),
+                "search_depth": (1, 2)
+            })
+        elif name == "large":
+            arch = {
+                'embed_dim': 128, 
+                'depth': 2, 
+                "mlp_ratio_0": 1.5,
+                "mlp_ratio_1": 1.5,
+                "num_head_0": 3,
+                "num_head_1": 3
+            }
+            init_kwargs.update({
+                "search_embed_dim": (64, 128),
+                "search_mlp_ratio": (1.0, 1.5),
+                "search_num_heads": (2, 3),
+                "search_depth": (1, 2)
+            })
+        else:
+            raise ValueError(f'Unsupported architecture with name: {name}')
+
+        model_factory = FixedFactory(cls, arch)
+        model = model_factory(**init_kwargs)
+
+        return model
+
+    def load_supernet(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+
+        if pretrained:
+            pass
+            # weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            # pretrained_weights = torch.load(weight_file)
+            # model.load_state_dict(pretrained_weights)
+
+        return 
+
+    @classmethod
+    def load_searched_model(
+        cls, name: str,
+        pretrained: bool = False, download: bool = False, progress: bool = True
+    ) -> nn.Module:
+
+        init_kwargs = {"qkv_bias": True, "drop_rate": 0.0, "drop_path_rate": 0.1, "global_pool": True, "num_classes": 3}
+        if name == "autoformer-tiny":
+            mlp_ratio = [3.5, 3.5, 3.0, 3.5, 3.0, 3.0, 4.0, 4.0, 3.5, 4.0, 3.5, 4.0, 3.5] + [3.0]
+            num_head = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3] + [3]
+            arch = {
+                'embed_dim': 192, 
+                'depth': 13
+            }
+            for i in range(14):
+                arch[f"mlp_ratio_{i}"] = mlp_ratio[i]
+                arch[f"num_head_{i}"] = num_head[i]
+
+            init_kwargs.update({
+                "search_embed_dim": (240, 216, 192),
+                "search_mlp_ratio": (4.0, 3.5, 3.0),
+                "search_num_heads": (4, 3),
+                "search_depth": (14, 13, 12),
+            })
+
+        else:
+            raise ValueError(f'Unsupported architecture with name: {name}')
+
+        model_factory = FixedFactory(cls, arch)
+        model = model_factory(**init_kwargs)
+
+        if pretrained:
+            pass
+            # weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            # pretrained_weights = torch.load(weight_file)
+            # model.load_state_dict(pretrained_weights)
+
+        return model
 
     def forward(self, x):
         B = x.shape[0]
         x = self.patch_embed(x)
         x = x.permute(0, 2, 3, 1).view(B, self.patches_num, -1)
-        cls_tokens = self.cls_token.expand(B, -1, -1)
-        x = torch.cat((cls_tokens, x), dim=1)
-        if self.abs_pos:
-            x = x + self.pos_embed
+        x = self.cls_token(x)
+        x = self.pos_embed(x)
         x = self.blocks(x)
-        if self.pre_norm:
-            x = self.norm(x)
+        x = self.norm(x)
+        
         if self.global_pool:
             x = torch.mean(x[:, 1:], dim=1)
         else:
