@@ -17,15 +17,15 @@ from ..base import Pruner
 from .tools import (
     DataCollector,
     HookCollectorInfo,
-    WeightDataCollector,
-    WeightTrainerBasedDataCollector,
-    SingleHookTrainerBasedDataCollector
+    TargetDataCollector,
+    EvaluatorBasedTargetDataCollector,
+    EvaluatorBasedHookDataCollector
 )
 
 from .tools import (
     MetricsCalculator,
     NormMetricsCalculator,
-    MultiDataNormMetricsCalculator,
+    HookDataNormMetricsCalculator,
     DistMetricsCalculator,
     APoZRankMetricsCalculator,
     MeanRankMetricsCalculator
@@ -210,7 +210,7 @@ class LevelPruner(BasicPruner):
 
     def reset_tools(self):
         if self.data_collector is None:
-            self.data_collector = WeightDataCollector(self)
+            self.data_collector = TargetDataCollector(self)
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
@@ -271,7 +271,7 @@ class NormPruner(BasicPruner):
 
     def reset_tools(self):
         if self.data_collector is None:
-            self.data_collector = WeightDataCollector(self)
+            self.data_collector = TargetDataCollector(self)
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
@@ -436,7 +436,7 @@ class FPGMPruner(BasicPruner):
 
     def reset_tools(self):
         if self.data_collector is None:
-            self.data_collector = WeightDataCollector(self)
+            self.data_collector = TargetDataCollector(self)
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
@@ -562,7 +562,7 @@ class SlimPruner(BasicPruner):
 
     def reset_tools(self):
         if self.data_collector is None:
-            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
+            self.data_collector = EvaluatorBasedTargetDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                   self.training_epochs, criterion_patch=self.criterion_patch)
         else:
             self.data_collector.reset()
@@ -683,7 +683,7 @@ class ActivationPruner(BasicPruner):
     def reset_tools(self):
         collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()], 'forward', self._collector)
         if self.data_collector is None:
-            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
+            self.data_collector = EvaluatorBasedHookDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                       1, collector_infos=[collector_info])
         else:
             self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
@@ -1004,12 +1004,12 @@ class TaylorFOWeightPruner(BasicPruner):
         hook_targets = {name: wrapper.weight for name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
         collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)  # type: ignore
         if self.data_collector is None:
-            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
+            self.data_collector = EvaluatorBasedHookDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                       1, collector_infos=[collector_info])
         else:
             self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
         if self.metrics_calculator is None:
-            self.metrics_calculator = MultiDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+            self.metrics_calculator = HookDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
@@ -1138,7 +1138,7 @@ class ADMMPruner(BasicPruner):
 
     def reset_tools(self):
         if self.data_collector is None:
-            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
+            self.data_collector = EvaluatorBasedTargetDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                   self.training_epochs, criterion_patch=self.criterion_patch)
         else:
             self.data_collector.reset()

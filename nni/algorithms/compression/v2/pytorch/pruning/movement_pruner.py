@@ -16,7 +16,7 @@ from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPrun
 from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, OptimizerConstructHelper
 from nni.common.serializer import Traceable
 
-from .tools.base import TrainerBasedDataCollector
+from .tools.base import EvaluatorBasedDataCollector
 
 from .tools import (
     StraightMetricsCalculator,
@@ -67,18 +67,19 @@ class _StraightThrough(autograd.Function):
         return gradOutput, None
 
 
-class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
+class WeightScoreTrainerBasedDataCollector(EvaluatorBasedDataCollector):
     """
     Collect all weight_score in wrappers as data used to calculate metrics.
     """
     def collect(self) -> Dict[str, Tensor]:
         assert self.compressor.bound_model is not None
-        for _ in range(self.training_epochs):
-            self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
+        self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
 
         data = {}
-        for _, wrapper in self.compressor.get_modules_wrapper().items():
-            data[wrapper.name] = wrapper.weight_score.data  # type: ignore
+        target_name = 'weight'
+        for module_name, wrapper in self.compressor.get_modules_wrapper().items():
+            target: Tensor = getattr(wrapper, target_name)
+            data[module_name] = {target_name: target.data.clone()}
         return data
 
 

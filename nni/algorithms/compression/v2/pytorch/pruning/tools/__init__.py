@@ -9,14 +9,14 @@ from .base import (
     TaskGenerator
 )
 from .data_collector import (
-    WeightDataCollector,
-    WeightTrainerBasedDataCollector,
-    SingleHookTrainerBasedDataCollector
+    TargetDataCollector,
+    EvaluatorBasedTargetDataCollector,
+    EvaluatorBasedHookDataCollector
 )
 from .metrics_calculator import (
     StraightMetricsCalculator,
     NormMetricsCalculator,
-    MultiDataNormMetricsCalculator,
+    HookDataNormMetricsCalculator,
     DistMetricsCalculator,
     APoZRankMetricsCalculator,
     MeanRankMetricsCalculator

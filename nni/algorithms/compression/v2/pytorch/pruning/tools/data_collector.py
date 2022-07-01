@@ -6,55 +6,61 @@ from typing import Dict, List
 
 from torch import Tensor
 
-from .base import DataCollector, TrainerBasedDataCollector
+from .base import DataCollector, EvaluatorBasedDataCollector
 
 _logger = logging.getLogger(__name__)
 
-__all__ = ['WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector']
+__all__ = ['TargetDataCollector', 'EvaluatorBasedTargetDataCollector', 'EvaluatorBasedHookDataCollector']
 
 
-class WeightDataCollector(DataCollector):
+class TargetDataCollector(DataCollector):
     """
-    Collect all wrapper weights.
+    Collect all wrapper targets.
     """
 
     def reset(self):
+        # No need to reset anything in this data collector.
         pass
 
-    def collect(self) -> Dict[str, Tensor]:
+    def collect(self) -> Dict[str, Dict[str, Tensor]]:
         data = {}
-        for _, wrapper in self.compressor.get_modules_wrapper().items():
-            data[wrapper.name] = wrapper.weight.data
+        target_name = 'weight'
+        for module_name, wrapper in self.compressor.get_modules_wrapper().items():
+            target: Tensor = getattr(wrapper, target_name)
+            data[module_name] = {target_name: target.data.clone()}
         return data
 
 
-class WeightTrainerBasedDataCollector(TrainerBasedDataCollector):
+class EvaluatorBasedTargetDataCollector(EvaluatorBasedDataCollector):
     """
-    Collect all wrapper weights after training or inference.
+    Collect all wrapper pruning target after training or inference.
     """
 
-    def collect(self) -> Dict[str, Tensor]:
+    def collect(self) -> Dict[str, Dict[str, Tensor]]:
         assert self.compressor.bound_model is not None
-        for _ in range(self.training_epochs):
-            self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
+        self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
 
         data = {}
-        for _, wrapper in self.compressor.get_modules_wrapper().items():
-            data[wrapper.name] = wrapper.weight.data
+        target_name = 'weight'
+        for module_name, wrapper in self.compressor.get_modules_wrapper().items():
+            target: Tensor = getattr(wrapper, target_name)
+            data[module_name] = {target_name: target.data.clone()}
         return data
 
 
-class SingleHookTrainerBasedDataCollector(TrainerBasedDataCollector):
+class EvaluatorBasedHookDataCollector(EvaluatorBasedDataCollector):
     """
     Add hooks and collect data during training or inference.
     Single means each wrapper only has one hook to collect data.
     """
 
-    def collect(self) -> Dict[str, List[Tensor]]:
+    def collect(self) -> Dict[str, Dict[str, List]]:
         assert self.compressor.bound_model is not None
-        for _ in range(self.training_epochs):
-            self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
+        self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
 
         data = {}
-        [data.update(buffer_dict) for _, buffer_dict in self._hook_buffer.items()]
+        for module_name, hooks in self._hooks.items():
+            data[module_name] = {}
+            for target_name, hook in hooks.items():
+                data[module_name][target_name] = hook.buffer
         return data
