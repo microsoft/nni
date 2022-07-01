@@ -20,7 +20,7 @@ from .config import (
     RetiariiExeConfig, OneshotEngineConfig, BaseEngineConfig,
     PyEngineConfig, CgoEngineConfig, BenchmarkEngineConfig
 )
-from ..codegen import model_to_pytorch_script
+from ..codegen.pytorch import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
