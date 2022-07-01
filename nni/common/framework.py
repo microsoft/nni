@@ -4,7 +4,7 @@
 import importlib
 import os
 import sys
-from typing import Optional
+from typing import Optional, cast
 
 from nni.typehint import Literal
 
@@ -17,9 +17,9 @@ ENV_NNI_FRAMEWORK = 'NNI_FRAMEWORK'
 
 def framework_from_env() -> framework_type:
     framework = os.getenv(ENV_NNI_FRAMEWORK, 'pytorch')
-    if framework not in framework_type.__args__:
-        raise ValueError(f'{framework} does not belong to {framework_type.__args__}')
-    return framework
+    if framework not in framework_type.__args__:  # type: ignore
+        raise ValueError(f'{framework} does not belong to {framework_type.__args__}')  # type: ignore
+    return cast(framework_type, framework)
 
 
 DEFAULT_FRAMEWORK = framework_from_env()
