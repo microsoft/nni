@@ -11,6 +11,10 @@ jobs:
   timeoutInMinutes: 60
 
   steps:
+  - script: |
+      nvidia-smi
+    displayName: Check GPU status
+
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu
@@ -19,6 +23,10 @@ jobs:
   - template: templates/install-nni.yml
 
   - template: templates/install-customized-tuner.yml
+
+  - script: |
+      METRIC_OUTPUT_DIR=. python -m nni.tools.gpu_tool.gpu_metrics_collector
+    displayName: Debug
 
   - script: |
       cd test
