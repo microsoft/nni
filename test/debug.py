@@ -30,6 +30,7 @@ def test_multi_trial(model):
     exp_config.trial_concurrency = 1
     exp_config.max_trial_number = 1
     exp.run(exp_config)
+    print(exp.config.canonical_copy())
     ensure_success(exp)
     assert isinstance(exp.export_top_models()[0], dict)
     exp.stop()

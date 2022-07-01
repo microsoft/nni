@@ -17,6 +17,7 @@ steps:
 
 - script: |
     set -e
+    ps aux
     sudo apt-get install -y swig3.0
     sudo rm -f /usr/bin/swig
     sudo ln -s swig3.0 /usr/bin/swig
