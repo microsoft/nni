@@ -15,10 +15,11 @@ steps:
     platform: ${{ parameters.platform }}
     python_env: ${{ parameters.python_env }}
 
+# Sometimes dpkg is locked due to unattended-upgrades
 - script: |
     set -e
     ps aux
-    sudo apt-get install -y swig3.0
+    sudo apt-get -o DPkg::Lock::Timeout=60 install -y swig3.0
     sudo rm -f /usr/bin/swig
     sudo ln -s swig3.0 /usr/bin/swig
   displayName: (Ubuntu) Downgrade swig

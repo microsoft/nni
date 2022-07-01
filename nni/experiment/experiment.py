@@ -161,6 +161,7 @@ class Experiment:
     def _wait_completion(self) -> bool:
         while True:
             status = self.get_status()
+            print(status, self.get_job_statistics())
             if status == 'DONE' or status == 'STOPPED':
                 return True
             if status == 'ERROR':
