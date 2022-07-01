@@ -23,7 +23,7 @@ def main(argv):
             print('=' * 20 + f'\nCaptured stderr: {smi.stderr}', file=sys.stderr)
             gen_empty_gpu_metric(metrics_output_dir)
             break
-        parse_nvidia_smi_result(smi_output, metrics_output_dir)
+        parse_nvidia_smi_result(smi.stdout, metrics_output_dir)
         # TODO: change to sleep time configurable via arguments
         time.sleep(5)
 
