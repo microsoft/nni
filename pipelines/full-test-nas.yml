@@ -54,6 +54,9 @@ stages:
     timeoutInMinutes: 60
 
     steps:
+    # FIXME: Windows should use GPU,
+    # but it's not used now since driver is not installed in the image.
+
     - template: templates/install-dependencies.yml
       parameters:
         platform: windows

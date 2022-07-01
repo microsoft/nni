@@ -97,4 +97,4 @@ jobs:
 
   - template: templates/save-crashed-info.yml
     parameters:
-      remote: true
+      training_service: remote

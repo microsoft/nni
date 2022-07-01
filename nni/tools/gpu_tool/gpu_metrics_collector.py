@@ -16,10 +16,11 @@ def main(argv):
 
     cmd = 'nvidia-smi -q -x'.split()
     while(True):
-        try:
-            smi_output = subprocess.check_output(cmd)
-        except Exception:
-            traceback.print_exc()
+        smi = subprocess.run(cmd, timeout=20, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if smi.returncode != 0:
+            print(f'gpu_metrics_collector error: nvidia-smi return code is {smi.returncode}', file=sys.stderr)
+            print('=' * 20 + f'\nCaptured stdout: {smi.stdout}', file=sys.stderr)
+            print('=' * 20 + f'\nCaptured stderr: {smi.stderr}', file=sys.stderr)
             gen_empty_gpu_metric(metrics_output_dir)
             break
         parse_nvidia_smi_result(smi_output, metrics_output_dir)

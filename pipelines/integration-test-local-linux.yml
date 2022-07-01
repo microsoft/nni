@@ -26,3 +26,5 @@ jobs:
     displayName: Integration test
 
   - template: templates/save-crashed-info.yml
+    parameters:
+      training_service: local
