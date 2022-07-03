@@ -26,6 +26,7 @@ from nni.algorithms.compression.v2.pytorch.pruning.tools import (
 )
 from nni.algorithms.compression.v2.pytorch.pruning.tools.base import HookCollectorInfo
 from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name
+from nni.algorithms.compression.v2.pytorch.utils.scaling import Scaling
 from nni.algorithms.compression.v2.pytorch.utils.constructor_helper import OptimizerConstructHelper
 
 
@@ -112,7 +113,7 @@ class PruningToolsTestCase(unittest.TestCase):
 
     def test_metrics_calculator(self):
         # Test NormMetricsCalculator
-        metrics_calculator = NormMetricsCalculator(dim=0, p=2)
+        metrics_calculator = NormMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         data = {
             '1': torch.ones(3, 3, 3),
             '2': torch.ones(4, 4) * 2
@@ -125,7 +126,7 @@ class PruningToolsTestCase(unittest.TestCase):
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
 
         # Test DistMetricsCalculator
-        metrics_calculator = DistMetricsCalculator(dim=0, p=2)
+        metrics_calculator = DistMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         data = {
             '1': torch.tensor([[1, 2], [4, 6]], dtype=torch.float32),
             '2': torch.tensor([[0, 0], [1, 1]], dtype=torch.float32)
@@ -138,7 +139,7 @@ class PruningToolsTestCase(unittest.TestCase):
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
 
         # Test MultiDataNormMetricsCalculator
-        metrics_calculator = MultiDataNormMetricsCalculator(dim=0, p=1)
+        metrics_calculator = MultiDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         data = {
             '1': [2, torch.ones(3, 3, 3) * 2],
             '2': [2, torch.ones(4, 4) * 2]
@@ -151,7 +152,7 @@ class PruningToolsTestCase(unittest.TestCase):
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
 
         # Test APoZRankMetricsCalculator
-        metrics_calculator = APoZRankMetricsCalculator(dim=1)
+        metrics_calculator = APoZRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
         data = {
             '1': [2, torch.tensor([[1, 1], [1, 1]], dtype=torch.float32)],
             '2': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
@@ -164,7 +165,7 @@ class PruningToolsTestCase(unittest.TestCase):
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
 
         # Test MeanRankMetricsCalculator
-        metrics_calculator = MeanRankMetricsCalculator(dim=1)
+        metrics_calculator = MeanRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
         data = {
             '1': [2, torch.tensor([[0, 1], [1, 0]], dtype=torch.float32)],
             '2': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]

@@ -20,12 +20,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional, Union
 
+from typing_extensions import Literal
+
 from ..training_service import TrainingServiceConfig
 from ..utils import PathLike
 
 @dataclass(init=False)
 class OpenpaiConfig(TrainingServiceConfig):
-    platform: str = 'openpai'
+    platform: Literal['openpai'] = 'openpai'
     host: str
     username: str
     token: str
