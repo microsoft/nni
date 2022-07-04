@@ -11,6 +11,6 @@ variables:
 
 jobs:
 - job: linux
-  pool: nni-it
+  pool: nni-it-1es-11
   steps:
   - template: templates/build-vm-image-template.yml
