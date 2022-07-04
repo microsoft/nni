@@ -10,6 +10,7 @@ steps:
 # 3. Add the identity to VMSS.
 - script: |
     az login --identity --allow-no-subscriptions --username $(identity_id)
+    az account list
   displayName: Login to Azure
 
 # Make sure all these are registered.
