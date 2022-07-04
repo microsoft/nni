@@ -3,6 +3,7 @@
     "type": "azure-arm",
 
     "client_id": "<client_id>",
+    "client_secret": "<client_secret>",
     "subscription_id": "<subscription_id>",
 
     "managed_image_name": "<managed_image_name>",
