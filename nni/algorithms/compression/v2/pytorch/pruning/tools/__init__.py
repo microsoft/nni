@@ -13,6 +13,12 @@ from .data_collector import (
     EvaluatorBasedTargetDataCollector,
     EvaluatorBasedHookDataCollector
 )
+# TODO: remove in nni v3.0.
+from .data_collector import (
+    WeightDataCollector,
+    WeightTrainerBasedDataCollector,
+    SingleHookTrainerBasedDataCollector
+)
 from .metrics_calculator import (
     StraightMetricsCalculator,
     NormMetricsCalculator,

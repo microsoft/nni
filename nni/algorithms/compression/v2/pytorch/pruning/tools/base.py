@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 import logging
 from pathlib import Path
+import types
 from typing import List, Dict, Tuple, Optional, Callable, Union
 
 import json_tricks
@@ -62,6 +63,7 @@ class DataCollector:
         raise NotImplementedError()
 
 
+# TODO: remove in nni v3.0.
 class HookCollectorInfo:
     def __init__(self, targets: Union[Dict[str, Tensor], List[LayerInfo]], hook_type: str,
                  collector: Union[Callable[[List, Tensor], Callable[[Tensor], None]], Callable[[List], Callable[[Module, Tensor, Tensor], None]]]):
@@ -83,6 +85,7 @@ class HookCollectorInfo:
         self.collector = collector
 
 
+# TODO: remove in nni v3.0.
 class TrainerBasedDataCollector(DataCollector):
     """
     This class includes some trainer based util functions, i.e., patch optimizer or criterion, add hooks.
@@ -143,6 +146,112 @@ class TrainerBasedDataCollector(DataCollector):
                     return patched_criterion
         """
         super().__init__(compressor)
+        self.trainer = trainer
+        self.training_epochs = training_epochs
+        self.optimizer_helper = optimizer_helper
+        self._origin_criterion = criterion
+        self._opt_before_tasks = opt_before_tasks
+        self._opt_after_tasks = opt_after_tasks
+
+        self._criterion_patch = criterion_patch
+
+        self.reset(collector_infos)
+
+    def reset(self, collector_infos: List[HookCollectorInfo] = []):
+        # refresh optimizer and criterion
+        self._reset_optimizer()
+
+        if self._criterion_patch is not None:
+            self.criterion = self._criterion_patch(self._origin_criterion)
+        else:
+            self.criterion = self._origin_criterion
+
+        # patch optimizer
+        self._patch_optimizer()
+
+        # hook
+        self._remove_all_hook()
+        self._hook_id = 0
+        self._hook_handles = {}
+        self._hook_buffer = {}
+
+        self._collector_infos = collector_infos
+        self._add_all_hook()
+
+    def _reset_optimizer(self):
+        parameter_name_map = self.compressor.get_origin2wrapped_parameter_name_map()
+        assert self.compressor.bound_model is not None
+        self.optimizer = self.optimizer_helper.call(self.compressor.bound_model, parameter_name_map)
+
+    def _patch_optimizer(self):
+        def patch_step(old_step):
+            def new_step(_, *args, **kwargs):
+                for task in self._opt_before_tasks:
+                    task()
+                # call origin optimizer step method
+                output = old_step(*args, **kwargs)
+                for task in self._opt_after_tasks:
+                    task()
+                return output
+            return new_step
+        if self.optimizer is not None:
+            self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
+
+    def _add_hook(self, collector_info: HookCollectorInfo) -> int:
+        self._hook_id += 1
+        self._hook_handles[self._hook_id] = {}
+        self._hook_buffer[self._hook_id] = {}
+
+        if collector_info.hook_type == 'forward':
+            self._add_forward_hook(self._hook_id, collector_info.targets, collector_info.collector)  # type: ignore
+        elif collector_info.hook_type == 'backward':
+            self._add_backward_hook(self._hook_id, collector_info.targets, collector_info.collector)  # type: ignore
+        elif collector_info.hook_type == 'tensor':
+            self._add_tensor_hook(self._hook_id, collector_info.targets, collector_info.collector)  # type: ignore
+        else:
+            _logger.warning('Skip unsupported hook type: %s', collector_info.hook_type)
+
+        return self._hook_id
+
+    def _add_forward_hook(self, hook_id: int, layers: List[LayerInfo],
+                          collector: Callable[[List], Callable[[Module, Tensor, Tensor], None]]):
+        assert all(isinstance(layer_info, LayerInfo) for layer_info in layers)
+        for layer in layers:
+            self._hook_buffer[hook_id][layer.name] = []
+            handle = layer.module.register_forward_hook(collector(self._hook_buffer[hook_id][layer.name]))
+            self._hook_handles[hook_id][layer.name] = handle
+
+    def _add_backward_hook(self, hook_id: int, layers: List[LayerInfo],
+                           collector: Callable[[List], Callable[[Module, Tensor, Tensor], None]]):
+        assert all(isinstance(layer_info, LayerInfo) for layer_info in layers)
+        for layer in layers:
+            self._hook_buffer[hook_id][layer.name] = []
+            handle = layer.module.register_backward_hook(collector(self._hook_buffer[hook_id][layer.name]))  # type: ignore
+            self._hook_handles[hook_id][layer.name] = handle
+
+    def _add_tensor_hook(self, hook_id: int, tensors: Dict[str, Tensor],
+                         collector: Callable[[List, Tensor], Callable[[Tensor], None]]):
+        assert all(isinstance(tensor, Tensor) for _, tensor in tensors.items())
+        for layer_name, tensor in tensors.items():
+            self._hook_buffer[hook_id][layer_name] = []
+            handle = tensor.register_hook(collector(self._hook_buffer[hook_id][layer_name], tensor))
+            self._hook_handles[hook_id][layer_name] = handle
+
+    def _remove_hook(self, hook_id: int):
+        if hook_id not in self._hook_handles:
+            raise ValueError("%s is not a valid collector id" % str(hook_id))
+        for handle in self._hook_handles[hook_id].values():
+            handle.remove()
+        del self._hook_handles[hook_id]
+
+    def _add_all_hook(self):
+        for collector_info in self._collector_infos:
+            self._add_hook(collector_info)
+
+    def _remove_all_hook(self):
+        if hasattr(self, '_hook_handles'):
+            for hook_id in list(self._hook_handles.keys()):
+                self._remove_hook(hook_id)
 
 
 class EvaluatorBasedDataCollector(DataCollector):
