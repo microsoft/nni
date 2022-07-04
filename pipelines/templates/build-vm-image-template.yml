@@ -46,6 +46,7 @@ steps:
 - script: |
     set -e
     set -x
+    az account list
     az image list -g $(resource_group)
     if az image list -g $(resource_group) --query [].'name' | grep -q $(managed_image_name); then
       az image delete -n $(managed_image_name) -g $(resource_group)
