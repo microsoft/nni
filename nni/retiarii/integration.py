@@ -113,7 +113,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
         """
         Invoke callback.
         """
-        self.call_queue.append((name, args))
+        self.call_queue.append((name, list(args)))
         self.process_queued_callbacks()
 
     def handle_initialize(self, data):
