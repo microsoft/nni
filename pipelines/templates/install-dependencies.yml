@@ -15,10 +15,16 @@ steps:
     platform: ${{ parameters.platform }}
     python_env: ${{ parameters.python_env }}
 
-# Sometimes dpkg is locked due to unattended-upgrades
+# Sometimes dpkg is locked due to unattended-upgrades,
+# and GPU kernel doesn't work due to upgrades.
+- script: |
+    sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken install
+  displayName: (GPU) Fix broken dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'), contains('${{ parameters.platform }}', 'gpu'))
+
 - script: |
     set -e
-    sudo apt-get -o DPkg::Lock::Timeout=120 install -y swig3.0
+    sudo apt-get install -y swig3.0
     sudo rm -f /usr/bin/swig
     sudo ln -s swig3.0 /usr/bin/swig
   displayName: (Ubuntu) Downgrade swig
