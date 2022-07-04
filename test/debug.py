@@ -23,13 +23,17 @@ def test_multi_trial(model):
 
     base_model, evaluator = _mnist_net(model, evaluator_kwargs)
 
+    import logging
+    logging.getLogger('nni').setLevel(logging.DEBUG)
+
     search_strategy = strategy.Random()
     exp = RetiariiExperiment(base_model, evaluator, strategy=search_strategy)
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnist_unittest'
     exp_config.trial_concurrency = 1
     exp_config.max_trial_number = 1
-    exp.run(exp_config)
+    exp.run(exp_config, debug=True)
+    print(exp.config.canonical_copy())
     ensure_success(exp)
     assert isinstance(exp.export_top_models()[0], dict)
     exp.stop()
