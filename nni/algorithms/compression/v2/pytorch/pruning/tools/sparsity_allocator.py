@@ -128,7 +128,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
                 expand_times = old_target_mask.numel() // target_metric.numel()
                 max_pruning_numel = int(max_sparsity * target_metric.numel()) * expand_times
                 threshold = torch.topk(target_metric.reshape(-1), max_pruning_numel, largest=False)[0].max()
-                metrics[module_name] = torch.where(target_metric <= threshold, target_metric, max_metric_value)
+                metrics[module_name][target_name] = torch.where(target_metric <= threshold, target_metric, max_metric_value)
 
         # build the global_matric & calculate global threshold
         metric_list = []

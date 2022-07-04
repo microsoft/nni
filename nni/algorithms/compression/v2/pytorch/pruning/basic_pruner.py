@@ -150,7 +150,7 @@ def _parse_args(arg_names: List, args: List, kwargs: Dict, func_name: str, def_k
         if arg_names[idx] in def_kwargs:
             raise TypeError(f"{func_name} got multiple values for argument '{arg_names[idx]}'")
         def_kwargs[arg_names[idx]] = arg
-    diff = set(arg_names.keys()).difference(def_kwargs)
+    diff = set(arg_names).difference(def_kwargs.keys())
     if diff:
         raise TypeError(f"{func_name} missing {len(diff)} required positional argument: {diff}")
     diff = set(def_kwargs.keys()).difference(arg_names)
@@ -554,7 +554,8 @@ class SlimPruner(BasicPruner):
         init_kwargs = {'scale': 0.0001, 'mode': 'global'}
         if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and 'evaluator' in kwargs):
             init_kwargs = _parse_args(new_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
-            self.evaluator = init_kwargs['evaluator']
+            self.evaluator: Evaluator = init_kwargs['evaluator']
+            self.evaluator._init_optimizer_helpers(model)
         else:
             init_kwargs = _parse_args(old_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
             self.trainer: _LEGACY_TRAINER = init_kwargs['trainer']
@@ -606,6 +607,9 @@ class SlimPruner(BasicPruner):
                         sum_l1 += torch.norm(getattr(wrapper, target_name), p=1)  # type: ignore
                     return self._scale * sum_l1 + origin_loss
 
+                # move to __init___ in nni v3.0
+                self.evaluator.unbind_model()
+                self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
                 self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=loss_patch, max_epochs=self.training_epochs)
             else:
                 self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
