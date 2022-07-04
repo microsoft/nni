@@ -25,7 +25,10 @@ from nni.retiarii.graph import Evaluator
 from nni.typehint import Literal
 
 
-__all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression']
+__all__ = [
+    'LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression',
+    'SupervisedLearningModule', 'ClassificationModule', 'RegressionModule', 'AccuracyWithLogits',
+]
 
 
 class LightningModule(pl.LightningModule):
@@ -190,7 +193,7 @@ def _check_dataloader(dataloader):
 
 ### The following are some commonly used Lightning modules ###
 
-class _SupervisedLearningModule(LightningModule):
+class SupervisedLearningModule(LightningModule):
 
     trainer: pl.Trainer
 
@@ -269,19 +272,19 @@ class _SupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-class _AccuracyWithLogits(torchmetrics.Accuracy):
+class AccuracyWithLogits(torchmetrics.Accuracy):
     def update(self, pred, target):
         return super().update(nn_functional.softmax(pred, dim=-1), target)
 
 
 @nni.trace
-class _ClassificationModule(_SupervisedLearningModule):
+class ClassificationModule(SupervisedLearningModule):
     def __init__(self, criterion: Type[nn.Module] = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: Type[optim.Optimizer] = optim.Adam,
                  export_onnx: bool = True):
-        super().__init__(criterion, {'acc': _AccuracyWithLogits},
+        super().__init__(criterion, {'acc': AccuracyWithLogits},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer,
                          export_onnx=export_onnx)
 
@@ -337,14 +340,14 @@ class Classification(Lightning):
         if train_dataloader is not None:
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
             train_dataloaders = train_dataloader
-        module = _ClassificationModule(criterion=criterion, learning_rate=learning_rate,
+        module = ClassificationModule(criterion=criterion, learning_rate=learning_rate,
                                        weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
         super().__init__(module, Trainer(**trainer_kwargs),
                          train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
 
 
 @nni.trace
-class _RegressionModule(_SupervisedLearningModule):
+class RegressionModule(SupervisedLearningModule):
     def __init__(self, criterion: Type[nn.Module] = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
@@ -402,7 +405,14 @@ class Regression(Lightning):
         if train_dataloader is not None:
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
             train_dataloaders = train_dataloader
-        module = _RegressionModule(criterion=criterion, learning_rate=learning_rate,
+        module = RegressionModule(criterion=criterion, learning_rate=learning_rate,
                                    weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
         super().__init__(module, Trainer(**trainer_kwargs),
                          train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
+
+
+# Alias for backwards compatibility
+_SupervisedLearningModule = SupervisedLearningModule
+_AccuracyWithLogits = AccuracyWithLogits
+_ClassificationModule = ClassificationModule
+_RegressionModule = RegressionModule
