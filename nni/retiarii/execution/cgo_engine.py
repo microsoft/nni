@@ -14,6 +14,7 @@ from dataclasses import dataclass
 
 from nni.common.device import GPUDevice, Device
 from nni.experiment.config.training_services import RemoteConfig
+from nni.retiarii.integration import RetiariiAdvisor
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
 from ..graph import Model, ModelStatus, MetricData, Node
@@ -26,6 +27,10 @@ from ..evaluator.pytorch.cgo.evaluator import _MultiModelSupervisedLearningModul
 from .base import BaseGraphData
 
 _logger = logging.getLogger(__name__)
+
+
+def _noop(*args, **kwargs):
+    pass
 
 
 @dataclass
@@ -90,12 +95,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._queue_lock = threading.Lock()
 
         # register advisor callbacks
-        advisor = get_advisor()
-        # advisor.send_trial_callback = self._send_trial_callback
-        # advisor.request_trial_jobs_callback = self._request_trial_jobs_callback
-        advisor.trial_end_callback = self._trial_end_callback
-        advisor.intermediate_metric_callback = self._intermediate_metric_callback
-        advisor.final_metric_callback = self._final_metric_callback
+        advisor: RetiariiAdvisor = get_advisor()
+        advisor.register_callbacks({
+            'send_trial': _noop,
+            'request_trial_jobs': _noop,
+            'trial_end': self._trial_end_callback,
+            'intermediate_metric': self._intermediate_metric_callback,
+            'final_metric': self._final_metric_callback
+        })
 
         self._stopped = False
         self._consumer_thread = threading.Thread(target=self._consume_models)
