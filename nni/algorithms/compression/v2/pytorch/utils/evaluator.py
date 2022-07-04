@@ -64,6 +64,15 @@ class Hook:
 
 
 class TensorHook(Hook):
+    """
+    Here is an example for hook_factory, in this example, the gradient on this tensor will be saved in the buffer::
+
+        def hook_factory(buffer):
+            def hook(grad):
+                buffer.append(grad.clone())
+            return hook
+    """
+
     def __init__(self, target: Tensor, target_name: str, hook_factory: Callable[[List], Callable[[Tensor], Any]]):
         assert isinstance(target, Tensor)
         super().__init__(target, target_name, hook_factory)
@@ -79,11 +88,29 @@ class ModuleHook(Hook):
 
 
 class ForwardHook(ModuleHook):
+    """
+    Here is an example for hook_factory, in this example, the output of this module will be saved in the buffer::
+
+        def hook_factory(buffer):
+            def hook(module, input, output):
+                buffer.append(output.clone())
+            return hook
+    """
+
     def _register(self, hook_func: Callable[[Module, Tensor, Tensor], Any]):
         return self.target.register_forward_hook(hook_func)  # type: ignore
 
 
 class BackwardHook(ModuleHook):
+    """
+    Here is an example for hook_factory, in this example, the gradient of this module input will be saved in the buffer::
+
+        def hook_factory(buffer):
+            def hook(module, grad_input, grad_output):
+                buffer.append(grad_input.clone())
+            return hook
+    """
+
     def _register(self, hook_func: Callable[[Module, Tensor, Tensor], Any]):
         return self.target.register_backward_hook(hook_func)  # type: ignore
 
@@ -245,6 +272,10 @@ class LightningEvaluator(Evaluator):
     def bind_model(self, model: pl.LightningModule, param_names_map: Dict[str, str] | None = None):
         assert self._initialization_complete is True, 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert isinstance(model, pl.LightningModule)
+        if self.model is not None:
+            _logger.warning('Already bound a model, will unbind it before bind a new model.')
+            self.unbind_model()
+
         self.model = model
         self._ori_model_attr.update({
             'training_step': model.training_step,
@@ -255,13 +286,16 @@ class LightningEvaluator(Evaluator):
         self._patch_configure_optimizers()
 
     def unbind_model(self):
-        self.revert_loss()
-        self.revert_optimizer_step()
-        self.remove_all_hooks()
-        self._revert_configure_optimizers()
-        self._param_names_map = None
-        self._ori_model_attr.clear()
-        self.model = None
+        if self.model:
+            self.revert_loss()
+            self.revert_optimizer_step()
+            self.remove_all_hooks()
+            self._revert_configure_optimizers()
+            self._param_names_map = None
+            self._ori_model_attr.clear()
+            self.model = None
+        else:
+            _logger.warning('Did not bind any model, no need to unbind model.')
 
     def _patch_configure_optimizers(self):
         assert isinstance(self.model, pl.LightningModule)
@@ -387,9 +421,13 @@ class LightningEvaluator(Evaluator):
         return nni_metric, original_results
 
     def get_dummy_input(self) -> Any:
-        if self._dummy_input:
+        if self._dummy_input is not None:
             return self._dummy_input
-        return next(iter(self.data_module.train_dataloader()))
+        try:
+            return next(iter(self.data_module.train_dataloader()))
+        except Exception as e:
+            _logger.error('Get default dummy input failed, please manually set dummy_input.')
+            raise e
 
 
 _CRITERION = Callable[[Any, Any], Any]
@@ -519,6 +557,10 @@ class TorchEvaluator(Evaluator):
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
         assert self._initialization_complete is True, 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert isinstance(model, Module)
+        if self.model is not None:
+            _logger.warning('Already bound a model, will unbind it before bind a new model.')
+            self.unbind_model()
+
         self.model = model
         self._param_names_map = param_names_map
         self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
@@ -526,14 +568,17 @@ class TorchEvaluator(Evaluator):
         self._first_optimizer_step = self._optimizers[0].step
 
     def unbind_model(self):
-        self.revert_loss()
-        self.revert_optimizer_step()
-        self.remove_all_hooks()
-        self._first_optimizer_step = None
-        self._lr_schedulers = None
-        self._optimizers = None
-        self._param_names_map = None
-        self.model = None
+        if self.model:
+            self.revert_loss()
+            self.revert_optimizer_step()
+            self.remove_all_hooks()
+            self._first_optimizer_step = None
+            self._lr_schedulers = None
+            self._optimizers = None
+            self._param_names_map = None
+            self.model = None
+        else:
+            _logger.warning('Did not bind any model, no need to unbind model.')
 
     def patch_loss(self, patch: Callable[[Tensor], Tensor]):
         old_criterion = self._criterion
