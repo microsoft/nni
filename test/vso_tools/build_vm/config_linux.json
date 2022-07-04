@@ -20,7 +20,7 @@
       "gallery_name": "<gallery_name>",
       "image_name": "<image_name>",
       "image_version": "<image_version>",
-      "replication_regions": ["southeastasia", "westus2"],
+      "replication_regions": ["southeastasia", "westus2", "eastus"],
       "storage_account_type": "Standard_LRS"
     },
 
