@@ -77,5 +77,4 @@ stages:
     - powershell: |
         cd test
         python -m pytest algo/nas
-        # python debug.py
       displayName: NAS test
