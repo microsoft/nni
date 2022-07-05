@@ -11,18 +11,19 @@ jobs:
   timeoutInMinutes: 60
 
   steps:
-  - script: |
-      set -e
-      sudo sed -i -e "s/Update-Package-Lists \"1\"/Update-Package-Lists \"0\"/g" /etc/apt/apt.conf.d/10periodic
-      sudo sed -i -e "s/Update-Package-Lists \"1\"/Update-Package-Lists \"0\"/g" /etc/apt/apt.conf.d/20auto-upgrades
-      sudo sed -i -e "s/Unattended-Upgrade \"1\"/Unattended-Upgrade \"0\"/g" /etc/apt/apt.conf.d/20auto-upgrades
-    displayName: Disable unattended-upgrade
 
-  # https://gist.github.com/posilva/1cefb5bf1eeccf9382920e5d57a4b3fe
   # Don't set -e here
   - script: |
       set -x
-      sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
+      sudo sed -i -e "s/Update-Package-Lists \"1\"/Update-Package-Lists \"0\"/g" /etc/apt/apt.conf.d/10periodic
+      sudo sed -i -e "s/Update-Package-Lists \"1\"/Update-Package-Lists \"0\"/g" /etc/apt/apt.conf.d/20auto-upgrades
+      sudo sed -i -e "s/Unattended-Upgrade \"1\"/Unattended-Upgrade \"0\"/g" /etc/apt/apt.conf.d/20auto-upgrades
+      sudo systemctl disable apt-daily.timer
+      sudo systemctl disable apt-daily.service
+      sudo systemctl disable apt-daily-upgrade.timer
+      sudo systemctl disable apt-daily-upgrade.service
+      # In case the trick above doesn't work, try to uncomment this script below.
+      # sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
       sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
     displayName: (GPU) Fix broken dependencies
 
@@ -46,13 +47,6 @@ jobs:
     displayName: Install dependencies
 
   - script: |
-      set -x
-      sudo ls /var/spool/cron/crontabs
-      ls /etc/apt/apt.conf.d
-      cat /etc/apt/apt.conf.d/10periodic
-      cat /etc/apt/apt.conf.d/15update-stamp
-      cat /etc/apt/apt.conf.d/20auto-upgrades
-      cat /etc/apt/apt.conf.d/50unattended-upgrades
       nvidia-smi
     displayName: Check GPU status
 
