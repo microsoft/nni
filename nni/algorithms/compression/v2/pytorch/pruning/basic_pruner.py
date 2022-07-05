@@ -154,7 +154,7 @@ class EvaluatorBasedPruner(BasicPruner):
     traced_optimizer: Optimizer
     criterion: _LEGACY_CRITERION
 
-    def _init_evaluator(self, model: Module, new_api: List[str], old_api: List[str], init_kwargs: List[str], args: List,
+    def _init_evaluator(self, model: Module, new_api: List[str], old_api: List[str], init_kwargs: Dict, args: List,
                         kwargs: Dict) -> Dict:
         # for fake __init__ overload, parsing args and kwargs, initializing evaluator or [trainer, traced_optimizer, criterion],
         # return the remaining arguments.
