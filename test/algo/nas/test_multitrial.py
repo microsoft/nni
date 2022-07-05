@@ -55,7 +55,6 @@ def _test_experiment_in_separate_process(rootpath):
         atexit._run_exitfuncs()
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason='This will hang sometimes on Windows.')
 def test_exp_exit_without_stop(pytestconfig):
     # NOTE: Multiprocessing has compatibility issue with OpenMP.
     # It makes the MNIST dataset fails to load on pipeline.
