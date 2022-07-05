@@ -12,6 +12,8 @@ jobs:
 
   steps:
   - script: |
+      cat /etc/crontab
+      crontab -l
       nvidia-smi
     displayName: Check GPU status
 
@@ -19,6 +21,12 @@ jobs:
     parameters:
       platform: ubuntu-latest-gpu
       python_env: venv
+
+  - script: |
+      cat /etc/crontab
+      crontab -l
+      nvidia-smi
+    displayName: Check GPU status again
 
   - template: templates/install-nni.yml
 
