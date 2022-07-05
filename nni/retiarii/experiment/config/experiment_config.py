@@ -28,6 +28,7 @@ def _get_ee_config_class(engine_name):
 @dataclass(init=False)
 class RetiariiExeConfig(ExperimentConfig):
     # FIXME: refactor this class to inherit from a new common base class with HPO config
+    experiment_type: str = 'nas'
     search_space: Any = ''
     trial_code_directory: utils.PathLike = '.'
     trial_command: str = '_reserved'
@@ -43,33 +44,39 @@ class RetiariiExeConfig(ExperimentConfig):
                  **kwargs):
         super().__init__(training_service_platform, **kwargs)
         self.execution_engine = execution_engine
+        
+        self._is_complete_config = False
+        if self.search_space != '' and self.trial_code_directory != '.' and self.trial_command != '_reserved':
+            # only experiment view and resume have complete config in init, as the config is directly loaded
+            self._is_complete_config = True
 
     def _canonicalize(self, _parents):
-        msg = '{} is not supposed to be set in Retiarii experiment by users, your config is {}.'
-        if self.search_space != '':
-            raise ValueError(msg.format('search_space', self.search_space))
-        # TODO: maybe we should also allow users to specify trial_code_directory
-        if str(self.trial_code_directory) != '.' and not os.path.isabs(self.trial_code_directory):
-            raise ValueError(msg.format('trial_code_directory', self.trial_code_directory))
+        if not self._is_complete_config:
+            msg = '{} is not supposed to be set in Retiarii experiment by users, your config is {}.'
+            if self.search_space != '':
+                raise ValueError(msg.format('search_space', self.search_space))
+            # TODO: maybe we should also allow users to specify trial_code_directory
+            if str(self.trial_code_directory) != '.' and not os.path.isabs(self.trial_code_directory):
+                raise ValueError(msg.format('trial_code_directory', self.trial_code_directory))
 
-        trial_command_tmpl = '{envs} {python} -m nni.retiarii.trial_entry {execution_engine}'
-        if self.trial_command != '_reserved' and '-m nni.retiarii.trial_entry' not in self.trial_command:
-            raise ValueError(msg.format('trial_command', self.trial_command))
+            trial_command_tmpl = '{envs} {python} -m nni.retiarii.trial_entry {execution_engine}'
+            if self.trial_command != '_reserved' and '-m nni.retiarii.trial_entry' not in self.trial_command:
+                raise ValueError(msg.format('trial_command', self.trial_command))
 
-        if isinstance(self.execution_engine, str):
-            self.execution_engine = execution_engine_config_factory(self.execution_engine)
+            if isinstance(self.execution_engine, str):
+                self.execution_engine = execution_engine_config_factory(self.execution_engine)
 
-        _trial_command_params = {
-            # Default variables
-            'envs': '',
-            # TODO: maybe use sys.executable rendered in trial side (e.g., trial_runner)
-            'python': sys.executable,
-            'execution_engine': self.execution_engine.name,
+            _trial_command_params = {
+                # Default variables
+                'envs': '',
+                # TODO: maybe use sys.executable rendered in trial side (e.g., trial_runner)
+                'python': sys.executable,
+                'execution_engine': self.execution_engine.name,
 
-            # This should override the parameters above.
-            **(self._trial_command_params or {})
-        }
+                # This should override the parameters above.
+                **(self._trial_command_params or {})
+            }
 
-        self.trial_command = trial_command_tmpl.format(**_trial_command_params).strip()
+            self.trial_command = trial_command_tmpl.format(**_trial_command_params).strip()
 
         super()._canonicalize([self])

@@ -61,6 +61,7 @@ class ExperimentConfig(ConfigBase):
     # In latter case hybrid training services can have different settings.
 
     experiment_name: Optional[str] = None
+    experiment_type: str = 'hpo'
     search_space_file: Optional[utils.PathLike] = None
     search_space: Any = None
     trial_command: Optional[str] = None  # training service field

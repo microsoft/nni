@@ -15,7 +15,7 @@ __all__ = [
     'fields', 'is_instance', 'validate_type', 'is_path_like',
     'guess_config_type', 'guess_list_config_type',
     'training_service_config_factory', 'load_training_service_config',
-    'get_ipv4_address'
+    'get_ipv4_address', 'init_experiment_config'
 ]
 
 import copy
@@ -197,3 +197,20 @@ def get_ipv4_address() -> str:
     addr = s.getsockname()[0]
     s.close()
     return addr
+
+def init_experiment_config(config_json) -> ConfigBase:
+    from ..experiment_config import ExperimentConfig
+    from nni.retiarii.experiment.config.experiment_config import RetiariiExeConfig
+    if 'experimentType' in config_json:
+        if config_json['experimentType'] == 'hpo':
+            return ExperimentConfig(**config_json)
+        elif config_json['experimentType'] == 'nas':
+            return RetiariiExeConfig(**config_json)
+        else:
+            raise KeyError(f'Unknown experiment_type: {config_json["experimentType"]}')
+    else:
+        # for backward compatibility, experiment config <= v2.8 does not have "experiment_type"
+        if 'executionEngine' in config_json:
+            return RetiariiExeConfig(**config_json)
+        else:
+            return ExperimentConfig(**config_json)
