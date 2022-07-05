@@ -12,6 +12,7 @@ jobs:
 
   steps:
   - script: |
+      sudo ls /var/spool/cron/crontabs
       ls /etc/apt/apt.conf.d
       cat /etc/apt/apt.conf.d/*
       cat /etc/crontab
