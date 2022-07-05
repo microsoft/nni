@@ -452,10 +452,20 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             apply(lr_schedulers)
 
+    def clip_weight_gradients(self, gradient_clip_val: int | float | None = None, gradient_clip_algorithm: str | None = None):
+        """Call ``self.clip_gradients()`` for every weight optimizer."""
+        optimizers = self.weight_optimizers()
+        if isinstance(optimizers, Optimizer):
+            self.configure_gradient_clipping(optimizers, 0, gradient_clip_val, gradient_clip_algorithm)
+        elif isinstance(optimizers, list):
+            for optimizer_idx, optimizer in enumerate(optimizers):
+                self.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
+
     def call_weight_optimizers(self, method: Literal['step', 'zero_grad']):
         """
-        Function that imitates lightning trainer's behavior of calling user's optimizers. Since auto_optimization is turned off by this
-        class, you can use this function to make user optimizers behave as they were automatically handled by the lightning trainer.
+        Function that imitates lightning trainer's behavior of calling user's optimizers.
+        Since auto_optimization is turned off in most one-shot algorithm,
+        this function is used to make user optimizers behave as they were automatically handled by the lightning trainer.
 
         Parameters
         ----------

@@ -6,6 +6,7 @@ Reproduction of experiments in `DARTS paper <https://arxiv.org/abs/1806.09055>`_
 """
 
 import argparse
+import json
 
 import numpy as np
 import torch
@@ -110,7 +111,7 @@ def get_cifar10_dataset(train: bool = True, cutout: bool = False):
     return nni.trace(CIFAR10)(root='./data', train=True, download=True, transform=transform)
 
 
-def search(batch_size: int = 64):
+def search(batch_size: int = 64, **kwargs):
     model_space = DARTS(16, 8, 'cifar')
 
     train_data = get_cifar10_dataset()
@@ -132,19 +133,22 @@ def search(batch_size: int = 64):
 
     evaluator = Lightning(
         AuxLossClassificationModule(0.025, 3e-4, 0., 50),
-        Trainer(gpus=1, gradient_clip_val=5., max_epochs=50),
+        Trainer(gpus=1, max_epochs=50),
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader
     )
 
-    strategy = DartsStrategy()
+    # Gradient clip needs to be put here because DARTS strategy doesn't support this configuration from trainer.
+    strategy = DartsStrategy(gradient_clip_val=5.)
 
     config = RetiariiExeConfig(execution_engine='oneshot')
     experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
     experiment.run(config)
 
+    return experiment.export_top_models()[0]
 
-def train(arch, batch_size: int = 96):
+
+def train(arch, batch_size: int = 96, **kwargs):
     with fixed_arch(arch):
         model = DARTS(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
 
@@ -161,7 +165,7 @@ def train(arch, batch_size: int = 96):
     evaluator.fit(model)
 
 
-def test(arch, weight_file, batch_size: int = 96):
+def test(arch, weight_file, batch_size: int = 96, **kwargs):
     with fixed_arch(arch):
         model = DARTS(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
     model.load_state_dict(torch.load(weight_file))
@@ -179,6 +183,20 @@ def test(arch, weight_file, batch_size: int = 96):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', choices=['search', 'train', 'test', 'search_train'], default='search_train')
+    parser.add_argument('--batch_size', type=int)
+    parser.add_argument('--arch', type=str)
+    parser.add_argument('--weight_file', type=str)
+
+    args = parser.parse_args()
+    if args.arch:
+        args.arch = json.loads(args.arch)
+
+    if 'search' in args.mode:
+        args.arch = search(**vars(args))
+    if 'train' in args.mode:
+        train(**vars(args))
+    if args.mode == 'test':
+        test(**vars(args))
 
 
 if __name__ == '__main__':

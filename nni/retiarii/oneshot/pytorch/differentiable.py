@@ -56,6 +56,8 @@ class DartsLightningModule(BaseOneShotLightningModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
+    gradient_clip_val : float
+        Clip gradients before optimizing models at each step. Default: None
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
         supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
@@ -86,8 +88,10 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
     def __init__(self, inner_module: pl.LightningModule,
                  mutation_hooks: list[MutationHook] | None = None,
-                 arc_learning_rate: float = 3.0E-4):
+                 arc_learning_rate: float = 3.0E-4,
+                 gradient_clip_val: float | None = None):
         self.arc_learning_rate = arc_learning_rate
+        self.gradient_clip_val = gradient_clip_val
         super().__init__(inner_module, mutation_hooks=mutation_hooks)
 
     def training_step(self, batch, batch_idx):
@@ -119,6 +123,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
         w_step_loss = loss_and_metrics['loss'] \
             if isinstance(loss_and_metrics, dict) else loss_and_metrics
         self.manual_backward(w_step_loss)
+        self.clip_weight_gradients(self.gradient_clip_val)
         self.call_weight_optimizers('step')
 
         self.call_lr_schedulers(batch_idx)
@@ -161,6 +166,8 @@ class ProxylessLightningModule(DartsLightningModule):
     {base_params}
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
+    gradient_clip_val : float
+        Clip gradients before optimizing models at each step. Default: None
     """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
 
     __doc__ = _proxyless_note.format(
@@ -222,6 +229,8 @@ class GumbelDartsLightningModule(DartsLightningModule):
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float
         Learning rate for architecture optimizer. Default: 3.0e-4
+    gradient_clip_val : float
+        Clip gradients before optimizing models at each step. Default: None
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
         supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
@@ -237,10 +246,11 @@ class GumbelDartsLightningModule(DartsLightningModule):
     def __init__(self, inner_module,
                  mutation_hooks: list[MutationHook] | None = None,
                  arc_learning_rate: float = 3.0e-4,
+                 gradient_clip_val: float | None = None,
                  gumbel_temperature: float = 1.,
                  use_temp_anneal: bool = False,
                  min_temp: float = .33):
-        super().__init__(inner_module, mutation_hooks, arc_learning_rate=arc_learning_rate)
+        super().__init__(inner_module, mutation_hooks, arc_learning_rate=arc_learning_rate, gradient_clip_val=gradient_clip_val)
         self.temp = gumbel_temperature
         self.init_temp = gumbel_temperature
         self.use_temp_anneal = use_temp_anneal
