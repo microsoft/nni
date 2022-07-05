@@ -142,24 +142,52 @@ class BasicPruner(Pruner):
         return self.bound_model, masks
 
 
-# TODO: remove in nni v3.0.
-def _parse_args(arg_names: List, args: List, kwargs: Dict, func_name: str, def_kwargs: Dict) -> Dict:
-    def_kwargs.update(kwargs)
-    for idx, arg in enumerate(args):
-        if arg_names[idx] in def_kwargs:
-            raise TypeError(f"{func_name} got multiple values for argument '{arg_names[idx]}'")
-        def_kwargs[arg_names[idx]] = arg
-    diff = set(arg_names).difference(def_kwargs.keys())
-    if diff:
-        raise TypeError(f"{func_name} missing {len(diff)} required positional argument: {diff}")
-    diff = set(def_kwargs.keys()).difference(arg_names)
-    if diff:
-        raise TypeError(f"{func_name} got {len(diff)} unexpected keyword argument: {diff}")
-    return def_kwargs
-
-
 _LEGACY_TRAINER = Callable[[Module, Optimizer, Callable], None]
 _LEGACY_CRITERION = Callable[[Tensor, Tensor], Tensor]
+
+
+# TODO: remove in nni v3.0.
+class EvaluatorBasedPruner(BasicPruner):
+    evaluator: LightningEvaluator | TorchEvaluator
+    using_evaluator: bool
+    trainer: _LEGACY_TRAINER
+    traced_optimizer: Optimizer
+    criterion: _LEGACY_CRITERION
+
+    def _init_evaluator(self, model: Module, new_api: List[str], old_api: List[str], init_kwargs: List[str], args: List,
+                        kwargs: Dict) -> Dict:
+        # for fake __init__ overload, parsing args and kwargs, initializing evaluator or [trainer, traced_optimizer, criterion],
+        # return the remaining arguments.
+        if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and 'evaluator' in kwargs):
+            init_kwargs = self._parse_args(new_api, args, kwargs, init_kwargs)
+            self.evaluator: Evaluator = init_kwargs.pop('evaluator')
+            self.evaluator._init_optimizer_helpers(model)
+            self.using_evaluator = True
+        else:
+            init_kwargs = self._parse_args(old_api, args, kwargs, init_kwargs)
+            self.trainer: _LEGACY_TRAINER = init_kwargs.pop('trainer')
+            traced_optimizer: Optimizer | OptimizerConstructHelper = init_kwargs.pop('traced_optimizer')
+            self.criterion: _LEGACY_CRITERION = init_kwargs.pop('criterion')
+            if isinstance(traced_optimizer, OptimizerConstructHelper):
+                self.optimizer_helper = traced_optimizer
+            else:
+                self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+            self.using_evaluator = False
+        return init_kwargs
+
+    def _parse_args(self, arg_names: List, args: List, kwargs: Dict, def_kwargs: Dict) -> Dict:
+        def_kwargs.update(kwargs)
+        for idx, arg in enumerate(args):
+            if arg_names[idx] in def_kwargs:
+                raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{arg_names[idx]}'")
+            def_kwargs[arg_names[idx]] = arg
+        diff = set(arg_names).difference(def_kwargs.keys())
+        if diff:
+            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
+        diff = set(def_kwargs.keys()).difference(arg_names)
+        if diff:
+            raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
+        return def_kwargs
 
 
 class LevelPruner(BasicPruner):
@@ -169,9 +197,9 @@ class LevelPruner(BasicPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -179,7 +207,7 @@ class LevelPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode : str
+    mode
         'normal' or 'balance'.
         If setting 'normal' mode, target tensor will be pruned in the way of finegrained pruning.
         If setting 'balance' mode, a specal sparse pattern will chosen by pruner. Take linear
@@ -188,7 +216,7 @@ class LevelPruner(BasicPruner):
         pattern have more chance to achieve better trade-off between model performance and hardware
         acceleration. Please refer to releated paper for further information `Balanced Sparsity for
         Efficient DNN Inference on GPU <https://arxiv.org/pdf/1811.00206.pdf>`__.
-    balance_gran : list
+    balance_gran
         Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning
         without awaring balance, namely normal finegrained pruning.
         If passing list of int, LevelPruner will prune the model in the granularity of multi-dimension block.
@@ -264,9 +292,9 @@ class NormPruner(BasicPruner):
     """
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -274,9 +302,9 @@ class NormPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    p : int
+    p
         The order of norm.
-    mode : str
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the norm of weights and the channel-dependency or
@@ -285,7 +313,7 @@ class NormPruner(BasicPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
@@ -334,9 +362,9 @@ class L1NormPruner(NormPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -344,7 +372,7 @@ class L1NormPruner(NormPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode : str
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the l1-norm of weights and the channel-dependency or
@@ -353,7 +381,7 @@ class L1NormPruner(NormPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
@@ -372,9 +400,9 @@ class L2NormPruner(NormPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -382,7 +410,7 @@ class L2NormPruner(NormPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode : str
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -391,7 +419,7 @@ class L2NormPruner(NormPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
@@ -422,9 +450,9 @@ class FPGMPruner(BasicPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -432,7 +460,7 @@ class FPGMPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode : str
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the FPGM of weights and the channel-dependency or
@@ -441,7 +469,7 @@ class FPGMPruner(BasicPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
@@ -486,7 +514,7 @@ class FPGMPruner(BasicPruner):
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
 
-class SlimPruner(BasicPruner):
+class SlimPruner(EvaluatorBasedPruner):
     r"""
     Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training to identify unimportant channels.
     The channels with small scaling factor values will be pruned.
@@ -552,19 +580,7 @@ class SlimPruner(BasicPruner):
         new_api = ['evaluator', 'training_epochs', 'scale', 'mode']
         old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_epochs', 'scale', 'mode']
         init_kwargs = {'scale': 0.0001, 'mode': 'global'}
-        if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and 'evaluator' in kwargs):
-            init_kwargs = _parse_args(new_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
-            self.evaluator: Evaluator = init_kwargs['evaluator']
-            self.evaluator._init_optimizer_helpers(model)
-        else:
-            init_kwargs = _parse_args(old_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
-            self.trainer: _LEGACY_TRAINER = init_kwargs['trainer']
-            traced_optimizer: Optimizer | OptimizerConstructHelper = init_kwargs['traced_optimizer']
-            self.criterion: _LEGACY_CRITERION = init_kwargs['criterion']
-            if isinstance(traced_optimizer, OptimizerConstructHelper):
-                self.optimizer_helper = traced_optimizer
-            else:
-                self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
 
         self.training_epochs, self._scale, self.mode = init_kwargs['training_epochs'], init_kwargs['scale'], init_kwargs['mode']
 
@@ -605,7 +621,7 @@ class SlimPruner(BasicPruner):
         return self._scale * sum_l1 + origin_loss
 
     def reset_tools(self):
-        if hasattr(self, 'evaluator'):
+        if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
@@ -631,7 +647,7 @@ class SlimPruner(BasicPruner):
                 raise NotImplementedError('Only support mode `normal` and `global`')
 
 
-class ActivationPruner(BasicPruner):
+class ActivationPruner(EvaluatorBasedPruner):
     """
     Parameters
     ----------
@@ -701,19 +717,7 @@ class ActivationPruner(BasicPruner):
         new_api = ['evaluator', 'training_steps', 'activation', 'mode', 'dummy_input']
         old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_batches', 'activation', 'mode', 'dummy_input']
         init_kwargs = {'activation': 'relu', 'mode': 'normal', 'dummy_input': None}
-        if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and 'evaluator' in kwargs):
-            init_kwargs = _parse_args(new_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
-            self.evaluator: Evaluator = init_kwargs['evaluator']
-            self.evaluator._init_optimizer_helpers(model)
-        else:
-            init_kwargs = _parse_args(old_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
-            self.trainer: _LEGACY_TRAINER = init_kwargs['trainer']
-            traced_optimizer: Optimizer | OptimizerConstructHelper = init_kwargs['traced_optimizer']
-            self.criterion: _LEGACY_CRITERION = init_kwargs['criterion']
-            if isinstance(traced_optimizer, OptimizerConstructHelper):
-                self.optimizer_helper = traced_optimizer
-            else:
-                self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
 
         self.training_steps: int = init_kwargs.get('training_steps', init_kwargs.get('training_batches'))
         self._activatio: str = self._choose_activation(init_kwargs['activation'])
@@ -757,7 +761,7 @@ class ActivationPruner(BasicPruner):
         raise NotImplementedError()
 
     def reset_tools(self):
-        if hasattr(self, 'evaluator'):
+        if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
@@ -959,7 +963,7 @@ class ActivationMeanRankPruner(ActivationPruner):
         return MeanRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
 
 
-class TaylorFOWeightPruner(BasicPruner):
+class TaylorFOWeightPruner(EvaluatorBasedPruner):
     r"""
     Taylor FO weight pruner is a pruner which prunes on the first weight dimension,
     based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity.
@@ -1060,19 +1064,7 @@ class TaylorFOWeightPruner(BasicPruner):
         new_api = ['evaluator', 'training_steps', 'mode', 'dummy_input']
         old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_batches', 'mode', 'dummy_input']
         init_kwargs = {'mode': 'normal', 'dummy_input': None}
-        if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and 'evaluator' in kwargs):
-            init_kwargs = _parse_args(new_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
-            self.evaluator: Evaluator = init_kwargs['evaluator']
-            self.evaluator._init_optimizer_helpers(model)
-        else:
-            init_kwargs = _parse_args(old_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
-            self.trainer: _LEGACY_TRAINER = init_kwargs['trainer']
-            traced_optimizer: Optimizer | OptimizerConstructHelper = init_kwargs['traced_optimizer']
-            self.criterion: _LEGACY_CRITERION = init_kwargs['criterion']
-            if isinstance(traced_optimizer, OptimizerConstructHelper):
-                self.optimizer_helper = traced_optimizer
-            else:
-                self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
 
         self.training_steps: int = init_kwargs.get('training_steps', init_kwargs.get('training_batches'))
         self.mode: str = init_kwargs['mode']
@@ -1112,7 +1104,7 @@ class TaylorFOWeightPruner(BasicPruner):
         return (weight_tensor.detach() * grad.detach()).data.pow(2)
 
     def reset_tools(self):
-        if hasattr(self, 'evaluator'):
+        if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
@@ -1147,7 +1139,7 @@ class TaylorFOWeightPruner(BasicPruner):
                 raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
 
 
-class ADMMPruner(BasicPruner):
+class ADMMPruner(EvaluatorBasedPruner):
     r"""
     Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
     by decomposing the original nonconvex problem into two subproblems that can be solved iteratively.
@@ -1239,19 +1231,7 @@ class ADMMPruner(BasicPruner):
         new_api = ['evaluator', 'iterations', 'training_epochs', 'granularity']
         old_api = ['trainer', 'traced_optimizer', 'criterion', 'iterations', 'training_epochs', 'granularity']
         init_kwargs = {'granularity': 'fine-grained'}
-        if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and 'evaluator' in kwargs):
-            init_kwargs = _parse_args(new_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
-            self.evaluator: Evaluator = init_kwargs['evaluator']
-            self.evaluator._init_optimizer_helpers(model)
-        else:
-            init_kwargs = _parse_args(old_api, args, kwargs, f'{self.__class__.__name__}.__init__()', init_kwargs)
-            self.trainer: _LEGACY_TRAINER = init_kwargs['trainer']
-            traced_optimizer: Optimizer | OptimizerConstructHelper = init_kwargs['traced_optimizer']
-            self.criterion: _LEGACY_CRITERION = init_kwargs['criterion']
-            if isinstance(traced_optimizer, OptimizerConstructHelper):
-                self.optimizer_helper = traced_optimizer
-            else:
-                self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
 
         self.iterations: int = init_kwargs['iterations']
         self.training_epochs: int = init_kwargs['training_epochs']
@@ -1292,7 +1272,7 @@ class ADMMPruner(BasicPruner):
         return origin_loss + penalty
 
     def reset_tools(self):
-        if hasattr(self, 'evaluator'):
+        if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())

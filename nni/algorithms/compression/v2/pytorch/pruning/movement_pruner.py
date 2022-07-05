@@ -3,7 +3,7 @@
 
 from copy import deepcopy
 import logging
-from typing import Dict, List, Tuple, Callable
+from typing import Dict, List, Tuple, Callable, overload
 
 import torch
 from torch import autograd, Tensor
@@ -12,15 +12,19 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer, Adam
 
 from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper, LayerInfo
-from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
+from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import EvaluatorBasedPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
 from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, OptimizerConstructHelper
-from nni.common.serializer import Traceable
 
-from .tools.base import EvaluatorBasedDataCollector
+from .tools.base import EvaluatorBasedDataCollector, TrainerBasedDataCollector
 
 from .tools import (
-    StraightMetricsCalculator,
-    NormalSparsityAllocator
+    NormalSparsityAllocator,
+    StraightMetricsCalculator
+)
+
+from ..utils import (
+    LightningEvaluator,
+    TorchEvaluator
 )
 
 _logger = logging.getLogger(__name__)
@@ -67,7 +71,23 @@ class _StraightThrough(autograd.Function):
         return gradOutput, None
 
 
-class WeightScoreTrainerBasedDataCollector(EvaluatorBasedDataCollector):
+class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
+    """
+    Collect all weight_score in wrappers as data used to calculate metrics.
+    """
+    def collect(self) -> Dict[str, Tensor]:
+        assert self.compressor.bound_model is not None
+        for _ in range(self.training_epochs):
+            self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
+
+        data = {}
+        target_name = 'weight'
+        for _, wrapper in self.compressor.get_modules_wrapper().items():
+            data[wrapper.name] = {target_name: wrapper.weight_score.data}  # type: ignore
+        return data
+
+
+class EvaluatorBasedScoreDataCollector(EvaluatorBasedDataCollector):
     """
     Collect all weight_score in wrappers as data used to calculate metrics.
     """
@@ -83,7 +103,7 @@ class WeightScoreTrainerBasedDataCollector(EvaluatorBasedDataCollector):
         return data
 
 
-class MovementPruner(BasicPruner):
+class MovementPruner(EvaluatorBasedPruner):
     r"""
     Movement pruner is an implementation of movement pruning.
     This is a "fine-pruning" algorithm, which means the masks may change during each fine-tuning step.
@@ -161,18 +181,27 @@ class MovementPruner(BasicPruner):
 
     For detailed example please refer to :githublink:`examples/model_compress/pruning/movement_pruning_glue.py <examples/model_compress/pruning/movement_pruning_glue.py>`
     """
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_epochs: int,
+                 warm_up_step: int, cool_down_beginning_step: int):
+        ...
+
+    @overload
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
                  cool_down_beginning_step: int):
-        self.trainer = trainer
-        if isinstance(traced_optimizer, OptimizerConstructHelper):
-            self.optimizer_helper = traced_optimizer
-        else:
-            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
-        self.criterion = criterion
-        self.training_epochs = training_epochs
-        self.warm_up_step = warm_up_step
-        self.cool_down_beginning_step = cool_down_beginning_step
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
+        # TODO: remove in nni v3.0. Fake overload.
+        new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
+        old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
+        init_kwargs = self._init_evaluator(model, new_api, old_api, {}, args, kwargs)
+
+        self.training_epochs: int = init_kwargs['training_epochs']
+        self.warm_up_step: int = init_kwargs['warm_up_step']
+        self.cool_down_beginning_step: int = init_kwargs['cool_down_beginning_step']
         assert self.warm_up_step < self.cool_down_beginning_step, '`warm_up_step` should smaller than `cool_down_beginning_step`'
         super().__init__(model, config_list)
 
@@ -215,10 +244,19 @@ class MovementPruner(BasicPruner):
                 masks = self.sparsity_allocator.generate_sparsity(metrics)  # type: ignore
                 self.load_masks(masks)
 
-        if self.data_collector is None:
-            self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
+        if self.using_evaluator:
+            # TODO: move to other place in nni v3.0
+            self.evaluator.unbind_model()
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
+            if self.data_collector is None:
+                self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator, after_opt_step_tasks=[_optimizer_patch], max_epochs=self.training_epochs)
+            else:
+                self.data_collector.reset(after_opt_step_tasks=[_optimizer_patch])
         else:
-            self.data_collector.reset()
+            if self.data_collector is None:
+                self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
+            else:
+                self.data_collector.reset()
 
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
         """
