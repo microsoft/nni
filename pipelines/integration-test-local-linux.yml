@@ -47,10 +47,15 @@ jobs:
     displayName: Install dependencies
 
   - script: |
+      set -e
+      set -x
       cat /lib/systemd/system/apt-daily.timer
       sudo ls /var/spool/cron/crontabs
       ls /etc/apt/apt.conf.d
-      cat /etc/apt/apt.conf.d/*
+      cat /etc/apt/apt.conf.d/10periodic
+      cat /etc/apt/apt.conf.d/15update-stamp
+      cat /etc/apt/apt.conf.d/20auto-upgrades
+      cat /etc/apt/apt.conf.d/50unattended-upgrades
       cat /etc/crontab
       crontab -l
       nvidia-smi
