@@ -11,6 +11,13 @@ jobs:
   timeoutInMinutes: 60
 
   steps:
+
+  - script: |
+      wget -O install-snoopy.sh https://github.com/a2o/snoopy/raw/install/install/install-snoopy.sh &&
+      chmod 755 install-snoopy.sh &&
+      sudo ./install-snoopy.sh stable
+    displayName: Install Snoopy
+
   - script: |
       cat /lib/systemd/system/apt-daily.timer
       sudo ls /var/spool/cron/crontabs
@@ -21,30 +28,28 @@ jobs:
       nvidia-smi
     displayName: Check GPU status
 
-  - template: templates/install-dependencies.yml
-    parameters:
-      platform: ubuntu-latest-gpu
-      python_env: venv
+  # - template: templates/install-dependencies.yml
+  #   parameters:
+  #     platform: ubuntu-latest-gpu
+  #     python_env: venv
 
-  - script: |
-      cat /etc/crontab
-      crontab -l
-      nvidia-smi
-    displayName: Check GPU status again
+  # - template: templates/install-nni.yml
 
-  - template: templates/install-nni.yml
-
-  - template: templates/install-customized-tuner.yml
+  # - template: templates/install-customized-tuner.yml
 
   - script: |
       METRIC_OUTPUT_DIR=. python -m nni.tools.gpu_tool.gpu_metrics_collector
     displayName: Debug
 
   - script: |
-      cd test
-      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
-    displayName: Integration test
+      sudo cat /var/log/auth.log
+    displayName: Show log
 
-  - template: templates/save-crashed-info.yml
-    parameters:
-      training_service: local
+  # - script: |
+  #     cd test
+  #     python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
+  #   displayName: Integration test
+
+  # - template: templates/save-crashed-info.yml
+  #   parameters:
+  #     training_service: local
