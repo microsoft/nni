@@ -257,7 +257,7 @@ class TrainerBasedDataCollector(DataCollector):
 class EvaluatorBasedDataCollector(DataCollector):
     def __init__(self, compressor: Pruner, evaluator: Evaluator, before_opt_step_tasks: List[Callable] | None = None,
                  after_opt_step_tasks: List[Callable] | None = None, loss_patch: Callable[[Tensor], Tensor] | None = None,
-                 hooks: List[Hook] | None = None, max_steps: int | None = None, max_epochs: int | None = None):
+                 hooks: Dict[str, Dict[str, Hook]] | None = None, max_steps: int | None = None, max_epochs: int | None = None):
         super().__init__(compressor)
         self.evaluator = evaluator
         self.max_steps = max_steps
