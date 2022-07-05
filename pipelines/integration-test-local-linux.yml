@@ -28,6 +28,14 @@ jobs:
     displayName: Configure Python version
 
   - script: |
+      python -m pip install pip==22.0.4 setuptools==62.1.0 wheel==0.37.1
+    displayName: Install PyPA tools
+
+  - script: |
+      python -m pip install -r dependencies/required.txt
+    displayName: Install dependencies
+
+  - script: |
       cat /lib/systemd/system/apt-daily.timer
       sudo ls /var/spool/cron/crontabs
       ls /etc/apt/apt.conf.d
