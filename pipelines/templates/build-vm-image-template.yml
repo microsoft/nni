@@ -117,3 +117,6 @@ steps:
 # az vmss update -n nni-it -g nni --set virtualMachineProfile.storageProfile.osDisk.diskSizeGb=50
 #
 # No need to update the image every time, because it's already set to latest.
+#
+# NOTE: After using 1ES pool, the pool image has to be updated manually to the latest version.
+# However, no successful build has been performed yet, because of resource shortage in Southeast Asia.
