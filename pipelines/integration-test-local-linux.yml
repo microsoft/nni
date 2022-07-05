@@ -22,6 +22,11 @@ jobs:
       sudo ./install-snoopy.sh stable
     displayName: Install Snoopy
 
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.9
+    displayName: Configure Python version
+
   - script: |
       cat /lib/systemd/system/apt-daily.timer
       sudo ls /var/spool/cron/crontabs
