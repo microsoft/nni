@@ -14,7 +14,7 @@ jobs:
 
   - script: |
       sudo systemctl disable apt-daily.service
-      sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken install
+      sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
     displayName: (GPU) Fix broken dependencies
 
   - script: |
