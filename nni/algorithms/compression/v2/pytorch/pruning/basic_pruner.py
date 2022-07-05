@@ -6,7 +6,7 @@ from __future__ import annotations
 from copy import deepcopy
 import functools
 import logging
-from typing import List, Dict, Tuple, Callable, Optional, overload
+from typing import List, Dict, Tuple, Callable, Optional, Union, overload
 
 from schema import And, Or, Optional as SchemaOptional, SchemaError
 import torch
@@ -148,7 +148,7 @@ _LEGACY_CRITERION = Callable[[Tensor, Tensor], Tensor]
 
 # TODO: remove in nni v3.0.
 class EvaluatorBasedPruner(BasicPruner):
-    evaluator: LightningEvaluator | TorchEvaluator
+    evaluator: Union[LightningEvaluator, TorchEvaluator]
     using_evaluator: bool
     trainer: _LEGACY_TRAINER
     traced_optimizer: Optimizer
@@ -158,10 +158,11 @@ class EvaluatorBasedPruner(BasicPruner):
                         kwargs: Dict) -> Dict:
         # for fake __init__ overload, parsing args and kwargs, initializing evaluator or [trainer, traced_optimizer, criterion],
         # return the remaining arguments.
-        if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and 'evaluator' in kwargs):
+        if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
             init_kwargs = self._parse_args(new_api, args, kwargs, init_kwargs)
             self.evaluator: Evaluator = init_kwargs.pop('evaluator')
-            self.evaluator._init_optimizer_helpers(model)
+            if not self.evaluator._initialization_complete:
+                self.evaluator._init_optimizer_helpers(model)
             self.using_evaluator = True
         else:
             init_kwargs = self._parse_args(old_api, args, kwargs, init_kwargs)

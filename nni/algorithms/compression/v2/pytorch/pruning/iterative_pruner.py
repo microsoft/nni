@@ -1,14 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Dict, List, Callable, Optional, Union
+from typing import Any, Dict, List, Callable, Optional, Union, overload
 
 from torch import Tensor
 from torch.nn import Module
-
-from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
 
 from .basic_pruner import (
     LevelPruner,
@@ -21,12 +21,17 @@ from .basic_pruner import (
     TaylorFOWeightPruner,
     ADMMPruner
 )
-from .basic_scheduler import PruningScheduler
+from .basic_scheduler import PruningScheduler, _LEGACY_FINETUNER, _LEGACY_EVALUATOR
 from .tools import (
     LinearTaskGenerator,
     AGPTaskGenerator,
     LotteryTicketTaskGenerator,
     SimulatedAnnealingTaskGenerator
+)
+from ..utils import (
+    OptimizerConstructHelper,
+    LightningEvaluator,
+    TorchEvaluator
 )
 
 _logger = logging.getLogger(__name__)
@@ -116,20 +121,49 @@ class LinearPruner(IterativePruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
     """
 
+    @overload
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False, dummy_input: Optional[Tensor] = None,
-                 evaluator: Optional[Callable[[Module], float]] = None, pruning_params: Dict = {}):
+                 finetuner: _LEGACY_FINETUNER | None = None, speedup: bool = False, dummy_input: Any | None = None,
+                 evaluator: _LEGACY_EVALUATOR | None = None, pruning_params: Dict = {}):
+        ...
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
+                 total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False,
+                 pruning_params: Dict = {}):
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
+                 total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 *args, **kwargs):
         task_generator = LinearTaskGenerator(total_iteration=total_iteration,
                                              origin_model=model,
                                              origin_config_list=config_list,
                                              log_dir=log_dir,
                                              keep_intermediate_result=keep_intermediate_result)
+
+        new_api = ['evaluator', 'speedup', 'pruning_params']
+        old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'pruning_params']
+        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
+        init_kwargs = self._init_evaluator(new_api, old_api, init_kwargs, args, kwargs)
+
+        if self.using_evaluator and not self.evaluator._initialization_complete:
+            self.evaluator._init_optimizer_helpers(model)
+        speedup = init_kwargs['speedup']
+        pruning_params = init_kwargs['pruning_params']
+
         if 'traced_optimizer' in pruning_params:
             pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
+
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
-                         evaluator=evaluator, reset_weight=False)
+
+        if self.using_evaluator:
+            super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
+        else:
+            super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
+                             evaluator=self.evaluator, reset_weight=False)
 
 
 class AGPPruner(IterativePruner):
