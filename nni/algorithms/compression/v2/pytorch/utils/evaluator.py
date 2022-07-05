@@ -116,6 +116,9 @@ class BackwardHook(ModuleHook):
 
 
 class Evaluator:
+    # A flag to indicate whether the evaluator is initialized complete.
+    _initialization_complete: bool
+
     def _init_optimizer_helpers(self, pure_model: Module | pl.LightningModule):
         # NOTE: this is a part of Evaluator initialization, please make sure this function has been called before using evaluator.
         raise NotImplementedError
@@ -563,6 +566,7 @@ class TorchEvaluator(Evaluator):
 
         self.model = model
         self._param_names_map = param_names_map
+        # initialize optimizers & lr_schedulers for the bound model here
         self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
         self._lr_schedulers = [lrs_helper.call(self._optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
         self._first_optimizer_step = self._optimizers[0].step
