@@ -12,6 +12,8 @@ jobs:
 
   steps:
   - script: |
+      ls /etc/apt/apt.conf.d
+      cat /etc/apt/apt.conf.d/*
       cat /etc/crontab
       crontab -l
       nvidia-smi
