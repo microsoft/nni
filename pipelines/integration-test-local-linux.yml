@@ -15,15 +15,7 @@ jobs:
   # Don't set -e here
   - script: |
       set -x
-      sudo sed -i -e "s/Update-Package-Lists \"1\"/Update-Package-Lists \"0\"/g" /etc/apt/apt.conf.d/10periodic
-      sudo sed -i -e "s/Update-Package-Lists \"1\"/Update-Package-Lists \"0\"/g" /etc/apt/apt.conf.d/20auto-upgrades
-      sudo sed -i -e "s/Unattended-Upgrade \"1\"/Unattended-Upgrade \"0\"/g" /etc/apt/apt.conf.d/20auto-upgrades
-      sudo systemctl disable apt-daily.timer
-      sudo systemctl disable apt-daily.service
-      sudo systemctl disable apt-daily-upgrade.timer
-      sudo systemctl disable apt-daily-upgrade.service
-      # In case the trick above doesn't work, try to uncomment this script below.
-      # sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
+      sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
       sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
     displayName: (GPU) Fix broken dependencies
 
