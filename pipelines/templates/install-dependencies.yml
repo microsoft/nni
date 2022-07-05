@@ -10,17 +10,20 @@ parameters:
   - venv
 
 steps:
+# Fix apt-related issues on 1ES linux pipeline.
+# Put this in the very first because unattended upgrade could possibly break the GPU driver.
+# Remove this after image is updated to latest.
+- script: |
+    set -x
+    sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
+    sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
+  displayName: (GPU) Fix broken dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'), contains('${{ parameters.platform }}', 'gpu'))
+
 - template: config-version.yml
   parameters:
     platform: ${{ parameters.platform }}
     python_env: ${{ parameters.python_env }}
-
-# Sometimes dpkg is locked due to unattended-upgrades,
-# and GPU kernel doesn't work due to upgrades.
-- script: |
-    sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken install
-  displayName: (GPU) Fix broken dependencies
-  condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'), contains('${{ parameters.platform }}', 'gpu'))
 
 - script: |
     set -e

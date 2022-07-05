@@ -11,64 +11,24 @@ jobs:
   timeoutInMinutes: 60
 
   steps:
+  - template: templates/install-dependencies.yml
+    parameters:
+      platform: ubuntu-latest-gpu
+      python_env: venv
 
-  # Don't set -e here
-  - script: |
-      set -x
-      sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
-      sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
-    displayName: (GPU) Fix broken dependencies
 
-  - script: |
-      wget -O install-snoopy.sh https://github.com/a2o/snoopy/raw/install/install/install-snoopy.sh &&
-      chmod 755 install-snoopy.sh &&
-      sudo ./install-snoopy.sh stable
-    displayName: Install Snoopy
-
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.9
-    displayName: Configure Python version
-
-  - script: |
-      python -m pip install pip==22.0.4 setuptools==62.1.0 wheel==0.37.1
-    displayName: Install PyPA tools
-
-  - script: |
-      python -m pip install -r dependencies/required.txt
-    displayName: Install dependencies
-
+  # Make sure GPU is not broken.
   - script: |
       nvidia-smi
     displayName: Check GPU status
 
-  # - template: templates/install-dependencies.yml
-  #   parameters:
-  #     platform: ubuntu-latest-gpu
-  #     python_env: venv
+  - template: templates/install-nni.yml
 
-  # - template: templates/install-nni.yml
-
-  # - template: templates/install-customized-tuner.yml
+  - template: templates/install-customized-tuner.yml
 
   - script: |
-      METRIC_OUTPUT_DIR=. python -m nni.tools.gpu_tool.gpu_metrics_collector
-    displayName: Debug
+      cd test
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
+    displayName: Integration test
 
-  - script: |
-      sudo systemctl list-units
-      sudo systemctl list-timers
-    displayName: Show service
-
-  - script: |
-      sudo cat /var/log/auth.log
-    displayName: Show log
-
-  # - script: |
-  #     cd test
-  #     python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
-  #   displayName: Integration test
-
-  # - template: templates/save-crashed-info.yml
-  #   parameters:
-  #     training_service: local
+  - template: templates/save-crashed-info.yml
