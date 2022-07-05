@@ -13,6 +13,11 @@ jobs:
   steps:
 
   - script: |
+      sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken install
+    displayName: (GPU) Fix broken dependencies
+    condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'), contains('${{ parameters.platform }}', 'gpu'))
+
+  - script: |
       wget -O install-snoopy.sh https://github.com/a2o/snoopy/raw/install/install/install-snoopy.sh &&
       chmod 755 install-snoopy.sh &&
       sudo ./install-snoopy.sh stable
