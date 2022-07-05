@@ -296,7 +296,8 @@ class CellBuilder:
                  C: nn.MaybeChoice[int],
                  num_nodes: int,
                  merge_op: Literal['all', 'loose_end'],
-                 first_cell_reduce: bool, last_cell_reduce: bool):
+                 first_cell_reduce: bool, last_cell_reduce: bool,
+                 drop_path_prob: float):
         self.C_prev_in = C_prev_in      # This is the out channels of the cell before last cell.
         self.C_in = C_in                # This is the out channesl of last cell.
         self.C = C                      # This is NOT C_out of this stage, instead, C_out = C * len(cell.output_node_indices)
@@ -305,6 +306,7 @@ class CellBuilder:
         self.merge_op: Literal['all', 'loose_end'] = merge_op
         self.first_cell_reduce = first_cell_reduce
         self.last_cell_reduce = last_cell_reduce
+        self.drop_path_prob = drop_path_prob
         self._expect_idx = 0
 
         # It takes an index that is the index in the repeat.
@@ -322,7 +324,12 @@ class CellBuilder:
             stride = 2
         else:
             stride = 1
-        return OPS[op](channels, stride, True)
+        operation = OPS[op](channels, stride, True)
+        if self.drop_path_prob > 0 and not isinstance(operation, nn.Identity):
+            # Omit drop-path when operation is skip connect.
+            # https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/model.py#L54
+            return nn.Sequential(operation, DropPath_(self.drop_path_prob))
+        return operation
 
     def __call__(self, repeat_idx: int):
         if self._expect_idx != repeat_idx:
@@ -483,6 +490,8 @@ class NDS(nn.Module):
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
     num_nodes_per_cell : int
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
+    drop_path_prob : float
+        Apply drop path. Enabled when it's set to be greater than 0.
     """
 
     def __init__(self,
@@ -492,12 +501,14 @@ class NDS(nn.Module):
                  width: Union[Tuple[int, ...], int] = 16,
                  num_cells: Union[Tuple[int, ...], int] = 20,
                  dataset: Literal['cifar', 'imagenet'] = 'imagenet',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__()
 
         self.dataset = dataset
         self.num_labels = 10 if dataset == 'cifar' else 1000
         self.auxiliary_loss = auxiliary_loss
+        self.drop_path_prob = drop_path_prob
 
         # preprocess the specified width and depth
         if isinstance(width, Iterable):
@@ -546,7 +557,7 @@ class NDS(nn.Module):
             # C_curr is number of channels for each operator in current stage.
             # C_out is usually `C * num_nodes_per_cell` because of concat operator.
             cell_builder = CellBuilder(op_candidates, C_pprev, C_prev, C_curr, num_nodes_per_cell,
-                                       merge_op, stage_idx > 0, last_cell_reduce)
+                                       merge_op, stage_idx > 0, last_cell_reduce, drop_path_prob)
             stage: Union[NDSStage, nn.Sequential] = NDSStage(cell_builder, num_cells_per_stage[stage_idx])
 
             if isinstance(stage, NDSStage):
@@ -655,14 +666,16 @@ class NASNet(NDS):
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__(self.NASNET_OPS,
                          merge_op='loose_end',
                          num_nodes_per_cell=5,
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
 
 @model_wrapper
@@ -686,14 +699,16 @@ class ENAS(NDS):
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__(self.ENAS_OPS,
                          merge_op='loose_end',
                          num_nodes_per_cell=5,
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
 
 @model_wrapper
@@ -721,7 +736,8 @@ class AmoebaNet(NDS):
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
 
         super().__init__(self.AMOEBA_OPS,
                          merge_op='loose_end',
@@ -729,7 +745,8 @@ class AmoebaNet(NDS):
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
 
 @model_wrapper
@@ -757,14 +774,16 @@ class PNAS(NDS):
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__(self.PNAS_OPS,
                          merge_op='all',
                          num_nodes_per_cell=5,
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
 
 @model_wrapper
@@ -791,14 +810,16 @@ class DARTS(NDS):
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__(self.DARTS_OPS,
                          merge_op='all',
                          num_nodes_per_cell=4,
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
     @classmethod
     def load_searched_model(

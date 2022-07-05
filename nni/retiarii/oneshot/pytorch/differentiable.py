@@ -28,6 +28,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
     DARTS repeats iterations, where each iteration consists of 2 training phases.
     The phase 1 is architecture step, in which model parameters are frozen and the architecture parameters are trained.
     The phase 2 is model step, in which architecture parameters are frozen and model parameters are trained.
+    In both phases, ``training_step`` of the Lightning evaluator will be used.
 
     The current implementation corresponds to DARTS (1st order) in paper.
     Second order (unrolled 2nd-order derivatives) is not supported yet.
@@ -133,6 +134,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
         ctrl_params = []
         for m in self.nas_modules:
             ctrl_params += list(m.parameters(arch=True))  # type: ignore
+        # Follow the hyper-parameters used in https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/architect.py#L17
         ctrl_optim = torch.optim.Adam(list(set(ctrl_params)), 3.e-4, betas=(0.5, 0.999),
                                       weight_decay=1.0E-3)
         return ctrl_optim
