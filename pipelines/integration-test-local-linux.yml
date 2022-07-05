@@ -16,10 +16,14 @@ jobs:
   - script: |
       set -e
       set -x
+      sudo systemctl list-units
+      sudo systemctl list-timers
       sudo systemctl disable apt-daily.service
       sudo systemctl disable apt-daily.timer
       sudo systemctl disable apt-daily-upgrade.timer
       sudo systemctl disable apt-daily-upgrade.service
+      sudo systemctl list-units
+      sudo systemctl list-timers
       sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
     displayName: (GPU) Fix broken dependencies
 
@@ -64,6 +68,11 @@ jobs:
   - script: |
       METRIC_OUTPUT_DIR=. python -m nni.tools.gpu_tool.gpu_metrics_collector
     displayName: Debug
+
+  - script: |
+      sudo systemctl list-units
+      sudo systemctl list-timers
+    displayName: Show service
 
   - script: |
       sudo cat /var/log/auth.log
