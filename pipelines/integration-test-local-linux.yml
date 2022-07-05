@@ -62,8 +62,6 @@ jobs:
       cat /etc/apt/apt.conf.d/15update-stamp
       cat /etc/apt/apt.conf.d/20auto-upgrades
       cat /etc/apt/apt.conf.d/50unattended-upgrades
-      cat /etc/crontab
-      crontab -l
       nvidia-smi
     displayName: Check GPU status
 
