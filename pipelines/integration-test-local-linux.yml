@@ -18,18 +18,10 @@ jobs:
       sudo sed -i -e "s/Unattended-Upgrade \"1\"/Unattended-Upgrade \"0\"/g" /etc/apt/apt.conf.d/20auto-upgrades
     displayName: Disable unattended-upgrade
 
-  # https://askubuntu.com/questions/1038923/do-i-really-need-apt-daily-service-and-apt-daily-upgrade-service
+  # https://gist.github.com/posilva/1cefb5bf1eeccf9382920e5d57a4b3fe
   - script: |
       set -e
-      set -x
-      sudo systemctl list-units
-      sudo systemctl list-timers
-      sudo systemctl disable apt-daily.service
-      sudo systemctl disable apt-daily.timer
-      sudo systemctl disable apt-daily-upgrade.timer
-      sudo systemctl disable apt-daily-upgrade.service
-      sudo systemctl list-units
-      sudo systemctl list-timers
+      sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
       sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
     displayName: (GPU) Fix broken dependencies
 
