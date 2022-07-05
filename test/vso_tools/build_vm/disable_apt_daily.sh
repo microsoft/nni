@@ -1,8 +1,5 @@
 #!/bin/bash
 
-set -x
-set -e
-
 # References: https://gist.github.com/posilva/1cefb5bf1eeccf9382920e5d57a4b3fe
 
 apt-get -y purge update-notifier-common ubuntu-release-upgrader-core landscape-common unattended-upgrades

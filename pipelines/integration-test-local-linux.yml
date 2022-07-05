@@ -19,8 +19,9 @@ jobs:
     displayName: Disable unattended-upgrade
 
   # https://gist.github.com/posilva/1cefb5bf1eeccf9382920e5d57a4b3fe
+  # Don't set -e here
   - script: |
-      set -e
+      set -x
       sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
       sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
     displayName: (GPU) Fix broken dependencies
