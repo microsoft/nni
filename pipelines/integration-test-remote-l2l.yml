@@ -16,6 +16,7 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
+  - template: templates/fix-apt-1es.yml
   # FIXME: GPU is not supported yet.
   # Change to ubuntu-latest-gpu when it's done.
 

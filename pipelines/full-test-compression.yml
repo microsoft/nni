@@ -35,6 +35,10 @@ stages:
     timeoutInMinutes: 60
 
     steps:
+    - template: templates/fix-apt-1es.yml
+      parameters:
+        check_gpu: true
+
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest-gpu
@@ -47,7 +51,7 @@ stages:
     - script: |
         cd test/algo
         python -m pytest compression
-      displayName: compression unit test
+      displayName: Compression unit test
 
     - script: |
         cd test

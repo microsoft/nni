@@ -1,3 +1,5 @@
+# FIXME: This pipeline is broken due to resource group location limitation.
+
 trigger: none
 pr: none
 
