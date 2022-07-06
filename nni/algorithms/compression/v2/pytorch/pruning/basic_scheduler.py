@@ -29,13 +29,15 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
     _evaluator: _LEGACY_EVALUATOR
     dummy_input: Any
 
-    def _init_evaluator(self, new_api: List[str], old_api: List[str], init_kwargs: Dict, args: List,
+    def _init_evaluator(self, model: Module, new_api: List[str], old_api: List[str], init_kwargs: Dict, args: List,
                         kwargs: Dict) -> Dict:
         # for fake __init__ overload, parsing args and kwargs, initializing evaluator or [finetuner, evaluator, dummy_input],
         # return the remaining arguments.
         if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
             init_kwargs = self._parse_args(new_api, args, kwargs, init_kwargs)
             self.evaluator: LightningEvaluator | TorchEvaluator = init_kwargs.pop('evaluator')
+            if not self.evaluator._initialization_complete:
+                self.evaluator._init_optimizer_helpers(model)
             self.using_evaluator = True
         else:
             init_kwargs = self._parse_args(old_api, args, kwargs, init_kwargs)

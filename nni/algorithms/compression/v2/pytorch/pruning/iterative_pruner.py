@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Callable, Optional, Union, overload
+from typing import Any, Dict, List, Optional, Union, overload
 
 from torch import Tensor
 from torch.nn import Module
@@ -124,39 +124,35 @@ class LinearPruner(IterativePruner):
     @overload
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: _LEGACY_FINETUNER | None = None, speedup: bool = False, dummy_input: Any | None = None,
-                 evaluator: _LEGACY_EVALUATOR | None = None, pruning_params: Dict = {}):
+                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False,
+                 pruning_params: Dict = {}):
         ...
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False,
-                 pruning_params: Dict = {}):
+                 finetuner: _LEGACY_FINETUNER | None = None, speedup: bool = False, dummy_input: Any | None = None,
+                 evaluator: _LEGACY_EVALUATOR | None = None, pruning_params: Dict = {}):
         ...
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
                  *args, **kwargs):
+        new_api = ['evaluator', 'speedup', 'pruning_params']
+        old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'pruning_params']
+        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        speedup = init_kwargs['speedup']
+        pruning_params = init_kwargs['pruning_params']
+
         task_generator = LinearTaskGenerator(total_iteration=total_iteration,
                                              origin_model=model,
                                              origin_config_list=config_list,
                                              log_dir=log_dir,
                                              keep_intermediate_result=keep_intermediate_result)
-
-        new_api = ['evaluator', 'speedup', 'pruning_params']
-        old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'pruning_params']
-        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
-        init_kwargs = self._init_evaluator(new_api, old_api, init_kwargs, args, kwargs)
-
-        if self.using_evaluator and not self.evaluator._initialization_complete:
-            self.evaluator._init_optimizer_helpers(model)
-        speedup = init_kwargs['speedup']
-        pruning_params = init_kwargs['pruning_params']
-
         if 'traced_optimizer' in pruning_params:
             pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
-
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
 
         if self.using_evaluator:
@@ -215,10 +211,31 @@ class AGPPruner(IterativePruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/iterative_pruning_torch.py <examples/model_compress/pruning/iterative_pruning_torch.py>`
     """
 
+    @overload
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False, dummy_input: Optional[Tensor] = None,
-                 evaluator: Optional[Callable[[Module], float]] = None, pruning_params: Dict = {}):
+                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False,
+                 pruning_params: Dict = {}):
+        ...
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
+                 total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 finetuner: _LEGACY_FINETUNER | None = None, speedup: bool = False, dummy_input: Any | None = None,
+                 evaluator: _LEGACY_EVALUATOR | None = None, pruning_params: Dict = {}):
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
+                 total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 *args, **kwargs):
+        new_api = ['evaluator', 'speedup', 'pruning_params']
+        old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'pruning_params']
+        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        speedup = init_kwargs['speedup']
+        pruning_params = init_kwargs['pruning_params']
+
         task_generator = AGPTaskGenerator(total_iteration=total_iteration,
                                           origin_model=model,
                                           origin_config_list=config_list,
@@ -227,8 +244,12 @@ class AGPPruner(IterativePruner):
         if 'traced_optimizer' in pruning_params:
             pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
-                         evaluator=evaluator, reset_weight=False)
+
+        if self.using_evaluator:
+            super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
+        else:
+            super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
+                             evaluator=self.evaluator, reset_weight=False)
 
 
 class LotteryTicketPruner(IterativePruner):
@@ -294,11 +315,33 @@ class LotteryTicketPruner(IterativePruner):
 
     """
 
+    @overload
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False, dummy_input: Optional[Tensor] = None,
-                 evaluator: Optional[Callable[[Module], float]] = None, reset_weight: bool = True,
+                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False,
+                 reset_weight: bool = True, pruning_params: Dict = {}):
+        ...
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
+                 total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 finetuner: _LEGACY_FINETUNER | None = None, speedup: bool = False, dummy_input: Optional[Tensor] = None,
+                 evaluator: _LEGACY_EVALUATOR | None = None, reset_weight: bool = True,
                  pruning_params: Dict = {}):
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
+                 total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 *args, **kwargs):
+        new_api = ['evaluator', 'speedup', 'reset_weight', 'pruning_params']
+        old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'reset_weight', 'pruning_params']
+        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        speedup = init_kwargs['speedup']
+        reset_weight = init_kwargs['reset_weight']
+        pruning_params = init_kwargs['pruning_params']
+
         task_generator = LotteryTicketTaskGenerator(total_iteration=total_iteration,
                                                     origin_model=model,
                                                     origin_config_list=config_list,
@@ -307,8 +350,12 @@ class LotteryTicketPruner(IterativePruner):
         if 'traced_optimizer' in pruning_params:
             pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
-                         evaluator=evaluator, reset_weight=reset_weight)
+
+        if self.using_evaluator:
+            super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=reset_weight)
+        else:
+            super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
+                             evaluator=self.evaluator, reset_weight=reset_weight)
 
 
 class SimulatedAnnealingPruner(IterativePruner):
@@ -371,11 +418,40 @@ class SimulatedAnnealingPruner(IterativePruner):
 
     For detailed example please refer to :githublink:`examples/model_compress/pruning/simulated_anealing_pruning_torch.py <examples/model_compress/pruning/simulated_anealing_pruning_torch.py>`
     """
-
-    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]], evaluator: Callable[[Module], float], start_temperature: float = 100,
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, start_temperature: float = 100,
                  stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
                  pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False, dummy_input: Optional[Tensor] = None):
+                 speedup: bool = False):
+        ...
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: _LEGACY_EVALUATOR, start_temperature: float = 100,
+                 stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
+                 pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False,
+                 finetuner: _LEGACY_FINETUNER = None, speedup: bool = False, dummy_input: Optional[Tensor] = None):
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
+        new_api = ['evaluator', 'start_temperature', 'stop_temperature', 'cool_down_rate', 'perturbation_magnitude', 'pruning_algorithm',
+                   'pruning_params', 'log_dir', 'keep_intermediate_result', 'speedup']
+        old_api = ['evaluator', 'start_temperature', 'stop_temperature', 'cool_down_rate', 'perturbation_magnitude', 'pruning_algorithm',
+                   'pruning_params', 'log_dir', 'keep_intermediate_result', 'finetuner', 'speedup', 'dummy_input']
+        init_kwargs = {'start_temperature': 100, 'stop_temperature': 20, 'cool_down_rate': 0.9, 'perturbation_magnitude': 0.35,
+                       'pruning_algorithm': 'level', 'pruning_params': {}, 'log_dir': '.', 'keep_intermediate_result': False,
+                       'finetuner': None, 'speedup': False, 'dummy_input': None}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        start_temperature = init_kwargs['start_temperature']
+        stop_temperature = init_kwargs['stop_temperature']
+        cool_down_rate = init_kwargs['cool_down_rate']
+        perturbation_magnitude = init_kwargs['perturbation_magnitude']
+        pruning_algorithm = init_kwargs['pruning_algorithm']
+        pruning_params = init_kwargs['pruning_params']
+        log_dir = init_kwargs['log_dir']
+        keep_intermediate_result = init_kwargs['keep_intermediate_result']
+        speedup = init_kwargs['speedup']
+
         task_generator = SimulatedAnnealingTaskGenerator(origin_model=model,
                                                          origin_config_list=config_list,
                                                          start_temperature=start_temperature,
@@ -387,5 +463,9 @@ class SimulatedAnnealingPruner(IterativePruner):
         if 'traced_optimizer' in pruning_params:
             pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])  # type: ignore
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
-                         evaluator=evaluator, reset_weight=False)
+
+        if self.using_evaluator:
+            super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
+        else:
+            super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
+                             evaluator=self.evaluator, reset_weight=False)

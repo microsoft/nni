@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from copy import deepcopy
 from pathlib import Path
-from typing import Dict, List, Callable, Optional, cast
+from typing import Dict, List, Callable, Optional, cast, overload
 
 import json_tricks
 import torch
@@ -11,12 +13,12 @@ from torch import Tensor
 from torch.nn import Module
 
 from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
-from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity, config_list_canonical
 from nni.compression.pytorch.utils import count_flops_params
 
 from .iterative_pruner import IterativePruner, PRUNER_DICT
 from .tools import TaskGenerator
 from .tools.rl_env import DDPG, AMCEnv
+from ..utils import LightningEvaluator, TorchEvaluator, compute_sparsity, config_list_canonical
 
 
 class AMCTaskGenerator(TaskGenerator):
@@ -236,10 +238,35 @@ class AMCPruner(IterativePruner):
     The full script can be found :githublink:`here <examples/model_compress/pruning/amc_pruning_torch.py>`.
     """
 
+    @overload
+    def __init__(self, total_episode: int, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,
+                 pruning_algorithm: str = 'l1', log_dir: str = '.', keep_intermediate_result: bool = False,
+                 ddpg_params: dict = {}, pruning_params: dict = {}, target: str = 'flops'):
+        ...
+
+    @overload
     def __init__(self, total_episode: int, model: Module, config_list: List[Dict], dummy_input: Tensor,
                  evaluator: Callable[[Module], float], pruning_algorithm: str = 'l1', log_dir: str = '.',
                  keep_intermediate_result: bool = False, finetuner: Optional[Callable[[Module], None]] = None,
                  ddpg_params: dict = {}, pruning_params: dict = {}, target: str = 'flops'):
+        ...
+
+    def __init__(self, total_episode: int, model: Module, config_list: List[Dict], *args, **kwargs):
+        new_api = ['evaluator', 'pruning_algorithm', 'log_dir', 'keep_intermediate_result', 'ddpg_params', 'pruning_params', 'target']
+        old_api = ['dummy_input', 'evaluator', 'pruning_algorithm', 'log_dir', 'keep_intermediate_result', 'finetuner', 'ddpg_params',
+                   'pruning_params', 'target']
+        init_kwargs = {'pruning_algorithm': 'l1', 'log_dir': '.', 'keep_intermediate_result': False, 'finetuner': None,
+                       'ddpg_params': {}, 'pruning_params': {}, 'target': 'flops'}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        pruning_algorithm = init_kwargs['pruning_algorithm']
+        log_dir = init_kwargs['log_dir']
+        keep_intermediate_result = init_kwargs['keep_intermediate_result']
+        ddpg_params = init_kwargs['ddpg_params']
+        pruning_params = init_kwargs['pruning_params']
+        target = init_kwargs['target']
+        dummy_input = self.dummy_input if self.using_evaluator else self.evaluator.get_dummy_input()
+
         assert pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo'], \
             "Only support pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo']"
         task_generator = AMCTaskGenerator(total_episode=total_episode,
@@ -251,5 +278,9 @@ class AMCPruner(IterativePruner):
                                           ddpg_params=ddpg_params,
                                           target=target)
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input,
-                         evaluator=evaluator, reset_weight=False)
+
+        if self.using_evaluator:
+            super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=True, reset_weight=False)
+        else:
+            super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=True, dummy_input=self.dummy_input,
+                             evaluator=self.evaluator, reset_weight=False)

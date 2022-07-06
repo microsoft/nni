@@ -1,18 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Dict, List, Callable, Optional
+from typing import Dict, List, Callable, Optional, overload
 
 from torch import Tensor
 from torch.nn import Module
 
-from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
-
 from .basic_pruner import ADMMPruner
 from .iterative_pruner import IterativePruner, SimulatedAnnealingPruner
 from .tools import LotteryTicketTaskGenerator
+from ..utils import LightningEvaluator, TorchEvaluator, OptimizerConstructHelper
 
 _logger = logging.getLogger(__name__)
 
@@ -21,8 +22,8 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
                  origin_masks: Dict[str, Dict[str, Tensor]] = {}, sa_params: Dict = {}, log_dir: str = '.',
                  keep_intermediate_result: bool = False):
-        self.iterative_pruner = SimulatedAnnealingPruner(model=None,
-                                                         config_list=None,
+        self.iterative_pruner = SimulatedAnnealingPruner(model=origin_model,
+                                                         config_list=origin_config_list,
                                                          log_dir=Path(log_dir, 'SA'),
                                                          **sa_params)
         super().__init__(total_iteration=total_iteration,
@@ -148,10 +149,29 @@ class AutoCompressPruner(IterativePruner):
     The full script can be found :githublink:`here <examples/model_compress/pruning/auto_compress_pruner.py>`.
     """
 
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
+                 sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 evaluator: LightningEvaluator | TorchEvaluator = None, speedup: bool = False):
+        ...
+
+    @overload
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speedup: bool = False,
                  dummy_input: Optional[Tensor] = None, evaluator: Optional[Callable[[Module], float]] = None):
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
+                 sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 *args, **kwargs):
+        new_api = ['evaluator', 'speedup']
+        old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator']
+        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        speedup = init_kwargs['speedup']
+
         task_generator = AutoCompressTaskGenerator(total_iteration=total_iteration,
                                                    origin_model=model,
                                                    origin_config_list=config_list,
@@ -176,5 +196,9 @@ class AutoCompressPruner(IterativePruner):
                 admm_params['granularity'] = 'fine-grained'
 
         pruner = ADMMPruner(None, None, **admm_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=speedup, dummy_input=dummy_input,
-                         evaluator=evaluator, reset_weight=False)
+
+        if self.using_evaluator:
+            super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
+        else:
+            super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
+                             evaluator=self.evaluator, reset_weight=False)
