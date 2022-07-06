@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import itertools
 from typing import Optional, Tuple, cast
 
 import torch
@@ -11,7 +10,8 @@ import nni.retiarii.nn.pytorch as nn
 
 
 from nni.retiarii import model_wrapper
-from nni.retiarii.hub.pytorch.utils.fixed import FixedFactory
+from .utils.fixed import FixedFactory
+from .utils.pretrained import load_pretrained_weight
 
 
 class RelativePosition2D(nn.Module):
@@ -29,14 +29,15 @@ class RelativePosition2D(nn.Module):
         # remove the first cls token distance computation
         length_q = length_q - 1
         length_k = length_k - 1
+        # init in the device directly, rather than move to device
         range_vec_q = torch.arange(length_q, device=self.embeddings_table_v.device)
         range_vec_k = torch.arange(length_k, device=self.embeddings_table_v.device)
         # compute the row and column distance
         distance_mat_v = (range_vec_k[None, :] // int(length_q ** 0.5) - range_vec_q[:, None] // int(length_q ** 0.5))
-        distance_mat_h = (range_vec_k[None, :] % int(length_q ** 0.5) - range_vec_q[:, None] % int(length_q ** 0.5))
+        distance_mat_h = (range_vec_k[None, :]  % int(length_q ** 0.5) - range_vec_q[:, None]  % int(length_q ** 0.5))
         # clip the distance to the range of [-legnth, legnth]
-        distance_mat_clipped_v = torch.clamp(distance_mat_v, -self.legnth, self.legnth)
-        distance_mat_clipped_h = torch.clamp(distance_mat_h, -self.legnth, self.legnth)
+        distance_mat_clipped_v = torch.clamp(distance_mat_v, - self.legnth, self.legnth)
+        distance_mat_clipped_h = torch.clamp(distance_mat_h, - self.legnth, self.legnth)
 
         # translate the distance from [1, 2 * legnth + 1], 0 is for the cls token
         final_mat_v = distance_mat_clipped_v + self.legnth + 1
@@ -69,20 +70,20 @@ class RelativePositionAttention(nn.Module):
             rpe_length = 14, rpe = False,
             head_dim = 64):
         super().__init__()
-        head_dim = head_dim or (embed_dim // num_heads)
         self.num_heads = num_heads
-        self.head_dim = head_dim
+        # head_dim is fixed 64 in autoformer. set head_dim = None to use flex head dim.
+        self.head_dim = head_dim or (embed_dim // num_heads)
         self.scale = qk_scale or head_dim ** -0.5
         """
-        When head nums increase from 2 to 3. 
+        When head nums increase from 2 to 3, the activate params position is important. 
         For nn.Linear(embed_dim, (head_dim * num_heads) * 3), 
-        the activate(o) weight distribute: ■■■■■■□□□□□□ -> ■■■■■■■■■□□□. not suitable.
+        the activate(■) weight position: ■■■■■■□□□□□□ -> ■■■■■■■■■□□□, which is not suitable.
         when use three split nn.Linear(embed_dim, (head_dim * num_heads)).
-        the activate(o) weight distribute: ■■□□■■□□■■□□ -> ■■■□■■■□■■■□
+        the activate(■) weight position: ■■□□■■□□■■□□ -> ■■■□■■■□■■■□.
         """
-        self.q = nn.Linear(embed_dim, head_dim * num_heads, bias=qkv_bias)
-        self.k = nn.Linear(embed_dim, head_dim * num_heads, bias=qkv_bias)
-        self.v = nn.Linear(embed_dim, head_dim * num_heads, bias=qkv_bias)
+        self.q = nn.Linear(embed_dim, head_dim * num_heads, bias = qkv_bias)
+        self.k = nn.Linear(embed_dim, head_dim * num_heads, bias = qkv_bias)
+        self.v = nn.Linear(embed_dim, head_dim * num_heads, bias = qkv_bias)
 
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj = nn.Linear(head_dim * num_heads, embed_dim)
@@ -134,20 +135,10 @@ class TransformerEncoderLayer(nn.Module):
     The pytorch build-in nn.TransformerEncoderLayer() does not support customed attention.
     """
     def __init__(
-        self,
-        embed_dim,
-        num_heads,
-        mlp_ratio=4.,
-        qkv_bias=False,
-        qk_scale=None,
-        rpe=False,
-        drop_rate=0.,
-        attn_drop=0.,
-        proj_drop=0.,
-        drop_path=0.,
-        pre_norm=True,
-        rpe_length=14,
-        head_dim=64
+        self, embed_dim, num_heads, mlp_ratio = 4., 
+        qkv_bias = False, qk_scale=None, rpe=False,
+        drop_rate=0., attn_drop=0., proj_drop=0., drop_path=0.,
+        pre_norm=True, rpe_length=14, head_dim=64
     ):
         super().__init__()
 
@@ -217,9 +208,9 @@ class TransformerEncoderLayer(nn.Module):
 
 
 class ClsToken(nn.Module):
-    """ Concat class token before patch embedding.
+    """ Concat class token before patch embedding. 
     """
-    def __init__(self, embed_dim):
+    def __init__(self, embed_dim: int):
         super(ClsToken, self).__init__()
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         trunc_normal_(self.cls_token, std=.02)
@@ -233,7 +224,7 @@ class ClsToken(nn.Module):
 class AbsPosEmbed(nn.Module):
     """ Add absolute position for patch embedding.
     """
-    def __init__(self, length, embed_dim, enable = False):
+    def __init__(self, length, embed_dim: int, enable = False):
         super(AbsPosEmbed, self).__init__()
         self.enable = enable
         self.pos_embed = nn.Parameter(torch.zeros(1, length, embed_dim))
@@ -289,27 +280,27 @@ class AutoformerSpace(nn.Module):
     """
 
     def __init__(
-            self,
-            search_embed_dim: Tuple[int, ...] = (192, 216, 240),
-            search_mlp_ratio: Tuple[float, ...] = (3.0, 3.5, 4.0),
-            search_num_heads: Tuple[int, ...] = (3, 4),
-            search_depth: Tuple[int, ...] = (12, 13, 14),
-            img_size: int = 224,
-            patch_size: int = 16,
-            in_chans: int = 3,
-            num_classes: int = 1000,
-            qkv_bias: bool = False,
-            drop_rate: float = 0.,
-            attn_drop_rate: float = 0.,
-            drop_path_rate: float = 0.,
-            pre_norm: bool = True,
-            global_pool: bool = False,
-            abs_pos: bool = True,
-            qk_scale: Optional[float] = None,
-            rpe: bool = True,
+        self,
+        search_embed_dim: Tuple[int, ...] = (192, 216, 240),
+        search_mlp_ratio: Tuple[float, ...] = (3.0, 3.5, 4.0),
+        search_num_heads: Tuple[int, ...] = (3, 4),
+        search_depth: Tuple[int, ...] = (12, 13, 14),
+        img_size: int = 224,
+        patch_size: int = 16,
+        in_chans: int = 3,
+        num_classes: int = 1000,
+        qkv_bias: bool = False,
+        drop_rate: float = 0.,
+        attn_drop_rate: float = 0.,
+        drop_path_rate: float = 0.,
+        pre_norm: bool = True,
+        global_pool: bool = False,
+        abs_pos: bool = True,
+        qk_scale: Optional[float] = None,
+        rpe: bool = True,
     ):
         super().__init__()
-
+        # define search space parameters
         embed_dim = nn.ValueChoice(list(search_embed_dim), label="embed_dim")
         depth = nn.ValueChoice(list(search_depth), label="depth")
         mlp_ratios = [nn.ValueChoice(list(search_mlp_ratio), label=f"mlp_ratio_{i}") for i in range(max(search_depth))]
@@ -339,59 +330,6 @@ class AutoformerSpace(nn.Module):
         self.norm = nn.LayerNorm(cast(int, embed_dim)) if pre_norm else nn.Identity()
         self.head = nn.Linear(cast(int, embed_dim), num_classes) if num_classes > 0 else nn.Identity()
 
-    @classmethod
-    def fixed_model(cls, name: str = "small") -> nn.Module:
-        init_kwargs = {"qkv_bias": True, "drop_rate": 0.0, "drop_path_rate": 0.1, "global_pool": True, "num_classes": 3}
-        if name == "small":
-            arch = {
-                'embed_dim': 64, 
-                'depth': 2, 
-                "mlp_ratio_0": 1.0,
-                "mlp_ratio_1": 1.0,
-                "num_head_0": 2,
-                "num_head_1": 2
-            }
-            init_kwargs.update({
-                "search_embed_dim": (64, 128),
-                "search_mlp_ratio": (1.0, 1.5),
-                "search_num_heads": (2, 3),
-                "search_depth": (1, 2)
-            })
-        elif name == "large":
-            arch = {
-                'embed_dim': 128, 
-                'depth': 2, 
-                "mlp_ratio_0": 1.5,
-                "mlp_ratio_1": 1.5,
-                "num_head_0": 3,
-                "num_head_1": 3
-            }
-            init_kwargs.update({
-                "search_embed_dim": (64, 128),
-                "search_mlp_ratio": (1.0, 1.5),
-                "search_num_heads": (2, 3),
-                "search_depth": (1, 2)
-            })
-        else:
-            raise ValueError(f'Unsupported architecture with name: {name}')
-
-        model_factory = FixedFactory(cls, arch)
-        model = model_factory(**init_kwargs)
-
-        return model
-
-    def load_supernet(
-        cls, name: str,
-        pretrained: bool = False, download: bool = False, progress: bool = True
-    ) -> nn.Module:
-
-        if pretrained:
-            pass
-            # weight_file = load_pretrained_weight(name, download=download, progress=progress)
-            # pretrained_weights = torch.load(weight_file)
-            # model.load_state_dict(pretrained_weights)
-
-        return 
 
     @classmethod
     def load_searched_model(
@@ -399,7 +337,7 @@ class AutoformerSpace(nn.Module):
         pretrained: bool = False, download: bool = False, progress: bool = True
     ) -> nn.Module:
 
-        init_kwargs = {"qkv_bias": True, "drop_rate": 0.0, "drop_path_rate": 0.1, "global_pool": True, "num_classes": 3}
+        init_kwargs = {"qkv_bias": True, "drop_rate": 0.0, "drop_path_rate": 0.1, "global_pool": True, "num_classes": 1000}
         if name == "autoformer-tiny":
             mlp_ratio = [3.5, 3.5, 3.0, 3.5, 3.0, 3.0, 4.0, 4.0, 3.5, 4.0, 3.5, 4.0, 3.5] + [3.0]
             num_head = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3] + [3]
@@ -417,7 +355,41 @@ class AutoformerSpace(nn.Module):
                 "search_num_heads": (4, 3),
                 "search_depth": (14, 13, 12),
             })
+        elif name == "autoformer-small":
+            mlp_ratio = [3.0, 3.5, 3.0, 3.5, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 3.5, 4.0] + [3.0]
+            num_head = [6, 6, 5, 7, 5, 5, 5, 6, 6, 7, 7, 6, 7] + [5]
+            arch = {
+                'embed_dim': 384, 
+                'depth': 13
+            }
+            for i in range(14):
+                arch[f"mlp_ratio_{i}"] = mlp_ratio[i]
+                arch[f"num_head_{i}"] = num_head[i]
 
+            init_kwargs.update({
+                "search_embed_dim": (448, 384, 320),
+                "search_mlp_ratio": (4.0, 3.5, 3.0),
+                "search_num_heads": (7, 6, 5),
+                "search_depth": (14, 13, 12),
+            })
+
+        elif name == "autoformer-base":
+            mlp_ratio = [3.5, 3.5, 4.0, 3.5, 4.0, 3.5, 3.5, 3.0, 4.0, 4.0, 3.0, 4.0, 3.0, 3.5] + [3.0, 3.0]
+            num_head = [9, 9, 9, 9, 9, 10, 9, 9, 10, 9, 10, 9, 9, 10] + [8, 8]
+            arch = {
+                'embed_dim': 576, 
+                'depth': 14
+            }
+            for i in range(16):
+                arch[f"mlp_ratio_{i}"] = mlp_ratio[i]
+                arch[f"num_head_{i}"] = num_head[i]
+
+            init_kwargs.update({
+                "search_embed_dim": (624, 576, 528),
+                "search_mlp_ratio": (4.0, 3.5, 3.0),
+                "search_num_heads": (10, 9, 8),
+                "search_depth": (16, 15, 14),
+            })
         else:
             raise ValueError(f'Unsupported architecture with name: {name}')
 
@@ -425,10 +397,9 @@ class AutoformerSpace(nn.Module):
         model = model_factory(**init_kwargs)
 
         if pretrained:
-            pass
-            # weight_file = load_pretrained_weight(name, download=download, progress=progress)
-            # pretrained_weights = torch.load(weight_file)
-            # model.load_state_dict(pretrained_weights)
+            weight_file = load_pretrained_weight(name, download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
+            model.load_state_dict(pretrained_weights)
 
         return model
 
@@ -449,3 +420,5 @@ class AutoformerSpace(nn.Module):
         x = self.head(x)
 
         return x
+
+
