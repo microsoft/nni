@@ -16,11 +16,11 @@ ReactDOM.render(
     <Suspense
         fallback={
             <div className='loading'>
-                <img title='loading-graph' src={(path || '') + '/loading.gif'} />
+                <img title='loading-graph' src={(path ?? '') + '/loading.gif'} />
             </div>
         }
     >
-        <Router basename={path === undefined ? '' : path}>
+        <Router basename={path ?? ''}>
             <Routes>
                 <Route path='/experiment' element={<ExperimentManagerIndex />} />
                 <Route element={<App />}>
