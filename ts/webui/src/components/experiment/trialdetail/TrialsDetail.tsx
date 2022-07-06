@@ -49,7 +49,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         const { whichChart } = this.state;
         const source = TRIALS.toArray();
         const trialIds = TRIALS.toArray().map(trial => trial.id);
-
+        const paraSource = TRIALS.succeededTrials();
         return (
             <AppContext.Consumer>
                 {(_value): React.ReactNode => (
@@ -75,12 +75,12 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 {/* <PivotItem tab={this.titleOfhyper} key="2"> */}
                                 <PivotItem headerText='Hyper-parameter' itemIcon='Equalizer' key='Hyper-parameter'>
                                     <Stack className='graph'>
-                                        <Para trials={source} searchSpace={EXPERIMENT.searchSpaceNew} />
+                                        <Para trials={paraSource} searchSpace={EXPERIMENT.searchSpaceNew} />
                                     </Stack>
                                 </PivotItem>
                                 {/* <PivotItem tab={this.titleOfDuration} key="3"> */}
                                 <PivotItem headerText='Duration' itemIcon='BarChartHorizontal' key='Duration'>
-                                    <Duration source={source} />
+                                    <Duration source={TRIALS.unWaittingTrials()} />
                                 </PivotItem>
                                 {/* <PivotItem tab={this.titleOfIntermediate} key="4"> */}
                                 <PivotItem
@@ -89,7 +89,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                     key='Intermediate result'
                                 >
                                     {/* *why this graph has small footprint? */}
-                                    <Intermediate source={source} />
+                                    <Intermediate source={TRIALS.allTrialsIntermediateChart()} />
                                 </PivotItem>
                             </Pivot>
                         </div>

@@ -26,23 +26,6 @@ interface MultipleAxes {
     axes: Map<string, SingleAxis>;
 }
 
-// draw accuracy graph data export interface
-interface TableObj {
-    key: number;
-    sequenceId: number;
-    id: string;
-    duration: number;
-    status: string;
-    acc?: FinalType; // draw accuracy graph
-    description: Parameters;
-    color?: string;
-    startTime?: number;
-    endTime?: number;
-    intermediates: (MetricDataRecord | undefined)[];
-    parameters(axes: MultipleAxes): Map<SingleAxis, any>;
-    metrics(axes: MultipleAxes): Map<SingleAxis, any>;
-}
-
 interface TableRecord {
     key: string;
     sequenceId: number;
@@ -53,10 +36,8 @@ interface TableRecord {
     status: string;
     message: string;
     intermediateCount: number;
-    accuracy?: number | any;
     latestAccuracy: number | undefined;
     formattedLatestAccuracy: string; // format (LATEST/FINAL),
-    accDictionary: FinalType | undefined;
 }
 
 interface SearchSpace {
@@ -66,17 +47,6 @@ interface SearchSpace {
 
 interface FinalType {
     default: string;
-}
-
-interface ErrorParameter {
-    error?: string;
-}
-
-interface Parameters {
-    parameters: ErrorParameter;
-    logPath?: string;
-    intermediate: number[];
-    multiProgress?: number;
 }
 
 // trial accuracy
@@ -121,14 +91,6 @@ interface ParaObj {
     parallelAxis: Array<Dimobj>;
 }
 
-interface Intermedia {
-    name: string; // id
-    type: string;
-    data: Array<number | object>; // intermediate data
-    hyperPara: object; // each trial hyperpara value
-    trialNum: number;
-}
-
 interface MetricDataRecord {
     timestamp: number;
     trialJobId: string;
@@ -138,6 +100,7 @@ interface MetricDataRecord {
 }
 
 interface TrialJobInfo {
+    key: number;
     trialJobId: string;
     sequenceId: number;
     status: string;
@@ -147,6 +110,11 @@ interface TrialJobInfo {
     hyperParameters?: string[];
     logPath?: string;
     finalMetricData?: MetricDataRecord[];
+    duration: number;
+    acc?: FinalType; // draw accuracy graph
+    intermediates: (MetricDataRecord | undefined)[];
+    parameters(axes: MultipleAxes): Map<SingleAxis, any>;
+    metrics(axes: MultipleAxes): Map<SingleAxis, any>;
 }
 
 interface ExperimentProfile {
@@ -224,20 +192,25 @@ interface SearchItems {
     isChoice: boolean; // for parameters: type = choice and status also as choice type
 }
 
+interface allTrialsIntermediateChart {
+    name: string;
+    // id: string;
+    sequenceId: number;
+    data: number[]; // data名字是固定的
+    parameter: object;
+    type: string;
+}
+
 export {
-    TableObj,
     TableRecord,
     SearchSpace,
     FinalType,
-    ErrorParameter,
-    Parameters,
     AccurPoint,
     DetailAccurPoint,
     TooltipForIntermediate,
     TooltipForAccuracy,
     Dimobj,
     ParaObj,
-    Intermedia,
     MetricDataRecord,
     TrialJobInfo,
     ExperimentProfile,
@@ -249,5 +222,6 @@ export {
     SortInfo,
     AllExperimentList,
     Tensorboard,
-    SearchItems
+    SearchItems,
+    allTrialsIntermediateChart
 };

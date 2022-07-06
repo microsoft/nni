@@ -119,7 +119,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     }
 
     generateScatterSeries(trials: Trial[]): any {
-        const data = trials.map(trial => [trial.sequenceId, trial.accuracy, trial.id, trial.description.parameters]);
+        const data = trials.map(trial => [trial.sequenceId, trial.accuracy, trial.id, trial.parameter]);
         return {
             symbolSize: 6,
             type: 'scatter',
@@ -130,7 +130,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     generateBestCurveSeries(trials: Trial[]): any {
         const { userSelectOptimizeMode } = this.state;
         let best = trials[0];
-        const data = [[best.sequenceId, best.accuracy, best.id, best.description.parameters]];
+        const data = [[best.sequenceId, best.accuracy, best.id, best.parameter]];
 
         for (let i = 1; i < trials.length; i++) {
             const trial = trials[i];
@@ -138,10 +138,10 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             const delta = trial.accuracy! - best.accuracy!;
             const better = userSelectOptimizeMode === 'minimize' ? delta < 0 : delta > 0;
             if (better) {
-                data.push([trial.sequenceId, trial.accuracy, best.id, trial.description.parameters]);
+                data.push([trial.sequenceId, trial.accuracy, best.id, trial.parameter]);
                 best = trial;
             } else {
-                data.push([trial.sequenceId, best.accuracy, best.id, trial.description.parameters]);
+                data.push([trial.sequenceId, best.accuracy, best.id, trial.parameter]);
             }
         }
 

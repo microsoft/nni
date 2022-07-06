@@ -51,7 +51,6 @@ class Experiment {
     private profileField?: ExperimentProfile;
     private metadataField?: ExperimentMetadata = undefined;
     private statusField?: NNIManagerStatus = undefined;
-    private isNestedExperiment: boolean = false;
     private isexperimentError: boolean = false;
     private experimentErrorMessage: string = '';
     private isStatusError: boolean = false;
