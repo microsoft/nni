@@ -3,8 +3,8 @@
 
 import os
 import sys
-from dataclasses import dataclass
-from typing import Any, Dict, Union, Optional
+from dataclasses import dataclass, MISSING
+from typing import Any, Dict, Union, Optional, overload
 
 from nni.experiment.config import utils, ExperimentConfig
 
@@ -12,12 +12,20 @@ from .engine_config import ExecutionEngineConfig
 
 __all__ = ['RetiariiExeConfig']
 
-def execution_engine_config_factory(engine_name):
-    # FIXME: may move this function to experiment utils in future
+# TODO: may move this function to experiment utils in future
+def init_execution_engine_config(engine_config: Union[str, dict]) -> ExecutionEngineConfig:
+    if isinstance(engine_config, str):
+        engine_name = engine_config
+    else:
+        engine_name = engine_config['name']
     cls = _get_ee_config_class(engine_name)
     if cls is None:
         raise ValueError(f'Invalid execution engine name: {engine_name}')
-    return cls()
+    engine = cls()
+    if isinstance(engine_config, dict):
+        for key, value in engine_config.items():
+            setattr(engine, key, value)
+    return engine
 
 def _get_ee_config_class(engine_name):
     for cls in ExecutionEngineConfig.__subclasses__():
@@ -43,8 +51,17 @@ class RetiariiExeConfig(ExperimentConfig):
                  execution_engine: Union[str, ExecutionEngineConfig] = 'py',
                  **kwargs):
         super().__init__(training_service_platform, **kwargs)
-        self.execution_engine = execution_engine
-        
+
+        if self.execution_engine != MISSING:
+            # this branch means kwargs is not {} and self.execution_engine has been assigned in super(),
+            # reassign it because super() may instantiate ExecutionEngineConfig by mistake
+            self.execution_engine = init_execution_engine_config(kwargs['executionEngine'])
+            del kwargs['executionEngine']
+        elif isinstance(execution_engine, str):
+            self.execution_engine = init_execution_engine_config(execution_engine)
+        else:
+            self.execution_engine = execution_engine
+
         self._is_complete_config = False
         if self.search_space != '' and self.trial_code_directory != '.' and self.trial_command != '_reserved':
             # only experiment view and resume have complete config in init, as the config is directly loaded
@@ -63,8 +80,10 @@ class RetiariiExeConfig(ExperimentConfig):
             if self.trial_command != '_reserved' and '-m nni.retiarii.trial_entry' not in self.trial_command:
                 raise ValueError(msg.format('trial_command', self.trial_command))
 
+            # this canonicalize is necessary because users may assign new execution engine str
+            # after execution engine config is instantiated
             if isinstance(self.execution_engine, str):
-                self.execution_engine = execution_engine_config_factory(self.execution_engine)
+                self.execution_engine = init_execution_engine_config(self.execution_engine)
 
             _trial_command_params = {
                 # Default variables

@@ -14,6 +14,7 @@ import colorama
 import torch
 import torch.nn as nn
 from nni.experiment import Experiment, RunMode
+from nni.experiment import launcher
 from nni.experiment.config.training_services import RemoteConfig
 
 from .config import (
@@ -24,7 +25,7 @@ from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
-from ..execution.utils import get_mutation_dict
+from ..execution.utils import get_mutation_dict, init_execution_engine
 from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
@@ -220,33 +221,7 @@ class RetiariiExperiment(Experiment):
         # TODO: find out a proper way to show no more trial message on WebUI
 
     def _create_execution_engine(self, config: RetiariiExeConfig) -> None:
-        #TODO: we will probably need a execution engine factory to make this clean and elegant
-        if isinstance(config.execution_engine, BaseEngineConfig):
-            from ..execution.base import BaseExecutionEngine
-            engine = BaseExecutionEngine(self.port, self.url_prefix)
-        elif isinstance(config.execution_engine, CgoEngineConfig):
-            from ..execution.cgo_engine import CGOExecutionEngine
-
-            assert not isinstance(config.training_service, list) \
-                and config.training_service.platform == 'remote', \
-                "CGO execution engine currently only supports remote training service"
-            assert config.execution_engine.batch_waiting_time is not None \
-                and config.execution_engine.max_concurrency_cgo is not None
-            engine = CGOExecutionEngine(cast(RemoteConfig, config.training_service),
-                                        max_concurrency=config.execution_engine.max_concurrency_cgo,
-                                        batch_waiting_time=config.execution_engine.batch_waiting_time,
-                                        rest_port=self.port,
-                                        rest_url_prefix=self.url_prefix)
-        elif isinstance(config.execution_engine, PyEngineConfig):
-            from ..execution.python import PurePythonExecutionEngine
-            engine = PurePythonExecutionEngine(self.port, self.url_prefix)
-        elif isinstance(config.execution_engine, BenchmarkEngineConfig):
-            from ..execution.benchmark import BenchmarkExecutionEngine
-            assert config.execution_engine.benchmark is not None, \
-                '"benchmark" must be set when benchmark execution engine is used.'
-            engine = BenchmarkExecutionEngine(config.execution_engine.benchmark)
-        else:
-            raise ValueError(f'Unsupported engine type: {config.execution_engine}')
+        engine = init_execution_engine(config, self.port, self.url_prefix)
         set_execution_engine(engine)
 
     def start(self, *args, **kwargs) -> None:
@@ -360,3 +335,23 @@ class RetiariiExperiment(Experiment):
                 return [model_to_pytorch_script(model) for model in all_models[:top_k]]
             elif formatter == 'dict':
                 return [get_mutation_dict(model) for model in all_models[:top_k]]
+
+    def resume(self, experiment_id: str, port: int = 8080, wait_completion: bool = True, debug: bool = False):
+        """
+        Resume a stopped experiment.
+
+        Parameters
+        ----------
+        experiment_id
+            The stopped experiment id.
+        port
+            The port of web UI.
+        wait_completion
+            If true, run in the foreground. If false, run in the background.
+        debug
+            Whether to start in debug mode.
+        """
+        self.id = experiment_id
+        self._action = 'resume'
+        config = launcher.get_stopped_experiment_config(experiment_id, None)
+        self.run(config, port=port, debug=debug)
