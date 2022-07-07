@@ -90,7 +90,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                     <div class="tooldetailAccuracy">
                         <div>Trial No.: ${data.data[0]}</div>
                         <div>Trial ID: ${data.data[2]}</div>
-                        <div>${userSelectAccuracyNumberKey} metric: ${data.data[1]}</div>
+                        <div>${userSelectAccuracyNumberKey}: ${data.data[1]}</div>
                         <div>Parameters: <pre>${JSON.stringify(
                             reformatRetiariiParameter(data.data[3]),
                             null,
@@ -122,6 +122,13 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         };
     }
 
+    private formatAccuracy(accuracy: number | undefined): number {
+        if (Object.is(NaN, NaN) || accuracy === undefined || Object.is(accuracy, Infinity)) {
+            return 0;
+        }
+        return accuracy;
+    }
+
     generateScatterSeries(trials: Trial[]): any {
         const { userSelectAccuracyNumberKey } = this.state;
         let data;
@@ -129,12 +136,17 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             // dict type final results
             data = trials.map(trial => [
                 trial.sequenceId,
-                trial.acc === undefined ? 0 : trial.acc[userSelectAccuracyNumberKey],
+                trial.acc === undefined ? 0 : this.formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
                 trial.id,
                 trial.description.parameters
             ]);
         } else {
-            data = trials.map(trial => [trial.sequenceId, trial.accuracy, trial.id, trial.description.parameters]);
+            data = trials.map(trial => [
+                trial.sequenceId,
+                this.formatAccuracy(trial.accuracy),
+                trial.id,
+                trial.description.parameters
+            ]);
         }
         return {
             symbolSize: 6,
@@ -149,7 +161,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         const data = [
             [
                 best.sequenceId,
-                best.acc === undefined ? 0 : best.acc[userSelectAccuracyNumberKey],
+                best.acc === undefined ? 0 : this.formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
                 best.id,
                 best.description.parameters
             ]
@@ -162,7 +174,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             if (better) {
                 data.push([
                     trial.sequenceId,
-                    trial.acc === undefined ? 0 : trial.acc[userSelectAccuracyNumberKey],
+                    trial.acc === undefined ? 0 : this.formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
                     best.id,
                     trial.description.parameters
                 ]);
@@ -170,7 +182,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             } else {
                 data.push([
                     trial.sequenceId,
-                    best.acc === undefined ? 0 : best.acc[userSelectAccuracyNumberKey],
+                    best.acc === undefined ? 0 : this.formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
                     best.id,
                     trial.description.parameters
                 ]);
