@@ -83,7 +83,7 @@ def validate_masks(masks: Dict[str, Dict[str, torch.Tensor]], model: torch.nn.Mo
         excepted_sparsity = next(iter(config_dict.values())).get('sparsity', config_dict[module_name].get('total_sparsity'))
         real_sparsity = total_masked_numel / total_target_numel
         err_msg = f'excepted global sparsity: {excepted_sparsity}, but real global sparsity: {real_sparsity}.'
-        assert excepted_sparsity * 0.99 < real_sparsity < excepted_sparsity * 1.01, err_msg
+        assert excepted_sparsity * 0.9 < real_sparsity < excepted_sparsity * 1.1, err_msg
 
 
 def validate_dependency_aware(model_type: str, masks: Dict[str, Dict[str, torch.Tensor]]):
