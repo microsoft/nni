@@ -100,7 +100,6 @@ interface MetricDataRecord {
 }
 
 interface TrialJobInfo {
-    key: number;
     trialJobId: string;
     sequenceId: number;
     status: string;
@@ -110,11 +109,6 @@ interface TrialJobInfo {
     hyperParameters?: string[];
     logPath?: string;
     finalMetricData?: MetricDataRecord[];
-    duration: number;
-    acc?: FinalType; // draw accuracy graph
-    intermediates: (MetricDataRecord | undefined)[];
-    parameters(axes: MultipleAxes): Map<SingleAxis, any>;
-    metrics(axes: MultipleAxes): Map<SingleAxis, any>;
 }
 
 interface ExperimentProfile {
