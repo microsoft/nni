@@ -173,6 +173,8 @@ class Evaluator:
                 for param in model.parameters():
                     params_norm += torch.norm(param)
                 return original_loss + params_norm
+
+        Something like ``loss = patch(criterion(result, target))`` will happen during each time loss computation.
         """
         raise NotImplementedError
 
