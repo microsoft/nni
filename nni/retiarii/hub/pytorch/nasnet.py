@@ -606,12 +606,13 @@ class NDS(nn.Module):
             s0 = s1 = self.stem(inputs)
 
         for stage_idx, stage in enumerate(self.stages):
-            if stage_idx == 2 and self.auxiliary_loss:
-                s = list(stage([s0, s1]).values())
-                s0, s1 = s[-1]
-                if self.training:
+            if stage_idx == 2 and self.auxiliary_loss and self.training:
+                assert isinstance(stage, nn.Sequential), 'Auxiliary loss is only supported for fixed architecture.'
+                for block_idx, block in enumerate(stage([s0, s1])):
                     # auxiliary loss is attached to the first cell of the last stage.
-                    logits_aux = self.auxiliary_head(s[0][1])
+                    s0, s1 = block([s0, s1])
+                    if block_idx == 0:
+                        logits_aux = self.auxiliary_head(s1)
             else:
                 s0, s1 = stage([s0, s1])
 

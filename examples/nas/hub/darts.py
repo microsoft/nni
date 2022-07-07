@@ -60,6 +60,7 @@ class AuxLossClassificationModule(ClassificationModule):
             self.log('train_loss_aux', loss_aux)
             loss = loss_main + self.auxiliary_loss_weight * loss_aux
         else:
+            y_hat = self(x)
             loss = self.criterion(y_hat, y)
         self.log('train_loss', loss, prog_bar=True)
         for name, metric in self.metrics.items():
@@ -150,7 +151,7 @@ def search(batch_size: int = 64, **kwargs):
 
 def train(arch, batch_size: int = 96, **kwargs):
     with fixed_arch(arch):
-        model = DARTS(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
+        model = DARTS(36, 20, 'cifar', auxiliary_loss=True)
 
     train_data = get_cifar10_dataset(cutout=True)
     valid_data = get_cifar10_dataset(train=False)
@@ -187,16 +188,18 @@ def main():
     parser.add_argument('--arch', type=str)
     parser.add_argument('--weight_file', type=str)
 
-    args = parser.parse_args()
-    if args.arch:
-        args.arch = json.loads(args.arch)
+    parsed_args = parser.parse_args()
+    config = {k: v for k, v in vars(parsed_args).items() if v is not None}
+    if 'arch' in config:
+        config['arch'] = json.loads(config['arch'])
 
-    if 'search' in args.mode:
-        args.arch = search(**vars(args))
-    if 'train' in args.mode:
-        train(**vars(args))
-    if args.mode == 'test':
-        test(**vars(args))
+    if 'search' in config['mode']:
+        config['arch'] = search(**config)
+        print('Searched config', config['arch'])
+    if 'train' in config['mode']:
+        train(**config)
+    if config['mode'] == 'test':
+        test(**config)
 
 
 if __name__ == '__main__':
