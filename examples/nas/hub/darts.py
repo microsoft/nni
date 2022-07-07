@@ -109,7 +109,7 @@ def get_cifar10_dataset(train: bool = True, cutout: bool = False):
             transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
         ])
 
-    return nni.trace(CIFAR10)(root='./data', train=True, download=True, transform=transform)
+    return nni.trace(CIFAR10)(root='./data', train=train, download=True, transform=transform)
 
 
 def search(batch_size: int = 64, **kwargs):
@@ -151,7 +151,7 @@ def search(batch_size: int = 64, **kwargs):
 
 def train(arch, batch_size: int = 96, **kwargs):
     with fixed_arch(arch):
-        model = DARTS(36, 20, 'cifar', auxiliary_loss=True)
+        model = DARTS(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
 
     train_data = get_cifar10_dataset(cutout=True)
     valid_data = get_cifar10_dataset(train=False)
@@ -166,9 +166,9 @@ def train(arch, batch_size: int = 96, **kwargs):
     evaluator.fit(model)
 
 
-def test(arch, weight_file, batch_size: int = 96, **kwargs):
+def test(arch, weight_file, batch_size: int = 512, **kwargs):
     with fixed_arch(arch):
-        model = DARTS(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
+        model = DARTS(36, 20, 'cifar')
     model.load_state_dict(torch.load(weight_file))
 
     lightning_module = AuxLossClassificationModule(0.025, 3e-4, 0., 600)
@@ -178,7 +178,7 @@ def test(arch, weight_file, batch_size: int = 96, **kwargs):
     valid_data = get_cifar10_dataset(train=False)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, pin_memory=True, num_workers=6)
 
-    trainer.test(model, valid_loader)
+    trainer.validate(lightning_module, valid_loader)
 
 
 def main():
