@@ -15,7 +15,6 @@ import torch
 import torch.nn as nn
 from nni.experiment import Experiment, RunMode
 from nni.experiment import launcher
-from nni.experiment.config.training_services import RemoteConfig
 
 from .config import (
     RetiariiExeConfig, OneshotEngineConfig, BaseEngineConfig,

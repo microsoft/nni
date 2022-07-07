@@ -4,7 +4,7 @@
 import os
 import sys
 from dataclasses import dataclass, MISSING
-from typing import Any, Dict, Union, Optional, overload
+from typing import Any, Dict, Union, Optional
 
 from nni.experiment.config import utils, ExperimentConfig
 
