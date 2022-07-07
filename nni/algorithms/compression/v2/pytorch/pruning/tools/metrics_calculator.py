@@ -71,7 +71,7 @@ class HookDataNormMetricsCalculator(NormMetricsCalculator):
             new_data[module_name] = {}
             for target_name, (_, target_data) in targets_data.items():
                 new_data[module_name][target_name] = target_data
-        return new_data
+        return super().calculate_metrics(new_data)
 
 
 class DistMetricsCalculator(MetricsCalculator):

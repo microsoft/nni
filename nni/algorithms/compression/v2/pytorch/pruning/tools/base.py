@@ -366,9 +366,9 @@ class SparsityAllocator:
         target_name = 'weight'
         for module_name, target_mask in new_masks.items():
             wrapper = self.pruner.get_modules_wrapper()[module_name]
-            old_target_mask = getattr(wrapper, f'{target_name}_mask', None)
+            old_target_mask: Tensor | None = getattr(wrapper, f'{target_name}_mask', None)
             if old_target_mask is not None:
-                new_masks[module_name][target_name] = torch.min(target_mask[target_name], old_target_mask)
+                new_masks[module_name][target_name] = torch.min(target_mask[target_name], old_target_mask.to(target_mask[target_name].device))
         return new_masks
 
     def common_target_masks_generation(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
@@ -410,7 +410,7 @@ class SparsityAllocator:
                 reduce_dims = [reduce_dim for reduce_dim in range(1, len(weight_mask.shape))]
                 # count unmasked number of values on dim 0 (output channel) of weight
                 unmasked_num_on_dim0 = weight_mask.sum(reduce_dims) if reduce_dims else weight_mask
-                module_masks['bias'] = (unmasked_num_on_dim0 != 0).type_as(old_bias_mask)
+                module_masks['bias'] = (unmasked_num_on_dim0 != 0).type_as(weight_mask)
         return masks
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:

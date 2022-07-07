@@ -274,13 +274,13 @@ class LevelPruner(BasicPruner):
         schema.validate(config_list)
 
     def reset_tools(self):
-        if self.data_collector is None:
+        if not hasattr(self, 'data_collector'):
             self.data_collector = TargetDataCollector(self)
         else:
             self.data_collector.reset()
-        if self.metrics_calculator is None:
+        if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = NormMetricsCalculator()
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == "normal":
                 self.sparsity_allocator = NormalSparsityAllocator(self)
             elif self.mode == "balance":
@@ -335,19 +335,19 @@ class NormPruner(BasicPruner):
         schema.validate(config_list)
 
     def reset_tools(self):
-        if self.data_collector is None:
-            self.data_collector = TargetDataCollector(self)
-        else:
-            self.data_collector.reset()
-        if self.metrics_calculator is None:
-            self.metrics_calculator = NormMetricsCalculator(p=self.p, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             elif self.mode == 'dependency_aware':
                 self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
+        if not hasattr(self, 'data_collector'):
+            self.data_collector = TargetDataCollector(self)
+        else:
+            self.data_collector.reset()
+        if not hasattr(self, 'metrics_calculator'):
+            self.metrics_calculator = NormMetricsCalculator(p=self.p, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
 
 
 class L1NormPruner(NormPruner):
@@ -500,19 +500,19 @@ class FPGMPruner(BasicPruner):
         schema.validate(config_list)
 
     def reset_tools(self):
-        if self.data_collector is None:
-            self.data_collector = TargetDataCollector(self)
-        else:
-            self.data_collector.reset()
-        if self.metrics_calculator is None:
-            self.metrics_calculator = DistMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             elif self.mode == 'dependency_aware':
                 self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
+        if not hasattr(self, 'data_collector'):
+            self.data_collector = TargetDataCollector(self)
+        else:
+            self.data_collector.reset()
+        if not hasattr(self, 'metrics_calculator'):
+            self.metrics_calculator = DistMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
 
 
 class SlimPruner(EvaluatorBasedPruner):
@@ -626,20 +626,20 @@ class SlimPruner(EvaluatorBasedPruner):
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
-            if self.data_collector is None:
+            if not hasattr(self, 'data_collector'):
                 self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch, max_epochs=self.training_epochs)
             else:
                 self.data_collector.reset(loss_patch=self.loss_patch)
         else:
-            if self.data_collector is None:
+            if not hasattr(self, 'data_collector'):
                 self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                       self.training_epochs, criterion_patch=self.criterion_patch)
             else:
                 self.data_collector.reset()
 
-        if self.metrics_calculator is None:
+        if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = NormMetricsCalculator()
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self)
             elif self.mode == 'global':
@@ -721,7 +721,7 @@ class ActivationPruner(EvaluatorBasedPruner):
         init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
 
         self.training_steps: int = init_kwargs.get('training_steps', init_kwargs.get('training_batches'))
-        self._activatio: str = self._choose_activation(init_kwargs['activation'])
+        self._activation: Callable[[Tensor], Tensor] = self._choose_activation(init_kwargs['activation'])
         self.mode: str = init_kwargs['mode']
         self.dummy_input = init_kwargs['dummy_input']
 
@@ -751,10 +751,11 @@ class ActivationPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
+            activation = self._activation_trans(output)
             if len(buffer) == 1:
-                buffer.append(torch.zeros_like(output))
+                buffer.append(torch.zeros_like(activation))
             if buffer[0] < self.training_steps:
-                buffer[1] += self._activation_trans(output)
+                buffer[1] += activation
                 buffer[0] += 1
         return collect_activation
 
@@ -762,6 +763,14 @@ class ActivationPruner(EvaluatorBasedPruner):
         raise NotImplementedError()
 
     def reset_tools(self):
+        if not hasattr(self, 'sparsity_allocator'):
+            if self.mode == 'normal':
+                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+            elif self.mode == 'dependency_aware':
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+            else:
+                raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
+
         if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
@@ -770,27 +779,20 @@ class ActivationPruner(EvaluatorBasedPruner):
             for module_name, wrapper in self.get_modules_wrapper().items():
                 target_name = 'weight'
                 forward_hooks[module_name] = {target_name: ForwardHook(wrapper, module_name, self._collector)}
-            if self.data_collector is None:
+            if not hasattr(self, 'data_collector'):
                 self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=forward_hooks, max_steps=self.training_steps)
             else:
                 self.data_collector.reset(hooks=forward_hooks)
         else:
             collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()], 'forward', self._collector)
-            if self.data_collector is None:
+            if not hasattr(self, 'data_collector'):
                 self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                           1, collector_infos=[collector_info])
             else:
                 self.data_collector.reset(collector_infos=[collector_info])
 
-        if self.metrics_calculator is None:
+        if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = self._create_metrics_calculator()
-        if self.sparsity_allocator is None:
-            if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
-            elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
-            else:
-                raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         raise NotImplementedError()
@@ -875,10 +877,10 @@ class ActivationAPoZRankPruner(ActivationPruner):
     """
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return a matrix that the position of zero in `output` is one, others is zero.
-        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output)
+        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).mean(0)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
-        return APoZRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
+        return APoZRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
 
 
 class ActivationMeanRankPruner(ActivationPruner):
@@ -958,10 +960,10 @@ class ActivationMeanRankPruner(ActivationPruner):
     """
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return the activation of `output` directly.
-        return self._activation(output.detach())
+        return self._activation(output.detach()).mean(0)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
-        return MeanRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
+        return MeanRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
 
 
 class TaylorFOWeightPruner(EvaluatorBasedPruner):
@@ -1093,9 +1095,10 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
     def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Tensor], None]:
         assert len(buffer) == 0, 'Buffer pass to taylor pruner collector is not empty.'
         buffer.append(0)
-        buffer.append(torch.zeros_like(weight_tensor))
 
         def collect_taylor(grad: Tensor):
+            if len(buffer) == 1:
+                buffer.append(torch.zeros_like(grad))
             if buffer[0] < self.training_steps:
                 buffer[1] += self._calculate_taylor_expansion(weight_tensor, grad)
                 buffer[0] += 1
@@ -1105,31 +1108,7 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
         return (weight_tensor.detach() * grad.detach()).data.pow(2)
 
     def reset_tools(self):
-        if self.using_evaluator:
-            # TODO: move to other place in nni v3.0
-            self.evaluator.unbind_model()
-            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
-            tensor_hooks = {}
-            for module_name, wrapper in self.get_modules_wrapper().items():
-                target_name = 'weight'
-                target = getattr(wrapper, target_name)
-                tensor_hooks[module_name] = {target_name: TensorHook(wrapper, module_name, functools.partial(self._collector, weight_tensor=target))}
-            if self.data_collector is None:
-                self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=tensor_hooks, max_steps=self.training_steps)
-            else:
-                self.data_collector.reset(hooks=tensor_hooks)
-        else:
-            hook_targets = {name: wrapper.weight for name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
-            collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)  # type: ignore
-            if self.data_collector is None:
-                self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
-                                                                          1, collector_infos=[collector_info])
-            else:
-                self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
-
-        if self.metrics_calculator is None:
-            self.metrics_calculator = HookDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             elif self.mode == 'global':
@@ -1138,6 +1117,31 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
                 self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
             else:
                 raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
+
+        if self.using_evaluator:
+            # TODO: move to other place in nni v3.0
+            self.evaluator.unbind_model()
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
+            tensor_hooks = {}
+            for module_name, wrapper in self.get_modules_wrapper().items():
+                target_name = 'weight'
+                target = getattr(wrapper, target_name)
+                tensor_hooks[module_name] = {target_name: TensorHook(target, module_name, functools.partial(self._collector, weight_tensor=target))}
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=tensor_hooks, max_steps=self.training_steps)
+            else:
+                self.data_collector.reset(hooks=tensor_hooks)
+        else:
+            hook_targets = {name: wrapper.weight for name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
+            collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)  # type: ignore
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
+                                                                          1, collector_infos=[collector_info])
+            else:
+                self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
+
+        if not hasattr(self, 'metrics_calculator'):
+            self.metrics_calculator = HookDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
 
 
 class ADMMPruner(EvaluatorBasedPruner):
@@ -1277,22 +1281,22 @@ class ADMMPruner(EvaluatorBasedPruner):
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
-            if self.data_collector is None:
+            if not hasattr(self, 'data_collector'):
                 self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, loss_patch=self.loss_patch, max_epochs=self.training_epochs)
             else:
                 self.data_collector.reset(loss_patch=self.loss_patch)
         else:
-            if self.data_collector is None:
+            if not hasattr(self, 'data_collector'):
                 self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                       self.training_epochs, criterion_patch=self.criterion_patch)
             else:
                 self.data_collector.reset()
-        if self.metrics_calculator is None:
+        if not hasattr(self, 'metrics_calculator'):
             if self.granularity == 'fine-grained':
                 self.metrics_calculator = NormMetricsCalculator(p=1)
             elif self.granularity == 'coarse-grained':
                 self.metrics_calculator = NormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             if self.granularity == 'fine-grained':
                 self.sparsity_allocator = NormalSparsityAllocator(self)
             elif self.granularity == 'coarse-grained':

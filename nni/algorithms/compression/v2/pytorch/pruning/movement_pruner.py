@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from copy import deepcopy
 import logging
 from typing import Dict, List, Tuple, Callable, overload
@@ -219,9 +221,9 @@ class MovementPruner(EvaluatorBasedPruner):
                     wrapper_dict[op_name].config['total_sparsity'] = current_sparsity
 
     def reset_tools(self):
-        if self.metrics_calculator is None:
+        if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = StraightMetricsCalculator()
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             self.sparsity_allocator = NormalSparsityAllocator(self, continuous_mask=False)
 
         # use Adam to update the weight_score
@@ -248,12 +250,12 @@ class MovementPruner(EvaluatorBasedPruner):
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
-            if self.data_collector is None:
+            if not hasattr(self, 'data_collector'):
                 self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator, after_opt_step_tasks=[_optimizer_patch], max_epochs=self.training_epochs)
             else:
                 self.data_collector.reset(after_opt_step_tasks=[_optimizer_patch])
         else:
-            if self.data_collector is None:
+            if not hasattr(self, 'data_collector'):
                 self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
             else:
                 self.data_collector.reset()

@@ -66,7 +66,7 @@ class SingleHookTrainerBasedDataCollector(TrainerBasedDataCollector):
 
         data = {}
         target_name = 'weight'
-        for buffer_dict in self._hook_buffer.items():
+        for _, buffer_dict in self._hook_buffer.items():
             for module_name, target_data in buffer_dict.items():
                 data[module_name] = {target_name: target_data}
         return data
@@ -110,7 +110,7 @@ class EvaluatorBasedTargetDataCollector(EvaluatorBasedDataCollector):
 class EvaluatorBasedHookDataCollector(EvaluatorBasedDataCollector):
     """
     Add hooks and collect data during training or inference.
-    Single means each wrapper only has one hook to collect data.
+    NOTE: Only support one target has one hook right now.
     """
 
     def collect(self) -> Dict[str, Dict[str, List]]:

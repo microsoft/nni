@@ -154,6 +154,8 @@ class GlobalSparsityAllocator(SparsityAllocator):
         return masks
 
 
+# TODO: This allocator will trace the model, means the model will be inference during initialization,
+# sometime we may not aware of this inference and it may lead to some error.
 class DependencyAwareAllocator(NormalSparsityAllocator):
     """
     An specific allocator for Conv2d & Linear module with dependency-aware.
@@ -219,7 +221,8 @@ class DependencyAwareAllocator(NormalSparsityAllocator):
                 # change the metric value corresponding to the public mask part to the minimum value
                 for module_name, targets_metric in sub_metrics.items():
                     if target_name in targets_metric:
-                        min_value = targets_metric[target_name].min()
+                        # - 1 ensure the denpendency metric is the minimum, and will be masked first.
+                        min_value = targets_metric[target_name].min() - 1
                         metrics[module_name][target_name] = torch.where(dependency_mask!=0, targets_metric[target_name], min_value)
 
         return super().common_target_masks_generation(metrics)

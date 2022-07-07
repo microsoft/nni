@@ -43,8 +43,8 @@ class PrunerModuleWrapper(Module):
             pruning_target_mask_name = '{}_mask'.format(pruning_target_name)
             pruning_target = getattr(self.module, pruning_target_name, None)
             if hasattr(self.module, pruning_target_name) and pruning_target is not None:
-                setattr(self, pruning_target_name, Parameter(torch.empty(pruning_target.shape)))
-                self.register_buffer(pruning_target_mask_name, torch.ones(pruning_target.shape))
+                setattr(self, pruning_target_name, Parameter(torch.empty_like(pruning_target)))
+                self.register_buffer(pruning_target_mask_name, torch.ones_like(pruning_target))
             else:
                 self.register_buffer(pruning_target_mask_name, None)
 
@@ -67,11 +67,11 @@ class PrunerModuleWrapper(Module):
         The best place to call this function is in `Pruner._unwrap_model()`.
         """
         delattr(self.module, 'weight')
-        self.module.weight = Parameter(torch.empty(self.weight.size()))
+        self.module.weight = Parameter(torch.empty_like(self.weight))
         self.module.weight.data = torch.mul(self.weight, self.weight_mask)
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             delattr(self.module, 'bias')
-            self.module.bias = Parameter(torch.empty(self.bias.size()))
+            self.module.bias = Parameter(torch.empty_like(self.bias))
             self.module.bias.data = torch.mul(self.bias, self.bias_mask)
 
     def forward(self, *inputs):
@@ -183,14 +183,12 @@ class Pruner(Compressor):
             The masks dict with format {'op_name': {'weight': mask, 'bias': mask}}.
         """
         wrappers = self.get_modules_wrapper()
-        for name, layer_mask in masks.items():
-            assert name in wrappers, '{} is not in wrappers of this pruner, can not apply the mask.'.format(name)
-            if layer_mask.get('weight') is not None:
-                assert hasattr(wrappers[name], 'weight_mask'), 'There is no attribute weight_mask in wrapper.'
-                setattr(wrappers[name], 'weight_mask', layer_mask.get('weight'))
-            if layer_mask.get('bias') is not None:
-                assert hasattr(wrappers[name], 'bias_mask'), 'There is no attribute bias_mask in wrapper.'
-                setattr(wrappers[name], 'bias_mask', layer_mask.get('bias'))
+        for module_name, target_masks in masks.items():
+            assert module_name in wrappers, '{} is not in wrappers of this pruner, can not apply the mask.'.format(module_name)
+            for target_name, target_mask in target_masks.items():
+                assert hasattr(wrappers[module_name], f'{target_name}_mask'), f'There is no attribute {target_name}_mask in wrapper.'
+                target: Tensor = getattr(self.get_modules_wrapper()[module_name], target_name)
+                setattr(wrappers[module_name], f'{target_name}_mask', target_mask.to(target.device))
 
     def compress(self) -> Tuple[Module, Dict[str, Dict[str, Tensor]]]:
         """
