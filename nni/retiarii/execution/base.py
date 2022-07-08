@@ -10,6 +10,7 @@ import string
 from typing import Any, Dict, Iterable, List
 
 from nni.experiment import rest
+from nni.retiarii.integration import RetiariiAdvisor
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .utils import get_mutation_summary
@@ -75,19 +76,20 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         self.url_prefix = rest_url_prefix
 
         self._listeners: List[AbstractGraphListener] = []
-
-        # register advisor callbacks
-        advisor = get_advisor()
-        advisor.send_trial_callback = self._send_trial_callback
-        advisor.request_trial_jobs_callback = self._request_trial_jobs_callback
-        advisor.trial_end_callback = self._trial_end_callback
-        advisor.intermediate_metric_callback = self._intermediate_metric_callback
-        advisor.final_metric_callback = self._final_metric_callback
-
         self._running_models: Dict[int, Model] = dict()
         self._history: List[Model] = []
 
         self.resources = 0
+
+        # register advisor callbacks
+        advisor: RetiariiAdvisor = get_advisor()
+        advisor.register_callbacks({
+            'send_trial': self._send_trial_callback,
+            'request_trial_jobs': self._request_trial_jobs_callback,
+            'trial_end': self._trial_end_callback,
+            'intermediate_metric': self._intermediate_metric_callback,
+            'final_metric': self._final_metric_callback
+        })
 
     def submit_models(self, *models: Model) -> None:
         for model in models:

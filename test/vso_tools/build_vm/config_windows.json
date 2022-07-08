@@ -3,6 +3,8 @@
     "type": "azure-arm",
 
     "client_id": "<client_id>",
+    "client_secret": "<client_secret>",
+    "subscription_id": "<subscription_id>",
 
     "managed_image_name": "<managed_image_name>",
     "managed_image_resource_group_name": "<resource_group>",
@@ -18,7 +20,7 @@
       "gallery_name": "<gallery_name>",
       "image_name": "<image_name>",
       "image_version": "<image_version>",
-      "replication_regions": ["southeastasia", "westus2"],
+      "replication_regions": ["southeastasia", "westus2", "eastus"],
       "storage_account_type": "Standard_LRS"
     },
 

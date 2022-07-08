@@ -127,9 +127,11 @@ class Random(BaseStrategy):
                     if budget_exhausted():
                         return
                     time.sleep(self._polling_interval)
+                    _logger.debug('Still waiting for resource.')
                 try:
                     model = get_targeted_model(base_model, applied_mutators, sample)
                     if filter_model(self.filter, model):
+                        _logger.debug('Submitting model: %s', model)
                         submit_models(model)
                 except InvalidMutation as e:
                     _logger.warning(f'Invalid mutation: {e}. Skip.')
