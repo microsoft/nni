@@ -116,66 +116,160 @@ class BackwardHook(ModuleHook):
 
 
 class Evaluator:
+    """
+    NOTE: Users are not recommended to use any member functions of this class.
+    """
+
     # A flag to indicate whether the evaluator is initialized complete.
     _initialization_complete: bool
+    _hook: List[Hook]
 
     def _init_optimizer_helpers(self, pure_model: Module | pl.LightningModule):
-        # NOTE: this is a part of Evaluator initialization, please make sure this function has been called before using evaluator.
+        """
+        This is an internal API, ``pure_model`` means the model is the original model passed in by the user,
+        it should not be the modified model (wrapped, hooked, or patched by NNI).
+        That is, the optimizers & lr_schedulers obtained by ``Evaluator`` match the ``pure_model``.
+
+        This function is used to record the status of the optimizers & lr_schedulers,
+        and ensure NNI can reinitialize the optimizers & lr_schedulers with a similar but modified model.
+
+        NOTE: this is a part of Evaluator initialization, please make sure this function has been called before using other evaluator functions.
+        """
         raise NotImplementedError
 
     def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None):
-        # param_names_map maps the names of the parameters in the pure_model to the names of the parameters in the binded model.
-        # The format of param_names_map is {pure_model_param_name: binded_model_param_name}.
-        # param_names_map is for initializing the optimizers for the binded model.
+        """
+        NOTE: NNI users don't need to call this function. This function usually called by NNI Compressor.
+
+        Bind the model suitable for this ``Evaluator`` to use the evaluator's abilities of model modification, model training, and model evaluation.
+
+        Parameter
+        ---------
+        model
+            The model bind to this ``Evaluator``, usually a wrapped model.
+        param_names_map
+            ``param_names_map`` maps the names of the parameters in the pure_model to the names of the parameters in the bound model.
+            The format of param_names_map is {pure_model_param_name: bound_model_param_name}.
+            It is for initializing the optimizers for the bound model.
+        """
         raise NotImplementedError
 
     def unbind_model(self):
-        # Evaluator can be reused by `unbind_model` then bind a new model by `bind_model`.
+        """
+        NOTE: NNI users don't need to call this function. This function usually called by NNI Compressor.
+
+        Unbind the model bound by ``bind_model``. Then ``Evaluator`` can be reused by binding a new model by `bind_model`.
+        """
         raise NotImplementedError
 
     def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+        """
+        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
+
+        The patch may add additional loss or replace the original loss. Here is an example::
+
+            def loss_patch(original_loss):
+                params_norm = 0
+                for param in model.parameters():
+                    params_norm += torch.norm(param)
+                return original_loss + params_norm
+
+        Something like ``loss = patch(criterion(result, target))`` will happen during each time loss computation.
+        """
         raise NotImplementedError
 
     def revert_loss(self):
+        """
+        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
+
+        Revert the loss to the original one.
+        """
         raise NotImplementedError
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
-        # Run tasks in `before_step_tasks` before `optimizer.step()` each time.
-        # Run tasks in `after_step_tasks` after `optimizer.step()` each time.
-        # NOTE: we only patch these tasks to the first optimizer right now.
+        """
+        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
+        NOTE: we only patch tasks to the first optimizer right now.
+
+        Run tasks in `before_step_tasks` before `optimizer.step()` each time.
+        Run tasks in `after_step_tasks` after `optimizer.step()` each time.
+        """
         raise NotImplementedError
 
     def revert_optimizer_step(self):
+        """
+        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
+
+        Revert the optimizer step to the original one.
+        """
         raise NotImplementedError
 
     def register_hooks(self, hooks: List[Hook]):
         """
+        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
+
         The input is a list of ``TensorHook``, ``ForwardHook``, ``BackwardHook``,
         please view how to use ``TensorHook``, ``ForwardHook``, ``BackwardHook``.
-        This function will apply hook.register() in ``hooks``.
+        This function will call ``Hook.register()`` of hook in ``hooks``, and record the hook in ``self._hooks``.
         """
-        raise NotImplementedError
+        if not hasattr(self, '_hooks'):
+            self._hooks: List[Hook] = []
+        for hook in hooks:
+            hook.register()
+            self._hooks.append(hook)
 
     def get_all_hooks(self) -> List[Hook]:
-        raise NotImplementedError
+        """
+        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
+
+        Get all registered ``Hook``.
+        """
+        return getattr(self, '_hooks', [])
 
     def remove_all_hooks(self):
         """
-        Remove all hooks registered by ``register_hooks``.
+        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
+
+        Call ``Hook.remove()`` of all ``Hook`` instances in ``self._hooks``, then clear ``self._hooks``.
+        """
+        if hasattr(self, '_hooks'):
+            for hook in self._hooks:
+                hook.remove()
+            self._hooks.clear()
+
+    def train(self, max_steps: int | None = None, max_epochs: int | None = None):
+        """
+        NOTE: NNI users can call this function to train the bound model, but not necessary.
+
+        Train the bound model with default optimization loop defined by user and only change the training duration.
         """
         raise NotImplementedError
 
-    def train(self, max_steps: int | None = None, max_epochs: int | None = None):
-        raise NotImplementedError
-
     def finetune(self):
+        """
+        NOTE: NNI users can call this function to finetune the bound model, but not necessary.
+
+        Finetune the bound model with default optimization loop defined by user.
+        """
         raise NotImplementedError
 
     def evaluate(self) -> float | Tuple[float, Any]:
+        """
+        NOTE: NNI users can call this function to evaluate the bound model, but not necessary.
+
+        Evaluate the bound model, the returned metric should be a float number,
+        or a tuple of two elements with the first element being a float number.
+        NNI will take this float number as the metric used in the compression algorithm.
+        """
         # Note that the first item of the returned value will be used as the default metric used by NNI.
         raise NotImplementedError
 
     def get_dummy_input(self) -> Any:
+        """
+        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
+
+        The returned value is a dummy input for the model, always used by ``torch.jit.trace``.
+        """
         raise NotImplementedError
 
 
@@ -203,7 +297,6 @@ class LightningEvaluator(Evaluator):
         self._dummy_input = dummy_input
 
         self.model: pl.LightningModule | None = None
-        self._hooks: List[Hook] = []
         self._ori_model_attr = {}
         self._param_names_map: Dict[str, str] | None = None
 
@@ -372,19 +465,6 @@ class LightningEvaluator(Evaluator):
         assert isinstance(self.model, pl.LightningModule)
         self.model.configure_callbacks = self._ori_model_attr['configure_callbacks']
 
-    def register_hooks(self, hooks: List[Hook]):
-        for hook in hooks:
-            hook.register()
-            self._hooks.append(hook)
-
-    def get_all_hooks(self) -> List[Hook]:
-        return self._hooks
-
-    def remove_all_hooks(self):
-        for hook in self._hooks:
-            hook.remove()
-        self._hooks.clear()
-
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
         assert isinstance(self.model, pl.LightningModule)
         # reset trainer
@@ -535,7 +615,6 @@ class TorchEvaluator(Evaluator):
         self._lr_schedulers: List[_LRScheduler] | None = None
         self._first_optimizer_step: Callable | None = None
         self._param_names_map: Dict[str, str] | None = None
-        self._hooks: List[Hook] = []
 
         # will del self._tmp_optimizers and self._tmp_lr_schedulers in `_init_optimizer_helpers`
         self._tmp_optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
@@ -615,19 +694,6 @@ class TorchEvaluator(Evaluator):
         assert self._optimizers is not None
         if self._first_optimizer_step:
             self._optimizers[0].step = self._first_optimizer_step
-
-    def register_hooks(self, hooks: List[Hook]):
-        for hook in hooks:
-            hook.register()
-            self._hooks.append(hook)
-
-    def get_all_hooks(self) -> List[Hook]:
-        return self._hooks
-
-    def remove_all_hooks(self):
-        for hook in self._hooks:
-            hook.remove()
-        self._hooks.clear()
 
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
         assert self.model is not None
