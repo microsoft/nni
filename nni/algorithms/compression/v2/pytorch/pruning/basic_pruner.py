@@ -1248,8 +1248,10 @@ class ADMMPruner(EvaluatorBasedPruner):
 
     def reset(self, model: Module, config_list: List[Dict]):
         super().reset(model, config_list)
-        self.Z = {name: wrapper.weight.data.clone() for name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
-        self.U = {name: torch.zeros_like(z).to(z.device) for name, z in self.Z.items()}
+        # FIXME: Only support pruning 'weight' right now.
+        target_name = 'weight'
+        self.Z = {module_name: {target_name: wrapper.weight.data.clone()} for module_name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
+        self.U = {module_name: {target_name: torch.zeros_like(z[target_name])} for module_name, z in self.Z.items()}
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
         schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
@@ -1265,7 +1267,9 @@ class ADMMPruner(EvaluatorBasedPruner):
             penalty = torch.tensor(0.0).to(output.device)
             for name, wrapper in self.get_modules_wrapper().items():
                 rho = wrapper.config.get('rho', 1e-4)
-                penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.weight - self.Z[name] + self.U[name]))
+                self.Z[name]['weight'] = self.Z[name]['weight'].to(wrapper.weight.device)
+                self.U[name]['weight'] = self.U[name]['weight'].to(wrapper.weight.device)
+                penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.weight - self.Z[name]['weight'] + self.U[name]['weight']))
             return origin_criterion(output, target) + penalty
         return patched_criterion
 
@@ -1273,7 +1277,9 @@ class ADMMPruner(EvaluatorBasedPruner):
         penalty = 0
         for name, wrapper in self.get_modules_wrapper().items():
             rho = wrapper.config.get('rho', 1e-4)
-            penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.weight - self.Z[name] + self.U[name]))
+            self.Z[name]['weight'] = self.Z[name]['weight'].to(wrapper.weight.device)
+            self.U[name]['weight'] = self.U[name]['weight'].to(wrapper.weight.device)
+            penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.weight - self.Z[name]['weight'] + self.U[name]['weight']))
         return origin_loss + penalty
 
     def reset_tools(self):
@@ -1282,7 +1288,7 @@ class ADMMPruner(EvaluatorBasedPruner):
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
             if not hasattr(self, 'data_collector'):
-                self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, loss_patch=self.loss_patch, max_epochs=self.training_epochs)
+                self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch, max_epochs=self.training_epochs)
             else:
                 self.data_collector.reset(loss_patch=self.loss_patch)
         else:
@@ -1308,14 +1314,17 @@ class ADMMPruner(EvaluatorBasedPruner):
             _logger.info('======= ADMM Iteration %d Start =======', i)
             data = self.data_collector.collect()
 
-            for name, weight in data.items():
-                self.Z[name] = weight + self.U[name]
+            for module_name, targets_data in data.items():
+                for target_name, target_data in targets_data.items():
+                    self.U[module_name][target_name] = self.U[module_name][target_name].to(target_data.device)
+                    self.Z[module_name][target_name] = target_data + self.U[module_name][target_name]
             metrics = self.metrics_calculator.calculate_metrics(self.Z)
             masks = self.sparsity_allocator.generate_sparsity(metrics)
 
-            for name, mask in masks.items():
-                self.Z[name] = self.Z[name].mul(mask['weight'])
-                self.U[name] = self.U[name] + data[name] - self.Z[name]
+            for module_name, targets_mask in masks.items():
+                target_name = 'weight'
+                self.Z[module_name][target_name] = self.Z[module_name][target_name].mul(targets_mask[target_name])
+                self.U[module_name][target_name] = self.U[module_name][target_name] + data[module_name][target_name] - self.Z[module_name][target_name]
 
         self.Z, self.U = {}, {}
         torch.cuda.empty_cache()

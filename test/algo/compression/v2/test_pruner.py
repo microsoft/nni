@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
-from operator import is_
 
 import pytest
 from typing import Any, Dict, List
@@ -75,7 +74,7 @@ def validate_masks(masks: Dict[str, Dict[str, torch.Tensor]], model: torch.nn.Mo
             excepted_sparsity = config_dict[module_name].get('sparsity', config_dict[module_name].get('total_sparsity'))
             real_sparsity = (mask == 0).sum().item() / mask.numel()
             err_msg = f'{module_name} {target_name} excepted sparsity: {excepted_sparsity}, but real sparsity: {real_sparsity}'
-            assert excepted_sparsity * 0.99 < real_sparsity < excepted_sparsity * 1.01, err_msg
+            assert excepted_sparsity * 0.9 < real_sparsity < excepted_sparsity * 1.1, err_msg
         else:
             total_masked_numel += (mask == 0).sum().item()
             total_target_numel += mask.numel()
@@ -190,3 +189,47 @@ def test_hook_based_pruner(model_type: str, pruning_type: str, using_evaluator: 
     validate_masks(masks, model, config_list)
     if mode == 'dependency_aware':
         validate_dependency_aware(model_type, masks)
+
+
+@pytest.mark.parametrize('model_type', ['lightning', 'pytorch'])
+@pytest.mark.parametrize('using_evaluator', [True, False])
+@pytest.mark.parametrize('granularity', ['fine-grained', 'coarse-grained'])
+def test_admm_pruner(model_type: str, using_evaluator: bool, granularity: str):
+    model, config_list, dummy_input = create_model(model_type)
+
+    if using_evaluator:
+        evaluator = create_lighting_evaluator() if model_type == 'lightning' else create_pytorch_evaluator(model)
+        pruner = ADMMPruner(model=model, config_list=config_list, evaluator=evaluator, iterations=2, training_epochs=1, granularity=granularity)
+    else:
+        model = model.to(device)
+        dummy_input = dummy_input.to(device)
+        optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+        pruner = ADMMPruner(model=model, config_list=config_list, trainer=training_model, traced_optimizer=optimizer, criterion=F.nll_loss,
+                            iterations=2, training_epochs=1, granularity=granularity)
+
+    _, masks = pruner.compress()
+    model(dummy_input)
+    pruner._unwrap_model()
+    validate_masks(masks, model, config_list)
+
+
+@pytest.mark.parametrize('model_type', ['lightning', 'pytorch'])
+@pytest.mark.parametrize('using_evaluator', [True, False])
+@pytest.mark.parametrize('granularity', ['fine-grained', 'coarse-grained'])
+def test_movement_pruner(model_type: str, using_evaluator: bool, granularity: str):
+    model, config_list, dummy_input = create_model(model_type)
+
+    if using_evaluator:
+        evaluator = create_lighting_evaluator() if model_type == 'lightning' else create_pytorch_evaluator(model)
+        pruner = MovementPruner(model=model, config_list=config_list, evaluator=evaluator, training_epochs=1, warm_up_step=20, cool_down_beginning_step=80)
+    else:
+        model = model.to(device)
+        dummy_input = dummy_input.to(device)
+        optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+        pruner = MovementPruner(model=model, config_list=config_list, trainer=training_model, traced_optimizer=optimizer, criterion=F.nll_loss,
+                                training_epochs=1, warm_up_step=20, cool_down_beginning_step=80)
+
+    _, masks = pruner.compress()
+    model(dummy_input)
+    pruner._unwrap_model()
+    validate_masks(masks, model, config_list)

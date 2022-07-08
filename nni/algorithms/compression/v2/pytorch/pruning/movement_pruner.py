@@ -240,8 +240,9 @@ class MovementPruner(EvaluatorBasedPruner):
             if self.step_counter > self.warm_up_step:
                 self.cubic_schedule(self.step_counter)
                 data = {}
+                target_name = 'weight'
                 for wrapper in self.get_modules_wrapper().values():
-                    data[wrapper.name] = wrapper.weight_score.data
+                    data[wrapper.name] = {target_name: wrapper.weight_score.data}
                 metrics = self.metrics_calculator.calculate_metrics(data)  # type: ignore
                 masks = self.sparsity_allocator.generate_sparsity(metrics)  # type: ignore
                 self.load_masks(masks)
