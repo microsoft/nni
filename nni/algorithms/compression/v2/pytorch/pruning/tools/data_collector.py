@@ -11,8 +11,8 @@ from .base import TrainerBasedDataCollector
 
 _logger = logging.getLogger(__name__)
 
-__all__ = ['TargetDataCollector', 'EvaluatorBasedTargetDataCollector', 'EvaluatorBasedHookDataCollector'] + \
-          ['WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector']  # TODO: remove in nni v3.0.
+__all__ = ['TargetDataCollector', 'EvaluatorBasedTargetDataCollector', 'EvaluatorBasedHookDataCollector',
+           'WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector']  # TODO: remove in nni v3.0.
 
 
 # TODO: remove in nni v3.0.

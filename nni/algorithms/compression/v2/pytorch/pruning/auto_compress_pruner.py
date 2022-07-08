@@ -152,7 +152,7 @@ class AutoCompressPruner(IterativePruner):
     @overload
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 evaluator: LightningEvaluator | TorchEvaluator = None, speedup: bool = False):
+                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False):
         ...
 
     @overload
@@ -195,10 +195,10 @@ class AutoCompressPruner(IterativePruner):
             else:
                 admm_params['granularity'] = 'fine-grained'
 
-        pruner = ADMMPruner(None, None, **admm_params)
+        pruner = ADMMPruner(None, None, **admm_params)  # type: ignore
 
         if self.using_evaluator:
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=False)
+                             evaluator=self.evaluator, reset_weight=False)  # type: ignore

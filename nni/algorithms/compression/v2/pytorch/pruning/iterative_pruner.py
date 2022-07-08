@@ -159,7 +159,7 @@ class LinearPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=False)
+                             evaluator=self.evaluator, reset_weight=False)  # type: ignore
 
 
 class AGPPruner(IterativePruner):
@@ -249,7 +249,7 @@ class AGPPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=False)
+                             evaluator=self.evaluator, reset_weight=False)  # type: ignore
 
 
 class LotteryTicketPruner(IterativePruner):
@@ -355,7 +355,7 @@ class LotteryTicketPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=reset_weight)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=reset_weight)
+                             evaluator=self.evaluator, reset_weight=reset_weight)  # type: ignore
 
 
 class SimulatedAnnealingPruner(IterativePruner):
@@ -429,7 +429,7 @@ class SimulatedAnnealingPruner(IterativePruner):
     def __init__(self, model: Module, config_list: List[Dict], evaluator: _LEGACY_EVALUATOR, start_temperature: float = 100,
                  stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
                  pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False,
-                 finetuner: _LEGACY_FINETUNER = None, speedup: bool = False, dummy_input: Optional[Tensor] = None):
+                 finetuner: _LEGACY_FINETUNER | None = None, speedup: bool = False, dummy_input: Optional[Tensor] = None):
         ...
 
     def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
@@ -468,4 +468,4 @@ class SimulatedAnnealingPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=False)
+                             evaluator=self.evaluator, reset_weight=False)  # type: ignore

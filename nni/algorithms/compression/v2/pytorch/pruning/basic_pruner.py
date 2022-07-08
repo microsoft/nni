@@ -148,21 +148,21 @@ _LEGACY_CRITERION = Callable[[Tensor, Tensor], Tensor]
 
 # TODO: remove in nni v3.0.
 class EvaluatorBasedPruner(BasicPruner):
-    evaluator: Union[LightningEvaluator, TorchEvaluator]
+    evaluator: LightningEvaluator | TorchEvaluator
     using_evaluator: bool
     trainer: _LEGACY_TRAINER
     traced_optimizer: Optimizer
     criterion: _LEGACY_CRITERION
 
-    def _init_evaluator(self, model: Module, new_api: List[str], old_api: List[str], init_kwargs: Dict, args: List,
+    def _init_evaluator(self, model: Module, new_api: List[str], old_api: List[str], init_kwargs: Dict, args: Tuple,
                         kwargs: Dict) -> Dict:
         # for fake __init__ overload, parsing args and kwargs, initializing evaluator or [trainer, traced_optimizer, criterion],
         # return the remaining arguments.
         if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
             init_kwargs = self._parse_args(new_api, args, kwargs, init_kwargs)
-            self.evaluator: Evaluator = init_kwargs.pop('evaluator')
+            self.evaluator: LightningEvaluator | TorchEvaluator = init_kwargs.pop('evaluator')
             if not self.evaluator._initialization_complete:
-                self.evaluator._init_optimizer_helpers(model)
+                self.evaluator._init_optimizer_helpers(model)  # type: ignore
             self.using_evaluator = True
         else:
             init_kwargs = self._parse_args(old_api, args, kwargs, init_kwargs)
@@ -176,7 +176,7 @@ class EvaluatorBasedPruner(BasicPruner):
             self.using_evaluator = False
         return init_kwargs
 
-    def _parse_args(self, arg_names: List, args: List, kwargs: Dict, def_kwargs: Dict) -> Dict:
+    def _parse_args(self, arg_names: List, args: Tuple, kwargs: Dict, def_kwargs: Dict) -> Dict:
         def_kwargs.update(kwargs)
         for idx, arg in enumerate(args):
             if arg_names[idx] in def_kwargs:
@@ -625,7 +625,7 @@ class SlimPruner(EvaluatorBasedPruner):
         if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
-            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             if not hasattr(self, 'data_collector'):
                 self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch, max_epochs=self.training_epochs)
             else:
@@ -774,7 +774,7 @@ class ActivationPruner(EvaluatorBasedPruner):
         if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
-            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             forward_hooks = {}
             for module_name, wrapper in self.get_modules_wrapper().items():
                 target_name = 'weight'
@@ -1121,7 +1121,7 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
         if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
-            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             tensor_hooks = {}
             for module_name, wrapper in self.get_modules_wrapper().items():
                 target_name = 'weight'
@@ -1226,7 +1226,7 @@ class ADMMPruner(EvaluatorBasedPruner):
         ...
 
     @overload
-    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]], trainer: _LEGACY_TRAINER,
+    def __init__(self, model: Module, config_list: List[Dict], trainer: _LEGACY_TRAINER,
                  traced_optimizer: Optimizer, criterion: _LEGACY_CRITERION, iterations: int,
                  training_epochs: int, granularity: str = 'fine-grained'):
         ...
@@ -1267,8 +1267,8 @@ class ADMMPruner(EvaluatorBasedPruner):
             penalty = torch.tensor(0.0).to(output.device)
             for name, wrapper in self.get_modules_wrapper().items():
                 rho = wrapper.config.get('rho', 1e-4)
-                self.Z[name]['weight'] = self.Z[name]['weight'].to(wrapper.weight.device)
-                self.U[name]['weight'] = self.U[name]['weight'].to(wrapper.weight.device)
+                self.Z[name]['weight'] = self.Z[name]['weight'].to(wrapper.weight.device)  # type: ignore
+                self.U[name]['weight'] = self.U[name]['weight'].to(wrapper.weight.device)  # type: ignore
                 penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.weight - self.Z[name]['weight'] + self.U[name]['weight']))
             return origin_criterion(output, target) + penalty
         return patched_criterion
@@ -1277,8 +1277,8 @@ class ADMMPruner(EvaluatorBasedPruner):
         penalty = 0
         for name, wrapper in self.get_modules_wrapper().items():
             rho = wrapper.config.get('rho', 1e-4)
-            self.Z[name]['weight'] = self.Z[name]['weight'].to(wrapper.weight.device)
-            self.U[name]['weight'] = self.U[name]['weight'].to(wrapper.weight.device)
+            self.Z[name]['weight'] = self.Z[name]['weight'].to(wrapper.weight.device)  # type: ignore
+            self.U[name]['weight'] = self.U[name]['weight'].to(wrapper.weight.device)  # type: ignore
             penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.weight - self.Z[name]['weight'] + self.U[name]['weight']))
         return origin_loss + penalty
 
@@ -1286,7 +1286,7 @@ class ADMMPruner(EvaluatorBasedPruner):
         if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
-            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             if not hasattr(self, 'data_collector'):
                 self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch, max_epochs=self.training_epochs)
             else:

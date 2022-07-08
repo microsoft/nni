@@ -274,8 +274,8 @@ class EvaluatorBasedDataCollector(DataCollector):
             self.evaluator.patch_loss(loss_patch)
         if hooks:
             self._hooks = hooks
-            hooks = [hook for _ in hooks.values() for hook in _.values()]
-            self.evaluator.register_hooks(hooks)
+            hook_list = [hook for _ in hooks.values() for hook in _.values()]
+            self.evaluator.register_hooks(hook_list)
 
 
 class MetricsCalculator:

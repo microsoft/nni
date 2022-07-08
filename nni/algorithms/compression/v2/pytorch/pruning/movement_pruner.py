@@ -250,7 +250,7 @@ class MovementPruner(EvaluatorBasedPruner):
         if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
-            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             if not hasattr(self, 'data_collector'):
                 self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator, after_opt_step_tasks=[_optimizer_patch], max_epochs=self.training_epochs)
             else:
