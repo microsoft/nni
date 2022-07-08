@@ -70,6 +70,10 @@ def _hub_factory(alias):
 
 
 def _strategy_factory(alias, space_type):
+    # Autoformer search space require specific hooks
+    if alias == 'random' and space_type == 'autoformer':
+        from nni.retiarii.hub.pytorch.autoformer import MixedAbsPosEmbed, MixedClsToken
+        return stg.RandomOneShot(mutation_hooks=[MixedAbsPosEmbed.mutate, MixedClsToken.mutate])
     # Some search space needs extra hooks
     extra_mutation_hooks = []
     nds_need_shape_alignment = '_smalldepth' in space_type
@@ -149,7 +153,7 @@ def _dataset_factory(dataset_type, subset=20):
     'mobilenetv3_small',
     'proxylessnas',
     'shufflenet',
-    # 'autoformer',
+    'autoformer',
     'nasnet',
     'enas',
     'amoeba',
@@ -190,6 +194,9 @@ def test_hub_oneshot(space_type, strategy_type):
             pytest.skip('The space has used unsupported APIs.')
     if strategy_type in ['darts', 'gumbel'] and space_type == 'mobilenetv3':
         pytest.skip('Skip as it consumes too much memory.')
+    
+    if space_type == "autoformer" and strategy_type != "random":
+        pytest.skip('The AutoFormer sapce only support randomoneshot currently.')
 
     model_space = _hub_factory(space_type)
 
