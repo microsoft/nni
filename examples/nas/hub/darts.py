@@ -72,7 +72,7 @@ class AuxLossClassificationModule(ClassificationModule):
         self.model.set_drop_path_prob(self.current_epoch / self.max_epochs)
 
 
-def cutout(img, length: int = 16):
+def cutout_transform(img, length: int = 16):
     h, w = img.size(1), img.size(2)
     mask = np.ones((h, w), np.float32)
     y = np.random.randint(h)
@@ -102,7 +102,7 @@ def get_cifar10_dataset(train: bool = True, cutout: bool = False):
             transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
         ])
         if cutout:
-            transform.transforms.append(cutout)
+            transform.transforms.append(cutout_transform)
     else:
         transform = transforms.Compose([
             transforms.ToTensor(),

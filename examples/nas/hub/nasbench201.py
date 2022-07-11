@@ -67,7 +67,7 @@ def search(batch_size: int = 256, algo: Literal['ENAS', 'DARTS', 'Gumbel', 'Prox
 
     evaluator = Lightning(
         NasBench201TrainingModule(),
-        Trainer(gpus=1, max_epochs=200),
+        Trainer(gpus=1, max_epochs=1, profiler='advanced'),
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader
     )
@@ -102,6 +102,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', choices=['search', 'train', 'search_train'], default='search_train')
     parser.add_argument('--batch_size', type=int)
+    parser.add_argument('--algo', type=str)
     parser.add_argument('--arch', type=str)
     parser.add_argument('--weight_file', type=str)
 
