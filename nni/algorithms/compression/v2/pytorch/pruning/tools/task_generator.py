@@ -259,14 +259,11 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
 
         num_weights = sorted([self.weights_numel[op_name] for op_name in op_names])
         sparsity = sorted(random_sparsity)
-
-        total_weights = 0
-        total_weights_pruned = 0
-
+        
         # calculate the scale
-        for idx, num_weight in enumerate(num_weights):
-            total_weights += num_weight
-            total_weights_pruned += int(num_weight * sparsity[idx])
+        total_weights = np.sum(num_weights)
+        total_weights_pruned = np.sum([int(num_weight * sparsity[idx]) for idx, num_weight in enumerate(num_weights)])
+        
         if total_weights_pruned == 0:
             return None
 
