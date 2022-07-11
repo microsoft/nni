@@ -9,7 +9,7 @@ import os
 import time
 import warnings
 from threading import Thread
-from typing import Any, List, Union, cast
+from typing import Any, List, Union, cast, Tuple
 
 import colorama
 
@@ -38,7 +38,6 @@ from ..oneshot.interface import BaseOneShotTrainer
 from ..serializer import is_model_wrapped
 from ..strategy import BaseStrategy
 from ..strategy.utils import dry_run_for_formatted_search_space
-from nni.retiarii import strategy
 
 _logger = logging.getLogger(__name__)
 
@@ -222,9 +221,9 @@ class RetiariiExperiment(Experiment):
         set_execution_engine(engine)
 
     def _save_experiment_checkpoint(self,
-                                    base_model_ir,
-                                    applied_mutators,
-                                    strategy) -> None:
+                                    base_model_ir: Model,
+                                    applied_mutators: List[Mutator],
+                                    strategy: BaseStrategy) -> None:
         ckp_path = os.path.join(os.path.expanduser(self.config.experiment_working_directory), self.id, 'checkpoint')
         with open(os.path.join(ckp_path, 'nas_model'), 'w') as fp:
             dump(base_model_ir._dump(), fp, pickle_size_limit=int(os.getenv('PICKLE_SIZE_LIMIT', 64 * 1024)))
@@ -233,7 +232,7 @@ class RetiariiExperiment(Experiment):
         with open(os.path.join(ckp_path, 'strategy'), 'w') as fp:
             dump(strategy, fp)
 
-    def _load_experiment_checkpoint(self):
+    def _load_experiment_checkpoint(self) -> Tuple[Model, List[Mutator], BaseStrategy]:
         ckp_path = os.path.join(os.path.expanduser(self.config.experiment_working_directory), self.id, 'checkpoint')
         with open(os.path.join(ckp_path, 'nas_model'), 'r') as fp:
             base_model_ir = load(fp=fp)

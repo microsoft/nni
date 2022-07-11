@@ -13,7 +13,6 @@ from enum import Enum
 from typing import (TYPE_CHECKING, Any, Callable, Dict, Iterable, List,
                     Optional, Set, Tuple, Type, Union, cast, overload)
 
-from nni.common import dump, load
 if TYPE_CHECKING:
     from .mutator import Mutator
 
