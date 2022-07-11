@@ -4,6 +4,7 @@
 import re
 import logging
 from functools import partial
+from sre_compile import isstring
 import torch
 
 
@@ -20,7 +21,7 @@ __all__ = [
     'relu_python', 'reshape_python', 'select_python', 'sigmoid_python', 'size_python', 'slice_python',
     'softmax_python', 'squeeze_python', 'to_python', 'toint_python', 'torch', 'trans_from_jit_to_python',
     'translate_list', 'transpose2_python', 'transpose_python', 'tupleunpack_python', 'typeas_python',
-    'unsqueeze_python', 'upsample_bilinear2d_python', 'view_python'
+    'unsqueeze_python', 'upsample_bilinear2d_python', 'view_python', 'sum_python'
 ]
 
 
@@ -87,230 +88,13 @@ def parse_constant(cvalue, speedup):
     return func(*input_values)
 
 
-def dropout_python(node, speedup):
-    return torch.dropout
-
-
-def flatten_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    start_dim = inputs[1].toIValue()
-    end_dim = inputs[2].toIValue()
-    new_flatten = partial(torch.flatten, start_dim=start_dim, end_dim=end_dim)
-    return new_flatten
-
-
-def relu_inplace_python(node, speedup):
-    return torch.relu_
-
-
-def relu_python(node, speedup):
-    return torch.relu
-
-
-def sigmoid_python(node, speedup):
-    return torch.sigmoid
-
-
-def mean_python(node, speedup):
+def sum_python(node, speedup):
     c_node = node.key_node
     inputs = list(c_node.inputs())
     dim_list = translate_list(inputs[1], speedup)
     keep_dim = inputs[2].toIValue()
-    new_mean = partial(torch.mean, dim=tuple(dim_list), keepdim=keep_dim)
-    return new_mean
-
-
-def add_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    constant = None
-    for i in range(2):
-        input_i = inputs[i]
-        debug_name = input_i.debugName()
-        if debug_name not in speedup.internal_result:
-            # this input is a constant value
-            # TODO: what if this input is a constant tensor
-
-            if input_i.toIValue() is not None:
-                constant = parse_constant(input_i, speedup)
-                break
-    if constant is None:
-        return torch.add
-    else:
-        new_add = partial(torch.add, constant)
-        return new_add
-
-
-def sub_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    constant = [None, None]
-    for i in range(2):
-        input_i = inputs[i]
-        debug_name = input_i.debugName()
-        if debug_name not in speedup.internal_result:
-            # this input is a constant value
-            # TODO: what if this input is a constant tensor
-
-            if input_i.toIValue() is not None:
-                constant[i] = parse_constant(input_i, speedup)
-                break
-    if constant[0] is None and constant[1] is None:
-        new_sub = torch.sub
-    elif constant[0] is not None:
-        new_sub = partial(torch.sub, input=constant)
-    else:
-        new_sub = partial(torch.sub, other=constant)
-    return new_sub
-
-
-def floor_div_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    divisor = inputs[1]
-    constant = None
-    if divisor.debugName() not in speedup.internal_result:
-        # divisor is a constant value/tensor
-        constant = parse_constant(divisor, speedup)
-    if constant is None:
-        return torch.floor_divide
-    else:
-        new_op = partial(torch.floor_divide, other=constant)
-        return new_op
-
-
-def mul_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    constant = None
-    for i in range(2):
-        input_i = inputs[i]
-        debug_name = input_i.debugName()
-        if debug_name not in speedup.internal_result:
-            constant = parse_constant(input_i, speedup)
-            # both two inputs cannot be constants at the same time
-            break
-    if constant is None:
-        return torch.mul
-    else:
-        new_mul = partial(torch.mul, constant)
-        return new_mul
-
-
-def transpose_python(node, speedup):
-    return torch.t
-
-
-def transpose2_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim_1 = inputs[1].toIValue()
-    dim_2 = inputs[2].toIValue()
-    new_transpose = partial(torch.transpose, dim0=dim_1, dim1=dim_2)
-    return new_transpose
-
-
-def matmul_python(node, speedup):
-    return torch.matmul
-
-
-def div_python(node, speedup):
-    # The second input parameter of torch.div can be a
-    # tensor or a constant, if it is a constant, we need
-    # to return
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    if inputs[1].debugName() in speedup.internal_result:
-        # the second input parameters is the output of the other
-        # nodes
-        return torch.div
-    else:
-        other = inputs[1].toIValue()
-        new_div = partial(torch.div, other=other)
-
-        return new_div
-
-
-def softmax_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = inputs[1].toIValue()
-    new_softmax = partial(torch.softmax, dim=dim)
-    return new_softmax
-
-
-def contiguous_python(node, speedup):
-    class contiguousModule(torch.nn.Module):
-        def forward(self, x):
-            return x.contiguous()
-    return contiguousModule()
-
-
-def gelu_python(node, speedup):
-    return torch.nn.GELU()
-
-
-def silu_python(node, speedup):
-    return torch.nn.SiLU()
-
-
-def avgpool2d_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    kernel_size = translate_list(inputs[1], speedup)
-    stride = translate_list(inputs[2], speedup)
-    padding = translate_list(inputs[3], speedup)
-    new_avgpool = partial(torch.nn.functional.avg_pool2d,
-                          kernel_size=kernel_size, stride=stride, padding=padding)
-    return new_avgpool
-
-
-def adaptive_avgpool_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    output_size = translate_list(inputs[1], speedup)
-    new_avgpool = torch.nn.AdaptiveAvgPool2d(output_size)
-    return new_avgpool
-
-
-def tupleunpack_python(node, speedup):
-    # Note: tuple unpack should only exists at the
-    # the end of the model, and is no need to replace/propagate mask
-    return None
-
-
-def num2tensor_python(node, speedup):
-    return torch.nn.Identity()
-
-
-def exp_python(node, speedup):
-    return torch.exp
-
-
-def squeeze_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = None
-    if len(inputs) > 1:
-        dim = parse_constant(inputs[1], speedup)
-    new_squeeze = partial(torch.squeeze, dim=dim)
-    return new_squeeze
-
-def unsqueeze_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = parse_constant(inputs[1], speedup)
-    new_unsqueeze = partial(torch.unsqueeze, dim=dim)
-    return new_unsqueeze
-
-def constant_pad_nd_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    pad = translate_list(inputs[1], speedup)
-    value = parse_constant(inputs[2], speedup)
-    new_constant_pad_nd = partial(torch.nn.functional.pad, pad=pad, value=value)
-    return new_constant_pad_nd
+    new_sum = partial(torch.sum, dim=tuple(dim_list), keepdim=keep_dim)
+    return new_sum
 
 ##########################################################
 # Split Line
@@ -318,7 +102,6 @@ def constant_pad_nd_python(node, speedup):
 # single function, so we use torch.nn.Module to wrap the
 # the core function, and return the torch.nn.Module instead
 ##########################################################
-
 
 def slice_python(node, speedup):
     class SliceMoudle(torch.nn.Module):
@@ -351,89 +134,19 @@ def slice_python(node, speedup):
     slice_list.append(slice_obj)
     return SliceMoudle(tuple(slice_list))
 
-
-def select_python(node, speedup):
-    class SelectModule(torch.nn.Module):
-        def __init__(self, dim, index):
-            super(SelectModule, self).__init__()
-            self.dim = dim
-            self.index = index
-
-        def forward(self, x):
-            return x.select(self.dim, self.index)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = inputs[1].toIValue()
-    index = inputs[2].toIValue()
-    return SelectModule(dim, index)
-
-
-def size_python(node, speedup):
-    # return None
-    class SizeMoudle(torch.nn.Module):
-        def __init__(self, sizedim):
-            super(SizeMoudle, self).__init__()
-            self.sizedim = sizedim
-
-        def forward(self, x):
-            return torch.as_tensor([x.size(self.sizedim)], dtype=torch.long)
-            # return torch.tensor(x.size(self.sizedim))
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    size_dim = inputs[1].toIValue()
-    return SizeMoudle(size_dim)
-
-
 def toint_python(node, speedup):
     class ToIntModule(torch.nn.Module):
         def forward(self, x):
             return x.to(torch.int)
     return ToIntModule()
 
+def tupleunpack_python(node, speedup):
+    # Note: tuple unpack should only exists at the
+    # the end of the model, and is no need to replace/propagate mask
+    return None
 
-def view_python(node, speedup):
-    class ViewModule(torch.nn.Module):
-        def __init__(self, shape):
-            super(ViewModule, self).__init__()
-            self.shape = shape
-            logger.info('View Module output size: %s', str(self.shape))
-
-        def forward(self, *args):
-            return args[0].view(self.shape)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    shape = translate_list(inputs[1], speedup)
-    return ViewModule(shape)
-
-
-def reshape_python(node, speedup):
-    class ReshapeModule(torch.nn.Module):
-        def __init__(self, shape):
-            super(ReshapeModule, self).__init__()
-            self.shape = shape
-            logger.info('Reshape Module output size: %s', str(self.shape))
-
-        def forward(self, *args):
-            return args[0].reshape(self.shape)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    shape = translate_list(inputs[1], speedup)
-    return ReshapeModule(shape)
-
-
-def permute_python(node, speedup):
-    class PermuteModule(torch.nn.Module):
-        def __init__(self, dimlist):
-            super(PermuteModule, self).__init__()
-            self.dimlist = dimlist
-
-        def forward(self, x):
-            return x.permute(self.dimlist)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim_list = translate_list(inputs[1], speedup)
-    return PermuteModule(dim_list)
-
+def num2tensor_python(node, speedup):
+    return torch.nn.Identity()
 
 def getattr_python(node, speedup):
     """
@@ -462,169 +175,106 @@ def getattr_python(node, speedup):
     assert len(key_words) == 1
     return GetModule(key_words[0])
 
+class my_partial:
+    def __new__(cls, func, undetermined, args, keywords):
+        if not callable(func):
+            raise TypeError("the first argument must be callable")
 
-def upsample_bilinear2d_python(node, speedup):
-    class UpsampleModule(torch.nn.Module):
-        def __init__(self, size_list, scale_list):
-            super(UpsampleModule, self).__init__()
-            self.size_list = size_list
-            self.scale_list = scale_list
+        if hasattr(func, "func"):
+            args = func.args + args
+            keywords = {**func.keywords, **keywords}
+            func = func.func
 
-        def forward(self, *args):
-            """
-            The first input of args is the target tensor to upsample
-            , the following parameters is useless, because we already
-            get the size_list and the scale_list by parsing the cpp_nodes.
-            """
-            return torch.nn.functional.upsample_bilinear(args[0],
-                                                         size=self.size_list, scale_factor=self.scale_list)
+        self = super(my_partial, cls).__new__(cls)
+
+        self.func = func
+        self.undetermined = undetermined
+        self.args = args
+        self.keywords = keywords
+        return self
+
+    def __call__(self, /, *args):
+        assert len(args) == len(self.undetermined)
+        for i in range(0, len(args)):
+            p = self.undetermined[i]
+            v = args[i]
+            if not isstring(p):
+                self.args[p] = v
+            else:
+                self.keywords[p] = v
+        return self.func(*self.args, **self.keywords)
+
+def generate_aten_to_python(func, node, speedup):
     c_node = node.key_node
-    inputs = list(c_node.inputs())
-    size_list_node = inputs[1].node()
-    scale_list_node = inputs[3].node()
-    size_list = None
-    scale_list = None
+    schema = c_node.schema()
 
-    if size_list_node.kind() == 'prim::ListConstruct':
-        size_list = translate_list(inputs[1], speedup)
-    if scale_list_node.kind() == 'prim::ListConstruct':
-        scale_list = translate_list(inputs[3], speedup)
-    return UpsampleModule(size_list, scale_list)
+    #, , , *, xx=xx, xx) ==> num_before_star, keyword_list
+    #, , ) ==> num_before_star, keywords = {}
+    schema = schema[0:schema.rfind(') ->')] + ','
+    num_before_star = 0
+    keyword_list = list()
+    i = schema.find(',')
+    while i != -1:
+        if schema[i - 1] != '*':
+            num_before_star += 1
+            i = schema.find(',', i + 1)
+        else:
+            i += 1
+            j = schema.find(',', i)
+            while j != -1:
+                match = re.search("(\w+)=[^\s]+$", schema[i:j])
+                if not match:
+                    match = re.search("(\w+)$", schema[i:j])
+                keyword_list.append(match.group(1))
+                i = j + 1
+                j = schema.find(',', i)
+            break
+    args = list()
+    keywords = dict()
+    undetermined = list()
+    
+    for input in list(c_node.inputs()):
+        if input.node().kind() == 'prim::ListConstruct':
+            arg = translate_list(input, speedup)
+        elif input.node().kind() == 'prim::Constant':
+            arg = input.toIValue()
+        else:
+            assert 'aten::' in input.node().kind()
+            if len(args) < num_before_star:
+                undetermined.append(len(args))
+            else:
+                undetermined.append(keyword_list[num_before_star - len(args)])
+            arg = None
 
+        if len(args) < num_before_star:
+            args.append(arg)
+        else:
+            keywords[keyword_list[num_before_star - len(args)]] = arg
+    new_func = my_partial(func, undetermined, args, keywords)
+    return new_func
 
-def upsample_nearest2d_python(node, speedup):
-    class UpsampleModule(torch.nn.Module):
-        def __init__(self, size_list, scale_list):
-            super(UpsampleModule, self).__init__()
-            self.size_list = size_list
-            self.scale_list = scale_list
-
-        def forward(self, *args):
-            """
-            The first input of args is the target tensor to upsample
-            , the following parameters is useless, because we already
-            get the size_list and the scale_list by parsing the cpp_nodes.
-            """
-            return torch.nn.functional.upsample_nearest(args[0],
-                                                        size=self.size_list, scale_factor=self.scale_list)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    size_list_node = inputs[1].node()
-    scale_list_node = inputs[2].node()
-    size_list = None
-    scale_list = None
-
-    if size_list_node.kind() == 'prim::ListConstruct':
-        size_list = translate_list(inputs[1], speedup)
-    if scale_list_node.kind() == 'prim::ListConstruct':
-        scale_list = translate_list(inputs[2], speedup)
-    return UpsampleModule(size_list, scale_list)
-
-
-def typeas_python(node, speedup):
-    """
-    currently only support type_as float.
-    TODO: support more types in the type_as, need to figure out
-    how to get the scalar type from torch._C.TensorType.
-    """
-    class TypeasModule(torch.nn.Module):
-        def __init__(self, dtype=torch.float):
-            self.example = torch.zeros(1, dtype=dtype)
-
-        def forward(self, x):
-            return x.type_as(self.example)
-    return TypeasModule()
-
-
-def to_python(node, speedup):
-    # for the time being, only device parameters are supported
-    class ToModule(torch.nn.Module):
-        def __init__(self, device):
-            super(ToModule, self).__init__()
-
-        def forward(self, x):
-            return x.to(device)
-
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    device = inputs[3].toIValue()
-    return ToModule(device)
-
-
-def cat_python(node, speedup):
-    class CatModule(torch.nn.Module):
-        def __init__(self, cat_dim):
-            super(CatModule, self).__init__()
-            self.cat_dim = cat_dim
-
-        def forward(self, *args):
-            return torch.cat(args, dim=self.cat_dim)
-
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = inputs[1].toIValue()
-    return CatModule(dim)
-
-
-def expandas_python(node, speedup):
-    class ExpandasModule(torch.nn.Module):
-        def forward(self, x, y):
-            return x.expand_as(y).clone()
-    return ExpandasModule()
-
-
-trans_from_jit_to_python = {
-    'aten::add': add_python,
-    'aten::add_': add_python,
-    'aten::sub': sub_python,
-    'aten::sub_': sub_python,
-    'aten::mul': mul_python,
-    'aten::mul_': mul_python,
-    'aten::relu': relu_python,
-    'aten::relu_': relu_inplace_python,
-    'aten::sigmoid': sigmoid_python,
-    'aten::sigmoid_': sigmoid_python,
-    # tanh behaives like relu
-    'aten::tanh': relu_python,
-    'aten::tanh_': relu_python,
-    'aten::flatten': flatten_python,
-    'aten::mean': mean_python,
-    'aten::dropout': dropout_python,
-    'aten::slice': slice_python,
-    'aten::select': select_python,
-    'aten::size': size_python,
-    'aten::t': transpose_python,
-    'aten::transpose': transpose2_python,
-    'aten::Int': toint_python,
-    'aten::view': view_python,
-    'aten::reshape': reshape_python,
-    'aten::permute': permute_python,
-    'aten::matmul': matmul_python,
-    'aten::div': div_python,
-    'aten::floor_divide': floor_div_python,
-    'aten::softmax': softmax_python,
-    'aten::contiguous': contiguous_python,
-    'aten::gelu': gelu_python,
-    'aten::cat': cat_python,
-    'aten::avg_pool2d': avgpool2d_python,
-    'aten::max_pool2d': avgpool2d_python,
-    'aten::adaptive_avg_pool2d': adaptive_avgpool_python,
-    'aten::to': to_python,
-    'aten::type_as': typeas_python,
-    'aten::upsample_bilinear2d': upsample_bilinear2d_python,
-    'aten::upsample_nearest2d': upsample_nearest2d_python,
-    'aten::exp': exp_python,
-    'aten::squeeze': squeeze_python,
-    'aten::unsqueeze': unsqueeze_python,
-    'aten::constant_pad_nd': constant_pad_nd_python,
-    'aten::silu': silu_python,
-    'aten::expand_as': expandas_python,
-    'prim::TupleUnpack': tupleunpack_python,
-    'prim::ListUnpack': tupleunpack_python,
-    'prim::NumToTensor': num2tensor_python,
-    'prim::GetAttr': getattr_python
-}
-
+members = None
+def init_trans_dict():
+    global members
+    if not members:
+        members = {
+            'aten::slice': slice_python, # cannot find function or method 'slice' under torch._C
+            'prim::TupleUnpack': tupleunpack_python,
+            'prim::ListUnpack': tupleunpack_python,
+            'prim::NumToTensor': num2tensor_python,
+            'prim::GetAttr': getattr_python,
+        }
+        def init_add_functions(func_from):
+            global members
+            new_members = {"aten::" + attr : partial(generate_aten_to_python, getattr(func_from, attr)) for attr in dir(func_from) if attr not in members and callable(getattr(func_from, attr)) and not attr.startswith("__")}
+            members = {**members, **new_members}
+        
+        init_add_functions(torch._C._VariableFunctions)
+        init_add_functions(torch._C._nn)
+        init_add_functions(torch._C._TensorBase)
+        
+    return members
+    
 
 def jit_to_python_function(node, speedup):
     """
@@ -644,11 +294,12 @@ def jit_to_python_function(node, speedup):
         Return the translated function that used to inference the mask
         , if current op_type is not supported, then we return None.
     """
+    the_dict = init_trans_dict()
     logger.debug(
         'Translate C function %s into its python version', node.op_type)
-    if node.op_type not in trans_from_jit_to_python:
+    if node.op_type not in the_dict:
         logger.error(
             '%s is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~', node.op_type)
         # return None to skip the mask inference for this node
         return None
-    return trans_from_jit_to_python[node.op_type](node, speedup)
+    return the_dict[node.op_type](node, speedup)
