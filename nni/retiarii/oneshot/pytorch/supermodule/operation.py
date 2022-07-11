@@ -474,14 +474,15 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
         )
 
 class MixedLayerNorm(MixedOperation, nn.LayerNorm):
-    """ Mixed LayerNorm operation.
+    """
+    Mixed LayerNorm operation.
 
     Supported arguments are:
-    
-    - ``normalized_shape ``
+
+    - ``normalized_shape``
     - ``eps`` (only supported in path sampling)
-    
-    For path-sampling, prefix of ``weight`` and ``bias`` are sliced. 
+
+    For path-sampling, prefix of ``weight`` and ``bias`` are sliced.
     For weighted cases, the maximum ``normalized_shape`` is used directly.
 
     eps is required to be float.
@@ -509,7 +510,7 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
             return max(all_sizes)
 
     def forward_with_args(self,
-                          normalized_shape,
+                          normalized_shape: int_or_int_dict,
                           eps: float,
                           inputs: torch.Tensor) -> torch.Tensor:
 
@@ -524,7 +525,7 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
             normalized_shape = (normalized_shape, )
         if isinstance(self.normalized_shape, int):
             normalized_shape = (self.normalized_shape, )
-        
+
         # slice all the normalized shape
         indices = [slice(0, min(i, j)) for i, j in zip(normalized_shape, self.normalized_shape)]
 

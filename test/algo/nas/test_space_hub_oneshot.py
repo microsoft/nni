@@ -70,10 +70,6 @@ def _hub_factory(alias):
 
 
 def _strategy_factory(alias, space_type):
-    # Autoformer search space require specific hooks
-    if alias == 'random' and space_type == 'autoformer':
-        from nni.retiarii.hub.pytorch.autoformer import MixedAbsPosEmbed, MixedClsToken
-        return stg.RandomOneShot(mutation_hooks=[MixedAbsPosEmbed.mutate, MixedClsToken.mutate])
     # Some search space needs extra hooks
     extra_mutation_hooks = []
     nds_need_shape_alignment = '_smalldepth' in space_type
@@ -82,6 +78,11 @@ def _strategy_factory(alias, space_type):
             extra_mutation_hooks.append(NDSStagePathSampling.mutate)
         else:
             extra_mutation_hooks.append(NDSStageDifferentiable.mutate)
+    
+    # Autoformer search space require specific extra hooks
+    if space_type == 'autoformer':
+        from nni.retiarii.hub.pytorch.autoformer import MixedAbsPosEmbed, MixedClsToken
+        extra_mutation_hooks.extend([MixedAbsPosEmbed.mutate, MixedClsToken.mutate])
 
     if alias == 'darts':
         return stg.DARTS(mutation_hooks=extra_mutation_hooks)

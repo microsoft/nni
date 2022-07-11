@@ -76,13 +76,8 @@ class RelativePositionAttention(nn.Module):
         # head_dim is fixed 64 in official autoformer. set head_dim = None to use flex head dim.
         self.head_dim = head_dim or (embed_dim // num_heads)
         self.scale = qk_scale or head_dim ** -0.5
-        
-        # When head nums changed, the activate params position is important. 
-        # For example, when head nums increse from 2 to 3.
-        # If nn.Linear(embed_dim, (head_dim * num_heads) * 3) used, 
-        # the activate(■) weight position: ■■■■■■□□□□□□ -> ■■■■■■■■■□□□, which is not suitable.
-        # If three split nn.Linear(embed_dim, (head_dim * num_heads)) used,
-        # the activate(■) weight position: ■■□□■■□□■■□□ -> ■■■□■■■□■■■□.
+
+        # Please refer to MixedMultiheadAttention for details.
         self.q = nn.Linear(embed_dim, head_dim * num_heads, bias = qkv_bias)
         self.k = nn.Linear(embed_dim, head_dim * num_heads, bias = qkv_bias)
         self.v = nn.Linear(embed_dim, head_dim * num_heads, bias = qkv_bias)
@@ -96,12 +91,11 @@ class RelativePositionAttention(nn.Module):
             self.rel_pos_embed_v = RelativePosition2D(head_dim, rpe_length)
 
     def forward(self, x):
-        B, N, C = x.shape
+        B, N, _ = x.shape
         head_dim = self.head_dim
         # num_heads can not get from self.num_heads directly,
         # use -1 to compute implicitly.
         num_heads = -1
-        # [B, N, C] -> [B, N, heads, head_dim] -> [B, heads, N, head_dim]
         q = self.q(x).reshape(B, N, num_heads, head_dim).permute(0, 2, 1, 3)
         k = self.k(x).reshape(B, N, num_heads, head_dim).permute(0, 2, 1, 3)
         v = self.v(x).reshape(B, N, num_heads, head_dim).permute(0, 2, 1, 3)
@@ -119,7 +113,7 @@ class RelativePositionAttention(nn.Module):
         attn = self.attn_drop(attn)
 
         x = (attn @ v).transpose(1, 2).reshape(B, N, num_heads * head_dim)
-        
+
         if self.rpe:
             attn_1 = attn.permute(2, 0, 1, 3).reshape(N, B * num_heads, N)
             r_p_v = self.rel_pos_embed_v(N, N)
@@ -127,7 +121,7 @@ class RelativePositionAttention(nn.Module):
             # the relative position embedding of V (N, N, head_dim) get shape like (N, B*num_heads, head_dim). We reshape it to the
             # same size as x (B, num_heads, N, hidden_dim)
             x = x + (attn_1 @ r_p_v).transpose(1, 0).reshape(B, num_heads, N, head_dim).transpose(2, 1).reshape(B, N, num_heads * head_dim)
-        
+
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
@@ -139,7 +133,7 @@ class TransformerEncoderLayer(nn.Module):
     The pytorch build-in nn.TransformerEncoderLayer() does not support customed attention.
     """
     def __init__(
-        self, embed_dim, num_heads, mlp_ratio=4., 
+        self, embed_dim, num_heads, mlp_ratio=4.,
         qkv_bias=False, qk_scale=None, rpe=False,
         drop_rate=0., attn_drop=0., proj_drop=0., drop_path=0.,
         pre_norm=True, rpe_length=14, head_dim=64
@@ -167,7 +161,7 @@ class TransformerEncoderLayer(nn.Module):
         self.activation_fn = nn.GELU()
 
         self.fc1 = nn.Linear(
-            cast(int, embed_dim), 
+            cast(int, embed_dim),
             cast(int, nn.ValueChoice.to_int(embed_dim * mlp_ratio))
         )
         self.fc2 = nn.Linear(
@@ -196,7 +190,7 @@ class TransformerEncoderLayer(nn.Module):
         x = self.drop_path(x)
         x = residual + x
         x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
-        
+
         residual = x
         x = self.maybe_layer_norm(self.ffn_layer_norm, x, before=True)
         x = self.fc1(x)
@@ -213,13 +207,13 @@ class TransformerEncoderLayer(nn.Module):
 
 @basic_unit
 class ClsToken(nn.Module):
-    """ Concat class token with dim=embed_dim before patch embedding. 
+    """ Concat class token with dim=embed_dim before patch embedding.
     """
     def __init__(self, embed_dim: int):
         super().__init__()
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         trunc_normal_(self.cls_token, std=.02)
-    
+
     def forward(self, x):
         return torch.cat((self.cls_token.expand(x.shape[0], -1, -1), x), dim=1)
 
@@ -230,7 +224,7 @@ class MixedClsToken(MixedOperation, ClsToken):
     Supported arguments are:
 
     - ``embed_dim``
-    
+
     Prefix of cls_token will be sliced.
     """
     bound_type = ClsToken
@@ -239,7 +233,7 @@ class MixedClsToken(MixedOperation, ClsToken):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def forward_with_args(self, embed_dim, 
+    def forward_with_args(self, embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
         cls_token = self.cls_token[..., :embed_dim]
 
@@ -265,7 +259,7 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
     Supported arguments are:
 
     - ``embed_dim``
-    
+
     Prefix of pos_embed will be sliced.
     """
     bound_type = AbsPosEmbed
@@ -274,7 +268,7 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def forward_with_args(self,  embed_dim, 
+    def forward_with_args(self,  embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
         pos_embed = self.pos_embed[..., :embed_dim]
 
@@ -286,6 +280,7 @@ class AutoformerSpace(nn.Module):
     """
     The search space that is proposed in `Autoformer <https://arxiv.org/abs/2107.00651>`__.
     There are four searchable variables: depth, embedding dimension, heads number and MLP ratio.
+
     Parameters
     ----------
     search_embed_dim : list of int
@@ -382,11 +377,11 @@ class AutoformerSpace(nn.Module):
     ) -> nn.Module:
 
         init_kwargs = {'qkv_bias': True, 'drop_rate': 0.0, 'drop_path_rate': 0.1, 'global_pool': True, 'num_classes': 1000}
-        if name == 'autoformer-tiny': 
+        if name == 'autoformer-tiny':
             mlp_ratio = [3.5, 3.5, 3.0, 3.5, 3.0, 3.0, 4.0, 4.0, 3.5, 4.0, 3.5, 4.0, 3.5] + [3.0]
             num_head = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3] + [3]
             arch = {
-                'embed_dim': 192, 
+                'embed_dim': 192,
                 'depth': 13
             }
             for i in range(14):
@@ -403,7 +398,7 @@ class AutoformerSpace(nn.Module):
             mlp_ratio = [3.0, 3.5, 3.0, 3.5, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 3.5, 4.0] + [3.0]
             num_head = [6, 6, 5, 7, 5, 5, 5, 6, 6, 7, 7, 6, 7] + [5]
             arch = {
-                'embed_dim': 384, 
+                'embed_dim': 384,
                 'depth': 13
             }
             for i in range(14):
@@ -421,7 +416,7 @@ class AutoformerSpace(nn.Module):
             mlp_ratio = [3.5, 3.5, 4.0, 3.5, 4.0, 3.5, 3.5, 3.0, 4.0, 4.0, 3.0, 4.0, 3.0, 3.5] + [3.0, 3.0]
             num_head = [9, 9, 9, 9, 9, 10, 9, 9, 10, 9, 10, 9, 9, 10] + [8, 8]
             arch = {
-                'embed_dim': 576, 
+                'embed_dim': 576,
                 'depth': 14
             }
             for i in range(16):
@@ -455,7 +450,7 @@ class AutoformerSpace(nn.Module):
         x = self.pos_embed(x)
         x = self.blocks(x)
         x = self.norm(x)
-        
+
         if self.global_pool:
             x = torch.mean(x[:, 1:], dim=1)
         else:
