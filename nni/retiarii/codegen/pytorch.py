@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+__all__ = ['model_to_pytorch_script']
+
 import logging
 import re
 from typing import Dict, List, Tuple, Any, cast
@@ -13,8 +15,6 @@ from nni.common.device import Device, GPUDevice
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 
 _logger = logging.getLogger(__name__)
-
-__all__ = ['model_to_pytorch_script']
 
 
 def model_to_pytorch_script(model: Model, placement=None) -> str:

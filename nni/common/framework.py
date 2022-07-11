@@ -1,14 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+__all__ = ['set_default_framework', 'get_default_framework', 'shortcut_module', 'shortcut_framework']
+
 import importlib
 import os
 import sys
 from typing import Optional, cast
 
-from nni.typehint import Literal
-
-__all__ = ['set_default_framework', 'get_default_framework', 'shortcut_module', 'shortcut_framework']
+from typing_extensions import Literal
 
 framework_type = Literal['pytorch', 'tensorflow', 'mxnet', 'none']
 """Supported framework types."""
