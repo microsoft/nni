@@ -224,7 +224,8 @@ class RetiariiExperiment(Experiment):
                                     base_model_ir: Model,
                                     applied_mutators: List[Mutator],
                                     strategy: BaseStrategy) -> None:
-        ckp_path = os.path.join(os.path.expanduser(self.config.experiment_working_directory), self.id, 'checkpoint')
+        ckp_path = os.path.join(os.path.expanduser(self.config.experiment_working_directory),
+                                self.id, 'checkpoint')
         with open(os.path.join(ckp_path, 'nas_model'), 'w') as fp:
             dump(base_model_ir._dump(), fp, pickle_size_limit=int(os.getenv('PICKLE_SIZE_LIMIT', 64 * 1024)))
         with open(os.path.join(ckp_path, 'applied_mutators'), 'w') as fp:
@@ -233,7 +234,8 @@ class RetiariiExperiment(Experiment):
             dump(strategy, fp)
 
     def _load_experiment_checkpoint(self) -> Tuple[Model, List[Mutator], BaseStrategy]:
-        ckp_path = os.path.join(os.path.expanduser(self.config.experiment_working_directory), self.id, 'checkpoint')
+        ckp_path = os.path.join(os.path.expanduser(self.config.experiment_working_directory),
+                                self.id, 'checkpoint')
         with open(os.path.join(ckp_path, 'nas_model'), 'r') as fp:
             base_model_ir = load(fp=fp)
             base_model_ir = Model._load(base_model_ir)

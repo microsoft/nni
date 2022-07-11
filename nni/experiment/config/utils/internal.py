@@ -34,7 +34,9 @@ import nni.runtime.config
 from .public import is_missing
 
 if typing.TYPE_CHECKING:
+    from nni.retiarii.experiment.config.experiment_config import RetiariiExeConfig
     from ..base import ConfigBase
+    from ..experiment_config import ExperimentConfig
     from ..training_service import TrainingServiceConfig
 
 ## handle relative path ##
@@ -198,9 +200,7 @@ def get_ipv4_address() -> str:
     s.close()
     return addr
 
-def init_experiment_config(config_json) -> ConfigBase:
-    from ..experiment_config import ExperimentConfig
-    from nni.retiarii.experiment.config.experiment_config import RetiariiExeConfig
+def init_experiment_config(config_json) -> typing.Union[ExperimentConfig, RetiariiExeConfig]:
     if 'experimentType' in config_json:
         if config_json['experimentType'] == 'hpo':
             return ExperimentConfig(**config_json)
