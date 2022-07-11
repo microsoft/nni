@@ -67,12 +67,12 @@ def search(batch_size: int = 256, algo: Literal['ENAS', 'DARTS', 'Gumbel', 'Prox
 
     evaluator = Lightning(
         NasBench201TrainingModule(),
-        Trainer(gpus=1, max_epochs=1, profiler='advanced'),
+        Trainer(gpus=1, max_epochs=200),
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader
     )
 
-    strategy_ = getattr(strategy, algo)()
+    strategy_ = getattr(strategy, algo)(reward_metric_name='val_acc')
 
     config = RetiariiExeConfig(execution_engine='oneshot')
     experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy_)

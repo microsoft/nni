@@ -218,8 +218,9 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 if metric_name not in self.trainer.callback_metrics:
                     raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
                                    f'found multiple (or zero) metrics without default: {list(self.trainer.callback_metrics.keys())}. '
-                                   f'Try to use self.log to report metrics with the specified key ``{metric_name}`` in validation_step, '
-                                   'and remember to set on_step=True.')
+                                   f'Please try to set ``reward_metric_name`` to be one of the keys listed above. '
+                                   f'If it is not working use self.log to report metrics with the specified key ``{metric_name}`` '
+                                   'in validation_step, and remember to set on_step=True.')
                 metric = self.trainer.callback_metrics[metric_name]
             reward: float = metric.item()
 
