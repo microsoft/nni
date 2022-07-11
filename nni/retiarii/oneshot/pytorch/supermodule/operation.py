@@ -510,7 +510,7 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
             return max(all_sizes)
 
     def forward_with_args(self,
-                          normalized_shape: int_or_int_dict,
+                          normalized_shape,
                           eps: float,
                           inputs: torch.Tensor) -> torch.Tensor:
 

@@ -371,6 +371,10 @@ class AutoformerSpace(nn.Module):
         self.head = nn.Linear(cast(int, embed_dim), num_classes) if num_classes > 0 else nn.Identity()
 
     @classmethod
+    def get_extra_mutation_hooks(cls):
+        return [MixedAbsPosEmbed.mutate, MixedClsToken.mutate]
+
+    @classmethod
     def load_searched_model(
         cls, name: str,
         pretrained: bool = False, download: bool = False, progress: bool = True
