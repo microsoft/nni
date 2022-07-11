@@ -15,7 +15,7 @@ __all__ = [
     'fields', 'is_instance', 'validate_type', 'is_path_like',
     'guess_config_type', 'guess_list_config_type',
     'training_service_config_factory', 'load_training_service_config',
-    'get_ipv4_address', 'init_experiment_config'
+    'get_ipv4_address', 'init_experiment_config', 'get_experiment_class_using_config'
 ]
 
 import copy
@@ -214,3 +214,19 @@ def init_experiment_config(config_json) -> ConfigBase:
             return RetiariiExeConfig(**config_json)
         else:
             return ExperimentConfig(**config_json)
+
+def get_experiment_class_using_config(config_json):
+    from ...experiment import Experiment
+    from nni.retiarii.experiment.pytorch import RetiariiExperiment
+    if 'experimentType' in config_json:
+        if config_json['experimentType'] == 'hpo':
+            return Experiment
+        elif config_json['experimentType'] == 'nas':
+            return RetiariiExperiment
+        else:
+            raise KeyError(f'Unknown experiment_type: {config_json["experimentType"]}')
+    else:
+        if 'executionEngine' in config_json:
+            return RetiariiExperiment
+        else:
+            return Experiment

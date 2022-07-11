@@ -11,6 +11,7 @@ import yaml
 
 from nni.experiment import Experiment, RunMode
 from nni.experiment.config import ExperimentConfig, convert, utils
+from nni.retiarii.experiment.pytorch import RetiariiExperiment
 from nni.tools.annotation import expand_annotations, generate_search_space
 
 # used for v1-only legacy setup, remove them later
@@ -104,9 +105,13 @@ def resume_experiment(args):
         legacy_launcher.resume_experiment(args)
         exit()
 
-    exp = Experiment._resume(exp_id, exp_dir)
-    run_mode = RunMode.Foreground if foreground else RunMode.Detach
-    exp.start(port, debug, run_mode)
+    exp_class = utils.get_experiment_class_using_config(config_json)
+    if exp_class is RetiariiExperiment:
+        RetiariiExperiment.resume(exp_id, port, True, debug)
+    else:
+        exp = Experiment._resume(exp_id, exp_dir)
+        run_mode = RunMode.Foreground if foreground else RunMode.Detach
+        exp.start(port, debug, run_mode)
 
 def view_experiment(args):
     exp_id = args.id
@@ -118,5 +123,9 @@ def view_experiment(args):
         legacy_launcher.view_experiment(args)
         exit()
 
-    exp = Experiment._view(exp_id, exp_dir)
-    exp.start(port, run_mode=RunMode.Detach)
+    exp_class = utils.get_experiment_class_using_config(config_json)
+    if exp_class is RetiariiExperiment:
+        RetiariiExperiment.view(exp_id, port, non_blocking=True)
+    else:
+        exp = Experiment._view(exp_id, exp_dir)
+        exp.start(port, run_mode=RunMode.Detach)
