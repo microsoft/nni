@@ -4,7 +4,6 @@
 import re
 import logging
 from functools import partial
-from sre_compile import isstring
 import torch
 
 
@@ -198,7 +197,7 @@ class my_partial:
         for i in range(0, len(args)):
             p = self.undetermined[i]
             v = args[i]
-            if not isstring(p):
+            if type(p) is int:
                 self.args[p] = v
             else:
                 self.keywords[p] = v
@@ -239,7 +238,7 @@ def generate_aten_to_python(func, node, speedup):
         elif input.node().kind() == 'prim::Constant':
             arg = input.toIValue()
         else:
-            assert 'aten::' in input.node().kind()
+            assert 'aten::' in input.node().kind() or 'prim::' in input.node().kind()
             if len(args) < num_before_star:
                 undetermined.append(len(args))
             else:
