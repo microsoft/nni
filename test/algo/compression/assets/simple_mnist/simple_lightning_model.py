@@ -41,6 +41,7 @@ class SimpleLightningModel(pl.LightningModule):
         acc = accuracy(preds, y)
 
         if stage:
+            self.log(f"default", loss, prog_bar=False)
             self.log(f"{stage}_loss", loss, prog_bar=True)
             self.log(f"{stage}_acc", acc, prog_bar=True)
 

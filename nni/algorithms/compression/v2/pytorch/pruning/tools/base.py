@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from pathlib import Path
 import types
-from typing import List, Dict, Tuple, Optional, Callable, Union
+from typing import List, Dict, Literal, Tuple, Optional, Callable, Union
 
 import json_tricks
 import torch
@@ -361,8 +361,20 @@ class SparsityAllocator:
             mask = (scaler.shrink(mask) != 0).type_as(mask)
         return mask
 
-    def _continuous_mask(self, new_masks: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+    def _mask_metric(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         # Set the already masked part in the metric to the minimum value.
+        target_name = 'weight'
+        for module_name, targets_metric in metrics.items():
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            old_target_mask: Tensor = getattr(wrapper, f'{target_name}_mask')
+            shrinked_target_mask = self._shrink_mask(module_name, target_name, old_target_mask)
+            # make sure the masked position has the minimum metric
+            min_value = targets_metric[target_name].min() - 1
+            targets_metric[target_name] = torch.where(shrinked_target_mask != 0, targets_metric[target_name], min_value)
+        return metrics
+
+    def _continuous_mask(self, new_masks: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+        # Set the already masked part to zero in the new_masks.
         target_name = 'weight'
         for module_name, target_mask in new_masks.items():
             wrapper = self.pruner.get_modules_wrapper()[module_name]
@@ -427,6 +439,8 @@ class SparsityAllocator:
         Dict[str, Dict[str, Tensor]]
             The masks format is {module_name: {target_name: mask}}.
         """
+        if self.continuous_mask:
+            metrics = self._mask_metric(metrics)
         masks = self.common_target_masks_generation(metrics)
         masks = self.special_target_masks_generation(masks)
         if self.continuous_mask:
@@ -451,11 +465,22 @@ class TaskGenerator:
         The log directory use to saving the task generator log.
     keep_intermediate_result
         If keeping the intermediate result, including intermediate model and masks during each iteration.
+    best_result_mode
+        The way to decide which one is the best result. Three modes are supported.
+        If the task results don't contain scores (task_result.score is None), it will fall back to ``latest``.
+
+        1. latest: The newest received result is the best result.
+        2. maximize_score: The one with largest task result score is the best result.
+        3. minimize_score: The one with smallest task result score is the best result.
     """
+
     def __init__(self, origin_model: Optional[Module], origin_masks: Optional[Dict[str, Dict[str, Tensor]]] = {},
-                 origin_config_list: Optional[List[Dict]] = [], log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False):
+                 origin_config_list: Optional[List[Dict]] = [], log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False,
+                 best_result_mode: Literal['latest', 'maximize_score', 'minimize_score'] = 'maximize_score'):
         self._log_dir = log_dir
         self._keep_intermediate_result = keep_intermediate_result
+        assert best_result_mode in ['latest', 'maximize_score', 'minimize_score'], f'Unsupported best_result_mode value: {best_result_mode}'
+        self._best_result_mode = best_result_mode
 
         if origin_model is not None and origin_config_list is not None and origin_masks is not None:
             self.reset(origin_model, origin_config_list, origin_masks)
@@ -498,13 +523,24 @@ class TaskGenerator:
             json_tricks.dump(config_list, f, indent=4)
 
     def update_best_result(self, task_result: TaskResult):
-        score = task_result.score
-        task_id = task_result.task_id
-        task = self._tasks[task_id]
-        task.score = score
-        if self._best_score is None or (score is not None and score > self._best_score):
-            self._best_score = score
-            self._best_task_id = task_id
+        save_as_best_result = False
+        task = self._tasks[task_result.task_id]
+        task.score = task_result.score
+
+        if self._best_result_mode == 'latest':
+            self._best_task_id, save_as_best_result = task_result.task_id, True
+
+        if self._best_result_mode == 'maximize_score':
+            if self._best_score is None or (task.score is not None and task.score > self._best_score):
+                self._best_score = task.score
+                self._best_task_id, save_as_best_result = task_result.task_id, True
+
+        if self._best_result_mode == 'minimize_score':
+            if self._best_score is None or (task.score is not None and task.score < self._best_score):
+                self._best_score = task.score
+                self._best_task_id, save_as_best_result = task_result.task_id, True
+
+        if save_as_best_result:
             with Path(task.config_list_path).open('r') as fr:
                 best_config_list = json_tricks.load(fr)
             self._save_data('best_result', task_result.compact_model, task_result.compact_model_masks, best_config_list)

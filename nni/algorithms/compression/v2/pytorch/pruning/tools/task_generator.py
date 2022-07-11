@@ -4,7 +4,7 @@
 from copy import deepcopy
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Literal
 import json_tricks
 
 import numpy as np
@@ -51,7 +51,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
         self.total_iteration = total_iteration
         self.skip_first_iteration = skip_first_iteration
         super().__init__(origin_model, origin_config_list=origin_config_list, origin_masks=origin_masks,
-                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result, best_result_mode='latest')
 
     def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
         self.current_iteration = 1 if self.skip_first_iteration else 0
@@ -188,7 +188,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         self.perturbation_magnitude = perturbation_magnitude
 
         super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
-                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result, best_result_mode='maximize_score')
 
     def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
         self.current_temperature = self.start_temperature

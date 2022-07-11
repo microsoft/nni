@@ -156,7 +156,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
 # TODO: This allocator will trace the model, means the model will be inference during initialization,
 # sometime we may not aware of this inference and it may lead to some error.
-class DependencyAwareAllocator(NormalSparsityAllocator):
+class DependencyAwareAllocator(SparsityAllocator):
     """
     An specific allocator for Conv2d & Linear module with dependency-aware.
     It will generate a public mask for the modules that have dependencies,
@@ -193,6 +193,8 @@ class DependencyAwareAllocator(NormalSparsityAllocator):
         return fused_metrics
 
     def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+        # placeholder, here we need more discussion about dependence sparsity, Plan A or Plan B.
+        masks = {}
         # generate public part for modules that have dependencies
         for module_names in self.channel_dependency:
             sub_metrics = {module_name: metrics[module_name] for module_name in module_names if module_name in metrics}
@@ -221,8 +223,29 @@ class DependencyAwareAllocator(NormalSparsityAllocator):
                 # change the metric value corresponding to the public mask part to the minimum value
                 for module_name, targets_metric in sub_metrics.items():
                     if target_name in targets_metric:
-                        # - 1 ensure the denpendency metric is the minimum, and will be masked first.
-                        min_value = targets_metric[target_name].min() - 1
-                        metrics[module_name][target_name] = torch.where(dependency_mask!=0, targets_metric[target_name], min_value)
+                        # Following is Plan A, generate the dependency mask first, and then fill in the sparsity, the final mask is group unbalanced.
+                        # # - 1 ensure the denpendency metric is the minimum, and will be masked first.
+                        # min_value = targets_metric[target_name].min() - 1
+                        # metrics[module_name][target_name] = torch.where(dependency_mask!=0, targets_metric[target_name], min_value)
 
-        return super().common_target_masks_generation(metrics)
+                        # Following is Plan B, just generate the dependency mask, the final mask is group balanced.
+                        masks.setdefault(module_name, {})
+                        masks[module_name][target_name] = self._expand_mask(module_name, target_name, dependency_mask)
+
+        # generate masks for layers without dependencies
+        for module_name, targets_metric in metrics.items():
+            masks.setdefault(module_name, {})
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                if target_name in masks[module_name]:
+                    continue
+                sparsity_rate = wrapper.config['total_sparsity']
+                prune_num = int(sparsity_rate * target_metric.numel())
+                if prune_num != 0:
+                    threshold = torch.topk(target_metric.reshape(-1), prune_num, largest=False)[0].max()
+                    shrinked_mask = torch.gt(target_metric, threshold).type_as(target_metric)
+                else:
+                    # target_metric should have the same size as shrinked_mask
+                    shrinked_mask = torch.ones_like(target_metric)
+                masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
+        return masks

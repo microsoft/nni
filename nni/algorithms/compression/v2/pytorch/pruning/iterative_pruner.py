@@ -336,9 +336,9 @@ class LotteryTicketPruner(IterativePruner):
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
                  *args, **kwargs):
         new_api = ['evaluator', 'speedup', 'reset_weight', 'pruning_params']
-        new_init_kwargs = {'evaluator': None, 'speedup': False, 'pruning_params': {}}
+        new_init_kwargs = {'evaluator': None, 'speedup': False, 'reset_weight': True, 'pruning_params': {}}
         old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'reset_weight', 'pruning_params']
-        old_init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
+        old_init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'reset_weight': True, 'pruning_params': {}}
         init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
 
         speedup = init_kwargs['speedup']

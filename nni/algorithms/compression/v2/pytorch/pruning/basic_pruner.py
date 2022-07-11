@@ -6,7 +6,7 @@ from __future__ import annotations
 from copy import deepcopy
 import functools
 import logging
-from typing import List, Dict, Tuple, Callable, Optional, Union, overload
+from typing import List, Dict, Tuple, Callable, Optional, overload
 
 from schema import And, Or, Optional as SchemaOptional, SchemaError
 import torch
