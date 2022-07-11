@@ -166,9 +166,10 @@ class AutoCompressPruner(IterativePruner):
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
                  *args, **kwargs):
         new_api = ['evaluator', 'speedup']
+        new_init_kwargs = {'evaluator': None, 'speedup': False}
         old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator']
-        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False}
-        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+        old_init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False}
+        init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
 
         speedup = init_kwargs['speedup']
 

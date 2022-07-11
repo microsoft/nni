@@ -68,6 +68,11 @@ def training_model(model: Module, optimizer: Optimizer, criterion: Callable, sch
             scheduler.step()
 
 
+def finetuning_model(model: Module):
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    training_model(model, optimizer, F.nll_loss)
+
+
 def evaluating_model(model: Module, device: torch.device = device):
     model.eval()
 

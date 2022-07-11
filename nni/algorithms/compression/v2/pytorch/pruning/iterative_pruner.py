@@ -139,9 +139,10 @@ class LinearPruner(IterativePruner):
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
                  *args, **kwargs):
         new_api = ['evaluator', 'speedup', 'pruning_params']
+        new_init_kwargs = {'evaluator': None, 'speedup': False, 'pruning_params': {}}
         old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'pruning_params']
-        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
-        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+        old_init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
+        init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
 
         speedup = init_kwargs['speedup']
         pruning_params = init_kwargs['pruning_params']
@@ -159,7 +160,7 @@ class LinearPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=False)  # type: ignore
+                             evaluator=self._evaluator, reset_weight=False)  # type: ignore
 
 
 class AGPPruner(IterativePruner):
@@ -229,9 +230,10 @@ class AGPPruner(IterativePruner):
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
                  *args, **kwargs):
         new_api = ['evaluator', 'speedup', 'pruning_params']
+        new_init_kwargs = {'evaluator': None, 'speedup': False, 'pruning_params': {}}
         old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'pruning_params']
-        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
-        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+        old_init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
+        init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
 
         speedup = init_kwargs['speedup']
         pruning_params = init_kwargs['pruning_params']
@@ -249,7 +251,7 @@ class AGPPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=False)  # type: ignore
+                             evaluator=self._evaluator, reset_weight=False)  # type: ignore
 
 
 class LotteryTicketPruner(IterativePruner):
@@ -334,9 +336,10 @@ class LotteryTicketPruner(IterativePruner):
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
                  *args, **kwargs):
         new_api = ['evaluator', 'speedup', 'reset_weight', 'pruning_params']
+        new_init_kwargs = {'evaluator': None, 'speedup': False, 'pruning_params': {}}
         old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'reset_weight', 'pruning_params']
-        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
-        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+        old_init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'pruning_params': {}}
+        init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
 
         speedup = init_kwargs['speedup']
         reset_weight = init_kwargs['reset_weight']
@@ -355,7 +358,7 @@ class LotteryTicketPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=reset_weight)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=reset_weight)  # type: ignore
+                             evaluator=self._evaluator, reset_weight=reset_weight)  # type: ignore
 
 
 class SimulatedAnnealingPruner(IterativePruner):
@@ -435,12 +438,15 @@ class SimulatedAnnealingPruner(IterativePruner):
     def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
         new_api = ['evaluator', 'start_temperature', 'stop_temperature', 'cool_down_rate', 'perturbation_magnitude', 'pruning_algorithm',
                    'pruning_params', 'log_dir', 'keep_intermediate_result', 'speedup']
+        new_init_kwargs = {'start_temperature': 100, 'stop_temperature': 20, 'cool_down_rate': 0.9, 'perturbation_magnitude': 0.35,
+                           'pruning_algorithm': 'level', 'pruning_params': {}, 'log_dir': '.', 'keep_intermediate_result': False,
+                           'speedup': False}
         old_api = ['evaluator', 'start_temperature', 'stop_temperature', 'cool_down_rate', 'perturbation_magnitude', 'pruning_algorithm',
                    'pruning_params', 'log_dir', 'keep_intermediate_result', 'finetuner', 'speedup', 'dummy_input']
-        init_kwargs = {'start_temperature': 100, 'stop_temperature': 20, 'cool_down_rate': 0.9, 'perturbation_magnitude': 0.35,
-                       'pruning_algorithm': 'level', 'pruning_params': {}, 'log_dir': '.', 'keep_intermediate_result': False,
-                       'finetuner': None, 'speedup': False, 'dummy_input': None}
-        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+        old_init_kwargs = {'start_temperature': 100, 'stop_temperature': 20, 'cool_down_rate': 0.9, 'perturbation_magnitude': 0.35,
+                           'pruning_algorithm': 'level', 'pruning_params': {}, 'log_dir': '.', 'keep_intermediate_result': False,
+                           'finetuner': None, 'speedup': False, 'dummy_input': None}
+        init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
 
         start_temperature = init_kwargs['start_temperature']
         stop_temperature = init_kwargs['stop_temperature']
@@ -468,4 +474,4 @@ class SimulatedAnnealingPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=False)  # type: ignore
+                             evaluator=self._evaluator, reset_weight=False)  # type: ignore

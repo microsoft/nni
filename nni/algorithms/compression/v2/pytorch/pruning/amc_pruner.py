@@ -253,11 +253,13 @@ class AMCPruner(IterativePruner):
 
     def __init__(self, total_episode: int, model: Module, config_list: List[Dict], *args, **kwargs):
         new_api = ['evaluator', 'pruning_algorithm', 'log_dir', 'keep_intermediate_result', 'ddpg_params', 'pruning_params', 'target']
+        new_init_kwargs = {'pruning_algorithm': 'l1', 'log_dir': '.', 'keep_intermediate_result': False,
+                           'ddpg_params': {}, 'pruning_params': {}, 'target': 'flops'}
         old_api = ['dummy_input', 'evaluator', 'pruning_algorithm', 'log_dir', 'keep_intermediate_result', 'finetuner', 'ddpg_params',
                    'pruning_params', 'target']
-        init_kwargs = {'pruning_algorithm': 'l1', 'log_dir': '.', 'keep_intermediate_result': False, 'finetuner': None,
-                       'ddpg_params': {}, 'pruning_params': {}, 'target': 'flops'}
-        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+        old_init_kwargs = {'pruning_algorithm': 'l1', 'log_dir': '.', 'keep_intermediate_result': False, 'finetuner': None,
+                           'ddpg_params': {}, 'pruning_params': {}, 'target': 'flops'}
+        init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
 
         pruning_algorithm = init_kwargs['pruning_algorithm']
         log_dir = init_kwargs['log_dir']

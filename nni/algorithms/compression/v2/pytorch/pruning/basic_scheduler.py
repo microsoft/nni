@@ -29,18 +29,18 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
     _evaluator: _LEGACY_EVALUATOR
     dummy_input: Any
 
-    def _init_evaluator(self, model: Module, new_api: List[str], old_api: List[str], init_kwargs: Dict, args: Tuple,
+    def _init_evaluator(self, model: Module, new_api: List[str], new_init_kwargs: Dict, old_api: List[str], old_init_kwargs: Dict, args: Tuple,
                         kwargs: Dict) -> Dict:
         # for fake __init__ overload, parsing args and kwargs, initializing evaluator or [finetuner, evaluator, dummy_input],
         # return the remaining arguments.
         if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
-            init_kwargs = self._parse_args(new_api, args, kwargs, init_kwargs)
+            init_kwargs = self._parse_args(new_api, args, kwargs, new_init_kwargs)
             self.evaluator: LightningEvaluator | TorchEvaluator = init_kwargs.pop('evaluator')
             if not self.evaluator._initialization_complete:
                 self.evaluator._init_optimizer_helpers(model)  # type: ignore
             self.using_evaluator = True
         else:
-            init_kwargs = self._parse_args(old_api, args, kwargs, init_kwargs)
+            init_kwargs = self._parse_args(old_api, args, kwargs, old_init_kwargs)
             self.finetuner: _LEGACY_FINETUNER = init_kwargs.pop('finetuner')
             self._evaluator: _LEGACY_EVALUATOR = init_kwargs.pop('evaluator')
             self.dummy_input = init_kwargs.pop('dummy_input')
@@ -99,11 +99,10 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
     def __init__(self, pruner: Pruner, task_generator: TaskGenerator, *args, **kwargs) -> None:
         # TODO: remove in nni v3.0. Fake overload.
         new_api = ['evaluator', 'speedup', 'reset_weight']
+        new_init_kwargs = {'evaluator': None, 'speedup': False, 'reset_weight': False}
         old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'reset_weight']
-        init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'reset_weight': False}
-        pruner._unwrap_model()
-        init_kwargs = self._init_evaluator(None, new_api, old_api, init_kwargs, args, kwargs)  # type: ignore
-        pruner._wrap_model()
+        old_init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'reset_weight': False}
+        init_kwargs = self._init_evaluator(None, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)  # type: ignore
 
         self.pruner = pruner
         self.task_generator = task_generator
@@ -124,6 +123,11 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         generate masks -> speedup -> finetune -> evaluate
         """
         model, masks, config_list = task.load_data()
+
+        # bind model if using evaluator
+        if self.using_evaluator:
+            self.evaluator.bind_model(model)
+
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
 
@@ -146,7 +150,7 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
 
         # finetune
         if self.using_evaluator:
-            if self.evaluator is not None and task.finetune:
+            if task.finetune:
                 if self.speedup:
                     self.evaluator.finetune()
                 else:
@@ -164,7 +168,7 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
 
         # evaluate
         if self.using_evaluator:
-            if self.evaluator is not None and task.evaluate:
+            if task.evaluate:
                 # TODO: support saving customized score
                 if self.speedup:
                     score = self.evaluator.evaluate()
@@ -176,18 +180,22 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
             else:
                 score = None
         else:
-            if self.evaluator is not None and task.evaluate:
+            if self._evaluator is not None and task.evaluate:
                 if self.speedup:
-                    score = self.evaluator(compact_model)  # type: ignore
+                    score = self._evaluator(compact_model)  # type: ignore
                 else:
                     self.pruner._wrap_model()
-                    score = self.evaluator(compact_model)  # type: ignore
+                    score = self._evaluator(compact_model)  # type: ignore
                     self.pruner._unwrap_model()
             else:
                 score = None
 
         # clear model references
         self.pruner.clear_model_references()
+
+        # unbind model if using evaluator
+        if self.using_evaluator:
+            self.evaluator.unbind_model()
 
         return TaskResult(task.task_id, compact_model, compact_model_masks, pruner_generated_masks, score)
 
@@ -196,13 +204,18 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         finetune -> generate masks -> reset weight -> speedup -> evaluate
         """
         model, masks, config_list = task.load_data()
+
+        # bind model if using evaluator
+        if self.using_evaluator:
+            self.evaluator.bind_model(model)
+
         checkpoint = deepcopy(model.state_dict())
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
 
         # finetune
         if self.using_evaluator:
-            if self.evaluator is not None and task.finetune:
+            if task.finetune:
                 self.evaluator.finetune()
         else:
             if self.finetuner is not None and task.finetune:
@@ -230,7 +243,7 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
 
         # evaluate
         if self.using_evaluator:
-            if self.evaluator is not None and task.evaluate:
+            if task.evaluate:
                 # TODO: support saving customized score
                 if self.speedup:
                     score = self.evaluator.evaluate()
@@ -242,18 +255,22 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
             else:
                 score = None
         else:
-            if self.evaluator is not None and task.evaluate:
+            if self._evaluator is not None and task.evaluate:
                 if self.speedup:
-                    score = self.evaluator(compact_model)  # type: ignore
+                    score = self._evaluator(compact_model)  # type: ignore
                 else:
                     self.pruner._wrap_model()
-                    score = self.evaluator(compact_model)  # type: ignore
+                    score = self._evaluator(compact_model)  # type: ignore
                     self.pruner._unwrap_model()
             else:
                 score = None
 
         # clear model references
         self.pruner.clear_model_references()
+
+        # unbind model if using evaluator
+        if self.using_evaluator:
+            self.evaluator.unbind_model()
 
         return TaskResult(task.task_id, compact_model, compact_model_masks, pruner_generated_masks, score)
 
