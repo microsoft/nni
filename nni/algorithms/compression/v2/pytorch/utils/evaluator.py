@@ -468,19 +468,17 @@ class LightningEvaluator(Evaluator):
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
         assert isinstance(self.model, pl.LightningModule)
         # reset trainer
-        self.trainer: pl.Trainer = self.trainer.trace_copy().get()  # type: ignore
+        trainer: pl.Trainer = self.trainer.trace_copy().get()  # type: ignore
         # NOTE: lightning may dry run some steps at first for sanity check in Trainer.fit() by default,
         # If we want to record some information in the forward hook, we may get some additional information,
         # so using Trainer.num_sanity_val_steps = 0 disable sanity check.
-        self.trainer.num_sanity_val_steps = 0
+        trainer.num_sanity_val_steps = 0
 
-        ori_max_steps, ori_max_epochs = self.trainer.fit_loop.max_steps, self.trainer.fit_loop.max_epochs
         if max_steps:
-            self.trainer.fit_loop.max_steps = max_steps
+            trainer.fit_loop.max_steps = max_steps
         if max_epochs:
-            self.trainer.fit_loop.max_epochs = max_epochs
-        self.trainer.fit(self.model, self.data_module)
-        self.trainer.fit_loop.max_steps, self.trainer.fit_loop.max_epochs = ori_max_steps, ori_max_epochs
+            trainer.fit_loop.max_epochs = max_epochs
+        trainer.fit(self.model, self.data_module)
 
     def finetune(self):
         self.train()
@@ -494,8 +492,8 @@ class LightningEvaluator(Evaluator):
         """
         assert isinstance(self.model, pl.LightningModule)
         # reset trainer
-        self.trainer = self.trainer.trace_copy().get()  # type: ignore
-        original_results = self.trainer.test(self.model, self.data_module)
+        trainer: pl.Trainer = self.trainer.trace_copy().get()  # type: ignore
+        original_results = trainer.test(self.model, self.data_module)
         nni_metrics_list = [metrics['default'] for metrics in original_results if 'default' in metrics]
         if nni_metrics_list:
             nni_metric = sum(nni_metrics_list) / len(nni_metrics_list)
