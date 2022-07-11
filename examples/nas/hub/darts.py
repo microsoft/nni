@@ -72,7 +72,7 @@ class AuxLossClassificationModule(ClassificationModule):
         self.model.set_drop_path_prob(self.current_epoch / self.max_epochs)
 
 
-def cutout(self, img, length: int = 16):
+def cutout(img, length: int = 16):
     h, w = img.size(1), img.size(2)
     mask = np.ones((h, w), np.float32)
     y = np.random.randint(h)
