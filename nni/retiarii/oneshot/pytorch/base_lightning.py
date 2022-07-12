@@ -295,6 +295,29 @@ class BaseOneShotLightningModule(pl.LightningModule):
             result.update(module.export(memo=result))
         return result
 
+    def export_probs(self) -> dict[str, Any]:
+        """
+        Export the probability of every choice in the search space got chosen.
+
+        .. note:: If such method of some modules is not implemented, they will be simply ignored.
+
+        Returns
+        -------
+        dict
+            In most cases, keys are names of ``nas_modules`` suffixed with ``/`` and choice name.
+            Values are the probability / logits depending on the implementation.
+        """
+        result = {}
+        for module in self.nas_modules:
+            try:
+                result.update(module.export_probs(memo=result))
+            except NotImplementedError:
+                warnings.warn(
+                    'Some super-modules you have used did not implement export_probs. You might find some logs are missing.',
+                    UserWarning
+                )
+        return result
+
     def forward(self, x):
         return self.model(x)
 

@@ -104,6 +104,13 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
             return {}  # nothing new to export
         return {self.label: self.op_names[int(torch.argmax(self._arch_alpha).item())]}
 
+    def export_probs(self, memo):
+        if any(k.startswith(self.label + '/') for k in memo):
+            return {}  # nothing new
+        weights = self._softmax(self._arch_alpha).cpu().tolist()
+        ret = {f'{self.label}/{name}': value for name, value in zip(self.op_names, weights)}
+        return ret
+
     def search_space_spec(self):
         return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ),
                                           True, size=len(self.op_names))}
@@ -207,6 +214,13 @@ class DifferentiableMixedInput(BaseSuperNetModule):
         if len(chosen) == 1:
             chosen = chosen[0]
         return {self.label: chosen}
+
+    def export_probs(self, memo):
+        if any(k.startswith(self.label + '/') for k in memo):
+            return {}  # nothing new
+        weights = self._softmax(self._arch_alpha).cpu().tolist()
+        ret = {f'{self.label}/{index}': value for index, value in enumerate(weights)}
+        return ret
 
     def search_space_spec(self):
         return {
@@ -321,6 +335,15 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
             result[name] = spec.values[chosen_index]
         return result
 
+    def export_probs(self, operation: MixedOperation, memo: dict[str, Any]):
+        """Export the weight for every leaf value choice."""
+        for name, spec in operation.search_space_spec().items():
+            if any(k.startswith(name + '/') for k in memo):
+                continue
+            weights = operation._softmax(operation._arch_alpha[name]).cpu().tolist()
+            ret = {f'{name}/{value}': weight for value, weight in zip(spec.values, weights)}
+            return ret
+
     def forward_argument(self, operation: MixedOperation, name: str) -> dict[Any, float] | Any:
         if name in operation.mutable_arguments:
             weights: dict[str, torch.Tensor] = {
@@ -375,6 +398,16 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
             chosen_index = int(torch.argmax(self._arch_alpha[name]).item())
             result[name] = spec.values[chosen_index]
         return result
+
+    def export_probs(self, memo):
+        """Export the weight for every leaf value choice."""
+        ret = {}
+        for name, spec in self.search_space_spec().items():
+            if any(k.startswith(name + '/') for k in memo):
+                continue
+            weights = self._softmax(self._arch_alpha[name]).cpu().tolist()
+            ret.update({f'{name}/{value}': weight for value, weight in zip(spec.values, weights)})
+        return ret
 
     def search_space_spec(self):
         return self._space_spec
@@ -464,6 +497,16 @@ class DifferentiableMixedCell(PathSamplingCell):
     def resample(self, memo):
         """Differentiable doesn't need to resample."""
         return {}
+
+    def export_probs(self, memo):
+        """When export probability, we follow the structure in arch alpha."""
+        ret = {}
+        for name, parameter in self._arch_alpha.items():
+            if any(k.startswith(name + '/') for k in memo):
+                continue
+            weights = self._softmax(parameter).cpu().tolist()
+            ret.update({f'{name}/{value}': weight for value, weight in zip(self.op_names, weights)})
+        return ret
 
     def export(self, memo):
         """Tricky export.

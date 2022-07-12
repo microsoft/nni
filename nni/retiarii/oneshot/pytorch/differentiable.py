@@ -128,6 +128,8 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
         self.call_lr_schedulers(batch_idx)
 
+        self.log_dict(self.export_probs())
+
         return loss_and_metrics
 
     def finalize_grad(self):
