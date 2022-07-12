@@ -157,7 +157,7 @@ def train(arch, batch_size: int = 96, **kwargs):
     valid_data = get_cifar10_dataset(train=False)
 
     evaluator = Lightning(
-        AuxLossClassificationModule(0.025, 3e-4, 0., 600),
+        AuxLossClassificationModule(0.025, 3e-4, 0.4, 600),
         Trainer(gpus=1, gradient_clip_val=5., max_epochs=600),
         train_dataloaders=DataLoader(train_data, batch_size=batch_size, pin_memory=True, num_workers=6),
         val_dataloaders=DataLoader(valid_data, batch_size=batch_size, pin_memory=True, num_workers=6)

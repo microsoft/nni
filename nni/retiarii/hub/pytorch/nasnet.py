@@ -593,13 +593,12 @@ class NDS(nn.Module):
         for stage_idx, stage in enumerate(self.stages):
             if stage_idx == 2 and self.auxiliary_loss and self.training:
                 assert isinstance(stage, nn.Sequential), 'Auxiliary loss is only supported for fixed architecture.'
-                for block_idx, block in enumerate(stage([s0, s1])):
+                for block_idx, block in enumerate(stage):
                     # auxiliary loss is attached to the first cell of the last stage.
                     s0, s1 = block([s0, s1])
                     if block_idx == 0:
                         logits_aux = self.auxiliary_head(s1)
             else:
-                print(stage_idx, [s0.shape, s1.shape])
                 s0, s1 = stage([s0, s1])
 
         out = self.global_pooling(s1)
