@@ -235,20 +235,6 @@ class AuxiliaryHead(nn.Module):
         return x
 
 
-class SequentialBreakdown(nn.Sequential):
-    """Return all layers of a sequential."""
-
-    def __init__(self, sequential: nn.Sequential):
-        super().__init__(OrderedDict(sequential.named_children()))
-
-    def forward(self, inputs):
-        result = []
-        for module in self:
-            inputs = module(inputs)
-            result.append(inputs)
-        return result
-
-
 class CellPreprocessor(nn.Module):
     """
     Aligning the shape of predecessors.
@@ -592,7 +578,6 @@ class NDS(nn.Module):
 
         if auxiliary_loss:
             assert isinstance(self.stages[2], nn.Sequential), 'Auxiliary loss can only be enabled in retrain mode.'
-            self.stages[2] = SequentialBreakdown(cast(nn.Sequential, self.stages[2]))
             self.auxiliary_head = AuxiliaryHead(C_to_auxiliary, self.num_labels, dataset=self.dataset)  # type: ignore
 
         self.global_pooling = nn.AdaptiveAvgPool2d((1, 1))
@@ -614,6 +599,7 @@ class NDS(nn.Module):
                     if block_idx == 0:
                         logits_aux = self.auxiliary_head(s1)
             else:
+                print(stage_idx, [s0.shape, s1.shape])
                 s0, s1 = stage([s0, s1])
 
         out = self.global_pooling(s1)
