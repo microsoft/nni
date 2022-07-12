@@ -100,7 +100,7 @@ def train(arch, batch_size: int = 256, **kwargs):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', choices=['search', 'train', 'search_train'], default='search_train')
+    parser.add_argument('--mode', choices=['search', 'train', 'search_train', 'query'], default='search_train')
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--algo', type=str)
     parser.add_argument('--arch', type=str)
@@ -116,6 +116,12 @@ def main():
         print('Searched config', config['arch'])
     if 'train' in config['mode']:
         train(**config)
+    if config['mode'] == 'query':
+        from nni.nas.benchmarks.nasbench201 import query_nb201_trial_stats
+        results = list(query_nb201_trial_stats(
+            {k.split('/')[-1]: v for k, v in config['arch'].items()}, 200, 'cifar10', include_intermediates=False
+        ))
+        print([r['ori_test_acc'] for r in results])
 
 
 if __name__ == '__main__':

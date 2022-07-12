@@ -31,7 +31,12 @@ def load_benchmark(benchmark: str) -> SqliteExtDatabase:
         return _loaded_benchmarks[benchmark]
     url = DB_URLS[benchmark]
     local_path = os.path.join(DATABASE_DIR, os.path.basename(url))
-    load_or_download_file(local_path, url)
+    try:
+        load_or_download_file(local_path, url)
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            f'Please use `nni.nas.benchmarks.download_benchmark("{benchmark}")` to setup the benchmark first before using it.'
+        )
     _loaded_benchmarks[benchmark] = SqliteExtDatabase(local_path, autoconnect=True)
     return _loaded_benchmarks[benchmark]
 
