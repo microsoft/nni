@@ -15,7 +15,7 @@ from torch.optim import Optimizer, Adam
 
 from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import EvaluatorBasedPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
-from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, OptimizerConstructHelper
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema
 
 from .tools.base import EvaluatorBasedDataCollector, TrainerBasedDataCollector
 
@@ -28,6 +28,8 @@ from ..utils import (
     LightningEvaluator,
     TorchEvaluator
 )
+
+from ..utils.docstring import _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
@@ -106,7 +108,7 @@ class EvaluatorBasedScoreDataCollector(EvaluatorBasedDataCollector):
 
 
 class MovementPruner(EvaluatorBasedPruner):
-    r"""
+    __doc__ = r"""
     Movement pruner is an implementation of movement pruning.
     This is a "fine-pruning" algorithm, which means the masks may change during each fine-tuning step.
     Each weight element will be scored by the opposite of the sum of the product of weight and its gradient during each step.
@@ -133,30 +135,12 @@ class MovementPruner(EvaluatorBasedPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer : Callable[[Module, Optimizer, Callable]
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion : Callable[[Tensor, Tensor], Tensor]
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
     training_epochs : int
         The total epoch number for training the model.
         Make sure the total `optimizer.step()` in `training_epochs` is bigger than `cool_down_beginning_step`.
@@ -168,21 +152,10 @@ class MovementPruner(EvaluatorBasedPruner):
         The sparsity after each `optimizer.step()` is:
         total_sparsity * (1 - (1 - (current_step - warm_up_step) / (cool_down_beginning_step - warm_up_step)) ** 3).
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import MovementPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = MovementPruner(model, config_list, trainer, traced_optimizer, criterion, 10, 3000, 27000)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/movement_pruning_glue.py <examples/model_compress/pruning/movement_pruning_glue.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_epochs: int,

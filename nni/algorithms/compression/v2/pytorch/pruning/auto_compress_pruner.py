@@ -14,6 +14,7 @@ from .basic_pruner import ADMMPruner
 from .iterative_pruner import IterativePruner, SimulatedAnnealingPruner
 from .tools import LotteryTicketTaskGenerator
 from ..utils import LightningEvaluator, TorchEvaluator, OptimizerConstructHelper
+from ..utils.docstring import _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
@@ -56,8 +57,9 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
 
 
 class AutoCompressPruner(IterativePruner):
-    r"""
+    __doc__ = r"""
     For total iteration number :math:`N`, AutoCompressPruner prune the model that survive the previous iteration for a fixed sparsity ratio (e.g., :math:`1-{(1-0.8)}^{(1/N)}`) to achieve the overall sparsity (e.g., :math:`0.8`):
+    """ + r"""
 
     .. code-block:: bash
 
@@ -68,35 +70,27 @@ class AutoCompressPruner(IterativePruner):
 
     Parameters
     ----------
-    model : Module
+    model
         The origin unwrapped pytorch model to be pruned.
-    config_list : List[Dict]
+    config_list
         The origin config list provided by the user.
-    total_iteration : int
+    total_iteration
         The total iteration number.
-    evaluator : Callable[[Module], float]
-        Evaluate the pruned model and give a score.
-    admm_params : Dict
+    admm_params
         The parameters passed to the ADMMPruner.
 
-        - trainer : Callable[[Module, Optimizer, Callable].
-            A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-            The model will be trained or inferenced `training_epochs` epochs.
-        - traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-            The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-            E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-        - criterion : Callable[[Tensor, Tensor], Tensor].
-            The criterion function used in trainer. Take model output and target value as input, and return the loss.
+        - evaluator : LightningEvaluator or TorchEvaluator.
+            The same with the evaluator of AutoCompressPruner input parameter.
         - iterations : int.
             The total iteration number in admm pruning algorithm.
         - training_epochs : int.
             The epoch number for training model in each iteration.
 
-    sa_params : Dict
+    sa_params
         The parameters passed to the SimulatedAnnealingPruner.
 
-        - evaluator : Callable[[Module], float]. Required.
-            Evaluate the pruned model and give a score.
+        - evaluator : LightningEvaluator or TorchEvaluator.
+            The same with the evaluator of AutoCompressPruner input parameter.
         - start_temperature : float. Default: `100`.
             Start temperature of the simulated annealing process.
         - stop_temperature : float. Default: `20`.
@@ -107,49 +101,25 @@ class AutoCompressPruner(IterativePruner):
             Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
         - pruning_algorithm : str. Default: `'level'`.
             Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
-        - pruning_params : Dict. Default: `{}`.
+        - pruning_params : Dict. Default: dict().
             If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
 
-    log_dir : str
+    log_dir
         The log directory used to save the result, you can find the best result under this folder.
-    keep_intermediate_result : bool
+    keep_intermediate_result
         If keeping the intermediate result, including intermediate model and masks during each iteration.
-    finetuner : Optional[Callable[[Module], None]]
-        The finetuner handles all finetune logic, takes a pytorch module as input.
-        It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
-    speedup : bool
+    evaluator
+        ``evaluator`` is used to replace the previous ``finetuner``, ``dummy_input`` and old ``evaluator`` API.
+        {evaluator_docstring}
+        The old API (``finetuner``, ``dummy_input`` and old ``evaluator``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    speedup
         If set True, speedup the model at the end of each iteration to make the pruned model compact.
-    dummy_input : Optional[torch.Tensor]
-        If `speedup` is True, `dummy_input` is required for tracing the model in speedup.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import AutoCompressPruner
-        >>> model = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> evaluator = ...
-        >>> finetuner = ...
-        >>> admm_params = {
-        >>>     'trainer': trainer,
-        >>>     'traced_optimizer': traced_optimizer,
-        >>>     'criterion': criterion,
-        >>>     'iterations': 10,
-        >>>     'training_epochs': 1
-        >>> }
-        >>> sa_params = {
-        >>>     'evaluator': evaluator
-        >>> }
-        >>> pruner = AutoCompressPruner(model, config_list, 10, admm_params, sa_params, finetuner=finetuner)
-        >>> pruner.compress()
-        >>> _, model, masks, _, _ = pruner.get_best_result()
-
+    Notes
+    -----
     The full script can be found :githublink:`here <examples/model_compress/pruning/auto_compress_pruner.py>`.
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,

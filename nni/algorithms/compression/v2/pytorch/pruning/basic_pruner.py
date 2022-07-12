@@ -60,6 +60,8 @@ from ..utils import (
     config_list_canonical
 )
 
+from ..utils.docstring import _EVALUATOR_DOCSTRING
+
 _logger = logging.getLogger(__name__)
 
 __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPruner', 'ActivationPruner',
@@ -522,8 +524,7 @@ class FPGMPruner(BasicPruner):
 
 
 class SlimPruner(EvaluatorBasedPruner):
-    r"""
-    Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training to identify unimportant channels.
+    __doc__ = r"""Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training to identify unimportant channels.
     The channels with small scaling factor values will be pruned.
 
     For more details, please refer to `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/abs/1708.06519>`__\.
@@ -544,9 +545,10 @@ class SlimPruner(EvaluatorBasedPruner):
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
 
     evaluator
-        LightningEvaluator or TorchEvaluator. Please refer ... for how to write ``evaluator``.
         ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
-        The old API is still supported and will be deprecated in v3.0.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
     training_epochs
         The epoch number for training model to sparsify the BN weight.
     scale
@@ -557,20 +559,10 @@ class SlimPruner(EvaluatorBasedPruner):
         That means a single layer may not reach or exceed the sparsity setting in config,
         but the total pruned weights meet the sparsity setting.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import SlimPruner
-        >>> model = ...
-        >>> # If your model is a Pytorch Lightning model, please use LightningEvaluator.
-        >>> evaluator = LightningEvaluator(lightning_trainer, lightning_data_module)
-        >>> evaluator = TorchEvaluator(training_func, optimziers, criterion, lr_schedulers)
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-        >>> pruner = SlimPruner(model, config_list, evaluator, training_epochs=1)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/slim_pruning_torch.py <examples/model_compress/pruning/slim_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,
@@ -655,8 +647,7 @@ class SlimPruner(EvaluatorBasedPruner):
 
 
 class ActivationPruner(EvaluatorBasedPruner):
-    """
-    Parameters
+    __doc__ = r"""Parameters
     ----------
     model
         Model to be pruned.
@@ -668,32 +659,14 @@ class ActivationPruner(EvaluatorBasedPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    training_batches
-        The batch number used to collect activations.
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    training_steps
+        The step number used to collect activations.
     mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
@@ -706,7 +679,7 @@ class ActivationPruner(EvaluatorBasedPruner):
     dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_steps: int,
@@ -805,13 +778,13 @@ class ActivationPruner(EvaluatorBasedPruner):
 
 
 class ActivationAPoZRankPruner(ActivationPruner):
-    r"""
-    Activation APoZ rank pruner is a pruner which prunes on the first weight dimension,
+    __doc__ = r"""Activation APoZ rank pruner is a pruner which prunes on the first weight dimension,
     with the smallest importance criterion ``APoZ`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
     The pruning criterion ``APoZ`` is explained in the paper `Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures <https://arxiv.org/abs/1607.03250>`__.
 
     The APoZ is defined as:
     :math:`APoZ_{c}^{(i)} = APoZ\left(O_{c}^{(i)}\right)=\frac{\sum_{k}^{N} \sum_{j}^{M} f\left(O_{c, j}^{(i)}(k)=0\right)}{N \times M}`
+    """ + r"""
 
     Activation APoZ rank pruner also supports dependency-aware mode.
 
@@ -827,32 +800,14 @@ class ActivationAPoZRankPruner(ActivationPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``..
-    criterion
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    training_batches
-        The batch number used to collect activations.
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    training_steps
+        The step number used to collect activations.
     mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
@@ -866,21 +821,11 @@ class ActivationAPoZRankPruner(ActivationPruner):
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import ActivationAPoZRankPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = ActivationAPoZRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return a matrix that the position of zero in `output` is one, others is zero.
         return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).mean(0)
@@ -890,7 +835,7 @@ class ActivationAPoZRankPruner(ActivationPruner):
 
 
 class ActivationMeanRankPruner(ActivationPruner):
-    r"""
+    __doc__ = r"""
     Activation mean rank pruner is a pruner which prunes on the first weight dimension,
     with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
 
@@ -910,32 +855,14 @@ class ActivationMeanRankPruner(ActivationPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``..
-    criterion
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    training_batches
-        The batch number used to collect activations.
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    training_steps
+        The step number used to collect activations.
     mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
@@ -949,21 +876,11 @@ class ActivationMeanRankPruner(ActivationPruner):
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import ActivationMeanRankPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = ActivationMeanRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return the activation of `output` directly.
         return self._activation(output.detach()).mean(0)
@@ -973,12 +890,13 @@ class ActivationMeanRankPruner(ActivationPruner):
 
 
 class TaylorFOWeightPruner(EvaluatorBasedPruner):
-    r"""
+    __doc__ = r"""
     Taylor FO weight pruner is a pruner which prunes on the first weight dimension,
     based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity.
     The estimated importance is defined as the paper `Importance Estimation for Neural Network Pruning <http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf>`__.
 
     :math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
+    """ + r"""
 
     Taylor FO weight pruner also supports dependency-aware mode.
 
@@ -986,9 +904,9 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -998,33 +916,15 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer : Callable[[Module, Optimizer, Callable]
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion : Callable[[Tensor, Tensor], Tensor]
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    training_batches : int
-        The batch number used to collect activations.
-    mode : str
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    training_steps
+        The step number used to collect activations.
+    mode
         'normal', 'dependency_aware' or 'global'.
 
         If prune the model in a dependency-aware way, this pruner will
@@ -1038,25 +938,14 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
         If prune the model in a global way, all layer weights with same config will be considered uniformly.
         That means a single layer may not reach or exceed the sparsity setting in config,
         but the total pruned weights meet the sparsity setting.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import TaylorFOWeightPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/taylorfo_pruning_torch.py <examples/model_compress/pruning/taylorfo_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_steps: int,
@@ -1151,7 +1040,7 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
 
 
 class ADMMPruner(EvaluatorBasedPruner):
-    r"""
+    __doc__ = r"""
     Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
     by decomposing the original nonconvex problem into two subproblems that can be solved iteratively.
     In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. 
@@ -1176,30 +1065,12 @@ class ADMMPruner(EvaluatorBasedPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
     iterations
         The total iteration number in admm pruning algorithm.
     training_epochs
@@ -1210,21 +1081,10 @@ class ADMMPruner(EvaluatorBasedPruner):
         In original admm pruning paper, author implemented a fine-grained admm pruning.
         In auto-compress paper, author used coarse-grained admm pruning.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import ADMMPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=10, training_epochs=1)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/admm_pruning_torch.py <examples/model_compress/pruning/admm_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, iterations: int,

@@ -19,6 +19,7 @@ from .iterative_pruner import IterativePruner, PRUNER_DICT
 from .tools import TaskGenerator
 from .tools.rl_env import DDPG, AMCEnv
 from ..utils import LightningEvaluator, TorchEvaluator, compute_sparsity, config_list_canonical
+from ..utils.docstring import _EVALUATOR_DOCSTRING
 
 
 class AMCTaskGenerator(TaskGenerator):
@@ -164,7 +165,7 @@ class AMCTaskGenerator(TaskGenerator):
 
 
 class AMCPruner(IterativePruner):
-    r"""
+    __doc__ = r"""
     AMC pruner leverages reinforcement learning to provide the model compression policy.
     According to the author, this learning-based compression policy outperforms conventional rule-based compression policy by having a higher compression ratio,
     better preserving the accuracy and freeing human labor.
@@ -188,10 +189,11 @@ class AMCPruner(IterativePruner):
             - op_names : Operation name to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude  : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    dummy_input : torch.Tensor
-        `dummy_input` is required for speedup and tracing the model in RL environment.
-    evaluator : Callable[[Module], float]
-        Evaluate the pruned model and give a score.
+    evaluator
+        ``evaluator`` is used to replace the previous ``finetuner``, ``dummy_input`` and old ``evaluator`` API.
+        {evaluator_docstring}
+        The old API (``finetuner``, ``dummy_input`` and old ``evaluator``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
     pruning_algorithm : str
         Supported pruning algorithm ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
@@ -199,8 +201,6 @@ class AMCPruner(IterativePruner):
         The log directory use to saving the result, you can find the best result under this folder.
     keep_intermediate_result : bool
         If keeping the intermediate result, including intermediate model and masks during each iteration.
-    finetuner : Optional[Callable[[Module], None]]
-        The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
     ddpg_params : Dict
         Configuration dict to configure the DDPG agent, any key unset will be set to default implicitly.
         - hidden1: hidden num of first fully connect layer. Default: 300
@@ -225,18 +225,10 @@ class AMCPruner(IterativePruner):
         'flops' or 'params'. Note that the sparsity in other pruners always means the parameters sparse, but in AMC, you can choose flops sparse.
         This parameter is used to explain what the sparsity setting in config_list refers to.
 
-    Examples
-    --------
-        >>> from nni.compression.pytorch.pruning import AMCPruner
-        >>> config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
-        >>> dummy_input = torch.rand(...).to(device)
-        >>> evaluator = ...
-        >>> finetuner = ...
-        >>> pruner = AMCPruner(400, model, config_list, dummy_input, evaluator, finetuner=finetuner)
-        >>> pruner.compress()
-
+    Notes
+    -----
     The full script can be found :githublink:`here <examples/model_compress/pruning/amc_pruning_torch.py>`.
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, total_episode: int, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,

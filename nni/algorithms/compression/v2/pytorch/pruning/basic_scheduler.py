@@ -23,7 +23,7 @@ _LEGACY_EVALUATOR = Callable[[Module], float]
 
 # TODO: remove in nni v3.0.
 class EvaluatorBasedPruningScheduler(BasePruningScheduler):
-    evaluator: Union[LightningEvaluator, TorchEvaluator]
+    evaluator: LightningEvaluator | TorchEvaluator
     using_evaluator: bool
     finetuner: _LEGACY_FINETUNER
     _evaluator: _LEGACY_EVALUATOR
