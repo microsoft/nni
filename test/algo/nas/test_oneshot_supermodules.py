@@ -28,6 +28,12 @@ def test_slice():
     assert S(weight)[:, 1:W(3)*2+1, :, 9:13].shape == (3, 6, 24, 4)
     assert S(weight)[:, 1:W(3)*2+1].shape == (3, 6, 24, 23)
 
+    # Ellipsis
+    assert S(weight)[..., 9:13].shape == (3, 7, 24, 4)
+    assert S(weight)[:2, ..., 1:W(3)+1].shape == (2, 7, 24, 3)
+    assert S(weight)[..., 1:W(3)*2+1].shape == (3, 7, 24, 6)
+    assert S(weight)[..., :10, 1:W(3)*2+1].shape == (3, 7, 10, 6)
+
     # no effect
     assert S(weight)[:] is weight
 

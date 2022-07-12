@@ -529,8 +529,8 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
         # slice all the normalized shape
         indices = [slice(0, min(i, j)) for i, j in zip(normalized_shape, self.normalized_shape)]
 
-        weight = self.weight[indices] if self.weight is not None else None
-        bias = self.bias[indices] if self.bias is not None else None
+        weight = _S(self.weight)[indices] if self.weight is not None else None
+        bias = _S(self.bias)[indices] if self.bias is not None else None
 
         return F.layer_norm(
             inputs,

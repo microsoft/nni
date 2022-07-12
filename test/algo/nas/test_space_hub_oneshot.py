@@ -191,13 +191,10 @@ def test_hub_oneshot(space_type, strategy_type):
     NDS_SPACES = ['amoeba', 'darts', 'pnas', 'enas', 'nasnet']
     if strategy_type == 'proxyless':
         if 'width' in space_type or 'depth' in space_type or \
-                any(space_type.startswith(prefix) for prefix in NDS_SPACES + ['proxylessnas', 'mobilenetv3']):
+                any(space_type.startswith(prefix) for prefix in NDS_SPACES + ['proxylessnas', 'mobilenetv3', 'autoformer']):
             pytest.skip('The space has used unsupported APIs.')
     if strategy_type in ['darts', 'gumbel'] and space_type == 'mobilenetv3':
         pytest.skip('Skip as it consumes too much memory.')
-    
-    if space_type == "autoformer" and strategy_type != "random":
-        pytest.skip('The AutoFormer sapce only support randomoneshot currently.')
 
     model_space = _hub_factory(space_type)
 

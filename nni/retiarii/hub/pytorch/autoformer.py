@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple, cast, Any, Dict
 
 import torch
 import torch.nn.functional as F
@@ -12,9 +12,11 @@ from nni.retiarii import model_wrapper, basic_unit
 from nni.retiarii.nn.pytorch.api import ValueChoiceX
 from nni.retiarii.oneshot.pytorch.supermodule.operation import MixedOperation
 from nni.retiarii.oneshot.pytorch.supermodule._valuechoice_utils import traverse_all_options
+from nni.retiarii.oneshot.pytorch.supermodule._operation_utils import Slicable as _S, MaybeWeighted as _W
 
 from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
+
 
 class RelativePosition2D(nn.Module):
     def __init__(self, head_embed_dim, length=14,) -> None:
@@ -235,7 +237,8 @@ class MixedClsToken(MixedOperation, ClsToken):
 
     def forward_with_args(self, embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
-        cls_token = self.cls_token[..., :embed_dim]
+        embed_dim_ = _W(embed_dim)
+        cls_token = _S(self.cls_token)[..., :embed_dim_]
 
         return torch.cat((cls_token.expand(inputs.shape[0], -1, -1), inputs), dim=1)
 
@@ -270,7 +273,8 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
 
     def forward_with_args(self,  embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
-        pos_embed = self.pos_embed[..., :embed_dim]
+        embed_dim_ = _W(embed_dim)
+        pos_embed = _S(self.pos_embed)[..., :embed_dim_]
 
         return inputs + pos_embed
 
@@ -382,23 +386,15 @@ class AutoformerSpace(nn.Module):
 
         init_kwargs = {'qkv_bias': True, 'drop_rate': 0.0, 'drop_path_rate': 0.1, 'global_pool': True, 'num_classes': 1000}
         if name == 'autoformer-tiny':
-            arch = {
-                'embed_dim': 192, 'depth': 13,
-                'mlp_ratio_0': 3.5, 'num_head_0': 3,
-                'mlp_ratio_1': 3.5, 'num_head_1': 3,
-                'mlp_ratio_2': 3.0, 'num_head_2': 3,
-                'mlp_ratio_3': 3.5, 'num_head_3': 3,
-                'mlp_ratio_4': 3.0, 'num_head_4': 3,
-                'mlp_ratio_5': 3.0, 'num_head_5': 3,
-                'mlp_ratio_6': 4.0, 'num_head_6': 3,
-                'mlp_ratio_7': 4.0, 'num_head_7': 3,
-                'mlp_ratio_8': 3.5, 'num_head_8': 3,
-                'mlp_ratio_9': 4.0, 'num_head_9': 3,
-                'mlp_ratio_10': 3.5, 'num_head_10': 4,
-                'mlp_ratio_11': 4.0, 'num_head_11': 3,
-                'mlp_ratio_12': 3.5, 'num_head_12': 3,
-                'mlp_ratio_13': 3.0, 'num_head_13': 3
+            mlp_ratio = [3.5, 3.5, 3.0, 3.5, 3.0, 3.0, 4.0, 4.0, 3.5, 4.0, 3.5, 4.0, 3.5] + [3.0]
+            num_head = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3] + [3]
+            arch: Dict[str, Any] = {
+                'embed_dim': 192,
+                'depth': 13
             }
+            for i in range(14):
+                arch[f'mlp_ratio_{i}'] = mlp_ratio[i]
+                arch[f'num_head_{i}'] = num_head[i]
 
             init_kwargs.update({
                 'search_embed_dim': (240, 216, 192),
@@ -407,23 +403,15 @@ class AutoformerSpace(nn.Module):
                 'search_depth': (14, 13, 12),
             })
         elif name == 'autoformer-small':
-            arch = {
-                'embed_dim': 384, 'depth': 13,
-                'mlp_ratio_0': 3.0, 'num_head_0': 6,
-                'mlp_ratio_1': 3.5, 'num_head_1': 6,
-                'mlp_ratio_2': 3.0, 'num_head_2': 5,
-                'mlp_ratio_3': 3.5, 'num_head_3': 7,
-                'mlp_ratio_4': 4.0, 'num_head_4': 5,
-                'mlp_ratio_5': 4.0, 'num_head_5': 5,
-                'mlp_ratio_6': 4.0, 'num_head_6': 5,
-                'mlp_ratio_7': 4.0, 'num_head_7': 6,
-                'mlp_ratio_8': 4.0, 'num_head_8': 6,
-                'mlp_ratio_9': 4.0, 'num_head_9': 7,
-                'mlp_ratio_10': 4.0, 'num_head_10': 7,
-                'mlp_ratio_11': 3.5, 'num_head_11': 6,
-                'mlp_ratio_12': 4.0, 'num_head_12': 7,
-                'mlp_ratio_13': 3.0, 'num_head_13': 5
+            mlp_ratio = [3.0, 3.5, 3.0, 3.5, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 3.5, 4.0] + [3.0]
+            num_head = [6, 6, 5, 7, 5, 5, 5, 6, 6, 7, 7, 6, 7] + [5]
+            arch: Dict[str, Any] = {
+                'embed_dim': 384,
+                'depth': 13
             }
+            for i in range(14):
+                arch[f'mlp_ratio_{i}'] = mlp_ratio[i]
+                arch[f'num_head_{i}'] = num_head[i]
 
             init_kwargs.update({
                 'search_embed_dim': (448, 384, 320),
@@ -433,25 +421,15 @@ class AutoformerSpace(nn.Module):
             })
 
         elif name == 'autoformer-base':
-            arch = {
-                'embed_dim': 576, 'depth': 14,
-                'mlp_ratio_0': 3.5, 'num_head_0': 9,
-                'mlp_ratio_1': 3.5, 'num_head_1': 9,
-                'mlp_ratio_2': 4.0, 'num_head_2': 9,
-                'mlp_ratio_3': 3.5, 'num_head_3': 9,
-                'mlp_ratio_4': 4.0, 'num_head_4': 9,
-                'mlp_ratio_5': 3.5, 'num_head_5': 10,
-                'mlp_ratio_6': 3.5, 'num_head_6': 9,
-                'mlp_ratio_7': 3.0, 'num_head_7': 9,
-                'mlp_ratio_8': 4.0, 'num_head_8': 10,
-                'mlp_ratio_9': 4.0, 'num_head_9': 9,
-                'mlp_ratio_10': 3.0, 'num_head_10': 10,
-                'mlp_ratio_11': 4.0, 'num_head_11': 9,
-                'mlp_ratio_12': 3.0, 'num_head_12': 9,
-                'mlp_ratio_13': 3.5, 'num_head_13': 10,
-                'mlp_ratio_14': 3.0, 'num_head_14': 8,
-                'mlp_ratio_15': 3.0, 'num_head_15': 8
+            mlp_ratio = [3.5, 3.5, 4.0, 3.5, 4.0, 3.5, 3.5, 3.0, 4.0, 4.0, 3.0, 4.0, 3.0, 3.5] + [3.0, 3.0]
+            num_head = [9, 9, 9, 9, 9, 10, 9, 9, 10, 9, 10, 9, 9, 10] + [8, 8]
+            arch: Dict[str, Any] = {
+                'embed_dim': 576,
+                'depth': 14
             }
+            for i in range(16):
+                arch[f'mlp_ratio_{i}'] = mlp_ratio[i]
+                arch[f'num_head_{i}'] = num_head[i]
 
             init_kwargs.update({
                 'search_embed_dim': (624, 576, 528),
