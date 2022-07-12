@@ -22,10 +22,7 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
                  origin_masks: Dict[str, Dict[str, Tensor]] = {}, sa_params: Dict = {}, log_dir: str = '.',
                  keep_intermediate_result: bool = False):
-        self.iterative_pruner = SimulatedAnnealingPruner(model=origin_model,
-                                                         config_list=origin_config_list,
-                                                         log_dir=Path(log_dir, 'SA'),
-                                                         **sa_params)
+        self._sa_params = sa_params
         super().__init__(total_iteration=total_iteration,
                          origin_model=origin_model,
                          origin_config_list=origin_config_list,
@@ -41,8 +38,13 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
         return super().reset(model, config_list, masks)
 
     def _iterative_pruner_reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
-        self.iterative_pruner.task_generator._log_dir = Path(self._log_dir_root, 'SA')
-        self.iterative_pruner.reset(model, config_list=config_list, masks=masks)
+        if hasattr(self, 'iterative_pruner'):
+            self.iterative_pruner.reset(model, config_list=config_list, masks=masks)
+        else:
+            self.iterative_pruner = SimulatedAnnealingPruner(model=model,
+                                                             config_list=config_list,
+                                                             log_dir=Path(self._log_dir_root, 'SA'),
+                                                             **self._sa_params)
 
     def allocate_sparsity(self, new_config_list: List[Dict], model: Module, masks: Dict[str, Dict[str, Tensor]]):
         self._iterative_pruner_reset(model, new_config_list, masks)
@@ -202,4 +204,4 @@ class AutoCompressPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=False)  # type: ignore
+                             evaluator=self._evaluator, reset_weight=False)  # type: ignore

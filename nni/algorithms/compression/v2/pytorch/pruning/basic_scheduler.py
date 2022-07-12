@@ -124,10 +124,6 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         """
         model, masks, config_list = task.load_data()
 
-        # bind model if using evaluator
-        if self.using_evaluator:
-            self.evaluator.bind_model(model)
-
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
 
@@ -151,12 +147,14 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         # finetune
         if self.using_evaluator:
             if task.finetune:
+                self.evaluator.bind_model(compact_model)  # type: ignore
                 if self.speedup:
                     self.evaluator.finetune()
                 else:
                     self.pruner._wrap_model()
                     self.evaluator.finetune()
                     self.pruner._unwrap_model()
+                self.evaluator.unbind_model()
         else:
             if self.finetuner is not None and task.finetune:
                 if self.speedup:
@@ -169,6 +167,7 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         # evaluate
         if self.using_evaluator:
             if task.evaluate:
+                self.evaluator.bind_model(compact_model)  # type: ignore
                 # TODO: support saving customized score
                 if self.speedup:
                     score = self.evaluator.evaluate()
@@ -177,6 +176,7 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
                     score = self.evaluator.evaluate()
                     self.pruner._unwrap_model()
                 score = score[0] if isinstance(score, tuple) else score
+                self.evaluator.unbind_model()
             else:
                 score = None
         else:
@@ -193,10 +193,6 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         # clear model references
         self.pruner.clear_model_references()
 
-        # unbind model if using evaluator
-        if self.using_evaluator:
-            self.evaluator.unbind_model()
-
         return TaskResult(task.task_id, compact_model, compact_model_masks, pruner_generated_masks, score)
 
     def pruning_one_step_reset_weight(self, task: Task) -> TaskResult:
@@ -205,10 +201,6 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         """
         model, masks, config_list = task.load_data()
 
-        # bind model if using evaluator
-        if self.using_evaluator:
-            self.evaluator.bind_model(model)
-
         checkpoint = deepcopy(model.state_dict())
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
@@ -216,7 +208,9 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         # finetune
         if self.using_evaluator:
             if task.finetune:
+                self.evaluator.bind_model(model)  # type: ignore
                 self.evaluator.finetune()
+                self.evaluator.unbind_model()
         else:
             if self.finetuner is not None and task.finetune:
                 self.finetuner(model)
@@ -246,7 +240,9 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
             if task.evaluate:
                 # TODO: support saving customized score
                 if self.speedup:
+                    self.evaluator.bind_model(compact_model)  # type: ignore
                     score = self.evaluator.evaluate()
+                    self.evaluator.unbind_model()
                 else:
                     self.pruner._wrap_model()
                     score = self.evaluator.evaluate()
@@ -267,10 +263,6 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
 
         # clear model references
         self.pruner.clear_model_references()
-
-        # unbind model if using evaluator
-        if self.using_evaluator:
-            self.evaluator.unbind_model()
 
         return TaskResult(task.task_id, compact_model, compact_model_masks, pruner_generated_masks, score)
 

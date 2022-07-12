@@ -288,4 +288,6 @@ class MovementPruner(EvaluatorBasedPruner):
         # del weight_score
         for wrapper in self.get_modules_wrapper().values():
             wrapper.weight_score = None
+        if self.using_evaluator:
+            self.evaluator.unbind_model()
         return result

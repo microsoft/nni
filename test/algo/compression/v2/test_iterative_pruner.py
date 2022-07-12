@@ -5,22 +5,21 @@ from __future__ import annotations
 
 import pytest
 
+import torch
+import torch.nn.functional as F
+
+import nni
 from nni.compression.pytorch.pruning import (
     LinearPruner,
     AGPPruner,
     LotteryTicketPruner,
     SimulatedAnnealingPruner,
-    AutoCompressPruner,
-    AMCPruner
+    AutoCompressPruner
 )
 
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).absolute().parent.parent))
-
-from assets.common import create_model, log_dir, validate_masks, validate_dependency_aware
-from assets.device import device
-from assets.simple_mnist import (
+from ..assets.common import create_model, log_dir, validate_masks, validate_dependency_aware
+from ..assets.device import device
+from ..assets.simple_mnist import (
     create_lighting_evaluator,
     create_pytorch_evaluator,
     training_model,
@@ -79,14 +78,48 @@ def test_sa_pruner(model_type: str, using_evaluator: bool):
 
     if using_evaluator:
         evaluator = create_lighting_evaluator() if model_type == 'lightning' else create_pytorch_evaluator(model)
-        pruner = SimulatedAnnealingPruner(model=model, config_list=config_list, evaluator=evaluator, log_dir=log_dir)
+        pruner = SimulatedAnnealingPruner(model=model, config_list=config_list, evaluator=evaluator, start_temperature=100,
+                                          stop_temperature=80, cool_down_rate=0.9, perturbation_magnitude=0.35, pruning_algorithm='l1',
+                                          pruning_params={}, log_dir=log_dir, keep_intermediate_result=False, speedup=False)
     else:
         model.to(device)
         dummy_input = dummy_input.to(device)
         pruner = SimulatedAnnealingPruner(model=model, config_list=config_list, evaluator=evaluating_model, start_temperature=100,
-                                          stop_temperature=80, log_dir=log_dir)
+                                          stop_temperature=80, cool_down_rate=0.9, perturbation_magnitude=0.35, pruning_algorithm='l1',
+                                          pruning_params={}, log_dir=log_dir, keep_intermediate_result=False, speedup=False)
 
     pruner.compress()
     best_task_id, best_model, best_masks, best_score, best_config_list = pruner.get_best_result()
     best_model(dummy_input)
     validate_masks(best_masks, best_model, config_list)
+
+
+@pytest.mark.parametrize('model_type', ['lightning', 'pytorch'])
+@pytest.mark.parametrize('using_evaluator', [True, False])
+def test_auto_compress_pruner(model_type: str, using_evaluator: bool):
+    model, config_list, dummy_input = create_model(model_type)
+
+    if using_evaluator:
+        evaluator = create_lighting_evaluator() if model_type == 'lightning' else create_pytorch_evaluator(model)
+        admm_params = {'evaluator': evaluator, 'iterations': 2, 'training_epochs': 1, 'granularity': 'coarse-grained'}
+        sa_params = {'evaluator': evaluator, 'start_temperature': 100, 'stop_temperature': 80, 'pruning_algorithm': 'l1'}
+        pruner = AutoCompressPruner(model=model, config_list=config_list, total_iteration=2, admm_params=admm_params, sa_params=sa_params,
+                                    log_dir=log_dir, keep_intermediate_result=False, evaluator=evaluator, speedup=False)
+    else:
+        model.to(device)
+        dummy_input = dummy_input.to(device)
+        optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+        admm_params = {'trainer': training_model, 'traced_optimizer': optimizer, 'criterion': F.nll_loss, 'iterations': 2,
+                       'training_epochs': 1, 'granularity': 'coarse-grained'}
+        sa_params = {'evaluator': evaluating_model, 'start_temperature': 100, 'stop_temperature': 80, 'pruning_algorithm': 'l1'}
+        pruner = AutoCompressPruner(model=model, config_list=config_list, total_iteration=2, admm_params=admm_params, sa_params=sa_params,
+                                    log_dir=log_dir, keep_intermediate_result=False, finetuner=finetuning_model, speedup=False,
+                                    dummy_input=dummy_input, evaluator=evaluating_model)
+
+    pruner.compress()
+    best_task_id, best_model, best_masks, best_score, best_config_list = pruner.get_best_result()
+    best_model(dummy_input)
+    validate_masks(best_masks, best_model, config_list)
+
+
+# we still need AMCPruner test, but it cost a lot, will add after we have GPU pool.

@@ -190,6 +190,12 @@ class EvaluatorBasedPruner(BasicPruner):
             raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
         return def_kwargs
 
+    def compress(self) -> Tuple[Module, Dict]:
+        result = super().compress()
+        if self.using_evaluator:
+            self.evaluator.unbind_model()
+        return result
+
 
 class LevelPruner(BasicPruner):
     r"""
@@ -1333,4 +1339,8 @@ class ADMMPruner(EvaluatorBasedPruner):
         masks = self.sparsity_allocator.generate_sparsity(metrics)
 
         self.load_masks(masks)
+
+        if self.using_evaluator:
+            self.evaluator.unbind_model()
+
         return self.bound_model, masks

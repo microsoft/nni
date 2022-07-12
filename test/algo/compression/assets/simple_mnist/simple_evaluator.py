@@ -25,7 +25,7 @@ def create_lighting_evaluator() -> LightningEvaluator:
         accelerator='auto',
         devices=1,
         max_epochs=1,
-        max_steps=100,
+        max_steps=50,
         logger=TensorBoardLogger(Path(__file__).parent.parent / 'lightning_logs', name="resnet"),
     )
     pl.Trainer()

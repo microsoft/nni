@@ -49,7 +49,7 @@ def training_model(model: Module, optimizer: Optimizer, criterion: Callable, sch
     train_dataloader = DataLoader(mnist_train, batch_size=32)
 
     max_epochs = max_epochs if max_epochs else 1
-    max_steps = max_steps if max_steps else 100
+    max_steps = max_steps if max_steps else 50
     current_steps = 0
 
     # training
