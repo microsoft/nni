@@ -277,4 +277,4 @@ class AMCPruner(IterativePruner):
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=True, reset_weight=False)
         else:
             super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=True, dummy_input=self.dummy_input,
-                             evaluator=self.evaluator, reset_weight=False)  # type: ignore
+                             evaluator=self._evaluator, reset_weight=False)  # type: ignore
