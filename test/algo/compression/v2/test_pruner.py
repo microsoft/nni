@@ -153,19 +153,18 @@ def test_admm_pruner(model_type: str, using_evaluator: bool, granularity: str):
 
 @pytest.mark.parametrize('model_type', ['lightning', 'pytorch'])
 @pytest.mark.parametrize('using_evaluator', [True, False])
-@pytest.mark.parametrize('granularity', ['fine-grained', 'coarse-grained'])
-def test_movement_pruner(model_type: str, using_evaluator: bool, granularity: str):
+def test_movement_pruner(model_type: str, using_evaluator: bool):
     model, config_list, dummy_input = create_model(model_type)
 
     if using_evaluator:
         evaluator = create_lighting_evaluator() if model_type == 'lightning' else create_pytorch_evaluator(model)
-        pruner = MovementPruner(model=model, config_list=config_list, evaluator=evaluator, training_epochs=1, warm_up_step=20, cool_down_beginning_step=80)
+        pruner = MovementPruner(model=model, config_list=config_list, evaluator=evaluator, training_epochs=1, warm_up_step=10, cool_down_beginning_step=40)
     else:
         model = model.to(device)
         dummy_input = dummy_input.to(device)
         optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
         pruner = MovementPruner(model=model, config_list=config_list, trainer=training_model, traced_optimizer=optimizer, criterion=F.nll_loss,
-                                training_epochs=1, warm_up_step=20, cool_down_beginning_step=80)
+                                training_epochs=1, warm_up_step=10, cool_down_beginning_step=40)
 
     _, masks = pruner.compress()
     model(dummy_input)

@@ -238,16 +238,16 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         # evaluate
         if self.using_evaluator:
             if task.evaluate:
+                self.evaluator.bind_model(compact_model)  # type: ignore
                 # TODO: support saving customized score
                 if self.speedup:
-                    self.evaluator.bind_model(compact_model)  # type: ignore
                     score = self.evaluator.evaluate()
-                    self.evaluator.unbind_model()
                 else:
                     self.pruner._wrap_model()
                     score = self.evaluator.evaluate()
                     self.pruner._unwrap_model()
                 score = score[0] if isinstance(score, tuple) else score
+                self.evaluator.unbind_model()
             else:
                 score = None
         else:

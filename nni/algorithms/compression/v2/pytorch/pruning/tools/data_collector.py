@@ -24,7 +24,7 @@ class WeightDataCollector(DataCollector):
     def reset(self):
         pass
 
-    def collect(self) -> Dict[str, Tensor]:
+    def collect(self) -> Dict[str, Dict[str, Tensor]]:
         data = {}
         target_name = 'weight'
         for module_name, wrapper in self.compressor.get_modules_wrapper().items():
@@ -39,7 +39,7 @@ class WeightTrainerBasedDataCollector(TrainerBasedDataCollector):
     Collect all wrapper weights after training or inference.
     """
 
-    def collect(self) -> Dict[str, Tensor]:
+    def collect(self) -> Dict[str, Dict[str, Tensor]]:
         assert self.compressor.bound_model is not None
         for _ in range(self.training_epochs):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
@@ -59,7 +59,7 @@ class SingleHookTrainerBasedDataCollector(TrainerBasedDataCollector):
     Single means each wrapper only has one hook to collect data.
     """
 
-    def collect(self) -> Dict[str, List[Tensor]]:
+    def collect(self) -> Dict[str, Dict[str, List[Tensor]]]:
         assert self.compressor.bound_model is not None
         for _ in range(self.training_epochs):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)

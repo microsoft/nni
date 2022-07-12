@@ -105,4 +105,4 @@ def test_evaluator(evaluator_type: str):
 
     evaluator.finetune()
     assert_flags()
-    assert all([len(hook.buffer) == 100 for hook in [tensor_hook, forward_hook, backward_hook]])
+    assert all([len(hook.buffer) == 50 for hook in [tensor_hook, forward_hook, backward_hook]])

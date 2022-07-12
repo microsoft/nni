@@ -267,7 +267,7 @@ class AMCPruner(IterativePruner):
         ddpg_params = init_kwargs['ddpg_params']
         pruning_params = init_kwargs['pruning_params']
         target = init_kwargs['target']
-        dummy_input = self.dummy_input if self.using_evaluator else self.evaluator.get_dummy_input()
+        dummy_input = self.dummy_input if not self.using_evaluator else self.evaluator.get_dummy_input()
 
         assert pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo'], \
             "Only support pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo']"

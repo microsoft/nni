@@ -369,6 +369,7 @@ class SparsityAllocator:
             old_target_mask: Tensor = getattr(wrapper, f'{target_name}_mask')
             shrinked_target_mask = self._shrink_mask(module_name, target_name, old_target_mask)
             # make sure the masked position has the minimum metric
+            targets_metric[target_name] = targets_metric[target_name].to(shrinked_target_mask.device)
             min_value = targets_metric[target_name].min() - 1
             targets_metric[target_name] = torch.where(shrinked_target_mask != 0, targets_metric[target_name], min_value)
         return metrics
