@@ -254,7 +254,12 @@ function formatComplexTypeValue(value: any): string | number {
     if (['number', 'string'].includes(typeof value)) {
         return value;
     } else {
-        return value.toString();
+        // for hpo experiment: search space choice value is None, and it shows null
+        if (Object.is(null, value)) {
+            return 'null';
+        } else {
+            return value.toString();
+        }
     }
 }
 
