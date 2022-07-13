@@ -12,7 +12,7 @@ import numpy as np
 import torch
 
 from nni.retiarii import strategy, fixed_arch
-from nni.retiarii.evaluator.pytorch import Lightning, ClassificationModule, LightningModule, Trainer
+from nni.retiarii.evaluator.pytorch import Lightning, ClassificationModule, LightningModule, AccuracyWithLogits, Trainer
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.hub.pytorch import NasBench201
 
@@ -24,6 +24,7 @@ from timm.models import create_model, safe_model_name, resume_checkpoint, load_c
     convert_splitbn_model, convert_sync_batchnorm, model_parameters
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler
+from torch.utils.data import DataLoader
 
 
 
@@ -33,6 +34,11 @@ class ImageNetTrainingHyperParameters:
 
     Only necessary settings are kept here. Will add more when needed.
     """
+    # Data parameters
+    input_size: tuple[int, int, int] = (3, 224, 224)
+    mean: tuple[float, float, float] | None = None
+    std: tuple[float, float, float] | None = None
+
     # Model parameters
     batch_size: int = 128
     validation_batch_size: int | None = None
@@ -89,6 +95,7 @@ class TimmTrainingModule(LightningModule):
     def __init__(self, hparams: ImageNetTrainingHyperParameters):
         super().__init__()
         self.save_hyperparameters(asdict(hparams))
+        self.accuracy = AccuracyWithLogits()
 
     def configure_optimizers(self):
         """Customized optimizer with momentum, as well as a scheduler."""
@@ -108,24 +115,68 @@ class TimmTrainingModule(LightningModule):
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
         self.log('train_loss', loss, prog_bar=True)
-        for name, metric in self.metrics.items():
-            self.log('train_' + name, metric(y_hat, y), prog_bar=True)
+        self.log('train_acc', self.accuracy(y_hat, y), prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
         self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)
-        for name, metric in self.metrics.items():
-            self.log('val_' + name, metric(y_hat, y), prog_bar=True)
+        self.log('val_acc', self.accuracy(y_hat, y), prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
         self.log('test_loss', self.criterion(y_hat, y), prog_bar=True)
-        for name, metric in self.metrics.items():
-            self.log('test_' + name, metric(y_hat, y), prog_bar=True)
+        self.log('test_acc', self.accuracy(y_hat, y), prog_bar=True)
 
     def on_train_epoch_end(self) -> None:
         if self.current_epoch + 1 >= self.num_epochs:
             self.trainer.should_stop = True
+
+
+def get_imagenet_dataloader(data_dir: str, hparams: ImageNetTrainingHyperParameters, train: bool) -> DataLoader:
+    dataset = create_dataset('', data_dir, 'train' if train else 'validation', batch_size=hparams.batch_size)
+
+    train_interpolation = args.train_interpolation
+    if args.no_aug or not train_interpolation:
+        train_interpolation = data_config['interpolation']
+    loader_train = create_loader(
+        dataset,
+        input_size=hparams.input_size,
+        batch_size=hparams.batch_size,
+        is_training=True,
+        re_prob=hparams.reprob,
+        re_mode=hparams.remode,
+        re_count=hparams.recount,
+        scale=hparams.scale,
+        ratio=hparams.ratio,
+        hflip=hparams.hflip,
+        vflip=hparams.vflip,
+        color_jitter=hparams.color_jitter,
+        auto_augment=hparams.aa,
+        interpolation=train_interpolation,
+        mean=hparams.mean,
+        std=hparams.std,
+        num_workers=hparams.workers,
+        distributed=hparams.distributed,
+        collate_fn=collate_fn,
+        pin_memory=hparams.pin_mem,
+        use_multi_epochs_loader=hparams.use_multi_epochs_loader,
+        worker_seeding=hparams.worker_seeding,
+    )
+
+    loader_eval = create_loader(
+        dataset_eval,
+        input_size=data_config['input_size'],
+        batch_size=args.validation_batch_size or args.batch_size,
+        is_training=False,
+        use_prefetcher=args.prefetcher,
+        interpolation=data_config['interpolation'],
+        mean=data_config['mean'],
+        std=data_config['std'],
+        num_workers=args.workers,
+        distributed=args.distributed,
+        crop_pct=data_config['crop_pct'],
+        pin_memory=args.pin_mem,
+    )
