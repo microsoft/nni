@@ -133,6 +133,8 @@ class EnasLightningModule(RandomSamplingLightningModule):
         before updating the weights of RL controller.
     ctrl_grad_clip : float
         Gradient clipping value of controller.
+    log_prob_every_n_step : int
+        Log the probability of choices every N steps. Useful for visualization and debugging.
     reward_metric_name : str or None
         The name of the metric which is treated as reward.
         This will be not effective when there's only one metric returned from evaluator.
@@ -145,7 +147,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
     )
 
     __doc__ = _enas_note.format(
-        module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.',
+        module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.pytorch.dataloader.ConcatLoader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
@@ -162,6 +164,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
                  baseline_decay: float = .999,
                  ctrl_steps_aggregate: float = 20,
                  ctrl_grad_clip: float = 0,
+                 log_prob_every_n_step: int = 20,
                  reward_metric_name: str | None = None,
                  mutation_hooks: list[MutationHook] | None = None):
         super().__init__(inner_module, mutation_hooks)
@@ -181,6 +184,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
         self.baseline = 0.
         self.ctrl_steps_aggregate = ctrl_steps_aggregate
         self.ctrl_grad_clip = ctrl_grad_clip
+        self.log_prob_every_n_step = log_prob_every_n_step
         self.reward_metric_name = reward_metric_name
 
     def configure_architecture_optimizers(self):
@@ -240,12 +244,24 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 arc_opt.step()
                 arc_opt.zero_grad()
 
+        if (batch_idx + 1) % self.log_prob_every_n_step == 0:
+            with torch.no_grad():
+                print(self.export_probs())
+
         return step_output
 
     def resample(self):
         """Resample the architecture with ENAS controller."""
         sample = self.controller.resample()
         result = self._interpret_controller_sampling_result(sample)
+        for module in self.nas_modules:
+            module.resample(memo=result)
+        return result
+
+    def export_probs(self):
+        """Export the probability from ENAS controller directly."""
+        sample = self.controller.resample(prob=True)
+        result = self._interpret_controller_probability_result(sample)
         for module in self.nas_modules:
             module.resample(memo=result)
         return result
@@ -262,3 +278,14 @@ class EnasLightningModule(RandomSamplingLightningModule):
         for key in list(sample.keys()):
             sample[key] = space_spec[key].values[sample[key]]
         return sample
+
+    def _interpret_controller_probability_result(self, sample: dict[str, list[float]]) -> dict[str, Any]:
+        """Convert ``{label: [prob1, prob2, prob3]} to ``{label/choice: prob}``"""
+        space_spec = self.search_space_spec()
+        result = {}
+        for key in list(sample.keys()):
+            if len(space_spec[key].values) != len(sample[key]):
+                raise ValueError(f'Expect {space_spec[key].values} to be of the same length as {sample[key]}')
+            for value, weight in zip(space_spec[key].values, sample[key]):
+                result[f'{key}/{value}'] = weight
+        return result

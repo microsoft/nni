@@ -169,7 +169,7 @@ class PathSamplingInput(BaseSuperNetModule):
 
 
 class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
-    """Implementes the path sampling in mixed operation.
+    """Implements the path sampling in mixed operation.
 
     One mixed operation can have multiple value choices in its arguments.
     Each value choice can be further decomposed into "leaf value choices".
