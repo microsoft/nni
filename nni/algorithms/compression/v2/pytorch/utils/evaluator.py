@@ -480,6 +480,9 @@ class LightningEvaluator(Evaluator):
             trainer.fit_loop.max_epochs = max_epochs
         trainer.fit(self.model, self.data_module)
 
+        # del trainer reference, we don't want to dump trainer when we dump the entire model.
+        self.model.trainer = None
+
     def finetune(self):
         self.train()
 
@@ -494,6 +497,8 @@ class LightningEvaluator(Evaluator):
         # reset trainer
         trainer: pl.Trainer = self.trainer.trace_copy().get()  # type: ignore
         original_results = trainer.test(self.model, self.data_module)
+        # del trainer reference, we don't want to dump trainer when we dump the entire model.
+        self.model.trainer = None
         nni_metrics_list = [metrics['default'] for metrics in original_results if 'default' in metrics]
         if nni_metrics_list:
             nni_metric = sum(nni_metrics_list) / len(nni_metrics_list)
