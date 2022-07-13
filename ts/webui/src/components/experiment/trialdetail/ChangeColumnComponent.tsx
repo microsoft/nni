@@ -118,7 +118,7 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
                         <PrimaryButton
                             text='Save'
                             onClick={this.saveUserSelectColumn}
-                            disabled={currentSelected.length < (minSelected === undefined ? 1 : minSelected)}
+                            disabled={currentSelected.length < (minSelected ?? 1)}
                         />
                         <DefaultButton text='Cancel' onClick={this.cancelOption} />
                     </DialogFooter>
