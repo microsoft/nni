@@ -146,7 +146,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     def pack_model_data(cls, model: Model) -> Any:
         mutation_summary = get_mutation_summary(model)
         assert model.evaluator is not None, 'Model evaluator can not be None'
-        return BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator, mutation_summary)
+        return BaseGraphData(codegen.pytorch.model_to_pytorch_script(model), model.evaluator, mutation_summary)  # type: ignore
 
     @classmethod
     def trial_execute_graph(cls) -> None:

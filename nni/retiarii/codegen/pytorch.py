@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+__all__ = ['model_to_pytorch_script']
+
 import logging
 import re
 from typing import Dict, List, Tuple, Any, cast

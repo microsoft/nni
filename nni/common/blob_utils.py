@@ -15,7 +15,6 @@ import tqdm
 
 __all__ = ['NNI_BLOB', 'load_or_download_file', 'upload_file', 'nni_cache_home']
 
-
 # Blob that contains some downloadable files.
 NNI_BLOB = 'https://nni.blob.core.windows.net'
 
