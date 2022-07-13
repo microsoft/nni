@@ -128,7 +128,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
         self.call_lr_schedulers(batch_idx)
 
-        self.log_dict(self.export_probs())
+        self.log_dict({'prob/' + k: v for k, v in self.export_probs().items()})
 
         return loss_and_metrics
 

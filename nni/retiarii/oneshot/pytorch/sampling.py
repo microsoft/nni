@@ -164,7 +164,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
                  baseline_decay: float = .999,
                  ctrl_steps_aggregate: float = 20,
                  ctrl_grad_clip: float = 0,
-                 log_prob_every_n_step: int = 20,
+                 log_prob_every_n_step: int = 10,
                  reward_metric_name: str | None = None,
                  mutation_hooks: list[MutationHook] | None = None):
         super().__init__(inner_module, mutation_hooks)
@@ -246,7 +246,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
 
         if (batch_idx + 1) % self.log_prob_every_n_step == 0:
             with torch.no_grad():
-                print(self.export_probs())
+                self.log_dict({'prob/' + k: v for k, v in self.export_probs().items()})
 
         return step_output
 

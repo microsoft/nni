@@ -12,6 +12,7 @@ from nni.retiarii import strategy, fixed_arch
 from nni.retiarii.evaluator.pytorch import Lightning, ClassificationModule, Trainer
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.hub.pytorch import NasBench201
+from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from typing_extensions import Literal
 
@@ -45,7 +46,7 @@ class NasBench201TrainingModule(ClassificationModule):
         }
 
 
-def search(batch_size: int = 256, algo: Literal['ENAS', 'DARTS', 'Gumbel', 'Proxyless'] = 'ENAS', **kwargs):
+def search(log_dir: str, batch_size: int = 256, algo: Literal['enas', 'darts', 'gumbel', 'proxyless'] = 'enas', **kwargs):
     model_space = NasBench201()
 
     train_data = get_cifar10_dataset()
@@ -67,12 +68,20 @@ def search(batch_size: int = 256, algo: Literal['ENAS', 'DARTS', 'Gumbel', 'Prox
 
     evaluator = Lightning(
         NasBench201TrainingModule(),
-        Trainer(gpus=1, max_epochs=200),
+        Trainer(gpus=1, max_epochs=200, logger=TensorBoardLogger(log_dir, name='search')),
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader
     )
 
-    strategy_ = getattr(strategy, algo)(reward_metric_name='val_acc')
+    if algo == 'enas':
+        strategy_ = strategy.ENAS(reward_metric_name='val_acc')
+    elif algo == 'darts':
+        strategy_ = strategy.DARTS(gradient_clip_val=5.)
+    elif algo == 'gumbel':
+        strategy_ = strategy.GumbelDARTS(gradient_clip_val=5.)
+    elif algo == 'proxyless':
+        # FIXME: Known issue with proxyless: No grad accumulator for a saved leaf!
+        strategy_ = strategy.Proxyless(gradient_clip_val=5.)
 
     config = RetiariiExeConfig(execution_engine='oneshot')
     experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy_)
@@ -81,7 +90,7 @@ def search(batch_size: int = 256, algo: Literal['ENAS', 'DARTS', 'Gumbel', 'Prox
     return experiment.export_top_models()[0]
 
 
-def train(arch, batch_size: int = 256, **kwargs):
+def train(log_dir: str, arch: dict, batch_size: int = 256, **kwargs):
     with fixed_arch(arch):
         model = NasBench201()
 
@@ -90,7 +99,7 @@ def train(arch, batch_size: int = 256, **kwargs):
 
     evaluator = Lightning(
         NasBench201TrainingModule(),
-        Trainer(gpus=1, max_epochs=200),
+        Trainer(gpus=1, max_epochs=200, logger=TensorBoardLogger(log_dir, name='train')),
         train_dataloaders=DataLoader(train_data, batch_size=batch_size, pin_memory=True, num_workers=6),
         val_dataloaders=DataLoader(valid_data, batch_size=batch_size, pin_memory=True, num_workers=6)
     )
@@ -100,11 +109,14 @@ def train(arch, batch_size: int = 256, **kwargs):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', choices=['search', 'train', 'search_train', 'query'], default='search_train')
+    parser.add_argument('--mode', choices=[
+        'search', 'train', 'search_train', 'search_query', 'search_train_query', 'query'
+    ], default='search_train_query')
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--algo', type=str)
     parser.add_argument('--arch', type=str)
     parser.add_argument('--weight_file', type=str)
+    parser.add_argument('--log_dir', default='lightning_logs', type=str)
 
     parsed_args = parser.parse_args()
     config = {k: v for k, v in vars(parsed_args).items() if v is not None}
@@ -116,12 +128,14 @@ def main():
         print('Searched config', config['arch'])
     if 'train' in config['mode']:
         train(**config)
-    if config['mode'] == 'query':
+    if 'query' in config['mode']:
+        from nni.nas.benchmarks import download_benchmark
         from nni.nas.benchmarks.nasbench201 import query_nb201_trial_stats
+        download_benchmark('nasbench201')
         results = list(query_nb201_trial_stats(
             {k.split('/')[-1]: v for k, v in config['arch'].items()}, 200, 'cifar10', include_intermediates=False
         ))
-        print([r['ori_test_acc'] for r in results])
+        print('Queried accuracy:', [r['ori_test_acc'] for r in results])
 
 
 if __name__ == '__main__':
