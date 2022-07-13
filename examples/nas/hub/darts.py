@@ -16,6 +16,7 @@ from nni.retiarii.evaluator.pytorch import Lightning, ClassificationModule, Trai
 from nni.retiarii.hub.pytorch import DARTS
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.strategy import DARTS as DartsStrategy
+from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision import transforms
@@ -69,7 +70,7 @@ class AuxLossClassificationModule(ClassificationModule):
 
     def on_train_epoch_start(self):
         """Set drop path probability before every epoch. This has no effect if drop path is not enabled in model."""
-        self.model.set_drop_path_prob(self.current_epoch / self.max_epochs)
+        self.model.set_drop_path_prob(self.model.drop_path_prob * self.current_epoch / self.max_epochs)
 
 
 def cutout_transform(img, length: int = 16):
@@ -112,7 +113,7 @@ def get_cifar10_dataset(train: bool = True, cutout: bool = False):
     return nni.trace(CIFAR10)(root='./data', train=train, download=True, transform=transform)
 
 
-def search(batch_size: int = 64, **kwargs):
+def search(log_dir: str, batch_size: int = 64, **kwargs):
     model_space = DARTS(16, 8, 'cifar')
 
     train_data = get_cifar10_dataset()
@@ -134,7 +135,11 @@ def search(batch_size: int = 64, **kwargs):
 
     evaluator = Lightning(
         AuxLossClassificationModule(0.025, 3e-4, 0., 50),
-        Trainer(gpus=1, max_epochs=50),
+        Trainer(
+            gpus=1,
+            max_epochs=50,
+            logger=TensorBoardLogger(log_dir, name='search')
+        ),
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader
     )
@@ -149,7 +154,7 @@ def search(batch_size: int = 64, **kwargs):
     return experiment.export_top_models()[0]
 
 
-def train(arch, batch_size: int = 96, **kwargs):
+def train(arch: dict, log_dir: str, batch_size: int = 96, **kwargs):
     with fixed_arch(arch):
         model = DARTS(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
 
@@ -158,7 +163,12 @@ def train(arch, batch_size: int = 96, **kwargs):
 
     evaluator = Lightning(
         AuxLossClassificationModule(0.025, 3e-4, 0.4, 600),
-        Trainer(gpus=1, gradient_clip_val=5., max_epochs=600),
+        Trainer(
+            gpus=1,
+            gradient_clip_val=5.,
+            max_epochs=600,
+            logger=TensorBoardLogger(log_dir, name='train')
+        ),
         train_dataloaders=DataLoader(train_data, batch_size=batch_size, pin_memory=True, num_workers=6),
         val_dataloaders=DataLoader(valid_data, batch_size=batch_size, pin_memory=True, num_workers=6)
     )
@@ -187,6 +197,7 @@ def main():
     parser.add_argument('--batch_size', type=int)
     parser.add_argument('--arch', type=str)
     parser.add_argument('--weight_file', type=str)
+    parser.add_argument('--log_dir', default='lightning_logs', type=str)
 
     parsed_args = parser.parse_args()
     config = {k: v for k, v in vars(parsed_args).items() if v is not None}
