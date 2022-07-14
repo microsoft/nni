@@ -1,4 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from .pytorch import model_to_pytorch_script
+from nni.common.framework import shortcut_framework
+
+shortcut_framework(__name__)
+
+del shortcut_framework

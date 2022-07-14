@@ -1,3 +1,5 @@
+# FIXME: This pipeline is broken due to resource group location limitation.
+
 trigger: none
 pr: none
 
@@ -11,6 +13,7 @@ variables:
 
 jobs:
 - job: linux
-  pool: nni-it
+  pool:
+    vmImage: ubuntu-latest
   steps:
   - template: templates/build-vm-image-template.yml
