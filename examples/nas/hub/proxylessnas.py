@@ -17,6 +17,7 @@ from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfi
 from nni.retiarii.hub.pytorch import NasBench201
 
 from timm import utils
+from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, DEFAULT_CROP_PCT
 from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, \
     LabelSmoothingCrossEntropy
@@ -24,6 +25,7 @@ from timm.models import create_model, safe_model_name, resume_checkpoint, load_c
     convert_splitbn_model, convert_sync_batchnorm, model_parameters
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler
+from timm.utils import distribute_bn
 from torch.utils.data import DataLoader
 
 
@@ -36,8 +38,11 @@ class ImageNetTrainingHyperParameters:
     """
     # Data parameters
     input_size: tuple[int, int, int] = (3, 224, 224)
-    mean: tuple[float, float, float] | None = None
-    std: tuple[float, float, float] | None = None
+    mean: tuple[float, float, float] = IMAGENET_DEFAULT_MEAN
+    std: tuple[float, float, float] = IMAGENET_DEFAULT_STD
+    interpolation: str = 'bicubic'
+    crop_pct: float = DEFAULT_CROP_PCT
+    workers: int = 4  # Number of workers for data loading
 
     # Model parameters
     batch_size: int = 128
@@ -136,47 +141,37 @@ class TimmTrainingModule(LightningModule):
 
 
 def get_imagenet_dataloader(data_dir: str, hparams: ImageNetTrainingHyperParameters, train: bool) -> DataLoader:
-    dataset = create_dataset('', data_dir, 'train' if train else 'validation', batch_size=hparams.batch_size)
+    dataset = create_dataset('', data_dir, 'train' if train else 'validation')
 
-    train_interpolation = args.train_interpolation
-    if args.no_aug or not train_interpolation:
-        train_interpolation = data_config['interpolation']
-    loader_train = create_loader(
-        dataset,
-        input_size=hparams.input_size,
-        batch_size=hparams.batch_size,
-        is_training=True,
-        re_prob=hparams.reprob,
-        re_mode=hparams.remode,
-        re_count=hparams.recount,
-        scale=hparams.scale,
-        ratio=hparams.ratio,
-        hflip=hparams.hflip,
-        vflip=hparams.vflip,
-        color_jitter=hparams.color_jitter,
-        auto_augment=hparams.aa,
-        interpolation=train_interpolation,
-        mean=hparams.mean,
-        std=hparams.std,
-        num_workers=hparams.workers,
-        distributed=hparams.distributed,
-        collate_fn=collate_fn,
-        pin_memory=hparams.pin_mem,
-        use_multi_epochs_loader=hparams.use_multi_epochs_loader,
-        worker_seeding=hparams.worker_seeding,
-    )
-
-    loader_eval = create_loader(
-        dataset_eval,
-        input_size=data_config['input_size'],
-        batch_size=args.validation_batch_size or args.batch_size,
-        is_training=False,
-        use_prefetcher=args.prefetcher,
-        interpolation=data_config['interpolation'],
-        mean=data_config['mean'],
-        std=data_config['std'],
-        num_workers=args.workers,
-        distributed=args.distributed,
-        crop_pct=data_config['crop_pct'],
-        pin_memory=args.pin_mem,
-    )
+    if train:
+        return create_loader(
+            dataset,
+            input_size=hparams.input_size,
+            batch_size=hparams.batch_size,
+            is_training=True,
+            re_prob=hparams.reprob,
+            re_mode=hparams.remode,
+            re_count=hparams.recount,
+            scale=hparams.scale,
+            ratio=hparams.ratio,
+            hflip=hparams.hflip,
+            vflip=hparams.vflip,
+            color_jitter=hparams.color_jitter,
+            auto_augment=hparams.aa,
+            interpolation=hparams.train_interpolation,
+            mean=hparams.mean,
+            std=hparams.std,
+            num_workers=hparams.workers,
+        )
+    else:
+        return create_loader(
+            dataset,
+            input_size=hparams.input_size,
+            batch_size=hparams.validation_batch_size or hparams.batch_size,
+            is_training=False,
+            interpolation=hparams.interpolation,
+            mean=hparams.mean,
+            std=hparams.std,
+            num_workers=hparams.workers,
+            crop_pct=hparams.crop_pct,
+        )
