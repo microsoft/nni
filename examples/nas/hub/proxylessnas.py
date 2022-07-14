@@ -3,36 +3,37 @@
 
 from __future__ import annotations
 
-import argparse
 from dataclasses import dataclass, field, asdict
-import json
+import logging
 
 import nni
-import numpy as np
 import torch
+from torch import nn
 
 from nni.retiarii import strategy, fixed_arch
-from nni.retiarii.evaluator.pytorch import Lightning, ClassificationModule, LightningModule, AccuracyWithLogits, Trainer
+from nni.retiarii.evaluator.pytorch import Lightning, LightningModule, AccuracyWithLogits, Trainer
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
-from nni.retiarii.hub.pytorch import NasBench201
-
-from timm import utils
-from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, DEFAULT_CROP_PCT
-from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
-from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, \
-    LabelSmoothingCrossEntropy
-from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint, \
-    convert_splitbn_model, convert_sync_batchnorm, model_parameters
+from nni.retiarii.hub.pytorch import ProxylessNAS
+from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.utilities import rank_zero_only
+from timm.data import (
+    IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, DEFAULT_CROP_PCT,
+    create_dataset, create_loader
+)
+from timm.loss import LabelSmoothingCrossEntropy
+from timm.models.efficientnet_builder import efficientnet_init_weights
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler
 from timm.utils import distribute_bn
 from torch.utils.data import DataLoader
 
+_logger = logging.getLogger('nni')
 
 
 @dataclass
 class ImageNetTrainingHyperParameters:
-    """Similar to the argument parser in timm: https://github.com/rwightman/pytorch-image-models/blob/f96da54eb1e03d7dfc32844deac34e231e73ea6f/train.py#L79
+    """Similar to the argument parser in timm:
+    https://github.com/rwightman/pytorch-image-models/blob/f96da54eb1e03d7dfc32844deac34e231e73ea6f/train.py#L79
 
     Only necessary settings are kept here. Will add more when needed.
     """
@@ -47,6 +48,7 @@ class ImageNetTrainingHyperParameters:
     # Model parameters
     batch_size: int = 128
     validation_batch_size: int | None = None
+    init_weight_google: bool = False  # Weight initialization as per Tensorflow official implementations
 
     # Optimizer parameters
     opt: str = 'sgd'
@@ -85,7 +87,7 @@ class ImageNetTrainingHyperParameters:
     bn_momentum: float | None = None
     bn_eps: float | None = None
     sync_bn: bool = False
-    dist_bn: str = 'reduce'  # Distribute BatchNorm stats between nodes after each epoch ("broadcast", "reduce", or "")
+    dist_bn: str | None = 'reduce'  # Distribute BatchNorm stats between nodes after each epoch ("broadcast", "reduce")
 
     # Model Exponential Moving Average
     model_ema: bool = False
@@ -100,24 +102,45 @@ class TimmTrainingModule(LightningModule):
     def __init__(self, hparams: ImageNetTrainingHyperParameters):
         super().__init__()
         self.save_hyperparameters(asdict(hparams))
+
+        if self.hparams.smoothing:
+            self.criterion = LabelSmoothingCrossEntropy(smoothing=self.hparams.smoothing)
+        else:
+            self.criterion = nn.CrossEntropyLoss()
         self.accuracy = AccuracyWithLogits()
 
     def configure_optimizers(self):
-        """Customized optimizer with momentum, as well as a scheduler."""
-        optimizer = create_optimizer_v2(self, **optimizer_kwargs(cfg=self.hparams))
+        optimizer = create_optimizer_v2(self.model, **optimizer_kwargs(cfg=self.hparams))
         lr_scheduler, self.num_epochs = create_scheduler(self.hparams, optimizer)
+        _logger.info('Number of epochs: %d', self.num_epochs)
         return {
             'optimizer': optimizer,
             'scheduler': lr_scheduler
         }
 
-    def forward(self, x):
-        y_hat = self.model(x)
-        return y_hat
+    def set_model(self, model):
+        super().set_model(model)
+
+        if self.hparams.bn_momentum is not None or self.hparams.bn_eps is not None:
+            # Reset BN momentum and epsilon if specified
+            for m in model.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    if self.hparams.bn_momentum is not None:
+                        m.momentum = self.hparams.bn_momentum
+                    if self.hparams.bn_eps is not None:
+                        m.eps = self.hparams.bn_eps
+
+        if self.hparams.init_weight_google:
+            # Initialize weights per Tensorflow official implementations
+            efficientnet_init_weights(self.model)
+
+        if self.hparams.model_ema:
+            # EMA will be wrapped by DDP in this case.
+            self.model_ema = utils.ModelEmaV2(self.model, decay=self.hparams.model_ema_decay)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self(x)
+        y_hat = self.model(x)
         loss = self.criterion(y_hat, y)
         self.log('train_loss', loss, prog_bar=True)
         self.log('train_acc', self.accuracy(y_hat, y), prog_bar=True)
@@ -125,19 +148,51 @@ class TimmTrainingModule(LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self(x)
+        y_hat = self.model(x)
         self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)
         self.log('val_acc', self.accuracy(y_hat, y), prog_bar=True)
 
+        if self.hparams.model_ema:
+            y_hat = self.model_ema(x)
+        self.log('val_acc_ema', self.accuracy(y_hat, y), prog_bar=True)
+
     def test_step(self, batch, batch_idx):
         x, y = batch
-        y_hat = self(x)
+        y_hat = self.model(x)
         self.log('test_loss', self.criterion(y_hat, y), prog_bar=True)
         self.log('test_acc', self.accuracy(y_hat, y), prog_bar=True)
+
+    def on_train_batch_end(self, outputs, batch, batch_idx, unused=0):
+        self.model_ema.update(self.model)
+        return super().on_train_batch_end(outputs, batch, batch_idx, unused)
+
+    def lr_scheduler_step(self, scheduler, optimizer_idx, metric):
+        if self.hparams.model_ema:
+            last_accuracy = self.trainer.callback_metrics['val_acc_ema']
+        else:
+            last_accuracy = self.trainer.callback_metrics['val_acc']
+        if rank_zero_only.rank == 0:
+            _logger.info('Schedule LR with metric: %s', last_accuracy)
+        scheduler.step(self.current_epoch + 1, last_accuracy)
+
+    def on_train_epoch_start(self):
+        # Logging learning rate at the beginning of every epoch
+        self.log('lr', self.trainer.optimizers[0].param_groups[0]['lr'])
 
     def on_train_epoch_end(self) -> None:
         if self.current_epoch + 1 >= self.num_epochs:
             self.trainer.should_stop = True
+
+        distributed = torch.is_distributed()
+
+        if distributed and self.hparams.dist_bn in ('broadcast', 'reduce'):
+            if rank_zero_only.rank == 0:
+                _logger.info('Distributing BatchNorm running means and vars')
+            distribute_bn(self.model, torch.distributed.get_world_size(), self.hparams.dist_bn == 'reduce')
+
+        if self.hparams.model_ema:
+            if distributed and self.hparams.dist_bn in ('broadcast', 'reduce'):
+                distribute_bn(self.model_ema, torch.distributed.get_world_size(), self.hparams.dist_bn == 'reduce')
 
 
 def get_imagenet_dataloader(data_dir: str, hparams: ImageNetTrainingHyperParameters, train: bool) -> DataLoader:
@@ -175,3 +230,29 @@ def get_imagenet_dataloader(data_dir: str, hparams: ImageNetTrainingHyperParamet
             num_workers=hparams.workers,
             crop_pct=hparams.crop_pct,
         )
+
+
+def train(arch: dict, log_dir: str, data_dir: str, batch_size: int | None = None, **kwargs):
+    with fixed_arch(arch):
+        model = ProxylessNAS()
+
+    hparams = ImageNetTrainingHyperParameters()
+
+    # For debugging, you can use a smaller batch size
+    if batch_size is not None:
+        hparams.batch_size = batch_size
+
+    train_loader = get_imagenet_dataloader(data_dir, hparams, True)
+    valid_loader = get_imagenet_dataloader(data_dir, hparams, False)
+
+    evaluator = Lightning(
+        TimmTrainingModule(hparams),
+        Trainer(
+            sync_batchnorm=hparams.sync_bn,
+            logger=TensorBoardLogger(log_dir, name='train')
+        ),
+        train_dataloaders=train_loader,
+        val_dataloaders=valid_loader,
+    )
+
+    evaluator.fit(model)
