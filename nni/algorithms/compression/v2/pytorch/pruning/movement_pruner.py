@@ -5,7 +5,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 import logging
-from typing import Dict, List, Literal, Tuple, Callable, overload
+from typing import Dict, List, Tuple, Callable, overload
+from typing_extensions import Literal
 
 import torch
 from torch import autograd, Tensor
