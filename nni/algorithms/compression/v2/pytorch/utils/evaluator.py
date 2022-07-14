@@ -117,7 +117,14 @@ class BackwardHook(ModuleHook):
 
 class Evaluator:
     """
-    NOTE: Users are not recommended to use any member functions of this class.
+    Evaluator is a package for the training & evaluation process. In model compression,
+    NNI have the need to intervene in the training process to collect intermediate information,
+    and even modify part of the training loop. Evaluator provides a series of member functions that are convenient to modify these,
+    and the compressor can easily intervene in training by calling these functions.
+
+    Notes
+    -----
+    Users are not recommended to use any member functions of this class.
     """
 
     # A flag to indicate whether the evaluator is initialized complete.
@@ -133,14 +140,14 @@ class Evaluator:
         This function is used to record the status of the optimizers & lr_schedulers,
         and ensure NNI can reinitialize the optimizers & lr_schedulers with a similar but modified model.
 
-        NOTE: this is a part of Evaluator initialization, please make sure this function has been called before using other evaluator functions.
+        Notes
+        -----
+        This is a part of Evaluator initialization, please make sure this function has been called before using other evaluator functions.
         """
         raise NotImplementedError
 
     def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None):
         """
-        NOTE: NNI users don't need to call this function. This function usually called by NNI Compressor.
-
         Bind the model suitable for this ``Evaluator`` to use the evaluator's abilities of model modification, model training, and model evaluation.
 
         Parameter
@@ -156,16 +163,12 @@ class Evaluator:
 
     def unbind_model(self):
         """
-        NOTE: NNI users don't need to call this function. This function usually called by NNI Compressor.
-
         Unbind the model bound by ``bind_model``. Then ``Evaluator`` can be reused by binding a new model by `bind_model`.
         """
         raise NotImplementedError
 
     def patch_loss(self, patch: Callable[[Tensor], Tensor]):
         """
-        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
-
         The patch may add additional loss or replace the original loss. Here is an example::
 
             def loss_patch(original_loss):
@@ -180,34 +183,29 @@ class Evaluator:
 
     def revert_loss(self):
         """
-        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
-
         Revert the loss to the original one.
         """
         raise NotImplementedError
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
         """
-        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
-        NOTE: we only patch tasks to the first optimizer right now.
-
         Run tasks in `before_step_tasks` before `optimizer.step()` each time.
         Run tasks in `after_step_tasks` after `optimizer.step()` each time.
+
+        Notes
+        -----
+        If the model has multiple optimizers, this function only patches tasks to the first optimizer right now.
         """
         raise NotImplementedError
 
     def revert_optimizer_step(self):
         """
-        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
-
         Revert the optimizer step to the original one.
         """
         raise NotImplementedError
 
     def register_hooks(self, hooks: List[Hook]):
         """
-        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
-
         The input is a list of ``TensorHook``, ``ForwardHook``, ``BackwardHook``,
         please view how to use ``TensorHook``, ``ForwardHook``, ``BackwardHook``.
         This function will call ``Hook.register()`` of hook in ``hooks``, and record the hook in ``self._hooks``.
@@ -220,16 +218,12 @@ class Evaluator:
 
     def get_all_hooks(self) -> List[Hook]:
         """
-        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
-
         Get all registered ``Hook``.
         """
         return getattr(self, '_hooks', [])
 
     def remove_all_hooks(self):
         """
-        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
-
         Call ``Hook.remove()`` of all ``Hook`` instances in ``self._hooks``, then clear ``self._hooks``.
         """
         if hasattr(self, '_hooks'):
@@ -239,35 +233,29 @@ class Evaluator:
 
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
         """
-        NOTE: NNI users can call this function to train the bound model, but not necessary.
-
         Train the bound model with default optimization loop defined by user and only change the training duration.
         """
         raise NotImplementedError
 
     def finetune(self):
         """
-        NOTE: NNI users can call this function to finetune the bound model, but not necessary.
-
         Finetune the bound model with default optimization loop defined by user.
         """
         raise NotImplementedError
 
-    def evaluate(self) -> float | Tuple[float, Any]:
+    def evaluate(self) -> float | None | Tuple[float, Any] | Tuple[None, Any]:
         """
-        NOTE: NNI users can call this function to evaluate the bound model, but not necessary.
-
-        Evaluate the bound model, the returned metric should be a float number,
-        or a tuple of two elements with the first element being a float number.
-        NNI will take this float number as the metric used in the compression algorithm.
+        NNI assume the evaluation function user passed in should return a float number or a dict as metric.
+        If the evaluation function returned a dict, take the value with dict key ``default`` as the first element of ``evaluate`` returned value,
+        and put the dict as the second element of the returned value.
+        For any other type of the metric returned by evaluation function, ``evaluate`` will directly returned
+        (it should be a float, but NNI does not prevent other types from being returned, this will handle by the object calling ``evaluate``).
         """
         # Note that the first item of the returned value will be used as the default metric used by NNI.
         raise NotImplementedError
 
     def get_dummy_input(self) -> Any:
         """
-        NOTE: NNI users are not recommended to call this function, it's used by NNI compressor.
-
         The returned value is a dummy input for the model, always used by ``torch.jit.trace``.
         """
         raise NotImplementedError
@@ -275,7 +263,13 @@ class Evaluator:
 
 class LightningEvaluator(Evaluator):
     """
-    NOTE: If the the test metric is needed by nni, please make sure log metric with key ``default`` in LightningModule.test_step().
+    LightningEvaluator is the Evaluator based on PytorchLightning.
+    It is very friendly to the users who are familiar to PytorchLightning
+    or already have training/validation/testing code written in PytorchLightning.
+    The only need is to use ``nni.trace`` to trace the Trainer & LightningDataModule.
+
+    Additionally, please make sure the ``Optimizer`` class and ``LR_Scheduler`` class used in ``LightningModule.configure_optimizers()``
+    are also be traced by ``nni.trace``.
 
     Parameters
     ----------
@@ -285,6 +279,10 @@ class LightningEvaluator(Evaluator):
         Pytorch-Lightning LightningDataModule. It should be traced by nni, e.g., ``data_module = nni.trace(pl.LightningDataModule)(...)``.
     dummy_input
         The dummy_input is used to trace the graph. If dummy_input is not given, will use the data in data_module.train_dataloader().
+
+    Notes
+    -----
+    If the the test metric is needed by nni, please make sure log metric with key ``default`` in ``LightningModule.test_step()``.
     """
 
     def __init__(self, trainer: pl.Trainer, data_module: pl.LightningDataModule,
@@ -517,12 +515,15 @@ class LightningEvaluator(Evaluator):
 
 
 _CRITERION = Callable[[Any, Any], Any]
-_EVALUATING_FUNC = Union[Callable[[Module], float], Callable[[Module], Tuple[float, Any]]]
+_EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
 _TRAINING_FUNC = Callable[[Module, Union[Optimizer, List[Optimizer]], _CRITERION, Union[None, _LRScheduler, List[_LRScheduler]], Optional[int], Optional[int]], None]
 
 
 class TorchEvaluator(Evaluator):
     """
+    TorchEvaluator is the Evaluator for native Pytorch users.
+    It has some requirements for the writing of the training loop, please refer to the documentation for details.
+
     Parameters
     ----------
     training_func
@@ -573,7 +574,7 @@ class TorchEvaluator(Evaluator):
         Optional. The traced _LRScheduler instance which the lr scheduler class is wrapped by nni.trace.
         E.g. ``traced_lr_scheduler = nni.trace(ExponentialLR)(optimizer, 0.1)``.
     dummy_input
-        Optional. The dummy_input is used to trace the graph.
+        Optional. The dummy_input is used to trace the graph, the same with ``example_inputs`` in ``torch.jit.trace(func, example_inputs, ...)``.
     evaluating_func
         Optional. A function that input is model and return the evaluation metric.
         The return value can be a single float or a tuple (float, Any).
@@ -709,10 +710,18 @@ class TorchEvaluator(Evaluator):
     def finetune(self):
         self.train()
 
-    def evaluate(self) -> float | Tuple[float, Any]:
+    def evaluate(self) -> float | None | Tuple[float, Dict[str, Any]] | Tuple[None, Dict[str, Any]]:
         assert self.model is not None
         assert self.evaluating_func is not None
-        return self.evaluating_func(self.model)
+        metric = self.evaluating_func(self.model)
+        if isinstance(metric, dict):
+            nni_used_metric = metric.get('default', None)
+            if nni_used_metric is None:
+                warn_msg = f'Evaluation function returns a dict metric without key `default`, will return None as the model evaluation metric value.'
+                _logger.warning(warn_msg)
+            return nni_used_metric, metric
+        else:
+            return metric
 
     def get_dummy_input(self) -> Any:
         return self.dummy_input
