@@ -42,6 +42,20 @@ class NormalSparsityAllocator(SparsityAllocator):
         return masks
 
 
+class ThresholdSparsityAllocator(SparsityAllocator):
+    def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+        masks = {}
+        # TODO: Support more target type in wrapper & config list refactor
+        for module_name, targets_metric in metrics.items():
+            masks[module_name] = {}
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                threshold = wrapper.config['total_sparsity']
+                shrinked_mask = torch.gt(torch.sigmoid(target_metric), threshold).type_as(target_metric)
+                masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
+        return masks
+
+
 class BankSparsityAllocator(SparsityAllocator):
     """
     In bank pruner, all values in weight are divided into different sub blocks each shape

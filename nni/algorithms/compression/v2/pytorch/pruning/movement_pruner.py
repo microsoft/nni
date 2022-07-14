@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import logging
-from typing import Dict, List, Tuple, Callable, overload
+from typing import Dict, List, Literal, Tuple, Callable, overload
 
 import torch
 from torch import autograd, Tensor
@@ -21,6 +21,7 @@ from .tools.base import EvaluatorBasedDataCollector, TrainerBasedDataCollector
 
 from .tools import (
     NormalSparsityAllocator,
+    ThresholdSparsityAllocator,
     StraightMetricsCalculator
 )
 
@@ -159,7 +160,7 @@ class MovementPruner(EvaluatorBasedPruner):
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_epochs: int,
-                 warm_up_step: int, cool_down_beginning_step: int):
+                 warm_up_step: int, cool_down_beginning_step: int, regular_scale: float | None = None, movement_mode: Literal['hard', 'soft'] = 'hard'):
         ...
 
     @overload
@@ -170,13 +171,15 @@ class MovementPruner(EvaluatorBasedPruner):
 
     def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
         # TODO: remove in nni v3.0. Fake overload.
-        new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
+        new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step', 'regular_scale', 'movement_mode']
         old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
         init_kwargs = self._init_evaluator(model, new_api, old_api, {}, args, kwargs)
 
         self.training_epochs: int = init_kwargs['training_epochs']
         self.warm_up_step: int = init_kwargs['warm_up_step']
         self.cool_down_beginning_step: int = init_kwargs['cool_down_beginning_step']
+        self.regular_scale: int | None = init_kwargs['regular_scale'] if self.using_evaluator else None
+        self.movement_mode: Literal['hard', 'soft'] | None = init_kwargs['movement_mode'] if self.using_evaluator else None
         assert self.warm_up_step < self.cool_down_beginning_step, '`warm_up_step` should smaller than `cool_down_beginning_step`'
         super().__init__(model, config_list)
 
@@ -186,18 +189,28 @@ class MovementPruner(EvaluatorBasedPruner):
         schema.validate(config_list)
 
     def cubic_schedule(self, current_step: int):
-        if self.warm_up_step < current_step <= self.cool_down_beginning_step:
-            wrapper_dict = self.get_modules_wrapper()
-            for config in self.config_list:
-                current_sparsity = config['total_sparsity'] * (1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3)
-                for op_name in config['op_names']:
-                    wrapper_dict[op_name].config['total_sparsity'] = current_sparsity
+        wrapper_dict = self.get_modules_wrapper()
+        for config in self.config_list:
+            current_sparsity = config['total_sparsity'] * self._cubic_scale(current_step)
+            for op_name in config['op_names']:
+                wrapper_dict[op_name].config['total_sparsity'] = current_sparsity
+
+    def _cubic_scale(self, current_step: int):
+        if self.warm_up_step > current_step:
+            return 0
+        elif current_step > self.cool_down_beginning_step:
+            return 1
+        else:
+            return 1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3
 
     def reset_tools(self):
         if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = StraightMetricsCalculator()
         if not hasattr(self, 'sparsity_allocator'):
-            self.sparsity_allocator = NormalSparsityAllocator(self, continuous_mask=False)
+            if self.movement_mode == 'soft':
+                self.sparsity_allocator = ThresholdSparsityAllocator(self, continuous_mask=False)
+            else:
+                self.sparsity_allocator = NormalSparsityAllocator(self, continuous_mask=False)
 
         # use Adam to update the weight_score
         assert self.bound_model is not None
@@ -220,12 +233,24 @@ class MovementPruner(EvaluatorBasedPruner):
                 masks = self.sparsity_allocator.generate_sparsity(metrics)  # type: ignore
                 self.load_masks(masks)
 
+        def _loss_patch(origin_loss: Tensor):
+            if self.regular_scale is not None:
+                l1_reg = 0
+                count = 0
+                for wrapper in self.get_modules_wrapper().values():
+                    l1_reg += torch.norm(torch.sigmoid(wrapper.weight_score), p=1) / wrapper.weight_score.numel()  # type: ignore
+                    count += 1
+                return origin_loss + self.regular_scale * self._cubic_scale(self.step_counter) * l1_reg / count
+            else:
+                return l1_reg
+
         if self.using_evaluator:
             # TODO: move to other place in nni v3.0
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             if not hasattr(self, 'data_collector'):
-                self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator, after_opt_step_tasks=[_optimizer_patch], max_epochs=self.training_epochs)
+                self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator, after_opt_step_tasks=[_optimizer_patch], max_epochs=self.training_epochs,
+                                                                       loss_patch=_loss_patch)
             else:
                 self.data_collector.reset(after_opt_step_tasks=[_optimizer_patch])
         else:
