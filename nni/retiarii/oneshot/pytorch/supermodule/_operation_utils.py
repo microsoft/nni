@@ -140,7 +140,7 @@ class Slicable(Generic[T]):
             raise TypeError(f'Unsuppoted weight type: {type(weight)}')
         self.weight = weight
 
-    def __getitem__(self, index: slice_type | multidim_slice) -> T:
+    def __getitem__(self, index: slice_type | multidim_slice | Any) -> T:
         if not isinstance(index, tuple):
             index = (index, )
         index = cast(multidim_slice, index)
@@ -267,7 +267,7 @@ def _iterate_over_slice_type(s: slice_type):
 def _iterate_over_multidim_slice(ms: multidim_slice):
     """Get :class:`MaybeWeighted` instances in ``ms``."""
     for s in ms:
-        if s is not None:
+        if s is not None and s is not Ellipsis:
             yield from _iterate_over_slice_type(s)
 
 
@@ -286,8 +286,8 @@ def _evaluate_multidim_slice(ms: multidim_slice, value_fn: _value_fn_type = None
     """Wraps :meth:`MaybeWeighted.evaluate` to evaluate the whole ``multidim_slice``."""
     res = []
     for s in ms:
-        if s is not None:
+        if s is not None and s is not Ellipsis:
             res.append(_evaluate_slice_type(s, value_fn))
         else:
-            res.append(None)
+            res.append(s)
     return tuple(res)
