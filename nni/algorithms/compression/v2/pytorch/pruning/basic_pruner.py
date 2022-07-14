@@ -12,7 +12,6 @@ import torch.nn.functional as F
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.common.serializer import Traceable
 from ..base import Pruner
 
 from .tools import (
@@ -523,7 +522,7 @@ class SlimPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor],
+                 traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
                  training_epochs: int, scale: float = 0.0001, mode='global'):
         self.mode = mode
         self.trainer = trainer
@@ -633,7 +632,7 @@ class ActivationPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
+                 traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
         self.dummy_input = dummy_input
@@ -957,7 +956,7 @@ class TaylorFOWeightPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
+                 traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
         self.dummy_input = dummy_input
@@ -1099,7 +1098,7 @@ class ADMMPruner(BasicPruner):
     """
 
     def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int,
+                 traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int,
                  training_epochs: int, granularity: str = 'fine-grained'):
         self.trainer = trainer
         if isinstance(traced_optimizer, OptimizerConstructHelper):
