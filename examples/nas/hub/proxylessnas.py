@@ -115,7 +115,7 @@ class TimmTrainingModule(LightningModule):
         _logger.info('Number of epochs: %d', self.num_epochs)
         return {
             'optimizer': optimizer,
-            'scheduler': lr_scheduler
+            'lr_scheduler': lr_scheduler
         }
 
     def set_model(self, model):

@@ -42,7 +42,7 @@ class NasBench201TrainingModule(ClassificationModule):
         )
         return {
             'optimizer': optimizer,
-            'scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_epochs, eta_min=0)
+            'lr_scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_epochs, eta_min=0)
         }
 
 

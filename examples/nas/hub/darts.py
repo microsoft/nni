@@ -7,6 +7,7 @@ Reproduction of experiments in `DARTS paper <https://arxiv.org/abs/1806.09055>`_
 
 import argparse
 import json
+import os
 
 import numpy as np
 import torch
@@ -47,7 +48,7 @@ class AuxLossClassificationModule(ClassificationModule):
         )
         return {
             'optimizer': optimizer,
-            'scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_epochs, eta_min=1e-3)
+            'lr_scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_epochs, eta_min=1e-3)
         }
 
     def training_step(self, batch, batch_idx):
@@ -71,6 +72,9 @@ class AuxLossClassificationModule(ClassificationModule):
     def on_train_epoch_start(self):
         """Set drop path probability before every epoch. This has no effect if drop path is not enabled in model."""
         self.model.set_drop_path_prob(self.model.drop_path_prob * self.current_epoch / self.max_epochs)
+
+        # Logging learning rate at the beginning of every epoch
+        self.log('lr', self.trainer.optimizers[0].param_groups[0]['lr'])
 
 
 def cutout_transform(img, length: int = 16):
@@ -206,6 +210,7 @@ def main():
 
     if 'search' in config['mode']:
         config['arch'] = search(**config)
+        json.dump(config['arch'], open(os.path.join(config['log_dir'], 'arch.json'), 'w'))
         print('Searched config', config['arch'])
     if 'train' in config['mode']:
         train(**config)
