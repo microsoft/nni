@@ -77,7 +77,7 @@ def parse_constant(cvalue, speedup):
 
     inputs = op_node.inputs()
     input_values = [parse_constant(_i, speedup) for _i in inputs]
-    func = init_trans_dict()[op_node.kind()](op_node, speedup)
+    func = get_trans_dict()[op_node.kind()](op_node, speedup)
     return func(*input_values)
 
 
@@ -156,20 +156,23 @@ def getattr_python(node, speedup):
 
 class my_partial:
     """
-    yet another functools.partial which support customed positions of arguements
+    Yet another functools.partial which support customed positions of arguements
     Array with associated photographic information.
 
     Attributes
     ----------
     func: Callable
         The function or method to be called.
-    undetermined: List
-        A list with the right positions of arguments.
-        Position is an int in positional or a str in keyword.
     positional: List
         Positional arguments.
     keyword: dict
         Keyword arguments.
+    undetermined: List
+        A list of the right positions of arguments.
+        Position is an int in positional or a str in keyword.
+    special_treat: List
+        A list of the positions and methods.
+        The values of these positions should be treat by those methods.
 
     """
     def __new__(cls, func, positional, keyword, undetermined, special_treat):
@@ -191,8 +194,10 @@ class my_partial:
         return self
 
     def __call__(self, /, *args):
-        assert len(args) == len(self.undetermined)
-        for i in range(0, len(args)):
+        assert len(args) >= len(self.undetermined)
+        if len(args) > len(self.undetermined):
+            logger.warning('drop some args when calling the function')
+        for i in range(0, len(self.undetermined)):
             p = self.undetermined[i]
             v = args[i]
             if type(p) is int:
@@ -205,7 +210,11 @@ class my_partial:
                 self.positional[p] = f(self.positional[p])
             else:
                 self.keyword[p] = f(self.keyword[p])
-        return self.func(*self.positional, **self.keyword)
+        result = self.func(*self.positional, **self.keyword)
+        if type(result) is int: # turn result of 'size' into tensor
+            result = torch.as_tensor([result], dtype=torch.long)
+        return result
+            
 
 scalar2dtype_dict = {
     0: torch.uint8, # byte
@@ -232,6 +241,17 @@ if torch.__version__ >= '1.9.0':
     }
     scalar2dtype_dict = {**scalar2dtype_dict, **scalar2dtype_dict_qint}
 def dtype_trans(scalar_type):
+    """
+    Special process for dtype.
+    Torch will transform dtype to an enum in cpp, so the value of dtype we get in jit is an int.
+    This function is used to recover the int to torch.dtype in python.
+
+    Parameters
+    ----------
+    scalar_type: 
+        The value of dtype or method to be recovered.
+
+    """
     if scalar_type is None or type(scalar_type) is torch.dtype:
         return scalar_type
     elif type(scalar_type) is int:
@@ -270,7 +290,7 @@ def generate_aten_to_python(func, node, speedup):
     schema = schema[0:schema.rfind(') ->')] + ','
     positional_num = 0
     keyword_list = list()
-    special_treat = list() # for dtype trans
+    special_treat = list() # for dtype trans now
 
     i = schema.find('(')
     if schema[i + 1] != ',':
@@ -300,28 +320,6 @@ def generate_aten_to_python(func, node, speedup):
                     i = j + 1
                     j = schema.find(',', i)
                 break
-    # i = schema.find('(')
-    # while i != -1:
-    #     if schema[i - 1] != '*':
-    #         if 'dtype=None' in schema[i:j]:
-    #             special_treat.append((positional_num, dtype_trans))
-    #         positional_num += 1
-    #         i = schema.find(',', i + 1)
-    #     else:
-    #         i += 1
-    #         j = schema.find(',', i)
-    #         while j != -1:
-    #             match = re.search("(\w+)=[^\s]+$", schema[i:j])
-    #             if not match:
-    #                 match = re.search("(\w+)$", schema[i:j])
-    #             key = match.group(1)
-    #             keyword_list.append(key)
-    #             if 'dtype=None' in schema[i:j]:
-    #                 special_treat.append((key, dtype_trans))
-
-    #             i = j + 1
-    #             j = schema.find(',', i)
-    #         break
 
     ## trans the input, to positional, keyword and undetermined
     positional = list()
@@ -359,11 +357,15 @@ def generate_aten_to_python(func, node, speedup):
     return my_partial(func, positional, keyword, undetermined, special_treat)
 
 members = None
-def init_trans_dict():
+def get_trans_dict():
+    """
+    Get the string to aten_recover_func dict.
+
+    """
     global members
     if not members:
         members = {
-            'aten::slice': slice_python, # cannot find function or method 'slice' under torch._C
+            'aten::slice': slice_python,
             'aten::Int': partial(generate_aten_to_python, torch._C._TensorBase.int),
             'prim::TupleUnpack': tupleunpack_python,
             'prim::ListUnpack': tupleunpack_python,
@@ -372,11 +374,12 @@ def init_trans_dict():
         }
         def init_add_functions(func_from):
             global members
-            new_members = {
-                "aten::" + attr : partial(generate_aten_to_python, getattr(func_from, attr))
-                for attr in dir(func_from)
-                if attr not in members and callable(getattr(func_from, attr)) and not attr.startswith("__")}
-            members = {**members, **new_members}
+            new_members = dict()
+            for name in dir(func_from):
+                attr = getattr(func_from, name)
+                if callable(attr) and not name.startswith("__"):
+                    new_members['aten::' + name] = partial(generate_aten_to_python, attr)
+            members = {**new_members, **members}
 
         init_add_functions(torch._C._VariableFunctions)
         init_add_functions(torch._C._nn)
@@ -402,12 +405,12 @@ def jit_to_python_function(node, speedup):
         Return the translated function that used to inference the mask
         , if current op_type is not supported, then we return None.
     """
-    the_dict = init_trans_dict()
+    trans_dict = get_trans_dict()
     logger.debug(
         'Translate C function %s into its python version', node.op_type)
-    if node.op_type not in the_dict:
+    if node.op_type not in trans_dict:
         logger.error(
             '%s is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~', node.op_type)
         # return None to skip the mask inference for this node
         return None
-    return the_dict[node.op_type](node, speedup)
+    return trans_dict[node.op_type](node, speedup)
