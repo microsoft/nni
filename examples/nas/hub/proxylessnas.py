@@ -24,7 +24,7 @@ from timm.loss import LabelSmoothingCrossEntropy
 from timm.models.efficientnet_builder import efficientnet_init_weights
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler
-from timm.utils import distribute_bn
+from timm.utils import distribute_bn, ModelEmaV2
 from torch.utils.data import DataLoader
 
 _logger = logging.getLogger('nni')
@@ -62,7 +62,7 @@ class ImageNetTrainingHyperParameters:
     warmup_lr: float = 0.0001
     min_lr: float = 1e-6  # lower lr bound for cyclic schedulers that hit 0
     epochs: int = 300  # number of epochs sent to scheduler
-    decay_milestones: list[int] = field(default=[30, 60])  # list of decay epoch indices for multistep lr. must be increasing
+    decay_milestones: list[int] = field(default_factory=lambda: [30, 60])  # decay epoch indices for multistep lr. must be increasing
     decay_epochs: int = 100  # epoch interval to decay LR
     warmup_epochs: int = 3  # epochs to warmup LR, if scheduler supports
     cooldown_epochs: int = 10  # epochs to cooldown LR at min_lr, after cyclic schedule ends
@@ -70,9 +70,9 @@ class ImageNetTrainingHyperParameters:
     decay_rate: float = 0.1  # LR decay rate
 
     # Augmentation & regularization parameters
-    scale: list[float] = field(default=[0.08, 1.0])  # Random resize scale
-    ratio: list[float] = field(default=[3/4, 4/3])  # Random resize aspect ratio
-    hflip: list[float] = field(default=0.5)  # Horizontal flip training aug probability
+    scale: list[float] = field(default_factory=lambda: [0.08, 1.0])  # Random resize scale
+    ratio: list[float] = field(default_factory=lambda: [3/4, 4/3])  # Random resize aspect ratio
+    hflip: float = 0.5  # Horizontal flip training aug probability
     vflip: float = 0.  # Vertical flip training aug probability
     color_jitter: float = 0.4  # Color jitter factor
     aa: str = None  # Use AutoAugment policy. "v0" or "original".
@@ -111,12 +111,12 @@ class TimmTrainingModule(LightningModule):
 
     def configure_optimizers(self):
         optimizer = create_optimizer_v2(self.model, **optimizer_kwargs(cfg=self.hparams))
-        lr_scheduler, self.num_epochs = create_scheduler(self.hparams, optimizer)
+
+        # This is a hack. PyTorch-Lightning does not support schedulers with custom types.
+        # Let's pretend there is not scheduler here. It will be manually called in `train_epoch_end`.
+        self._lr_scheduler, self.num_epochs = create_scheduler(self.hparams, optimizer)
         _logger.info('Number of epochs: %d', self.num_epochs)
-        return {
-            'optimizer': optimizer,
-            'lr_scheduler': lr_scheduler
-        }
+        return optimizer
 
     def set_model(self, model):
         super().set_model(model)
@@ -136,7 +136,7 @@ class TimmTrainingModule(LightningModule):
 
         if self.hparams.model_ema:
             # EMA will be wrapped by DDP in this case.
-            self.model_ema = utils.ModelEmaV2(self.model, decay=self.hparams.model_ema_decay)
+            self.model_ema = ModelEmaV2(self.model, decay=self.hparams.model_ema_decay)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -163,27 +163,35 @@ class TimmTrainingModule(LightningModule):
         self.log('test_acc', self.accuracy(y_hat, y), prog_bar=True)
 
     def on_train_batch_end(self, outputs, batch, batch_idx, unused=0):
-        self.model_ema.update(self.model)
+        if self.hparams.model_ema:
+            self.model_ema.update(self.model)
         return super().on_train_batch_end(outputs, batch, batch_idx, unused)
 
-    def lr_scheduler_step(self, scheduler, optimizer_idx, metric):
-        if self.hparams.model_ema:
-            last_accuracy = self.trainer.callback_metrics['val_acc_ema']
-        else:
-            last_accuracy = self.trainer.callback_metrics['val_acc']
-        if rank_zero_only.rank == 0:
-            _logger.info('Schedule LR with metric: %s', last_accuracy)
-        scheduler.step(self.current_epoch + 1, last_accuracy)
+    def on_train_start(self):
+        _logger.info('Start training at epoch: %d', self.current_epoch)
+        if self.current_epoch > 0:
+            self._lr_scheduler.step(self.current_epoch)
 
     def on_train_epoch_start(self):
         # Logging learning rate at the beginning of every epoch
         self.log('lr', self.trainer.optimizers[0].param_groups[0]['lr'])
 
     def on_train_epoch_end(self) -> None:
+        # Update learning rate scheduler
+        if self.hparams.model_ema:
+            last_accuracy = self.trainer.callback_metrics['val_acc_ema']
+        else:
+            last_accuracy = self.trainer.callback_metrics['val_acc']
+        if rank_zero_only.rank == 0:
+            _logger.info('Schedule LR with metric: %s', last_accuracy)
+        self._lr_scheduler.step(self.current_epoch + 1, last_accuracy)
+
+        # Stop training when appropriate
         if self.current_epoch + 1 >= self.num_epochs:
             self.trainer.should_stop = True
 
-        distributed = torch.is_distributed()
+        # Distribute Batch norm stats between nodes
+        distributed = torch.distributed.is_initialized()
 
         if distributed and self.hparams.dist_bn in ('broadcast', 'reduce'):
             if rank_zero_only.rank == 0:
@@ -234,9 +242,21 @@ def get_imagenet_dataloader(data_dir: str, hparams: ImageNetTrainingHyperParamet
 
 def train(arch: dict, log_dir: str, data_dir: str, batch_size: int | None = None, **kwargs):
     with fixed_arch(arch):
-        model = ProxylessNAS()
+        model = ProxylessNAS(bn_momentum=0.01, bn_eps=0.001, dropout_rate=0.15)
 
     hparams = ImageNetTrainingHyperParameters()
+    hparams.batch_size = 256
+    hparams.lr = 2.64
+    hparams.warmup_lr = 0.1
+    hparams.warmup_epochs = 9
+    hparams.epochs = 360
+    hparams.sched = 'cosine'
+    hparams.opt = 'rmsproptf'
+    hparams.opt_eps = 1.
+    hparams.weight_decay = 4e-5
+    hparams.dist_bn = 'reduce'
+    hparams.bn_momentum = 0.01
+    hparams.bn_eps = 0.001
 
     # For debugging, you can use a smaller batch size
     if batch_size is not None:
@@ -245,14 +265,52 @@ def train(arch: dict, log_dir: str, data_dir: str, batch_size: int | None = None
     train_loader = get_imagenet_dataloader(data_dir, hparams, True)
     valid_loader = get_imagenet_dataloader(data_dir, hparams, False)
 
-    evaluator = Lightning(
-        TimmTrainingModule(hparams),
-        Trainer(
-            sync_batchnorm=hparams.sync_bn,
-            logger=TensorBoardLogger(log_dir, name='train')
-        ),
-        train_dataloaders=train_loader,
-        val_dataloaders=valid_loader,
-    )
+    # evaluator = Lightning(
+    #     TimmTrainingModule(hparams),
+    #     Trainer(
+    #         sync_batchnorm=hparams.sync_bn,
+    #         logger=TensorBoardLogger(log_dir, name='train'),
+    #     ),
+    #     train_dataloaders=train_loader,
+    #     val_dataloaders=valid_loader,
+    # )
 
-    evaluator.fit(model)
+    # evaluator.fit(model)
+    lightning_module = TimmTrainingModule(hparams)
+    lightning_module.set_model(model)
+    Trainer(gpus=1).validate(lightning_module, dataloaders=valid_loader)
+
+
+
+def debug_train():
+    train({
+        's2_depth': 2,
+        's2_i0': 'k5e3',
+        's2_i1': 'k3e3',
+        's3_depth': 4,
+        's3_i0': 'k7e3',
+        's3_i1': 'k3e3',
+        's3_i2': 'k5e3',
+        's3_i3': 'k5e3',
+        's4_depth': 4,
+        's4_i0': 'k7e6',
+        's4_i1': 'k5e3',
+        's4_i2': 'k5e3',
+        's4_i3': 'k5e3',
+        's5_depth': 4,
+        's5_i0': 'k5e6',
+        's5_i1': 'k5e3',
+        's5_i2': 'k5e3',
+        's5_i3': 'k5e3',
+        's6_depth': 4,
+        's6_i0': 'k7e6',
+        's6_i1': 'k7e6',
+        's6_i2': 'k7e3',
+        's6_i3': 'k7e3',
+        's7_depth': 1,
+        's7_i0': 'k7e6'
+    }, 'lightning_logs', 'data/imagenet', 256)
+
+
+if __name__ == '__main__':
+    debug_train()

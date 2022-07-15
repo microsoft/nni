@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 
 import nni
 import numpy as np
@@ -125,6 +126,7 @@ def main():
 
     if 'search' in config['mode']:
         config['arch'] = search(**config)
+        json.dump(config['arch'], open(os.path.join(config['log_dir'], 'arch.json'), 'w'))
         print('Searched config', config['arch'])
     if 'train' in config['mode']:
         train(**config)
@@ -135,6 +137,7 @@ def main():
         results = list(query_nb201_trial_stats(
             {k.split('/')[-1]: v for k, v in config['arch'].items()}, 200, 'cifar10', include_intermediates=False
         ))
+        json.dump(results, open(os.path.join(config['log_dir'], 'query_results.json'), 'w'))
         print('Queried accuracy:', [r['ori_test_acc'] for r in results])
 
 
