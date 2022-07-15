@@ -154,7 +154,7 @@ class TimmTrainingModule(LightningModule):
 
         if self.hparams.model_ema:
             y_hat = self.model_ema(x)
-        self.log('val_acc_ema', self.accuracy(y_hat, y), prog_bar=True)
+            self.log('val_acc_ema', self.accuracy(y_hat, y), prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         x, y = batch
@@ -265,21 +265,22 @@ def train(arch: dict, log_dir: str, data_dir: str, batch_size: int | None = None
     train_loader = get_imagenet_dataloader(data_dir, hparams, True)
     valid_loader = get_imagenet_dataloader(data_dir, hparams, False)
 
-    # evaluator = Lightning(
-    #     TimmTrainingModule(hparams),
-    #     Trainer(
-    #         sync_batchnorm=hparams.sync_bn,
-    #         logger=TensorBoardLogger(log_dir, name='train'),
-    #     ),
-    #     train_dataloaders=train_loader,
-    #     val_dataloaders=valid_loader,
-    # )
+    evaluator = Lightning(
+        TimmTrainingModule(hparams),
+        Trainer(
+            sync_batchnorm=hparams.sync_bn,
+            logger=TensorBoardLogger(log_dir, name='train'),
+        ),
+        train_dataloaders=train_loader,
+        val_dataloaders=valid_loader,
+    )
 
-    # evaluator.fit(model)
-    lightning_module = TimmTrainingModule(hparams)
-    lightning_module.set_model(model)
-    Trainer(gpus=1).validate(lightning_module, dataloaders=valid_loader)
+    evaluator.fit(model)
 
+    # model.load_state_dict(torch.load('/home/yugzhan/.cache/nni/nashub/proxyless-mobile-8668a978.pth'))
+    # lightning_module = TimmTrainingModule(hparams)
+    # lightning_module.set_model(model)
+    # Trainer(gpus=1).validate(lightning_module, dataloaders=valid_loader)
 
 
 def debug_train():
