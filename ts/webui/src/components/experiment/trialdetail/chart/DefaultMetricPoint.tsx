@@ -123,7 +123,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     }
 
     private formatAccuracy(accuracy: number | undefined): number {
-        if (accuracy === undefined || isNaN(accuracy) || Object.is(accuracy, Infinity)) {
+        if (accuracy === undefined || isNaN(accuracy) || !isFinite(accuracy)) {
             return 0;
         }
         return accuracy;
