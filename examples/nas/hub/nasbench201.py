@@ -101,7 +101,7 @@ def train(log_dir: str, arch: dict, batch_size: int = 256, **kwargs):
     evaluator = Lightning(
         NasBench201TrainingModule(),
         Trainer(gpus=1, max_epochs=200, logger=TensorBoardLogger(log_dir, name='train')),
-        train_dataloaders=DataLoader(train_data, batch_size=batch_size, pin_memory=True, num_workers=6),
+        train_dataloaders=DataLoader(train_data, batch_size=batch_size, pin_memory=True, shuffle=True, num_workers=6),
         val_dataloaders=DataLoader(valid_data, batch_size=batch_size, pin_memory=True, num_workers=6)
     )
 

@@ -173,7 +173,7 @@ def train(arch: dict, log_dir: str, batch_size: int = 96, **kwargs):
             max_epochs=600,
             logger=TensorBoardLogger(log_dir, name='train')
         ),
-        train_dataloaders=DataLoader(train_data, batch_size=batch_size, pin_memory=True, num_workers=6),
+        train_dataloaders=DataLoader(train_data, batch_size=batch_size, pin_memory=True, shuffle=True, num_workers=6),
         val_dataloaders=DataLoader(valid_data, batch_size=batch_size, pin_memory=True, num_workers=6)
     )
 
