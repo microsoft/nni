@@ -28,7 +28,8 @@ from .tools import (
 
 from ..utils import (
     LightningEvaluator,
-    TorchEvaluator
+    TorchEvaluator,
+    Scaling
 )
 
 from ..utils.docstring import _EVALUATOR_DOCSTRING
@@ -161,7 +162,8 @@ class MovementPruner(EvaluatorBasedPruner):
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_epochs: int,
-                 warm_up_step: int, cool_down_beginning_step: int, regular_scale: float | None = None, movement_mode: Literal['hard', 'soft'] = 'hard'):
+                 warm_up_step: int, cool_down_beginning_step: int, regular_scale: float | None = None, movement_mode: Literal['hard', 'soft'] = 'hard',
+                 sparse_granularity: Literal['auto', 'finegrained'] = 'finegrained'):
         ...
 
     @overload
@@ -181,6 +183,7 @@ class MovementPruner(EvaluatorBasedPruner):
         self.cool_down_beginning_step: int = init_kwargs['cool_down_beginning_step']
         self.regular_scale: int | None = init_kwargs['regular_scale'] if self.using_evaluator else None
         self.movement_mode: Literal['hard', 'soft'] | None = init_kwargs['movement_mode'] if self.using_evaluator else None
+        self.sparse_granularity = init_kwargs['sparse_granularity'] if self.using_evaluator else None
         assert self.warm_up_step < self.cool_down_beginning_step, '`warm_up_step` should smaller than `cool_down_beginning_step`'
         super().__init__(model, config_list)
 
@@ -205,13 +208,26 @@ class MovementPruner(EvaluatorBasedPruner):
             return 1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3
 
     def reset_tools(self):
+        if self.sparse_granularity and self.sparse_granularity == 'auto':
+            scalers = {}
+            for config in self.config_list:
+                op_names = config.get('op_names', None)
+                if op_names:
+                    for op_name in op_names:
+                        if 'attention' in op_name:
+                            scalers[op_name] = {'_default': Scaling([64, 64])}
+                        else:
+                            scalers[op_name] = {'_default': Scaling([1], 'back')}
+        else:
+            scalers = Scaling([1])
+
         if not hasattr(self, 'metrics_calculator'):
-            self.metrics_calculator = StraightMetricsCalculator()
+            self.metrics_calculator = StraightMetricsCalculator(scalers=scalers)
         if not hasattr(self, 'sparsity_allocator'):
             if self.movement_mode == 'soft':
-                self.sparsity_allocator = ThresholdSparsityAllocator(self, continuous_mask=False)
+                self.sparsity_allocator = ThresholdSparsityAllocator(self, scalers=scalers, continuous_mask=False)
             else:
-                self.sparsity_allocator = NormalSparsityAllocator(self, continuous_mask=False)
+                self.sparsity_allocator = NormalSparsityAllocator(self, scalers=scalers, continuous_mask=False)
 
         # use Adam to update the weight_score
         assert self.bound_model is not None
