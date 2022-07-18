@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from functools import reduce
 import itertools
 from typing import Any, Dict
 
@@ -31,13 +32,24 @@ class NormalSparsityAllocator(SparsityAllocator):
             wrapper = self.pruner.get_modules_wrapper()[module_name]
             for target_name, target_metric in targets_metric.items():
                 sparsity_rate = wrapper.config['total_sparsity']
-                prune_num = int(sparsity_rate * target_metric.numel())
-                if prune_num != 0:
-                    threshold = torch.topk(target_metric.reshape(-1), prune_num, largest=False)[0].max()
-                    shrinked_mask = torch.gt(target_metric, threshold).type_as(target_metric)
-                else:
-                    # target_metric should have the same size as shrinked_mask
-                    shrinked_mask = torch.ones_like(target_metric)
+                flatten_metric = target_metric.reshape(-1)
+                kept_num = flatten_metric.numel() - int(sparsity_rate * flatten_metric.numel())
+                kept_indices = torch.topk(flatten_metric, kept_num).indices
+                shrinked_mask = torch.zeros_like(flatten_metric).scatter(0, kept_indices, 1.0).reshape_as(target_metric)
+                masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
+        return masks
+
+
+class ThresholdSparsityAllocator(SparsityAllocator):
+    def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+        masks = {}
+        # TODO: Support more target type in wrapper & config list refactor
+        for module_name, targets_metric in metrics.items():
+            masks[module_name] = {}
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                threshold = wrapper.config['total_sparsity']
+                shrinked_mask = torch.gt(torch.sigmoid(target_metric), threshold).type_as(target_metric)
                 masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
         return masks
 
@@ -69,27 +81,28 @@ class BankSparsityAllocator(SparsityAllocator):
                 assert n_dim >= len(self.balance_gran), 'Dimension of balance_gran should be smaller than metric'
                 # make up for balance_gran
                 balance_gran = [1] * (n_dim - len(self.balance_gran)) + self.balance_gran
+                balance_numel = reduce(lambda x, y: x * y, balance_gran)
+
+                reshape_size_split = []
+                reshape_size_balance = []
                 for i, j in zip(target_metric.shape, balance_gran):
                     assert i % j == 0, 'Length of {} {} is not aligned with balance granularity'.format(module_name, target_name)
+                    reshape_size_split.extend([i // j, j])
+                    reshape_size_balance.append(i // j)
+                reshape_size_balance.append(balance_numel)
 
-                # FIXME: The following code need refactor, do it after scaling refactor is done.
-                shrinked_mask = torch.ones(target_metric.shape).type_as(target_metric)
-                loop_iters = [range(int(i / j)) for i, j in zip(target_metric.shape, balance_gran)]
-                for iter_params in itertools.product(*loop_iters):
-                    index_str_list = [f"{iter_param * gran}:{(iter_param+1) * gran}"\
-                        for iter_param, gran in zip(iter_params, balance_gran)]
-                    index_str = ",".join(index_str_list)
-                    sub_metric_str = "target_metric[{}]".format(index_str)
-                    sub_mask_str =  "shrinked_mask[{}] = mask_bank".format(index_str)
-                    metric_bank: Tensor = eval(sub_metric_str)
-                    prune_num = int(sparsity_rate * metric_bank.numel())
-                    # mask_bank will be used in exec(sub_mask_str)
-                    if prune_num != 0:
-                        threshold = torch.topk(metric_bank.reshape(-1), prune_num, largest=False)[0].max()
-                        mask_bank = torch.gt(metric_bank, threshold).type_as(metric_bank)
-                    else:
-                        mask_bank = torch.ones_like(metric_bank)
-                    exec(sub_mask_str)
+                permute_dims_balance = [_ * 2 for _ in range(n_dim)] + [_ * 2 + 1 for _ in range(n_dim)]
+                permute_dims_split = []
+                for i in range(n_dim):
+                    permute_dims_split.extend([i, i + n_dim])
+
+                _target_metric = target_metric.reshape(reshape_size_split).permute(permute_dims_balance)
+                reshape_size_split_p = _target_metric.shape
+                balance_metric = _target_metric.reshape(reshape_size_balance)
+
+                kept_num = balance_numel - int(sparsity_rate * balance_numel)
+                kept_indices = torch.topk(balance_metric, kept_num).indices
+                shrinked_mask = torch.zeros_like(balance_metric).scatter(-1, kept_indices, 1.0).reshape(reshape_size_split_p).permute(permute_dims_split).reshape_as(target_metric)
                 masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
         return masks
 
