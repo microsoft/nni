@@ -9,7 +9,7 @@ import pytorch_lightning as pl
 import torch
 import torch.optim as optim
 
-from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
+from .base_lightning import BaseOneShotLightningModule, MANUAL_OPTIMIZATION_NOTE, MutationHook, no_default_hook
 from .supermodule.differentiable import (
     DifferentiableMixedLayer, DifferentiableMixedInput,
     MixedOpDifferentiablePolicy, GumbelSoftmax,
@@ -50,6 +50,8 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
     {{module_notes}}
 
+    {optimization_note}
+
     Parameters
     ----------
     {{module_params}}
@@ -60,7 +62,8 @@ class DartsLightningModule(BaseOneShotLightningModule):
         Clip gradients before optimizing models at each step. Default: None
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
-        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES),
+        optimization_note=MANUAL_OPTIMIZATION_NOTE
     )
 
     __doc__ = _darts_note.format(
@@ -162,6 +165,8 @@ class ProxylessLightningModule(DartsLightningModule):
 
     {{module_notes}}
 
+    {optimization_note}
+
     Parameters
     ----------
     {{module_params}}
@@ -218,6 +223,8 @@ class GumbelDartsLightningModule(DartsLightningModule):
 
     {{module_notes}}
 
+    {optimization_note}
+
     Parameters
     ----------
     {{module_params}}
@@ -235,7 +242,8 @@ class GumbelDartsLightningModule(DartsLightningModule):
         Clip gradients before optimizing models at each step. Default: None
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
-        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES),
+        optimization_note=MANUAL_OPTIMIZATION_NOTE
     )
 
     def mutate_kwargs(self):

@@ -22,12 +22,26 @@ from nni.typehint import Literal
 from .supermodule.base import BaseSuperNetModule
 
 __all__ = [
+    'MANUAL_OPTIMIZATION_NOTE',
     'MutationHook',
     'BaseSuperNetModule',
     'BaseOneShotLightningModule',
     'traverse_and_mutate_submodules',
     'no_default_hook'
 ]
+
+
+MANUAL_OPTIMIZATION_NOTE = """
+    .. warning::
+
+        The strategy, under the hood, creates a Lightning module that wraps the Lightning module defined in evaluator,
+        and enables `Manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`_.
+        We call the optimizers and schedulers configured in evaluator, following the definition in Lightning at best effort,
+        but we make no guarantee that the behaviors are exactly same as automatic optimization.
+        Moreover, some advanced features like gradient clipping will not be supported.
+        If you encounter any issues, please contact us by `creating an issue <https://github.com/microsoft/nni/issues>`_.
+
+"""
 
 
 MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
@@ -327,113 +341,71 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         return self.model.training_step(batch, batch_idx)
 
-    def configure_optimizers(self):
+    def configure_optimizers(self) -> Any:
         """
-        Combine architecture optimizers and user's model optimizers.
-        You can overwrite :meth:`configure_architecture_optimizers` if architecture optimizers are needed in your NAS algorithm.
+        Transparently configure optimizers for the inner model,
+        unless one-shot algorithm has its own optimizer (via :meth:`configure_architecture_optimizers`),
+        in which case, the optimizer will be appended to the list.
 
-        For now :attr:`model` is tested against evaluators in :mod:`nni.retiarii.evaluator.pytorch.lightning`
-        and it only returns 1 optimizer.
-        But for extendibility, codes for other return value types are also implemented.
+        The return value is still one of the 6 types defined in PyTorch-Lightning.
         """
-        # pylint: disable=assignment-from-none
-        arc_optimizers = self.configure_architecture_optimizers()
-        if arc_optimizers is None:
+        arch_optimizers = self.configure_architecture_optimizers() or []
+        if not arch_optimizers:  # no architecture optimizer available
             return self.model.configure_optimizers()
 
-        if isinstance(arc_optimizers, optim.Optimizer):
-            arc_optimizers = [arc_optimizers]
-        self.arc_optim_count = len(arc_optimizers)
+        if isinstance(arch_optimizers, optim.Optimizer):
+            arch_optimizers = [arch_optimizers]
 
-        # FIXME: this part uses non-official lightning API.
-        # The return values ``frequency`` and ``monitor`` are ignored because lightning requires
-        # ``len(optimizers) == len(frequency)``, and gradient backword is handled manually.
-        # For data structure of variables below, please see pytorch lightning docs of ``configure_optimizers``.
-        try:
-            # above v1.6
-            from pytorch_lightning.core.optimizer import (  # pylint: disable=import-error
-                _configure_optimizers,  # type: ignore
-                _configure_schedulers_automatic_opt,  # type: ignore
-                _configure_schedulers_manual_opt  # type: ignore
-            )
-            w_optimizers, lr_schedulers, self.frequencies, monitor = \
-                _configure_optimizers(self.model.configure_optimizers())  # type: ignore
-            lr_schedulers = (
-                _configure_schedulers_automatic_opt(lr_schedulers, monitor)
-                if self.automatic_optimization
-                else _configure_schedulers_manual_opt(lr_schedulers)
-            )
-        except ImportError:
-            # under v1.5
-            w_optimizers, lr_schedulers, self.frequencies, monitor = \
-                self.trainer._configure_optimizers(self.model.configure_optimizers())  # type: ignore
-            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)  # type: ignore
+        # Set the flag to True so that they can differ from other optimizers
+        for optimizer in arch_optimizers:
+            optimizer.is_arch_optimizer = True
 
-        if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):  # type: ignore
-            raise Exception(
-                "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
-            )
+        optim_conf = self.model.configure_optimizers()
 
-        # variables used to handle optimizer frequency
-        self.cur_optimizer_step = 0
-        self.cur_optimizer_index = 0
+        # single optimizer
+        if isinstance(optim_conf, Optimizer):
+            return [optim_conf] + arch_optimizers
+        # two lists, optimizer + lr schedulers
+        if (
+            isinstance(optim_conf, (list, tuple))
+            and len(optim_conf) == 2
+            and isinstance(optim_conf[0], list)
+            and all(isinstance(opt, Optimizer) for opt in optim_conf[0])
+        ):
+            return list(optim_conf[0]) + arch_optimizers, optim_conf[1]
+        # single dictionary
+        if isinstance(optim_conf, dict):
+            return [optim_conf] + [{'optimizer': optimizer} for optimizer in arch_optimizers]
+        # multiple dictionaries
+        if isinstance(optim_conf, (list, tuple)) and all(isinstance(d, dict) for d in optim_conf):
+            return optim_conf + [{'optimizer': optimizer} for optimizer in arch_optimizers]
+        # single list or tuple, multiple optimizer
+        if isinstance(optim_conf, (list, tuple)) and all(isinstance(opt, Optimizer) for opt in optim_conf):
+            return list(optim_conf) + arch_optimizers
+        # unknown configuration
+        warnings.warn('Unknown optimizer configuration. Architecture optimizers will be ignored. Strategy might fail.', UserWarning)
 
-        return arc_optimizers + w_optimizers, lr_schedulers
+        return optim_conf
 
-    def on_train_start(self):
-        return self.model.on_train_start()
-
-    def on_train_end(self):
-        return self.model.on_train_end()
-
-    def on_fit_start(self):
+    def setup(self, stage=None):
         # redirect the access to trainer/log to this module
         # but note that we might be missing other attributes,
         # which could potentially be a problem
         self.model.trainer = self.trainer  # type: ignore
         self.model.log = self.log
-        return self.model.on_fit_start()
+        return self.model.setup(stage)
 
-    def on_fit_end(self):
-        return self.model.on_fit_end()
+    def teardown(self, stage=None):
+        return self.model.teardown(stage)
 
-    def on_train_batch_start(self, batch, batch_idx, unused=0):
-        return self.model.on_train_batch_start(batch, batch_idx, unused)
-
-    def on_train_batch_end(self, outputs, batch, batch_idx, unused=0):
-        return self.model.on_train_batch_end(outputs, batch, batch_idx, unused)
-
-    # Deprecated hooks in pytorch-lightning
-    def on_epoch_start(self):
-        return self.model.on_epoch_start()
-
-    def on_epoch_end(self):
-        return self.model.on_epoch_end()
-
-    def on_train_epoch_start(self):
-        return self.model.on_train_epoch_start()
-
-    def on_train_epoch_end(self):
-        return self.model.on_train_epoch_end()
-
-    def on_before_backward(self, loss):
-        return self.model.on_before_backward(loss)
-
-    def on_after_backward(self):
-        return self.model.on_after_backward()
-
-    def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val=None, gradient_clip_algorithm=None):
-        return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
-
-    def configure_architecture_optimizers(self):
+    def configure_architecture_optimizers(self) -> list[optim.Optimizer] | optim.Optimizer | None:
         """
         Hook kept for subclasses. A specific NAS method inheriting this base class should return its architecture optimizers here
         if architecture parameters are needed. Note that lr schedulers are not supported now for architecture_optimizers.
 
         Returns
-        ----------
-        arc_optimizers : list[Optimizer], Optimizer
-            Optimizers used by a specific NAS algorithm. Return None if no architecture optimizers are needed.
+        -------
+        Optimizers used by a specific NAS algorithm. Return None if no architecture optimizers are needed.
         """
         return None
 
@@ -561,3 +533,40 @@ class BaseOneShotLightningModule(pl.LightningModule):
         if self.arc_optim_count == 0:
             return cast(Union[List[Optimizer], Optimizer], opts)
         return None
+
+    # The following methods redirects the callbacks to inner module.
+    # It's not the complete list though.
+    # More methods can be added if needed.
+
+    def on_train_start(self):
+        return self.model.on_train_start()
+
+    def on_train_end(self):
+        return self.model.on_train_end()
+
+    def on_fit_start(self):
+        return self.model.on_fit_start()
+
+    def on_fit_end(self):
+        return self.model.on_fit_end()
+
+    def on_train_batch_start(self, batch, batch_idx, unused=0):
+        return self.model.on_train_batch_start(batch, batch_idx, unused)
+
+    def on_train_batch_end(self, outputs, batch, batch_idx, unused=0):
+        return self.model.on_train_batch_end(outputs, batch, batch_idx, unused)
+
+    def on_train_epoch_start(self):
+        return self.model.on_train_epoch_start()
+
+    def on_train_epoch_end(self):
+        return self.model.on_train_epoch_end()
+
+    def on_before_backward(self, loss):
+        return self.model.on_before_backward(loss)
+
+    def on_after_backward(self):
+        return self.model.on_after_backward()
+
+    def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val=None, gradient_clip_algorithm=None):
+        return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)

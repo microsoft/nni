@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
+from .base_lightning import MANUAL_OPTIMIZATION_NOTE, BaseOneShotLightningModule, MutationHook, no_default_hook
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
 from .supermodule.sampling import (
     PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy,
@@ -115,6 +115,8 @@ class EnasLightningModule(RandomSamplingLightningModule):
 
     {{module_notes}}
 
+    {optimization_note}
+
     Parameters
     ----------
     {{module_params}}
@@ -143,7 +145,8 @@ class EnasLightningModule(RandomSamplingLightningModule):
         Otherwise it raises an exception indicating multiple metrics are found.
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
-        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES),
+        optimization_note=MANUAL_OPTIMIZATION_NOTE
     )
 
     __doc__ = _enas_note.format(
