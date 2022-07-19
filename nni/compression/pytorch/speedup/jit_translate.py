@@ -244,18 +244,20 @@ enum2dtype_dict = {
     11: torch.bool,
     15: torch.bfloat16,
 }
-if torch.__version__ >= '1.11.0' and torch.__version__ < '1.12':
-    # torch.complex32 is disabled in 1.11
-    enum2dtype_dict[8] = torch.complex32
 if torch.__version__ >= '1.9.0':
     scalar2dtype_dict_qint = {
         12: torch.qint8,
         13: torch.quint8,
         14: torch.qint32,
         16: torch.quint4x2,
-        17: torch.quint2x4,
     }
     enum2dtype_dict = {**enum2dtype_dict, **scalar2dtype_dict_qint}
+if torch.__version__ < '1.11.0' and torch.__version__ >= '1.12.0':
+    # torch.complex32 is disabled in 1.11
+    enum2dtype_dict[8] = torch.complex32
+if torch.__version__ >= '1.12.0':
+    # In 1.12, torch.quint2x4 is existed, and there is a 'QUInt2x4Storage'.
+    enum2dtype_dict[17] = torch.quint2x4
 def dtype_trans(ivalue: int | torch.dtype):
     """
     Special process for dtype.
