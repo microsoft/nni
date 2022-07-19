@@ -105,8 +105,8 @@ class EvaluatorBasedScoreDataCollector(EvaluatorBasedDataCollector):
         data = {}
         target_name = 'weight'
         for module_name, wrapper in self.compressor.get_modules_wrapper().items():
-            target: Tensor = getattr(wrapper, target_name)
-            data[module_name] = {target_name: target.data.clone()}
+            target_score: Tensor = getattr(wrapper, f'{target_name}_score')
+            data[module_name] = {target_name: target_score.data.clone()}
         return data
 
 
@@ -174,7 +174,7 @@ class MovementPruner(EvaluatorBasedPruner):
 
     def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
         # TODO: remove in nni v3.0. Fake overload.
-        new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step', 'regular_scale', 'movement_mode']
+        new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step', 'regular_scale', 'movement_mode', 'sparse_granularity']
         old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
         init_kwargs = self._init_evaluator(model, new_api, old_api, {}, args, kwargs)
 
@@ -255,11 +255,19 @@ class MovementPruner(EvaluatorBasedPruner):
                 l1_reg = 0
                 count = 0
                 for wrapper in self.get_modules_wrapper().values():
-                    l1_reg += torch.norm(torch.sigmoid(wrapper.weight_score), p=1) / wrapper.weight_score.numel()  # type: ignore
+                    reg = torch.norm(torch.sigmoid(wrapper.weight_score), p=1) / wrapper.weight_score.numel()  # type: ignore
+                    if self.sparse_granularity == 'auto':
+                        if 'attention' in wrapper.name:
+                            reg /= 1
+                        elif 'intermediate' in wrapper.name:
+                            reg /= 1
+                        else:
+                            reg /= 1
+                    l1_reg += reg
                     count += 1
                 return origin_loss + self.regular_scale * self._cubic_scale(self.step_counter) * l1_reg / count
             else:
-                return l1_reg
+                return origin_loss
 
         if self.using_evaluator:
             # TODO: move to other place in nni v3.0
