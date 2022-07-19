@@ -306,7 +306,7 @@ class CellBuilder:
                    op: str, channels: int, is_reduction_cell: bool):
         if is_reduction_cell and (
             input_index is None or input_index < self.num_predecessors
-        ):  # could be none when constructing search sapce
+        ):  # could be none when constructing search space
             stride = 2
         else:
             stride = 1

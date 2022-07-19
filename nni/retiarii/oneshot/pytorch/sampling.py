@@ -37,6 +37,9 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
     * :class:`nni.retiarii.nn.pytorch.Cell`.
     * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
 
+    This strategy assumes inner evaluator has set
+    `automatic optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__ to true.
+
     Parameters
     ----------
     {{module_params}}

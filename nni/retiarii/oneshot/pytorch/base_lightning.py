@@ -35,9 +35,12 @@ MANUAL_OPTIMIZATION_NOTE = """
     .. warning::
 
         The strategy, under the hood, creates a Lightning module that wraps the Lightning module defined in evaluator,
-        and enables `Manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`_.
+        and enables `Manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`_,
+        although we assume **the inner evaluator has enabled automatic optimization**.
         We call the optimizers and schedulers configured in evaluator, following the definition in Lightning at best effort,
         but we make no guarantee that the behaviors are exactly same as automatic optimization.
+        We call :meth:`~BaseSuperNetModule.advance_optimizers` and :meth:`~BaseSuperNetModule.advance_lr_schedulers`
+        to invoke the optimizers and schedulers configured in evaluators.
         Moreover, some advanced features like gradient clipping will not be supported.
         If you encounter any issues, please contact us by `creating an issue <https://github.com/microsoft/nni/issues>`_.
 
@@ -362,10 +365,10 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         optim_conf = self.model.configure_optimizers()
 
-        # single optimizer
+        # 1. single optimizer
         if isinstance(optim_conf, Optimizer):
             return [optim_conf] + arch_optimizers
-        # two lists, optimizer + lr schedulers
+        # 2. two lists, optimizer + lr schedulers
         if (
             isinstance(optim_conf, (list, tuple))
             and len(optim_conf) == 2
@@ -373,13 +376,13 @@ class BaseOneShotLightningModule(pl.LightningModule):
             and all(isinstance(opt, Optimizer) for opt in optim_conf[0])
         ):
             return list(optim_conf[0]) + arch_optimizers, optim_conf[1]
-        # single dictionary
+        # 3. single dictionary
         if isinstance(optim_conf, dict):
             return [optim_conf] + [{'optimizer': optimizer} for optimizer in arch_optimizers]
-        # multiple dictionaries
+        # 4. multiple dictionaries
         if isinstance(optim_conf, (list, tuple)) and all(isinstance(d, dict) for d in optim_conf):
             return optim_conf + [{'optimizer': optimizer} for optimizer in arch_optimizers]
-        # single list or tuple, multiple optimizer
+        # 5. single list or tuple, multiple optimizer
         if isinstance(optim_conf, (list, tuple)) and all(isinstance(opt, Optimizer) for opt in optim_conf):
             return list(optim_conf) + arch_optimizers
         # unknown configuration

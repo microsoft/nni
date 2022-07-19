@@ -175,7 +175,10 @@ class ProxylessLightningModule(DartsLightningModule):
         Learning rate for architecture optimizer. Default: 3.0e-4
     gradient_clip_val : float
         Clip gradients before optimizing models at each step. Default: None
-    """.format(base_params=BaseOneShotLightningModule._mutation_hooks_note)
+    """.format(
+        base_params=BaseOneShotLightningModule._mutation_hooks_note,
+        optimization_note=MANUAL_OPTIMIZATION_NOTE
+    )
 
     __doc__ = _proxyless_note.format(
         module_notes='This module should be trained with :class:`pytorch_lightning.trainer.supporters.CombinedLoader`.',
