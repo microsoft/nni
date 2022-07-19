@@ -1,6 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
+from types import ModuleType
+from typing import Any, Callable, Dict, List, Type
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:  # Only imports the below statements during type checking
+    from nni.compression.pytorch.speedup import ModelSpeedup
+    from nni.common.graph_utils import NodePyGroup
+
 import re
 import logging
 from functools import partial
@@ -13,8 +22,8 @@ logger.setLevel(logging.INFO)
 # to exclude partial
 
 __all__ = [
-    'getattr_python', 'jit_to_python_function', 'num2tensor_python', 'parse_constant', 'slice_python', 'torch',
-    'translate_list', 'tupleunpack_python',
+    'getattr_python', 'jit_to_python_function', 'num2tensor_python', 'parse_constant', 'slice_python',
+    'translate_list', 'tupleunpack_python', 'dtype_trans', 'memory_format_trans'
 ]
 
 
@@ -168,15 +177,16 @@ class my_partial:
         Positional arguments.
     keyword: dict
         Keyword arguments.
-    undetermined: List
+    undetermined: List[int | str]
         A list of the right positions of arguments.
         Position is an int in positional or a str in keyword.
-    special_treat: List
-        A list of the positions and methods.
+    special_treat: Dict[int | str, Callable]
+        A Dict of the positions and methods.
         The values of these positions should be treat by those methods.
 
     """
-    def __new__(cls, func, positional, keyword, undetermined, special_treat):
+    def __new__(cls, func: Callable, positional: List[Any], keyword: Dict[str, Any],
+                undetermined: List[int | str], special_treat: Dict[int | str, Callable]):
         if not callable(func):
             raise TypeError("the first argument must be callable")
 
@@ -197,7 +207,7 @@ class my_partial:
     def __call__(self, /, *args):
         assert len(args) >= len(self.undetermined)
         if len(args) > len(self.undetermined):
-            logger.warning('throw some args away when calling the function \'%s\'' % self.func.__name__)
+            logger.warning('throw some args away when calling the function \'%s\'', self.func.__name__)
         for i in range(0, len(self.undetermined)):
             p = self.undetermined[i]
             v = args[i]
@@ -216,8 +226,11 @@ class my_partial:
             result = torch.as_tensor([result], dtype=torch.long)
         return result
 
+# There are some types that will be convert into enums after jit.
+# So we should recover them back:
+#   device, dtype, layout, memory_format, qscheme, qengine, dispatchkey
 
-scalar2dtype_dict = {
+enum2dtype_dict = {
     0: torch.uint8, # byte
     1: torch.int8, # char
     2: torch.int16,
@@ -226,12 +239,14 @@ scalar2dtype_dict = {
     5: torch.float16,
     6: torch.float32,
     7: torch.float64, # double
-    8: torch.complex32,
     9: torch.complex64,
     10: torch.complex128,
     11: torch.bool,
     15: torch.bfloat16,
 }
+if torch.__version__ >= '1.11.0' and torch.__version__ < '1.12':
+    # torch.complex32 is disabled in 1.11
+    enum2dtype_dict[8] = torch.complex32
 if torch.__version__ >= '1.9.0':
     scalar2dtype_dict_qint = {
         12: torch.qint8,
@@ -240,8 +255,8 @@ if torch.__version__ >= '1.9.0':
         16: torch.quint4x2,
         17: torch.quint2x4,
     }
-    scalar2dtype_dict = {**scalar2dtype_dict, **scalar2dtype_dict_qint}
-def dtype_trans(scalar_type):
+    enum2dtype_dict = {**enum2dtype_dict, **scalar2dtype_dict_qint}
+def dtype_trans(ivalue: int | torch.dtype):
     """
     Special process for dtype.
     Torch will transform dtype to an enum in cpp, so the value of dtype we get in jit is an int.
@@ -249,21 +264,53 @@ def dtype_trans(scalar_type):
 
     Parameters
     ----------
-    scalar_type:
+    ivalue:
         The value of dtype or method to be recovered.
 
     """
-    if scalar_type is None or type(scalar_type) is torch.dtype:
-        return scalar_type
-    elif type(scalar_type) is int:
-        global scalar2dtype_dict
-        if scalar_type not in scalar2dtype_dict:
+    if ivalue is None or type(ivalue) is torch.dtype:
+        return ivalue
+    elif type(ivalue) is int:
+        global enum2dtype_dict
+        if ivalue not in enum2dtype_dict:
             raise TypeError("Unimplemented scalar type")
-        return scalar2dtype_dict[scalar_type]
+        return enum2dtype_dict[ivalue]
     else:
         raise TypeError("Unimplemented scalar type")
 
-def generate_aten_to_python(func, node, speedup):
+enum2memory_format_dict = {
+    0: torch.contiguous_format,
+    1: torch.preserve_format, # char
+    2: torch.channels_last,
+    3: torch.channels_last_3d,
+}
+def memory_format_trans(ivalue: int | torch.memory_format):
+    """
+    Special process for memory_format.
+    Torch will transform memory_format to an enum in cpp, so the value of memory_format we get in jit is an int.
+    This function is used to recover the int to torch.memory_format in python.
+
+    Parameters
+    ----------
+    ivalue:
+        The value of memory_format or method to be recovered.
+
+    """
+    if ivalue is None or type(ivalue) is torch.memory_format:
+        return ivalue
+    elif type(ivalue) is int:
+        global enum2memory_format_dict
+        if ivalue not in enum2memory_format_dict:
+            raise TypeError("Unimplemented memory_format type")
+        return enum2memory_format_dict[ivalue]
+    else:
+        raise TypeError("Unimplemented memory_format type")
+
+special_treat_dict = {
+    'dtype': dtype_trans,
+    'memory_format': memory_format_trans,
+}
+def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpeedup):
     """
     parse a
     Return a callable object to inference the mask according to the
@@ -273,7 +320,7 @@ def generate_aten_to_python(func, node, speedup):
     ---------
     func: Callable
         The torch function one-to-one correspondence with the node.
-    node: NodeGroup
+    node: NodePyGroup
         The target node to inference the mask
     speedup: ModelSpeedup
         The speedup object of the target model.
@@ -300,10 +347,14 @@ def generate_aten_to_python(func, node, speedup):
         while j != -1:
             if schema[j - 1] != '*':
                 # detect and it to the special_treat
-                if 'dtype=None' in schema[i:j]:
+                match = re.search("(\w+)=[^\s]+$", schema[i:j])
+                if not match:
+                    match = re.search("(\w+)$", schema[i:j])
+                arg_name = match.group(1)
+                if arg_name in special_treat_dict:
                     key = positional_num
-                    if key not in special_treat: special_treat[key] = [dtype_trans]
-                    else: special_treat[key].append(dtype_trans)
+                    if key not in special_treat: special_treat[key] = [special_treat_dict[arg_name]]
+                    else: special_treat[key].append(special_treat_dict[arg_name])
                 positional_num += 1
 
                 i = j + 1
@@ -315,13 +366,13 @@ def generate_aten_to_python(func, node, speedup):
                     match = re.search("(\w+)=[^\s]+$", schema[i:j])
                     if not match:
                         match = re.search("(\w+)$", schema[i:j])
-                    key = match.group(1)
-                    keyword_list.append(key)
+                    arg_name = match.group(1)
+                    keyword_list.append(arg_name)
                     # detect and it to the special_treat
-                    if 'dtype=None' in schema[i:j]:
-                        assert key == 'dtype'
-                        if key not in special_treat: special_treat[key] = [dtype_trans]
-                        else: special_treat[key].append(dtype_trans)
+                    if arg_name in special_treat_dict:
+                        key = arg_name
+                        if key not in special_treat: special_treat[key] = [special_treat_dict[arg_name]]
+                        else: special_treat[key].append(special_treat_dict[arg_name])
 
                     i = j + 1
                     j = schema.find(',', i)
@@ -370,7 +421,7 @@ trans_func_dict = {
     'prim::NumToTensor': num2tensor_python,
     'prim::GetAttr': getattr_python,
 }
-def init_add_functions(func_from):
+def init_add_functions(func_from: ModuleType | Type):
     """
     Add function/method attributes from a module/class, to the trans_func_dict
 
@@ -392,14 +443,14 @@ init_add_functions(torch._C._VariableFunctions)
 init_add_functions(torch._C._nn)
 init_add_functions(torch._C._TensorBase)
 
-def jit_to_python_function(node, speedup):
+def jit_to_python_function(node: NodePyGroup, speedup: ModelSpeedup):
     """
     Return a callable object to inference the mask according to the
     node.op_type.
 
     Parameters
     ---------
-    node: NodeGroup
+    node: NodePyGroup
         The target node to inference the mask
     speedup: ModelSpeedup
         The speedup object of the target model.
