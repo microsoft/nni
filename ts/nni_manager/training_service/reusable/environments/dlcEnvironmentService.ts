@@ -54,7 +54,7 @@ export class DlcEnvironmentService extends EnvironmentService {
     public get getName(): string {
         return 'dlc';
     }
-    public sleep(time:any):Promise<any> {
+    public sleep(time: any): Promise<any> {
         return new Promise((resolve) => setTimeout(resolve, time*1000));
     }
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
@@ -80,6 +80,7 @@ export class DlcEnvironmentService extends EnvironmentService {
                     environment.setStatus('SUCCEEDED');
                     break;
                 case 'FAILED':
+                    // the job create failed,we will sleep(60) to create new job
                     await this.sleep(60);
                     this.log.debug(`await 60s to create new job,DLC: job ${environment.id} is failed!`);
                     environment.setStatus('FAILED');

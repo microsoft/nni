@@ -99,9 +99,9 @@ export class DlcClient {
         this.log.debug(`monitor submit`);
         const log = this.log;
         this.pythonShellClient.on('message', (message: any) => {
-            const job_id = this.parseContent('job_id', message);
-            log.debug(`reslove job_id ${job_id}`);
-            deferred.resolve(job_id);
+            const jobid = this.parseContent('job_id', message);
+            log.debug(`reslove job_id ${jobid}`);
+            deferred.resolve(jobid);
         });
         return deferred.promise;
     }
@@ -110,7 +110,7 @@ export class DlcClient {
             throw Error('python shell client not initialized!');
         }
         const log = this.log;
-        this.pythonShellClient.on('message', (message:any) => {
+        this.pythonShellClient.on('message', (message: any) => {
             const status: string= this.parseContent('status', message);
             if (status.length > 0) {
                 log.debug(`on message status: ${status}`)
