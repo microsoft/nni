@@ -56,7 +56,6 @@ interface TableRecord {
     accuracy?: number | any;
     latestAccuracy: number | undefined;
     formattedLatestAccuracy: string; // format (LATEST/FINAL),
-    accDictionary: FinalType | undefined;
 }
 
 interface SearchSpace {
