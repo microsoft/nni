@@ -4,6 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as component from 'common/component';
+import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from 'common/log';
 import { DlcConfig } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
@@ -53,8 +54,11 @@ export class DlcEnvironmentService extends EnvironmentService {
     public get getName(): string {
         return 'dlc';
     }
-
+    public sleep(time:any):Promise<any> {
+        return new Promise((resolve) => setTimeout(resolve, time*1000));
+    }
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
         environments.forEach(async (environment) => {
             const dlcClient = (environment as DlcEnvironmentInformation).dlcClient;
             if (!dlcClient) {
@@ -76,8 +80,11 @@ export class DlcEnvironmentService extends EnvironmentService {
                     environment.setStatus('SUCCEEDED');
                     break;
                 case 'FAILED':
+                    await this.sleep(60);
+                    this.log.debug(`await 60s to create new job,DLC: job ${environment.id} is failed!`);
                     environment.setStatus('FAILED');
-                    return Promise.reject(`DLC: job ${environment.envId} is failed!`);
+                    deferred.reject(`DLC: job ${environment.id} is failed!`);
+                    break;
                 case 'STOPPED':
                 case 'STOPPING':
                     environment.setStatus('USER_CANCELED');
@@ -86,6 +93,8 @@ export class DlcEnvironmentService extends EnvironmentService {
                     environment.setStatus('UNKNOWN');
             }
         });
+        deferred.resolve();
+        return deferred.promise;
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
