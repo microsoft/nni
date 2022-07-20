@@ -252,7 +252,7 @@ if torch.__version__ >= '1.9.0':
         16: torch.quint4x2,
     }
     enum2dtype_dict = {**enum2dtype_dict, **scalar2dtype_dict_qint}
-if torch.__version__ < '1.11.0' and torch.__version__ >= '1.12.0':
+if torch.__version__ < '1.11.0' or torch.__version__ >= '1.12.0':
     # torch.complex32 is disabled in 1.11
     enum2dtype_dict[8] = torch.complex32
 if torch.__version__ >= '1.12.0':
