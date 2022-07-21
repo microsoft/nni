@@ -42,10 +42,9 @@ def training_model(model: Module, optimizer: Optimizer, criterion: Callable, sch
     model.train()
 
     # prepare data
-    data_dir = Path(__file__).parent / 'data'
-    MNIST(data_dir, train=True, download=True)
+    MNIST(root='data/mnist', train=True, download=True)
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    mnist_train = MNIST(data_dir, train=True, transform=transform)
+    mnist_train = MNIST(root='data/mnist', train=True, transform=transform)
     train_dataloader = DataLoader(mnist_train, batch_size=32)
 
     max_epochs = max_epochs if max_epochs else 1
@@ -77,10 +76,9 @@ def evaluating_model(model: Module, device: torch.device = device):
     model.eval()
 
     # prepare data
-    data_dir = Path(__file__).parent / 'data'
-    MNIST(data_dir, train=False, download=True)
+    MNIST(root='data/mnist', train=False, download=True)
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    mnist_test = MNIST(data_dir, train=False, transform=transform)
+    mnist_test = MNIST(root='data/mnist', train=False, transform=transform)
     test_dataloader = DataLoader(mnist_test, batch_size=32)
 
     # testing

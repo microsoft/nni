@@ -256,6 +256,8 @@ class TrainerBasedDataCollector(DataCollector):
 
 
 class EvaluatorBasedDataCollector(DataCollector):
+    # TODO: add docstring
+
     def __init__(self, compressor: Pruner, evaluator: Evaluator, before_opt_step_tasks: List[Callable] | None = None,
                  after_opt_step_tasks: List[Callable] | None = None, loss_patch: Callable[[Tensor], Tensor] | None = None,
                  hooks: Dict[str, Dict[str, Hook]] | None = None, max_steps: int | None = None, max_epochs: int | None = None):
@@ -472,16 +474,16 @@ class TaskGenerator:
         If the task results don't contain scores (task_result.score is None), it will fall back to ``latest``.
 
         1. latest: The newest received result is the best result.
-        2. maximize_score: The one with largest task result score is the best result.
-        3. minimize_score: The one with smallest task result score is the best result.
+        2. maximize: The one with largest task result score is the best result.
+        3. minimize: The one with smallest task result score is the best result.
     """
 
     def __init__(self, origin_model: Optional[Module], origin_masks: Optional[Dict[str, Dict[str, Tensor]]] = {},
                  origin_config_list: Optional[List[Dict]] = [], log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False,
-                 best_result_mode: Literal['latest', 'maximize_score', 'minimize_score'] = 'maximize_score'):
+                 best_result_mode: Literal['latest', 'maximize', 'minimize'] = 'maximize'):
         self._log_dir = log_dir
         self._keep_intermediate_result = keep_intermediate_result
-        assert best_result_mode in ['latest', 'maximize_score', 'minimize_score'], f'Unsupported best_result_mode value: {best_result_mode}'
+        assert best_result_mode in ['latest', 'maximize', 'minimize'], f'Unsupported best_result_mode value: {best_result_mode}'
         self._best_result_mode = best_result_mode
 
         if origin_model is not None and origin_config_list is not None and origin_masks is not None:
@@ -532,12 +534,12 @@ class TaskGenerator:
         if self._best_result_mode == 'latest':
             self._best_task_id, save_as_best_result = task_result.task_id, True
 
-        if self._best_result_mode == 'maximize_score':
+        if self._best_result_mode == 'maximize':
             if self._best_score is None or (task.score is not None and task.score > self._best_score):
                 self._best_score = task.score
                 self._best_task_id, save_as_best_result = task_result.task_id, True
 
-        if self._best_result_mode == 'minimize_score':
+        if self._best_result_mode == 'minimize':
             if self._best_score is None or (task.score is not None and task.score < self._best_score):
                 self._best_score = task.score
                 self._best_task_id, save_as_best_result = task_result.task_id, True
