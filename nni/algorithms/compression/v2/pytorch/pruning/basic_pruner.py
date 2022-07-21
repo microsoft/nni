@@ -176,6 +176,8 @@ class EvaluatorBasedPruner(BasicPruner):
             else:
                 self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
             self.using_evaluator = False
+            warn_msg = f"The old API ...{','.join(old_api)} will be deprecated after NNI v3.0, please using the new one ...{','.join(new_api)}"
+            _logger.warning(warn_msg)
         return init_kwargs
 
     def _parse_args(self, arg_names: List, args: Tuple, kwargs: Dict, def_kwargs: Dict) -> Dict:

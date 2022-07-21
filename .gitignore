@@ -110,3 +110,8 @@ venv.bak/
 .vscode
 .vs
 .history
+
+playground
+nni_outputs
+nni/compression/experiment/config/zoo
+nni/compression/experiment/interface.py

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import logging
 from typing import Any, Dict, List, Tuple, Callable, Optional, Union, overload
 
 import torch
@@ -16,6 +17,7 @@ from nni.compression.pytorch.speedup import ModelSpeedup
 from .tools import TaskGenerator
 from ..utils import Evaluator, LightningEvaluator, TorchEvaluator
 
+_logger = logging.getLogger(__name__)
 
 _LEGACY_FINETUNER = Callable[[Module], None]
 _LEGACY_EVALUATOR = Callable[[Module], float]
@@ -45,6 +47,8 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
             self._evaluator: _LEGACY_EVALUATOR = init_kwargs.pop('evaluator')
             self.dummy_input = init_kwargs.pop('dummy_input')
             self.using_evaluator = False
+            warn_msg = f"The old API ...{','.join(old_api)} will be deprecated after NNI v3.0, please using the new one ...{','.join(new_api)}"
+            _logger.warning(warn_msg)
         return init_kwargs
 
     def _parse_args(self, arg_names: List, args: Tuple, kwargs: Dict, def_kwargs: Dict) -> Dict:
