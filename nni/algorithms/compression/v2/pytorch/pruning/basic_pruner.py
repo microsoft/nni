@@ -717,6 +717,8 @@ class ActivationPruner(EvaluatorBasedPruner):
     def _choose_activation(self, activation: str = 'relu') -> Callable:
         if activation == 'relu':
             return F.relu
+        elif activation == 'gelu':
+            return F.gelu
         elif activation == 'relu6':
             return F.relu6
         else:
@@ -732,10 +734,10 @@ class ActivationPruner(EvaluatorBasedPruner):
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
             activation = self._activation_trans(output)
             if len(buffer) == 1:
-                buffer.append(torch.zeros_like(activation))
+                buffer.append(torch.zeros(activation.shape[1], device=activation.device))
             if buffer[0] < self.training_steps:
-                buffer[1] += activation
-                buffer[0] += 1
+                buffer[1] += activation.sum(0)
+                buffer[0] += activation.shape[0]
         return collect_activation
 
     def _activation_trans(self, output: Tensor) -> Tensor:
@@ -826,9 +828,14 @@ class ActivationAPoZRankPruner(ActivationPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int = -1) -> Tensor:
         # return a matrix that the position of zero in `output` is one, others is zero.
-        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).mean(0)
+        permute_dims = list(range(len(output.shape)))
+        dim = dim if dim >= 0 else dim + len(output.shape)
+        permute_dims.remove(dim)
+        flatten_shape = [functools.reduce(lambda x, y: x * y, permute_dims), output.shape[dim]]
+        permute_dims.append(dim)
+        return torch.eq(self._activation(output.detach()), 0.0).type_as(output).permute(permute_dims).reshape(flatten_shape)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         return APoZRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
@@ -881,9 +888,15 @@ class ActivationMeanRankPruner(ActivationPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int = -1) -> Tensor:
         # return the activation of `output` directly.
-        return self._activation(output.detach()).mean(0)
+        permute_dims = list(range(len(output.shape)))
+        dim = dim if dim >= 0 else dim + len(output.shape)
+        permute_dims.remove(dim)
+        permute_dims.append(dim)
+        flatten = [output.shape[d] for d in permute_dims[:-1]]
+        flatten_shape = [functools.reduce(lambda x, y: x * y, flatten), output.shape[dim]]
+        return self._activation(output.detach()).permute(permute_dims).reshape(flatten_shape)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
