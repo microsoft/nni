@@ -100,8 +100,10 @@ export class DlcClient {
         const log = this.log;
         this.pythonShellClient.on('message', (message: any) => {
             const jobid = this.parseContent('job_id', message);
-            log.debug(`reslove job_id ${jobid}`);
-            deferred.resolve(jobid);
+            if (jobid !== '') {
+                log.debug(`reslove job_id ${jobid}`);
+                deferred.resolve(jobid);
+            }
         });
         return deferred.promise;
     }
