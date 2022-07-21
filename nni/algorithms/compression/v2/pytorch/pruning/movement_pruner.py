@@ -13,6 +13,7 @@ from torch import autograd, Tensor
 from torch.nn import Module
 from torch.nn.parameter import Parameter
 from torch.optim import Optimizer, Adam
+from torch.optim.lr_scheduler import LambdaLR
 
 from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import EvaluatorBasedPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
@@ -53,13 +54,24 @@ class PrunerScoredModuleWrapper(PrunerModuleWrapper):
     """
     def __init__(self, module: Module, module_name: str, config: Dict):
         super().__init__(module, module_name, config)
-        self.weight_score = Parameter(torch.empty(self.weight.size()))  # type: ignore
+        if 'attention' in module_name:
+            self.weight_score = Parameter(torch.empty(self.weight.shape[0] // 64, self.weight.shape[1] // 64))  # type: ignore
+        elif 'intermediate.dense' in module_name:
+            self.weight_score = Parameter(torch.empty(self.weight.shape[0]))  # type: ignore
+        else:
+            self.weight_score = Parameter(torch.empty(self.weight.shape[1]))  # type: ignore
         torch.nn.init.constant_(self.weight_score, val=0.0)
 
     def forward(self, *inputs):
         # apply mask to weight, bias
         # NOTE: I don't know why training getting slower and slower if only `self.weight_mask` without `detach()`
-        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask.detach()))  # type: ignore
+        if 'attention' in self.name:
+            weight_score = self.weight_score.repeat_interleave(64, 0).repeat_interleave(64, 1)  # type: ignore
+        elif 'intermediate.dense' in self.name:
+            weight_score = self.weight_score.unsqueeze(1).expand_as(self.weight).contiguous()  # type: ignore
+        else:
+            weight_score = self.weight_score.unsqueeze(0).expand_as(self.weight).contiguous()  # type: ignore
+        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(weight_score, self.weight_mask.detach()))  # type: ignore
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.module.bias = torch.mul(self.bias, self.bias_mask)  # type: ignore
         return self.module(*inputs)
@@ -210,19 +222,18 @@ class MovementPruner(EvaluatorBasedPruner):
     def reset_tools(self):
         if self.sparse_granularity and self.sparse_granularity == 'auto':
             scalers = {}
-            for config in self.config_list:
-                op_names = config.get('op_names', None)
-                if op_names:
-                    for op_name in op_names:
-                        if 'attention' in op_name:
-                            scalers[op_name] = {'_default': Scaling([64, 64])}
-                        else:
-                            scalers[op_name] = {'_default': Scaling([1], 'back')}
+            for op_name in self.get_modules_wrapper().keys():
+                if 'attention' in op_name:
+                    scalers[op_name] = {'_default': Scaling([64, 64])}
+                elif 'intermediate.dense' in op_name:
+                    scalers[op_name] = {'_default': Scaling([1], 'back')}
+                else:
+                    scalers[op_name] = {'_default': Scaling([-1, 1], 'back')}
         else:
             scalers = Scaling([1])
 
         if not hasattr(self, 'metrics_calculator'):
-            self.metrics_calculator = StraightMetricsCalculator(scalers=scalers)
+            self.metrics_calculator = StraightMetricsCalculator()
         if not hasattr(self, 'sparsity_allocator'):
             if self.movement_mode == 'soft':
                 self.sparsity_allocator = ThresholdSparsityAllocator(self, scalers=scalers, continuous_mask=False)
@@ -235,10 +246,18 @@ class MovementPruner(EvaluatorBasedPruner):
         optimizer = Adam(params, 1e-2)
         self.step_counter = 0
 
+        def lr_lambda(current_step: int):
+            if current_step < 12272:
+                return float(current_step) / 12272
+            return max(0.0, float(147264 - current_step) / float(147264 - 12272))
+
+        lr_scheduler = LambdaLR(optimizer, lr_lambda)
+
         # update the masks after each optimzier step
         def _optimizer_patch():
             optimizer.step()
             optimizer.zero_grad()
+            lr_scheduler.step()
             self.step_counter += 1
             if self.step_counter > self.warm_up_step:
                 self.cubic_schedule(self.step_counter)
