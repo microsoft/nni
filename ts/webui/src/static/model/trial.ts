@@ -169,7 +169,7 @@ class Trial {
 
         return accuracyTypeList;
     }
-    
+
     /* table obj start */
 
     get tableRecord(): TableRecord {
