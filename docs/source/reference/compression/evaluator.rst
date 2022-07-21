@@ -1,14 +1,14 @@
 Evaluator
 =========
 
-.. _torch-evaluator:
+.. _compression-torch-evaluator:
 
 TorchEvaluator
 --------------
 
 ..  autoclass:: nni.compression.pytorch.TorchEvaluator
 
-.. _lightning-evaluator:
+.. _compression-lightning-evaluator:
 
 LightningEvaluator
 ------------------
