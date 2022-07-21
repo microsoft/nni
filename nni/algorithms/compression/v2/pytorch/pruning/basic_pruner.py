@@ -195,7 +195,7 @@ class EvaluatorBasedPruner(BasicPruner):
         diff = set(merged_kwargs.keys()).difference(arg_names)
         if diff:
             raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
-        return def_kwargs
+        return merged_kwargs
 
     def compress(self) -> Tuple[Module, Dict]:
         result = super().compress()
