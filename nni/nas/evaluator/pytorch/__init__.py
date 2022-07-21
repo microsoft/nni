@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from nni.nas.execution.pytorch.graph.codegen import *
+from .lightning import *
