@@ -434,11 +434,14 @@ class BaseOneShotLightningModule(pl.LightningModule):
         batch_idx: int
             The current batch index.
         """
+        if self.automatic_optimization:
+            raise ValueError('This method should not be used when automatic optimization is turned on.')
+
         if self.trainer.optimizer_frequencies:
             warnings.warn('optimizer_frequencies is not supported in NAS. It will be ignored.', UserWarning)
 
         # Filter out optimizers for architecture parameters
-        optimizers = [opt for opt in self.trainer.optimizers() if not getattr(opt, 'is_arch_optimizer', False)]
+        optimizers = [opt for opt in self.trainer.optimizers if not getattr(opt, 'is_arch_optimizer', False)]
 
         opt_idx = self._optimizer_progress % len(optimizers)
         optimizer = optimizers[opt_idx]
@@ -447,7 +450,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # 1. zero gradient
         self.model.optimizer_zero_grad(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)
         # 2. backward
-        self.model.manual_backward(loss)
+        self.manual_backward(loss)
         # 3. grad clip
         self.model.configure_gradient_clipping(optimizer, opt_idx, gradient_clip_val, gradient_clip_algorithm)
         # 4. optimizer step
@@ -464,6 +467,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
         We only include a partial implementation here.
         Advanced features like Reduce-lr-on-plateau are not supported.
         """
+        if self.automatic_optimization:
+            raise ValueError('This method should not be used when automatic optimization is turned on.')
+
         self._advance_lr_schedulers_impl(batch_idx, 'step')
         if self.trainer.is_last_batch:
             self._advance_lr_schedulers_impl(batch_idx, 'epoch')
@@ -479,7 +485,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
                 if config.reduce_on_plateau:
                     warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
                 if config.interval == interval and current_idx % config.frequency == 0:
-                    self.model.lr_scheduler_step(scheduler, opt_idx)
+                    self.model.lr_scheduler_step(scheduler, opt_idx, None)
         except AttributeError:
             # lightning < 1.6
             for lr_scheduler in self.trainer.lr_schedulers:
@@ -492,7 +498,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         Get the optimizers configured in :meth:`configure_architecture_optimizers`.
         """
-        optimizers = [opt for opt in self.trainer.optimizers() if getattr(opt, 'is_arch_optimizer', False)]
+        optimizers = [opt for opt in self.trainer.optimizers if getattr(opt, 'is_arch_optimizer', False)]
         if not optimizers:
             return None
         if len(optimizers) == 1:
@@ -532,6 +538,3 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def on_after_backward(self):
         return self.model.on_after_backward()
-
-    def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val=None, gradient_clip_algorithm=None):
-        return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)

@@ -337,12 +337,13 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
 
     def export_probs(self, operation: MixedOperation, memo: dict[str, Any]):
         """Export the weight for every leaf value choice."""
+        ret = {}
         for name, spec in operation.search_space_spec().items():
             if any(k.startswith(name + '/') for k in memo):
                 continue
             weights = operation._softmax(operation._arch_alpha[name]).cpu().tolist()
-            ret = {f'{name}/{value}': weight for value, weight in zip(spec.values, weights)}
-            return ret
+            ret.update({f'{name}/{value}': weight for value, weight in zip(spec.values, weights)})
+        return ret
 
     def forward_argument(self, operation: MixedOperation, name: str) -> dict[Any, float] | Any:
         if name in operation.mutable_arguments:
