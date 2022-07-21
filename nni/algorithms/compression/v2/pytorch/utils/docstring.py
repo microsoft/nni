@@ -7,8 +7,8 @@ _EVALUATOR_DOCSTRING = r"""NNI will use the evaluator to intervene in the model 
         Usually you just need to wrap some classes with ``nni.trace`` or package the training process as a function to initialize the evaluator.
         Please refer ... for a full tutorial on how to initialize a ``evaluator``.
 
-        The following are two simple examples, if you use pytorch_lightning, please refer to LightningEvaluator,
-        if you use native pytorch, please refer to TorchEvaluator::
+        The following are two simple examples, if you use pytorch_lightning, please refer to :class:`nni.compression.pytorch.LightningEvaluator`,
+        if you use native pytorch, please refer to :class:`nni.compression.pytorch.TorchEvaluator`::
 
             # LightningEvaluator example
             import pytorch_lightning

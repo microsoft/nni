@@ -59,7 +59,7 @@ class AMCTaskGenerator(TaskGenerator):
         self.config_list_copy = deepcopy(origin_config_list)
 
         super().__init__(origin_model=origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
-                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result, best_result_mode='maximize_score')
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result, best_result_mode='maximize')
 
     def init_pending_tasks(self) -> List[Task]:
         origin_model = torch.load(self._origin_model_path)

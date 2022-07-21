@@ -188,7 +188,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         self.perturbation_magnitude = perturbation_magnitude
 
         super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
-                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result, best_result_mode='maximize_score')
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result, best_result_mode='maximize')
 
     def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
         self.current_temperature = self.start_temperature

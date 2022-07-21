@@ -176,18 +176,27 @@ class EvaluatorBasedPruner(BasicPruner):
             else:
                 self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
             self.using_evaluator = False
+            warn_msg = f"The old API ...{','.join(old_api)} will be deprecated after NNI v3.0, please using the new one ...{','.join(new_api)}"
+            _logger.warning(warn_msg)
         return init_kwargs
 
     def _parse_args(self, arg_names: List, args: Tuple, kwargs: Dict, def_kwargs: Dict) -> Dict:
-        def_kwargs.update(kwargs)
+        merged_kwargs = {}
         for idx, arg in enumerate(args):
             if arg_names[idx] in def_kwargs:
                 raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{arg_names[idx]}'")
-            def_kwargs[arg_names[idx]] = arg
-        diff = set(arg_names).difference(def_kwargs.keys())
+            merged_kwargs[arg_names[idx]] = arg
+        for key, value in kwargs.items():
+            if key in merged_kwargs:
+                raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{key}'")
+            merged_kwargs[key] = value
+        for key, value in def_kwargs.items():
+            if key not in merged_kwargs:
+                merged_kwargs[key] = value
+        diff = set(arg_names).difference(merged_kwargs.keys())
         if diff:
             raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
-        diff = set(def_kwargs.keys()).difference(arg_names)
+        diff = set(merged_kwargs.keys()).difference(arg_names)
         if diff:
             raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
         return def_kwargs
