@@ -171,7 +171,8 @@ def load_training_service_config(config) -> TrainingServiceConfig:
         cls = _get_ts_config_class(config['platform'])
         if cls is not None:
             return cls(**config)
-    return config  # not valid json, don't touch
+    # not valid json, don't touch
+    return config  # type: ignore
 
 def _get_ts_config_class(platform: str) -> type[TrainingServiceConfig] | None:
     from ..training_service import TrainingServiceConfig  # avoid circular import

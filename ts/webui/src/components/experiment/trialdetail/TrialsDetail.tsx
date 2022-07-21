@@ -48,8 +48,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     render(): React.ReactNode {
         const { whichChart } = this.state;
         const source = TRIALS.toArray();
-        const trialIds = TRIALS.toArray().map(trial => trial.id);
         const paraSource = TRIALS.succeededTrials();
+        const succeededTrialIds = TRIALS.succeededTrials().map(trial => trial.id);
         return (
             <AppContext.Consumer>
                 {(_value): React.ReactNode => (
@@ -65,7 +65,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 <PivotItem headerText='Default metric' itemIcon='HomeGroup' key='Default metric'>
                                     <Stack className='graph'>
                                         <DefaultPoint
-                                            trialIds={trialIds}
+                                            trialIds={succeededTrialIds}
                                             hasBestCurve={true}
                                             chartHeight={402}
                                             changeExpandRowIDs={_value.changeExpandRowIDs}

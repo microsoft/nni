@@ -153,6 +153,23 @@ class Trial {
             return undefined;
         }
     }
+
+    get accuracyNumberTypeDictKeys(): string[] {
+        let accuracyTypeList: string[] = [];
+
+        if (this.acc !== undefined) {
+            for (const [item, value] of Object.entries(this.acc)) {
+                if (typeof value === 'number') {
+                    accuracyTypeList.push(item);
+                }
+            }
+        } else {
+            accuracyTypeList = ['default'];
+        }
+
+        return accuracyTypeList;
+    }
+    
     /* table obj start */
 
     get tableRecord(): TableRecord {

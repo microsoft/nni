@@ -11,8 +11,8 @@ lightgbm
 onnx
 peewee
 graphviz
-gym
-tianshou >= 0.4.1
+gym < 0.23
+tianshou >= 0.4.1, < 0.4.9
 matplotlib
 timm >= 0.5.4
 
