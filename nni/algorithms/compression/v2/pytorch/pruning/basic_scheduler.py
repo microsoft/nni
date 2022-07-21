@@ -52,11 +52,7 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
         return init_kwargs
 
     def _parse_args(self, arg_names: List, args: Tuple, kwargs: Dict, def_kwargs: Dict) -> Dict:
-        merged_kwargs = {}
-        for idx, arg in enumerate(args):
-            if arg_names[idx] in def_kwargs:
-                raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{arg_names[idx]}'")
-            merged_kwargs[arg_names[idx]] = arg
+        merged_kwargs = {arg_names[idx]: arg for idx, arg in enumerate(args)}
         for key, value in kwargs.items():
             if key in merged_kwargs:
                 raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{key}'")
