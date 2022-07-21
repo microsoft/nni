@@ -538,6 +538,7 @@ def _trace_cls(base, kw_only, call_super=True, inheritable=False):
 
             # Pickle can't handle type objects.
             if '_nni_symbol' in obj_:
+                obj_ = dict(obj_)  # copy the object to keep the original symbol unchanged
                 obj_['_nni_symbol'] = cloudpickle.dumps(obj_['_nni_symbol'])
 
             return _pickling_object, (type_, kw_only, obj_)

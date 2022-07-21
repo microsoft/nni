@@ -2,7 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import { getPrefix } from './static/function';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 const Overview = lazy(() => import('./components/experiment/overview/Overview'));
 const TrialsDetail = lazy(() => import('./components/experiment/trialdetail/TrialsDetail'));
 const ExperimentManagerIndex = lazy(() => import('./components/experimentManagement/ExperimentManagerIndex'));
@@ -13,24 +13,24 @@ import * as serviceWorker from './serviceWorker';
 const path = getPrefix();
 
 ReactDOM.render(
-    <Router basename={path === undefined ? null : path}>
-        <Suspense
-            fallback={
-                <div className='loading'>
-                    <img title='loading-graph' src={(path || '') + '/loading.gif'} />
-                </div>
-            }
-        >
-            <Route path='/experiment' component={ExperimentManagerIndex} exact />
-            <Switch>
-                <App>
-                    <Route path='/' component={Overview} exact />
-                    <Route path='/oview' component={Overview} />
-                    <Route path='/detail' component={TrialsDetail} />
-                </App>
-            </Switch>
-        </Suspense>
-    </Router>,
+    <Suspense
+        fallback={
+            <div className='loading'>
+                <img title='loading-graph' src={(path ?? '') + '/loading.gif'} />
+            </div>
+        }
+    >
+        <Router basename={path ?? ''}>
+            <Routes>
+                <Route path='/experiment' element={<ExperimentManagerIndex />} />
+                <Route element={<App />}>
+                    <Route path='/oview' element={<Overview />} />
+                    <Route path='/detail' element={<TrialsDetail />} />
+                    <Route path='/*' element={<Navigate to='/oview' />} />
+                </Route>
+            </Routes>
+        </Router>
+    </Suspense>,
 
     document.getElementById('root')
 );

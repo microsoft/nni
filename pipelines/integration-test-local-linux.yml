@@ -7,10 +7,14 @@ schedules:
 
 jobs:
 - job: linux
-  pool: nni-it
+  pool: nni-it-1es-11
   timeoutInMinutes: 60
 
   steps:
+  - template: templates/fix-apt-1es.yml
+    parameters:
+      check_gpu: true
+
   - template: templates/install-dependencies.yml
     parameters:
       platform: ubuntu-latest-gpu

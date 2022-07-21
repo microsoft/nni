@@ -188,7 +188,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         self.perturbation_magnitude = perturbation_magnitude
 
         super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
-                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result, best_result_mode='maximize_score')
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result, best_result_mode='maximize')
 
     def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
         self.current_temperature = self.start_temperature
@@ -259,14 +259,11 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
 
         num_weights = sorted([self.weights_numel[op_name] for op_name in op_names])
         sparsity = sorted(random_sparsity)
-
-        total_weights = 0
-        total_weights_pruned = 0
-
+        
         # calculate the scale
-        for idx, num_weight in enumerate(num_weights):
-            total_weights += num_weight
-            total_weights_pruned += int(num_weight * sparsity[idx])
+        total_weights = np.sum(num_weights)
+        total_weights_pruned = np.sum([int(num_weight * sparsity[idx]) for idx, num_weight in enumerate(num_weights)])
+        
         if total_weights_pruned == 0:
             return None
 

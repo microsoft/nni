@@ -371,6 +371,23 @@ def test_subclass():
     assert isinstance(obj, Super)
 
 
+class ConsistencyTest1:
+    pass
+
+
+class ConsistencyTest2:
+    def __init__(self):
+        self.test = nni.trace(ConsistencyTest1)()
+
+
+def test_dump_consistency():
+    test2 = ConsistencyTest2()
+    symbol1 = test2.test.trace_symbol
+    pickle.dumps(test2)
+    symbol2 = test2.test.trace_symbol
+    assert symbol1 == symbol2
+
+
 def test_get():
     @nni.trace
     class Foo:

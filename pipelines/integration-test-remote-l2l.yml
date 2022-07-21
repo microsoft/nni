@@ -12,10 +12,11 @@ schedules:
 
 jobs:
 - job: remote_linux2linux
-  pool: nni-it
+  pool: nni-it-1es-11
   timeoutInMinutes: 120
 
   steps:
+  - template: templates/fix-apt-1es.yml
   # FIXME: GPU is not supported yet.
   # Change to ubuntu-latest-gpu when it's done.
 
@@ -97,4 +98,4 @@ jobs:
 
   - template: templates/save-crashed-info.yml
     parameters:
-      remote: true
+      training_service: remote

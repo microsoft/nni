@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import logging
 from typing import Any, Dict, List, Tuple, Callable, Optional, Union, overload
 
 import torch
@@ -16,6 +17,7 @@ from nni.compression.pytorch.speedup import ModelSpeedup
 from .tools import TaskGenerator
 from ..utils import Evaluator, LightningEvaluator, TorchEvaluator
 
+_logger = logging.getLogger(__name__)
 
 _LEGACY_FINETUNER = Callable[[Module], None]
 _LEGACY_EVALUATOR = Callable[[Module], float]
@@ -45,21 +47,26 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
             self._evaluator: _LEGACY_EVALUATOR = init_kwargs.pop('evaluator')
             self.dummy_input = init_kwargs.pop('dummy_input')
             self.using_evaluator = False
+            warn_msg = f"The old API ...{','.join(old_api)} will be deprecated after NNI v3.0, please using the new one ...{','.join(new_api)}"
+            _logger.warning(warn_msg)
         return init_kwargs
 
     def _parse_args(self, arg_names: List, args: Tuple, kwargs: Dict, def_kwargs: Dict) -> Dict:
-        def_kwargs.update(kwargs)
-        for idx, arg in enumerate(args):
-            if arg_names[idx] in def_kwargs:
-                raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{arg_names[idx]}'")
-            def_kwargs[arg_names[idx]] = arg
-        diff = set(arg_names).difference(def_kwargs.keys())
+        merged_kwargs = {arg_names[idx]: arg for idx, arg in enumerate(args)}
+        for key, value in kwargs.items():
+            if key in merged_kwargs:
+                raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{key}'")
+            merged_kwargs[key] = value
+        for key, value in def_kwargs.items():
+            if key not in merged_kwargs:
+                merged_kwargs[key] = value
+        diff = set(arg_names).difference(merged_kwargs.keys())
         if diff:
             raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
-        diff = set(def_kwargs.keys()).difference(arg_names)
+        diff = set(merged_kwargs.keys()).difference(arg_names)
         if diff:
             raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
-        return def_kwargs
+        return merged_kwargs
 
 
 class PruningScheduler(EvaluatorBasedPruningScheduler):
