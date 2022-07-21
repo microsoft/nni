@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 import warnings
-from typing import Any
+from typing import Any, cast
 
 import pytorch_lightning as pl
 import torch
@@ -76,9 +76,9 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
             'mixed_op_sampling': MixedOpPathSamplingPolicy
         }
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, *args, **kwargs):
         self.resample()
-        return self.model.training_step(batch, batch_idx)
+        return self.model.training_step(*args, **kwargs)
 
     def export(self) -> dict[str, Any]:
         """
@@ -197,27 +197,22 @@ class EnasLightningModule(RandomSamplingLightningModule):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
 
     def training_step(self, batch_packed, batch_idx):
+        # The received batch is a tuple of (data, "train" | "val")
         batch, mode = batch_packed
 
         if mode == 'train':
             # train model params
             with torch.no_grad():
                 self.resample()
-            self.call_weight_optimizers('zero_grad')
             step_output = self.model.training_step(batch, batch_idx)
-            w_step_loss = step_output['loss'] \
-                if isinstance(step_output, dict) else step_output
-            self.manual_backward(w_step_loss)
-            self.call_weight_optimizers('step')
+            w_step_loss = step_output['loss'] if isinstance(step_output, dict) else step_output
+            self.advance_optimizers(w_step_loss, batch_idx)
 
         else:
             # train ENAS agent
-            arc_opt = self.architecture_optimizers()
-            if not isinstance(arc_opt, optim.Optimizer):
-                raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
-            arc_opt.zero_grad()
-            self.resample()
 
+            # Run a sample to retrieve the reward
+            self.resample()
             step_output = self.model.validation_step(batch, batch_idx)
 
             # use the default metric of self.model as reward function
@@ -234,6 +229,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 metric = self.trainer.callback_metrics[metric_name]
             reward: float = metric.item()
 
+            # Compute the loss and run back propagation
             if self.entropy_weight:
                 reward = reward + self.entropy_weight * self.controller.sample_entropy.item()  # type: ignore
             self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
@@ -247,14 +243,28 @@ class EnasLightningModule(RandomSamplingLightningModule):
             if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
                 if self.ctrl_grad_clip > 0:
                     nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
+
+                # Update the controller and zero out its gradients
+                arc_opt = cast(optim.Optimizer, self.architecture_optimizers())
                 arc_opt.step()
                 arc_opt.zero_grad()
+
+        self.advance_lr_schedulers(batch_idx)
 
         if (batch_idx + 1) % self.log_prob_every_n_step == 0:
             with torch.no_grad():
                 self.log_dict({'prob/' + k: v for k, v in self.export_probs().items()})
 
         return step_output
+
+    def on_train_epoch_start(self):
+        # Always zero out the gradients of ENAS controller at the beginning of epochs.
+        arc_opt = self.architecture_optimizers()
+        if not isinstance(arc_opt, optim.Optimizer):
+            raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
+        arc_opt.zero_grad()
+
+        return self.model.on_train_epoch_start()
 
     def resample(self):
         """Resample the architecture with ENAS controller."""

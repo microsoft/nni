@@ -121,15 +121,12 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
         # phase 2: model step
         self.resample()
-        self.call_weight_optimizers('zero_grad')
         loss_and_metrics = self.model.training_step(trn_batch, 2 * batch_idx + 1)
-        w_step_loss = loss_and_metrics['loss'] \
-            if isinstance(loss_and_metrics, dict) else loss_and_metrics
-        self.manual_backward(w_step_loss)
-        self.clip_weight_gradients(self.gradient_clip_val)
-        self.call_weight_optimizers('step')
+        w_step_loss = loss_and_metrics['loss'] if isinstance(loss_and_metrics, dict) else loss_and_metrics
+        self.advance_optimizers(w_step_loss, batch_idx, self.gradient_clip_val)
 
-        self.call_lr_schedulers(batch_idx)
+        # Update learning rates
+        self.advance_lr_schedulers(batch_idx)
 
         self.log_dict({'prob/' + k: v for k, v in self.export_probs().items()})
 

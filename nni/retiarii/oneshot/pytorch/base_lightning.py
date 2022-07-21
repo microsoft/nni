@@ -338,12 +338,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def forward(self, x):
         return self.model(x)
 
-    def training_step(self, batch, batch_idx):
-        """This is the implementation of what happens in training loops of one-shot algos.
-        It usually calls ``self.model.training_step`` which implements the real training recipe of the users' model.
-        """
-        return self.model.training_step(batch, batch_idx)
-
     def configure_optimizers(self) -> Any:
         """
         Transparently configure optimizers for the inner model,
@@ -396,6 +390,10 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # which could potentially be a problem
         self.model.trainer = self.trainer  # type: ignore
         self.model.log = self.log
+
+        # Reset the optimizer progress (only once at the very beginning)
+        self._optimizer_progress = 0
+
         return self.model.setup(stage)
 
     def teardown(self, stage=None):
@@ -412,130 +410,94 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         return None
 
-    def call_lr_schedulers(self, batch_index):
+    def advance_optimizers(
+        self,
+        loss: Any,
+        batch_idx: int,
+        gradient_clip_val: int | float | None = None,
+        gradient_clip_algorithm: str | None = None
+    ):
         """
-        Function that imitates lightning trainer's behaviour of calling user's lr schedulers. Since auto_optimization is turned off
-        by this class, you can use this function to make schedulers behave as they were automatically handled by the lightning trainer.
+        Run the optimizer defined in evaluators, when manual optimization is turned on.
+
+        Call this method when the model should be optimized.
+        To keep it as neat as possible, we only implement the basic ``zero_grad``, ``backward``, ``grad_clip``, and ``step`` here.
+        Many hooks and pre/post-processing are omitted.
+        Inherit this method if you need more advanced behavior.
+
+        The full optimizer step could be found
+        `here <https://github.com/Lightning-AI/lightning/blob/0e531283/src/pytorch_lightning/loops/optimization/optimizer_loop.py>`__.
+        We only implement part of the optimizer loop here.
 
         Parameters
         ----------
-        batch_idx : int
-            batch index
+        batch_idx: int
+            The current batch index.
         """
-        def apply(lr_scheduler):
-            # single scheduler is called every epoch
-            if isinstance(lr_scheduler, _LRScheduler):
-                if self.trainer.is_last_batch:
-                    lr_scheduler.step()
-            # lr_scheduler_config is called as configured
-            elif isinstance(lr_scheduler, dict):
-                interval = lr_scheduler['interval']
-                frequency = lr_scheduler['frequency']
-                if (
-                        interval == 'step' and
-                        batch_index % frequency == 0
-                    ) or \
-                    (
-                        interval == 'epoch' and
-                        self.trainer.is_last_batch and
-                        (self.trainer.current_epoch + 1) % frequency == 0
-                ):
+        if self.trainer.optimizer_frequencies:
+            warnings.warn('optimizer_frequencies is not supported in NAS. It will be ignored.', UserWarning)
+
+        # Filter out optimizers for architecture parameters
+        optimizers = [opt for opt in self.trainer.optimizers() if not getattr(opt, 'is_arch_optimizer', False)]
+
+        opt_idx = self._optimizer_progress % len(optimizers)
+        optimizer = optimizers[opt_idx]
+
+        # There should be many before/after hooks called here, but they are omitted in this implementation.
+        # 1. zero gradient
+        self.model.optimizer_zero_grad(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)
+        # 2. backward
+        self.model.manual_backward(loss)
+        # 3. grad clip
+        self.model.configure_gradient_clipping(optimizer, opt_idx, gradient_clip_val, gradient_clip_algorithm)
+        # 4. optimizer step
+        self.model.optimizer_step(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)
+
+        self._optimizer_progress += 1
+
+    def advance_lr_schedulers(self, batch_idx: int):
+        """
+        Advance the learning rates, when manual optimization is turned on.
+
+        The full implementation is
+        `here <https://github.com/Lightning-AI/lightning/blob/0e531283/src/pytorch_lightning/loops/epoch/training_epoch_loop.py>`__.
+        We only include a partial implementation here.
+        Advanced features like Reduce-lr-on-plateau are not supported.
+        """
+        self._advance_lr_schedulers_impl(batch_idx, 'step')
+        if self.trainer.is_last_batch:
+            self._advance_lr_schedulers_impl(batch_idx, 'epoch')
+
+    def _advance_lr_schedulers_impl(self, batch_idx: int, interval: str):
+        current_idx = batch_idx if interval == 'step' else self.trainer.current_epoch
+        current_idx += 1  # account for both batch and epoch starts from 0
+
+        try:
+            # lightning >= 1.6
+            for config in self.trainer.lr_scheduler_configs:
+                scheduler, opt_idx = config.scheduler, config.opt_idx
+                if config.reduce_on_plateau:
+                    warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
+                if config.interval == interval and current_idx % config.frequency == 0:
+                    self.model.lr_scheduler_step(scheduler, opt_idx)
+        except AttributeError:
+            # lightning < 1.6
+            for lr_scheduler in self.trainer.lr_schedulers:
+                if lr_scheduler['reduce_on_plateau']:
+                    warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
+                if lr_scheduler['interval'] == interval and current_idx % lr_scheduler['frequency']:
                     lr_scheduler['scheduler'].step()
-
-        lr_schedulers = self.lr_schedulers()
-
-        if isinstance(lr_schedulers, list):
-            for lr_scheduler in lr_schedulers:
-                apply(lr_scheduler)
-        else:
-            apply(lr_schedulers)
-
-    def clip_weight_gradients(self, gradient_clip_val: int | float | None = None, gradient_clip_algorithm: str | None = None):
-        """Call ``self.clip_gradients()`` for every weight optimizer."""
-        optimizers = self.weight_optimizers()
-        if isinstance(optimizers, Optimizer):
-            self.configure_gradient_clipping(optimizers, 0, gradient_clip_val, gradient_clip_algorithm)
-        elif isinstance(optimizers, list):
-            for optimizer_idx, optimizer in enumerate(optimizers):
-                self.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
-
-    def call_weight_optimizers(self, method: Literal['step', 'zero_grad']):
-        """
-        Function that imitates lightning trainer's behavior of calling user's optimizers.
-        Since auto_optimization is turned off in most one-shot algorithm,
-        this function is used to make user optimizers behave as they were automatically handled by the lightning trainer.
-
-        Parameters
-        ----------
-        method : str
-            Method to call. Only ``step`` and ``zero_grad`` are supported now.
-        """
-        def apply_method(optimizer, method):
-            if method == 'step':
-                optimizer.step()
-            elif method == 'zero_grad':
-                optimizer.zero_grad()
-
-        optimizers = self.weight_optimizers()
-        if optimizers is None:
-            return
-
-        assert isinstance(optimizers, list), 'Did you forget to set use_pl_optimizers to true?'
-
-        if len(self.frequencies) > 0:
-            self.cur_optimizer_step += 1
-            if self.frequencies[self.cur_optimizer_index] == self.cur_optimizer_step:
-                self.cur_optimizer_step = 0
-                self.cur_optimizer_index = self.cur_optimizer_index + 1 \
-                    if self.cur_optimizer_index + 1 < len(optimizers) \
-                    else 0
-            apply_method(optimizers[self.cur_optimizer_index], method)
-        else:
-            for optimizer in optimizers:
-                apply_method(optimizer, method)
 
     def architecture_optimizers(self) -> list[Optimizer] | Optimizer | None:
         """
-        Get architecture optimizers from all optimizers. Use this to get your architecture optimizers in :meth:`training_step`.
-
-        Returns
-        ----------
-        opts : list[Optimizer], Optimizer, None
-            Architecture optimizers defined in :meth:`configure_architecture_optimizers`. This will be None if there is no
-            architecture optimizers.
+        Get the optimizers configured in :meth:`configure_architecture_optimizers`.
         """
-        opts = self.optimizers()
-        if isinstance(opts, list):
-            # pylint: disable=unsubscriptable-object
-            arc_opts = opts[:self.arc_optim_count]
-            if len(arc_opts) == 1:
-                return cast(Optimizer, arc_opts[0])
-            return cast(List[Optimizer], arc_opts)
-        # If there is only 1 optimizer and it is the architecture optimizer
-        if self.arc_optim_count == 1:
-            return cast(Union[List[Optimizer], Optimizer], opts)
-        return None
-
-    def weight_optimizers(self) -> list[Optimizer] | Optimizer | None:
-        """
-        Get user optimizers from all optimizers. Use this to get user optimizers in :meth:`training_step`.
-
-        Returns
-        ----------
-        opts : list[Optimizer], Optimizer, None
-            Optimizers defined by user's model. This will be None if there is no user optimizers.
-        """
-        # Since use_pl_optimizer is set true (by default) here.
-        # opts always return a list
-        opts = self.optimizers()
-        if isinstance(opts, list):
-            # pylint: disable=unsubscriptable-object
-            return cast(List[Optimizer], opts[self.arc_optim_count:])
-        # FIXME: this case is actually not correctly handled
-        # If there is only 1 optimizer and no architecture optimizer
-        if self.arc_optim_count == 0:
-            return cast(Union[List[Optimizer], Optimizer], opts)
-        return None
+        optimizers = [opt for opt in self.trainer.optimizers() if getattr(opt, 'is_arch_optimizer', False)]
+        if not optimizers:
+            return None
+        if len(optimizers) == 1:
+            return optimizers[0]
+        return optimizers
 
     # The following methods redirects the callbacks to inner module.
     # It's not the complete list though.
