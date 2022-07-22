@@ -7,7 +7,8 @@ Operations used in graph-based engine.
 
 from typing import (Any, Dict, List, Optional, cast)
 
-from . import debug_configs
+from nni.common.framework import get_default_framework
+
 
 __all__ = ['Operation', 'Cell']
 
@@ -67,14 +68,14 @@ class Operation:
             # NOTE: cell_name is the same as its Node's name, when the cell is wrapped within the node
             return Cell(cell_name, parameters)
         else:
-            if debug_configs.framework.lower() in ('torch', 'pytorch'):
+            if get_default_framework() in ('torch', 'pytorch'):
                 from .operation_def import torch_op_def  # pylint: disable=unused-import
                 cls = PyTorchOperation._find_subclass(type_name)
-            elif debug_configs.framework.lower() in ('tf', 'tensorflow'):
+            elif get_default_framework() in ('tf', 'tensorflow'):
                 from .operation_def import tf_op_def  # pylint: disable=unused-import
                 cls = TensorFlowOperation._find_subclass(type_name)
             else:
-                raise ValueError(f'Unsupported framework: {debug_configs.framework}')
+                raise ValueError(f'Unsupported framework: {get_default_framework()}')
             return cls(type_name, parameters, _internal=True, attributes=attributes)
 
     @classmethod
