@@ -34,7 +34,8 @@ export const BasicInfo = (): any => {
                     <p>Status</p>
                     <Stack horizontal className='status'>
                         <span className={`${EXPERIMENT.status} status-text`}>{EXPERIMENT.status}</span>
-                        {EXPERIMENT.status === 'ERROR' ? (
+                        {/* {EXPERIMENT.status === 'ERROR' ? ( */}
+                        {EXPERIMENT.status !== 'ERROR' ? (
                             <div>
                                 <div className={`${styles.buttonArea} error-info-icon`} ref={ref}>
                                     <IconButton
