@@ -7,7 +7,7 @@ from pathlib import Path
 nn_cache_file_path = Path(__file__).parent / '_layers.py'
 
 # Update this when cache format changes, to enforce an update.
-cache_version = 2
+cache_version = 3
 
 
 def validate_cache() -> bool:
@@ -70,7 +70,7 @@ def generate_stub_file() -> str:
         f'# _torch_nn_cache_version = {cache_version}',
         'import typing',
         'import torch.nn as nn',
-        'from nni.retiarii.serializer import basic_unit',
+        'from nni.nas.utils import basic_unit',
     ]
 
     all_names = []

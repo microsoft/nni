@@ -1,11 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-"""This file should be merged to nni/retiarii/fixed.py"""
+"""This file should be merged to nni/nas/fixed.py"""
 
 from typing import Type
 
-from nni.retiarii.utils import ContextStack
+from nni.nas.utils import ContextStack
 
 
 class FixedFactory:

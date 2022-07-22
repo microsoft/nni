@@ -7,12 +7,12 @@ import torch
 import torch.nn.functional as F
 from timm.models.layers import trunc_normal_, DropPath
 
-import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import model_wrapper, basic_unit
-from nni.retiarii.nn.pytorch.api import ValueChoiceX
-from nni.retiarii.oneshot.pytorch.supermodule.operation import MixedOperation
-from nni.retiarii.oneshot.pytorch.supermodule._valuechoice_utils import traverse_all_options
-from nni.retiarii.oneshot.pytorch.supermodule._operation_utils import Slicable as _S, MaybeWeighted as _W
+import nni.nas.nn.pytorch as nn
+from nni.nas import model_wrapper, basic_unit
+from nni.nas.nn.pytorch import ValueChoiceX
+from nni.nas.oneshot.pytorch.supermodule.operation import MixedOperation
+from nni.nas.oneshot.pytorch.supermodule._valuechoice_utils import traverse_all_options
+from nni.nas.oneshot.pytorch.supermodule._operation_utils import Slicable as _S, MaybeWeighted as _W
 
 from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight

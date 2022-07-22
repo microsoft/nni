@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import nni
-from nni.nas.execution.common.graph import Evaluator
+from .evaluator import Evaluator
 
 
 @nni.trace

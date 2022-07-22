@@ -7,10 +7,10 @@ from packaging.version import Version
 import torch
 import torch.nn as nn
 
-from nni.retiarii.serializer import basic_unit
+from nni.nas.utils import basic_unit
 
-from .api import LayerChoice
-from .mutation_utils import generate_new_label
+from nni.nas.nn.pytorch import LayerChoice
+from nni.nas.nn.pytorch.mutation_utils import generate_new_label
 
 __all__ = ['AutoActivation']
 

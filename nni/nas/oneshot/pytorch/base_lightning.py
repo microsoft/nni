@@ -17,7 +17,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 import nni.nas.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
-from nni.nas.nn.pytorch.api import ValueChoiceX
+from nni.nas.nn.pytorch.choice import ValueChoiceX
 from nni.typehint import Literal
 from .supermodule.base import BaseSuperNetModule
 

@@ -4,8 +4,8 @@
 import abc
 from typing import List, Any
 
-from ..graph import Model
-from ..mutator import Mutator
+from nni.nas.execution.common import Model
+from nni.nas.mutable import Mutator
 
 
 class BaseStrategy(abc.ABC):

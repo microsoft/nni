@@ -3,11 +3,11 @@
 
 from typing import List, Dict, Tuple
 
-from nni.retiarii.utils import uid
-from nni.retiarii.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule
+from nni.nas.utils import uid
+from nni.nas.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule
 from nni.common.device import GPUDevice
 
-from ...graph import Graph, Model, Node
+from nni.nas.execution.common.graph import Graph, Model, Node
 from .interface import AbstractOptimizer
 from .logical_plan import (AbstractLogicalNode, LogicalGraph, LogicalPlan,
                            OriginNode)

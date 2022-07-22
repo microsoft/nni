@@ -7,12 +7,12 @@ import logging
 import re
 from typing import Dict, List, Tuple, Any, cast
 
-from nni.retiarii.operation import PyTorchOperation
-from nni.retiarii.operation_def.torch_op_def import ToDevice
-from nni.retiarii.utils import STATE_DICT_PY_MAPPING
 from nni.common.device import Device, GPUDevice
+from nni.nas.execution.common.graph import IllegalGraphError, Edge, Graph, Node, Model
+from nni.nas.execution.common.graph_op import PyTorchOperation
+from nni.nas.utils import STATE_DICT_PY_MAPPING
 
-from ..graph import IllegalGraphError, Edge, Graph, Node, Model
+from .op_def import ToDevice
 
 _logger = logging.getLogger(__name__)
 
@@ -215,7 +215,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-import nni.retiarii.nn.pytorch
+import nni.nas.nn.pytorch
 
 {}
 

@@ -21,7 +21,7 @@ from torch import Tensor
 import nni.nas.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
-from nni.nas.nn.pytorch.api import ValueChoiceX
+from nni.nas.nn.pytorch.choice import ValueChoiceX
 
 from .base import BaseSuperNetModule
 from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, evaluate_constant

@@ -10,7 +10,7 @@ from typing import (Any, Dict, List, Optional, cast)
 from nni.common.framework import get_default_framework
 
 
-__all__ = ['Operation', 'Cell']
+__all__ = ['Operation', 'Cell', 'PyTorchOperation', 'TensorFlowOperation']
 
 
 def _convert_name(name: str) -> str:

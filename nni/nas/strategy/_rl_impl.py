@@ -21,9 +21,9 @@ from tianshou.env.worker import EnvWorker
 
 from typing_extensions import TypedDict
 
+from nni.nas.execution import submit_models, wait_models
+from nni.nas.execution.common import ModelStatus
 from .utils import get_targeted_model
-from ..graph import ModelStatus
-from ..execution import submit_models, wait_models
 
 
 _logger = logging.getLogger(__name__)

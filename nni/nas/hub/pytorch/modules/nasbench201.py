@@ -9,8 +9,8 @@ from typing import Callable, List, Dict, Union, Optional
 import torch
 import torch.nn as nn
 
-from .api import LayerChoice
-from .mutation_utils import generate_new_label
+from nni.nas.nn.pytorch import LayerChoice
+from nni.nas.nn.pytorch.mutation_utils import generate_new_label
 
 
 class NasBench201Cell(nn.Module):

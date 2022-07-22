@@ -7,7 +7,7 @@ from typing import Callable, List, Union, Tuple, Optional
 
 import torch.nn as nn
 
-from nni.retiarii.utils import NoContextError, STATE_DICT_PY_MAPPING_PARTIAL
+from nni.nas.utils import NoContextError, STATE_DICT_PY_MAPPING_PARTIAL
 
 from .choice import ValueChoice, ValueChoiceX, ChoiceOf
 from .mutation_utils import Mutable, get_fixed_value

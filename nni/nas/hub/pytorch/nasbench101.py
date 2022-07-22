@@ -5,8 +5,9 @@ import math
 
 import torch
 import torch.nn as nn
-from nni.retiarii import model_wrapper
-from nni.retiarii.nn.pytorch import NasBench101Cell
+
+from nni.nas import model_wrapper
+from .modules.nasbench101 import NasBench101Cell
 
 
 __all__ = ['NasBench101']

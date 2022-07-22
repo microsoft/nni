@@ -7,7 +7,7 @@ import warnings
 from typing import Any, TypeVar, Type
 
 from nni.common.serializer import is_traceable, is_wrapped_with_trace, trace, _copy_class_wrapper_attributes
-from .utils import ModelNamespace
+from .misc import ModelNamespace
 
 __all__ = ['get_init_parameters_or_fail', 'serialize', 'serialize_cls', 'basic_unit', 'model_wrapper',
            'is_basic_unit', 'is_model_wrapped']

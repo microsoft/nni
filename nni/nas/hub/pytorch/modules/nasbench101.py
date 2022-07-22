@@ -11,10 +11,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from nni.retiarii.mutator import InvalidMutation, Mutator
-from nni.retiarii.graph import Model
-from .api import InputChoice, ValueChoice, LayerChoice
-from .mutation_utils import Mutable, generate_new_label, get_fixed_dict
+from nni.nas.mutable import InvalidMutation, Mutator
+from nni.nas.execution.common import Model
+from nni.nas.nn.pytorch import InputChoice, ValueChoice, LayerChoice
+from nni.nas.nn.pytorch.mutation_utils import Mutable, generate_new_label, get_fixed_dict
 
 _logger = logging.getLogger(__name__)
 

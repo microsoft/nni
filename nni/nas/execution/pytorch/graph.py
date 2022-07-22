@@ -12,9 +12,9 @@ import string
 from typing import Any, Dict, Iterable, List
 
 from nni.experiment import rest
-from nni.retiarii.integration import RetiariiAdvisor
 
-from .interface import AbstractExecutionEngine, AbstractGraphListener
+from nni.nas.execution.common.integration import RetiariiAdvisor
+from nni.nas.execution.common import AbstractExecutionEngine, AbstractGraphListener
 from .utils import get_mutation_summary
 from .. import codegen, utils
 from ..graph import Model, ModelStatus, MetricData, Evaluator

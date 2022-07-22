@@ -17,7 +17,7 @@ from typing import Any, Type
 
 import torch.nn as nn
 
-from nni.nas.graph import Model
+from nni.nas.execution.common import Model
 from nni.nas.strategy.base import BaseStrategy
 from nni.nas.evaluator.pytorch.lightning import Lightning, LightningModule
 

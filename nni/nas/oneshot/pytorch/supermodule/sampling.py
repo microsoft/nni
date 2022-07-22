@@ -12,7 +12,7 @@ import torch.nn as nn
 
 from nni.common.hpo_utils import ParameterSpec
 from nni.nas.nn.pytorch import LayerChoice, InputChoice, Repeat, ChoiceOf, Cell
-from nni.nas.nn.pytorch.api import ValueChoiceX
+from nni.nas.nn.pytorch.choice import ValueChoiceX
 from nni.nas.nn.pytorch.cell import CellOpFactory, create_cell_op_candidates, preprocess_cell_inputs
 
 from .base import BaseSuperNetModule

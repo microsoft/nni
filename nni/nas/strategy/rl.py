@@ -4,9 +4,9 @@
 import logging
 from typing import Optional, Callable
 
+from nni.nas.execution import query_available_resources
 from .base import BaseStrategy
 from .utils import dry_run_for_search_space
-from ..execution import query_available_resources
 
 try:
     has_tianshou = True

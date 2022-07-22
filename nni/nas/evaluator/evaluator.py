@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+__all__ = ['Evaluator']
+
 from __future__ import annotations
 
 import abc
