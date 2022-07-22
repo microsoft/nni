@@ -102,8 +102,8 @@ class EvaluatorBasedScoreDataCollector(EvaluatorBasedDataCollector):
         data = {}
         target_name = 'weight'
         for module_name, wrapper in self.compressor.get_modules_wrapper().items():
-            target: Tensor = getattr(wrapper, target_name)
-            data[module_name] = {target_name: target.data.clone()}
+            target_score: Tensor = getattr(wrapper, f'{target_name}_score')
+            data[module_name] = {target_name: target_score.data.clone()}
         return data
 
 
