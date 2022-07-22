@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-__all__ = ['BaseGraphData', 'BaseExecutionEngine']
-
 from __future__ import annotations
+
+__all__ = ['BaseGraphData', 'BaseExecutionEngine']
 
 import logging
 import os

@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-__all__ = ['CGOExecutionEngine', 'TrialSubmission']
-
 from __future__ import annotations
+
+__all__ = ['CGOExecutionEngine', 'TrialSubmission']
 
 import logging
 import os

@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-__all__ = ['Evaluator']
-
 from __future__ import annotations
+
+__all__ = ['Evaluator']
 
 import abc
 from typing import Any, Callable, Type, Union, cast
