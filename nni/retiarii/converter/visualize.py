@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from nni.nas.execution.pytorch.graph.converter.visualize import *
+from nni.nas.execution.pytorch.converter.visualize import *
