@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+__all__ = ['RetiariiExeConfig', 'RetiariiExperiment', 'preprocess_model', 'debug_mutated_model']
+
 import logging
 
 import warnings
@@ -35,9 +37,6 @@ from .config import (
 )
 
 _logger = logging.getLogger(__name__)
-
-
-__all__ = ['RetiariiExeConfig', 'RetiariiExperiment']
 
 
 def preprocess_model(base_model, evaluator, applied_mutators, full_ir=True, dummy_input=None, oneshot=False):
