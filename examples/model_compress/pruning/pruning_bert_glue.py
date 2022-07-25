@@ -28,7 +28,7 @@ from nni.compression.pytorch.speedup import ModelSpeedup
 
 pretrained_model_name_or_path = 'bert-base-uncased'
 task_name = 'mnli'
-experiment_id = '0'
+experiment_id = '1'
 log_dir = Path(f'./pruning_log/{pretrained_model_name_or_path}/{task_name}/{experiment_id}')
 model_dir = Path(f'./models/{pretrained_model_name_or_path}/{task_name}')
 
@@ -88,7 +88,7 @@ train_dataloader, validate_dataloader1, validate_dataloader2 = prepare_data()
 
 def training(model: BertForSequenceClassification, optimizer: torch.optim.Optimizer, criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
              lr_scheduler: torch.optim.lr_scheduler._LRScheduler = None, max_steps: int | None = None, max_epochs: int | None = None,
-             save_best_model: bool = False, save_path: str | None = None, teacher_model: torch.nn.Module | None = None):
+             save_best_model: bool = False, save_path: str | None = None, log_path: str | None = Path(log_dir) / 'training.log', teacher_model: torch.nn.Module | None = None):
     model.train()
     if teacher_model:
         teacher_model.eval()
@@ -112,7 +112,7 @@ def training(model: BertForSequenceClassification, optimizer: torch.optim.Optimi
             current_step += 1
             if current_step % 1000 == 0 or current_step % len(train_dataloader) == 0:
                 result = evaluation(model)
-                with (Path(log_dir) / 'training.log').open('a+') as f:
+                with (log_path).open('a+') as f:
                     f.write('[{}] Epoch {}, Step {}: {}\n'.format(time.asctime(time.localtime(time.time())), current_epoch, current_step, result))
                 if save_best_model and best_result < result[0]:
                     assert save_path is not None
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     warmup_steps = 1 * steps_per_epoch
     cooldown_steps = 4 * steps_per_epoch
 
-    distil_training = functools.partial(training, teacher_model=teacher_model)
+    distil_training = functools.partial(training, teacher_model=teacher_model, log_path=log_dir / 'movement_pruning.log')
 
     traced_optimizer = nni.trace(Adam)(finetuned_model.parameters(), lr=3e-5, eps=1e-8)
 
@@ -209,7 +209,7 @@ if __name__ == '__main__':
                             training_epochs=total_epochs,
                             warm_up_step=warmup_steps,
                             cool_down_beginning_step=total_steps - cooldown_steps,
-                            regular_scale=30,
+                            regular_scale=20,
                             movement_mode='soft',
                             sparse_granularity='auto')
     simulated_pruning_model, attention_masks = pruner.compress()
@@ -225,10 +225,6 @@ if __name__ == '__main__':
     ffn_config_list = []
     attention_masks = torch.load(Path(log_dir) / 'attention_masks.pth')
 
-    distil_training = functools.partial(training, teacher_model=teacher_model)
-    traced_optimizer = nni.trace(Adam)(finetuned_model.parameters(), lr=3e-5, eps=1e-8)
-    evaluator = TorchEvaluator(distil_training, traced_optimizer, fake_criterion)
-
     layer_count = 0
     module_list = []
     for i in range(0, 12):
@@ -240,7 +236,7 @@ if __name__ == '__main__':
         if len(head_idx) != 12:
             attention_pruned_model.bert.encoder.layer[i].attention.prune_heads(head_idx)
             module_list.append(attention_pruned_model.bert.encoder.layer[i])
-            sparsity = 1 - (1 - len(head_idx) / 12)
+            sparsity = 1 - (1 - len(head_idx) / 12) * 0.5
             sparsity_per_iter = 1 - (1 - sparsity) ** (1 / 12)
             ffn_config_list.append({'op_names': [f'bert.encoder.layer.{layer_count}.intermediate.dense'], 'sparsity': sparsity_per_iter})
             layer_count += 1
@@ -262,6 +258,11 @@ if __name__ == '__main__':
     attention_pruned_model.load_state_dict(torch.load(at_model_save_path))
 
     # pruning FFN with TaylorFOWeightPruner
+
+    distil_training = functools.partial(training, teacher_model=teacher_model, log_path=log_dir / 'taylor_pruning.log')
+    traced_optimizer = nni.trace(Adam)(attention_pruned_model.parameters(), lr=3e-5, eps=1e-8)
+    evaluator = TorchEvaluator(distil_training, traced_optimizer, fake_criterion)
+
     attention_pruned_model.train()
     current_step = 0
     best_result = 0
