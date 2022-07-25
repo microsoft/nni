@@ -17,6 +17,7 @@ import { MountedStorageService } from '../storages/mountedStorageService';
 import { Scope } from 'typescript-ioc';
 import { StorageService } from '../storageService';
 import { getLogDir } from 'common/utils';
+import { setTimeout } from 'timers/promises';
 
 /**
  * Collector DLC jobs info from DLC cluster, and update dlc job status locally
@@ -54,9 +55,7 @@ export class DlcEnvironmentService extends EnvironmentService {
     public get getName(): string {
         return 'dlc';
     }
-    public sleep(time: any): Promise<any> {
-        return new Promise((resolve) => setTimeout(resolve, time*1000));
-    }
+    
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         environments.forEach(async (environment) => {
@@ -81,10 +80,9 @@ export class DlcEnvironmentService extends EnvironmentService {
                     break;
                 case 'FAILED':
                     // the job create failed,we will sleep(60) to create new job
-                    await this.sleep(60);
+                    await setTimeout(60000);
                     this.log.debug(`await 60s to create new job,DLC: job ${environment.id} is failed!`);
                     environment.setStatus('FAILED');
-                    deferred.reject(`DLC: job ${environment.id} is failed!`);
                     break;
                 case 'STOPPED':
                 case 'STOPPING':

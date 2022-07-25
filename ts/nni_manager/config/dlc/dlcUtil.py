@@ -101,8 +101,8 @@ if __name__ == "__main__":
                         print('status:' + status)
                         break
                     except Exception as e:
-                        logging.error('dlc get status error: \n')
-                        logging.error(e, exc_info=1)
+                        logging.exception('dlc get status error: \n')
+
                 logging.info("exit job_id %s update status",job_id)
             elif line == 'tracking_url':
                 #TODO: 1. get this url by api? 2. change this url in private dlc mode.
@@ -117,9 +117,9 @@ if __name__ == "__main__":
                         client.stop_job(job_id)
                         exit(0)
                     except Exception as e:
-                        logging.error('dlc stop error: \n')
-                        logging.error(e, exc_info=1)
+                        logging.exception('dlc stop error: \n')
+
                         
     except Exception as e:
-        logging.error('DLC submit Exception: \n')
-        logging.error(e, exc_info=1)
+        logging.exception('DLC submit Exception: \n')
+
