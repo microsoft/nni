@@ -19,7 +19,10 @@ from nni.nas.evaluator import Evaluator
 from nni.nas.utils import uid
 from .graph_op import Cell, Operation, _IOPseudoOperation
 
-__all__ = ['Evaluator', 'Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData']
+__all__ = [
+    'Evaluator', 'Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData',
+    'DebugEvaluator',
+]
 
 
 MetricData = Any

@@ -14,7 +14,7 @@ import nni.runtime.platform.test
 import nni.retiarii.evaluator.pytorch.lightning as pl
 import nni.retiarii.hub.pytorch as searchspace
 from nni.retiarii import fixed_arch
-from nni.retiarii.execution.utils import _unpack_if_only_one
+from nni.retiarii.execution.utils import unpack_if_only_one
 from nni.retiarii.mutator import InvalidMutation, Sampler
 from nni.retiarii.nn.pytorch.mutator import extract_mutation_from_pt_module
 
@@ -58,7 +58,7 @@ def _test_searchspace_on_dataset(searchspace, dataset='cifar10', arch=None):
 
     if arch is None:
         model = try_mutation_until_success(model, mutators, 10)
-        arch = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
+        arch = {mut.mutator.label: unpack_if_only_one(mut.samples) for mut in model.history}
 
     print('Selected model:', arch)
     with fixed_arch(arch):

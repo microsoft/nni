@@ -1,20 +1,20 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-__all__ = ['get_mutation_dict', 'mutation_dict_to_summary', 'get_mutation_summary']
+__all__ = ['unpack_if_only_one', 'get_mutation_dict', 'mutation_dict_to_summary', 'get_mutation_summary']
 
 from typing import Any, List
 from .graph import Model
 
 
-def _unpack_if_only_one(ele: List[Any]):
+def unpack_if_only_one(ele: List[Any]):
     if len(ele) == 1:
         return ele[0]
     return ele
 
 
 def get_mutation_dict(model: Model):
-    return {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
+    return {mut.mutator.label: unpack_if_only_one(mut.samples) for mut in model.history}
 
 
 def mutation_dict_to_summary(mutation: dict) -> dict:
