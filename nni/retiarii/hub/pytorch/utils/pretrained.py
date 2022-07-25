@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# pylint: disable=wildcard-import,unused-wildcard-import
+
 """
 Weights available in this file are processed with scripts in https://github.com/ultmaster/spacehub-conversion,
 and uploaded with :func:`nni.common.blob_utils.upload_file`.

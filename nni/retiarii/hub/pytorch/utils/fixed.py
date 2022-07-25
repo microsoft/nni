@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# pylint: disable=wildcard-import,unused-wildcard-import
+
 """This file should be merged to nni/retiarii/fixed.py"""
 
 from typing import Type

@@ -25,10 +25,10 @@ from nni.nas.execution.common import (
 from nni.nas.execution.pytorch import codegen
 from nni.nas.evaluator.pytorch.lightning import Lightning
 from nni.nas.evaluator.pytorch.cgo.evaluator import _MultiModelSupervisedLearningModule
+from nni.nas.execution.pytorch.graph import BaseGraphData
+
 from .logical_optimizer.logical_plan import LogicalPlan, AbstractLogicalNode
 from .logical_optimizer.opt_dedup_input import DedupInputOptimizer
-
-from nni.nas.execution.pytorch.graph import BaseGraphData
 
 _logger = logging.getLogger(__name__)
 

@@ -16,10 +16,6 @@ import torch.nn as nn
 from nni.experiment import Experiment, RunMode
 from nni.experiment.config.training_services import RemoteConfig
 
-from .config import (
-    RetiariiExeConfig, OneshotEngineConfig, BaseEngineConfig,
-    PyEngineConfig, CgoEngineConfig, BenchmarkEngineConfig
-)
 from nni.nas.execution import list_models, set_execution_engine
 from nni.nas.execution.common import RetiariiAdvisor, get_mutation_dict
 from nni.nas.execution.pytorch.codegen import model_to_pytorch_script
@@ -33,6 +29,10 @@ from nni.nas.nn.pytorch.mutator import (
 from nni.nas.utils import is_model_wrapped
 from nni.nas.strategy import BaseStrategy
 from nni.nas.strategy.utils import dry_run_for_formatted_search_space
+from .config import (
+    RetiariiExeConfig, OneshotEngineConfig, BaseEngineConfig,
+    PyEngineConfig, CgoEngineConfig, BenchmarkEngineConfig
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ def debug_mutated_model(base_model, evaluator, applied_mutators):
         a list of mutators that will be applied on the base model for generating a new model
     """
     base_model_ir, applied_mutators = preprocess_model(base_model, evaluator, applied_mutators)
-    from ..strategy.local_debug_strategy import _LocalDebugStrategy
+    from nni.nas.strategy.debug import _LocalDebugStrategy
     strategy = _LocalDebugStrategy()
     strategy.run(base_model_ir, applied_mutators)
     _logger.info('local debug completed!')

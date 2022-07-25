@@ -69,10 +69,10 @@ class Operation:
             return Cell(cell_name, parameters)
         else:
             if get_default_framework() in ('torch', 'pytorch'):
-                from .operation_def import torch_op_def  # pylint: disable=unused-import
+                from nni.nas.execution.pytorch.op_def import torch_op_def  # pylint: disable=unused-import
                 cls = PyTorchOperation._find_subclass(type_name)
             elif get_default_framework() in ('tf', 'tensorflow'):
-                from .operation_def import tf_op_def  # pylint: disable=unused-import
+                from nni.nas.execution.tensorflow.op_def import tf_op_def  # pylint: disable=unused-import
                 cls = TensorFlowOperation._find_subclass(type_name)
             else:
                 raise ValueError(f'Unsupported framework: {get_default_framework()}')

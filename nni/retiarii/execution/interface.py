@@ -1,4 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from nni.nas.execution.common.interface import *
+# pylint: disable=wildcard-import,unused-wildcard-import
+
+from nni.nas.execution.common.engine import *

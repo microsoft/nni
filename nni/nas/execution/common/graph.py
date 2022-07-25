@@ -16,8 +16,8 @@ if TYPE_CHECKING:
     from .mutator import Mutator
 
 from nni.nas.evaluator import Evaluator
+from nni.nas.utils import uid
 from .graph_op import Cell, Operation, _IOPseudoOperation
-from .utils import uid
 
 __all__ = ['Evaluator', 'Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData']
 
@@ -31,8 +31,6 @@ EdgeEndpoint = Tuple['Node', Optional[int]]
 """
 Type hint for edge's endpoint. The int indicates nodes' order.
 """
-
-
 
 
 class Model:
