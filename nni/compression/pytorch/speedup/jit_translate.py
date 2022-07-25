@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # Only imports the below statements during type checking
     from nni.compression.pytorch.speedup import ModelSpeedup
@@ -86,7 +86,6 @@ def parse_constant(cvalue, speedup):
 
     inputs = op_node.inputs()
     input_values = [parse_constant(_i, speedup) for _i in inputs]
-    global trans_func_dict
     func = trans_func_dict[op_node.kind()](op_node, speedup)
     return func(*input_values)
 
@@ -129,7 +128,7 @@ def slice_python(node, speedup):
     slice_list.append(slice_obj)
     return SliceMoudle(tuple(slice_list))
 
-def tupleunpack_python(node, speedup):
+def tupleunpack_python(_node, _speedup) -> Optional[Callable]:
     # Note: tuple unpack should only exists at the
     # the end of the model, and is no need to replace/propagate mask
     return None
@@ -163,20 +162,21 @@ def getattr_python(node, speedup):
     key_words = re.findall(pattern, str(node))
     assert len(key_words) == 1
     return GetModule(key_words[0])
-
-class my_partial:
+class func_adapter:
     """
-    Yet another functools.partial which support customed positions of arguements
-    Array with associated photographic information.
+    A function adapter which can reorder arguments.
+    It can be initialate with constant argument, and positions of each non-constant
+    argument. When called, it can put arguments into correct position, then call the
+    function.
 
     Attributes
     ----------
     func: Callable
         The function or method to be called.
-    positional: List
-        Positional arguments.
-    keyword: dict
-        Keyword arguments.
+    positional: List[Any]
+        Positional arguments values. The placeholder is None if it's non-constant.
+    keyword: Dict[str, Any]
+        Keyword arguments values. . The placeholder is None if it's non-constant.
     undetermined: List[int | str]
         A list of the right positions of arguments.
         Position is an int in positional or a str in keyword.
@@ -185,17 +185,19 @@ class my_partial:
         The values of these positions should be treat by those methods.
 
     """
+
+    func: Callable
+    positional: List[Any]
+    keyword: Dict[str, Any]
+    undetermined: List[Union[int, str]]
+    special_treat: Dict[Union[int, str], Callable]
+
     def __new__(cls, func: Callable, positional: List[Any], keyword: Dict[str, Any],
-                undetermined: List[int | str], special_treat: Dict[int | str, Callable]):
+                undetermined: List[Union[int, str]], special_treat: Dict[Union[int, str], Callable]):
         if not callable(func):
-            raise TypeError("the first argument must be callable")
+            raise TypeError("the 'func' argument must be callable")
 
-        if hasattr(func, "func"):
-            positional = func.positional + positional
-            keyword = {**func.keyword, **keyword}
-            func = func.func
-
-        self = super(my_partial, cls).__new__(cls)
+        self = super(func_adapter, cls).__new__(cls)
 
         self.func = func
         self.positional = positional
@@ -208,8 +210,7 @@ class my_partial:
         assert len(args) >= len(self.undetermined)
         if len(args) > len(self.undetermined):
             logger.warning('throw some args away when calling the function \'%s\'', self.func.__name__)
-        for i in range(0, len(self.undetermined)):
-            p = self.undetermined[i]
+        for i, p in enumerate(self.undetermined):
             v = args[i]
             if type(p) is int:
                 self.positional[p] = v
@@ -217,7 +218,7 @@ class my_partial:
                 self.keyword[p] = v
 
         for p, fs in self.special_treat.items():
-            if type(p) is int:
+            if isinstance(p, int):
                 for f in fs: self.positional[p] = f(self.positional[p])
             else:
                 for f in fs: self.keyword[p] = f(self.keyword[p])
@@ -230,35 +231,31 @@ class my_partial:
 # So we should recover them back:
 #   device, dtype, layout, memory_format, qscheme, qengine, dispatchkey
 
-enum2dtype_dict = {
-    0: torch.uint8, # byte
-    1: torch.int8, # char
-    2: torch.int16,
-    3: torch.int32,
-    4: torch.int64,
-    5: torch.float16,
-    6: torch.float32,
-    7: torch.float64, # double
-    9: torch.complex64,
-    10: torch.complex128,
-    11: torch.bool,
-    15: torch.bfloat16,
+enum_to_dtype_names = {
+    0: 'uint8',
+    1: 'int8',
+    2: 'int16',
+    3: 'int32',
+    4: 'int64',
+    5: 'float16',
+    6: 'float32',
+    7: 'float64',
+    8: 'complex32',
+    9: 'complex64',
+    10: 'complex128',
+    11: 'bool',
+    12: 'qint8',
+    13: 'quint8',
+    14: 'qint32',
+    15: 'bfloat16',
+    16: 'quint4x2',
+    17: 'quint2x4',
 }
-if torch.__version__ >= '1.9.0':
-    scalar2dtype_dict_qint = {
-        12: torch.qint8,
-        13: torch.quint8,
-        14: torch.qint32,
-        16: torch.quint4x2,
-    }
-    enum2dtype_dict = {**enum2dtype_dict, **scalar2dtype_dict_qint}
-if torch.__version__ < '1.11.0' or torch.__version__ >= '1.12.0':
-    # torch.complex32 is disabled in 1.11
-    enum2dtype_dict[8] = torch.complex32
-if torch.__version__ >= '1.12.0':
-    # In 1.12, torch.quint2x4 is existed, and there is a 'QUInt2x4Storage'.
-    enum2dtype_dict[17] = torch.quint2x4
-def dtype_trans(ivalue: int | torch.dtype):
+enum_to_dtype_dict = {}
+for enum_value, dtype_name in enum_to_dtype_names.items():
+    if hasattr(torch, dtype_name):
+        enum_to_dtype_dict[enum_value] = getattr(torch, dtype_name)
+def dtype_trans(ivalue: Union[int, torch.dtype]):
     """
     Special process for dtype.
     Torch will transform dtype to an enum in cpp, so the value of dtype we get in jit is an int.
@@ -266,27 +263,25 @@ def dtype_trans(ivalue: int | torch.dtype):
 
     Parameters
     ----------
-    ivalue:
+    ivalue: int | torch.dtype
         The value of dtype or method to be recovered.
 
     """
     if ivalue is None or type(ivalue) is torch.dtype:
         return ivalue
     elif type(ivalue) is int:
-        global enum2dtype_dict
-        if ivalue not in enum2dtype_dict:
-            raise TypeError("Unimplemented scalar type")
-        return enum2dtype_dict[ivalue]
-    else:
-        raise TypeError("Unimplemented scalar type")
+        global enum_to_dtype_dict
+        if ivalue in enum_to_dtype_dict:
+            return enum_to_dtype_dict[ivalue]
+    raise TypeError("Unimplemented scalar type of value '%s'", ivalue)
 
-enum2memory_format_dict = {
+enum_to_memory_format_dict = {
     0: torch.contiguous_format,
-    1: torch.preserve_format, # char
+    1: torch.preserve_format,
     2: torch.channels_last,
     3: torch.channels_last_3d,
 }
-def memory_format_trans(ivalue: int | torch.memory_format):
+def memory_format_trans(ivalue: Union[int, torch.memory_format]):
     """
     Special process for memory_format.
     Torch will transform memory_format to an enum in cpp, so the value of memory_format we get in jit is an int.
@@ -294,49 +289,26 @@ def memory_format_trans(ivalue: int | torch.memory_format):
 
     Parameters
     ----------
-    ivalue:
+    ivalue: int | torch.memory_format
         The value of memory_format or method to be recovered.
 
     """
     if ivalue is None or type(ivalue) is torch.memory_format:
         return ivalue
     elif type(ivalue) is int:
-        global enum2memory_format_dict
-        if ivalue not in enum2memory_format_dict:
-            raise TypeError("Unimplemented memory_format type")
-        return enum2memory_format_dict[ivalue]
-    else:
-        raise TypeError("Unimplemented memory_format type")
+        global enum_to_memory_format_dict
+        if ivalue in enum_to_memory_format_dict:
+            return enum_to_memory_format_dict[ivalue]
+    raise TypeError("Unimplemented memory_format type of value '%s'", ivalue)
 
 special_treat_dict = {
     'dtype': dtype_trans,
     'memory_format': memory_format_trans,
 }
-def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpeedup):
+def parse_aten_schema(schema: str):
     """
-    parse a
-    Return a callable object to inference the mask according to the
-    node.op_type.
-
-    Parameters
-    ---------
-    func: Callable
-        The torch function one-to-one correspondence with the node.
-    node: NodePyGroup
-        The target node to inference the mask
-    speedup: ModelSpeedup
-        The speedup object of the target model.
-
-    Returns
-    ------
-    func: callable object(nn.Module/function)
-        Return the translated function that used to inference the mask
-        , if current op_type is not supported, then we return None.
+    Parse the schema, to positional_num and keyword_list, and detect if the argument should be specially treated.
     """
-    c_node = node.key_node
-    schema = c_node.schema()
-
-    ## parse the schema, to positional_num and keyword_list
     schema = schema[0:schema.rfind(') ->')] + ','
     positional_num = 0
     keyword_list = list()
@@ -355,8 +327,10 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
                 arg_name = match.group(1)
                 if arg_name in special_treat_dict:
                     key = positional_num
-                    if key not in special_treat: special_treat[key] = [special_treat_dict[arg_name]]
-                    else: special_treat[key].append(special_treat_dict[arg_name])
+                    if key not in special_treat:
+                        special_treat[key] = [special_treat_dict[arg_name]]
+                    else:
+                        special_treat[key].append(special_treat_dict[arg_name])
                 positional_num += 1
 
                 i = j + 1
@@ -373,19 +347,25 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
                     # detect and it to the special_treat
                     if arg_name in special_treat_dict:
                         key = arg_name
-                        if key not in special_treat: special_treat[key] = [special_treat_dict[arg_name]]
-                        else: special_treat[key].append(special_treat_dict[arg_name])
+                        if key not in special_treat:
+                            special_treat[key] = [special_treat_dict[arg_name]]
+                        else:
+                            special_treat[key].append(special_treat_dict[arg_name])
 
                     i = j + 1
                     j = schema.find(',', i)
                 break
+    return positional_num, keyword_list, special_treat
 
-    ## translate inputs, to positional, keyword and undetermined
+def parse_input_value(speedup: ModelSpeedup, input_nodes: List[torch._C.Node], positional_num: int, keyword_list: List[str]):
+    """
+    translate inputs, to constant positional arguments, constant keyword arguments, and undetermined positions
+    """
     positional = list()
     keyword = dict()
     undetermined = list()
 
-    for ainput in list(c_node.inputs()):
+    for ainput in input_nodes:
         if ainput.node().kind() == 'prim::ListConstruct':
             arg = translate_list(ainput, speedup)
         elif ainput.node().kind() == 'prim::Constant':
@@ -402,8 +382,13 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
             positional.append(arg)
         else:
             keyword[keyword_list[positional_num - len(positional)]] = arg
+    return positional, keyword, undetermined
 
-    ## if something in special_treat is not in undetermined, do the treat
+def special_treat_to_constant_value(positional: List, keyword: Dict[str], undetermined: List[Union[int, str]],
+                                    special_treat: Dict[Union[int, str], Callable]):
+    """
+    if any argument with special_treat is not in undetermined, do the treat
+    """
     undetermined_special_treat = dict()
     for p, fs in special_treat.items():
         if p in undetermined:
@@ -412,8 +397,38 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
             for f in fs: positional[p] = f(positional[p])
         else:
             for f in fs: keyword[p] = f(keyword[p])
+    return undetermined_special_treat
 
-    return my_partial(func, positional, keyword, undetermined, undetermined_special_treat)
+def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpeedup):
+    """
+    parse a Return a callable object to inference the mask according to the node.op_type.
+
+    Parameters
+    ---------
+    func: Callable
+        The torch function one-to-one correspondence with the node.
+    node: NodePyGroup
+        The target node to inference the mask
+    speedup: ModelSpeedup
+        The speedup object of the target model.
+
+    Returns
+    ------
+    func: callable object(nn.Module/function)
+        Return the translated function that used to inference the mask
+        , if current op_type is not supported, then we return None.
+    """
+    c_node = node.key_node
+
+    schema = c_node.schema()
+    positional_num, keyword_list, special_treat = parse_aten_schema(schema)
+
+    input_nodes = list(c_node.inputs())
+    positional, keyword, undetermined = parse_input_value(speedup, input_nodes, positional_num, keyword_list)
+
+    undetermined_special_treat = special_treat_to_constant_value(positional, keyword, undetermined, special_treat)
+
+    return func_adapter(func, positional, keyword, undetermined, undetermined_special_treat)
 
 trans_func_dict = {
     'aten::slice': slice_python,
@@ -423,7 +438,7 @@ trans_func_dict = {
     'prim::NumToTensor': num2tensor_python,
     'prim::GetAttr': getattr_python,
 }
-def init_add_functions(func_from: ModuleType | Type):
+def init_add_functions(func_from: Union[ModuleType, Type]):
     """
     Add function/method attributes from a module/class, to the trans_func_dict
 
@@ -447,8 +462,7 @@ init_add_functions(torch._C._TensorBase)
 
 def jit_to_python_function(node: NodePyGroup, speedup: ModelSpeedup):
     """
-    Return a callable object to inference the mask according to the
-    node.op_type.
+    Return a callable object to inference the mask according to the node.op_type.
 
     Parameters
     ---------
@@ -463,7 +477,6 @@ def jit_to_python_function(node: NodePyGroup, speedup: ModelSpeedup):
         Return the translated function that used to inference the mask
         , if current op_type is not supported, then we return None.
     """
-    global trans_func_dict
     logger.debug(
         'Translate C function %s into its python version', node.op_type)
     if node.op_type not in trans_func_dict:
