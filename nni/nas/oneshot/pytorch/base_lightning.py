@@ -122,7 +122,7 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
         nas_nn.LayerChoice,
         nas_nn.InputChoice,
         nas_nn.Repeat,
-        nas_nn.NasBench101Cell,
+        # nas_nn.NasBench101Cell,   # FIXME: nasbench101 is moved to hub, can't check any more.
         # nas_nn.ValueChoice,       # could be false positive
         # nas_nn.Cell,              # later
         # nas_nn.NasBench201Cell,   # forward = supernet

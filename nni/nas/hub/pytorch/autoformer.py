@@ -9,7 +9,7 @@ from timm.models.layers import trunc_normal_, DropPath
 
 import nni.nas.nn.pytorch as nn
 from nni.nas import model_wrapper, basic_unit
-from nni.nas.nn.pytorch import ValueChoiceX
+from nni.nas.nn.pytorch.choice import ValueChoiceX
 from nni.nas.oneshot.pytorch.supermodule.operation import MixedOperation
 from nni.nas.oneshot.pytorch.supermodule._valuechoice_utils import traverse_all_options
 from nni.nas.oneshot.pytorch.supermodule._operation_utils import Slicable as _S, MaybeWeighted as _W
