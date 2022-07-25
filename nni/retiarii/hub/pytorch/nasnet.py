@@ -779,10 +779,16 @@ class DARTS(NDS):
     It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
     Its operator candidates are :attribute:`~DARTS.DARTS_OPS`.
     It has 4 nodes per cell, and the output is concatenation of all nodes in the cell.
+
+    .. note::
+
+        ``none`` is not included in the operator candidates.
+        It has already been handled in the differentiable implementation of cell.
+
     """ + _INIT_PARAMETER_DOCS
 
     DARTS_OPS = [
-        'none',
+        # 'none',
         'max_pool_3x3',
         'avg_pool_3x3',
         'skip_connect',

@@ -461,6 +461,8 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
 class DifferentiableMixedCell(PathSamplingCell):
     """Implementation of Cell under differentiable context.
 
+    Similar to PathSamplingCell, this cell only handles cells of specific kinds (e.g., with loose end).
+
     An architecture parameter is created on each edge of the full-connected graph.
     """
 
@@ -484,13 +486,20 @@ class DifferentiableMixedCell(PathSamplingCell):
                 op = cast(List[Dict[str, nn.Module]], self.ops[i - self.num_predecessors])[j]
                 if edge_label in memo:
                     alpha = memo[edge_label]
-                    if len(alpha) != len(op):
-                        raise ValueError(
-                            f'Architecture parameter size of same label {edge_label} conflict: '
-                            f'{len(alpha)} vs. {len(op)}'
+                    if len(alpha) != len(op) + 1:
+                        if len(alpha) != len(op):
+                            raise ValueError(
+                                f'Architecture parameter size of same label {edge_label} conflict: '
+                                f'{len(alpha)} vs. {len(op)}'
+                            )
+                        warnings.warn(
+                            f'Architecture parameter size {len(alpha)} is not same as expected: {len(op) + 1}. '
+                            'This is likely due to the label being shared by a LayerChoice inside the cell and outside.',
+                            UserWarning
                         )
                 else:
-                    alpha = nn.Parameter(torch.randn(len(op)) * 1E-3)
+                    # +1 to emulate the input choice.
+                    alpha = nn.Parameter(torch.randn(len(op) + 1) * 1E-3)
                 self._arch_alpha[edge_label] = alpha
 
         self._softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
@@ -513,7 +522,6 @@ class DifferentiableMixedCell(PathSamplingCell):
         """Tricky export.
 
         Reference: https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/model_search.py#L135
-        We don't avoid selecting operations like ``none`` here, because it looks like a different search space.
         """
         exported = {}
         for i in range(self.num_predecessors, self.num_nodes + self.num_predecessors):
@@ -521,6 +529,7 @@ class DifferentiableMixedCell(PathSamplingCell):
             all_weights: list[tuple[float, int, str]] = []
             for j in range(i):
                 for k, name in enumerate(self.op_names):
+                    # The last appended weight is automatically skipped in export.
                     all_weights.append((
                         float(self._arch_alpha[f'{self.label}/{i}_{j}'][k].item()),
                         j, name,
@@ -559,7 +568,11 @@ class DifferentiableMixedCell(PathSamplingCell):
 
             for j in range(i):  # for every previous tensors
                 op_results = torch.stack([op(states[j]) for op in ops[j].values()])
-                alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
+                alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)  # (-1, 1, 1, 1, 1, ...)
+                op_weights = self._softmax(self._arch_alpha[f'{self.label}/{i}_{j}'])
+                if len(op_weights) == len(op_results) + 1:
+                    # concatenate with a zero operation, indicating this path is not chosen at all.
+                    op_results = torch.cat((op_results, torch.zeros_like(op_results[:1])), 0)
                 edge_sum = torch.sum(op_results * self._softmax(self._arch_alpha[f'{self.label}/{i}_{j}']).view(*alpha_shape), 0)
                 current_state.append(edge_sum)
 
