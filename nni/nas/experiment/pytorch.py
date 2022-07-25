@@ -37,7 +37,7 @@ from .config import (
 _logger = logging.getLogger(__name__)
 
 
-__all__ = ['RetiariiExperiment']
+__all__ = ['RetiariiExeConfig', 'RetiariiExperiment']
 
 
 def preprocess_model(base_model, evaluator, applied_mutators, full_ir=True, dummy_input=None, oneshot=False):
