@@ -516,6 +516,7 @@ class LightningEvaluator(Evaluator):
 
 _CRITERION = Callable[[Any, Any], Any]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
+_PREDICTING_FUNC = Callable[[Module], None]
 _TRAINING_FUNC = Callable[[Module, Union[Optimizer, List[Optimizer]], _CRITERION, Union[None, _LRScheduler, List[_LRScheduler]], Optional[int], Optional[int]], None]
 
 
@@ -602,14 +603,15 @@ class TorchEvaluator(Evaluator):
                 return correct / len(mnist_test)
     """
 
-    def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
+    def __init__(self, training_func: _TRAINING_FUNC = None, optimizers: Optimizer | List[Optimizer] = None, criterion: _CRITERION = None,
                  lr_schedulers: _LRScheduler | List[_LRScheduler] | None = None, dummy_input: Any | None = None,
-                 evaluating_func: _EVALUATING_FUNC | None = None):
+                 evaluating_func: _EVALUATING_FUNC | None = None, predicting_func: _PREDICTING_FUNC | None = None):
         self.training_func = training_func
         self._ori_criterion = criterion
         self._criterion = self._ori_criterion
         self.dummy_input = dummy_input
         self.evaluating_func = evaluating_func
+        self.predicting_func = predicting_func
 
         self._train_with_single_optimizer = isinstance(optimizers, Optimizer)
         self._train_with_single_scheduler = isinstance(lr_schedulers, _LRScheduler)
@@ -722,6 +724,11 @@ class TorchEvaluator(Evaluator):
             return nni_used_metric, metric
         else:
             return metric
+
+    def predict(self) -> None:
+        assert self.model is not None
+        assert self.predicting_func is not None
+        self.predicting_func(self.model)
 
     def get_dummy_input(self) -> Any:
         return self.dummy_input

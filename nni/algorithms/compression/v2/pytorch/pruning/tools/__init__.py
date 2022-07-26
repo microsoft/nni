@@ -11,7 +11,8 @@ from .base import (
 from .data_collector import (
     TargetDataCollector,
     EvaluatorBasedTargetDataCollector,
-    EvaluatorBasedHookDataCollector
+    EvaluatorBasedHookDataCollector,
+    EvaluatorPredictingDataCollector
 )
 # TODO: remove in nni v3.0.
 from .data_collector import (

@@ -12,7 +12,8 @@ from .base import TrainerBasedDataCollector
 _logger = logging.getLogger(__name__)
 
 __all__ = ['TargetDataCollector', 'EvaluatorBasedTargetDataCollector', 'EvaluatorBasedHookDataCollector',
-           'WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector']  # TODO: remove in nni v3.0.
+           'WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector',
+           'EvaluatorPredictingDataCollector']  # TODO: remove in nni v3.0.
 
 
 # TODO: remove in nni v3.0.
@@ -117,6 +118,18 @@ class EvaluatorBasedHookDataCollector(EvaluatorBasedDataCollector):
         assert self.compressor.bound_model is not None
         self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
 
+        data = {}
+        for module_name, hooks in self._hooks.items():
+            data[module_name] = {}
+            for target_name, hook in hooks.items():
+                data[module_name][target_name] = hook.buffer
+        return data
+
+class EvaluatorPredictingDataCollector(EvaluatorBasedDataCollector):
+    """
+    """
+    def collect(self) -> Dict[str, Dict[str, List]]:
+        self.evaluator.predict()
         data = {}
         for module_name, hooks in self._hooks.items():
             data[module_name] = {}
