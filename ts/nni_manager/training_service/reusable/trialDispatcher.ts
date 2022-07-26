@@ -244,7 +244,7 @@ class TrialDispatcher implements TrainingService {
 
             // Copy the compressed file to remoteDirectory and delete it
             const codeDir = path.resolve(this.config.trialCodeDirectory);
-            const envDir = storageService.joinPath("envs");
+            const envDir = storageService.joinPath("nni", `${this.experimentId}`, "envs");
             const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
             storageService.rename(codeFileName, "nni-code.tar.gz");
 
@@ -666,7 +666,7 @@ class TrialDispatcher implements TrainingService {
         runnerSettings.platform = environmentService.getName;
         runnerSettings.experimentId = this.experimentId;
         const storageService: StorageService = this.getStorageService(environmentService);
-        const envDir = storageService.joinPath("envs");
+        const envDir = storageService.joinPath("nni", `${this.experimentId}`, "envs");
         const runnerSettingsConfig = storageService.joinPath(envDir, environment.id, "settings.json");
         await storageService.save(JSON.stringify(runnerSettings), runnerSettingsConfig);
     }
