@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import torch
 import torch.nn as nn
-from nni.retiarii.nn.pytorch import ValueChoice, Conv2d, BatchNorm2d, Linear, MultiheadAttention
+from nni.retiarii.nn.pytorch import ValueChoice, LayerChoice, Conv2d, BatchNorm2d, Linear, MultiheadAttention
 from nni.retiarii.oneshot.pytorch.base_lightning import traverse_and_mutate_submodules
 from nni.retiarii.oneshot.pytorch.supermodule.differentiable import (
     MixedOpDifferentiablePolicy, DifferentiableMixedLayer, DifferentiableMixedInput, GumbelSoftmax,
@@ -136,6 +136,16 @@ def test_differentiable_valuechoice():
     assert conv(torch.zeros((1, 3, 7, 7))).size(2) == 7
 
     assert set(conv.export({}).keys()) == {'123', '456'}
+
+
+def test_differentiable_layerchoice_dedup():
+    layerchoice1 = LayerChoice([Conv2d(3, 3, 3), Conv2d(3, 3, 3)], label='a')
+    layerchoice2 = LayerChoice([Conv2d(3, 3, 3), Conv2d(3, 3, 3)], label='a')
+
+    memo = {}
+    DifferentiableMixedLayer.mutate(layerchoice1, 'x', memo, {})
+    DifferentiableMixedLayer.mutate(layerchoice2, 'x', memo, {})
+    assert len(memo) == 1 and 'a' in memo
 
 
 def _mixed_operation_sampling_sanity_check(operation, memo, *input):
