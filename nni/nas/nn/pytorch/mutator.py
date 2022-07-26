@@ -171,7 +171,7 @@ class RepeatMutator(Mutator):
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     applied_mutators = []
 
-    ic_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.nas.nn.pytorch.api.InputChoice'))
+    ic_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.nas.nn.pytorch.choice.InputChoice'))
     for node_list in ic_nodes:
         assert _is_all_equal(map(lambda node: node.operation.parameters['n_candidates'], node_list)) and \
             _is_all_equal(map(lambda node: node.operation.parameters['n_chosen'], node_list)), \
@@ -179,7 +179,7 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
         mutator = InputChoiceMutator(node_list)
         applied_mutators.append(mutator)
 
-    vc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.nas.nn.pytorch.api.ValueChoice'))
+    vc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.nas.nn.pytorch.choice.ValueChoice'))
     for node_list in vc_nodes:
         assert _is_all_equal(map(lambda node: node.operation.parameters['candidates'], node_list)), \
             'Value choice with the same label must have the same candidates.'

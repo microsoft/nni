@@ -1,7 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-__all__ = ['get_advisor', 'register_advisor', 'send_trial', 'receive_trial_parameters', 'get_experiment_id']
+__all__ = [
+    'get_advisor', 'register_advisor', 'send_trial', 'receive_trial_parameters', 'get_experiment_id',
+    '_advisor'  # FIXME: hack to make it importable for tests
+]
 
 import warnings
 from typing import NewType, Any

@@ -25,7 +25,11 @@ from nni.nas.evaluator import Evaluator
 from nni.typehint import Literal
 
 
-__all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression']
+__all__ = [
+    'LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression',
+    '_AccuracyWithLogits', '_SupervisedLearningModule', '_ClassificationModule', '_RegressionModule',
+    # FIXME: hack to make it importable for tests
+]
 
 
 class LightningModule(pl.LightningModule):
