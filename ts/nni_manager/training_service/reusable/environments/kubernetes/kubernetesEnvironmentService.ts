@@ -150,6 +150,8 @@ export class KubernetesEnvironmentService extends EnvironmentService {
         await cpp.exec(`mkdir -p ${this.environmentLocalTempFolder}`);
         try {
             await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.environmentLocalTempFolder}`);
+            // create a separate working directory for each experiment
+            await cpp.exec(`mkdir -p ${this.environmentLocalTempFolder}/nni/${this.experimentId}`);
         } catch (error) {
             const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.environmentLocalTempFolder} failed, error is ${error}`;
             this.log.error(mountError);
