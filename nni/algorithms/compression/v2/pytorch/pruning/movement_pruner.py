@@ -13,7 +13,6 @@ from torch import autograd, Tensor
 from torch.nn import Module
 from torch.nn.parameter import Parameter
 from torch.optim import Optimizer, Adam
-from torch.optim.lr_scheduler import LambdaLR
 
 from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import EvaluatorBasedPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
@@ -34,6 +33,7 @@ from ..utils import (
 )
 
 from ..utils.docstring import _EVALUATOR_DOCSTRING
+from ..utils.external.huggingface import parser_factory
 
 _logger = logging.getLogger(__name__)
 
@@ -52,14 +52,9 @@ class PrunerScoredModuleWrapper(PrunerModuleWrapper):
     module_name
         The name of the module to compress, wrapper module shares same name.
     """
-    def __init__(self, module: Module, module_name: str, config: Dict):
+    def __init__(self, module: Module, module_name: str, config: Dict, score_size: List[int]):
         super().__init__(module, module_name, config)
-        if 'attention' in module_name:
-            self.weight_score = Parameter(torch.empty(self.weight.shape[0] // 64, self.weight.shape[1] // 64))  # type: ignore
-        elif 'intermediate.dense' in module_name:
-            self.weight_score = Parameter(torch.empty(self.weight.shape[0]))  # type: ignore
-        else:
-            self.weight_score = Parameter(torch.empty(self.weight.shape[1]))  # type: ignore
+        self.weight_score = Parameter(torch.empty(score_size))  # type: ignore
         torch.nn.init.constant_(self.weight_score, val=0.0)
 
     def forward(self, *inputs):
@@ -140,9 +135,9 @@ class MovementPruner(EvaluatorBasedPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -156,16 +151,34 @@ class MovementPruner(EvaluatorBasedPruner):
         {evaluator_docstring}
         The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
         If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
-    training_epochs : int
+    training_epochs
         The total epoch number for training the model.
         Make sure the total `optimizer.step()` in `training_epochs` is bigger than `cool_down_beginning_step`.
-    warm_up_step : int
+    warm_up_step
         The total `optimizer.step()` number before start pruning for warm up.
         Make sure `warm_up_step` is smaller than `cool_down_beginning_step`.
-    cool_down_beginning_step: int
+    cool_down_beginning_step
         The number of steps at which sparsity stops growing, note that the sparsity stop growing doesn't mean masks not changed.
         The sparsity after each `optimizer.step()` is:
         total_sparsity * (1 - (1 - (current_step - warm_up_step) / (cool_down_beginning_step - warm_up_step)) ** 3).
+    regular_scale
+        Use to scale the movement score regular loss. In 'soft' mode, higher regular scale means higher final sparsity.
+        The recommended range is 1 ~ 30.
+    movement_mode
+        'hard' or 'soft'. Note that in 'soft' mode, ``sparsity`` set in the ``config_list`` means the sparsify threshold,
+        'soft' mode cannot precisely control the sparsity rate, but usually has higher performance compared with 'hard' mode.
+        ``sparsity`` in 'soft' mode usually set to ``0.1``, and using ``regular_scale`` to control the final relative sparsity.
+
+        For detailed differences between 'hard' and 'soft', please refer to the paper.
+        In short, 'hard' means that the corresponding layer is pruned to a fixed ratio by the topk method according to the movement score,
+        which is the sparsity ratio set in config_list.
+        'soft' means that the final sparsity size will not be fixed, but the generation of the mask will be controlled by a threshold,
+        and the positions corresponding to scores below the threshold will be masked during the movement training process.
+    sparse_granularity
+        This is an experimental interface, by default, apply 'finegrained' pruning. If 'auto' is set, will try to apply structure pruning.
+        For the attention layer, will apply block sparse with size [head_width, head_width]. For the following two linear layers (FFN),
+        will apply output channel pruning for the first linear, and the input channel pruning for the second one.
+        'auto' only support partial hugingface transformers right now (bart, bert, t5).
 
     Notes
     -----
@@ -197,6 +210,8 @@ class MovementPruner(EvaluatorBasedPruner):
         self.movement_mode: Literal['hard', 'soft'] | None = init_kwargs['movement_mode'] if self.using_evaluator else None
         self.sparse_granularity = init_kwargs['sparse_granularity'] if self.using_evaluator else None
         assert self.warm_up_step < self.cool_down_beginning_step, '`warm_up_step` should smaller than `cool_down_beginning_step`'
+
+        self._model_parser = parser_factory(model)
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -209,7 +224,9 @@ class MovementPruner(EvaluatorBasedPruner):
         for config in self.config_list:
             current_sparsity = config['total_sparsity'] * self._cubic_scale(current_step)
             for op_name in config['op_names']:
-                wrapper_dict[op_name].config['total_sparsity'] = current_sparsity
+                # There is an unreachable pyright error if `wrapper_dict[op_name].config['total_sparsity'] = current_sparsity`, seems a pyright bug...
+                wrapper_config = wrapper_dict[op_name].config
+                wrapper_config['total_sparsity'] = current_sparsity
 
     def _cubic_scale(self, current_step: int):
         if self.warm_up_step > current_step:
@@ -219,19 +236,34 @@ class MovementPruner(EvaluatorBasedPruner):
         else:
             return 1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3
 
-    def reset_tools(self):
-        if self.sparse_granularity and self.sparse_granularity == 'auto':
+    def _create_scalers(self) -> Scaling | Dict[str, Scaling]:
+        if self.sparse_granularity and self.sparse_granularity == 'auto' and self._model_parser:
             scalers = {}
-            for op_name in self.get_modules_wrapper().keys():
-                if 'attention' in op_name:
-                    scalers[op_name] = {'_default': Scaling([64, 64])}
-                elif 'intermediate.dense' in op_name:
-                    scalers[op_name] = {'_default': Scaling([1], 'back')}
+            for module_name, module in self.get_modules_wrapper().items():
+                if self._model_parser.is_attention(module_name):
+                    is_output_dense = not self._model_parser.is_attention(module_name, include_output=False)
+                    num_heads = self._model_parser.get_num_heads(module_name, self.bound_model)
+                    if num_heads <= 0:
+                        scalers[module_name] = {'_default': Scaling([1])}
+                    else:
+                        if module.module.weight.shape[0] % num_heads != 0 or module.module.weight.shape[1] % num_heads != 0:
+                            scalers[module_name] = {'_default': Scaling([1])}
+                        else:
+                            total_head_size = module.module.weight.shape[0] if not is_output_dense else module.module.weight.shape[1]
+                            block_w = total_head_size // num_heads
+                            scalers[module_name] = {'_default': Scaling([block_w, block_w])}
+                elif self._model_parser.is_ffn(module_name, ffn_num=1):
+                    scalers[module_name] = {'_default': Scaling([1, -1])}
+                elif self._model_parser.is_ffn(module_name, ffn_num=2):
+                    scalers[module_name] = {'_default': Scaling([-1, 1])}
                 else:
-                    scalers[op_name] = {'_default': Scaling([-1, 1], 'back')}
+                    scalers[module_name] = {'_default': Scaling([1])}
         else:
             scalers = Scaling([1])
+        return scalers
 
+    def reset_tools(self):
+        scalers = self._create_scalers()
         if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = StraightMetricsCalculator()
         if not hasattr(self, 'sparsity_allocator'):
@@ -246,18 +278,18 @@ class MovementPruner(EvaluatorBasedPruner):
         optimizer = Adam(params, 1e-2)
         self.step_counter = 0
 
-        def lr_lambda(current_step: int):
-            if current_step < 12272:
-                return float(current_step) / 12272
-            return max(0.0, float(147264 - current_step) / float(147264 - 12272))
+        # TODO: waiting for api stable and experiemnts to prove this scheduler is needed.
+        # def lr_lambda(current_step: int):
+        #     if current_step < self.warm_up_step:
+        #         return float(current_step) / self.warm_up_step
+        #     return max(0.0, float(147264 - current_step) / float(147264 - self.warm_up_step))
 
-        lr_scheduler = LambdaLR(optimizer, lr_lambda)
+        # lr_scheduler = LambdaLR(optimizer, lr_lambda)
 
         # update the masks after each optimzier step
         def _optimizer_patch():
             optimizer.step()
             optimizer.zero_grad()
-            lr_scheduler.step()
             self.step_counter += 1
             if self.step_counter > self.warm_up_step:
                 self.cubic_schedule(self.step_counter)
@@ -274,15 +306,7 @@ class MovementPruner(EvaluatorBasedPruner):
                 l1_reg = 0
                 count = 0
                 for wrapper in self.get_modules_wrapper().values():
-                    reg = torch.norm(torch.sigmoid(wrapper.weight_score), p=1) / wrapper.weight_score.numel()  # type: ignore
-                    if self.sparse_granularity == 'auto':
-                        if 'attention' in wrapper.name:
-                            reg /= 1
-                        elif 'intermediate' in wrapper.name:
-                            reg /= 1
-                        else:
-                            reg /= 1
-                    l1_reg += reg
+                    l1_reg += torch.norm(torch.sigmoid(wrapper.weight_score), p=1) / wrapper.weight_score.numel()  # type: ignore
                     count += 1
                 return origin_loss + self.regular_scale * self._cubic_scale(self.step_counter) * l1_reg / count
             else:
@@ -316,7 +340,29 @@ class MovementPruner(EvaluatorBasedPruner):
             The configuration for generating the mask.
         """
         _logger.debug("Module detected to compress : %s.", layer.name)
-        wrapper = PrunerScoredModuleWrapper(layer.module, layer.name, config)
+        # TODO: merge with _create_scalers after nni v3.0
+        if self.sparse_granularity and self.sparse_granularity == 'auto' and self._model_parser:
+            if self._model_parser.is_attention(layer.name):
+                is_output_dense = not self._model_parser.is_attention(layer.name, include_output=False)
+                num_heads = self._model_parser.get_num_heads(layer.name, self.bound_model)
+                if num_heads <= 0:
+                    score_size = layer.module.weight.shape
+                else:
+                    if layer.module.weight.shape[0] % num_heads != 0 or layer.module.weight.shape[1] % num_heads != 0:
+                        score_size = layer.module.weight.shape
+                    else:
+                        total_head_size = layer.module.weight.shape[0] if not is_output_dense else layer.module.weight.shape[1]
+                        block_w = total_head_size // num_heads
+                        score_size = [block_w, block_w]
+            elif self._model_parser.is_ffn(layer.name, ffn_num=1):
+                score_size = layer.module.weight.shape[0]
+            elif self._model_parser.is_ffn(layer.name, ffn_num=2):
+                score_size = layer.module.weight.shape[1]
+            else:
+                score_size = layer.module.weight.shape
+        else:
+            score_size = layer.module.weight.shape
+        wrapper = PrunerScoredModuleWrapper(layer.module, layer.name, config, score_size)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight
         wrapper.to(layer.module.weight.device)  # type: ignore
