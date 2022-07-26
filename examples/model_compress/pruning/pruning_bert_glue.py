@@ -28,7 +28,7 @@ from nni.compression.pytorch.speedup import ModelSpeedup
 
 pretrained_model_name_or_path = 'bert-base-uncased'
 task_name = 'mnli'
-experiment_id = '1'
+experiment_id = '0'
 log_dir = Path(f'./pruning_log/{pretrained_model_name_or_path}/{task_name}/{experiment_id}')
 model_dir = Path(f'./models/{pretrained_model_name_or_path}/{task_name}')
 
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     warmup_steps = 1 * steps_per_epoch
     cooldown_steps = 4 * steps_per_epoch
 
-    distil_training = functools.partial(training, teacher_model=teacher_model, log_path=log_dir / 'movement_pruning.log')
+    movement_training = functools.partial(training, log_path=log_dir / 'movement_pruning.log')
 
     traced_optimizer = nni.trace(Adam)(finetuned_model.parameters(), lr=3e-5, eps=1e-8)
 
@@ -201,7 +201,7 @@ if __name__ == '__main__':
         return max(0.0, float(total_steps - current_step) / float(total_steps - warmup_steps))
 
     traced_scheduler = nni.trace(LambdaLR)(traced_optimizer, lr_lambda)
-    evaluator = TorchEvaluator(distil_training, traced_optimizer, fake_criterion, traced_scheduler)
+    evaluator = TorchEvaluator(movement_training, traced_optimizer, fake_criterion, traced_scheduler)
     config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder.layer.{}.'.format(i) for i in range(12)], 'sparsity': 0.1}]
     pruner = MovementPruner(model=finetuned_model,
                             config_list=config_list,
@@ -209,7 +209,7 @@ if __name__ == '__main__':
                             training_epochs=total_epochs,
                             warm_up_step=warmup_steps,
                             cool_down_beginning_step=total_steps - cooldown_steps,
-                            regular_scale=20,
+                            regular_scale=30,
                             movement_mode='soft',
                             sparse_granularity='auto')
     simulated_pruning_model, attention_masks = pruner.compress()
@@ -246,14 +246,15 @@ if __name__ == '__main__':
     print(ffn_config_list)
 
     # finetuning speedup model
+    total_epochs = 5
     optimizer = Adam(attention_pruned_model.parameters(), lr=lr, eps=1e-8)
 
     def lr_lambda(current_step: int):
-        return max(0.0, float(3 * steps_per_epoch - current_step) / float(3 * steps_per_epoch))
+        return max(0.0, float(total_epochs * steps_per_epoch - current_step) / float(total_epochs * steps_per_epoch))
 
     lr_scheduler = LambdaLR(optimizer, lr_lambda)
     at_model_save_path = log_dir / 'attention_pruned_model_state.pth'
-    training(attention_pruned_model, optimizer, fake_criterion, lr_scheduler=lr_scheduler, max_epochs=3, save_best_model=True, save_path=at_model_save_path, teacher_model=teacher_model)
+    training(attention_pruned_model, optimizer, fake_criterion, lr_scheduler=lr_scheduler, max_epochs=total_epochs, save_best_model=True, save_path=at_model_save_path, teacher_model=teacher_model)
 
     attention_pruned_model.load_state_dict(torch.load(at_model_save_path))
 
@@ -266,7 +267,10 @@ if __name__ == '__main__':
     attention_pruned_model.train()
     current_step = 0
     best_result = 0
-    for current_epoch in range(3):
+    total_epochs = 4
+    init_lr = 3e-5
+
+    for current_epoch in range(total_epochs):
         for batch in train_dataloader:
             # pruning 12 times
             if current_step % 2000 == 0 and current_step < 24000:
@@ -279,9 +283,12 @@ if __name__ == '__main__':
                 pruner._unwrap_model()
                 attention_pruned_model.load_state_dict(check_point)
                 ModelSpeedup(attention_pruned_model.bert.encoder, torch.rand(8, 128, 768).to(device), renamed_ffn_masks).speedup_model()
-                optimizer = Adam(attention_pruned_model.parameters(), lr=3e-5)
+                optimizer = Adam(attention_pruned_model.parameters(), lr=init_lr)
             batch.to(device)
             optimizer.zero_grad()
+            # manually schedule lr
+            for params_group in optimizer.param_groups:
+                params_group['lr'] = (1 - current_step / (total_epochs * steps_per_epoch)) * init_lr
             outputs = attention_pruned_model(**batch)
             loss = outputs.loss
             if teacher_model:
