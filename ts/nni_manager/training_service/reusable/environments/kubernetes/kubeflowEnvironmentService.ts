@@ -85,7 +85,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
 
         const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
         
-        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), environment.command, { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, `nni/${this.experimentId}`, "run.sh"), environment.command, { encoding: 'utf8' });
 
         //upload script files to sotrage
         const trialJobOutputUrl: string = await this.uploadFolder(this.environmentLocalTempFolder, `nni/${this.experimentId}`);
