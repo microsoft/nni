@@ -83,7 +83,7 @@ class TensorHook(Hook):
 
 class ModuleHook(Hook):
     def __init__(self, target: Module, target_name: str, hook_factory: Callable[[List], Callable[[Module, Tensor, Tensor], Any]]):
-        assert isinstance(target, Module)
+        assert isinstance(target, Module), f'the type of target is {type(target)}, but should be Module'
         super().__init__(target, target_name, hook_factory)
 
 
@@ -624,9 +624,9 @@ class TorchEvaluator(Evaluator):
 
         # will del self._tmp_optimizers and self._tmp_lr_schedulers in `_init_optimizer_helpers`
         self._tmp_optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
-        assert all(isinstance(optimizer, Optimizer) and is_traceable(optimizer) for optimizer in self._tmp_optimizers)
+        #assert all(isinstance(optimizer, Optimizer) and is_traceable(optimizer) for optimizer in self._tmp_optimizers)
         self._tmp_lr_schedulers = lr_schedulers if isinstance(lr_schedulers, (list, tuple)) else [lr_schedulers] if lr_schedulers else []
-        assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers)
+        #assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers)
         self._initialization_complete = False
 
     def _init_optimizer_helpers(self, pure_model: Module):
@@ -642,8 +642,18 @@ class TorchEvaluator(Evaluator):
         delattr(self, '_tmp_lr_schedulers')
         self._initialization_complete = True
 
+    def bind_only_model(self, model: Module):
+        assert isinstance(model, Module)
+        if self.model is not None:
+            _logger.warning('Already bound a model, will unbind it before bind a new model.')
+            self.unbind_model()
+        self.model = model
+
+    def unbind_only_model(self):
+        self.model = None
+
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
-        assert self._initialization_complete is True, 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
+        #assert self._initialization_complete is True, 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert isinstance(model, Module)
         if self.model is not None:
             _logger.warning('Already bound a model, will unbind it before bind a new model.')

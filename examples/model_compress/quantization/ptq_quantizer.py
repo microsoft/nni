@@ -162,12 +162,12 @@ class MobileNetV2(nn.Module):
 
     def forward(self, x):
 
-        x = self.quant(x)
+        #x = self.quant(x)
 
         x = self.features(x)
         x = x.mean([2, 3])
         x = self.classifier(x)
-        x = self.dequant(x)
+        #x = self.dequant(x)
         return x
 
     # Fuse Conv+BN and Conv+BN+Relu modules prior to quantization
@@ -369,16 +369,22 @@ print('Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_s
 
 #==========================nni
 
+num_calibration_batches = 32
+
 myModel = load_model(saved_model_dir + float_model_file).to('cpu')
 myModel.eval()
 
 def my_eval(model):
     evaluate(model, criterion, data_loader, neval_batches=num_calibration_batches)
 
-from nni.algorithms.compression.pytorch.quantization.ptq_quantizer import PtqQuantizer
+from nni.algorithms.compression.pytorch.quantization import PtqQuantizer
 from nni.algorithms.compression.v2.pytorch.utils import TorchEvaluator
 
-config_list = []
+config_list = [{
+    'quant_types': ['input', 'weight'],
+    'quant_bits': {'input': 8, 'weight': 8},
+    'op_types': ['default']
+}]
 
 predict_func = TorchEvaluator(predicting_func=my_eval)
 quantizer = PtqQuantizer(myModel, config_list, predict_func)

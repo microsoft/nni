@@ -5,7 +5,7 @@ import functools
 from curses import wrapper
 import logging
 from collections import defaultdict
-from typing import Callable, Dict, Tuple
+from typing import Any, Callable, Dict, Tuple
 import torch
 import torch.nn as nn
 from schema import Schema, And, Or, Optional
@@ -13,7 +13,7 @@ from nni.compression.pytorch.utils.config_validation import QuantizerSchema
 from nni.compression.pytorch.compressor import Quantizer, QuantForward
 
 from ...v2.pytorch.utils import Evaluator, ForwardHook
-from ...v2.pytorch.pruning import EvaluatorPredictingDataCollector
+from ...v2.pytorch.pruning.tools import EvaluatorPredictingDataCollector
 
 logger = logging.getLogger(__name__)
 
@@ -22,16 +22,21 @@ __all__ = ['PtqQuantizer']
 def max_min_collector(buffer: list,
                       collect_input: bool,
                       collect_output: bool,
-                      mode: str) -> Callable[[nn.Module, torch.Tensor, torch.Tensor], None]:
+                      mode: str = None) -> Callable[[nn.Module, torch.Tensor, torch.Tensor], None]:
     assert len(buffer) == 0, 'Buffer pass to activation pruner collector is not empty.'
     # the length of the buffer here is always 4.
     # buffer[0] buffer[2] records the min value of input and output
     # buffer[1] buffer[3] records the max value of input and output
-    buffer.extend([0, 0, 0, 0])
+    buffer.extend([torch.tensor(float('inf')), torch.tensor(float('-inf')),
+                   torch.tensor(float('inf')), torch.tensor(float('-inf'))])
 
-    def collect_maxmin(_module: nn.Module, _input: torch.Tensor, output: torch.Tensor):
-        if collect_input and _input.numel() != 0:
-            min_val, max_val = torch.aminmax(_input)
+    def collect_maxmin(_module: nn.Module,
+                       _input: Tuple[Any],
+                       output: Any):
+        # TODO: support multiple inputs and outputs
+        assert len(_input) == 1 and isinstance(output, torch.Tensor)
+        if collect_input and _input[0].numel() != 0:
+            min_val, max_val = torch.aminmax(_input[0])
             buffer[0] = torch.min(min_val, buffer[0])
             buffer[1] = torch.max(max_val, buffer[1])
         if collect_output and output.numel() != 0:
@@ -102,7 +107,7 @@ class PtqQuantizer(Quantizer):
                 collect_output = True
             if collect_input or collect_output:
                 self.collector_hooks[layer_name] = {
-                    'input_output': ForwardHook(layer, layer_name,
+                    'input_output': ForwardHook(module, layer_name,
                         functools.partial(max_min_collector, collect_input=collect_input, collect_output=collect_output))
                     }
         data_collector = EvaluatorPredictingDataCollector(self, self.evaluator, hooks=self.collector_hooks)
@@ -114,6 +119,8 @@ class PtqQuantizer(Quantizer):
         process is simulated.
         """
         assert self.bound_model is not None and self.config_list is not None
+        assert self.evaluator is not None
+        self.evaluator.bind_only_model(self.bound_model)
         data_collector = self._prepare_data_collectors()
         data = data_collector.collect()
 
@@ -146,7 +153,7 @@ class PtqQuantizer(Quantizer):
                 module.register_buffer('output_zero_point', zero_point.to(self.device))
         self.compressed = True
         # for removing hooks
-        self.evaluator.unbind_model()
+        self.evaluator.unbind_only_model()
         # FIXME: return quant config
         return self.bound_model, None
 
