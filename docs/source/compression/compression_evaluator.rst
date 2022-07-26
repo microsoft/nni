@@ -37,13 +37,11 @@ and three optional parameters, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
 Let's explain how NNI passes in these six parameters, but in most cases, users don't need to care what NNI passes in.
 Users only need to treat these six parameters as the original parameters during the training process.
 
-* The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned,
-so it can share training function with the original model.
+* The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned, so it can share training function with the original model.
 * ``optimizers`` are reinitialized according to ``optimizers`` passed to the evaluator and the wrapped model's parameters.
 * ``criterion`` also based on the ``criterion`` passed to the evaluator, it might be modified in some algorithms.
 * If users use ``lr_schedulers`` in the ``training_func``, NNI will reinitialize the ``lr_schedulers`` with the reinitialized optimizers.
-* ``max_steps`` is the NNI training duration limitation. An integer means that after ``max_steps`` steps, the training should stop.
-``None`` means NNI doesn't limit the duration, it is up to users to decide when to stop.
+* ``max_steps`` is the NNI training duration limitation. An integer means that after ``max_steps`` steps, the training should stop. ``None`` means NNI doesn't limit the duration, it is up to users to decide when to stop.
 * ``max_epochs`` is similar to the ``max_steps``, it controls the longest training epochs.
 
 Note that ``optimizers`` and ``lr_schedulers`` passed to the ``training_func`` have the same type as the ``optimizers`` and ``lr_schedulers`` passed to evaluator,
