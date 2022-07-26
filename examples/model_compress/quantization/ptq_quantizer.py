@@ -235,7 +235,7 @@ def evaluate(model, criterion, data_loader, neval_batches):
             loss = criterion(output, target)
             cnt += 1
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            print('.', end = '')
+            print('one batch...')
             top1.update(acc1[0], image.size(0))
             top5.update(acc5[0], image.size(0))
             if cnt >= neval_batches:
@@ -293,17 +293,18 @@ def prepare_data_loaders(data_path):
 
 #=====================
 
-data_path = '/data/v-yugzh/imagenet-train64k'
-saved_model_dir = '/data/quzha/quant/'
-float_model_file = '/data/quzha/quant/mobilenet_pretrained_float.pth'
-scripted_float_model_file = '/data/quzha/quant/mobilenet_quantization_scripted.pth'
-scripted_quantized_model_file = '/data/quzha/quant/mobilenet_quantization_scripted_quantized.pth'
+data_path = '/data/data0/v-zhiqxi/imagenet-raw-data'
+saved_model_dir = 'data/'
+float_model_file = 'mobilenet_pretrained_float.pth'
+scripted_float_model_file = 'mobilenet_quantization_scripted.pth'
+scripted_quantized_model_file = 'mobilenet_quantization_scripted_quantized.pth'
 
 train_batch_size = 30
 eval_batch_size = 50
 
 data_loader, data_loader_test = prepare_data_loaders(data_path)
 criterion = nn.CrossEntropyLoss()
+'''
 float_model = load_model(saved_model_dir + float_model_file).to('cpu')
 
 # Next, we'll "fuse modules"; this can both make the model faster by saving on memory access
@@ -366,7 +367,7 @@ num_eval_batches = 100
 
 top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches)
 print('Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
-
+'''
 #==========================nni
 
 num_calibration_batches = 32

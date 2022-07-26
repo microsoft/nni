@@ -650,6 +650,7 @@ class TorchEvaluator(Evaluator):
         self.model = model
 
     def unbind_only_model(self):
+        self.remove_all_hooks()
         self.model = None
 
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):

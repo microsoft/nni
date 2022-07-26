@@ -123,10 +123,13 @@ class PtqQuantizer(Quantizer):
         self.evaluator.bind_only_model(self.bound_model)
         data_collector = self._prepare_data_collectors()
         data = data_collector.collect()
+        print('collected data: ', data)
 
+        quant_result_conf = {}
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
             module = layer.module
+            quant_result_conf[layer.name] = {}
             if "weight" in config.get("quant_types", []):
                 # quantize weight directly with weight_qmin and weight_qmax
                 vmin, vmax = torch.aminmax(module.weight)
@@ -141,21 +144,27 @@ class PtqQuantizer(Quantizer):
                 # TODO: do we need to keep the old weight???
                 delattr(module, 'weight')
                 module.register_buffer('weight', quantized_weight)
+                quant_result_conf[layer.name]['weight'] = {'qmin': module.weight_qmin, 'qmax': module.weight_qmax,
+                                                           'scale': scale, 'zero_point': zero_point}
             if "input" in config.get("quant_types", []):
                 vmin, vmax = data[layer.name]['input_output'][0], data[layer.name]['input_output'][1]
                 scale, zero_point = self._calculate_qparams(vmin, vmax, module.input_qmin, module.input_qmax)
                 module.register_buffer('input_scale', scale.to(self.device))
                 module.register_buffer('input_zero_point', zero_point.to(self.device))
+                quant_result_conf[layer.name]['input'] = {'qmin': module.input_qmin, 'qmax': module.input_qmax,
+                                                          'scale': scale, 'zero_point': zero_point}
             if "output" in config.get("quant_types", []):
                 vmin, vmax = data[layer.name]['input_output'][2], data[layer.name]['input_output'][3]
                 scale, zero_point = self._calculate_qparams(vmin, vmax, module.output_qmin, module.output_qmax)
                 module.register_buffer('output_scale', scale.to(self.device))
                 module.register_buffer('output_zero_point', zero_point.to(self.device))
+                quant_result_conf[layer.name]['output'] = {'qmin': module.output_qmin, 'qmax': module.output_qmax,
+                                                           'scale': scale, 'zero_point': zero_point}
         self.compressed = True
         # for removing hooks
         self.evaluator.unbind_only_model()
         # FIXME: return quant config
-        return self.bound_model, None
+        return self.bound_model, quant_result_conf
 
     # def record(self, wrapper, quant_type, tensor):
     #     name = wrapper.name
