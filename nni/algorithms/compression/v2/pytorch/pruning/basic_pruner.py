@@ -788,7 +788,7 @@ class ActivationPruner(EvaluatorBasedPruner):
                 self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                           1, collector_infos=[collector_info])
             else:
-                self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
+                self.data_collector.reset([collector_info])  # type: ignore
 
         if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = self._create_metrics_calculator()
@@ -1058,7 +1058,7 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
                 self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                           1, collector_infos=[collector_info])
             else:
-                self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
+                self.data_collector.reset([collector_info])  # type: ignore
 
         if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = HookDataNormMetricsCalculator(p=1, scalers=scalers)

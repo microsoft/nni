@@ -89,6 +89,7 @@ class BankSparsityAllocator(SparsityAllocator):
                         mask_bank = torch.gt(metric_bank, threshold).type_as(metric_bank)  # type: ignore
                     else:
                         mask_bank = torch.ones_like(metric_bank)  # type: ignore
+                    mask_bank = mask_bank  # `type: ignore` is useless for unused-variable error, add this line to workaround
                     exec(sub_mask_str)
                 masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
         return masks
