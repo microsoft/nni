@@ -235,7 +235,7 @@ def evaluate(model, criterion, data_loader, neval_batches):
             loss = criterion(output, target)
             cnt += 1
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            print('one batch...')
+            print('.', end = '')
             top1.update(acc1[0], image.size(0))
             top5.update(acc5[0], image.size(0))
             if cnt >= neval_batches:
@@ -371,9 +371,13 @@ print('Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_s
 #==========================nni
 
 num_calibration_batches = 32
+num_eval_batches = 100
 
 myModel = load_model(saved_model_dir + float_model_file).to('cpu')
 myModel.eval()
+
+top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches)
+print('Before quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
 
 def my_eval(model):
     evaluate(model, criterion, data_loader, neval_batches=num_calibration_batches)
@@ -389,4 +393,7 @@ config_list = [{
 
 predict_func = TorchEvaluator(predicting_func=my_eval)
 quantizer = PtqQuantizer(myModel, config_list, predict_func)
-sim_quant_model = quantizer.compress()
+sim_quant_model, quant_result_conf = quantizer.compress()
+
+top1, top5 = evaluate(sim_quant_model, criterion, data_loader_test, neval_batches=num_eval_batches)
+print('After quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))

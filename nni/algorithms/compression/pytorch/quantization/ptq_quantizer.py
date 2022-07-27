@@ -163,7 +163,7 @@ class PtqQuantizer(Quantizer):
         self.compressed = True
         # for removing hooks
         self.evaluator.unbind_only_model()
-        # FIXME: return quant config
+        print('quant resulting config: ', quant_result_conf)
         return self.bound_model, quant_result_conf
 
     # def record(self, wrapper, quant_type, tensor):
@@ -194,10 +194,10 @@ class PtqQuantizer(Quantizer):
         if self.compressed:
             module = wrapper.module
             inputs = self._quantize(inputs,
-                                      module.input_scale,
-                                      module.input_zero_point,
-                                      module.input_qmin,
-                                      module.input_qmax)
+                                    module.input_scale,
+                                    module.input_zero_point,
+                                    module.input_qmin,
+                                    module.input_qmax)
         #else:
         #    self.record(wrapper, 'input', inputs)
         return inputs
@@ -212,15 +212,15 @@ class PtqQuantizer(Quantizer):
     def quantize_output(self, output, wrapper, **kwargs):
         if self.compressed:
             module = wrapper.module
-            new_output = self._quantize(output,
-                                       module.output_scale,
-                                       module.output_zero_point,
-                                       module.output_qmin,
-                                       module.output_qmax)
+            output = self._quantize(output,
+                                    module.output_scale,
+                                    module.output_zero_point,
+                                    module.output_qmin,
+                                    module.output_qmax)
         #else:
         #    self.record(wrapper, 'output', output)
         #    new_output = output
-        return new_output
+        return output
 
     def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
