@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+__all__ = ['RetiariiExeConfig', 'RetiariiExperiment', 'preprocess_model', 'debug_mutated_model']
+
 import logging
 
 import warnings
 from threading import Thread
-from typing import Any, List, Union, cast
+from typing import Any, List, cast
 
 import colorama
 
@@ -16,30 +18,25 @@ import torch.nn as nn
 from nni.experiment import Experiment, RunMode
 from nni.experiment.config.training_services import RemoteConfig
 
+from nni.nas.execution import list_models, set_execution_engine
+from nni.nas.execution.common import RetiariiAdvisor, get_mutation_dict
+from nni.nas.execution.pytorch.codegen import model_to_pytorch_script
+from nni.nas.execution.pytorch.converter import convert_to_graph
+from nni.nas.execution.pytorch.converter.graph_gen import GraphConverterWithShape
+from nni.nas.evaluator import Evaluator
+from nni.nas.mutable import Mutator
+from nni.nas.nn.pytorch.mutator import (
+    extract_mutation_from_pt_module, process_inline_mutation, process_evaluator_mutations, process_oneshot_mutations
+)
+from nni.nas.utils import is_model_wrapped
+from nni.nas.strategy import BaseStrategy
+from nni.nas.strategy.utils import dry_run_for_formatted_search_space
 from .config import (
     RetiariiExeConfig, OneshotEngineConfig, BaseEngineConfig,
     PyEngineConfig, CgoEngineConfig, BenchmarkEngineConfig
 )
-from ..codegen.pytorch import model_to_pytorch_script
-from ..converter import convert_to_graph
-from ..converter.graph_gen import GraphConverterWithShape
-from ..execution import list_models, set_execution_engine
-from ..execution.utils import get_mutation_dict
-from ..graph import Evaluator
-from ..integration import RetiariiAdvisor
-from ..mutator import Mutator
-from ..nn.pytorch.mutator import (
-    extract_mutation_from_pt_module, process_inline_mutation, process_evaluator_mutations, process_oneshot_mutations
-)
-from ..oneshot.interface import BaseOneShotTrainer
-from ..serializer import is_model_wrapped
-from ..strategy import BaseStrategy
-from ..strategy.utils import dry_run_for_formatted_search_space
 
 _logger = logging.getLogger(__name__)
-
-
-__all__ = ['RetiariiExperiment']
 
 
 def preprocess_model(base_model, evaluator, applied_mutators, full_ir=True, dummy_input=None, oneshot=False):
@@ -97,7 +94,7 @@ def debug_mutated_model(base_model, evaluator, applied_mutators):
         a list of mutators that will be applied on the base model for generating a new model
     """
     base_model_ir, applied_mutators = preprocess_model(base_model, evaluator, applied_mutators)
-    from ..strategy.local_debug_strategy import _LocalDebugStrategy
+    from nni.nas.strategy.debug import _LocalDebugStrategy
     strategy = _LocalDebugStrategy()
     strategy.run(base_model_ir, applied_mutators)
     _logger.info('local debug completed!')
@@ -174,10 +171,10 @@ class RetiariiExperiment(Experiment):
     """
 
     def __init__(self, base_model: nn.Module,
-                 evaluator: Union[BaseOneShotTrainer, Evaluator] = cast(Evaluator, None),
+                 evaluator: Evaluator = cast(Evaluator, None),
                  applied_mutators: List[Mutator] = cast(List[Mutator], None),
                  strategy: BaseStrategy = cast(BaseStrategy, None),
-                 trainer: BaseOneShotTrainer = cast(BaseOneShotTrainer, None)):
+                 trainer: Any = None):
         super().__init__(None)
         self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
 
@@ -190,7 +187,7 @@ class RetiariiExperiment(Experiment):
             raise ValueError('Evaluator should not be none.')
 
         self.base_model = base_model
-        self.evaluator: Union[Evaluator, BaseOneShotTrainer] = evaluator
+        self.evaluator: Evaluator = evaluator
         self.applied_mutators = applied_mutators
         self.strategy = strategy
 
@@ -222,10 +219,10 @@ class RetiariiExperiment(Experiment):
     def _create_execution_engine(self, config: RetiariiExeConfig) -> None:
         #TODO: we will probably need a execution engine factory to make this clean and elegant
         if isinstance(config.execution_engine, BaseEngineConfig):
-            from ..execution.base import BaseExecutionEngine
+            from nni.nas.execution.pytorch.graph import BaseExecutionEngine
             engine = BaseExecutionEngine(self.port, self.url_prefix)
         elif isinstance(config.execution_engine, CgoEngineConfig):
-            from ..execution.cgo_engine import CGOExecutionEngine
+            from nni.nas.execution.pytorch.cgo import CGOExecutionEngine
 
             assert not isinstance(config.training_service, list) \
                 and config.training_service.platform == 'remote', \
@@ -238,10 +235,10 @@ class RetiariiExperiment(Experiment):
                                         rest_port=self.port,
                                         rest_url_prefix=self.url_prefix)
         elif isinstance(config.execution_engine, PyEngineConfig):
-            from ..execution.python import PurePythonExecutionEngine
+            from nni.nas.execution.pytorch.simplified import PurePythonExecutionEngine
             engine = PurePythonExecutionEngine(self.port, self.url_prefix)
         elif isinstance(config.execution_engine, BenchmarkEngineConfig):
-            from ..execution.benchmark import BenchmarkExecutionEngine
+            from nni.nas.execution.pytorch.benchmark import BenchmarkExecutionEngine
             assert config.execution_engine.benchmark is not None, \
                 '"benchmark" must be set when benchmark execution engine is used.'
             engine = BenchmarkExecutionEngine(config.execution_engine.benchmark)
@@ -265,12 +262,13 @@ class RetiariiExperiment(Experiment):
         Run the experiment.
         This function will block until experiment finish or error.
         """
+
+        from nni.retiarii.oneshot.interface import BaseOneShotTrainer
         if isinstance(self.evaluator, BaseOneShotTrainer):
-            # TODO: will throw a deprecation warning soon
-            # warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
-            #               'We will try to convert this trainer to our new implementation to run the algorithm. '
-            #               'In case you want to stick to the old implementation, '
-            #               'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
+            warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
+                          'We will try to convert this trainer to our new implementation to run the algorithm. '
+                          'In case you want to stick to the old implementation, '
+                          'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
             self.evaluator.fit()
             return
 
@@ -344,6 +342,7 @@ class RetiariiExperiment(Experiment):
             config = self.config.canonical_copy()
             assert not isinstance(config.execution_engine, PyEngineConfig), \
                 'You should use `dict` formatter when using Python execution engine.'
+        from nni.retiarii.oneshot.interface import BaseOneShotTrainer
         if isinstance(self.evaluator, BaseOneShotTrainer):
             assert top_k == 1, 'Only support top_k is 1 for now.'
             return self.evaluator.export()

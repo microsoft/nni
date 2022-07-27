@@ -1,8 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from ..graph import Model, ModelStatus
-from .interface import MetricData, AbstractGraphListener
+__all__ = ['DefaultListener']
+
+from .graph import Model, ModelStatus, MetricData
+from .engine import AbstractGraphListener
 
 
 class DefaultListener(AbstractGraphListener):

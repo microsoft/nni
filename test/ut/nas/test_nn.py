@@ -15,7 +15,7 @@ from nni.retiarii import InvalidMutation, Sampler, basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.evaluator import FunctionalEvaluator
-from nni.retiarii.execution.utils import _unpack_if_only_one
+from nni.retiarii.execution.utils import unpack_if_only_one
 from nni.retiarii.experiment.pytorch import preprocess_model
 from nni.retiarii.graph import Model
 from nni.retiarii.nn.pytorch.api import ValueChoice
@@ -827,7 +827,7 @@ class Python(GraphIR):
     graph_engine = False
 
     def _get_converted_pytorch_model(self, model_ir):
-        mutation = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model_ir.history}
+        mutation = {mut.mutator.label: unpack_if_only_one(mut.samples) for mut in model_ir.history}
         with ContextStack('fixed', mutation):
             model = model_ir.python_class(**model_ir.python_init_params)
             return model

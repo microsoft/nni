@@ -7,13 +7,13 @@ from typing import Any, List, Optional, Tuple, Dict, Iterator, Iterable, cast
 import torch.nn as nn
 
 from nni.common.serializer import is_traceable, is_wrapped_with_trace
-from nni.retiarii.graph import Cell, Graph, Model, ModelStatus, Node, Evaluator
-from nni.retiarii.mutator import Mutator
-from nni.retiarii.serializer import is_basic_unit, is_model_wrapped
-from nni.retiarii.utils import ModelNamespace, uid
+from nni.nas.execution.common.graph import Graph, Model, ModelStatus, Node, Evaluator
+from nni.nas.execution.common.graph_op import Cell
+from nni.nas.hub.pytorch.modules import NasBench101Cell, NasBench101Mutator
+from nni.nas.mutable import Mutator
+from nni.nas.utils import is_basic_unit, is_model_wrapped, ModelNamespace, uid
 
-from .api import LayerChoice, InputChoice, ValueChoice, ValueChoiceX, Placeholder
-from .component import NasBench101Cell, NasBench101Mutator
+from .choice import LayerChoice, InputChoice, ValueChoice, ValueChoiceX, Placeholder
 
 
 class LayerChoiceMutator(Mutator):
@@ -60,7 +60,7 @@ class InputChoiceMutator(Mutator):
             chosen = [self.choice(candidates) for _ in range(n_chosen)]
         for node in self.nodes:
             target = cast(Node, model.get_node_by_name(node.name))
-            target.update_operation('__torch__.nni.retiarii.nn.pytorch.ChosenInputs',
+            target.update_operation('__torch__.nni.nas.nn.pytorch.ChosenInputs',
                                     {'chosen': chosen, 'reduction': node.operation.parameters['reduction']})
 
 
@@ -171,7 +171,7 @@ class RepeatMutator(Mutator):
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     applied_mutators = []
 
-    ic_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.InputChoice'))
+    ic_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.nas.nn.pytorch.choice.InputChoice'))
     for node_list in ic_nodes:
         assert _is_all_equal(map(lambda node: node.operation.parameters['n_candidates'], node_list)) and \
             _is_all_equal(map(lambda node: node.operation.parameters['n_chosen'], node_list)), \
@@ -179,7 +179,7 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
         mutator = InputChoiceMutator(node_list)
         applied_mutators.append(mutator)
 
-    vc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.ValueChoice'))
+    vc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.nas.nn.pytorch.choice.ValueChoice'))
     for node_list in vc_nodes:
         assert _is_all_equal(map(lambda node: node.operation.parameters['candidates'], node_list)), \
             'Value choice with the same label must have the same candidates.'

@@ -5,11 +5,13 @@ from typing import Dict, Any, Type, cast
 
 import torch.nn as nn
 
-from ..graph import Evaluator, Model
-from ..integration_api import receive_trial_parameters
-from ..utils import ContextStack
-from .base import BaseExecutionEngine
-from .utils import get_mutation_dict, mutation_dict_to_summary
+from nni.nas.execution.common import (
+    Model, receive_trial_parameters,
+    get_mutation_dict, mutation_dict_to_summary
+)
+from nni.nas.evaluator import Evaluator
+from nni.nas.utils import ContextStack
+from .graph import BaseExecutionEngine
 
 
 class PythonGraphData:

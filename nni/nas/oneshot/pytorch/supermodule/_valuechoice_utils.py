@@ -13,7 +13,7 @@ import numpy as np
 import torch
 
 from nni.common.hpo_utils import ParameterSpec
-from nni.retiarii.nn.pytorch.api import ChoiceOf, ValueChoiceX
+from nni.nas.nn.pytorch.choice import ChoiceOf, ValueChoiceX
 
 
 Choice = Any

@@ -3,11 +3,11 @@
 
 from pathlib import Path
 
-# To make auto-completion happy, we generate a _nn.py that lists out all the classes.
-nn_cache_file_path = Path(__file__).parent / '_nn.py'
+# To make auto-completion happy, we generate a _layers.py that lists out all the classes.
+nn_cache_file_path = Path(__file__).parent / '_layers.py'
 
 # Update this when cache format changes, to enforce an update.
-cache_version = 2
+cache_version = 3
 
 
 def validate_cache() -> bool:
@@ -70,7 +70,7 @@ def generate_stub_file() -> str:
         f'# _torch_nn_cache_version = {cache_version}',
         'import typing',
         'import torch.nn as nn',
-        'from nni.retiarii.serializer import basic_unit',
+        'from nni.nas.utils import basic_unit',
     ]
 
     all_names = []
@@ -113,4 +113,4 @@ if not validate_cache():
 
 del Path, validate_cache, write_cache, cache_version, nn_cache_file_path, code
 
-from ._nn import *  # pylint: disable=import-error, wildcard-import, unused-wildcard-import
+from ._layers import *  # pylint: disable=import-error, wildcard-import, unused-wildcard-import

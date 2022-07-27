@@ -18,10 +18,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-import nni.retiarii.nn.pytorch as retiarii_nn
+import nni.nas.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
-from nni.retiarii.nn.pytorch.api import ValueChoiceX
+from nni.nas.nn.pytorch.choice import ValueChoiceX
 
 from .base import BaseSuperNetModule
 from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, evaluate_constant
@@ -236,7 +236,7 @@ class MixedLinear(MixedOperation, nn.Linear):
     Prefix of weight and bias will be sliced.
     """
 
-    bound_type = retiarii_nn.Linear
+    bound_type = nas_nn.Linear
     argument_list = ['in_features', 'out_features']
 
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
@@ -294,7 +294,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         □ □ □ □ □   □ □ □ □ □
     """
 
-    bound_type = retiarii_nn.Conv2d
+    bound_type = nas_nn.Conv2d
     argument_list = [
         'in_channels', 'out_channels', 'kernel_size', 'stride', 'padding', 'dilation', 'groups'
     ]
@@ -427,7 +427,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
     PyTorch BatchNorm supports a case where momentum can be none, which is not supported here.
     """
 
-    bound_type = retiarii_nn.BatchNorm2d
+    bound_type = nas_nn.BatchNorm2d
     argument_list = ['num_features', 'eps', 'momentum']
 
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
@@ -488,7 +488,7 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
     eps is required to be float.
     """
 
-    bound_type = retiarii_nn.LayerNorm
+    bound_type = nas_nn.LayerNorm
     argument_list = ['normalized_shape', 'eps']
 
     @staticmethod
@@ -565,7 +565,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     All candidates of ``embed_dim`` should be divisible by all candidates of ``num_heads``.
     """
 
-    bound_type = retiarii_nn.MultiheadAttention
+    bound_type = nas_nn.MultiheadAttention
     argument_list = ['embed_dim', 'num_heads', 'kdim', 'vdim', 'dropout']
 
     def __post_init__(self):

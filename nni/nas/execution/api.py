@@ -5,9 +5,11 @@ import time
 import warnings
 from typing import Iterable
 
-from ..graph import Model, ModelStatus
-from .interface import AbstractExecutionEngine
-from .listener import DefaultListener
+from nni.nas.execution.common import (
+    Model, ModelStatus,
+    AbstractExecutionEngine,
+    DefaultListener
+)
 
 _execution_engine = None
 _default_listener = None

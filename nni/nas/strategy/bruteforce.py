@@ -8,7 +8,8 @@ import random
 import time
 from typing import Any, Dict, List, Sequence, Optional
 
-from .. import InvalidMutation, Sampler, submit_models, query_available_resources, budget_exhausted
+from nni.nas.execution import submit_models, query_available_resources, budget_exhausted
+from nni.nas.mutable import InvalidMutation, Sampler
 from .base import BaseStrategy
 from .utils import dry_run_for_search_space, get_targeted_model, filter_model
 

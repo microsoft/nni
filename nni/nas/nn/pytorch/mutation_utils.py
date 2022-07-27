@@ -4,7 +4,7 @@
 from typing import Any, Optional, Tuple, Union
 
 import torch.nn as nn
-from nni.retiarii.utils import NoContextError, ModelNamespace, get_current_context
+from nni.nas.utils import NoContextError, ModelNamespace, get_current_context
 
 
 class Mutable(nn.Module):

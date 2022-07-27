@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+__all__ = ['CGOExecutionEngine', 'TrialSubmission']
+
 import logging
 import os
 import random
@@ -14,17 +16,19 @@ from dataclasses import dataclass
 
 from nni.common.device import GPUDevice, Device
 from nni.experiment.config.training_services import RemoteConfig
-from nni.retiarii.integration import RetiariiAdvisor
-from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
-from .. import codegen, utils
-from ..graph import Model, ModelStatus, MetricData, Node
-from ..integration_api import send_trial, receive_trial_parameters, get_advisor
+from nni.nas import utils
+from nni.nas.execution.common import (
+    AbstractExecutionEngine, AbstractGraphListener, WorkerInfo,
+    Model, ModelStatus, MetricData, Node,
+    RetiariiAdvisor, send_trial, receive_trial_parameters, get_advisor,
+)
+from nni.nas.execution.pytorch import codegen
+from nni.nas.evaluator.pytorch.lightning import Lightning
+from nni.nas.evaluator.pytorch.cgo.evaluator import _MultiModelSupervisedLearningModule
+from nni.nas.execution.pytorch.graph import BaseGraphData
+
 from .logical_optimizer.logical_plan import LogicalPlan, AbstractLogicalNode
 from .logical_optimizer.opt_dedup_input import DedupInputOptimizer
-from ..evaluator.pytorch.lightning import Lightning
-from ..evaluator.pytorch.cgo.evaluator import _MultiModelSupervisedLearningModule
-
-from .base import BaseGraphData
 
 _logger = logging.getLogger(__name__)
 

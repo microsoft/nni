@@ -4,7 +4,7 @@
 from .base import BaseStrategy
 
 try:
-    from nni.retiarii.oneshot.pytorch.strategy import (  # pylint: disable=unused-import
+    from nni.nas.oneshot.pytorch.strategy import (  # pylint: disable=unused-import
         DARTS, GumbelDARTS, Proxyless, ENAS, RandomOneShot
     )
 except ImportError as import_err:

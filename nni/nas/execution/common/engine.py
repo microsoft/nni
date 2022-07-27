@@ -4,10 +4,10 @@
 from abc import ABC, abstractmethod, abstractclassmethod
 from typing import Any, Iterable, NewType, List, Union, Type
 
-from ..graph import Model, MetricData
+from .graph import Model, MetricData
 
 __all__ = [
-    'GraphData', 'WorkerInfo',
+    'GraphData', 'WorkerInfo', 'MetricData',
     'AbstractGraphListener', 'AbstractExecutionEngine'
 ]
 

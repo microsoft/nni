@@ -4,8 +4,8 @@
 """Strategy integration of one-shot.
 
 This file is put here simply because it relies on "pytorch".
-For consistency, please consider importing strategies from ``nni.retiarii.strategy``.
-For example, ``nni.retiarii.strategy.DartsStrategy`` (this requires pytorch to be installed of course).
+For consistency, please consider importing strategies from ``nni.nas.strategy``.
+For example, ``nni.nas.strategy.DartsStrategy`` (this requires pytorch to be installed of course).
 
 When adding/modifying a new strategy in this file, don't forget to link it in strategy/oneshot.py.
 """
@@ -17,9 +17,9 @@ from typing import Any, Type
 
 import torch.nn as nn
 
-from nni.retiarii.graph import Model
-from nni.retiarii.strategy.base import BaseStrategy
-from nni.retiarii.evaluator.pytorch.lightning import Lightning, LightningModule
+from nni.nas.execution.common import Model
+from nni.nas.strategy.base import BaseStrategy
+from nni.nas.evaluator.pytorch.lightning import Lightning, LightningModule
 
 from .base_lightning import BaseOneShotLightningModule
 from .differentiable import DartsLightningModule, ProxylessLightningModule, GumbelDartsLightningModule

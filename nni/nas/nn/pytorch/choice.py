@@ -13,9 +13,7 @@ import torch
 import torch.nn as nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import Translatable
-from nni.retiarii.serializer import basic_unit
-from nni.retiarii.utils import (STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace,
-                                NoContextError)
+from nni.nas.utils import STATE_DICT_PY_MAPPING_PARTIAL, ModelNamespace, NoContextError, basic_unit
 
 from .mutation_utils import Mutable, generate_new_label, get_fixed_value
 

@@ -4,7 +4,7 @@
 import warnings
 from typing import (Any, Iterable, List, Optional, Tuple, cast)
 
-from .graph import Model, Mutation, ModelStatus
+from nni.nas.execution import Model, Mutation, ModelStatus
 
 
 __all__ = ['Sampler', 'Mutator', 'InvalidMutation']

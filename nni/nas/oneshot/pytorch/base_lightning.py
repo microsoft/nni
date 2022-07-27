@@ -14,10 +14,10 @@ from torch.optim import Optimizer
 
 from torch.optim.lr_scheduler import _LRScheduler
 
-import nni.retiarii.nn.pytorch as nas_nn
+import nni.nas.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
-from nni.retiarii.nn.pytorch.api import ValueChoiceX
+from nni.nas.nn.pytorch.choice import ValueChoiceX
 from nni.typehint import Literal
 from .supermodule.base import BaseSuperNetModule
 
@@ -122,7 +122,7 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
         nas_nn.LayerChoice,
         nas_nn.InputChoice,
         nas_nn.Repeat,
-        nas_nn.NasBench101Cell,
+        # nas_nn.NasBench101Cell,   # FIXME: nasbench101 is moved to hub, can't check any more.
         # nas_nn.ValueChoice,       # could be false positive
         # nas_nn.Cell,              # later
         # nas_nn.NasBench201Cell,   # forward = supernet
@@ -156,8 +156,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Extra mutation hooks to support customized mutation on primitives other than built-ins.
 
         Mutation hooks are callable that inputs an Module and returns a
-        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`.
-        They are invoked in :func:`~nni.retiarii.oneshot.pytorch.base_lightning.traverse_and_mutate_submodules`, on each submodules.
+        :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule`.
+        They are invoked in :func:`~nni.nas.oneshot.pytorch.base_lightning.traverse_and_mutate_submodules`, on each submodules.
         For each submodule, the hook list are invoked subsequently,
         the later hooks can see the result from previous hooks.
         The modules that are processed by ``mutation_hooks`` will be replaced by the returned module,
@@ -177,21 +177,21 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         The returned arguments can be also one of the three kinds:
 
-        1. tuple of: :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None, and boolean,
+        1. tuple of: :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None, and boolean,
         2. boolean,
-        3. :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None.
+        3. :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None.
 
         The boolean value is ``suppress`` indicates whether the following hooks should be called.
         When it's true, it suppresses the subsequent hooks, and they will never be invoked.
         Without boolean value specified, it's assumed to be false.
         If a none value appears on the place of
-        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
+        :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
         it means the hook suggests to
         keep the module unchanged, and nothing will happen.
 
-        An example of mutation hook is given in :func:`~nni.retiarii.oneshot.pytorch.base_lightning.no_default_hook`.
+        An example of mutation hook is given in :func:`~nni.nas.oneshot.pytorch.base_lightning.no_default_hook`.
         However it's recommended to implement mutation hooks by deriving
-        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
+        :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
         and add its classmethod ``mutate`` to this list.
     """
 
@@ -309,7 +309,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Combine architecture optimizers and user's model optimizers.
         You can overwrite :meth:`configure_architecture_optimizers` if architecture optimizers are needed in your NAS algorithm.
 
-        For now :attr:`model` is tested against evaluators in :mod:`nni.retiarii.evaluator.pytorch.lightning`
+        For now :attr:`model` is tested against evaluators in :mod:`nni.nas.evaluator.pytorch.lightning`
         and it only returns 1 optimizer.
         But for extendibility, codes for other return value types are also implemented.
         """

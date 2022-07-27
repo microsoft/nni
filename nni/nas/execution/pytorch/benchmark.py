@@ -5,10 +5,8 @@ import os
 import random
 from typing import Dict, Any, List, Optional, Union, Tuple, Callable, Iterable, cast
 
-from ..graph import Model
-from ..integration_api import receive_trial_parameters
-from .base import BaseExecutionEngine
-from .utils import get_mutation_dict
+from nni.nas.execution.common import Model, receive_trial_parameters, get_mutation_dict
+from .graph import BaseExecutionEngine
 
 
 class BenchmarkGraphData:

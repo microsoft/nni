@@ -7,8 +7,8 @@ from typing import Dict, Tuple, Any
 from nni.retiarii.utils import uid
 from nni.common.device import Device, CPUDevice
 
-from ...graph import Cell, Edge, Graph, Model, Node
-from ...operation import Operation, _IOPseudoOperation
+from nni.nas.execution.common.graph import Cell, Edge, Graph, Model, Node
+from nni.nas.execution.common.graph_op import Operation, _IOPseudoOperation
 
 
 class AbstractLogicalNode(Node):

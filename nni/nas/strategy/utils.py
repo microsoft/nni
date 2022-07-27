@@ -4,8 +4,8 @@
 import collections
 import logging
 from typing import Dict, Any, List
-from ..graph import Model
-from ..mutator import Mutator, Sampler
+from nni.nas.execution.common import Model
+from nni.nas.mutable import Mutator, Sampler
 
 _logger = logging.getLogger(__name__)
 

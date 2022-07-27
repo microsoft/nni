@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+__all__ = ['BaseGraphData', 'BaseExecutionEngine']
+
 import logging
 import os
 import random
@@ -10,13 +12,14 @@ import string
 from typing import Any, Dict, Iterable, List
 
 from nni.experiment import rest
-from nni.retiarii.integration import RetiariiAdvisor
 
-from .interface import AbstractExecutionEngine, AbstractGraphListener
-from .utils import get_mutation_summary
-from .. import codegen, utils
-from ..graph import Model, ModelStatus, MetricData, Evaluator
-from ..integration_api import send_trial, receive_trial_parameters, get_advisor
+from nni.nas.execution.common import (
+    AbstractExecutionEngine, AbstractGraphListener, RetiariiAdvisor, get_mutation_summary,
+    Model, ModelStatus, MetricData, Evaluator,
+    send_trial, receive_trial_parameters, get_advisor
+)
+from nni.nas.utils import import_
+from .codegen import model_to_pytorch_script
 
 _logger = logging.getLogger(__name__)
 
@@ -146,7 +149,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     def pack_model_data(cls, model: Model) -> Any:
         mutation_summary = get_mutation_summary(model)
         assert model.evaluator is not None, 'Model evaluator can not be None'
-        return BaseGraphData(codegen.pytorch.model_to_pytorch_script(model), model.evaluator, mutation_summary)  # type: ignore
+        return BaseGraphData(model_to_pytorch_script(model), model.evaluator, mutation_summary)  # type: ignore
 
     @classmethod
     def trial_execute_graph(cls) -> None:
@@ -159,6 +162,6 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name, 'w') as f:
             f.write(graph_data.model_script)
-        model_cls = utils.import_(f'_generated_model.{random_str}._model')
+        model_cls = import_(f'_generated_model.{random_str}._model')
         graph_data.evaluator._execute(model_cls)
         os.remove(file_name)
