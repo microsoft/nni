@@ -405,7 +405,7 @@ class LightningEvaluator(Evaluator):
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
-                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) \
+                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]])
                                  for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
                 opt_lrs_dicts = deepcopy(self._opt_returned_dicts)
                 for opt_lrs_dict in opt_lrs_dicts:
@@ -415,10 +415,9 @@ class LightningEvaluator(Evaluator):
                 return opt_lrs_dicts
         elif self._lr_scheduler_helpers:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers = [opt_helper.call(self.model, self._param_names_map) \
-                             for opt_helper in self._optimizer_helpers]  # type: ignore
-                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) \
-                                for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
+                optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
+                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]])
+                                 for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
                 return optimizers, lr_schedulers
         else:
             def new_configure_optimizers(_):
@@ -653,7 +652,7 @@ class TorchEvaluator(Evaluator):
         self._lr_scheduler_helpers = [LRSchedulerConstructHelper.from_trace(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers]
         optimizer_ids_map = {id(optimizer): i for i, optimizer in enumerate(self._tmp_optimizers)}
         # record i-th lr_scheduler scheduling j-th optimizer lr
-        self._lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)] \
+        self._lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)]  # type: ignore
                              for i, lr_scheduler in enumerate(self._tmp_lr_schedulers)}  # type: ignore
 
         delattr(self, '_tmp_optimizers')

@@ -1141,8 +1141,8 @@ class ADMMPruner(EvaluatorBasedPruner):
         super().reset(model, config_list)
         # FIXME: Only support pruning 'weight' right now.
         target_name = 'weight'
-        self.Z = {module_name: {target_name: wrapper.weight.data.clone()} \
-                  for module_name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
+        for module_name, wrapper in self.get_modules_wrapper().items():
+            self.Z[module_name] = {target_name: wrapper.weight.data.clone()}  # type: ignore
         self.U = {module_name: {target_name: torch.zeros_like(z[target_name])} for module_name, z in self.Z.items()}
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):

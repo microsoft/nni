@@ -408,15 +408,15 @@ class SparsityAllocator:
                                                                 old_target_mask.to(target_mask[target_name].device))
         return new_masks
 
-    def common_target_masks_generation(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
+    def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         """
         Generate masks for metrics-dependent targets.
 
         Parameters
         ----------
         metrics
-            The format is {module_name: weight_metric}.
-            The metric of `weight` usually has the same size with shrinked mask.
+            The format is {module_name: {target_name: target_metric}}.
+            The metric of usually has the same size with shrinked mask.
 
         Return
         ------

@@ -86,7 +86,7 @@ class OptimizerConstructHelper(ConstructHelper):
             'Please use nni.trace to wrap the optimizer class before initialize the optimizer.'
         assert isinstance(optimizer_trace, Optimizer), \
             'It is not an instance of torch.nn.Optimizer.'
-        return OptimizerConstructHelper(model, optimizer_trace.trace_symbol, *optimizer_trace.trace_args,
+        return OptimizerConstructHelper(model, optimizer_trace.trace_symbol, *optimizer_trace.trace_args,  # type: ignore
                                         **optimizer_trace.trace_kwargs)  # type: ignore
 
 
@@ -116,5 +116,5 @@ class LRSchedulerConstructHelper(ConstructHelper):
             'Please use nni.trace to wrap the lr scheduler class before initialize the scheduler.'
         assert isinstance(lr_scheduler_trace, _LRScheduler), \
             'It is not an instance of torch.nn.lr_scheduler._LRScheduler.'
-        return LRSchedulerConstructHelper(lr_scheduler_trace.trace_symbol, *lr_scheduler_trace.trace_args,
+        return LRSchedulerConstructHelper(lr_scheduler_trace.trace_symbol, *lr_scheduler_trace.trace_args,  # type: ignore
                                           **lr_scheduler_trace.trace_kwargs)  # type: ignore

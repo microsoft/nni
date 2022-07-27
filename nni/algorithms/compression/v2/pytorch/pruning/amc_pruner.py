@@ -122,6 +122,7 @@ class AMCTaskGenerator(TaskGenerator):
         if self.current_episode < self.total_episode:
             if self.observation is None:
                 self.observation = self.env.reset().copy()
+                self.temp_config_list = []
                 compact_model = torch.load(self._origin_model_path)
                 compact_model_masks = torch.load(self._origin_masks_path)
             else:
