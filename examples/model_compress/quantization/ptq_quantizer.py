@@ -375,7 +375,7 @@ num_eval_batches = 100
 
 myModel = load_model(saved_model_dir + float_model_file).to('cpu')
 myModel.eval()
-
+myModel.to(torch.device('cuda'))
 #top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches)
 #print('Before quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
 
@@ -388,6 +388,8 @@ from nni.algorithms.compression.v2.pytorch.utils import TorchEvaluator
 config_list = [{
     'quant_types': ['input', 'weight', 'output'],
     'quant_bits': {'input': 8, 'weight': 8, 'output': 8},
+    'quant_dtype': 'int',
+    'quant_scheme': 'per_tensor_symmetric',
     'op_types': ['default']
 }]
 

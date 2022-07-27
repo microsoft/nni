@@ -9,7 +9,7 @@ import torch.nn as nn
 from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.quantization.settings import LayerQuantSetting
 from nni.compression.pytorch.utils.config_validation import QuantizerSchema
-from nni.compression.pytorch.compressor import Quantizer
+from nni.compression.pytorch.compressor import Quantizer, QuantForward
 from nni.compression.pytorch.quantization.literal import (
     QuantScheme,
     QuantDtype
@@ -39,13 +39,17 @@ def max_min_collector(buffer: list,
         # TODO: support multiple inputs and outputs
         assert len(_input) == 1 and isinstance(output, torch.Tensor)
         if collect_input and _input[0].numel() != 0:
-            min_val, max_val = torch.aminmax(_input[0])
-            buffer[0] = torch.min(min_val, buffer[0])
-            buffer[1] = torch.max(max_val, buffer[1])
+            cur_min_val, cur_max_val = torch.aminmax(_input[0])
+            min_val = torch.min(cur_min_val, buffer[0])
+            max_val = torch.max(cur_max_val, buffer[1])
+            buffer[0].copy_(min_val)
+            buffer[1].copy_(max_val)
         if collect_output and output.numel() != 0:
-            min_val, max_val = torch.aminmax(output)
-            buffer[2] = torch.min(min_val, buffer[2])
-            buffer[3] = torch.max(max_val, buffer[3])
+            cur_min_val, cur_max_val = torch.aminmax(output)
+            min_val = torch.min(cur_min_val, buffer[2])
+            max_val = torch.max(cur_max_val, buffer[3])
+            buffer[2].copy_(min_val)
+            buffer[3].copy_(max_val)
     return collect_maxmin
 
 def histogram_collector(buffer: list,
@@ -55,17 +59,17 @@ def histogram_collector(buffer: list,
     ...
 
 def calculate_qparams(vmin, vmax, qmin, qmax):
-        # FIXME: check min max is valid
-        # FIXME: support different quant schemes
-        vmin_neg = torch.min(vmin, torch.zeros_like(vmin))
-        vmax_pos = torch.max(vmax, torch.zeros_like(vmax))
-        device = vmin_neg.device
-        scale = torch.ones(vmin_neg.size(), dtype=torch.float32, device=device)
-        zero_point = torch.zeros(vmin_neg.size(), dtype=torch.int64, device=device)
-        vmax_pos = torch.max(-vmin_neg, vmax_pos)
-        scale = vmax_pos / (float(qmax - qmin) / 2)
-        scale = torch.max(scale, torch.tensor([torch.finfo(torch.float32).eps]))
-        return scale, zero_point
+    assert torch.all(vmin <= vmax)
+    # FIXME: support different quant schemes
+    vmin_neg = torch.min(vmin, torch.zeros_like(vmin))
+    vmax_pos = torch.max(vmax, torch.zeros_like(vmax))
+    device = vmin_neg.device
+    scale = torch.ones(vmin_neg.size(), dtype=torch.float32, device=device)
+    zero_point = torch.zeros(vmin_neg.size(), dtype=torch.int64, device=device)
+    vmax_pos = torch.max(-vmin_neg, vmax_pos)
+    scale = vmax_pos / (float(qmax - qmin) / 2)
+    scale = torch.max(scale, torch.tensor([torch.finfo(torch.float32).eps]))
+    return scale, zero_point
 
 class PtqQuantizer(Quantizer):
     """
@@ -77,7 +81,7 @@ class PtqQuantizer(Quantizer):
         # TODO: canonicalize config list
         super().__init__(model, config_list, None)
         assert not model.training, "Currently the observer quantizer only works in evaluation mode."
-        #self.quant_grad = QuantForward()
+        self.quant_grad = QuantForward()
         self.evaluator = evaluator
         self.device = next(model.parameters()).device
         self.compressed = False
@@ -143,7 +147,9 @@ class PtqQuantizer(Quantizer):
             if collect_input or collect_output:
                 collector_hooks[name] = {
                     'input_output': ForwardHook(module, name,
-                        functools.partial(max_min_collector, collect_input, collect_output))
+                        functools.partial(max_min_collector,
+                                          collect_input=collect_input,
+                                          collect_output=collect_output))
                     }
         data_collector = EvaluatorPredictingDataCollector(self, self.evaluator, hooks=collector_hooks)
         return data_collector
