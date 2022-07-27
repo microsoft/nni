@@ -103,7 +103,7 @@ class PtqQuantizer(Quantizer):
             if "output" in config.get("quant_types", []):
                 bits = config.get('quant_bits')['output']
                 setattr(module, "output_qmax", 2**(bits-1))
-                setattr(module, "output_qmin", -2**(bits-1))
+                setattr(module, "output_qmin", 0)
                 collect_output = True
             if collect_input or collect_output:
                 self.collector_hooks[layer_name] = {
@@ -166,11 +166,6 @@ class PtqQuantizer(Quantizer):
         print('quant resulting config: ', quant_result_conf)
         return self.bound_model, quant_result_conf
 
-    # def record(self, wrapper, quant_type, tensor):
-    #     name = wrapper.name
-    #     observer = self.all_observers[name][quant_type]
-    #     observer(tensor.cpu())
-
     def _calculate_qparams(self, vmin, vmax, qmin, qmax):
         # FIXME: check min max is valid
         vmin_neg = torch.min(vmin, torch.zeros_like(vmin))
@@ -198,16 +193,12 @@ class PtqQuantizer(Quantizer):
                                     module.input_zero_point,
                                     module.input_qmin,
                                     module.input_qmax)
-        #else:
-        #    self.record(wrapper, 'input', inputs)
         return inputs
 
     def quantize_weight(self, wrapper, **kwargs):
         # If ObserverQuantizer.compress is executed, the weight will be set to
         # the Pseudo-quantized one. So there is no need to quantize it
         return
-        #weight = wrapper.module.weight
-        #self.record(wrapper, 'weight', weight)
 
     def quantize_output(self, output, wrapper, **kwargs):
         if self.compressed:
@@ -217,9 +208,6 @@ class PtqQuantizer(Quantizer):
                                     module.output_zero_point,
                                     module.output_qmin,
                                     module.output_qmax)
-        #else:
-        #    self.record(wrapper, 'output', output)
-        #    new_output = output
         return output
 
     def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):

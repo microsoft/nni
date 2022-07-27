@@ -386,8 +386,8 @@ from nni.algorithms.compression.pytorch.quantization import PtqQuantizer
 from nni.algorithms.compression.v2.pytorch.utils import TorchEvaluator
 
 config_list = [{
-    'quant_types': ['input', 'weight'],
-    'quant_bits': {'input': 8, 'weight': 8},
+    'quant_types': ['input', 'weight', 'output'],
+    'quant_bits': {'input': 8, 'weight': 8, 'output': 8},
     'op_types': ['default']
 }]
 
