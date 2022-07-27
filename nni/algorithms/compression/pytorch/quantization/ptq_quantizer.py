@@ -2,15 +2,18 @@
 # Licensed under the MIT license.
 
 import functools
-from curses import wrapper
 import logging
-from collections import defaultdict
 from typing import Any, Callable, Dict, Tuple
 import torch
 import torch.nn as nn
 from schema import Schema, And, Or, Optional
+from nni.compression.pytorch.quantization.settings import LayerQuantSetting
 from nni.compression.pytorch.utils.config_validation import QuantizerSchema
-from nni.compression.pytorch.compressor import Quantizer, QuantForward
+from nni.compression.pytorch.compressor import Quantizer
+from nni.compression.pytorch.quantization.literal import (
+    QuantScheme,
+    QuantDtype
+)
 
 from ...v2.pytorch.utils import Evaluator, ForwardHook
 from ...v2.pytorch.pruning.tools import EvaluatorPredictingDataCollector
@@ -51,6 +54,18 @@ def histogram_collector(buffer: list,
                       mode: str) -> Callable[[nn.Module, torch.Tensor, torch.Tensor], None]:
     ...
 
+def calculate_qparams(vmin, vmax, qmin, qmax):
+        # FIXME: check min max is valid
+        vmin_neg = torch.min(vmin, torch.zeros_like(vmin))
+        vmax_pos = torch.max(vmax, torch.zeros_like(vmax))
+        device = vmin_neg.device
+        scale = torch.ones(vmin_neg.size(), dtype=torch.float32, device=device)
+        zero_point = torch.zeros(vmin_neg.size(), dtype=torch.int64, device=device)
+        vmax_pos = torch.max(-vmin_neg, vmax_pos)
+        scale = vmax_pos / (float(qmax - qmin) / 2)
+        scale = torch.max(scale, torch.tensor([torch.finfo(torch.float32).eps]))
+        return scale, zero_point
+
 class PtqQuantizer(Quantizer):
     """
     PTQ (Post Training Quantization)
@@ -61,14 +76,33 @@ class PtqQuantizer(Quantizer):
         # TODO: canonicalize config list
         super().__init__(model, config_list, None)
         assert not model.training, "Currently the observer quantizer only works in evaluation mode."
-        self.quant_grad = QuantForward()
-        self.device = next(model.parameters()).device
+        #self.quant_grad = QuantForward()
         self.evaluator = evaluator
-        self.collector_hooks = {}
-        #weight_qmin, weight_qmax = -127, 127
-        #output_qmin, output_qmax = 0, 127  # reduce_range is set to True
+        self.device = next(model.parameters()).device
         self.compressed = False
+        self._prepare_buffers_for_quant()
         self.bound_model.to(self.device)
+
+    def _prepare_buffers_for_quant(self) -> None:
+        for layer, config in self.get_modules_to_compress():
+            module = layer.module
+            layer_quant_setting = LayerQuantSetting(config)
+            if "weight" in config.get("quant_types", []):
+                module.register_buffer('weight_qmax', layer_quant_setting.weight.qmax)
+                module.register_buffer('weight_qmin', layer_quant_setting.weight.qmin)
+                module.register_buffer('weight_scale', torch.zeros([1]))
+                module.register_buffer('weight_zero_point', torch.zeros([1]))
+            if "input" in config.get("quant_types", []):
+                module.register_buffer('input_qmax', layer_quant_setting.input.qmax)
+                module.register_buffer('input_qmin', layer_quant_setting.input.qmin)
+                module.register_buffer('input_scale', torch.zeros([1]))
+                module.register_buffer('input_zero_point', torch.zeros([1]))
+            if "output" in config.get("quant_types", []):
+                module.register_buffer("output_qmax", layer_quant_setting.output.qmax)
+                module.register_buffer("output_qmin", layer_quant_setting.output.qmin)
+                module.register_buffer('output_scale', torch.zeros([1]))
+                module.register_buffer('output_zero_point', torch.zeros([1]))
+            setattr(module, 'layer_quant_setting', layer_quant_setting)
 
     def validate_config(self, model, config_list):
         schema = QuantizerSchema([{
@@ -78,6 +112,16 @@ class PtqQuantizer(Quantizer):
                 Optional('output'): And(int, lambda n: n == 8),
                 Optional('input'): And(int, lambda n: n == 8),
             })),
+            Optional('quant_scheme'): Or(lambda x: x in QuantScheme, Schema({
+                Optional('input'): lambda x: x in QuantScheme,
+                Optional('weight'): lambda x: x in QuantScheme,
+                Optional('output'): lambda x: x in QuantScheme
+            })),
+            Optional('quant_dtype'): Or(lambda x: x in QuantDtype, Schema({
+                Optional('input'): lambda x: x in QuantDtype,
+                Optional('weight'): lambda x: x in QuantDtype,
+                Optional('output'): lambda x: x in QuantDtype
+            })),
             Optional('op_types'): [str],
             Optional('op_names'): [str]
         }], model, logger)
@@ -85,32 +129,22 @@ class PtqQuantizer(Quantizer):
         schema.validate(config_list)
 
     def _prepare_data_collectors(self):
+        collector_hooks = {}
         modules_to_compress = self.get_modules_to_compress()
-        for layer, config in modules_to_compress:
-            layer_name = layer.name
+        for layer, _ in modules_to_compress:
+            name = layer.name
             module = layer.module
             collect_input = collect_output = False
-            if "weight" in config.get("quant_types", []):
-                # FIXME: handle bits==1, and unsigned int
-                bits = config.get('quant_bits')['weight']
-                setattr(module, 'weight_qmax', 2**(bits-1)-1)
-                setattr(module, 'weight_qmin', -2**(bits-1)+1)
-            if "input" in config.get("quant_types", []):
-                bits = config.get('quant_bits')['input']
-                setattr(module, 'input_qmax', 2**(bits-1)-1)
-                setattr(module, 'input_qmin', -2**(bits-1)+1)
+            if module.layer_quant_setting.input is not None:
                 collect_input = True
-            if "output" in config.get("quant_types", []):
-                bits = config.get('quant_bits')['output']
-                setattr(module, "output_qmax", 2**(bits-1)-1)
-                setattr(module, "output_qmin", -2**(bits-1)+1)
+            if module.layer_quant_setting.output is not None:
                 collect_output = True
             if collect_input or collect_output:
-                self.collector_hooks[layer_name] = {
-                    'input_output': ForwardHook(module, layer_name,
-                        functools.partial(max_min_collector, collect_input=collect_input, collect_output=collect_output))
+                collector_hooks[name] = {
+                    'input_output': ForwardHook(module, name,
+                        functools.partial(max_min_collector, collect_input, collect_output))
                     }
-        data_collector = EvaluatorPredictingDataCollector(self, self.evaluator, hooks=self.collector_hooks)
+        data_collector = EvaluatorPredictingDataCollector(self, self.evaluator, hooks=collector_hooks)
         return data_collector
 
     def compress(self) -> Tuple[nn.Module, Dict]:
@@ -126,16 +160,15 @@ class PtqQuantizer(Quantizer):
         print('collected data: ', data)
 
         quant_result_conf = {}
-        modules_to_compress = self.get_modules_to_compress()
-        for layer, config in modules_to_compress:
+        for layer, _ in self.get_modules_to_compress():
             module = layer.module
             quant_result_conf[layer.name] = {}
-            if "weight" in config.get("quant_types", []):
+            if module.layer_quant_setting.weight is not None:
                 # quantize weight directly with weight_qmin and weight_qmax
                 vmin, vmax = torch.aminmax(module.weight)
-                scale, zero_point = self._calculate_qparams(vmin, vmax, module.weight_qmin, module.weight_qmax)
-                module.register_buffer('weight_scale', scale.to(self.device))
-                module.register_buffer('weight_zero_point', zero_point.to(self.device))
+                scale, zero_point = calculate_qparams(vmin, vmax, module.weight_qmin, module.weight_qmax)
+                module.weight_scale.copy_(scale)
+                module.weight_zero_point.copy_(zero_point)
                 quantized_weight = self._quantize(module.weight,
                                                   module.weight_scale,
                                                   module.weight_zero_point,
@@ -146,18 +179,18 @@ class PtqQuantizer(Quantizer):
                 module.register_buffer('weight', quantized_weight)
                 quant_result_conf[layer.name]['weight'] = {'qmin': module.weight_qmin, 'qmax': module.weight_qmax,
                                                            'scale': scale, 'zero_point': zero_point}
-            if "input" in config.get("quant_types", []):
+            if module.layer_quant_setting.input is not None:
                 vmin, vmax = data[layer.name]['input_output'][0], data[layer.name]['input_output'][1]
-                scale, zero_point = self._calculate_qparams(vmin, vmax, module.input_qmin, module.input_qmax)
-                module.register_buffer('input_scale', scale.to(self.device))
-                module.register_buffer('input_zero_point', zero_point.to(self.device))
+                scale, zero_point = calculate_qparams(vmin, vmax, module.input_qmin, module.input_qmax)
+                module.input_scale.copy_(scale)
+                module.input_zero_point.copy_(zero_point)
                 quant_result_conf[layer.name]['input'] = {'qmin': module.input_qmin, 'qmax': module.input_qmax,
                                                           'scale': scale, 'zero_point': zero_point}
-            if "output" in config.get("quant_types", []):
+            if module.layer_quant_setting.output is not None:
                 vmin, vmax = data[layer.name]['input_output'][2], data[layer.name]['input_output'][3]
-                scale, zero_point = self._calculate_qparams(vmin, vmax, module.output_qmin, module.output_qmax)
-                module.register_buffer('output_scale', scale.to(self.device))
-                module.register_buffer('output_zero_point', zero_point.to(self.device))
+                scale, zero_point = calculate_qparams(vmin, vmax, module.output_qmin, module.output_qmax)
+                module.output_scale.copy_(scale)
+                module.output_zero_point.copy_(zero_point)
                 quant_result_conf[layer.name]['output'] = {'qmin': module.output_qmin, 'qmax': module.output_qmax,
                                                            'scale': scale, 'zero_point': zero_point}
         self.compressed = True
@@ -165,18 +198,6 @@ class PtqQuantizer(Quantizer):
         self.evaluator.unbind_only_model()
         print('quant resulting config: ', quant_result_conf)
         return self.bound_model, quant_result_conf
-
-    def _calculate_qparams(self, vmin, vmax, qmin, qmax):
-        # FIXME: check min max is valid
-        vmin_neg = torch.min(vmin, torch.zeros_like(vmin))
-        vmax_pos = torch.max(vmax, torch.zeros_like(vmax))
-        device = vmin_neg.device
-        scale = torch.ones(vmin_neg.size(), dtype=torch.float32, device=device)
-        zero_point = torch.zeros(vmin_neg.size(), dtype=torch.int64, device=device)
-        vmax_pos = torch.max(-vmin_neg, vmax_pos)
-        scale = vmax_pos / (float(qmax - qmin) / 2)
-        scale = torch.max(scale, torch.tensor([torch.finfo(torch.float32).eps]))
-        return scale, zero_point
 
     def _quantize(self, x, scale, zero_point, qmin, qmax):
         x = x / scale + zero_point

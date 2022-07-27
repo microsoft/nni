@@ -22,6 +22,7 @@ class QuantScheme(str, _QuantLiteralEnum):
     PER_TENSOR_SYMMETRIC = 'per_tensor_symmetric'
     PER_CHANNEL_AFFINE = 'per_channel_affine'
     PER_CHANNEL_SYMMETRIC = 'per_channel_symmetric'
+    # TODO: more schemes to be supported
 
 
 PER_CHANNEL_QUANT_SCHEME = [QuantScheme.PER_CHANNEL_AFFINE, QuantScheme.PER_CHANNEL_SYMMETRIC]
