@@ -56,6 +56,7 @@ def histogram_collector(buffer: list,
 
 def calculate_qparams(vmin, vmax, qmin, qmax):
         # FIXME: check min max is valid
+        # FIXME: support different quant schemes
         vmin_neg = torch.min(vmin, torch.zeros_like(vmin))
         vmax_pos = torch.max(vmax, torch.zeros_like(vmax))
         device = vmin_neg.device
@@ -88,18 +89,18 @@ class PtqQuantizer(Quantizer):
             module = layer.module
             layer_quant_setting = LayerQuantSetting(config)
             if "weight" in config.get("quant_types", []):
-                module.register_buffer('weight_qmax', layer_quant_setting.weight.qmax)
-                module.register_buffer('weight_qmin', layer_quant_setting.weight.qmin)
+                module.register_buffer('weight_qmax', torch.tensor(layer_quant_setting.weight.qmax))
+                module.register_buffer('weight_qmin', torch.tensor(layer_quant_setting.weight.qmin))
                 module.register_buffer('weight_scale', torch.zeros([1]))
                 module.register_buffer('weight_zero_point', torch.zeros([1]))
             if "input" in config.get("quant_types", []):
-                module.register_buffer('input_qmax', layer_quant_setting.input.qmax)
-                module.register_buffer('input_qmin', layer_quant_setting.input.qmin)
+                module.register_buffer('input_qmax', torch.tensor(layer_quant_setting.input.qmax))
+                module.register_buffer('input_qmin', torch.tensor(layer_quant_setting.input.qmin))
                 module.register_buffer('input_scale', torch.zeros([1]))
                 module.register_buffer('input_zero_point', torch.zeros([1]))
             if "output" in config.get("quant_types", []):
-                module.register_buffer("output_qmax", layer_quant_setting.output.qmax)
-                module.register_buffer("output_qmin", layer_quant_setting.output.qmin)
+                module.register_buffer("output_qmax", torch.tensor(layer_quant_setting.output.qmax))
+                module.register_buffer("output_qmin", torch.tensor(layer_quant_setting.output.qmin))
                 module.register_buffer('output_scale', torch.zeros([1]))
                 module.register_buffer('output_zero_point', torch.zeros([1]))
             setattr(module, 'layer_quant_setting', layer_quant_setting)
