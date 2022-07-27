@@ -93,17 +93,17 @@ class PtqQuantizer(Quantizer):
             if "weight" in config.get("quant_types", []):
                 # FIXME: handle bits==1, and unsigned int
                 bits = config.get('quant_bits')['weight']
-                setattr(module, 'weight_qmax', 2**(bits-1))
-                setattr(module, 'weight_qmin', -2**(bits-1))
+                setattr(module, 'weight_qmax', 2**(bits-1)-1)
+                setattr(module, 'weight_qmin', -2**(bits-1)+1)
             if "input" in config.get("quant_types", []):
                 bits = config.get('quant_bits')['input']
-                setattr(module, 'input_qmax', 2**(bits-1))
-                setattr(module, 'input_qmin', -2**(bits-1))
+                setattr(module, 'input_qmax', 2**(bits-1)-1)
+                setattr(module, 'input_qmin', -2**(bits-1)+1)
                 collect_input = True
             if "output" in config.get("quant_types", []):
                 bits = config.get('quant_bits')['output']
-                setattr(module, "output_qmax", 2**(bits-1))
-                setattr(module, "output_qmin", 0)
+                setattr(module, "output_qmax", 2**(bits-1)-1)
+                setattr(module, "output_qmin", -2**(bits-1)+1)
                 collect_output = True
             if collect_input or collect_output:
                 self.collector_hooks[layer_name] = {
