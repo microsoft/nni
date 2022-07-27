@@ -191,8 +191,8 @@ class PtqQuantizer(Quantizer):
                 scale, zero_point = calculate_qparams(vmin, vmax,
                                                       module.weight_qmin,
                                                       module.weight_qmax,
-                                                      module.quant_scheme,
-                                                      module.quant_dtype)
+                                                      module.layer_quant_setting.weight.quant_scheme,
+                                                      module.layer_quant_setting.weight.quant_dtype)
                 module.weight_scale.copy_(scale)
                 module.weight_zero_point.copy_(zero_point)
                 quantized_weight = self._quantize(module.weight,
@@ -210,8 +210,8 @@ class PtqQuantizer(Quantizer):
                 scale, zero_point = calculate_qparams(vmin, vmax,
                                                       module.input_qmin,
                                                       module.input_qmax,
-                                                      module.quant_scheme,
-                                                      module.quant_dtype)
+                                                      module.layer_quant_setting.input.quant_scheme,
+                                                      module.layer_quant_setting.input.quant_dtype)
                 module.input_scale.copy_(scale)
                 module.input_zero_point.copy_(zero_point)
                 quant_result_conf[layer.name]['input'] = {'qmin': module.input_qmin, 'qmax': module.input_qmax,
@@ -221,8 +221,8 @@ class PtqQuantizer(Quantizer):
                 scale, zero_point = calculate_qparams(vmin, vmax,
                                                       module.output_qmin,
                                                       module.output_qmax,
-                                                      module.quant_scheme,
-                                                      module.quant_dtype)
+                                                      module.layer_quant_setting.output.quant_scheme,
+                                                      module.layer_quant_setting.output.quant_dtype)
                 module.output_scale.copy_(scale)
                 module.output_zero_point.copy_(zero_point)
                 quant_result_conf[layer.name]['output'] = {'qmin': module.output_qmin, 'qmax': module.output_qmax,
