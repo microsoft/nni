@@ -224,13 +224,15 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def evaluate(model, criterion, data_loader, neval_batches):
+def evaluate(model, criterion, data_loader, neval_batches, device):
     model.eval()
     top1 = AverageMeter('Acc@1', ':6.2f')
     top5 = AverageMeter('Acc@5', ':6.2f')
     cnt = 0
     with torch.no_grad():
         for image, target in data_loader:
+            image = image.to(device)
+            target = target.to(device)
             output = model(image)
             loss = criterion(output, target)
             cnt += 1
@@ -372,15 +374,16 @@ print('Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_s
 
 num_calibration_batches = 32
 num_eval_batches = 100
+device = torch.device('cuda')
 
 myModel = load_model(saved_model_dir + float_model_file).to('cpu')
 myModel.eval()
-myModel.to(torch.device('cuda'))
+myModel.to(device)
 #top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches)
 #print('Before quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
 
 def my_eval(model):
-    evaluate(model, criterion, data_loader, neval_batches=num_calibration_batches)
+    evaluate(model, criterion, data_loader, neval_batches=num_calibration_batches, device=device)
 
 from nni.algorithms.compression.pytorch.quantization import PtqQuantizer
 from nni.algorithms.compression.v2.pytorch.utils import TorchEvaluator
@@ -397,5 +400,5 @@ predict_func = TorchEvaluator(predicting_func=my_eval)
 quantizer = PtqQuantizer(myModel, config_list, predict_func)
 sim_quant_model, quant_result_conf = quantizer.compress()
 
-top1, top5 = evaluate(sim_quant_model, criterion, data_loader_test, neval_batches=num_eval_batches)
+top1, top5 = evaluate(sim_quant_model, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
 print('After quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
