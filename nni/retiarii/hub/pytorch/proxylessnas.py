@@ -247,7 +247,7 @@ class ProxylessNAS(nn.Module):
     The search space proposed by `ProxylessNAS <https://arxiv.org/abs/1812.00332>`__.
 
     Following the official implementation, the inverted residual with kernel size / expand ratio variations in each layer
-    is implemented with a :class:`nn.LayerChoice` with all-combination candidates. That means,
+    is implemented with a :class:`~nni.retiarii.nn.pytorch.LayerChoice` with all-combination candidates. That means,
     when used in weight sharing, these candidates will be treated as separate layers, and won't be fine-grained shared.
     We note that :class:`MobileNetV3Space` is different in this perspective.
 

@@ -125,6 +125,9 @@ ProxylessNAS
 ..  autoclass:: nni.retiarii.hub.pytorch.ProxylessNAS
     :members:
 
+..  autoclass:: nni.retiarii.hub.pytorch.proxylessnas.InvertedResidual
+    :members:
+
 MobileNetV3Space
 ^^^^^^^^^^^^^^^^
 

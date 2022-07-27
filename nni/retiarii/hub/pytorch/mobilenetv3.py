@@ -79,7 +79,7 @@ class MobileNetV3Space(nn.Module):
     The search dimensions include widths, expand ratios, kernel sizes, SE ratio.
     Some of them can be turned off via arguments to narrow down the search space.
 
-    Different from ProxylessNAS search space, this space is implemented with :class:`nn.ValueChoice`.
+    Different from ProxylessNAS search space, this space is implemented with :class:`~nni.retiarii.nn.pytorch.ValueChoice`.
 
     We use the following snipppet as reference.
     https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728

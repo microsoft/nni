@@ -28,11 +28,9 @@ The model spaces provided so far are all built for image classification tasks, t
    * - :class:`~nni.retiarii.hub.pytorch.ENAS`
      - Proposed by `Efficient neural architecture search via parameter sharing <https://arxiv.org/abs/1802.03268>`__, subtly different from NASNet
    * - :class:`~nni.retiarii.hub.pytorch.AmoebaNet`
-     - Proposed by
-    `Regularized evolution for image classifier architecture search <https://arxiv.org/abs/1802.01548>`__, subtly different from NASNet
+     - Proposed by `Regularized evolution for image classifier architecture search <https://arxiv.org/abs/1802.01548>`__, subtly different from NASNet
    * - :class:`~nni.retiarii.hub.pytorch.PNAS`
-     - Proposed by
-    `Progressive neural architecture search <https://arxiv.org/abs/1712.00559>`__, subtly different from NASNet
+     - Proposed by `Progressive neural architecture search <https://arxiv.org/abs/1712.00559>`__, subtly different from NASNet
    * - :class:`~nni.retiarii.hub.pytorch.DARTS`
      - Proposed by `Darts: Differentiable architecture search <https://arxiv.org/abs/1806.09055>`__, most popularly used in evaluating one-shot algorithms
    * - :class:`~nni.retiarii.hub.pytorch.ProxylessNAS`
@@ -83,29 +81,46 @@ One way to use the model space is to directly leverage the searched results. Not
 In the example above, ``MobileNetV3Space`` can be replaced with any model spaces in the hub, and ``mobilenetv3-small-100`` can be any model alias listed below.
 
 +-------------------+------------------------+----------+---------+-------------------------------+
-| Search space      | Model alias            | Dataset  | Metric  | Eval Protocol                 |
+| Search space      | Model                  | Dataset  | Metric  | Eval Protocol                 |
 +===================+========================+==========+=========+===============================+
 | ProxylessNAS      | acenas-m1              | ImageNet | 75.176  | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | ProxylessNAS      | acenas-m2              | ImageNet | 75.0    | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | ProxylessNAS      | acenas-m3              | ImageNet | 75.118  | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | ProxylessNAS      | proxyless-cpu          | ImageNet | 75.29   | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | ProxylessNAS      | proxyless-gpu          | ImageNet | 75.084  | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | ProxylessNAS      | proxyless-mobile       | ImageNet | 74.594  | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | mobilenetv3-large-100  | ImageNet | 75.768  | Bicubic interpolation         |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | mobilenetv3-small-050  | ImageNet | 57.906  | Bicubic interpolation         |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | mobilenetv3-small-075  | ImageNet | 65.24   | Bicubic interpolation         |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | mobilenetv3-small-100  | ImageNet | 67.652  | Bicubic interpolation         |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | cream-014              | ImageNet | 53.74   | Test image size = 64          |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | cream-043              | ImageNet | 66.256  | Test image size = 96          |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | cream-114              | ImageNet | 72.514  | Test image size = 160         |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | cream-287              | ImageNet | 77.52   | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | cream-481              | ImageNet | 79.078  | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | MobileNetV3Space  | cream-604              | ImageNet | 79.92   | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | DARTS             | darts-v2               | CIFAR-10 | 97.37   | Default                       |
++-------------------+------------------------+----------+---------+-------------------------------+
 | ShuffleNetSpace   | spos                   | ImageNet | 74.14   | BGR tensor; no normalization  |
 +-------------------+------------------------+----------+---------+-------------------------------+
 
-.. notes::
+.. note::
 
    1. The metrics listed above are obtained by evaluating the checkpoints provided the original author and converted to NNI NAS format with `these scripts <https://github.com/ultmaster/spacehub-conversion>`__. Do note that some metrics can be higher / lower than the original report, because there could be subtle differences between data preprocessing, operation implementation (e.g., 3rd-party hswish vs ``nn.Hardswish``), or even library versions we are using. But most of these errors are acceptable (~0.1%).
    2. The default metric for ImageNet and CIFAR-10 is top-1 accuracy.
