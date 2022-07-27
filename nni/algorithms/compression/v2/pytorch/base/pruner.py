@@ -130,7 +130,8 @@ class Pruner(Compressor):
         Wrap all modules that needed to be compressed.
         Different from the parent function, call `wrapper._weight2buffer()` after replace the origin module to wrapper.
         """
-        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        err_msg = 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.bound_model is not None, err_msg
 
         if not self.is_wrapped:
             for _, wrapper in reversed(list(self.get_modules_wrapper().items())):
@@ -143,7 +144,8 @@ class Pruner(Compressor):
         Unwrap all modules that needed to be compressed.
         Different from the parent function, call `wrapper._weight2parameter()` after replace the wrapper to origin module.
         """
-        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        err_msg = 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.bound_model is not None, err_msg
 
         if self.is_wrapped:
             for wrapper in self.get_modules_wrapper().values():
@@ -165,8 +167,10 @@ class Pruner(Compressor):
             self._unwrap_model()
             parameter_name_map = {}
             for name, param in self.bound_model.named_parameters():
-                # If the parameter name in under wrapped module is `xxx.weight` or `xxx.bias`, the name will not change after wrap.
-                # If the parameter name in under wrapped module is others, the name `xxx.param` will change to `xxx.module.param` after wrap.
+                # If the parameter name in under wrapped module is `xxx.weight` or `xxx.bias`,
+                # the name will not change after wrap.
+                # If the parameter name in under wrapped module is others,
+                # the name `xxx.param` will change to `xxx.module.param` after wrap.
                 parameter_name_map[name] = wrapped_param_names[id(param)] if id(param) in wrapped_param_names else name
             self._wrap_model()
             return parameter_name_map

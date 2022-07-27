@@ -310,7 +310,8 @@ class LotteryTicketPruner(IterativePruner):
         new_api = ['evaluator', 'speedup', 'reset_weight', 'pruning_params']
         new_init_kwargs = {'evaluator': None, 'speedup': False, 'reset_weight': True, 'pruning_params': {}}
         old_api = ['finetuner', 'speedup', 'dummy_input', 'evaluator', 'reset_weight', 'pruning_params']
-        old_init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False, 'reset_weight': True, 'pruning_params': {}}
+        old_init_kwargs = {'finetuner': None, 'evaluator': None, 'dummy_input': None, 'speedup': False,
+                           'reset_weight': True, 'pruning_params': {}}
         init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
 
         speedup = init_kwargs['speedup']
@@ -385,30 +386,34 @@ class SimulatedAnnealingPruner(IterativePruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, start_temperature: float = 100,
-                 stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
-                 pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False,
-                 speedup: bool = False):
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,
+                 start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
+                 perturbation_magnitude: float = 0.35, pruning_algorithm: str = 'level', pruning_params: Dict = {},
+                 log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False, speedup: bool = False):
         ...
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: _LEGACY_EVALUATOR, start_temperature: float = 100,
-                 stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
-                 pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False,
-                 finetuner: _LEGACY_FINETUNER | None = None, speedup: bool = False, dummy_input: Optional[Tensor] = None):
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: _LEGACY_EVALUATOR,
+                 start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
+                 perturbation_magnitude: float = 0.35, pruning_algorithm: str = 'level', pruning_params: Dict = {},
+                 log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False,
+                 finetuner: _LEGACY_FINETUNER | None = None, speedup: bool = False,
+                 dummy_input: Optional[Tensor] = None):
         ...
 
     def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
-        new_api = ['evaluator', 'start_temperature', 'stop_temperature', 'cool_down_rate', 'perturbation_magnitude', 'pruning_algorithm',
-                   'pruning_params', 'log_dir', 'keep_intermediate_result', 'speedup']
-        new_init_kwargs = {'start_temperature': 100, 'stop_temperature': 20, 'cool_down_rate': 0.9, 'perturbation_magnitude': 0.35,
-                           'pruning_algorithm': 'level', 'pruning_params': {}, 'log_dir': '.', 'keep_intermediate_result': False,
-                           'speedup': False}
-        old_api = ['evaluator', 'start_temperature', 'stop_temperature', 'cool_down_rate', 'perturbation_magnitude', 'pruning_algorithm',
-                   'pruning_params', 'log_dir', 'keep_intermediate_result', 'finetuner', 'speedup', 'dummy_input']
-        old_init_kwargs = {'start_temperature': 100, 'stop_temperature': 20, 'cool_down_rate': 0.9, 'perturbation_magnitude': 0.35,
-                           'pruning_algorithm': 'level', 'pruning_params': {}, 'log_dir': '.', 'keep_intermediate_result': False,
-                           'finetuner': None, 'speedup': False, 'dummy_input': None}
+        new_api = ['evaluator', 'start_temperature', 'stop_temperature', 'cool_down_rate', 'perturbation_magnitude',
+                   'pruning_algorithm', 'pruning_params', 'log_dir', 'keep_intermediate_result', 'speedup']
+        new_init_kwargs = {'start_temperature': 100, 'stop_temperature': 20, 'cool_down_rate': 0.9,
+                           'perturbation_magnitude': 0.35, 'pruning_algorithm': 'level', 'pruning_params': {},
+                           'log_dir': '.', 'keep_intermediate_result': False, 'speedup': False}
+        old_api = ['evaluator', 'start_temperature', 'stop_temperature', 'cool_down_rate', 'perturbation_magnitude',
+                   'pruning_algorithm', 'pruning_params', 'log_dir', 'keep_intermediate_result', 'finetuner',
+                   'speedup', 'dummy_input']
+        old_init_kwargs = {'start_temperature': 100, 'stop_temperature': 20, 'cool_down_rate': 0.9,
+                           'perturbation_magnitude': 0.35, 'pruning_algorithm': 'level', 'pruning_params': {},
+                           'log_dir': '.', 'keep_intermediate_result': False, 'finetuner': None, 'speedup': False,
+                           'dummy_input': None}
         init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
 
         start_temperature = init_kwargs['start_temperature']
@@ -430,11 +435,12 @@ class SimulatedAnnealingPruner(IterativePruner):
                                                          log_dir=log_dir,
                                                          keep_intermediate_result=keep_intermediate_result)
         if 'traced_optimizer' in pruning_params:
-            pruning_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])  # type: ignore
+            pruning_params['traced_optimizer'] = \
+                OptimizerConstructHelper.from_trace(model, pruning_params['traced_optimizer'])  # type: ignore
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
 
         if self.using_evaluator:
             super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=speedup, reset_weight=False)
         else:
-            super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup, dummy_input=self.dummy_input,
-                             evaluator=self._evaluator, reset_weight=False)  # type: ignore
+            super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=speedup,
+                             dummy_input=self.dummy_input, evaluator=self._evaluator, reset_weight=False)  # type: ignore
