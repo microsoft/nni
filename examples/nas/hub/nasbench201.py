@@ -79,7 +79,7 @@ def search(log_dir: str, batch_size: int = 256, algo: Literal['enas', 'darts', '
     elif algo == 'darts':
         strategy_ = strategy.DARTS(gradient_clip_val=5.)
     elif algo == 'gumbel':
-        strategy_ = strategy.GumbelDARTS(gradient_clip_val=5.)
+        strategy_ = strategy.GumbelDARTS(gradient_clip_val=5., use_temp_anneal=True)
     elif algo == 'proxyless':
         # FIXME: Known issue with proxyless: No grad accumulator for a saved leaf!
         strategy_ = strategy.Proxyless(gradient_clip_val=5.)

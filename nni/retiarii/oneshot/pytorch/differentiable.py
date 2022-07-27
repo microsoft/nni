@@ -236,6 +236,7 @@ class GumbelDartsLightningModule(DartsLightningModule):
     use_temp_anneal : bool
         If true, a linear annealing will be applied to ``gumbel_temperature``.
         Otherwise, run at a fixed temperature. See `SNAS <https://arxiv.org/abs/1812.09926>`__ for details.
+        Default is false.
     min_temp : float
         The minimal temperature for annealing. No need to set this if you set ``use_temp_anneal`` False.
     arc_learning_rate : float
@@ -268,13 +269,15 @@ class GumbelDartsLightningModule(DartsLightningModule):
         self.use_temp_anneal = use_temp_anneal
         self.min_temp = min_temp
 
-    def on_train_epoch_end(self):
+    def on_train_epoch_start(self):
         if self.use_temp_anneal:
             self.temp = (1 - self.trainer.current_epoch / self.trainer.max_epochs) * (self.init_temp - self.min_temp) + self.min_temp
             self.temp = max(self.temp, self.min_temp)
 
-        for module in self.nas_modules:
-            if hasattr(module, '_softmax'):
-                module._softmax.temp = self.temp  # type: ignore
+        self.log('gumbel_temperature', self.temp)
 
-        return self.model.on_train_epoch_end()
+        for module in self.nas_modules:
+            if hasattr(module, '_softmax') and isinstance(module, GumbelSoftmax):
+                module._softmax.tau = self.temp  # type: ignore
+
+        return self.model.on_train_epoch_start()
