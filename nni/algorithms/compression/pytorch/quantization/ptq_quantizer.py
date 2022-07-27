@@ -58,17 +58,32 @@ def histogram_collector(buffer: list,
                       mode: str) -> Callable[[nn.Module, torch.Tensor, torch.Tensor], None]:
     ...
 
-def calculate_qparams(vmin, vmax, qmin, qmax):
+def calculate_qparams(vmin: torch.Tensor, vmax: torch.Tensor,
+                      qmin: torch.Tensor, qmax: torch.Tensor,
+                      qscheme: QuantScheme, qdtype: QuantDtype
+                      ) -> Tuple[torch.Tensor, torch.Tensor]:
     assert torch.all(vmin <= vmax)
     # FIXME: support different quant schemes
+    # include zero in the range
     vmin_neg = torch.min(vmin, torch.zeros_like(vmin))
     vmax_pos = torch.max(vmax, torch.zeros_like(vmax))
     device = vmin_neg.device
     scale = torch.ones(vmin_neg.size(), dtype=torch.float32, device=device)
     zero_point = torch.zeros(vmin_neg.size(), dtype=torch.int64, device=device)
-    vmax_pos = torch.max(-vmin_neg, vmax_pos)
-    scale = vmax_pos / (float(qmax - qmin) / 2)
-    scale = torch.max(scale, torch.tensor([torch.finfo(torch.float32).eps]))
+    if qscheme in [QuantScheme.PER_TENSOR_SYMMETRIC, QuantScheme.PER_CHANNEL_SYMMETRIC]:
+        # symmetric
+        vmax_pos = torch.max(-vmin_neg, vmax_pos)
+        scale = vmax_pos / (float(qmax - qmin) / 2)
+        scale = torch.max(scale, torch.tensor([torch.finfo(torch.float32).eps]))
+        if qdtype == QuantDtype.UINT:
+            # symmetric and uint
+            zero_point = zero_point.new_full(zero_point.size(), qmax // 2)
+    else:
+        # affine
+        scale = (vmax_pos - vmin_neg) / float(qmax - qmin)
+        scale = torch.max(scale, torch.tensor([torch.finfo(torch.float32).eps]))
+        zero_point = qmin - torch.round(vmin_neg / scale).to(torch.int)
+        zero_point = torch.clamp(zero_point, qmin, qmax)
     return scale, zero_point
 
 class PtqQuantizer(Quantizer):
@@ -173,7 +188,11 @@ class PtqQuantizer(Quantizer):
             if module.layer_quant_setting.weight is not None:
                 # quantize weight directly with weight_qmin and weight_qmax
                 vmin, vmax = torch.aminmax(module.weight)
-                scale, zero_point = calculate_qparams(vmin, vmax, module.weight_qmin, module.weight_qmax)
+                scale, zero_point = calculate_qparams(vmin, vmax,
+                                                      module.weight_qmin,
+                                                      module.weight_qmax,
+                                                      module.quant_scheme,
+                                                      module.quant_dtype)
                 module.weight_scale.copy_(scale)
                 module.weight_zero_point.copy_(zero_point)
                 quantized_weight = self._quantize(module.weight,
@@ -188,14 +207,22 @@ class PtqQuantizer(Quantizer):
                                                            'scale': scale, 'zero_point': zero_point}
             if module.layer_quant_setting.input is not None:
                 vmin, vmax = data[layer.name]['input_output'][0], data[layer.name]['input_output'][1]
-                scale, zero_point = calculate_qparams(vmin, vmax, module.input_qmin, module.input_qmax)
+                scale, zero_point = calculate_qparams(vmin, vmax,
+                                                      module.input_qmin,
+                                                      module.input_qmax,
+                                                      module.quant_scheme,
+                                                      module.quant_dtype)
                 module.input_scale.copy_(scale)
                 module.input_zero_point.copy_(zero_point)
                 quant_result_conf[layer.name]['input'] = {'qmin': module.input_qmin, 'qmax': module.input_qmax,
                                                           'scale': scale, 'zero_point': zero_point}
             if module.layer_quant_setting.output is not None:
                 vmin, vmax = data[layer.name]['input_output'][2], data[layer.name]['input_output'][3]
-                scale, zero_point = calculate_qparams(vmin, vmax, module.output_qmin, module.output_qmax)
+                scale, zero_point = calculate_qparams(vmin, vmax,
+                                                      module.output_qmin,
+                                                      module.output_qmax,
+                                                      module.quant_scheme,
+                                                      module.quant_dtype)
                 module.output_scale.copy_(scale)
                 module.output_zero_point.copy_(zero_point)
                 quant_result_conf[layer.name]['output'] = {'qmin': module.output_qmin, 'qmax': module.output_qmax,
