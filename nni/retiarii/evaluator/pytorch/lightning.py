@@ -101,12 +101,15 @@ class Lightning(Evaluator):
         Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list of them, specifying validation samples.
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
         It can be `any types of dataloader supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
+    fit_kwargs
+        Keyword arguments passed to ``trainer.fit()``.
     """
 
     def __init__(self, lightning_module: LightningModule, trainer: Trainer,
                  train_dataloaders: Optional[Any] = None,
                  val_dataloaders: Optional[Any] = None,
-                 train_dataloader: Optional[Any] = None):
+                 train_dataloader: Optional[Any] = None,
+                 fit_kwargs: Optional[Dict[str, Any]] = None):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
         if train_dataloader is not None:
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
@@ -129,6 +132,7 @@ class Lightning(Evaluator):
         self.trainer = trainer
         self.train_dataloaders = train_dataloaders
         self.val_dataloaders = val_dataloaders
+        self.fit_kwargs = fit_kwargs or {}
 
     @staticmethod
     def _load(ir):
@@ -177,7 +181,7 @@ class Lightning(Evaluator):
             The model to fit.
         """
         self.module.set_model(model)
-        return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders)
+        return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders, **self.fit_kwargs)
 
 
 def _check_dataloader(dataloader):

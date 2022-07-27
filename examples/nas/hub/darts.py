@@ -158,12 +158,16 @@ def search(log_dir: str, batch_size: int = 64, **kwargs):
     return experiment.export_top_models()[0]
 
 
-def train(arch: dict, log_dir: str, batch_size: int = 96, **kwargs):
+def train(arch: dict, log_dir: str, batch_size: int = 96, ckpt_path: str = None, **kwargs):
     with fixed_arch(arch):
         model = DARTS(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
 
     train_data = get_cifar10_dataset(cutout=True)
     valid_data = get_cifar10_dataset(train=False)
+
+    fit_kwargs = {}
+    if ckpt_path:
+        fit_kwargs['ckpt_path'] = ckpt_path
 
     evaluator = Lightning(
         AuxLossClassificationModule(0.025, 3e-4, 0.4, 600),
@@ -174,7 +178,8 @@ def train(arch: dict, log_dir: str, batch_size: int = 96, **kwargs):
             logger=TensorBoardLogger(log_dir, name='train')
         ),
         train_dataloaders=DataLoader(train_data, batch_size=batch_size, pin_memory=True, shuffle=True, num_workers=6),
-        val_dataloaders=DataLoader(valid_data, batch_size=batch_size, pin_memory=True, num_workers=6)
+        val_dataloaders=DataLoader(valid_data, batch_size=batch_size, pin_memory=True, num_workers=6),
+        fit_kwargs=fit_kwargs
     )
 
     evaluator.fit(model)
@@ -202,6 +207,7 @@ def main():
     parser.add_argument('--arch', type=str)
     parser.add_argument('--weight_file', type=str)
     parser.add_argument('--log_dir', default='lightning_logs', type=str)
+    parser.add_argument('--ckpt_path', type=str)
 
     parsed_args = parser.parse_args()
     config = {k: v for k, v in vars(parsed_args).items() if v is not None}
