@@ -73,16 +73,16 @@ class TensorHook(Hook):
             return hook
     """
 
-    def __init__(self, target: Tensor, target_name: str, hook_factory: Callable[[List], Callable[[Tensor], Any]]):
+    def __init__(self, target: Tensor, target_name: str, hook_factory: Callable[[List], Callable[[Tensor], Tensor | None]]):
         assert isinstance(target, Tensor)
         super().__init__(target, target_name, hook_factory)
 
-    def _register(self, hook_func: Callable[[Tensor], Any]) -> RemovableHandle:
+    def _register(self, hook_func: Callable[[Tensor], Tensor | None]) -> RemovableHandle:
         return self.target.register_hook(hook_func)  # type: ignore
 
 
 class ModuleHook(Hook):
-    def __init__(self, target: Module, target_name: str, hook_factory: Callable[[List], Callable[[Module, Tensor, Tensor], Any]]):
+    def __init__(self, target: Module, target_name: str, hook_factory: Callable[[List], Callable[[Module, Any, Any], Any]]):
         assert isinstance(target, Module)
         super().__init__(target, target_name, hook_factory)
 
@@ -97,7 +97,7 @@ class ForwardHook(ModuleHook):
             return hook
     """
 
-    def _register(self, hook_func: Callable[[Module, Tensor, Tensor], Any]):
+    def _register(self, hook_func: Callable[[Module, Tuple[Any], Any], Any]):
         return self.target.register_forward_hook(hook_func)  # type: ignore
 
 
@@ -111,7 +111,7 @@ class BackwardHook(ModuleHook):
             return hook
     """
 
-    def _register(self, hook_func: Callable[[Module, Tensor, Tensor], Any]):
+    def _register(self, hook_func: Callable[[Module, Tuple[Tensor] | Tensor, Tuple[Tensor] | Tensor], Any]):
         return self.target.register_backward_hook(hook_func)  # type: ignore
 
 
@@ -405,7 +405,8 @@ class LightningEvaluator(Evaluator):
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
-                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
+                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) \
+                                 for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
                 opt_lrs_dicts = deepcopy(self._opt_returned_dicts)
                 for opt_lrs_dict in opt_lrs_dicts:
                     opt_lrs_dict['optimizer'] = optimizers[opt_lrs_dict['optimizer']]

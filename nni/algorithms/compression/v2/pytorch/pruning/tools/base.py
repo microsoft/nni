@@ -257,7 +257,22 @@ class TrainerBasedDataCollector(DataCollector):
 
 
 class EvaluatorBasedDataCollector(DataCollector):
-    # TODO: add docstring
+    """
+    This data collector is the base class for the data collectors that want to use ``Evaluator`` to train or inference.
+    Three main usages are supported in this data collector:
+
+    1. Doing something before ``optimzer.step()`` and after ``optimzer.step()``. ``before_opt_step_tasks`` is a list of task functions
+       that will execute before ``optimzer.step()``. ``after_opt_step_tasks`` is a list of task functions that will execute after
+       ``optimzer.step()``. All the task functions in the list should not have input arguments, function return value is allowed,
+       but ``Evaluator`` will not catch it.
+    2. Patch or modify the training loss. ``loss_patch`` is a function with input is the original loss and the output is the modified loss.
+    3. Add hooks on ``torch.nn.Module`` or ``Parameter`` or ``Buffer``. Three kinds of hook are supported, ``TensorHook``, ``ForwardHook``
+       and ``BackwardHook``. For initializing a ``Hook``, a hook function factory is needed, the factory function's input is an empty list,
+       and the output is a hook function defined by Pytorch.
+       Please refer `register_hook <https://pytorch.org/docs/stable/generated/torch.Tensor.register_hook.html>`_,
+       `register_forward_hook <https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.register_forward_hook>`_,
+       `register_backward_hook <https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.register_backward_hook>`_.
+    """
 
     def __init__(self, compressor: Pruner, evaluator: Evaluator, before_opt_step_tasks: List[Callable] | None = None,
                  after_opt_step_tasks: List[Callable] | None = None, loss_patch: Callable[[Tensor], Tensor] | None = None,

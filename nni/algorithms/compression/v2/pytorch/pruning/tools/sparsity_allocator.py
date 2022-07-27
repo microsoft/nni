@@ -86,9 +86,9 @@ class BankSparsityAllocator(SparsityAllocator):
                     # mask_bank will be used in exec(sub_mask_str)
                     if prune_num != 0:
                         threshold = torch.topk(metric_bank.reshape(-1), prune_num, largest=False)[0].max()
-                        mask_bank = torch.gt(metric_bank, threshold).type_as(metric_bank)
+                        mask_bank = torch.gt(metric_bank, threshold).type_as(metric_bank)  # type: ignore
                     else:
-                        mask_bank = torch.ones_like(metric_bank)
+                        mask_bank = torch.ones_like(metric_bank)  # type: ignore
                     exec(sub_mask_str)
                 masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
         return masks
