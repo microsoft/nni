@@ -44,9 +44,97 @@ The model spaces provided so far are all built for image classification tasks, t
    * - :class:`~nni.retiarii.hub.pytorch.AutoformerSpace`
      - Based on ViT, proposed by `Autoformer <https://arxiv.org/abs/2107.00651>`__
 
-Using model spaces from hub
----------------------------
+.. note::
 
-Here is an example of how to use the model spaces from space hub.
+   We are actively enriching the model space hub. Planned model spaces include:
 
+   - `NAS-BERT <https://arxiv.org/abs/2105.14444>`__
+   - `LightSpeech <https://arxiv.org/abs/2102.04040>`__
 
+   We welcome suggestions and contributions.
+
+Using pre-searched models
+-------------------------
+
+One way to use the model space is to directly leverage the searched results. Note that some of them have already been well-known neural networks and widely used.
+
+.. code-block:: python
+
+   from nni.retiarii.hub.pytorch import MobileNetV3Space
+
+   # Load one of the searched results from MobileNetV3 search space.
+   mobilenetv3 = MobileNetV3Space.load_searched_model(
+       'mobilenetv3-small-100',        # Available model alias are listed in the table below.
+       pretrained=True, download=True  # download and load the pretrained checkpoint
+   )
+
+   # MobileNetV3 model can be directly evaluated on ImageNet
+   dataset = ImageNet(directory, 'val', transform=test_transform)
+   model.eval()
+   with torch.no_grad():
+       correct = total = 0
+       for inputs, targets in pbar:
+           logits = model(inputs)
+           _, predict = torch.max(logits, 1)
+           correct += (predict == targets).sum().item()
+           total += targets.size(0)
+   print('Accuracy:', correct / total)
+
+In the example above, ``MobileNetV3Space`` can be replaced with any model spaces in the hub, and ``mobilenetv3-small-100`` can be any model alias listed below.
+
++-------------------+------------------------+----------+---------+-------------------------------+
+| Search space      | Model alias            | Dataset  | Metric  | Eval Protocol                 |
++===================+========================+==========+=========+===============================+
+| ProxylessNAS      | acenas-m1              | ImageNet | 75.176  | Default                       |
+| ProxylessNAS      | acenas-m2              | ImageNet | 75.0    | Default                       |
+| ProxylessNAS      | acenas-m3              | ImageNet | 75.118  | Default                       |
+| ProxylessNAS      | proxyless-cpu          | ImageNet | 75.29   | Default                       |
+| ProxylessNAS      | proxyless-gpu          | ImageNet | 75.084  | Default                       |
+| ProxylessNAS      | proxyless-mobile       | ImageNet | 74.594  | Default                       |
+| MobileNetV3Space  | mobilenetv3-large-100  | ImageNet | 75.768  | Bicubic interpolation         |
+| MobileNetV3Space  | mobilenetv3-small-050  | ImageNet | 57.906  | Bicubic interpolation         |
+| MobileNetV3Space  | mobilenetv3-small-075  | ImageNet | 65.24   | Bicubic interpolation         |
+| MobileNetV3Space  | mobilenetv3-small-100  | ImageNet | 67.652  | Bicubic interpolation         |
+| MobileNetV3Space  | cream-014              | ImageNet | 53.74   | Test image size = 64          |
+| MobileNetV3Space  | cream-043              | ImageNet | 66.256  | Test image size = 96          |
+| MobileNetV3Space  | cream-114              | ImageNet | 72.514  | Test image size = 160         |
+| MobileNetV3Space  | cream-287              | ImageNet | 77.52   | Default                       |
+| MobileNetV3Space  | cream-481              | ImageNet | 79.078  | Default                       |
+| MobileNetV3Space  | cream-604              | ImageNet | 79.92   | Default                       |
+| DARTS             | darts-v2               | CIFAR-10 | 97.37   | Default                       |
+| ShuffleNetSpace   | spos                   | ImageNet | 74.14   | BGR tensor; no normalization  |
++-------------------+------------------------+----------+---------+-------------------------------+
+
+.. notes::
+
+   1. The metrics listed above are obtained by evaluating the checkpoints provided the original author and converted to NNI NAS format with `these scripts <https://github.com/ultmaster/spacehub-conversion>`__. Do note that some metrics can be higher / lower than the original report, because there could be subtle differences between data preprocessing, operation implementation (e.g., 3rd-party hswish vs ``nn.Hardswish``), or even library versions we are using. But most of these errors are acceptable (~0.1%).
+   2. The default metric for ImageNet and CIFAR-10 is top-1 accuracy.
+   3. The default evaluation follows the protocols in `timm <https://github.com/rwightman/pytorch-image-models>`__.
+
+.. todos: measure latencies and flops, reproduce training.
+
+Searching within model spaces
+-----------------------------
+
+To search for a new architecture on a particular dataset, you can use the following code.
+
+.. code-block:: python
+
+   # Create the model space
+   from nni.retiarii.hub.pytorch import MobileNetV3Space
+   model_space = MobileNetV3Space()
+
+   # Pick a search strategy
+   from nni.retiarii.strategy import Evolution
+   strategy = Evolution()  # It can be any strategy, including one-shot strategies.
+
+   # Define an evaluator
+   from nni.retiarii.evaluator.pytorch import Classification
+   evaluator = Classification(train_dataloaders=DataLoader(train_dataset, batch_size=batch_size),
+                              val_dataloaders=DataLoader(test_dataset, batch_size=batch_size))
+
+   # Launch the experiment, start the search process
+   experiment = RetiariiExperiment(model_space, evaluator, [], strategy)
+   experiment.run(experiment_config)
+
+.. todo: search reproduction results
