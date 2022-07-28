@@ -8,14 +8,20 @@ import torch.nn.functional as F
 
 import nni
 from nni.algorithms.compression.v2.pytorch.base import Pruner
+# TODO: remove in nni v3.0.
 from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     WeightDataCollector,
     WeightTrainerBasedDataCollector,
     SingleHookTrainerBasedDataCollector
 )
 from nni.algorithms.compression.v2.pytorch.pruning.tools import (
+    TargetDataCollector,
+    EvaluatorBasedTargetDataCollector,
+    EvaluatorBasedHookDataCollector
+)
+from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     NormMetricsCalculator,
-    MultiDataNormMetricsCalculator,
+    HookDataNormMetricsCalculator,
     DistMetricsCalculator,
     APoZRankMetricsCalculator,
     MeanRankMetricsCalculator
@@ -84,7 +90,7 @@ class PruningToolsTestCase(unittest.TestCase):
         # Test WeightDataCollector
         data_collector = WeightDataCollector(pruner)
         data = data_collector.collect()
-        assert all(torch.equal(get_module_by_name(model, module_name)[1].weight.data, data[module_name]) for module_name in ['conv1', 'conv2'])
+        assert all(torch.equal(get_module_by_name(model, module_name)[1].weight.data, data[module_name]['weight']) for module_name in ['conv1', 'conv2'])
 
         # Test WeightTrainerBasedDataCollector
         def opt_after():
@@ -94,8 +100,8 @@ class PruningToolsTestCase(unittest.TestCase):
         optimizer_helper = OptimizerConstructHelper.from_trace(model, get_optimizer(model))
         data_collector = WeightTrainerBasedDataCollector(pruner, trainer, optimizer_helper, criterion, 1, opt_after_tasks=[opt_after])
         data = data_collector.collect()
-        assert all(torch.equal(get_module_by_name(model, module_name)[1].weight.data, data[module_name]) for module_name in ['conv1', 'conv2'])
-        assert all(t.numel() == (t == 1).type_as(t).sum().item() for t in data.values())
+        assert all(torch.equal(get_module_by_name(model, module_name)[1].weight.data, data[module_name]['weight']) for module_name in ['conv1', 'conv2'])
+        assert all(t['weight'].numel() == (t['weight'] == 1).type_as(t['weight']).sum().item() for t in data.values())
 
         # Test SingleHookTrainerBasedDataCollector
         def _collector(buffer, weight_tensor):
@@ -109,73 +115,73 @@ class PruningToolsTestCase(unittest.TestCase):
         optimizer_helper = OptimizerConstructHelper.from_trace(model, get_optimizer(model))
         data_collector = SingleHookTrainerBasedDataCollector(pruner, trainer, optimizer_helper, criterion, 2, collector_infos=[collector_info])
         data = data_collector.collect()
-        assert all(len(t) == 2 for t in data.values())
+        assert all(len(t['weight']) == 2 for t in data.values())
 
     def test_metrics_calculator(self):
         # Test NormMetricsCalculator
         metrics_calculator = NormMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         data = {
-            '1': torch.ones(3, 3, 3),
-            '2': torch.ones(4, 4) * 2
+            '1': {'target_name': torch.ones(3, 3, 3)},
+            '2': {'target_name': torch.ones(4, 4) * 2}
         }
         result = {
-            '1': torch.ones(3) * 3,
-            '2': torch.ones(4) * 4
+            '1': {'target_name': torch.ones(3) * 3},
+            '2': {'target_name': torch.ones(4) * 4}
         }
         metrics = metrics_calculator.calculate_metrics(data)
-        assert all(torch.equal(result[k], v) for k, v in metrics.items())
+        assert all(torch.equal(result[k]['target_name'], v['target_name']) for k, v in metrics.items())
 
         # Test DistMetricsCalculator
         metrics_calculator = DistMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         data = {
-            '1': torch.tensor([[1, 2], [4, 6]], dtype=torch.float32),
-            '2': torch.tensor([[0, 0], [1, 1]], dtype=torch.float32)
+            '1': {'target_name': torch.tensor([[1, 2], [4, 6]], dtype=torch.float32)},
+            '2': {'target_name': torch.tensor([[0, 0], [1, 1]], dtype=torch.float32)}
         }
         result = {
-            '1': torch.tensor([5, 5], dtype=torch.float32),
-            '2': torch.sqrt(torch.tensor([2, 2], dtype=torch.float32))
+            '1': {'target_name': torch.tensor([5, 5], dtype=torch.float32)},
+            '2': {'target_name': torch.sqrt(torch.tensor([2, 2], dtype=torch.float32))}
         }
         metrics = metrics_calculator.calculate_metrics(data)
-        assert all(torch.equal(result[k], v) for k, v in metrics.items())
+        assert all(torch.equal(result[k]['target_name'], v['target_name']) for k, v in metrics.items())
 
-        # Test MultiDataNormMetricsCalculator
-        metrics_calculator = MultiDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+        # Test HookDataNormMetricsCalculator
+        metrics_calculator = HookDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
         data = {
-            '1': [2, torch.ones(3, 3, 3) * 2],
-            '2': [2, torch.ones(4, 4) * 2]
+            '1': {'target_name': [2, torch.ones(3, 3, 3) * 2]},
+            '2': {'target_name': [2, torch.ones(4, 4) * 2]}
         }
         result = {
-            '1': torch.ones(3) * 18,
-            '2': torch.ones(4) * 8
+            '1': {'target_name': torch.ones(3) * 18},
+            '2': {'target_name': torch.ones(4) * 8}
         }
         metrics = metrics_calculator.calculate_metrics(data)
-        assert all(torch.equal(result[k], v) for k, v in metrics.items())
+        assert all(torch.equal(result[k]['target_name'], v['target_name']) for k, v in metrics.items())
 
         # Test APoZRankMetricsCalculator
         metrics_calculator = APoZRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
         data = {
-            '1': [2, torch.tensor([[1, 1], [1, 1]], dtype=torch.float32)],
-            '2': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
+            '1': {'target_name': [2, torch.tensor([[1, 1], [1, 1]], dtype=torch.float32)]},
+            '2': {'target_name': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]}
         }
         result = {
-            '1': torch.tensor([0.5, 0.5], dtype=torch.float32),
-            '2': torch.tensor([1, 1, 0.75], dtype=torch.float32)
+            '1': {'target_name': torch.tensor([0.5, 0.5], dtype=torch.float32)},
+            '2': {'target_name': torch.tensor([1, 1, 0.75], dtype=torch.float32)}
         }
         metrics = metrics_calculator.calculate_metrics(data)
-        assert all(torch.equal(result[k], v) for k, v in metrics.items())
+        assert all(torch.equal(result[k]['target_name'], v['target_name']) for k, v in metrics.items())
 
         # Test MeanRankMetricsCalculator
         metrics_calculator = MeanRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
         data = {
-            '1': [2, torch.tensor([[0, 1], [1, 0]], dtype=torch.float32)],
-            '2': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
+            '1': {'target_name': [2, torch.tensor([[0, 1], [1, 0]], dtype=torch.float32)]},
+            '2': {'target_name': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]}
         }
         result = {
-            '1': torch.tensor([0.25, 0.25], dtype=torch.float32),
-            '2': torch.tensor([0, 0, 0.25], dtype=torch.float32)
+            '1': {'target_name': torch.tensor([0.25, 0.25], dtype=torch.float32)},
+            '2': {'target_name': torch.tensor([0, 0, 0.25], dtype=torch.float32)}
         }
         metrics = metrics_calculator.calculate_metrics(data)
-        assert all(torch.equal(result[k], v) for k, v in metrics.items())
+        assert all(torch.equal(result[k]['target_name'], v['target_name']) for k, v in metrics.items())
 
     def test_sparsity_allocator(self):
         # Test NormalSparsityAllocator
@@ -183,8 +189,8 @@ class PruningToolsTestCase(unittest.TestCase):
         config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
         pruner = Pruner(model, config_list)
         metrics = {
-            'conv1': torch.rand(5, 1, 5, 5),
-            'conv2': torch.rand(10, 5, 5, 5)
+            'conv1': {'weight': torch.rand(5, 1, 5, 5)},
+            'conv2': {'weight': torch.rand(10, 5, 5, 5)}
         }
         sparsity_allocator = NormalSparsityAllocator(pruner)
         masks = sparsity_allocator.generate_sparsity(metrics)

@@ -17,7 +17,8 @@ _logger = logging.getLogger(__name__)
 
 
 class AMCEnv:
-    def __init__(self, model: Module, config_list: List[Dict], dummy_input: Tensor, total_sparsity: float, max_sparsity_per_layer: Dict[str, float], target: str = 'flops'):
+    def __init__(self, model: Module, config_list: List[Dict], dummy_input: Tensor, total_sparsity: float,
+                 max_sparsity_per_layer: Dict[str, float], target: str = 'flops'):
         pruning_op_names = []
         [pruning_op_names.extend(config['op_names']) for config in config_list_canonical(model, config_list)]
         self.pruning_ops = OrderedDict()
@@ -26,7 +27,10 @@ class AMCEnv:
             if name in pruning_op_names:
                 op_type = type(layer).__name__
                 stride = np.power(np.prod(layer.stride), 1 / len(layer.stride)) if hasattr(layer, 'stride') else 0  # type: ignore
-                kernel_size = np.power(np.prod(layer.kernel_size), 1 / len(layer.kernel_size)) if hasattr(layer, 'kernel_size') else 1  # type: ignore
+                if hasattr(layer, 'kernel_size'):
+                    kernel_size = np.power(np.prod(layer.kernel_size), 1 / len(layer.kernel_size))  # type: ignore
+                else:
+                    kernel_size = 1
                 self.pruning_ops[name] = (i, op_type, stride, kernel_size)
                 self.pruning_types.append(op_type)
         self.pruning_types = list(set(self.pruning_types))
@@ -60,15 +64,18 @@ class AMCEnv:
 
             total_current_target = sum([current_statistics[name][self.target] for name in self.pruning_op_names])
             previous_pruning_target = self.under_pruning_target - total_current_target
-            max_rest_pruning_target = sum([current_statistics[name][self.target] * self.max_sparsity_per_layer[name] for name in self.pruning_op_names[index + 1:]])
+            max_rest_pruning_target = sum([current_statistics[name][self.target] * self.max_sparsity_per_layer[name] \
+                                          for name in self.pruning_op_names[index + 1:]])
             min_current_pruning_target = self.excepted_pruning_target - previous_pruning_target - max_rest_pruning_target
-            max_current_pruning_target_1 = self.origin_statistics[op_name][self.target] * self.max_sparsity_per_layer[op_name] - (self.origin_statistics[op_name][self.target] - current_statistics[op_name][self.target])
+            max_current_pruning_target_1 = self.origin_statistics[op_name][self.target] * self.max_sparsity_per_layer[op_name] - \
+                                           (self.origin_statistics[op_name][self.target] - current_statistics[op_name][self.target])
             max_current_pruning_target_2 = self.excepted_pruning_target - previous_pruning_target
             max_current_pruning_target = min(max_current_pruning_target_1, max_current_pruning_target_2)
             min_action = min_current_pruning_target / current_statistics[op_name][self.target]
             max_action = max_current_pruning_target / current_statistics[op_name][self.target]
             if min_action > self.max_sparsity_per_layer[op_name]:
-                _logger.warning('[%s] min action > max sparsity per layer: %f > %f', op_name, min_action, self.max_sparsity_per_layer[op_name])
+                warn_msg = f'[{op_name}] min action > max sparsity per layer: {min_action} > {self.max_sparsity_per_layer[op_name]}'
+                _logger.warning(warn_msg)
             action = max(0., min(max_action, max(min_action, action)))
 
             self.current_op_name = op_name
