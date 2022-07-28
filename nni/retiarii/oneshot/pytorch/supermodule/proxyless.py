@@ -21,28 +21,39 @@ from .differentiable import DifferentiableMixedLayer, DifferentiableMixedInput
 __all__ = ['ProxylessMixedLayer', 'ProxylessMixedInput']
 
 
-class _ArchGradientFunction(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, x, binary_gates, run_func, backward_func):
-        ctx.run_func = run_func
-        ctx.backward_func = backward_func
+class ProxylessContext:
 
-        detached_x = x.detach()
-        detached_x.requires_grad = x.requires_grad
-        with torch.enable_grad():
-            output = run_func(detached_x)
-        ctx.save_for_backward(detached_x, output)
-        return output.data
+    def __init__(self, arch_alpha: torch.Tensor, binary_gates: torch.Tensor) -> None:
+        self.arch_alpha = arch_alpha
+        self.binary_gates = binary_gates
 
-    @staticmethod
-    def backward(ctx, grad_output):
-        detached_x, output = ctx.saved_tensors
+        self.output = None
 
-        grad_x = torch.autograd.grad(output, detached_x, grad_output, only_inputs=True)
-        # compute gradients w.r.t. binary_gates
-        binary_grads = ctx.backward_func(detached_x.data, output.data, grad_output.data)
+    def forward_hook(self, module: nn.Module, input: torch.Tensor, output: torch.Tensor) -> None:
+        # Save the output to be used in gradients.
+        self.output = output.data
 
-        return grad_x[0], binary_grads, None, None
+    def backward_hook(self, module: nn.Module, grad_input: torch.Tensor, grad_output: torch.Tensor) -> None:
+        def backward(_x, _output, grad_output):
+            binary_grads = torch.zeros_like(binary_gates.data)
+            with torch.no_grad():
+                for k in range(len(ops)):
+                    if k != active_id:
+                        out_k = ops[k](_x.data, **kwargs)
+                    else:
+                        out_k = _output.data
+                    grad_k = torch.sum(out_k * grad_output)
+                    binary_grads[k] = grad_k
+            return binary_grads
+        return backward
+
+
+
+def _proxyless_backward_hook(self, grad_input, grad_output):
+    """
+    A backward hook to handle the computation of binary gates and alpha in Proxyless layers.
+    """
+
 
 
 class ProxylessMixedLayer(DifferentiableMixedLayer):
@@ -54,42 +65,15 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
 
     def __init__(self, paths: list[tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__(paths, alpha, softmax, label)
-        self._binary_gates = nn.Parameter(torch.randn(len(paths)) * 1E-3)
+        self._binary_gates = nn.Parameter(torch.zeros(len(paths)))
 
         # like sampling-based methods, it has a ``_sampled``.
         self._sampled: str | None = None
         self._sample_idx: int | None = None
 
     def forward(self, *args, **kwargs):
-        def run_function(ops, active_id, **kwargs):
-            def forward(_x):
-                return ops[active_id](_x, **kwargs)
-            return forward
-
-        def backward_function(ops, active_id, binary_gates, **kwargs):
-            def backward(_x, _output, grad_output):
-                binary_grads = torch.zeros_like(binary_gates.data)
-                with torch.no_grad():
-                    for k in range(len(ops)):
-                        if k != active_id:
-                            out_k = ops[k](_x.data, **kwargs)
-                        else:
-                            out_k = _output.data
-                        grad_k = torch.sum(out_k * grad_output)
-                        binary_grads[k] = grad_k
-                return binary_grads
-            return backward
-
-        assert len(args) == 1, 'ProxylessMixedLayer only supports exactly one input argument.'
-        x = args[0]
-
-        assert self._sampled is not None, 'Need to call resample() before running fprop.'
-        list_ops = [getattr(self, op) for op in self.op_names]
-
-        return _ArchGradientFunction.apply(
-            x, self._binary_gates, run_function(list_ops, self._sample_idx, **kwargs),
-            backward_function(list_ops, self._sample_idx, self._binary_gates, **kwargs)
-        )
+        """Forward pass of one single path."""
+        return getattr(self, self.op_names[self._sample_idx])(*args, **kwargs)
 
     def resample(self, memo):
         """Sample one path based on alpha if label is not found in memo."""
@@ -100,6 +84,7 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
             probs = self._softmax(self._arch_alpha)
             self._sample_idx = int(torch.multinomial(probs, 1)[0].item())
             self._sampled = self.op_names[self._sample_idx]
+        print(self._sampled, self._sample_idx)
 
         # set binary gates
         with torch.no_grad():
@@ -136,7 +121,7 @@ class ProxylessMixedInput(DifferentiableMixedInput):
 
     def __init__(self, n_candidates: int, n_chosen: int | None, alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__(n_candidates, n_chosen, alpha, softmax, label)
-        self._binary_gates = nn.Parameter(torch.randn(n_candidates) * 1E-3)
+        self._binary_gates = nn.Parameter(torch.zeros(n_candidates))
         self._sampled: int | None = None
 
     def forward(self, inputs):

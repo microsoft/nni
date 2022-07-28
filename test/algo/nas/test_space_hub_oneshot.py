@@ -3,13 +3,16 @@ import pytest
 
 import numpy as np
 import torch
+import torch.nn as nn
 
 import nni
 import nni.retiarii.hub.pytorch as ss
 import nni.retiarii.evaluator.pytorch as pl
 import nni.retiarii.strategy as stg
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
+from nni.retiarii.hub.pytorch.nasbench201 import OPS_WITH_STRIDE
 from nni.retiarii.hub.pytorch.nasnet import NDSStagePathSampling, NDSStageDifferentiable
+from nni.retiarii.oneshot.pytorch.supermodule.proxyless import ProxylessMixedLayer
 from torch.utils.data import Subset
 from torchvision import transforms
 from torchvision.datasets import CIFAR10, ImageNet
@@ -228,6 +231,51 @@ def test_hub_oneshot(space_type, strategy_type):
     experiment = RetiariiExperiment(model_space, evaluator, strategy=strategy)
 
     experiment.run(config)
+
+
+class FFF(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x):
+        # detached_x = x
+        detached_x = x.detach()
+        detached_x.requires_grad_(x.requires_grad)
+        with torch.enable_grad():
+            output = detached_x + 1
+        ctx.save_for_backward(detached_x, output)
+
+        return output.data
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        detached_x, output = ctx.saved_tensors
+
+        grad_x = torch.autograd.grad(output, detached_x, grad_output)
+        print(grad_x)
+
+        return grad_x
+
+
+def test_proxyless_bp():
+    op = ProxylessMixedLayer(
+        [(name, value(3, 3, 1)) for name, value in OPS_WITH_STRIDE.items() if name != 'none'],
+        torch.randn(len(OPS_WITH_STRIDE) - 1), nn.Softmax(-1), 'proxyless'
+    )
+    op.train()
+
+    x = torch.randn(1, 3, 9, 9)
+    x.requires_grad_()
+    # print(torch.autograd.grad(x, x))
+
+    y = FFF.apply(x).sum()
+    y.backward()
+
+    # for _ in range(10):
+    #     x = torch.randn(1, 3, 9, 9)
+    #     x.requires_grad_()
+    #     op.resample({})
+    #     y = op(x).sum()
+    #     y.backward()
+    #     op.finalize_grad()
 
 
 _original_loglevel = None
