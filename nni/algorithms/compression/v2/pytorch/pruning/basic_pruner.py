@@ -132,7 +132,8 @@ class BasicPruner(Pruner):
         Tuple[Module, Dict]
             Return the wrapped model and mask.
         """
-        assert self.bound_model is not None and self.config_list is not None, 'Model and/or config_list are not set in this pruner, please set them by reset() before compress().'
+        err_msg = 'Model and/or config_list are not set in this pruner, please set them by reset() before compress().'
+        assert self.bound_model is not None and self.config_list is not None, err_msg
         assert self.data_collector is not None and self.metrics_calculator is not None and self.sparsity_allocator is not None
         data = self.data_collector.collect()
         _logger.debug('Collected Data:\n%s', data)
@@ -176,7 +177,8 @@ class EvaluatorBasedPruner(BasicPruner):
             else:
                 self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
             self.using_evaluator = False
-            warn_msg = f"The old API ...{','.join(old_api)} will be deprecated after NNI v3.0, please using the new one ...{','.join(new_api)}"
+            warn_msg = f"The old API ...{','.join(old_api)} will be deprecated after NNI v3.0, " + \
+                       "please using the new one ...{','.join(new_api)}"
             _logger.warning(warn_msg)
         return init_kwargs
 
@@ -273,7 +275,8 @@ class LevelPruner(BasicPruner):
         >>> pruner = LevelPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/level_pruning_torch.py <examples/model_compress/pruning/level_pruning_torch.py>`
+    For detailed example please refer to
+    :githublink:`examples/model_compress/pruning/level_pruning_torch.py <examples/model_compress/pruning/level_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: Optional[List] = None):
@@ -348,11 +351,12 @@ class NormPruner(BasicPruner):
         schema.validate(config_list)
 
     def reset_tools(self):
+        scalers = Scaling(kernel_size=[1], kernel_padding_mode='back')
         if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = NormalSparsityAllocator(self, scalers)
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, scalers)
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
         if not hasattr(self, 'data_collector'):
@@ -360,7 +364,7 @@ class NormPruner(BasicPruner):
         else:
             self.data_collector.reset()
         if not hasattr(self, 'metrics_calculator'):
-            self.metrics_calculator = NormMetricsCalculator(p=self.p, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+            self.metrics_calculator = NormMetricsCalculator(p=self.p, scalers=scalers)
 
 
 class L1NormPruner(NormPruner):
@@ -408,7 +412,8 @@ class L1NormPruner(NormPruner):
 class L2NormPruner(NormPruner):
     r"""
     L2 norm pruner is a variant of L1 norm pruner.
-    The only different between L2 norm pruner and L1 norm pruner is L2 norm pruner prunes the weight with the smallest L2 norm of the weights.
+    The only different between L2 norm pruner and L1 norm pruner is
+    L2 norm pruner prunes the weight with the smallest L2 norm of the weights.
 
     L2 norm pruner also supports dependency-aware mode.
 
@@ -445,7 +450,8 @@ class L2NormPruner(NormPruner):
         >>> pruner = L2NormPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/norm_pruning_torch.py <examples/model_compress/pruning/norm_pruning_torch.py>`
+    For detailed example please refer to
+    :githublink:`examples/model_compress/pruning/norm_pruning_torch.py <examples/model_compress/pruning/norm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict],
@@ -458,7 +464,8 @@ class FPGMPruner(BasicPruner):
     FPGM pruner prunes the blocks of the weight on the first dimension with the smallest geometric median.
     FPGM chooses the weight blocks with the most replaceable contribution.
 
-    For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/abs/1811.00250>`__.
+    For more details, please refer to
+    `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/abs/1811.00250>`__.
 
     FPGM pruner also supports dependency-aware mode.
 
@@ -495,7 +502,8 @@ class FPGMPruner(BasicPruner):
         >>> pruner = FPGMPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/fpgm_pruning_torch.py <examples/model_compress/pruning/fpgm_pruning_torch.py>`
+    For detailed example please refer to
+    :githublink:`examples/model_compress/pruning/fpgm_pruning_torch.py <examples/model_compress/pruning/fpgm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict],
@@ -513,11 +521,12 @@ class FPGMPruner(BasicPruner):
         schema.validate(config_list)
 
     def reset_tools(self):
+        scalers = Scaling(kernel_size=[1], kernel_padding_mode='back')
         if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = NormalSparsityAllocator(self, scalers)
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, scalers)
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
         if not hasattr(self, 'data_collector'):
@@ -525,12 +534,12 @@ class FPGMPruner(BasicPruner):
         else:
             self.data_collector.reset()
         if not hasattr(self, 'metrics_calculator'):
-            self.metrics_calculator = DistMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+            self.metrics_calculator = DistMetricsCalculator(p=2, scalers=scalers)
 
 
 class SlimPruner(EvaluatorBasedPruner):
-    __doc__ = r"""Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training to identify unimportant channels.
-    The channels with small scaling factor values will be pruned.
+    __doc__ = r"""Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training
+    to identify unimportant channels. The channels with small scaling factor values will be pruned.
 
     For more details, please refer to `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/abs/1708.06519>`__\.
 
@@ -604,7 +613,9 @@ class SlimPruner(EvaluatorBasedPruner):
             schema.validate(config_list)
         except SchemaError as e:
             if "Missing key: 'total_sparsity'" in str(e):
-                _logger.error('`config_list` validation failed. If global mode is set in this pruner, `sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.')
+                err_msg = '`config_list` validation failed. If global mode is set in this pruner, ' + \
+                          '`sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.'
+                _logger.error(err_msg)
             raise e
 
     # TODO: remove in nni v3.0.
@@ -630,7 +641,8 @@ class SlimPruner(EvaluatorBasedPruner):
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             if not hasattr(self, 'data_collector'):
-                self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch, max_epochs=self.training_epochs)
+                self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch,
+                                                                        max_epochs=self.training_epochs)
             else:
                 self.data_collector.reset(loss_patch=self.loss_patch)
         else:
@@ -747,11 +759,12 @@ class ActivationPruner(EvaluatorBasedPruner):
         raise NotImplementedError()
 
     def reset_tools(self):
+        scalers = Scaling(kernel_size=[1], kernel_padding_mode='back')
         if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = NormalSparsityAllocator(self, scalers)
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, scalers)
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
@@ -764,16 +777,18 @@ class ActivationPruner(EvaluatorBasedPruner):
                 target_name = 'weight'
                 forward_hooks[module_name] = {target_name: ForwardHook(wrapper, module_name, self._collector)}
             if not hasattr(self, 'data_collector'):
-                self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=forward_hooks, max_steps=self.training_steps)
+                self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=forward_hooks,
+                                                                      max_steps=self.training_steps)
             else:
                 self.data_collector.reset(hooks=forward_hooks)
         else:
-            collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()], 'forward', self._collector)
+            collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()],
+                                               'forward', self._collector)
             if not hasattr(self, 'data_collector'):
                 self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                           1, collector_infos=[collector_info])
             else:
-                self.data_collector.reset(collector_infos=[collector_info])
+                self.data_collector.reset([collector_info])  # type: ignore
 
         if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = self._create_metrics_calculator()
@@ -989,7 +1004,9 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
             schema.validate(config_list)
         except SchemaError as e:
             if "Missing key: 'total_sparsity'" in str(e):
-                _logger.error('`config_list` validation failed. If global mode is set in this pruner, `sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.')
+                err_msg = '`config_list` validation failed. If global mode is set in this pruner, ' + \
+                          '`sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.'
+                _logger.error(err_msg)
             raise e
 
     def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Tensor], None]:
@@ -1008,13 +1025,14 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
         return (weight_tensor.detach() * grad.detach()).data.pow(2)
 
     def reset_tools(self):
+        scalers = Scaling(kernel_size=[1], kernel_padding_mode='back')
         if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = NormalSparsityAllocator(self, scalers)
             elif self.mode == 'global':
-                self.sparsity_allocator = GlobalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = GlobalSparsityAllocator(self, scalers)
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, scalers)
             else:
                 raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
 
@@ -1026,9 +1044,11 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
             for module_name, wrapper in self.get_modules_wrapper().items():
                 target_name = 'weight'
                 target = getattr(wrapper, target_name)
-                tensor_hooks[module_name] = {target_name: TensorHook(target, module_name, functools.partial(self._collector, weight_tensor=target))}
+                tensor_hooks[module_name] = {target_name: TensorHook(target, module_name,
+                                                                     functools.partial(self._collector, weight_tensor=target))}
             if not hasattr(self, 'data_collector'):
-                self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=tensor_hooks, max_steps=self.training_steps)
+                self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=tensor_hooks,
+                                                                      max_steps=self.training_steps)
             else:
                 self.data_collector.reset(hooks=tensor_hooks)
         else:
@@ -1038,10 +1058,10 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
                 self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                           1, collector_infos=[collector_info])
             else:
-                self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
+                self.data_collector.reset([collector_info])  # type: ignore
 
         if not hasattr(self, 'metrics_calculator'):
-            self.metrics_calculator = HookDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
+            self.metrics_calculator = HookDataNormMetricsCalculator(p=1, scalers=scalers)
 
 
 class ADMMPruner(EvaluatorBasedPruner):
@@ -1121,7 +1141,8 @@ class ADMMPruner(EvaluatorBasedPruner):
         super().reset(model, config_list)
         # FIXME: Only support pruning 'weight' right now.
         target_name = 'weight'
-        self.Z = {module_name: {target_name: wrapper.weight.data.clone()} for module_name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
+        for module_name, wrapper in self.get_modules_wrapper().items():
+            self.Z[module_name] = {target_name: wrapper.weight.data.clone()}  # type: ignore
         self.U = {module_name: {target_name: torch.zeros_like(z[target_name])} for module_name, z in self.Z.items()}
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -1159,7 +1180,8 @@ class ADMMPruner(EvaluatorBasedPruner):
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             if not hasattr(self, 'data_collector'):
-                self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch, max_epochs=self.training_epochs)
+                self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch,
+                                                                        max_epochs=self.training_epochs)
             else:
                 self.data_collector.reset(loss_patch=self.loss_patch)
         else:
@@ -1195,7 +1217,8 @@ class ADMMPruner(EvaluatorBasedPruner):
             for module_name, targets_mask in masks.items():
                 target_name = 'weight'
                 self.Z[module_name][target_name] = self.Z[module_name][target_name].mul(targets_mask[target_name])
-                self.U[module_name][target_name] = self.U[module_name][target_name] + data[module_name][target_name] - self.Z[module_name][target_name]
+                self.U[module_name][target_name] = self.U[module_name][target_name] + data[module_name][target_name] - \
+                                                   self.Z[module_name][target_name]
 
         self.Z, self.U = {}, {}
         torch.cuda.empty_cache()

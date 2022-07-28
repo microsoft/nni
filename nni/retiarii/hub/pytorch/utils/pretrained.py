@@ -37,6 +37,11 @@ PRETRAINED_WEIGHT_URLS = {
 
     # spos
     'spos': f'{NNI_BLOB}/nashub/spos-0b17f6fc.pth',
+
+    # autoformer
+    'autoformer-tiny': f'{NNI_BLOB}/nashub/autoformer-searched-tiny-1e90ebc1.pth',
+    'autoformer-small': f'{NNI_BLOB}/nashub/autoformer-searched-small-4bc5d4e5.pth',
+    'autoformer-base': f'{NNI_BLOB}/nashub/autoformer-searched-base-c417590a.pth'
 }
 
 

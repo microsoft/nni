@@ -55,8 +55,7 @@ class PrunerScoredModuleWrapper(PrunerModuleWrapper):
 
     def forward(self, *inputs):
         # apply mask to weight, bias
-        # NOTE: I don't know why training getting slower and slower if only `self.weight_mask` without `detach()`
-        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask.detach()))  # type: ignore
+        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask))  # type: ignore
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.module.bias = torch.mul(self.bias, self.bias_mask)  # type: ignore
         return self.module(*inputs)
@@ -189,9 +188,11 @@ class MovementPruner(EvaluatorBasedPruner):
         if self.warm_up_step < current_step <= self.cool_down_beginning_step:
             wrapper_dict = self.get_modules_wrapper()
             for config in self.config_list:
-                current_sparsity = config['total_sparsity'] * (1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3)
+                scale = 1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3
+                current_sparsity = config['total_sparsity'] * scale
                 for op_name in config['op_names']:
-                    wrapper_dict[op_name].config['total_sparsity'] = current_sparsity
+                    wrapper = wrapper_dict[op_name]
+                    wrapper.config['total_sparsity'] = current_sparsity
 
     def reset_tools(self):
         if not hasattr(self, 'metrics_calculator'):
@@ -225,12 +226,16 @@ class MovementPruner(EvaluatorBasedPruner):
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             if not hasattr(self, 'data_collector'):
-                self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator, after_opt_step_tasks=[_optimizer_patch], max_epochs=self.training_epochs)
+                self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator,
+                                                                       after_opt_step_tasks=[_optimizer_patch],
+                                                                       max_epochs=self.training_epochs)
             else:
                 self.data_collector.reset(after_opt_step_tasks=[_optimizer_patch])
         else:
             if not hasattr(self, 'data_collector'):
-                self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
+                self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper,
+                                                                           self.criterion, self.training_epochs,
+                                                                           opt_after_tasks=[_optimizer_patch])
             else:
                 self.data_collector.reset()
 
@@ -258,9 +263,6 @@ class MovementPruner(EvaluatorBasedPruner):
         for wrapper in self.get_modules_wrapper().values():
             wrapper.config['total_sparsity'] = 0
         result = super().compress()
-        # del weight_score
-        for wrapper in self.get_modules_wrapper().values():
-            wrapper.weight_score = None
         if self.using_evaluator:
             self.evaluator.unbind_model()
         return result

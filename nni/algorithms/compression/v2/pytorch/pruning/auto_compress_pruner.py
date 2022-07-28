@@ -35,17 +35,20 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
         # TODO: replace with validation here
         for config in config_list:
             if 'sparsity' in config or 'sparsity_per_layer' in config:
-                _logger.warning('Only `total_sparsity` can be differentially allocated sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fixed sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
+                warn_msg = 'Only `total_sparsity` can be differentially allocated sparse ratio to each layer, ' + \
+                           '`sparsity` or `sparsity_per_layer` will allocate fixed sparse ratio to layers. ' + \
+                           'Make sure you know what this will lead to, otherwise please use `total_sparsity`.'
+                _logger.warning(warn_msg)
         return super().reset(model, config_list, masks)
 
     def _iterative_pruner_reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
-        if hasattr(self, 'iterative_pruner'):
-            self.iterative_pruner.reset(model, config_list=config_list, masks=masks)
-        else:
+        if not hasattr(self, 'iterative_pruner'):
             self.iterative_pruner = SimulatedAnnealingPruner(model=model,
                                                              config_list=config_list,
                                                              log_dir=Path(self._log_dir_root, 'SA'),
                                                              **self._sa_params)
+        else:
+            self.iterative_pruner.reset(model, config_list=config_list, masks=masks)
 
     def allocate_sparsity(self, new_config_list: List[Dict], model: Module, masks: Dict[str, Dict[str, Tensor]]):
         self._iterative_pruner_reset(model, new_config_list, masks)

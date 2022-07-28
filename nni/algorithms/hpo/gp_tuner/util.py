@@ -89,7 +89,8 @@ def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
     x_seeds = [space.random_sample() for _ in range(int(num_starting_points))]
 
     bounds_minmax = np.array(
-        [[bound['_value'][0], bound['_value'][-1]] for bound in bounds])
+        [[bound['_value'][0], bound['_value'][1 if bound['_type'] == 'quniform'
+            or bound['_type'] == 'qloguniform' else -1]] for bound in bounds])
 
     for x_try in x_seeds:
         # Find the minimum of minus the acquisition function

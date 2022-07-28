@@ -35,6 +35,7 @@ __all__ = [
     'MixedLinear',
     'MixedConv2d',
     'MixedBatchNorm2d',
+    'MixedLayerNorm',
     'MixedMultiHeadAttention',
     'NATIVE_MIXED_OPERATIONS',
 ]
@@ -472,6 +473,74 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
             eps,
         )
 
+class MixedLayerNorm(MixedOperation, nn.LayerNorm):
+    """
+    Mixed LayerNorm operation.
+
+    Supported arguments are:
+
+    - ``normalized_shape``
+    - ``eps`` (only supported in path sampling)
+
+    For path-sampling, prefix of ``weight`` and ``bias`` are sliced.
+    For weighted cases, the maximum ``normalized_shape`` is used directly.
+
+    eps is required to be float.
+    """
+
+    bound_type = retiarii_nn.LayerNorm
+    argument_list = ['normalized_shape', 'eps']
+
+    @staticmethod
+    def _to_tuple(value: scalar_or_scalar_dict[Any]) -> tuple[Any, Any]:
+        if not isinstance(value, tuple):
+            return (value, value)
+        return value
+
+    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
+        if name not in ['normalized_shape']:
+            raise NotImplementedError(f'Unsupported value choice on argument: {name}')
+        all_sizes = set(traverse_all_options(value_choice))
+        if any(isinstance(sz, (tuple, list)) for sz in all_sizes):
+            # transpose
+            all_sizes = list(zip(*all_sizes))
+            # maximum dim should be calculated on every dimension
+            return (max(self._to_tuple(sz)) for sz in all_sizes)
+        else:
+            return max(all_sizes)
+
+    def forward_with_args(self,
+                          normalized_shape,
+                          eps: float,
+                          inputs: torch.Tensor) -> torch.Tensor:
+
+        if any(isinstance(arg, dict) for arg in [eps]):
+            raise ValueError(_diff_not_compatible_error.format('eps', 'LayerNorm'))
+
+        if isinstance(normalized_shape, dict):
+            normalized_shape = self.normalized_shape
+
+        # make it as tuple
+        if isinstance(normalized_shape, int):
+            normalized_shape = (normalized_shape, )
+        if isinstance(self.normalized_shape, int):
+            normalized_shape = (self.normalized_shape, )
+
+        # slice all the normalized shape
+        indices = [slice(0, min(i, j)) for i, j in zip(normalized_shape, self.normalized_shape)]
+
+        # remove _S(*)
+        weight = self.weight[indices] if self.weight is not None else None
+        bias = self.bias[indices] if self.bias is not None else None
+
+        return F.layer_norm(
+            inputs,
+            normalized_shape,
+            weight,
+            bias,
+            eps
+        )
+
 
 class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     """
@@ -628,6 +697,7 @@ NATIVE_MIXED_OPERATIONS: list[Type[MixedOperation]] = [
     MixedLinear,
     MixedConv2d,
     MixedBatchNorm2d,
+    MixedLayerNorm,
     MixedMultiHeadAttention,
 ]
 
