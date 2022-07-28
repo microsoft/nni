@@ -85,7 +85,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
 
         const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
         
-        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, `nni/${this.experimentId}`, "run.sh"), environment.command, { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, `nni/${this.experimentId}`, `${environment.id}_run.sh`), environment.command, { encoding: 'utf8' });
 
         //upload script files to sotrage
         const trialJobOutputUrl: string = await this.uploadFolder(this.environmentLocalTempFolder, `nni/${this.experimentId}`);
@@ -159,24 +159,26 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
             if (this.config.worker) {
                 const privateRegistrySecretName = await this.createRegistrySecret(this.config.worker.privateRegistryAuthPath);
                 replicaSpecsObj.Worker = this.generateReplicaConfig(this.config.worker.replicas,
-                                                                    this.config.worker.dockerImage, 'run.sh', workerPodResources, privateRegistrySecretName);
+                                                                    this.config.worker.dockerImage, 
+                                                                    `${envId}_run.sh`, workerPodResources, privateRegistrySecretName);
             }
             if (this.config.ps !== undefined) {
                 const privateRegistrySecretName: string | undefined = await this.createRegistrySecret(this.config.ps.privateRegistryAuthPath);
                 replicaSpecsObj.Ps = this.generateReplicaConfig(this.config.ps.replicas,
-                                                                this.config.ps.dockerImage, 'run.sh', nonWorkerPodResources, privateRegistrySecretName);
+                                                                this.config.ps.dockerImage,
+                                                                `${envId}_run.sh`, nonWorkerPodResources, privateRegistrySecretName);
             }
             replicaSpecsObjMap.set(this.kubernetesCRDClient.jobKind, {tfReplicaSpecs: replicaSpecsObj});
         } else if (this.config.operator === 'pytorch-operator') {
             if (this.config.worker !== undefined) {
                 const privateRegistrySecretName: string | undefined = await this.createRegistrySecret(this.config.worker.privateRegistryAuthPath);
                 replicaSpecsObj.Worker = this.generateReplicaConfig(this.config.worker.replicas,
-                                                                    this.config.worker.dockerImage, 'run.sh', workerPodResources, privateRegistrySecretName);
+                                                                    this.config.worker.dockerImage, `${envId}_run.sh`, workerPodResources, privateRegistrySecretName);
             }
             if (this.config.master !== undefined) {
                 const privateRegistrySecretName: string | undefined = await this.createRegistrySecret(this.config.master.privateRegistryAuthPath);
                 replicaSpecsObj.Master = this.generateReplicaConfig(this.config.master.replicas,
-                                                                    this.config.master.dockerImage, 'run.sh', nonWorkerPodResources, privateRegistrySecretName);
+                                                                    this.config.master.dockerImage, `${envId}_run.sh`, nonWorkerPodResources, privateRegistrySecretName);
     
             }
             replicaSpecsObjMap.set(this.kubernetesCRDClient.jobKind, {pytorchReplicaSpecs: replicaSpecsObj});
