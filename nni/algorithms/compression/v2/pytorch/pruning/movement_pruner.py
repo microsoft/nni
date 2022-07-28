@@ -52,21 +52,18 @@ class PrunerScoredModuleWrapper(PrunerModuleWrapper):
     module_name
         The name of the module to compress, wrapper module shares same name.
     """
-    def __init__(self, module: Module, module_name: str, config: Dict, score_size: List[int]):
+    def __init__(self, module: Module, module_name: str, config: Dict, score_size: List[int] | None = None):
         super().__init__(module, module_name, config)
-        self.weight_score = Parameter(torch.empty(score_size))  # type: ignore
+        self.weight_score = Parameter(torch.empty(score_size)) \
+            if score_size is not None else Parameter(torch.empty_like(module.weight))  # type: ignore
         torch.nn.init.constant_(self.weight_score, val=0.0)
 
     def forward(self, *inputs):
-        # apply mask to weight, bias
-        # NOTE: I don't know why training getting slower and slower if only `self.weight_mask` without `detach()`
-        if 'attention' in self.name:
-            weight_score = self.weight_score.repeat_interleave(64, 0).repeat_interleave(64, 1)  # type: ignore
-        elif 'intermediate.dense' in self.name:
-            weight_score = self.weight_score.unsqueeze(1).expand_as(self.weight).contiguous()  # type: ignore
-        else:
-            weight_score = self.weight_score.unsqueeze(0).expand_as(self.weight).contiguous()  # type: ignore
-        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(weight_score, self.weight_mask.detach()))  # type: ignore
+        repeat = [a // b for a, b in zip(self.weight.shape, self.weight_score.shape)]  # type: ignore
+        weight_score = self.weight_score
+        for dim, num in enumerate(repeat):
+            weight_score = weight_score.repeat_interleave(num, dim=dim)
+        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(weight_score, self.weight_mask))  # type: ignore
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.module.bias = torch.mul(self.bias, self.bias_mask)  # type: ignore
         return self.module(*inputs)
@@ -187,8 +184,8 @@ class MovementPruner(EvaluatorBasedPruner):
 
     @overload
     def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_epochs: int,
-                 warm_up_step: int, cool_down_beginning_step: int, regular_scale: float | None = None, movement_mode: Literal['hard', 'soft'] = 'hard',
-                 sparse_granularity: Literal['auto', 'finegrained'] = 'finegrained'):
+                 warm_up_step: int, cool_down_beginning_step: int, regular_scale: float | None = None,
+                 movement_mode: Literal['hard', 'soft'] = 'hard', sparse_granularity: Literal['auto', 'finegrained'] = 'finegrained'):
         ...
 
     @overload
@@ -199,7 +196,8 @@ class MovementPruner(EvaluatorBasedPruner):
 
     def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
         # TODO: remove in nni v3.0. Fake overload.
-        new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step', 'regular_scale', 'movement_mode', 'sparse_granularity']
+        new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step', 'regular_scale', 'movement_mode',
+                   'sparse_granularity']
         old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
         init_kwargs = self._init_evaluator(model, new_api, old_api, {}, args, kwargs)
 
@@ -224,7 +222,8 @@ class MovementPruner(EvaluatorBasedPruner):
         for config in self.config_list:
             current_sparsity = config['total_sparsity'] * self._cubic_scale(current_step)
             for op_name in config['op_names']:
-                # There is an unreachable pyright error if `wrapper_dict[op_name].config['total_sparsity'] = current_sparsity`, seems a pyright bug...
+                # There is an unreachable pyright error if `wrapper_dict[op_name].config['total_sparsity'] = current_sparsity`,
+                # seems a pyright bug...
                 wrapper_config = wrapper_dict[op_name].config
                 wrapper_config['total_sparsity'] = current_sparsity
 
@@ -239,23 +238,23 @@ class MovementPruner(EvaluatorBasedPruner):
     def _create_scalers(self) -> Scaling | Dict[str, Scaling]:
         if self.sparse_granularity and self.sparse_granularity == 'auto' and self._model_parser:
             scalers = {}
-            for module_name, module in self.get_modules_wrapper().items():
+            for module_name, wrapper in self.get_modules_wrapper().items():
                 if self._model_parser.is_attention(module_name):
                     is_output_dense = not self._model_parser.is_attention(module_name, include_output=False)
                     num_heads = self._model_parser.get_num_heads(module_name, self.bound_model)
                     if num_heads <= 0:
                         scalers[module_name] = {'_default': Scaling([1])}
                     else:
-                        if module.module.weight.shape[0] % num_heads != 0 or module.module.weight.shape[1] % num_heads != 0:
+                        if wrapper.module.weight.shape[0] % num_heads != 0 or wrapper.module.weight.shape[1] % num_heads != 0:
                             scalers[module_name] = {'_default': Scaling([1])}
                         else:
-                            total_head_size = module.module.weight.shape[0] if not is_output_dense else module.module.weight.shape[1]
+                            total_head_size = wrapper.module.weight.shape[0] if not is_output_dense else wrapper.module.weight.shape[1]
                             block_w = total_head_size // num_heads
                             scalers[module_name] = {'_default': Scaling([block_w, block_w])}
                 elif self._model_parser.is_ffn(module_name, ffn_num=1):
-                    scalers[module_name] = {'_default': Scaling([1, -1])}
+                    scalers[module_name] = {'_default': Scaling([1, wrapper.module.weight.shape[1]])}  # type: ignore
                 elif self._model_parser.is_ffn(module_name, ffn_num=2):
-                    scalers[module_name] = {'_default': Scaling([-1, 1])}
+                    scalers[module_name] = {'_default': Scaling([wrapper.module.weight.shape[0], 1])}  # type: ignore
                 else:
                     scalers[module_name] = {'_default': Scaling([1])}
         else:
@@ -359,9 +358,9 @@ class MovementPruner(EvaluatorBasedPruner):
                         block_w = total_head_size // num_heads
                         score_size = [block_w, block_w]
             elif self._model_parser.is_ffn(layer.name, ffn_num=1):
-                score_size = layer.module.weight.shape[0]
+                score_size = (layer.module.weight.shape[0], 1)
             elif self._model_parser.is_ffn(layer.name, ffn_num=2):
-                score_size = layer.module.weight.shape[1]
+                score_size = (1, layer.module.weight.shape[1])
             else:
                 score_size = layer.module.weight.shape
         else:
