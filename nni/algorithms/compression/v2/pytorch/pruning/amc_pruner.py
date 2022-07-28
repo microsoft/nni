@@ -44,8 +44,8 @@ class AMCTaskGenerator(TaskGenerator):
     ddpg_params
         The ddpg agent parameters.
     target : str
-        'flops' or 'params'. Note that the sparsity in other pruners always means the parameters sparse, but in AMC, you can choose flops sparse.
-        This parameter is used to explain what the sparsity setting in config_list refers to.
+        'flops' or 'params'. Note that the sparsity in other pruners always means the parameters sparse,
+        but in AMC, you can choose flops sparse. This parameter is used to explain what the sparsity setting in config_list refers to.
     """
 
     def __init__(self, total_episode: int, dummy_input: Tensor, origin_model: Module, origin_config_list: List[Dict],
@@ -85,6 +85,8 @@ class AMCTaskGenerator(TaskGenerator):
         return self.generate_tasks(task_result)
 
     def generate_tasks(self, task_result: TaskResult) -> List[Task]:
+        self.temp_config_list = self.temp_config_list if hasattr(self, 'temp_config_list') else []
+
         # append experience & update agent policy
         if self.action is not None:
             action, reward, observation, done = self.env.step(self.action, task_result.compact_model)
@@ -109,7 +111,8 @@ class AMCTaskGenerator(TaskGenerator):
             origin_model = torch.load(self._origin_model_path)
             compact_model = task_result.compact_model
             compact_model_masks = task_result.compact_model_masks
-            current2origin_sparsity, _, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.temp_config_list)
+            current2origin_sparsity, _, _ = compute_sparsity(origin_model, compact_model, compact_model_masks,
+                                                             self.temp_config_list)  # type: ignore
             self._tasks[task_result.task_id].state['current2origin_sparsity'] = current2origin_sparsity
             current2origin_sparsity, _, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.config_list_copy)
             self._tasks[task_result.task_id].state['current_total_sparsity'] = current2origin_sparsity

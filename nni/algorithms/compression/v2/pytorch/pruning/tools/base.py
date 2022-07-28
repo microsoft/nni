@@ -65,9 +65,11 @@ class DataCollector:
 
 
 # TODO: remove in nni v3.0.
+COLLECTOR_TYPE = Union[Callable[[List, Tensor], Callable[[Tensor], None]], Callable[[List], Callable[[Module, Tensor, Tensor], None]]]
+
 class HookCollectorInfo:
     def __init__(self, targets: Union[Dict[str, Tensor], List[LayerInfo]], hook_type: str,
-                 collector: Union[Callable[[List, Tensor], Callable[[Tensor], None]], Callable[[List], Callable[[Module, Tensor, Tensor], None]]]):
+                 collector: COLLECTOR_TYPE):
         """
         This class used to aggregate the information of what kind of hook is placed on which layers.
 
@@ -78,8 +80,8 @@ class HookCollectorInfo:
         hook_type
             'forward' or 'backward'.
         collector
-            A hook function generator, the input is a buffer (empty list) or a buffer (empty list) and tensor, the output is a hook function.
-            The buffer is used to store the data wanted to hook.
+            A hook function generator, the input is a buffer (empty list) or a buffer (empty list) and tensor,
+            the output is a hook function. The buffer is used to store the data wanted to hook.
         """
         self.targets = targets
         self.hook_type = hook_type
@@ -92,10 +94,10 @@ class TrainerBasedDataCollector(DataCollector):
     This class includes some trainer based util functions, i.e., patch optimizer or criterion, add hooks.
     """
 
-    def __init__(self, compressor: Pruner, trainer: Callable[[Module, Optimizer, Callable], None], optimizer_helper: OptimizerConstructHelper,
-                 criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int,
-                 opt_before_tasks: List = [], opt_after_tasks: List = [],
-                 collector_infos: List[HookCollectorInfo] = [], criterion_patch: Optional[Callable[[Callable], Callable]] = None):
+    def __init__(self, compressor: Pruner, trainer: Callable[[Module, Optimizer, Callable], None],
+                 optimizer_helper: OptimizerConstructHelper, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int,
+                 opt_before_tasks: List = [], opt_after_tasks: List = [], collector_infos: List[HookCollectorInfo] = [],
+                 criterion_patch: Optional[Callable[[Callable], Callable]] = None):
         """
         Parameters
         ----------
@@ -256,7 +258,22 @@ class TrainerBasedDataCollector(DataCollector):
 
 
 class EvaluatorBasedDataCollector(DataCollector):
-    # TODO: add docstring
+    """
+    This data collector is the base class for the data collectors that want to use ``Evaluator`` to train or inference.
+    Three main usages are supported in this data collector:
+
+    1. Doing something before ``optimzer.step()`` and after ``optimzer.step()``. ``before_opt_step_tasks`` is a list of task functions
+       that will execute before ``optimzer.step()``. ``after_opt_step_tasks`` is a list of task functions that will execute after
+       ``optimzer.step()``. All the task functions in the list should not have input arguments, function return value is allowed,
+       but ``Evaluator`` will not catch it.
+    2. Patch or modify the training loss. ``loss_patch`` is a function with input is the original loss and the output is the modified loss.
+    3. Add hooks on ``torch.nn.Module`` or ``Parameter`` or ``Buffer``. Three kinds of hook are supported, ``TensorHook``, ``ForwardHook``
+       and ``BackwardHook``. For initializing a ``Hook``, a hook function factory is needed, the factory function's input is an empty list,
+       and the output is a hook function defined by Pytorch.
+       Please refer `register_hook <https://pytorch.org/docs/stable/generated/torch.Tensor.register_hook.html>`_,
+       `register_forward_hook <https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.register_forward_hook>`_,
+       `register_backward_hook <https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.register_backward_hook>`_.
+    """
 
     def __init__(self, compressor: Pruner, evaluator: Evaluator, before_opt_step_tasks: List[Callable] | None = None,
                  after_opt_step_tasks: List[Callable] | None = None, loss_patch: Callable[[Tensor], Tensor] | None = None,
@@ -289,7 +306,8 @@ class MetricsCalculator:
     ----------
     scalers
         Scaler is used to scale the metrics' size. It scaling metric to the same size as the shrinked mask in the sparsity allocator.
-        If you want to use different scalers for different pruning targets in different modules, please use a dict `{module_name: {target_name: scaler}}`.
+        If you want to use different scalers for different pruning targets in different modules,
+        please use a dict `{module_name: {target_name: scaler}}`.
         If allocator meets an unspecified module name, it will try to use `scalers['_default'][target_name]` to scale its mask.
         If allocator meets an unspecified target name, it will try to use `scalers[module_name]['_default']` to scale its mask.
         Passing in a scaler instead of a `dict` of scalers will be treated as passed in `{'_default': {'_default': scalers}}`.
@@ -297,7 +315,8 @@ class MetricsCalculator:
     """
 
     def __init__(self, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
-        self.scalers: Dict[str, Dict[str, Scaling]] | None = scalers if isinstance(scalers, (dict, type(None))) else {'_default': {'_default': scalers}}  # type: ignore
+        self.scalers: Dict[str, Dict[str, Scaling]] | None = scalers \
+            if isinstance(scalers, (dict, type(None))) else {'_default': {'_default': scalers}}  # type: ignore
 
     def _get_scaler(self, module_name: str, target_name: str) -> Scaling:
         scaler = _get_scaler(self.scalers, module_name, target_name)
@@ -330,7 +349,8 @@ class SparsityAllocator:
     scalers
         Scaler is used to scale the masks' size. It shrinks the mask of the same size as the pruning target to the same size as the metric,
         or expands the mask of the same size as the metric to the same size as the pruning target.
-        If you want to use different scalers for different pruning targets in different modules, please use a dict `{module_name: {target_name: scaler}}`.
+        If you want to use different scalers for different pruning targets in different modules,
+        please use a dict `{module_name: {target_name: scaler}}`.
         If allocator meets an unspecified module name, it will try to use `scalers['_default'][target_name]` to scale its mask.
         If allocator meets an unspecified target name, it will try to use `scalers[module_name]['_default']` to scale its mask.
         Passing in a scaler instead of a `dict` of scalers will be treated as passed in `{'_default': {'_default': scalers}}`.
@@ -342,7 +362,8 @@ class SparsityAllocator:
 
     def __init__(self, pruner: Pruner, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None, continuous_mask: bool = True):
         self.pruner = pruner
-        self.scalers: Dict[str, Dict[str, Scaling]] | None = scalers if isinstance(scalers, (dict, type(None))) else {'_default': {'_default': scalers}}  # type: ignore
+        self.scalers: Dict[str, Dict[str, Scaling]] | None = scalers \
+            if isinstance(scalers, (dict, type(None))) else {'_default': {'_default': scalers}}  # type: ignore
         self.continuous_mask = continuous_mask
 
     def _get_scaler(self, module_name: str, target_name: str) -> Scaling | None:
@@ -384,18 +405,19 @@ class SparsityAllocator:
             wrapper = self.pruner.get_modules_wrapper()[module_name]
             old_target_mask: Tensor | None = getattr(wrapper, f'{target_name}_mask', None)
             if old_target_mask is not None:
-                new_masks[module_name][target_name] = torch.min(target_mask[target_name], old_target_mask.to(target_mask[target_name].device))
+                new_masks[module_name][target_name] = torch.min(target_mask[target_name],
+                                                                old_target_mask.to(target_mask[target_name].device))
         return new_masks
 
-    def common_target_masks_generation(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
+    def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         """
         Generate masks for metrics-dependent targets.
 
         Parameters
         ----------
         metrics
-            The format is {module_name: weight_metric}.
-            The metric of `weight` usually has the same size with shrinked mask.
+            The format is {module_name: {target_name: target_metric}}.
+            The metric of usually has the same size with shrinked mask.
 
         Return
         ------

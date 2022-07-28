@@ -58,7 +58,7 @@ class BankSparsityAllocator(SparsityAllocator):
     """
     In bank pruner, all values in weight are divided into different sub blocks each shape
     aligned with balance_gran. Each sub block has the same sparsity which equal to the overall sparsity.
-    This allocator pruned the weight in the granularity of block. 
+    This allocator pruned the weight in the granularity of block.
     """
 
     def __init__(self, pruner: Pruner, balance_gran: list):
@@ -189,8 +189,10 @@ class DependencyAwareAllocator(SparsityAllocator):
         # group dependency format: {module_name: group_num}
         self.pruner._unwrap_model()
         graph = TorchModuleGraph(model=self.pruner.bound_model, dummy_input=dummy_input)
-        channel_dependency = ChannelDependency(model=self.pruner.bound_model, dummy_input=dummy_input, traced_model=graph.trace).dependency_sets
-        group_dependency = GroupDependency(model=self.pruner.bound_model, dummy_input=dummy_input, traced_model=graph.trace).dependency_sets
+        channel_dependency = ChannelDependency(model=self.pruner.bound_model, dummy_input=dummy_input,
+                                               traced_model=graph.trace).dependency_sets
+        group_dependency = GroupDependency(model=self.pruner.bound_model, dummy_input=dummy_input,
+                                           traced_model=graph.trace).dependency_sets
         self.pruner._wrap_model()
         return channel_dependency, group_dependency
 
@@ -216,7 +218,8 @@ class DependencyAwareAllocator(SparsityAllocator):
             fused_metrics = self._metric_fuse(sub_metrics)
 
             for target_name, fused_metric in fused_metrics.items():
-                sparsity_rates = {module_name: self.pruner.get_modules_wrapper()[module_name].config['total_sparsity'] for module_name in sub_metrics.keys()}
+                sparsity_rates = {module_name: self.pruner.get_modules_wrapper()[module_name].config['total_sparsity']
+                                  for module_name in sub_metrics.keys()}
                 min_sparsity_rate = min(sparsity_rates.values())
 
                 group_nums = [self.group_dependency.get(module_name, 1) for module_name in sub_metrics.keys()]
@@ -236,8 +239,8 @@ class DependencyAwareAllocator(SparsityAllocator):
                 # change the metric value corresponding to the public mask part to the minimum value
                 for module_name, targets_metric in sub_metrics.items():
                     if target_name in targets_metric:
-                        # Following is Plan A, generate the dependency mask first, and then fill in the sparsity, the final mask is group unbalanced.
-                        # # - 1 ensure the denpendency metric is the minimum, and will be masked first.
+                        # Following is Plan A, generate the dependency mask first, and then fill in the sparsity,
+                        # the final mask is group unbalanced. - 1 ensure the denpendency metric is the minimum, and will be masked first.
                         # min_value = targets_metric[target_name].min() - 1
                         # metrics[module_name][target_name] = torch.where(dependency_mask!=0, targets_metric[target_name], min_value)
 

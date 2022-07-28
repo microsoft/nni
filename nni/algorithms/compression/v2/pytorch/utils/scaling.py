@@ -53,18 +53,24 @@ class Scaling:
             # for the `-1` in kernel_size, then expand size (4, 3, 1) to size (4, 6, 2).
     kernel_padding_mode
         'front' or 'back', default is 'front'.
-        If set 'front', for a given tensor when shrinking, padding `1` at front of kernel_size until `len(tensor.shape) == len(kernel_size)`;
-        for a given expand size when expanding, padding `1` at front of kernel_size until `len(expand_size) == len(kernel_size)`.
-        If set 'back', for a given tensor when shrinking, padding `-1` at back of kernel_size until `len(tensor.shape) == len(kernel_size)`;
-        for a given expand size when expanding, padding `-1` at back of kernel_size until `len(expand_size) == len(kernel_size)`.
+        If set 'front', for a given tensor when shrinking,
+        padding `1` at front of kernel_size until `len(tensor.shape) == len(kernel_size)`;
+        for a given expand size when expanding,
+        padding `1` at front of kernel_size until `len(expand_size) == len(kernel_size)`.
+        If set 'back', for a given tensor when shrinking,
+        padding `-1` at back of kernel_size until `len(tensor.shape) == len(kernel_size)`;
+        for a given expand size when expanding,
+        padding `-1` at back of kernel_size until `len(expand_size) == len(kernel_size)`.
     """
 
     def __init__(self, kernel_size: List[int], kernel_padding_mode: Literal['front', 'back'] = 'front') -> None:
         self.kernel_size = kernel_size
-        assert kernel_padding_mode in ['front', 'back'], f"kernel_padding_mode should be one of ['front', 'back'], but get kernel_padding_mode={kernel_padding_mode}."
+        err_msg = f"kernel_padding_mode should be one of ['front', 'back'], but get kernel_padding_mode={kernel_padding_mode}."
+        assert kernel_padding_mode in ['front', 'back'], err_msg
         self.kernel_padding_mode = kernel_padding_mode
 
-    def _padding(self, _list: List[int], length: int, padding_value: int = -1, padding_mode: Literal['front', 'back'] = 'back') -> List[int]:
+    def _padding(self, _list: List[int], length: int, padding_value: int = -1,
+                 padding_mode: Literal['front', 'back'] = 'back') -> List[int]:
         """
         Padding the `_list` to a specific length with `padding_value`.
 
@@ -144,10 +150,12 @@ class Scaling:
                 assert b % a == 0, f'Can not expand tensor with {target.shape} to {expand_size} with kernel size {kernel_size}.'
                 _expand_size.append(b // a)
                 _expand_size.append(a)
-        new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [new_target] + [2 * _ + 1 for _ in range(len(expand_size))])  # type: ignore
+        new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim),
+                                    [new_target] + [2 * _ + 1 for _ in range(len(expand_size))])  # type: ignore
 
         # step 3: expanding the new target to _expand_size and reshape to expand_size.
-        # Note that we can also give an interface for how to expand the tensor, like `reduce_func` in `_shrink`, currently we don't have that need.
+        # Note that we can also give an interface for how to expand the tensor, like `reduce_func` in `_shrink`,
+        # currently we don't have that need.
         result = new_target.expand(_expand_size).reshape(expand_size).clone()
 
         return result

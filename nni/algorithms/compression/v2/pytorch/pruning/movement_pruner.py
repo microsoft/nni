@@ -317,13 +317,17 @@ class MovementPruner(EvaluatorBasedPruner):
             self.evaluator.unbind_model()
             self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
             if not hasattr(self, 'data_collector'):
-                self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator, after_opt_step_tasks=[_optimizer_patch], max_epochs=self.training_epochs,
+                self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator,
+                                                                       after_opt_step_tasks=[_optimizer_patch],
+                                                                       max_epochs=self.training_epochs,
                                                                        loss_patch=_loss_patch)
             else:
                 self.data_collector.reset(after_opt_step_tasks=[_optimizer_patch])
         else:
             if not hasattr(self, 'data_collector'):
-                self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
+                self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper,
+                                                                           self.criterion, self.training_epochs,
+                                                                           opt_after_tasks=[_optimizer_patch])
             else:
                 self.data_collector.reset()
 
@@ -373,9 +377,6 @@ class MovementPruner(EvaluatorBasedPruner):
         for wrapper in self.get_modules_wrapper().values():
             wrapper.config['total_sparsity'] = 0
         result = super().compress()
-        # del weight_score
-        for wrapper in self.get_modules_wrapper().values():
-            wrapper.weight_score = None
         if self.using_evaluator:
             self.evaluator.unbind_model()
         return result

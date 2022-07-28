@@ -31,11 +31,12 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
     _evaluator: _LEGACY_EVALUATOR
     dummy_input: Any
 
-    def _init_evaluator(self, model: Module, new_api: List[str], new_init_kwargs: Dict, old_api: List[str], old_init_kwargs: Dict, args: Tuple,
-                        kwargs: Dict) -> Dict:
-        # for fake __init__ overload, parsing args and kwargs, initializing evaluator or [finetuner, evaluator, dummy_input],
-        # return the remaining arguments.
-        if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
+    def _init_evaluator(self, model: Module, new_api: List[str], new_init_kwargs: Dict, old_api: List[str],
+                        old_init_kwargs: Dict, args: Tuple, kwargs: Dict) -> Dict:
+        # for fake __init__ overload, parsing args and kwargs,
+        # initializing evaluator or [finetuner, evaluator, dummy_input], return the remaining arguments.
+        if (len(args) > 0 and isinstance(args[0], Evaluator)) or \
+                (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
             init_kwargs = self._parse_args(new_api, args, kwargs, new_init_kwargs)
             self.evaluator: LightningEvaluator | TorchEvaluator = init_kwargs.pop('evaluator')
             if not self.evaluator._initialization_complete:
@@ -47,7 +48,8 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
             self._evaluator: _LEGACY_EVALUATOR = init_kwargs.pop('evaluator')
             self.dummy_input = init_kwargs.pop('dummy_input')
             self.using_evaluator = False
-            warn_msg = f"The old API ...{','.join(old_api)} will be deprecated after NNI v3.0, please using the new one ...{','.join(new_api)}"
+            warn_msg = f'The old API ...{",".join(old_api)} will be deprecated after NNI v3.0,' + \
+                       f'please using the new one ...{",".join(new_api)}'
             _logger.warning(warn_msg)
         return init_kwargs
 
@@ -80,7 +82,8 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
         Used to generate task for each iteration.
     finetuner
         The finetuner handled all finetune logic, use a pytorch module as input.
-        It will be called at the end of each iteration if reset_weight is False, will be called at the beginning of each iteration otherwise.
+        It will be called at the end of each iteration if reset_weight is False,
+        will be called at the beginning of each iteration otherwise.
     speedup
         If set True, speedup the model at the end of each iteration to make the pruned model compact.
     dummy_input
