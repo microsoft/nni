@@ -55,8 +55,7 @@ class PrunerScoredModuleWrapper(PrunerModuleWrapper):
 
     def forward(self, *inputs):
         # apply mask to weight, bias
-        # NOTE: I don't know why training getting slower and slower if only `self.weight_mask` without `detach()`
-        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask.detach()))  # type: ignore
+        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask))  # type: ignore
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.module.bias = torch.mul(self.bias, self.bias_mask)  # type: ignore
         return self.module(*inputs)
@@ -264,9 +263,6 @@ class MovementPruner(EvaluatorBasedPruner):
         for wrapper in self.get_modules_wrapper().values():
             wrapper.config['total_sparsity'] = 0
         result = super().compress()
-        # del weight_score
-        for wrapper in self.get_modules_wrapper().values():
-            delattr(wrapper, 'weight_score')
         if self.using_evaluator:
             self.evaluator.unbind_model()
         return result

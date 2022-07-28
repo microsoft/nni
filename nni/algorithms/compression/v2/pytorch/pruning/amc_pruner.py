@@ -85,6 +85,8 @@ class AMCTaskGenerator(TaskGenerator):
         return self.generate_tasks(task_result)
 
     def generate_tasks(self, task_result: TaskResult) -> List[Task]:
+        self.temp_config_list = self.temp_config_list if hasattr(self, 'temp_config_list') else []
+
         # append experience & update agent policy
         if self.action is not None:
             action, reward, observation, done = self.env.step(self.action, task_result.compact_model)
