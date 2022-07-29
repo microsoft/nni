@@ -12,12 +12,7 @@ from .base import TrainerBasedDataCollector
 _logger = logging.getLogger(__name__)
 
 __all__ = ['TargetDataCollector', 'EvaluatorBasedTargetDataCollector', 'EvaluatorBasedHookDataCollector',
-<<<<<<< HEAD
-           'WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector',
-           'EvaluatorPredictingDataCollector']  # TODO: remove in nni v3.0.
-=======
            'WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector']  # TODO: remove in nni v3.0.
->>>>>>> ed455174db7d027cdfcd07c97c02f7021f333958
 
 
 # TODO: remove in nni v3.0.
@@ -118,22 +113,17 @@ class EvaluatorBasedHookDataCollector(EvaluatorBasedDataCollector):
     NOTE: Only support one target has one hook right now.
     """
 
-    def collect(self) -> Dict[str, Dict[str, List]]:
+    def collect(self, mode: str = 'train') -> Dict[str, Dict[str, List]]:
         assert self.compressor.bound_model is not None
-        self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
+        if mode == 'train':
+            self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
+        elif mode == 'evaluate':
+            self.evaluator.evaluate()
+        elif mode == 'predict':
+            self.evaluator.predict()
+        else:
+            raise ValueError(f'Unknown mode "{mode}" in collect() of EvaluatorBasedHookDataCollector.')
 
-        data = {}
-        for module_name, hooks in self._hooks.items():
-            data[module_name] = {}
-            for target_name, hook in hooks.items():
-                data[module_name][target_name] = hook.buffer
-        return data
-
-class EvaluatorPredictingDataCollector(EvaluatorBasedDataCollector):
-    """
-    """
-    def collect(self) -> Dict[str, Dict[str, List]]:
-        self.evaluator.predict()
         data = {}
         for module_name, hooks in self._hooks.items():
             data[module_name] = {}

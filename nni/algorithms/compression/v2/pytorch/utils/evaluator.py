@@ -624,6 +624,8 @@ class TorchEvaluator(Evaluator):
     def __init__(self, training_func: _TRAINING_FUNC = None, optimizers: Optimizer | List[Optimizer] = None, criterion: _CRITERION = None,
                  lr_schedulers: _LRScheduler | List[_LRScheduler] | None = None, dummy_input: Any | None = None,
                  evaluating_func: _EVALUATING_FUNC | None = None, predicting_func: _PREDICTING_FUNC | None = None):
+        if training_func is not None:
+            assert optimizers is not None and criterion is not None
         self.training_func = training_func
         self._ori_criterion = criterion
         self._criterion = self._ori_criterion
@@ -640,12 +642,14 @@ class TorchEvaluator(Evaluator):
         self._first_optimizer_step: Callable | None = None
         self._param_names_map: Dict[str, str] | None = None
 
-        # will del self._tmp_optimizers and self._tmp_lr_schedulers in `_init_optimizer_helpers`
-        self._tmp_optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
-        #assert all(isinstance(optimizer, Optimizer) and is_traceable(optimizer) for optimizer in self._tmp_optimizers)
-        self._tmp_lr_schedulers = lr_schedulers if isinstance(lr_schedulers, (list, tuple)) else [lr_schedulers] if lr_schedulers else []
-        #assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers)
-        self._initialization_complete = False
+        if self.training_func is not None:
+            # will del self._tmp_optimizers and self._tmp_lr_schedulers in `_init_optimizer_helpers`
+            self._tmp_optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
+            assert all(isinstance(optimizer, Optimizer) and is_traceable(optimizer) for optimizer in self._tmp_optimizers)
+            self._tmp_lr_schedulers = lr_schedulers if isinstance(lr_schedulers, (list, tuple)) \
+                                                    else [lr_schedulers] if lr_schedulers else []
+            assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers)
+            self._initialization_complete = False
 
     def _init_optimizer_helpers(self, pure_model: Module):
         assert self._initialization_complete is False, 'Evaluator initialization is already complete.'
@@ -661,42 +665,33 @@ class TorchEvaluator(Evaluator):
         delattr(self, '_tmp_lr_schedulers')
         self._initialization_complete = True
 
-    def bind_only_model(self, model: Module):
-        assert isinstance(model, Module)
-        if self.model is not None:
-            _logger.warning('Already bound a model, will unbind it before bind a new model.')
-            self.unbind_model()
-        self.model = model
-
-    def unbind_only_model(self):
-        self.remove_all_hooks()
-        self.model = None
-
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
-        err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
-        #assert self._initialization_complete is True, err_msg
         assert isinstance(model, Module)
         if self.model is not None:
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
-
         self.model = model
-        self._param_names_map = param_names_map
-        # initialize optimizers & lr_schedulers for the bound model here
-        self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
-        self._lr_schedulers = [lrs_helper.call(self._optimizers[self._lrs_opt_map[i]]) \
-                               for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
-        self._first_optimizer_step = self._optimizers[0].step
+
+        if self.training_func is not None:
+            err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
+            assert self._initialization_complete is True, err_msg
+            self._param_names_map = param_names_map
+            # initialize optimizers & lr_schedulers for the bound model here
+            self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
+            self._lr_schedulers = [lrs_helper.call(self._optimizers[self._lrs_opt_map[i]]) \
+                                   for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
+            self._first_optimizer_step = self._optimizers[0].step
 
     def unbind_model(self):
         if self.model:
-            self.revert_loss()
-            self.revert_optimizer_step()
+            if self.training_func is not None:
+                self.revert_loss()
+                self.revert_optimizer_step()
+                self._first_optimizer_step = None
+                self._lr_schedulers = None
+                self._optimizers = None
+                self._param_names_map = None
             self.remove_all_hooks()
-            self._first_optimizer_step = None
-            self._lr_schedulers = None
-            self._optimizers = None
-            self._param_names_map = None
             self.model = None
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')

@@ -16,7 +16,7 @@ from nni.compression.pytorch.quantization.literal import (
 )
 
 from ...v2.pytorch.utils import Evaluator, ForwardHook
-from ...v2.pytorch.pruning.tools import EvaluatorPredictingDataCollector
+from ...v2.pytorch.pruning.tools import EvaluatorBasedHookDataCollector
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +169,7 @@ class PtqQuantizer(Quantizer):
                                           collect_output=collect_output,
                                           device=self.device))
                     }
-        data_collector = EvaluatorPredictingDataCollector(self, self.evaluator, hooks=collector_hooks)
+        data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=collector_hooks)
         return data_collector
 
     def compress(self) -> Tuple[nn.Module, Dict]:
@@ -179,9 +179,9 @@ class PtqQuantizer(Quantizer):
         """
         assert self.bound_model is not None and self.config_list is not None
         assert self.evaluator is not None
-        self.evaluator.bind_only_model(self.bound_model)
+        self.evaluator.bind_model(self.bound_model)
         data_collector = self._prepare_data_collectors()
-        data = data_collector.collect()
+        data = data_collector.collect(mode='predict')
         print('collected data: ', data)
 
         quant_result_conf = {}
@@ -232,7 +232,7 @@ class PtqQuantizer(Quantizer):
                                                            'scale': scale, 'zero_point': zero_point}
         self.compressed = True
         # for removing hooks
-        self.evaluator.unbind_only_model()
+        self.evaluator.unbind_model()
         print('quant resulting config: ', quant_result_conf)
         return self.bound_model, quant_result_conf
 
