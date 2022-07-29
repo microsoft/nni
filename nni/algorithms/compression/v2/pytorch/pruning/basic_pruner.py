@@ -189,7 +189,7 @@ class EvaluatorBasedPruner(BasicPruner):
                 raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{key}'")
             merged_kwargs[key] = value
         for key, value in def_kwargs.items():
-            if key not in merged_kwargs:
+            if key not in merged_kwargs and key in arg_names:
                 merged_kwargs[key] = value
         diff = set(arg_names).difference(merged_kwargs.keys())
         if diff:
@@ -751,10 +751,10 @@ class ActivationPruner(EvaluatorBasedPruner):
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
             activation = self._activation_trans(output)
             if len(buffer) == 1:
-                buffer.append(torch.zeros(activation.shape[1], device=activation.device))
+                buffer.append(torch.zeros_like(activation))
             if buffer[0] < self.training_steps:
-                buffer[1] += activation.sum(0)
-                buffer[0] += activation.shape[0]
+                buffer[1] += activation
+                buffer[0] += 1
         return collect_activation
 
     def _activation_trans(self, output: Tensor) -> Tensor:

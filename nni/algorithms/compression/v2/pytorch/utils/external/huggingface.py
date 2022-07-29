@@ -135,14 +135,3 @@ class HuggingfaceT5Parser(HuggingfaceModelParser):
     FFN1 = ('DenseReluDense.wi',)
     FFN2 = ('DenseReluDense.wo')
     ATTENTION = ('SelfAttention', 'EncDecAttention')
-
-
-if __name__ == '__main__':
-    from transformers import T5Model
-    _logger.setLevel(40)
-    parser = HuggingfaceT5Parser
-    config = T5Config()
-    model = T5Model(config)
-    print(f'{parser.is_huggingface_model(model)}')
-    for module_name, module in model.named_modules():
-        print(f'{parser.is_attention(module_name)} {parser.is_ffn(module_name)} {parser.get_num_heads(module_name, model)} : {module_name}')

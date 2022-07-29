@@ -8,7 +8,7 @@ from nni.algorithms.compression.v2.pytorch.utils.scaling import Scaling
 
 
 def test_scaling():
-    data = torch.tensor([_ for _ in range(100)]).reshape(10, 10)
+    data = torch.tensor([_ for _ in range(100)], dtype=torch.float32).reshape(10, 10)
 
     scaler = Scaling([5], kernel_padding_mode='front')
     shrinked_data = scaler.shrink(data)

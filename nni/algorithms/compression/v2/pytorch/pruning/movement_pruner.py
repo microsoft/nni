@@ -199,7 +199,8 @@ class MovementPruner(EvaluatorBasedPruner):
         new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step', 'regular_scale', 'movement_mode',
                    'sparse_granularity']
         old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
-        init_kwargs = self._init_evaluator(model, new_api, old_api, {}, args, kwargs)
+        init_kwargs = {'regular_scale': None, 'movement_mode': 'hard', 'sparse_granularity': 'finegrained'}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
 
         self.training_epochs: int = init_kwargs['training_epochs']
         self.warm_up_step: int = init_kwargs['warm_up_step']

@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from functools import reduce
-import itertools
 from typing import Any, Dict
 
 import numpy as np
@@ -102,7 +101,8 @@ class BankSparsityAllocator(SparsityAllocator):
 
                 kept_num = balance_numel - int(sparsity_rate * balance_numel)
                 kept_indices = torch.topk(balance_metric, kept_num).indices
-                shrinked_mask = torch.zeros_like(balance_metric).scatter(-1, kept_indices, 1.0).reshape(reshape_size_split_p).permute(permute_dims_split).reshape_as(target_metric)
+                shrinked_mask = torch.zeros_like(balance_metric).scatter(-1, kept_indices, 1.0).reshape(reshape_size_split_p)
+                shrinked_mask = shrinked_mask.permute(permute_dims_split).reshape_as(target_metric)
                 masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
         return masks
 

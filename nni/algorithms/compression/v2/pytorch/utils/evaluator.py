@@ -14,8 +14,13 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.hooks import RemovableHandle
 
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import Callback
+try:
+    import pytorch_lightning as pl
+    from pytorch_lightning.callbacks import Callback
+except ImportError:
+    LightingInstalled = False
+else:
+    LightingInstalled = True
 
 from nni.common import is_traceable
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
@@ -290,6 +295,7 @@ class LightningEvaluator(Evaluator):
 
     def __init__(self, trainer: pl.Trainer, data_module: pl.LightningDataModule,
                  dummy_input: Any | None = None):
+        assert LightingInstalled, 'pytorch_lightning is not installed.'
         err_msg_p = 'Only support traced {}, please use nni.trace({}) to initialize the trainer.'
         err_msg = err_msg_p.format('pytorch_lightning.Trainer', 'pytorch_lightning.Trainer')
         assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), err_msg
