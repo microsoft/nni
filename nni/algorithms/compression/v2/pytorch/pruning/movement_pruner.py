@@ -242,17 +242,19 @@ class MovementPruner(EvaluatorBasedPruner):
             scalers = {}
             for module_name, wrapper in self.get_modules_wrapper().items():
                 if self._model_parser.is_attention(module_name):
-                    is_output_dense = not self._model_parser.is_attention(module_name, include_output=False)
                     num_heads = self._model_parser.get_num_heads(module_name, self.bound_model)
                     if num_heads <= 0:
                         scalers[module_name] = {'_default': Scaling([1])}
                     else:
-                        if wrapper.module.weight.shape[0] % num_heads != 0 or wrapper.module.weight.shape[1] % num_heads != 0:  # type: ignore
+                        # assume attention layer weights are 2D
+                        weight_h: int = wrapper.module.weight.shape[0]  # type: ignore
+                        weight_w: int = wrapper.module.weight.shape[1]  # type: ignore
+                        if weight_h % num_heads != 0 or weight_w % num_heads != 0:
                             scalers[module_name] = {'_default': Scaling([1])}
                         else:
-                            total_head_size = wrapper.module.weight.shape[0] if not is_output_dense else wrapper.module.weight.shape[1]  # type: ignore
-                            block_w: int = total_head_size // num_heads
-                            scalers[module_name] = {'_default': Scaling([block_w, block_w])}
+                            block_h = weight_h // num_heads
+                            block_w = weight_w // num_heads
+                            scalers[module_name] = {'_default': Scaling([block_h, block_w])}
                 elif self._model_parser.is_ffn(module_name, ffn_num=1):
                     scalers[module_name] = {'_default': Scaling([1, wrapper.module.weight.shape[1]])}  # type: ignore
                 elif self._model_parser.is_ffn(module_name, ffn_num=2):
@@ -349,25 +351,22 @@ class MovementPruner(EvaluatorBasedPruner):
         # TODO: merge with _create_scalers after nni v3.0
         if self.sparse_granularity and self.sparse_granularity == 'auto' and self._model_parser:
             if self._model_parser.is_attention(layer.name):
-                is_output_dense = not self._model_parser.is_attention(layer.name, include_output=False)
                 num_heads = self._model_parser.get_num_heads(layer.name, self.bound_model)
                 if num_heads <= 0:
-                    score_size = layer.module.weight.shape  # type: ignore
+                    score_size = None
                 else:
                     if layer.module.weight.shape[0] % num_heads != 0 or layer.module.weight.shape[1] % num_heads != 0:  # type: ignore
-                        score_size = layer.module.weight.shape
+                        score_size = None
                     else:
-                        total_head_size = layer.module.weight.shape[0] if not is_output_dense else layer.module.weight.shape[1]  # type: ignore
-                        block_w = total_head_size // num_heads
-                        score_size = [block_w, block_w]
+                        score_size = [num_heads, num_heads]
             elif self._model_parser.is_ffn(layer.name, ffn_num=1):
-                score_size = (layer.module.weight.shape[0], 1)  # type: ignore
+                score_size = [layer.module.weight.shape[0], 1]  # type: ignore
             elif self._model_parser.is_ffn(layer.name, ffn_num=2):
-                score_size = (1, layer.module.weight.shape[1])  # type: ignore
+                score_size = [1, layer.module.weight.shape[1]]  # type: ignore
             else:
-                score_size = layer.module.weight.shape  # type: ignore
+                score_size = None
         else:
-            score_size = layer.module.weight.shape  # type: ignore
+            score_size = None
         wrapper = PrunerScoredModuleWrapper(layer.module, layer.name, config, score_size)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight

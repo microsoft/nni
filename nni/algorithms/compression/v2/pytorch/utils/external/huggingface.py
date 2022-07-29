@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Set, Tuple
+from typing import Tuple
 
 from torch.nn import Module
 
@@ -53,11 +53,11 @@ def parser_factory(model: Module) -> HuggingfaceModelParser | None:
 
 class HuggingfaceModelParser:
     TRANSFORMER_PREFIX: str
-    QKV: Tuple[str]
-    QKVO: Tuple[str]
-    FFN1: Tuple[str]
-    FFN2: Tuple[str]
-    ATTENTION: Tuple[str]
+    QKV: Tuple[str, ...]
+    QKVO: Tuple[str, ...]
+    FFN1: Tuple[str, ...]
+    FFN2: Tuple[str, ...]
+    ATTENTION: Tuple[str, ...]
 
     @classmethod
     def is_huggingface_model(cls, model: Module):
@@ -104,8 +104,7 @@ class HuggingfaceModelParser:
                         _logger.warning(warn_msg)
                         num_heads = 0
                     return num_heads
-                else:
-                    return 0
+            return 0
         else:
             warn_msg = f'The layer `{module_name}` might not an (Q|K|V) attention layer.'
             _logger.warning(warn_msg)
@@ -135,5 +134,5 @@ class HuggingfaceT5Parser(HuggingfaceModelParser):
     QKV = ('SelfAttention.q', 'SelfAttention.k', 'SelfAttention.v', 'EncDecAttention.q', 'EncDecAttention.k', 'EncDecAttention.v')
     QKVO = QKV + ('SelfAttention.o', 'EncDecAttention.o')
     FFN1 = ('DenseReluDense.wi',)
-    FFN2 = ('DenseReluDense.wo')
+    FFN2 = ('DenseReluDense.wo',)
     ATTENTION = ('SelfAttention', 'EncDecAttention')
