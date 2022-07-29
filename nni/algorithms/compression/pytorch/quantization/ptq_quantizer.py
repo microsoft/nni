@@ -25,13 +25,14 @@ __all__ = ['PtqQuantizer']
 def max_min_collector(buffer: list,
                       collect_input: bool,
                       collect_output: bool,
+                      device: str = None,
                       mode: str = None) -> Callable[[nn.Module, torch.Tensor, torch.Tensor], None]:
     assert len(buffer) == 0, 'Buffer pass to activation pruner collector is not empty.'
     # the length of the buffer here is always 4.
     # buffer[0] buffer[2] records the min value of input and output
     # buffer[1] buffer[3] records the max value of input and output
-    buffer.extend([torch.tensor(float('inf')), torch.tensor(float('-inf')),
-                   torch.tensor(float('inf')), torch.tensor(float('-inf'))])
+    buffer.extend([torch.tensor(float('inf'), device=device), torch.tensor(float('-inf'), device=device),
+                   torch.tensor(float('inf'), device=device), torch.tensor(float('-inf'), device=device)])
 
     def collect_maxmin(_module: nn.Module,
                        _input: Tuple[Any],
@@ -70,18 +71,19 @@ def calculate_qparams(vmin: torch.Tensor, vmax: torch.Tensor,
     device = vmin_neg.device
     scale = torch.ones(vmin_neg.size(), dtype=torch.float32, device=device)
     zero_point = torch.zeros(vmin_neg.size(), dtype=torch.int64, device=device)
+    eps = torch.tensor([torch.finfo(torch.float32).eps], device=device)
     if qscheme in [QuantScheme.PER_TENSOR_SYMMETRIC, QuantScheme.PER_CHANNEL_SYMMETRIC]:
         # symmetric
         vmax_pos = torch.max(-vmin_neg, vmax_pos)
         scale = vmax_pos / (float(qmax - qmin) / 2)
-        scale = torch.max(scale, torch.tensor([torch.finfo(torch.float32).eps]))
+        scale = torch.max(scale, eps)
         if qdtype == QuantDtype.UINT:
             # symmetric and uint
             zero_point = zero_point.new_full(zero_point.size(), qmax // 2)
     else:
         # affine
         scale = (vmax_pos - vmin_neg) / float(qmax - qmin)
-        scale = torch.max(scale, torch.tensor([torch.finfo(torch.float32).eps]))
+        scale = torch.max(scale, eps)
         zero_point = qmin - torch.round(vmin_neg / scale).to(torch.int)
         zero_point = torch.clamp(zero_point, qmin, qmax)
     return scale, zero_point
@@ -164,7 +166,8 @@ class PtqQuantizer(Quantizer):
                     'input_output': ForwardHook(module, name,
                         functools.partial(max_min_collector,
                                           collect_input=collect_input,
-                                          collect_output=collect_output))
+                                          collect_output=collect_output,
+                                          device=self.device))
                     }
         data_collector = EvaluatorPredictingDataCollector(self, self.evaluator, hooks=collector_hooks)
         return data_collector
