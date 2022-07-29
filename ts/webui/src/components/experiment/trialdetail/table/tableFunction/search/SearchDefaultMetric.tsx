@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
-import PropTypes from 'prop-types';
 import { Stack, PrimaryButton, Dropdown, IDropdownOption } from '@fluentui/react';
 import { EXPERIMENT } from '@static/datamodel';
 import { getSearchInputValueBySearchList } from './searchFunction';
 import { gap10 } from '@components/fluent/ChildrenGap';
 import { AppContext } from '@/App';
+import { SearchItems } from '@static/interface';
 
 // This file is for filtering trial default metric column including intermediate results
 // you could click `filter` button -> `Default metric` use it
@@ -14,13 +14,22 @@ import { AppContext } from '@/App';
 // Default metric:[0.1,0.2];  //  0.1 < trial metric < 0.2
 // Default metric:0.1009; // trial metric = 0.1009, because shown metric is dealed with,so it's no use in most time
 
-function SearchDefaultMetric(props): any {
+interface SearchDefaultMetricProps {
+    parameter: string;
+    searchFilter: SearchItems[];
+    dismiss: () => void;
+    setSearchInputVal: (a: string) => void;
+    changeSearchFilterList: (a: SearchItems[]) => void;
+    updatePage: () => void;
+}
+
+function SearchDefaultMetric(props: SearchDefaultMetricProps): any {
     const { parameter, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal } = props;
     const { updateDetailPage } = useContext(AppContext);
     const operatorList = ['between', '>', '<', '='];
 
     const initValueList = getInitVal();
-    const [operatorVal, setOperatorVal] = useState(initValueList[0]);
+    const [operatorVal, setOperatorVal] = useState(initValueList[0] as string);
     const [firstInputVal, setFirstInputVal] = useState(initValueList[1] as string);
     const [secondInputVal, setSecondInputVal] = useState(initValueList[2] as string);
 
@@ -61,7 +70,7 @@ function SearchDefaultMetric(props): any {
         if (secondInputVal === '' && operatorVal === 'between') {
             // if user uses 'between' operator and doesn't write the second input value,
             // help to set second value as this parameter max value
-            return EXPERIMENT.searchSpace[parameter]._value[1].toString();
+            return String(EXPERIMENT.searchSpace[parameter]._value[1]);
         }
 
         return secondInputVal as string;
@@ -140,14 +149,5 @@ function SearchDefaultMetric(props): any {
         </Stack>
     );
 }
-
-SearchDefaultMetric.propTypes = {
-    parameter: PropTypes.string,
-    searchFilter: PropTypes.array,
-    dismiss: PropTypes.func,
-    setSearchInputVal: PropTypes.func,
-    changeSearchFilterList: PropTypes.func,
-    updatePage: PropTypes.func
-};
 
 export default SearchDefaultMetric;

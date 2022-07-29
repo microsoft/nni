@@ -1,8 +1,11 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import TrialLog from './TrialLog';
 
-const PaitrialLog = (props): any => {
+interface PaitrialLogProps {
+    logStr: string;
+}
+
+const PaitrialLog = (props: PaitrialLogProps): any => {
     const { logStr } = props;
     const isHasNFSLog = logStr.indexOf(',') !== -1 ? true : false;
     return (
@@ -17,10 +20,6 @@ const PaitrialLog = (props): any => {
             )}
         </div>
     );
-};
-
-PaitrialLog.propTypes = {
-    logStr: PropTypes.string
 };
 
 export default PaitrialLog;

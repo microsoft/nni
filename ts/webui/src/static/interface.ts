@@ -204,13 +204,20 @@ interface AllExperimentList {
     prefixUrl: string;
 }
 
-interface Tensorboard {
+interface KillJobIsError {
+    isError: boolean;
+    message: string;
+}
+
+type TensorboardTaskStatus = 'RUNNING' | 'DOWNLOADING_DATA' | 'STOPPING' | 'STOPPED' | 'ERROR' | 'FAIL_DOWNLOAD_DATA';
+
+interface TensorboardTaskInfo {
     id: string;
-    status: string;
+    status: TensorboardTaskStatus;
     trialJobIdList: string[];
     trialLogDirectoryList: string[];
-    pid: number;
-    port: string;
+    pid?: number;
+    port?: string;
 }
 
 // for TableList search
@@ -247,6 +254,7 @@ export {
     MultipleAxes,
     SortInfo,
     AllExperimentList,
-    Tensorboard,
-    SearchItems
+    TensorboardTaskInfo,
+    SearchItems,
+    KillJobIsError
 };

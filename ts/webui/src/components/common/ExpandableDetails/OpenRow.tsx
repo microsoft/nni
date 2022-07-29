@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui/react';
 import * as copy from 'copy-to-clipboard';
 import JSONTree from 'react-json-tree';
@@ -18,7 +17,11 @@ import '@style/experiment/overview/overview.scss';
  *  Remember to update it if the value is changed or this file is moved.
  **/
 
-const OpenRow = (props): any => {
+interface OpenRowProps {
+    trialId: string;
+}
+
+const OpenRow = (props: OpenRowProps): any => {
     const [typeInfo, setTypeInfo] = useState('');
     const [info, setInfo] = useState('');
     const [isHidenInfo, setHideninfo] = useState(true);
@@ -159,10 +162,6 @@ const OpenRow = (props): any => {
             </Stack>
         </Stack>
     );
-};
-
-OpenRow.propTypes = {
-    trialId: PropTypes.string
 };
 
 export default OpenRow;

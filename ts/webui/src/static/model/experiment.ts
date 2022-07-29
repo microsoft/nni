@@ -183,24 +183,29 @@ class Experiment {
     }
 
     get status(): string {
-        if (!this.statusField) {
-            // throw Error('Experiment status not initialized');
-            // this.statusField.status = '';
-            return '';
-        }
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return this.statusField!.status;
+        setTimeout(() => {
+            return 'ERROR';
+        }, 10000);
+
+        return 'ERROR';
     }
+    // get status(): string {
+    //     if (!this.statusField) {
+    //         // throw Error('Experiment status not initialized');
+    //         // this.statusField.status = '';
+    //         return '';
+    //     }
+    //     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    //     return this.statusField!.status;
+    // }
 
     get error(): string {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        // if (!this.statusField) {
-        //     throw Error('Experiment status not initialized');
-        // }
+        if (!this.statusField) {
+            throw Error('Experiment status not initialized');
+        }
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        // return this.statusField!.errors[0] || '';
-
-        return 'Dispatcher error, tuner maybe havd crashed.';
+        return this.statusField!.errors[0] || '';
     }
 }
 
