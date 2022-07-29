@@ -7,6 +7,7 @@ import os
 import pathlib
 import sys
 import traceback
+import time
 from argparse import ArgumentParser
 # ref: https://help.aliyun.com/document_detail/203290.html?spm=a2c4g.11186623.6.727.6f9b5db6bzJh4x
 from alibabacloud_pai_dlc20201203.client import Client
@@ -83,18 +84,42 @@ if __name__ == "__main__":
 
         response = client.create_job(req)
         job_id = response.body.job_id
-        print('job id: ' + job_id)
+        print('job_id:' + job_id)
 
         while True:
             line = sys.stdin.readline().rstrip()
             if line == 'update_status':
-                print('status:' + client.get_job(job_id).body.status)
+                # when the dlc sudden failure，such as 503,
+                # we will not get the status
+                # We'll keep getting the state until we get it
+                while True:
+                    try:
+                        # to avoid user flow control
+                        time.sleep(60)
+                        status = client.get_job(job_id).body.status
+                        logging.info('job_id %s, client.get_job(job_id).body.status %s',job_id, status)
+                        print('status:' + status)
+                        break
+                    except Exception as e:
+                        logging.exception('dlc get status error: \n')
+
+                logging.info("exit job_id %s update status",job_id)
             elif line == 'tracking_url':
                 #TODO: 1. get this url by api? 2. change this url in private dlc mode.
                 print('tracking_url:' + f'https://pai-dlc.console.aliyun.com/#/jobs/detail?jobId={job_id}&regionId={args.region}')
             elif line == 'stop':
-                client.stop_job(job_id)
-                exit(0)
+                # when the dlc 503,we will not stop the job
+                # We'll keep stopping the job until we stop it
+                while True:
+                    try:
+                        # to avoid user flow control
+                        time.sleep(60)
+                        client.stop_job(job_id)
+                        exit(0)
+                    except Exception as e:
+                        logging.exception('dlc stop error: \n')
+
+                        
     except Exception as e:
-        logging.error('DLC submit Exception: \n')
-        logging.error(e, exc_info=1)
+        logging.exception('DLC submit Exception: \n')
+

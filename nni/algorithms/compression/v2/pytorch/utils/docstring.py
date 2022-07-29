@@ -2,7 +2,8 @@
 # Licensed under the MIT license.
 
 
-_EVALUATOR_DOCSTRING = r"""NNI will use the evaluator to intervene in the model training process, so as to perform training-aware model compression.
+_EVALUATOR_DOCSTRING = r"""NNI will use the evaluator to intervene in the model training process,
+        so as to perform training-aware model compression.
         All training-aware model compression will use the evaluator as the entry for intervention training in the future.
         Usually you just need to wrap some classes with ``nni.trace`` or package the training process as a function to initialize the evaluator.
         Please refer ... for a full tutorial on how to initialize a ``evaluator``.
