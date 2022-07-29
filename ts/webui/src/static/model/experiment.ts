@@ -183,21 +183,14 @@ class Experiment {
     }
 
     get status(): string {
-        setTimeout(() => {
-            return 'ERROR';
-        }, 10000);
-
-        return 'ERROR';
+        if (!this.statusField) {
+            // throw Error('Experiment status not initialized');
+            // this.statusField.status = '';
+            return '';
+        }
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return this.statusField!.status;
     }
-    // get status(): string {
-    //     if (!this.statusField) {
-    //         // throw Error('Experiment status not initialized');
-    //         // this.statusField.status = '';
-    //         return '';
-    //     }
-    //     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    //     return this.statusField!.status;
-    // }
 
     get error(): string {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
