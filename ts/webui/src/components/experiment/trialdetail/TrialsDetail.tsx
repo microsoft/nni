@@ -80,7 +80,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 </PivotItem>
                                 {/* <PivotItem tab={this.titleOfDuration} key="3"> */}
                                 <PivotItem headerText='Duration' itemIcon='BarChartHorizontal' key='Duration'>
-                                    <Duration source={TRIALS.unWaittingTrials()} />
+                                    <Duration source={TRIALS.notWaittingTrials()} />
                                 </PivotItem>
                                 {/* <PivotItem tab={this.titleOfIntermediate} key="4"> */}
                                 <PivotItem

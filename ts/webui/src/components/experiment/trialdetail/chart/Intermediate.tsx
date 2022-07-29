@@ -69,8 +69,9 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                     confine: true,
                     formatter: function (data: TooltipForIntermediate): React.ReactNode {
                         const trialId = data.seriesName;
-                        let parameter = {}; // 这两个参数先行赋值因为有时候找不到对应的数据导致页面崩溃
-                        let trialNo = 0; // 同上
+                        // parameter and trialNo need to have the init value otherwise maybe cause page broke down
+                        let parameter = {};
+                        let trialNo = 0;
                         const renderTrial = source.find(key => key.name === trialId);
                         if (renderTrial !== undefined) {
                             parameter = renderTrial.parameter;

@@ -87,7 +87,7 @@ class TrialManager {
         return this.filter(trial => trial.status === 'SUCCEEDED');
     }
 
-    public unWaittingTrials(): Trial[] {
+    public notWaittingTrials(): Trial[] {
         return this.filter(trial => trial.status !== 'WAITING');
     }
 
