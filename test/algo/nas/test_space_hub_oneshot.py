@@ -266,16 +266,15 @@ def test_proxyless_bp():
     x.requires_grad_()
     # print(torch.autograd.grad(x, x))
 
-    y = FFF.apply(x).sum()
-    y.backward()
+    # y = FFF.apply(x).sum()
+    # y.backward()
 
-    # for _ in range(10):
-    #     x = torch.randn(1, 3, 9, 9)
-    #     x.requires_grad_()
-    #     op.resample({})
-    #     y = op(x).sum()
-    #     y.backward()
-    #     op.finalize_grad()
+    for _ in range(10):
+        x = torch.randn(1, 3, 9, 9)
+        x.requires_grad_()
+        op.resample({})
+        y = op(x).sum()
+        y.backward()
 
 
 _original_loglevel = None
