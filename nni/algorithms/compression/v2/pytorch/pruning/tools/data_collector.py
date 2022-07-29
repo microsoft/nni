@@ -12,8 +12,12 @@ from .base import TrainerBasedDataCollector
 _logger = logging.getLogger(__name__)
 
 __all__ = ['TargetDataCollector', 'EvaluatorBasedTargetDataCollector', 'EvaluatorBasedHookDataCollector',
+<<<<<<< HEAD
            'WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector',
            'EvaluatorPredictingDataCollector']  # TODO: remove in nni v3.0.
+=======
+           'WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector']  # TODO: remove in nni v3.0.
+>>>>>>> ed455174db7d027cdfcd07c97c02f7021f333958
 
 
 # TODO: remove in nni v3.0.
