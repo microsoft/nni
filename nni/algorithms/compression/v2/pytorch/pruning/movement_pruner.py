@@ -236,7 +236,8 @@ class MovementPruner(EvaluatorBasedPruner):
         else:
             return 1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3
 
-    def _create_scalers(self) -> Scaling | Dict[str, Scaling]:
+    def _create_scalers(self) -> Scaling | Dict[str, Dict[str, Scaling]]:
+        assert self.bound_model is not None
         if self.sparse_granularity and self.sparse_granularity == 'auto' and self._model_parser:
             scalers = {}
             for module_name, wrapper in self.get_modules_wrapper().items():
@@ -246,11 +247,11 @@ class MovementPruner(EvaluatorBasedPruner):
                     if num_heads <= 0:
                         scalers[module_name] = {'_default': Scaling([1])}
                     else:
-                        if wrapper.module.weight.shape[0] % num_heads != 0 or wrapper.module.weight.shape[1] % num_heads != 0:
+                        if wrapper.module.weight.shape[0] % num_heads != 0 or wrapper.module.weight.shape[1] % num_heads != 0:  # type: ignore
                             scalers[module_name] = {'_default': Scaling([1])}
                         else:
-                            total_head_size = wrapper.module.weight.shape[0] if not is_output_dense else wrapper.module.weight.shape[1]
-                            block_w = total_head_size // num_heads
+                            total_head_size = wrapper.module.weight.shape[0] if not is_output_dense else wrapper.module.weight.shape[1]  # type: ignore
+                            block_w: int = total_head_size // num_heads
                             scalers[module_name] = {'_default': Scaling([block_w, block_w])}
                 elif self._model_parser.is_ffn(module_name, ffn_num=1):
                     scalers[module_name] = {'_default': Scaling([1, wrapper.module.weight.shape[1]])}  # type: ignore
@@ -344,28 +345,29 @@ class MovementPruner(EvaluatorBasedPruner):
             The configuration for generating the mask.
         """
         _logger.debug("Module detected to compress : %s.", layer.name)
+        assert self.bound_model is not None
         # TODO: merge with _create_scalers after nni v3.0
         if self.sparse_granularity and self.sparse_granularity == 'auto' and self._model_parser:
             if self._model_parser.is_attention(layer.name):
                 is_output_dense = not self._model_parser.is_attention(layer.name, include_output=False)
                 num_heads = self._model_parser.get_num_heads(layer.name, self.bound_model)
                 if num_heads <= 0:
-                    score_size = layer.module.weight.shape
+                    score_size = layer.module.weight.shape  # type: ignore
                 else:
-                    if layer.module.weight.shape[0] % num_heads != 0 or layer.module.weight.shape[1] % num_heads != 0:
+                    if layer.module.weight.shape[0] % num_heads != 0 or layer.module.weight.shape[1] % num_heads != 0:  # type: ignore
                         score_size = layer.module.weight.shape
                     else:
-                        total_head_size = layer.module.weight.shape[0] if not is_output_dense else layer.module.weight.shape[1]
+                        total_head_size = layer.module.weight.shape[0] if not is_output_dense else layer.module.weight.shape[1]  # type: ignore
                         block_w = total_head_size // num_heads
                         score_size = [block_w, block_w]
             elif self._model_parser.is_ffn(layer.name, ffn_num=1):
-                score_size = (layer.module.weight.shape[0], 1)
+                score_size = (layer.module.weight.shape[0], 1)  # type: ignore
             elif self._model_parser.is_ffn(layer.name, ffn_num=2):
-                score_size = (1, layer.module.weight.shape[1])
+                score_size = (1, layer.module.weight.shape[1])  # type: ignore
             else:
-                score_size = layer.module.weight.shape
+                score_size = layer.module.weight.shape  # type: ignore
         else:
-            score_size = layer.module.weight.shape
+            score_size = layer.module.weight.shape  # type: ignore
         wrapper = PrunerScoredModuleWrapper(layer.module, layer.name, config, score_size)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight
