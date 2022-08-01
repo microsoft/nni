@@ -1,11 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""Wrappers of HPO tuners as NAS strategy."""
+
 import logging
 import time
 from typing import Optional
 
-from .. import Sampler, submit_models, query_available_resources, is_stopped_exec, budget_exhausted
+from nni.nas import Sampler, submit_models, query_available_resources, is_stopped_exec, budget_exhausted
 from .base import BaseStrategy
 
 _logger = logging.getLogger(__name__)

@@ -21,11 +21,15 @@ try:
 except ImportError:
     cgo_import_failed = True
 
-from nni.retiarii.graph import Evaluator
+from nni.nas.evaluator import Evaluator
 from nni.typehint import Literal
 
 
-__all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression']
+__all__ = [
+    'LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression',
+    '_AccuracyWithLogits', '_SupervisedLearningModule', '_ClassificationModule', '_RegressionModule',
+    # FIXME: hack to make it importable for tests
+]
 
 
 class LightningModule(pl.LightningModule):
@@ -113,7 +117,7 @@ class Lightning(Evaluator):
         else:
             # this is not isinstance(trainer, Trainer) because with a different trace call, it can be different
             assert (isinstance(trainer, pl.Trainer) and is_traceable(trainer)) or isinstance(trainer, cgo_trainer.Trainer), \
-                f'Trainer must be imported from {__name__} or nni.retiarii.evaluator.pytorch.cgo.trainer'
+                f'Trainer must be imported from {__name__} or nni.nas.evaluator.pytorch.cgo.trainer'
         if not _check_dataloader(train_dataloaders):
             warnings.warn(f'Please try to wrap PyTorch DataLoader with nni.trace or '
                           f'import DataLoader from {__name__}: {train_dataloaders}',

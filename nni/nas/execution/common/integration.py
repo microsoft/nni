@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+__all__ = ['RetiariiAdvisor']
+
 import logging
 import os
 from typing import Any, Callable, Optional, Dict, List, Tuple

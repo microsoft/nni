@@ -6,9 +6,10 @@ import os
 import random
 import string
 
-from .. import Sampler, codegen, utils
-from ..execution.base import BaseGraphData
-from ..execution.utils import get_mutation_summary
+from nni.nas import Sampler, utils
+from nni.nas.execution.pytorch import codegen
+from nni.nas.execution.pytorch.graph import BaseGraphData
+from nni.nas.execution.common import get_mutation_summary
 from .base import BaseStrategy
 
 _logger = logging.getLogger(__name__)

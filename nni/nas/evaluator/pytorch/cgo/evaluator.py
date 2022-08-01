@@ -15,6 +15,12 @@ import nni
 from ..lightning import LightningModule, _AccuracyWithLogits, Lightning
 from .trainer import Trainer
 
+__all__ = [
+    '_MultiModelSupervisedLearningModule', 'MultiModelSupervisedLearningModule',
+    '_ClassificationModule', 'Classification',
+    '_RegressionModule', 'Regression',
+]
+
 
 @nni.trace
 class _MultiModelSupervisedLearningModule(LightningModule):

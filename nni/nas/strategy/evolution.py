@@ -7,8 +7,8 @@ import logging
 import random
 import time
 
-from ..execution import query_available_resources, submit_models
-from ..graph import ModelStatus
+from nni.nas.execution import query_available_resources, submit_models
+from nni.nas.execution.common import ModelStatus
 from .base import BaseStrategy
 from .utils import dry_run_for_search_space, get_targeted_model, filter_model
 

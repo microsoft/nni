@@ -3,9 +3,9 @@
 
 from __future__ import annotations
 
-import tensorflow as tf
+from tensorflow.keras import Layer
 
 
-class LayerChoice(tf.keras.Layer):
+class LayerChoice(Layer):
     # FIXME: This is only a draft to test multi-framework support, it's not unimplemented at all.
     pass

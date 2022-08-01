@@ -5,8 +5,7 @@ from typing import Optional
 
 from typing_extensions import TypeGuard
 
-from ..operation import Cell
-from ..graph import Model, Graph, Node, Edge
+from nni.nas.execution.common import Cell, Model, Graph, Node, Edge
 
 
 def build_full_name(prefix, name, seq=None):

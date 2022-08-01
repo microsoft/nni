@@ -4,8 +4,8 @@
 from typing import cast
 
 import torch
-import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import model_wrapper
+import nni.nas.nn.pytorch as nn
+from nni.nas import model_wrapper
 
 from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight

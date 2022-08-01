@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from nni.retiarii.nn.pytorch import ValueChoice
+from nni.nas.nn.pytorch import ValueChoice
 
 
 class DifferentiableSuperConv2d(nn.Conv2d):

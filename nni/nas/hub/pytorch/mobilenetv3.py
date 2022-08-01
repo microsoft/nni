@@ -5,8 +5,8 @@ from functools import partial
 from typing import Tuple, Optional, Callable, Union, List, Type, cast
 
 import torch
-import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import model_wrapper
+import nni.nas.nn.pytorch as nn
+from nni.nas import model_wrapper
 from nni.typehint import Literal
 
 from .proxylessnas import ConvBNReLU, InvertedResidual, DepthwiseSeparableConv, make_divisible, reset_parameters

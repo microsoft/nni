@@ -14,9 +14,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from nni.common.hpo_utils import ParameterSpec
-from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, ChoiceOf, Repeat
-from nni.retiarii.nn.pytorch.api import ValueChoiceX
-from nni.retiarii.nn.pytorch.cell import preprocess_cell_inputs
+from nni.nas.nn.pytorch import LayerChoice, InputChoice, ChoiceOf, Repeat
+from nni.nas.nn.pytorch.choice import ValueChoiceX
+from nni.nas.nn.pytorch.cell import preprocess_cell_inputs
 
 from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingPolicy
@@ -28,7 +28,7 @@ _logger = logging.getLogger(__name__)
 __all__ = [
     'DifferentiableMixedLayer', 'DifferentiableMixedInput',
     'DifferentiableMixedRepeat', 'DifferentiableMixedCell',
-    'MixedOpDifferentiablePolicy',
+    'MixedOpDifferentiablePolicy', 'GumbelSoftmax',
 ]
 
 

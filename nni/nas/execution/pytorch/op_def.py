@@ -8,7 +8,7 @@ from typing import (Any, Dict, List)
 import torch
 import torch.nn.functional as nn_functional
 
-from ..operation import PyTorchOperation
+from nni.nas.execution.common import PyTorchOperation
 
 
 mem_format = [

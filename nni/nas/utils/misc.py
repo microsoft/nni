@@ -11,7 +11,11 @@ from pathlib import Path
 
 from nni.common.hpo_utils import ParameterSpec
 
-__all__ = ['NoContextError', 'ContextStack', 'ModelNamespace', 'original_state_dict_hooks']
+__all__ = [
+    'NoContextError', 'ContextStack', 'ModelNamespace', 'original_state_dict_hooks',
+    'uid', 'import_', 'reset_uid', 'get_module_name', 'get_importable_name', 'get_current_context',
+    'STATE_DICT_PY_MAPPING', 'STATE_DICT_PY_MAPPING_PARTIAL',
+]
 
 
 def import_(target: str, allow_none: bool = False) -> Any:

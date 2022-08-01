@@ -5,11 +5,9 @@ import re
 
 import torch
 
-from ..graph import Graph, Model, Node
-from ..nn.pytorch import InputChoice, Placeholder, LayerChoice
-from ..operation import Cell, Operation
-from ..serializer import get_init_parameters_or_fail
-from ..utils import get_importable_name
+from nni.nas.execution.common import Graph, Model, Node, Cell, Operation
+from nni.nas.nn.pytorch import InputChoice, Placeholder, LayerChoice
+from nni.nas.utils import get_init_parameters_or_fail, get_importable_name
 from .op_types import MODULE_EXCEPT_LIST, OpTypeName
 from .utils import (
     _convert_name, build_full_name, _without_shape_info,
