@@ -374,7 +374,8 @@ print('Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_s
 
 num_calibration_batches = 32
 num_eval_batches = 100
-device = torch.device('cuda')
+#device = torch.device('cuda')
+device = torch.device('cpu')
 
 myModel = load_model(saved_model_dir + float_model_file).to('cpu')
 myModel.eval()
