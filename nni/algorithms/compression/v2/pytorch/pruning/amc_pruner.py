@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from copy import deepcopy
 from pathlib import Path
-from typing import Dict, List, Callable, Optional, cast
+from typing import Dict, List, Callable, Optional, cast, overload
 
 import json_tricks
 import torch
@@ -11,12 +13,13 @@ from torch import Tensor
 from torch.nn import Module
 
 from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
-from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity, config_list_canonical
 from nni.compression.pytorch.utils import count_flops_params
 
 from .iterative_pruner import IterativePruner, PRUNER_DICT
 from .tools import TaskGenerator
 from .tools.rl_env import DDPG, AMCEnv
+from ..utils import LightningEvaluator, TorchEvaluator, compute_sparsity, config_list_canonical
+from ..utils.docstring import _EVALUATOR_DOCSTRING
 
 
 class AMCTaskGenerator(TaskGenerator):
@@ -41,8 +44,8 @@ class AMCTaskGenerator(TaskGenerator):
     ddpg_params
         The ddpg agent parameters.
     target : str
-        'flops' or 'params'. Note that the sparsity in other pruners always means the parameters sparse, but in AMC, you can choose flops sparse.
-        This parameter is used to explain what the sparsity setting in config_list refers to.
+        'flops' or 'params'. Note that the sparsity in other pruners always means the parameters sparse,
+        but in AMC, you can choose flops sparse. This parameter is used to explain what the sparsity setting in config_list refers to.
     """
 
     def __init__(self, total_episode: int, dummy_input: Tensor, origin_model: Module, origin_config_list: List[Dict],
@@ -56,7 +59,7 @@ class AMCTaskGenerator(TaskGenerator):
         self.config_list_copy = deepcopy(origin_config_list)
 
         super().__init__(origin_model=origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
-                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result, best_result_mode='maximize')
 
     def init_pending_tasks(self) -> List[Task]:
         origin_model = torch.load(self._origin_model_path)
@@ -82,6 +85,8 @@ class AMCTaskGenerator(TaskGenerator):
         return self.generate_tasks(task_result)
 
     def generate_tasks(self, task_result: TaskResult) -> List[Task]:
+        self.temp_config_list = self.temp_config_list if hasattr(self, 'temp_config_list') else []
+
         # append experience & update agent policy
         if self.action is not None:
             action, reward, observation, done = self.env.step(self.action, task_result.compact_model)
@@ -106,7 +111,8 @@ class AMCTaskGenerator(TaskGenerator):
             origin_model = torch.load(self._origin_model_path)
             compact_model = task_result.compact_model
             compact_model_masks = task_result.compact_model_masks
-            current2origin_sparsity, _, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.temp_config_list)
+            current2origin_sparsity, _, _ = compute_sparsity(origin_model, compact_model, compact_model_masks,
+                                                             self.temp_config_list)  # type: ignore
             self._tasks[task_result.task_id].state['current2origin_sparsity'] = current2origin_sparsity
             current2origin_sparsity, _, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.config_list_copy)
             self._tasks[task_result.task_id].state['current_total_sparsity'] = current2origin_sparsity
@@ -162,7 +168,7 @@ class AMCTaskGenerator(TaskGenerator):
 
 
 class AMCPruner(IterativePruner):
-    r"""
+    __doc__ = r"""
     AMC pruner leverages reinforcement learning to provide the model compression policy.
     According to the author, this learning-based compression policy outperforms conventional rule-based compression policy by having a higher compression ratio,
     better preserving the accuracy and freeing human labor.
@@ -186,10 +192,11 @@ class AMCPruner(IterativePruner):
             - op_names : Operation name to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude  : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    dummy_input : torch.Tensor
-        `dummy_input` is required for speedup and tracing the model in RL environment.
-    evaluator : Callable[[Module], float]
-        Evaluate the pruned model and give a score.
+    evaluator
+        ``evaluator`` is used to replace the previous ``finetuner``, ``dummy_input`` and old ``evaluator`` API.
+        {evaluator_docstring}
+        The old API (``finetuner``, ``dummy_input`` and old ``evaluator``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
     pruning_algorithm : str
         Supported pruning algorithm ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
@@ -197,8 +204,6 @@ class AMCPruner(IterativePruner):
         The log directory use to saving the result, you can find the best result under this folder.
     keep_intermediate_result : bool
         If keeping the intermediate result, including intermediate model and masks during each iteration.
-    finetuner : Optional[Callable[[Module], None]]
-        The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
     ddpg_params : Dict
         Configuration dict to configure the DDPG agent, any key unset will be set to default implicitly.
         - hidden1: hidden num of first fully connect layer. Default: 300
@@ -223,23 +228,42 @@ class AMCPruner(IterativePruner):
         'flops' or 'params'. Note that the sparsity in other pruners always means the parameters sparse, but in AMC, you can choose flops sparse.
         This parameter is used to explain what the sparsity setting in config_list refers to.
 
-    Examples
-    --------
-        >>> from nni.compression.pytorch.pruning import AMCPruner
-        >>> config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
-        >>> dummy_input = torch.rand(...).to(device)
-        >>> evaluator = ...
-        >>> finetuner = ...
-        >>> pruner = AMCPruner(400, model, config_list, dummy_input, evaluator, finetuner=finetuner)
-        >>> pruner.compress()
-
+    Notes
+    -----
     The full script can be found :githublink:`here <examples/model_compress/pruning/amc_pruning_torch.py>`.
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
+    @overload
+    def __init__(self, total_episode: int, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,
+                 pruning_algorithm: str = 'l1', log_dir: str = '.', keep_intermediate_result: bool = False,
+                 ddpg_params: dict = {}, pruning_params: dict = {}, target: str = 'flops'):
+        ...
+
+    @overload
     def __init__(self, total_episode: int, model: Module, config_list: List[Dict], dummy_input: Tensor,
                  evaluator: Callable[[Module], float], pruning_algorithm: str = 'l1', log_dir: str = '.',
                  keep_intermediate_result: bool = False, finetuner: Optional[Callable[[Module], None]] = None,
                  ddpg_params: dict = {}, pruning_params: dict = {}, target: str = 'flops'):
+        ...
+
+    def __init__(self, total_episode: int, model: Module, config_list: List[Dict], *args, **kwargs):
+        new_api = ['evaluator', 'pruning_algorithm', 'log_dir', 'keep_intermediate_result', 'ddpg_params', 'pruning_params', 'target']
+        new_init_kwargs = {'pruning_algorithm': 'l1', 'log_dir': '.', 'keep_intermediate_result': False,
+                           'ddpg_params': {}, 'pruning_params': {}, 'target': 'flops'}
+        old_api = ['dummy_input', 'evaluator', 'pruning_algorithm', 'log_dir', 'keep_intermediate_result', 'finetuner', 'ddpg_params',
+                   'pruning_params', 'target']
+        old_init_kwargs = {'pruning_algorithm': 'l1', 'log_dir': '.', 'keep_intermediate_result': False, 'finetuner': None,
+                           'ddpg_params': {}, 'pruning_params': {}, 'target': 'flops'}
+        init_kwargs = self._init_evaluator(model, new_api, new_init_kwargs, old_api, old_init_kwargs, args, kwargs)
+
+        pruning_algorithm = init_kwargs['pruning_algorithm']
+        log_dir = init_kwargs['log_dir']
+        keep_intermediate_result = init_kwargs['keep_intermediate_result']
+        ddpg_params = init_kwargs['ddpg_params']
+        pruning_params = init_kwargs['pruning_params']
+        target = init_kwargs['target']
+        dummy_input = self.dummy_input if not self.using_evaluator else self.evaluator.get_dummy_input()
+
         assert pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo'], \
             "Only support pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo']"
         task_generator = AMCTaskGenerator(total_episode=total_episode,
@@ -251,5 +275,9 @@ class AMCPruner(IterativePruner):
                                           ddpg_params=ddpg_params,
                                           target=target)
         pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speedup=True, dummy_input=dummy_input,
-                         evaluator=evaluator, reset_weight=False)
+
+        if self.using_evaluator:
+            super().__init__(pruner, task_generator, evaluator=self.evaluator, speedup=True, reset_weight=False)
+        else:
+            super().__init__(pruner, task_generator, finetuner=self.finetuner, speedup=True, dummy_input=self.dummy_input,
+                             evaluator=self._evaluator, reset_weight=False)  # type: ignore

@@ -11,7 +11,7 @@ variables:
 
 jobs:
 - job: remote_windows2windows
-  pool: nni-it-windows
+  pool: nni-it-1es-windows
   timeoutInMinutes: 120
 
   steps:
@@ -49,4 +49,4 @@ jobs:
 
   - template: templates/save-crashed-info.yml
     parameters:
-      remote: true
+      training_service: remote

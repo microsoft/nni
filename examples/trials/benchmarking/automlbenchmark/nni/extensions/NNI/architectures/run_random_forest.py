@@ -138,7 +138,7 @@ def run_random_forest(dataset, config, tuner, log):
             
                 # Here score is the output of score() from the estimator
                 cur_score = cross_val_score(cur_model, X_train, y_train)
-                cur_score = sum(cur_score) / float(len(cur_score))
+                cur_score = np.mean(cur_score)
                 if np.isnan(cur_score):
                     cur_score = 0
             

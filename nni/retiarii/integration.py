@@ -3,7 +3,7 @@
 
 import logging
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Dict, List, Tuple
 
 import nni
 from nni.common.serializer import PayloadTooLarge
@@ -21,6 +21,7 @@ _logger = logging.getLogger(__name__)
 class RetiariiAdvisor(MsgDispatcherBase):
     """
     The class is to connect Retiarii components to NNI backend.
+    It can be considered as a Python wrapper of NNI manager.
 
     It will function as the main thread when running a Retiarii experiment through NNI.
     Strategy will be launched as its thread, who will call APIs in execution engine. Execution
@@ -31,9 +32,6 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     The conversion advisor provides are minimum. It is only a send/receive module, and execution engine
     needs to handle all the rest.
-
-    FIXME
-        How does advisor exit when strategy exists?
 
     Attributes
     ----------
@@ -60,6 +58,63 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.final_metric_callback: Optional[Callable[[int, MetricData], None]] = None
 
         self.parameters_count = 0
+
+        # Sometimes messages arrive first before the callbacks get registered.
+        # Or in case that we allow engine to be absent during the experiment.
+        # Here we need to store the messages and invoke them later.
+        self.call_queue: List[Tuple[str, list]] = []
+
+    def register_callbacks(self, callbacks: Dict[str, Callable[..., None]]):
+        """
+        Register callbacks for NNI backend.
+
+        Parameters
+        ----------
+        callbacks
+            A dictionary of callbacks.
+            The key is the name of the callback. The value is the callback function.
+        """
+        self.send_trial_callback = callbacks.get('send_trial')
+        self.request_trial_jobs_callback = callbacks.get('request_trial_jobs')
+        self.trial_end_callback = callbacks.get('trial_end')
+        self.intermediate_metric_callback = callbacks.get('intermediate_metric')
+        self.final_metric_callback = callbacks.get('final_metric')
+
+        self.process_queued_callbacks()
+
+    def process_queued_callbacks(self) -> None:
+        """
+        Process callbacks in queue.
+        Consume the messages that haven't been handled previously.
+        """
+        processed_idx = []
+        for queue_idx, (call_name, call_args) in enumerate(self.call_queue):
+            if call_name == 'send_trial' and self.send_trial_callback is not None:
+                self.send_trial_callback(*call_args)  # pylint: disable=not-callable
+                processed_idx.append(queue_idx)
+            if call_name == 'request_trial_jobs' and self.request_trial_jobs_callback is not None:
+                self.request_trial_jobs_callback(*call_args)  # pylint: disable=not-callable
+                processed_idx.append(queue_idx)
+            if call_name == 'trial_end' and self.trial_end_callback is not None:
+                self.trial_end_callback(*call_args)  # pylint: disable=not-callable
+                processed_idx.append(queue_idx)
+            if call_name == 'intermediate_metric' and self.intermediate_metric_callback is not None:
+                self.intermediate_metric_callback(*call_args)  # pylint: disable=not-callable
+                processed_idx.append(queue_idx)
+            if call_name == 'final_metric' and self.final_metric_callback is not None:
+                self.final_metric_callback(*call_args)  # pylint: disable=not-callable
+                processed_idx.append(queue_idx)
+
+        # Remove processed messages
+        for idx in reversed(processed_idx):
+            self.call_queue.pop(idx)
+
+    def invoke_callback(self, name: str, *args: Any) -> None:
+        """
+        Invoke callback.
+        """
+        self.call_queue.append((name, list(args)))
+        self.process_queued_callbacks()
 
     def handle_initialize(self, data):
         """callback for initializing the advisor
@@ -140,8 +195,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
         # nevertheless, there could still be blocked by pipe / nni-manager
         self.send(CommandType.NewTrialJob, send_payload)
 
-        if self.send_trial_callback is not None:
-            self.send_trial_callback(parameters)  # pylint: disable=not-callable
+        self.invoke_callback('send_trial', parameters)
         return self.parameters_count
 
     def mark_experiment_as_ending(self):
@@ -149,8 +203,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     def handle_request_trial_jobs(self, num_trials):
         _logger.debug('Request trial jobs: %s', num_trials)
-        if self.request_trial_jobs_callback is not None:
-            self.request_trial_jobs_callback(num_trials)  # pylint: disable=not-callable
+        self.invoke_callback('request_trial_jobs', num_trials)
 
     def handle_update_search_space(self, data):
         _logger.debug('Received search space: %s', data)
@@ -158,22 +211,16 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     def handle_trial_end(self, data):
         _logger.debug('Trial end: %s', data)
-        if self.trial_end_callback is not None:
-            self.trial_end_callback(nni.load(data['hyper_params'])['parameter_id'],  # pylint: disable=not-callable
-                                    data['event'] == 'SUCCEEDED')
+        self.invoke_callback('trial_end', nni.load(data['hyper_params'])['parameter_id'], data['event'] == 'SUCCEEDED')
 
     def handle_report_metric_data(self, data):
         _logger.debug('Metric reported: %s', data)
         if data['type'] == MetricType.REQUEST_PARAMETER:
             raise ValueError('Request parameter not supported')
         elif data['type'] == MetricType.PERIODICAL:
-            if self.intermediate_metric_callback is not None:
-                self.intermediate_metric_callback(data['parameter_id'],  # pylint: disable=not-callable
-                                                  self._process_value(data['value']))
+            self.invoke_callback('intermediate_metric', data['parameter_id'], self._process_value(data['value']))
         elif data['type'] == MetricType.FINAL:
-            if self.final_metric_callback is not None:
-                self.final_metric_callback(data['parameter_id'],  # pylint: disable=not-callable
-                                           self._process_value(data['value']))
+            self.invoke_callback('final_metric', data['parameter_id'], self._process_value(data['value']))
 
     @staticmethod
     def _process_value(value) -> Any:  # hopefully a float
