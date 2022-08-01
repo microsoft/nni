@@ -41,9 +41,9 @@ def parser_factory(model: Module) -> HuggingfaceModelParser | None:
         }
 
         if hasattr(model, 'config_class'):
-            parser = cls2parser.get(getattr(model.config, 'config_class'))
+            parser = cls2parser.get(getattr(model, 'config_class'))
         elif hasattr(model, 'model_type'):
-            parser = type2parser.get(getattr(model.config, 'model_type'))
+            parser = type2parser.get(getattr(model, 'model_type'))
         else:
             parser = None
 
