@@ -64,7 +64,6 @@ def calculate_qparams(vmin: torch.Tensor, vmax: torch.Tensor,
                       qscheme: QuantScheme, qdtype: QuantDtype
                       ) -> Tuple[torch.Tensor, torch.Tensor]:
     assert torch.all(vmin <= vmax)
-    # FIXME: support different quant schemes
     # include zero in the range
     vmin_neg = torch.min(vmin, torch.zeros_like(vmin))
     vmax_pos = torch.max(vmax, torch.zeros_like(vmax))
@@ -94,9 +93,14 @@ class PtqQuantizer(Quantizer):
     Users should implement predicting_func in TorchEvaluator
     """
 
-    def __init__(self, model: nn.Module, config_list: list, evaluator: Evaluator):
-        # TODO: canonicalize config list
-        super().__init__(model, config_list, None)
+    def __init__(self, model: nn.Module, config_list: list, evaluator: Evaluator, op_folding: bool = False):
+        dummy_input = evaluator.get_dummy_input()
+        if op_folding:
+            if dummy_input is None:
+                raise RuntimeError('Missing dummy input! Please provide dummy input to evaluator when op_folding is set to True.')
+        else:
+            dummy_input = None
+        super().__init__(model, config_list, dummy_input=dummy_input)
         assert not model.training, "Currently the observer quantizer only works in evaluation mode."
         self.quant_grad = QuantForward()
         self.evaluator = evaluator
@@ -107,32 +111,33 @@ class PtqQuantizer(Quantizer):
 
     def _prepare_buffers_for_quant(self) -> None:
         for layer, config in self.get_modules_to_compress():
+            print('layer name and layer type: ', layer.name, type(layer.module))
             module = layer.module
             layer_quant_setting = LayerQuantSetting(config)
             if "weight" in config.get("quant_types", []):
                 module.register_buffer('weight_qmax', torch.tensor(layer_quant_setting.weight.qmax))
                 module.register_buffer('weight_qmin', torch.tensor(layer_quant_setting.weight.qmin))
-                module.register_buffer('weight_scale', torch.zeros([1]))
+                module.register_buffer('weight_scale', torch.ones([1]))
                 module.register_buffer('weight_zero_point', torch.zeros([1]))
             if "input" in config.get("quant_types", []):
                 module.register_buffer('input_qmax', torch.tensor(layer_quant_setting.input.qmax))
                 module.register_buffer('input_qmin', torch.tensor(layer_quant_setting.input.qmin))
-                module.register_buffer('input_scale', torch.zeros([1]))
+                module.register_buffer('input_scale', torch.ones([1]))
                 module.register_buffer('input_zero_point', torch.zeros([1]))
             if "output" in config.get("quant_types", []):
                 module.register_buffer("output_qmax", torch.tensor(layer_quant_setting.output.qmax))
                 module.register_buffer("output_qmin", torch.tensor(layer_quant_setting.output.qmin))
-                module.register_buffer('output_scale', torch.zeros([1]))
+                module.register_buffer('output_scale', torch.ones([1]))
                 module.register_buffer('output_zero_point', torch.zeros([1]))
             setattr(module, 'layer_quant_setting', layer_quant_setting)
 
     def validate_config(self, model, config_list):
         schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output', 'input']]),
-            Optional('quant_bits'): Or(And(int, lambda n: n == 8), Schema({
-                Optional('weight'): And(int, lambda n: n == 8),
-                Optional('output'): And(int, lambda n: n == 8),
-                Optional('input'): And(int, lambda n: n == 8),
+            Optional('quant_bits'): Or(And(int, lambda n: 0 < n <= 32), Schema({
+                Optional('weight'): And(int, lambda n: 0 < n <= 32),
+                Optional('output'): And(int, lambda n: 0 < n <= 32),
+                Optional('input'): And(int, lambda n: 0 < n <= 32),
             })),
             Optional('quant_scheme'): Or(lambda x: x in QuantScheme, Schema({
                 Optional('input'): lambda x: x in QuantScheme,
@@ -179,6 +184,7 @@ class PtqQuantizer(Quantizer):
         """
         assert self.bound_model is not None and self.config_list is not None
         assert self.evaluator is not None
+        self._oneshot_fold_bn()
         self.evaluator.bind_model(self.bound_model)
         data_collector = self._prepare_data_collectors()
         data = data_collector.collect(mode='predict')
@@ -203,9 +209,7 @@ class PtqQuantizer(Quantizer):
                                                   module.weight_zero_point,
                                                   module.weight_qmin,
                                                   module.weight_qmax)
-                # TODO: do we need to keep the old weight???
-                delattr(module, 'weight')
-                module.register_buffer('weight', quantized_weight)
+                module.weight.copy_(quantized_weight)
                 quant_result_conf[layer.name]['weight'] = {'qmin': module.weight_qmin, 'qmax': module.weight_qmax,
                                                            'scale': scale, 'zero_point': zero_point}
             if module.layer_quant_setting.input is not None:
@@ -235,6 +239,38 @@ class PtqQuantizer(Quantizer):
         self.evaluator.unbind_model()
         print('quant resulting config: ', quant_result_conf)
         return self.bound_model, quant_result_conf
+
+    def _oneshot_fold_bn(self):
+        for wrapper in self.get_modules_wrapper():
+            if wrapper.bn_module is not None:
+                module = wrapper.module
+                bn_module = wrapper.bn_module
+                weight = module.weight
+                assert hasattr(module, 'bias')
+                bias = module.bias
+                new_weight, new_bias = self._fold_bn(module, bn_module, weight, bias)
+                module.weight.copy_(new_weight)
+                module.bias.copy_(new_bias)
+
+    def fold_bn(self, *inputs, wrapper):
+        """
+        As bn folding has been done in ``_oneshot_fold_bn``, directly return the module's
+        weight and bias
+
+        Parameters
+        ----------
+        inputs : tuple of torch.Tensor
+            inputs for the module
+        wrapper : QuantizerModuleWrapper
+            the wrapper for origin module
+
+        Returns
+        -------
+        Tuple of torch.Tensor
+        """
+        assert self.bound_model is not None
+        module = wrapper.module
+        return module.weight, module.bias
 
     def _quantize(self, x, scale, zero_point, qmin, qmax):
         x = x / scale + zero_point

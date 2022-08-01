@@ -374,8 +374,8 @@ print('Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_s
 
 num_calibration_batches = 32
 num_eval_batches = 100
-#device = torch.device('cuda')
-device = torch.device('cpu')
+device = torch.device('cuda')
+#device = torch.device('cpu')
 
 myModel = load_model(saved_model_dir + float_model_file).to('cpu')
 myModel.eval()
@@ -392,13 +392,23 @@ from nni.algorithms.compression.v2.pytorch.utils import TorchEvaluator
 config_list = [{
     'quant_types': ['input', 'weight', 'output'],
     'quant_bits': {'input': 8, 'weight': 8, 'output': 8},
+    #'quant_types': ['weight'],
+    #'quant_bits': {'weight': 8},
     'quant_dtype': 'int',
     'quant_scheme': 'per_tensor_symmetric',
     'op_types': ['default']
 }]
 
-predict_func = TorchEvaluator(predicting_func=my_eval)
-quantizer = PtqQuantizer(myModel, config_list, predict_func)
+dummy_input = torch.Tensor(30, 3, 224, 224)
+dummy_input = dummy_input.to(device)
+predict_func = TorchEvaluator(predicting_func=my_eval, dummy_input=dummy_input)
+quantizer = PtqQuantizer(myModel, config_list, predict_func, False)
+
+#top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
+#print('After quantization bn folding: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
+
+#exit(0)
+
 sim_quant_model, quant_result_conf = quantizer.compress()
 
 top1, top5 = evaluate(sim_quant_model, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
