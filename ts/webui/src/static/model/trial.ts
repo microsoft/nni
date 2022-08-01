@@ -234,14 +234,14 @@ class Trial implements TableObj {
         } else {
             const tempHyper = this.info.hyperParameters;
             let params = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
-            // for hpo experiment: search space choice value is None, and it shows null
-            for (const key in params) {
-                if (Object.is(null, params[key])) {
-                    params[key] = 'null';
-                }
-            }
             if (typeof params === 'string') {
                 params = JSON.parse(params);
+            }
+            // for hpo experiment: search space choice value is None, and it shows null
+            for (const [key, value] of Object.entries(params)) {
+                if (Object.is(null, value)) {
+                    params[key] = 'null';
+                }
             }
             const [updated, unexpectedEntries] = inferTrialParameters(params, axes);
             if (unexpectedEntries.size) {
