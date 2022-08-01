@@ -34,7 +34,8 @@ Result
 ------
 
 .. list-table:: Prune Bert-base-uncased on MNLI
-   :header-rows: 1
+    :header-rows: 1
+    :widths: auto
 
     * - Attention Pruning Method
       - FFN Pruning Method
