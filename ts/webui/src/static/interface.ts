@@ -190,7 +190,7 @@ interface allTrialsIntermediateChart {
     name: string;
     // id: string;
     sequenceId: number;
-    data: number[]; // data名字是固定的
+    data: number[];
     parameter: object;
     type: string;
 }
