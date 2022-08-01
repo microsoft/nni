@@ -49,6 +49,13 @@ def _iter_tensors(tensor: Any) -> Any:
             yield from _iter_tensors(t)
 
 
+def _pack_as_tuple(tensor: Any) -> Any:
+    """Return a tuple of tensor with only one element if tensor it's not a tuple."""
+    if not isinstance(tensor, tuple):
+        return (tensor,)
+    return tensor
+
+
 def element_product_sum(tensor1: tuple[torch.Tensor, ...], tensor2: tuple[torch.Tensor, ...]) -> torch.Tensor:
     """Compute the sum of all the element-wise product."""
     assert len(tensor1) == len(tensor2), 'The number of tensors must be the same.'
@@ -105,6 +112,10 @@ class ProxylessContext:
                     out_k = module.forward_path(k, *args, **kwargs)
                 else:
                     out_k = layer_output
+
+                # In case out_k is a single tensor
+                out_k = _pack_as_tuple(out_k)
+
                 # FIXME: One limitation here is that out_k can't be complex objects like dict.
                 # I think it's also a limitation of backward hook.
                 binary_grads[k] = element_product_sum(out_k, grad_output)

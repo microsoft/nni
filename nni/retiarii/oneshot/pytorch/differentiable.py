@@ -116,7 +116,6 @@ class DartsLightningModule(BaseOneShotLightningModule):
         if isinstance(arc_step_loss, dict):
             arc_step_loss = arc_step_loss['loss']
         self.manual_backward(arc_step_loss)
-        self.finalize_grad()
         arc_optim.step()
 
         # phase 2: model step
@@ -131,10 +130,6 @@ class DartsLightningModule(BaseOneShotLightningModule):
         self.log_dict({'prob/' + k: v for k, v in self.export_probs().items()})
 
         return loss_and_metrics
-
-    def finalize_grad(self):
-        # Note: This hook is currently kept for Proxyless NAS.
-        pass
 
     def configure_architecture_optimizers(self):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
@@ -193,10 +188,6 @@ class ProxylessLightningModule(DartsLightningModule):
         ]
         # FIXME: no support for mixed operation currently
         return hooks
-
-    def finalize_grad(self):
-        for m in self.nas_modules:
-            m.finalize_grad()  # type: ignore
 
 
 class GumbelDartsLightningModule(DartsLightningModule):
