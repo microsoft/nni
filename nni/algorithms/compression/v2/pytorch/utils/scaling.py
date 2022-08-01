@@ -123,6 +123,7 @@ class Scaling:
         converted_target = target.reshape(reshape_size).permute(permute_dims).reshape(final_size + [-1])
 
         # step 2: reduce the converted_target last dim with a certain way, by default is converted_target.mean(-1).
+        # `sum` does not take into account the metric scale problem, it is better to use `mean` here.
         result = reduce_func(converted_target) if reduce_func else converted_target.mean(-1)
 
         # step 3: reduce the dims where kernel_size is -1.

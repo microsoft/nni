@@ -26,6 +26,7 @@ from nni.algorithms.compression.v2.pytorch.utils.attr import get_nested_attr
 _logger = logging.getLogger(__name__)
 
 
+# huggingface transformers pretrained model parser supported: bart, bert, t5
 def parser_factory(model: Module) -> HuggingfaceModelParser | None:
     if TRANSFORMERS_INSTALLED and isinstance(model, PreTrainedModel):
         cls2parser = {
@@ -52,6 +53,8 @@ def parser_factory(model: Module) -> HuggingfaceModelParser | None:
 
 
 class HuggingfaceModelParser:
+    # This class is used to verify that a module name belongs to a specific huggingface transformers pretrained model.
+    # Further, verify that the module with this name is some kind of special layer (QKVO or FFN).
     TRANSFORMER_PREFIX: str
     QKV: Tuple[str, ...]
     QKVO: Tuple[str, ...]

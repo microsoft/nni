@@ -137,10 +137,10 @@ class GlobalSparsityAllocator(SparsityAllocator):
                 max_sparsity = wrapper.config.get('max_sparsity_per_layer', {}).get(module_name, 0.99)
                 assert 0 <= max_sparsity <= 1
                 old_target_mask: Tensor = getattr(wrapper, f'{target_name}_mask')
-                expand_times = old_target_mask.numel() // target_metric.numel()
-                max_pruning_numel = int(max_sparsity * target_metric.numel()) * expand_times
-                threshold = torch.topk(target_metric.reshape(-1), max_pruning_numel, largest=False)[0].max()
-                metrics[module_name][target_name] = torch.where(target_metric <= threshold, target_metric, max_metric_value)
+                flatten_metric = target_metric.reshape(-1)
+                protected_pruning_numel = target_metric.numel() - int(max_sparsity * target_metric.numel())
+                protected_indices = torch.topk(flatten_metric, protected_pruning_numel).indices
+                metrics[module_name][target_name] = flatten_metric.scatter(0, protected_indices, max_metric_value).reshape_as(target_metric)
 
         # build the global_matric & calculate global threshold
         metric_list = []
