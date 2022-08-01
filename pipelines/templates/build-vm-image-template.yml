@@ -8,8 +8,11 @@ steps:
 # 1. Assign the role following the instruction.
 # 2. Assign contributor role of the resource group to the identity.
 # 3. Add the identity to VMSS.
+#
+# Update 2022/7 (running on Microsoft-hosted agents).
+# Use a service principal. This service principal must be assigned contributor access to the resource group.
 - script: |
-    az login --identity --allow-no-subscriptions --username $(identity_id)
+    az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
   displayName: Login to Azure
 
 # Make sure all these are registered.
@@ -65,7 +68,8 @@ steps:
     export IP_ADDRESS=$(curl -s ifconfig.me)
     export VERSION=$(date "+%Y").$(date "+%m%d").$(date "+%H%M%S")
     export CONFIG_PATH=$(packer_config).json
-    sed -i -e "s/<client_id>/$(identity_id)/g" $CONFIG_PATH
+    sed -i -e "s/<client_id>/$(client_id)/g" $CONFIG_PATH
+    sed -i -e "s/<client_secret>/$(client_secret)/g" $CONFIG_PATH
     sed -i -e "s/<subscription_id>/$(subscription_id)/g" $CONFIG_PATH
     sed -i -e "s/<managed_image_name>/$(managed_image_name)/g" $CONFIG_PATH
     sed -i -e "s/<resource_group>/$(resource_group)/g" $CONFIG_PATH
@@ -113,3 +117,6 @@ steps:
 # az vmss update -n nni-it -g nni --set virtualMachineProfile.storageProfile.osDisk.diskSizeGb=50
 #
 # No need to update the image every time, because it's already set to latest.
+#
+# NOTE: After using 1ES pool, the pool image has to be updated manually to the latest version.
+# However, no successful build has been performed yet, because of resource shortage in Southeast Asia.

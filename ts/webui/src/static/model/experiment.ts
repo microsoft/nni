@@ -128,11 +128,11 @@ class Experiment {
     }
 
     get profile(): ExperimentProfile {
-        return this.profileField === undefined ? emptyProfile : this.profileField;
+        return this.profileField ?? emptyProfile;
     }
 
     get metadata(): ExperimentMetadata {
-        return this.metadataField === undefined ? emptyMetadata : this.metadataField;
+        return this.metadataField ?? emptyMetadata;
     }
 
     get config(): ExperimentConfig {
@@ -146,7 +146,7 @@ class Experiment {
 
     get maxTrialNumber(): number {
         const value = this.config.maxTrialNumber || (this.config as any).maxTrialNum;
-        return value === undefined ? Infinity : value;
+        return value ?? Infinity;
     }
 
     get trialConcurrency(): number {
