@@ -34,19 +34,28 @@ def _detach_tensor(tensor: Any) -> Any:
 
 
 def _iter_tensors(tensor: Any) -> Any:
-    """Recursively iterate over all the tensors."""
-    if isinstance(tensor, (list, tuple)):
-        yield from (_iter_tensors(t) for t in tensor)
-    elif isinstance(tensor, dict):
-        yield from (_iter_tensors(t) for t in tensor.values())
-    elif isinstance(tensor, torch.Tensor):
+    """Recursively iterate over all the tensors.
+
+    This is kept for complex outputs (like dicts / lists).
+    However, complex outputs are not supported by PyTorch backward hooks yet.
+    """
+    if isinstance(tensor, torch.Tensor):
         yield tensor
+    elif isinstance(tensor, (list, tuple)):
+        for t in tensor:
+            yield from _iter_tensors(t)
+    elif isinstance(tensor, dict):
+        for t in tensor.values():
+            yield from _iter_tensors(t)
 
 
 def element_product_sum(tensor1: tuple[torch.Tensor, ...], tensor2: tuple[torch.Tensor, ...]) -> torch.Tensor:
     """Compute the sum of all the element-wise product."""
     assert len(tensor1) == len(tensor2), 'The number of tensors must be the same.'
-    ret = [torch.sum(t1 * t2) for t1, t2 in zip(tensor1, tensor2)]
+    # Skip zero gradients
+    ret = [torch.sum(t1 * t2) for t1, t2 in zip(tensor1, tensor2) if t1 is not None and t2 is not None]
+    if not ret:
+        return torch.tensor(0)
     if len(ret) == 1:
         return ret[0]
     return sum(ret)
@@ -93,10 +102,12 @@ class ProxylessContext:
             for k in range(len(binary_grads)):
                 if k != layer_sample_idx:
                     args, kwargs = layer_input
-                    out_k = module.forward_path(*args, **kwargs)
+                    out_k = module.forward_path(k, *args, **kwargs)
                 else:
                     out_k = layer_output
-                binary_grads[k] = element_product_sum(tuple(_iter_tensors(out_k)), grad_output)
+                # FIXME: One limitation here is that out_k can't be complex objects like dict.
+                # I think it's also a limitation of backward hook.
+                binary_grads[k] = element_product_sum(out_k, grad_output)
 
             # Compute the gradient of the arch_alpha, based on binary_grads.
             if self.arch_alpha.grad is None:
@@ -104,6 +115,7 @@ class ProxylessContext:
             probs = self.softmax(self.arch_alpha)
             for i in range(len(self.arch_alpha)):
                 for j in range(len(self.arch_alpha)):
+                    # Arch alpha's gradients are accumulated for all backwards through this layer.
                     self.arch_alpha.grad[i] += binary_grads[j] * probs[j] * (int(i == j) - probs[i])
 
 
@@ -116,7 +128,8 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
 
     def __init__(self, paths: list[tuple[str, nn.Module]], alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__(paths, alpha, softmax, label)
-        self._binary_gates = nn.Parameter(torch.zeros(len(paths)))
+        # Binary gates should be created here, but it's not because it's never used in the forward pass.
+        # self._binary_gates = nn.Parameter(torch.zeros(len(paths)))
 
         # like sampling-based methods, it has a ``_sampled``.
         self._sampled: str | None = None
@@ -153,38 +166,28 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
 
 class ProxylessMixedInput(DifferentiableMixedInput):
     """Proxyless version of differentiable input choice.
-    See :class:`ProxylessLayerChoice` for implementation details.
+    See :class:`ProxylessMixedLayer` for implementation details.
     """
 
     _arch_parameter_names = ['_arch_alpha', '_binary_gates']
 
     def __init__(self, n_candidates: int, n_chosen: int | None, alpha: torch.Tensor, softmax: nn.Module, label: str):
         super().__init__(n_candidates, n_chosen, alpha, softmax, label)
-        self._binary_gates = nn.Parameter(torch.zeros(n_candidates))
+
+        # We only support choosing a particular one here.
+        # Nevertheless, we rank the score and export the tops in export.
         self._sampled: int | None = None
+        self.ctx = ProxylessContext(alpha, softmax)
+        self.register_full_backward_hook(self.ctx.backward_hook)
 
     def forward(self, inputs):
-        def run_function(active_sample):
-            return lambda x: x[active_sample]
+        """Choose one single input."""
+        output = self.forward_path(self._sampled, inputs)
+        self.ctx.save_forward_context(((inputs,), {}), output, self._sampled)
+        return output
 
-        def backward_function(binary_gates):
-            def backward(_x, _output, grad_output):
-                binary_grads = torch.zeros_like(binary_gates.data)
-                with torch.no_grad():
-                    for k in range(self.n_candidates):
-                        out_k = _x[k].data
-                        grad_k = torch.sum(out_k * grad_output)
-                        binary_grads[k] = grad_k
-                return binary_grads
-            return backward
-
-        inputs = torch.stack(inputs, 0)
-        assert self._sampled is not None, 'Need to call resample() before running fprop.'
-
-        return _ArchGradientFunction.apply(
-            inputs, self._binary_gates, run_function(self._sampled),
-            backward_function(self._binary_gates)
-        )
+    def forward_path(self, index, inputs):
+        return inputs[index]
 
     def resample(self, memo):
         """Sample one path based on alpha if label is not found in memo."""
@@ -195,27 +198,6 @@ class ProxylessMixedInput(DifferentiableMixedInput):
             sample = torch.multinomial(probs, 1)[0].item()
             self._sampled = int(sample)
 
-        # set binary gates
-        with torch.no_grad():
-            self._binary_gates.zero_()
-            self._binary_gates.grad = torch.zeros_like(self._binary_gates.data)
-            self._binary_gates.data[cast(int, self._sampled)] = 1.0
+        self.ctx.clear_context()
 
         return {self.label: self._sampled}
-
-    def export(self, memo):
-        """Chose the argmax if label isn't found in memo."""
-        if self.label in memo:
-            return {}  # nothing new to export
-        return {self.label: torch.argmax(self._arch_alpha).item()}
-
-    def finalize_grad(self):
-        binary_grads = self._binary_gates.grad
-        assert binary_grads is not None
-        with torch.no_grad():
-            if self._arch_alpha.grad is None:
-                self._arch_alpha.grad = torch.zeros_like(self._arch_alpha.data)
-            probs = self._softmax(self._arch_alpha)
-            for i in range(self.n_candidates):
-                for j in range(self.n_candidates):
-                    self._arch_alpha.grad[i] += binary_grads[j] * probs[j] * (int(i == j) - probs[i])
