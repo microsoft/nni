@@ -130,7 +130,7 @@ valid_loader = DataLoader(
 #
 # .. warning:: Max epochs is set to 1 here for tutorial purposes. To get a reasonable result, this should be at least 10.
 
-max_epochs = 1
+max_epochs = 10
 
 evaluator = Classification(
     learning_rate=0.01,
@@ -191,6 +191,9 @@ experiment.run(config)
 
 exported_arch = experiment.export_top_models()[0]
 
+# TODO: delete
+print(exported_arch)
+
 exported_arch
 
 # %%
@@ -234,7 +237,7 @@ valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
 # ``max_epochs`` should be further increased to at least 200.
 # We only set it to 1 here for tutorial demo purposes.
 
-max_epochs = 1
+max_epochs = 200
 
 evaluator = Classification(
     learning_rate=0.01,
