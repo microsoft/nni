@@ -11,7 +11,7 @@ The support remains limited. Known limitations include:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Tuple, Union, cast
 
 import torch
 import torch.nn as nn
@@ -65,7 +65,7 @@ def element_product_sum(tensor1: tuple[torch.Tensor, ...], tensor2: tuple[torch.
         return torch.tensor(0)
     if len(ret) == 1:
         return ret[0]
-    return sum(ret)
+    return cast(torch.Tensor, sum(ret))
 
 
 class ProxylessContext:
@@ -90,7 +90,9 @@ class ProxylessContext:
         self.layer_output.append(_detach_tensor(layer_output))
         self.layer_sample_idx.append(layer_sample_idx)
 
-    def backward_hook(self, module: nn.Module, grad_input: torch.Tensor, grad_output: torch.Tensor) -> None:
+    def backward_hook(self, module: nn.Module,
+                      grad_input: Union[Tuple[torch.Tensor, ...], torch.Tensor],
+                      grad_output: Union[Tuple[torch.Tensor, ...], torch.Tensor]) -> None:
         # binary_grads is the gradient of binary gates.
         # Binary gates is a one-hot tensor where 1 is on the sampled index, and others are 0.
         # By chain rule, it's gradient is grad_output times the layer_output (of the corresponding path).
@@ -109,16 +111,16 @@ class ProxylessContext:
             for k in range(len(binary_grads)):
                 if k != layer_sample_idx:
                     args, kwargs = layer_input
-                    out_k = module.forward_path(k, *args, **kwargs)
+                    out_k = module.forward_path(k, *args, **kwargs)  # type: ignore
                 else:
                     out_k = layer_output
 
-                # In case out_k is a single tensor
-                out_k = _pack_as_tuple(out_k)
-
                 # FIXME: One limitation here is that out_k can't be complex objects like dict.
                 # I think it's also a limitation of backward hook.
-                binary_grads[k] = element_product_sum(out_k, grad_output)
+                binary_grads[k] = element_product_sum(
+                    _pack_as_tuple(out_k),  # In case out_k is a single tensor
+                    _pack_as_tuple(grad_output)
+                )
 
             # Compute the gradient of the arch_alpha, based on binary_grads.
             if self.arch_alpha.grad is None:
@@ -153,6 +155,8 @@ class ProxylessMixedLayer(DifferentiableMixedLayer):
 
     def forward(self, *args, **kwargs):
         """Forward pass of one single path."""
+        if self._sample_idx is None:
+            raise RuntimeError('resample() needs to be called before fprop.')
         output = self.forward_path(self._sample_idx, *args, **kwargs)
         self.ctx.save_forward_context((args, kwargs), output, self._sample_idx)
         return output
@@ -193,6 +197,8 @@ class ProxylessMixedInput(DifferentiableMixedInput):
 
     def forward(self, inputs):
         """Choose one single input."""
+        if self._sampled is None:
+            raise RuntimeError('resample() needs to be called before fprop.')
         output = self.forward_path(self._sampled, inputs)
         self.ctx.save_forward_context(((inputs,), {}), output, self._sampled)
         return output

@@ -344,7 +344,7 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
         for name, spec in operation.search_space_spec().items():
             if any(k.startswith(name + '/') for k in memo):
                 continue
-            weights = operation._softmax(operation._arch_alpha[name]).cpu().tolist()
+            weights = operation._softmax(operation._arch_alpha[name]).cpu().tolist()  # type: ignore
             ret.update({f'{name}/{value}': weight for value, weight in zip(spec.values, weights)})
         return ret
 

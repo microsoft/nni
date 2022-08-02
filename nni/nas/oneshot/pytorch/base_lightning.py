@@ -136,7 +136,7 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
         nas_nn.LayerChoice,
         nas_nn.InputChoice,
         nas_nn.Repeat,
-        nas_nn.NasBench101Cell,
+        # nas_nn.NasBench101Cell,
         # nas_nn.ValueChoice,       # could be false positive
         # nas_nn.Cell,              # later
         # nas_nn.NasBench201Cell,   # forward = supernet
@@ -352,9 +352,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         # Set the flag to True so that they can differ from other optimizers
         for optimizer in arch_optimizers:
-            optimizer.is_arch_optimizer = True
+            optimizer.is_arch_optimizer = True  # type: ignore
 
-        optim_conf = self.model.configure_optimizers()
+        optim_conf: Any = self.model.configure_optimizers()
 
         # 1. single optimizer
         if isinstance(optim_conf, Optimizer):
@@ -372,7 +372,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             return [optim_conf] + [{'optimizer': optimizer} for optimizer in arch_optimizers]
         # 4. multiple dictionaries
         if isinstance(optim_conf, (list, tuple)) and all(isinstance(d, dict) for d in optim_conf):
-            return optim_conf + [{'optimizer': optimizer} for optimizer in arch_optimizers]
+            return list(optim_conf) + [{'optimizer': optimizer} for optimizer in arch_optimizers]
         # 5. single list or tuple, multiple optimizer
         if isinstance(optim_conf, (list, tuple)) and all(isinstance(opt, Optimizer) for opt in optim_conf):
             return list(optim_conf) + arch_optimizers
@@ -482,7 +482,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
                 if config.reduce_on_plateau:
                     warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
                 if config.interval == interval and current_idx % config.frequency == 0:
-                    self.model.lr_scheduler_step(scheduler, opt_idx, None)
+                    self.model.lr_scheduler_step(cast(Any, scheduler), cast(int, opt_idx), None)
         except AttributeError:
             # lightning < 1.6
             for lr_scheduler in self.trainer.lr_schedulers:

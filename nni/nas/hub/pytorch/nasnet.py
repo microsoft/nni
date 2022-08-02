@@ -386,7 +386,7 @@ class NDSStagePathSampling(PathSamplingRepeat):
     """The path-sampling implementation (for one-shot) of each NDS stage if depth is mutating."""
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.api.ValueChoiceX):
+        if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.choice.ValueChoiceX):
             return cls(
                 module.first_cell_transformation_factory(),
                 cast(List[nn.Module], module.blocks),
@@ -411,7 +411,7 @@ class NDSStageDifferentiable(DifferentiableMixedRepeat):
     """The differentiable implementation (for one-shot) of each NDS stage if depth is mutating."""
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.api.ValueChoiceX):
+        if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.choice.ValueChoiceX):
             # Only interesting when depth is mutable
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
             return cls(

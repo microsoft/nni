@@ -129,7 +129,7 @@ class ReinforceController(nn.Module):
             log_prob = self.cross_entropy_loss(logit, sampled)
             self._inputs = self.embedding[field.name](sampled)
         else:
-            sampled_dist = torch.sigmoid(logit, dim=-1)
+            sampled_dist = torch.sigmoid(logit)
             logit = logit.view(-1, 1)
             logit = torch.cat([-logit, logit], 1)  # pylint: disable=invalid-unary-operand-type
             sampled = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
