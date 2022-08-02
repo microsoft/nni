@@ -137,7 +137,7 @@ evaluator = Classification(
     weight_decay=1e-4,
     train_dataloaders=train_loader,
     val_dataloaders=valid_loader,
-    max_epochs=max_epochs，
+    max_epochs=max_epochs,
     gpus=1,
 )
 
