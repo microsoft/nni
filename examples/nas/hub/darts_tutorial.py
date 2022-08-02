@@ -254,7 +254,8 @@ evaluator = Classification(
     val_dataloaders=valid_loader,
     max_epochs=max_epochs,
     gpus=1,
-    logger=TensorBoardLogger('lightning_logs', name='train-lr', version='lr-{}')
+    logger=TensorBoardLogger('lightning_logs', name='train-lr', version='lr-{}'),
+    export_onnx=False
 )
 
 evaluator.fit(final_model)
