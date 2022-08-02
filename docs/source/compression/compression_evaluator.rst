@@ -1,5 +1,5 @@
-Compression Evaluator Creation
-==============================
+Compression Evaluator
+=====================
 
 The evaluator is used to package the training and evaluation process for models with similar topologies.
 To explain why NNI needs an evaluator, let's first look at the general process of model compression in NNI.
@@ -12,11 +12,15 @@ In model quantization, NNI has quantization-aware training algorithm,
 it can adjust the scale and zero point required for model quantization from time to time during the training process,
 and may achieve a better performance compare to post-training quantization.
 
-For the support of the above algorithms, NNI previously provided APIs like ``trainer``, ``traced_optimizer``, ``criterion``, ``finetuner``.
-These APIs were maybe tedious in terms of user experience. Users need to exchange the corresponding API frequently if they want to switch compression algorithms.
-After using the evaluator, users only need to consider one parameter to support NNI to complete the compression process.
+In order to better support the above algorithms and maintain the consistency of the interface,
+NNI introduces the evaluator as the carrier of the training and evaluation process.
 
-For users of PytorchLightning, the evaluator can be created with only a few lines of code, and there is no need to make changes to the original code in most cases.
+.. note::
+    For the support of the above algorithms, NNI previously provided APIs like ``trainer``, ``traced_optimizer``, ``criterion``, ``finetuner``.
+    These APIs were maybe tedious in terms of user experience. Users need to exchange the corresponding API frequently if they want to switch compression algorithms.
+    After using the evaluator, users only need to consider one parameter to support NNI to complete the compression process.
+
+For users of `PytorchLightning <https://www.pytorchlightning.ai/>`__, the evaluator can be created with only a few lines of code, and there is no need to make changes to the original code in most cases.
 For users of native Pytorch, the evaluator requires the user to encapsulate the training process as a function and specifies the exposed interface,
 which will bring some complexity. And don't worry, in most cases, this will not change too much code.
 
