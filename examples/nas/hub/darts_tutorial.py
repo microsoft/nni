@@ -182,19 +182,22 @@ from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfi
 
 config = RetiariiExeConfig(execution_engine='oneshot')
 experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
-experiment.run(config)
+# experiment.run(config)
 
 # %%
 #
 # We can then retrieve the best model found by the strategy with ``export_top_models``.
 # Here, the retrieved model is a dict (called *architecture dict*) describing the selected normal cell and reduction cell.
 
-exported_arch = experiment.export_top_models()[0]
+# exported_arch = experiment.export_top_models()[0]
 
-# TODO: delete
-print(exported_arch)
+# # TODO: delete
+# print(exported_arch)
 
-exported_arch
+# exported_arch
+
+import json
+exported_arch = json.load(open('lightning_logs/arch.json'))
 
 # %%
 #
@@ -239,13 +242,19 @@ valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
 
 max_epochs = 200
 
+from pytorch_lightning.loggers import TensorBoardLogger
+import os
+
+lr = float(os.environ["LR"])
+
 evaluator = Classification(
-    learning_rate=0.01,
+    learning_rate=lr,
     weight_decay=1e-4,
     train_dataloaders=train_loader,
     val_dataloaders=valid_loader,
     max_epochs=max_epochs,
     gpus=1,
+    logger=TensorBoardLogger('lightning_logs', name='train-lr', version='lr-{}')
 )
 
 evaluator.fit(final_model)
