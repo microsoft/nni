@@ -117,12 +117,12 @@ indices = np.random.permutation(num_samples)
 split = num_samples // 2
 
 train_loader = DataLoader(
-    train_data, batch_size=64,
+    train_data, batch_size=64, num_workers=6,
     sampler=SubsetRandomSampler(indices[:split]),
 )
 
 valid_loader = DataLoader(
-    train_data, batch_size=64,
+    train_data, batch_size=64, num_workers=6,
     sampler=SubsetRandomSampler(indices[split:]),
 )
 
@@ -137,7 +137,8 @@ evaluator = Classification(
     weight_decay=1e-4,
     train_dataloaders=train_loader,
     val_dataloaders=valid_loader,
-    max_epochs=max_epochs
+    max_epochs=max_epochs，
+    gpus=1,
 )
 
 # %%
@@ -215,14 +216,14 @@ with fixed_arch(exported_arch):
 #
 # We then train the model on full CIFAR-10 training dataset, and evaluate it on the original CIFAR-10 validation dataset.
 
-train_loader = DataLoader(train_data, batch_size=96)  # Use the original training data
+train_loader = DataLoader(train_data, batch_size=96, num_workers=6)  # Use the original training data
 
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
 ])
 valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform)
-valid_loader = DataLoader(train_data, batch_size=256)
+valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
 
 # %%
 #
@@ -240,7 +241,8 @@ evaluator = Classification(
     weight_decay=1e-4,
     train_dataloaders=train_loader,
     val_dataloaders=valid_loader,
-    max_epochs=max_epochs
+    max_epochs=max_epochs,
+    gpus=1,
 )
 
 evaluator.fit(final_model)
