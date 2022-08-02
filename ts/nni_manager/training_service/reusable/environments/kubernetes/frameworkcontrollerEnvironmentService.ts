@@ -14,6 +14,7 @@ import { FrameworkControllerClientFactory } from '../../../kubernetes/frameworkc
 import { FrameworkControllerClusterConfigAzure, FrameworkControllerJobStatus, FrameworkControllerTrialConfigTemplate,
      FrameworkControllerJobCompleteStatus } from '../../../kubernetes/frameworkcontroller/frameworkcontrollerConfig';
 import { KeyVaultConfig, AzureStorage } from '../../../kubernetes/kubernetesConfig';
+import cpp from 'child-process-promise';
 
 @component.Singleton
 export class FrameworkControllerEnvironmentService extends KubernetesEnvironmentService {
@@ -106,8 +107,13 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             }
             return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, 2);
         } else {
-            // do not need to upload files to nfs server, temp folder already mounted to nfs
-            return `nfs://${this.config.storage.server}:${destDirectory}`;
+            // srcDirectory: /something/nni-experiments/experiment-id/environment-temp
+            // destDirectory: nni/experiment-id
+            let experimentDir = `${srcDirectory}/${destDirectory}`;
+            await cpp.exec(`mkdir -p ${experimentDir}/envs`);
+            await cpp.exec(`cp -rfp ${srcDirectory}/envs/* ${experimentDir}/envs && rm -rf ${srcDirectory}/envs`);
+            await cpp.exec(`cp -fp ${srcDirectory}/run*.sh ${experimentDir} && rm -f ${srcDirectory}/run*.sh`);
+            return `nfs://${this.config.storage.server}:${this.config.storage.path}/${destDirectory}`;
         }
     }
 
@@ -174,7 +180,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             const taskRole: any = this.generateTaskRoleConfig(
                 trialWorkingFolder,
                 this.config.taskRoles[index].dockerImage,
-                `run.sh`,
+                `run_${envId}.sh`,
                 podResources[index],
                 containerPort,
                 await this.createRegistrySecret(this.config.taskRoles[index].privateRegistryAuthPath)
