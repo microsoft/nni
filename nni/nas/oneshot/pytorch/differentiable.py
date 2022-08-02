@@ -136,7 +136,8 @@ class DartsLightningModule(BaseOneShotLightningModule):
         ctrl_params = []
         for m in self.nas_modules:
             ctrl_params += list(m.parameters(arch=True))  # type: ignore
-        # Follow the hyper-parameters used in https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/architect.py#L17
+        # Follow the hyper-parameters used in
+        # https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/architect.py#L17
         params = list(set(ctrl_params))
         if not params:
             raise ValueError('No architecture parameters found. Nothing to search.')

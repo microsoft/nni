@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Callable, Any, Dict, Union, Tuple, List, cast
+from typing import Callable, Any, Dict, Union, Tuple, cast
 
 import pytorch_lightning as pl
 import torch.optim as optim

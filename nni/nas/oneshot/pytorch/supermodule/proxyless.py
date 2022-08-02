@@ -11,7 +11,7 @@ The support remains limited. Known limitations include:
 
 from __future__ import annotations
 
-from typing import cast, Any
+from typing import Any
 
 import torch
 import torch.nn as nn
