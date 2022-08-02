@@ -1,11 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from ..operation import TensorFlowOperation
+# pylint: disable=wildcard-import,unused-wildcard-import
 
-
-class Conv2D(TensorFlowOperation):
-    def __init__(self, type_name, parameters, _internal, attributes=None):
-        if 'padding' not in parameters:
-            parameters['padding'] = 'same'
-        super().__init__(type_name, parameters, _internal)
+from nni.nas.execution.tensorflow.op_def import *
