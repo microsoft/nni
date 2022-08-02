@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v2.7'
+release = 'v2.8'
 
 # -- General configuration ---------------------------------------------------
 
@@ -110,7 +110,8 @@ linkcheck_ignore = [
     r'https://www\.msra\.cn/',                              # MSRA
     r'https://1drv\.ms/',                                   # OneDrive (shortcut)
     r'https://onedrive\.live\.com/',                        # OneDrive
-    r'https://www\.openml\.org/',
+    r'https://www\.openml\.org/',                           # OpenML
+    r'https://ml\.informatik\.uni-freiburg\.de/'
 ]
 
 # Ignore all links located in release.rst
@@ -195,7 +196,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # Translation related settings
 locale_dir = ['locales']
@@ -405,5 +406,5 @@ epub_exclude_files = ['search.html']
 # external links (for github code)
 # Reference the code via :githublink:`path/to/your/example/code.py`
 extlinks = {
-    'githublink': ('https://github.com/microsoft/nni/blob/' + git_commit_id + '/%s', 'Github link: ')
+    'githublink': ('https://github.com/microsoft/nni/blob/' + git_commit_id + '/%s', 'Github link: %s')
 }

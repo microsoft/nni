@@ -1,6 +1,12 @@
 Uncategorized Modules
 =====================
 
+nni.common.framework
+--------------------
+
+.. automodule:: nni.common.framework
+    :members:
+
 nni.common.serializer
 ---------------------
 

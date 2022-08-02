@@ -119,7 +119,8 @@ class Compressor:
         Detect all modules should be compressed, and save the result in `self._modules_to_compress`.
         The model will be instrumented and user should never edit it after calling this method.
         """
-        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        err_msg = 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.bound_model is not None, err_msg
 
         if self._modules_to_compress is None:
             self._modules_to_compress = []
@@ -146,7 +147,8 @@ class Compressor:
         Optional[Dict]
             The retrieved configuration for this layer, if None, this layer should not be compressed.
         """
-        assert self.config_list is not None, 'No config_list set in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        err_msg = 'No config_list set in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.config_list is not None, err_msg
 
         ret = None
         for config in self.config_list:
@@ -240,8 +242,10 @@ class Compressor:
         Dict[int, List[str]]
             A dict. The key is the config idx in config_list, the value is the module name list. i.e., {1: ['layer.0', 'layer.2']}.
         """
-        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
-        assert self.config_list is not None, 'No config_list set in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        err_msg = 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.bound_model is not None, err_msg
+        err_msg = 'No config_list set in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.config_list is not None, err_msg
 
         self._unwrap_model()
         module_groups = {}
@@ -323,6 +327,8 @@ class Compressor:
         torch.nn.Module
             model with specified modules compressed.
         """
-        assert self.bound_model is not None, 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
-        assert self.config_list is not None, 'No config_list set in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        err_msg = 'No model bounded in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.bound_model is not None, err_msg
+        err_msg = 'No config_list set in this compressor, please use Compressor.reset(model, config_list) to set it.'
+        assert self.config_list is not None, err_msg
         return self.bound_model

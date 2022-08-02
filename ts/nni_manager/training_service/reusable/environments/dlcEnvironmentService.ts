@@ -4,6 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as component from 'common/component';
+import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from 'common/log';
 import { DlcConfig } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
@@ -15,6 +16,8 @@ import { FileCommandChannel } from '../channels/fileCommandChannel';
 import { MountedStorageService } from '../storages/mountedStorageService';
 import { Scope } from 'typescript-ioc';
 import { StorageService } from '../storageService';
+import { getLogDir } from 'common/utils';
+import { setTimeout } from 'timers/promises';
 
 /**
  * Collector DLC jobs info from DLC cluster, and update dlc job status locally
@@ -52,8 +55,9 @@ export class DlcEnvironmentService extends EnvironmentService {
     public get getName(): string {
         return 'dlc';
     }
-
+    
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
         environments.forEach(async (environment) => {
             const dlcClient = (environment as DlcEnvironmentInformation).dlcClient;
             if (!dlcClient) {
@@ -75,8 +79,11 @@ export class DlcEnvironmentService extends EnvironmentService {
                     environment.setStatus('SUCCEEDED');
                     break;
                 case 'FAILED':
+                    // the job create failed,we will sleep(60) to create new job
+                    await setTimeout(60000);
+                    this.log.debug(`await 60s to create new job,DLC: job ${environment.id} is failed!`);
                     environment.setStatus('FAILED');
-                    return Promise.reject(`DLC: job ${environment.envId} is failed!`);
+                    break;
                 case 'STOPPED':
                 case 'STOPPING':
                     environment.setStatus('USER_CANCELED');
@@ -85,6 +92,8 @@ export class DlcEnvironmentService extends EnvironmentService {
                     environment.setStatus('UNKNOWN');
             }
         });
+        deferred.resolve();
+        return deferred.promise;
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
@@ -112,11 +121,12 @@ export class DlcEnvironmentService extends EnvironmentService {
             environment.id,
             this.config.ecsSpec,
             this.config.region,
+            this.config.workspaceId,
             this.config.nasDataSourceId,
             this.config.accessKeyId,
             this.config.accessKeySecret,
             environment.command,
-            dlcEnvironment.workingFolder,
+            path.join(getLogDir(), `envs/${environment.id}`),
             this.config.ossDataSourceId,
         );
 

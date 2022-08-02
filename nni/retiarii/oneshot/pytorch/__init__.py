@@ -7,4 +7,3 @@ from .proxyless import ProxylessTrainer
 from .random import SinglePathTrainer, RandomTrainer
 from .differentiable import DartsLightningModule, ProxylessLightningModule, GumbelDartsLightningModule
 from .sampling import EnasLightningModule, RandomSamplingLightningModule
-from .utils import InterleavedTrainValDataLoader, ConcatenateTrainValDataLoader

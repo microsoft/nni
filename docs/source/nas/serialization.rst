@@ -53,7 +53,7 @@ Below is an example, ``transforms.Compose``, ``transforms.Normalize``, and ``MNI
 
   train_dataset = nni.trace(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
   test_dataset = nni.trace(create_mnist_dataset)('data/mnist', transform=transform)  # factory is also acceptable
-  evaluator = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+  evaluator = pl.Classification(train_dataloaders=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=10)
 

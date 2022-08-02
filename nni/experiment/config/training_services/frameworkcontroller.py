@@ -19,6 +19,8 @@ __all__ = ['FrameworkControllerConfig', 'FrameworkControllerRoleConfig', 'Framew
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
+from typing_extensions import Literal
+
 from ..base import ConfigBase
 from ..training_service import TrainingServiceConfig
 from .k8s_storage import K8sStorageConfig
@@ -41,7 +43,7 @@ class FrameworkControllerRoleConfig(ConfigBase):
 
 @dataclass(init=False)
 class FrameworkControllerConfig(TrainingServiceConfig):
-    platform: str = 'frameworkcontroller'
+    platform: Literal['frameworkcontroller'] = 'frameworkcontroller'
     storage: K8sStorageConfig
     service_account_name: Optional[str]
     task_roles: List[FrameworkControllerRoleConfig]

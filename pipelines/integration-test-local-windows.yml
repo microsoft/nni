@@ -1,13 +1,13 @@
 trigger: none
 pr: none
 schedules:
-- cron: 0 16 * * *
+- cron: 0 20 * * *
   branches:
     include: [ master ]
 
 jobs:
 - job: windows
-  pool: nni-it-windows
+  pool: nni-it-1es-windows
   timeoutInMinutes: 120
 
   steps:
@@ -43,3 +43,5 @@ jobs:
     displayName: Integration test
 
   - template: templates/save-crashed-info.yml
+    parameters:
+      training_service: local
