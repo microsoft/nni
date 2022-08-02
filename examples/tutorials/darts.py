@@ -186,15 +186,61 @@ experiment.run(config)
 # %%
 #
 # We can then retrieve the best model found by the strategy with ``export_top_models``.
-# Here, the retrieved model is a dict describing the selected normal cell and reduction cell.
+# Here, the retrieved model is a dict (called *architecture dict*) describing the selected normal cell and reduction cell.
 
-top_model = experiment.export_top_models()[0]
+exported_arch = experiment.export_top_models()[0]
 
-top_model
+exported_arch
 
 # %%
 #
 # Retrain the searched model
 # --------------------------
 #
-# To have a final usable model based on the searched cell, we will need to 
+# What we have got in the last step, is only a cell structure.
+# To get a final usable model with trained weights, we need to construct a real model based on this structure,
+# and then fully train it.
+#
+# To construct a fixed model based on the architecture dict exported from the experiment,
+# we can use :func:`nni.retiarii.fixed_arch`.
+# Here, we increase the number of filters to 36, and number of cells to 20,
+# so as to reasonably increase the model size and boost the performance.
+
+from nni.retiarii import fixed_arch
+
+with fixed_arch(exported_arch):
+    final_model = DARTS(36, 20, 'cifar')
+
+# %%
+#
+# We then train the model on full CIFAR-10 training dataset, and evaluate it on the original CIFAR-10 validation dataset.
+
+train_loader = DataLoader(train_data, batch_size=96)  # Use the original training data
+
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+])
+valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform)
+valid_loader = DataLoader(train_data, batch_size=256)
+
+# %%
+#
+# Create a new evaluator here because we can using a different data split.
+# Also, we should avoid the underlying pytorch-lightning implementation of Classification evaluator from loading the wrong checkpoint.
+#
+# Here, to get an accuracy comparable to `pytorch-cifar repo <https://github.com/kuangliu/pytorch-cifar>`__,
+# ``max_epochs`` should be further increased to at least 200.
+# We only set it to 1 here for tutorial demo purposes.
+
+max_epochs = 1
+
+evaluator = Classification(
+    learning_rate=0.01,
+    weight_decay=1e-4,
+    train_dataloaders=train_loader,
+    val_dataloaders=valid_loader,
+    max_epochs=max_epochs
+)
+
+evaluator.fit(final_model)
