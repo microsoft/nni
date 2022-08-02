@@ -12,6 +12,12 @@ Through this process, you will learn:
 
 In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves xx.xx% accuracy.
 
+.. attention::
+
+   Running this tutorial requires a GPU.
+   If you don't have one, you can set ``gpus`` in :class:`~nni.retiarii.evaluator.pytorch.Classification` to be 0,
+   but do note that it will be much slower.
+
 Use the model space
 -------------------
 
@@ -59,12 +65,18 @@ during the search phase, and increase them back when training the final searched
 #
 # The DARTS model space here is provided by :doc:`model space hub <./space_hub>`,
 # where we have supported multiple popular model spaces for plug-and-play.
+#
+# .. note::
+#
+#    Since we are going to search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
+#    To avoid confusion, we refer to them as *DARTS model space* and *DARTS strategy* respectively.
 
 from nni.retiarii.hub.pytorch import DARTS
 
 model_space = DARTS(16, 8, 'cifar')
 
 # %%
+#
 # Search on the model space
 # -------------------------
 #
@@ -114,11 +126,75 @@ valid_loader = DataLoader(
     sampler=SubsetRandomSampler(indices[split:]),
 )
 
+# %%
+#
+# .. warning:: Max epochs is set to 1 here for tutorial purposes. To get a reasonable result, this should be at least 10.
+
+max_epochs = 1
+
 evaluator = Classification(
     learning_rate=0.01,
     weight_decay=1e-4,
     train_dataloaders=train_loader,
-    val_dataloaders=valid_loader
+    val_dataloaders=valid_loader,
+    max_epochs=max_epochs
 )
 
 # %%
+#
+# We will use DARTS (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
+# DARTS strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
+# The fundamental differences between One-shot strategies and :ref:`multi-trial strategies <multi-trial-nas>` is that,
+# one-shot strategy combines search with model training into a single run.
+# Compared to multi-trial strategies, one-shot NAS doesn't need to iteratively spawn new trials (i.e., models),
+# and thus saves the excessive cost of model training.
+# It's worth mentioning that one-shot NAS also suffers from multiple drawbacks despite its computational efficiency.
+# We recommend
+# `Weight-Sharing Neural Architecture Search: A Battle to Shrink the Optimization Gap <https://arxiv.org/abs/2008.01475>`__
+# and
+# `How Does Supernet Help in Neural Architecture Search? <https://arxiv.org/abs/2010.08219>`__ for interested readers.
+#
+# If you want to know how DARTS strategy works, here is a brief version.
+# Under the hood, DARTS converts the cell into a densely connected graph, and put operators on edges (see the following figure).
+# Since the operators are not decided yet, every edge is a weighted mixture of multiple operators (multiple color in the figure).
+# DARTS then learns to assign the optimal "color" for each edge during the network training.
+# It finally selects one "color" for each edge, and drops redundant edges.
+# The weights on the edges are called *architecture weights*.
+#
+# .. image:: ../../img/darts_illustration.png
+#
+# Note that for DARTS model space, exactly two inputs are kept for every node. This fact is not reflected in the figure.
+#
+# :class:`~nni.retiarii.strategy.DARTS` strategy is provided as one of NNI's :doc:`built-in search strategies </nas/exploration_strategy>`.
+# Using it can be as simple as one line of code.
+
+from nni.retiarii.strategy import DARTS as DartsStrategy
+
+strategy = DartsStrategy()
+
+# %%
+#
+# Launching the experiment is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`,
+# except that the ``execution_engine`` argument should be set to ``oneshot``.
+
+from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
+
+config = RetiariiExeConfig(execution_engine='oneshot')
+experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
+experiment.run(config)
+
+# %%
+#
+# We can then retrieve the best model found by the strategy with ``export_top_models``.
+# Here, the retrieved model is a dict describing the selected normal cell and reduction cell.
+
+top_model = experiment.export_top_models()[0]
+
+top_model
+
+# %%
+#
+# Retrain the searched model
+# --------------------------
+#
+# To have a final usable model based on the searched cell, we will need to 
