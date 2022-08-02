@@ -2,11 +2,9 @@
 # Licensed under the MIT license.
 
 import logging
-from functools import reduce
 import math
 import torch
 import torch.nn as nn
-from torch._C import ListType
 from .error_code import EmptyLayerError, ShapeMisMatchError, InputsNumberError, OutputTypeError, UnBalancedGroupError
 
 _logger = logging.getLogger(__name__)

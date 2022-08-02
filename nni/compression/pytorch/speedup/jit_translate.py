@@ -765,8 +765,7 @@ trans_from_jit_to_python = {
     'prim::Constant': constant_python,
     'aten::constant_pad_nd': constant_pad_nd_python,
     'aten::silu': silu_python,
-    'aten::expand_as': expandas_python,
-    
+    'aten::expand_as': expandas_python
 }
 
 

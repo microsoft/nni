@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import copy
-import types
+
 import logging
 from pathlib import Path
 import queue
@@ -13,10 +13,10 @@ import torch.nn as nn
 from nni.common.graph_utils import build_module_graph
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name
-from .compress_modules import replace_module, replace_func
+from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
-from ..utils import rand_like_with_shape, translate_jit_code
+from ..utils import rand_like_with_shape
 
 
 _logger = logging.getLogger(__name__)
