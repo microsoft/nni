@@ -595,7 +595,8 @@ class TorchEvaluator(Evaluator):
         the same with ``example_inputs`` in ``torch.jit.trace(func, example_inputs, ...)``.
     evaluating_func
         Optional. A function that input is model and return the evaluation metric.
-        The return value can be a single float or a tuple (float, Any).
+        The return value can be a single float or dict. If the return value is a dict,
+        NNI will take the value of key ``default`` as evaluation metric.
 
         Example::
 
