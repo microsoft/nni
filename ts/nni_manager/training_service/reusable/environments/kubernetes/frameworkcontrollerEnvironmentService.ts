@@ -81,7 +81,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
 
         const frameworkcontrollerJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
         const command = this.generateCommandScript(this.config.taskRoles, environment.command);
-        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), command, { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, `nni/${this.experimentId}`, `${environment.id}_run.sh`), command, { encoding: 'utf8' });
 
         //upload script files to sotrage
         const trialJobOutputUrl: string = await this.uploadFolder(this.environmentLocalTempFolder, `nni/${this.experimentId}`);
@@ -174,7 +174,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             const taskRole: any = this.generateTaskRoleConfig(
                 trialWorkingFolder,
                 this.config.taskRoles[index].dockerImage,
-                `run.sh`,
+                `${envId}_run.sh`,
                 podResources[index],
                 containerPort,
                 await this.createRegistrySecret(this.config.taskRoles[index].privateRegistryAuthPath)
