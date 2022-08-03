@@ -233,8 +233,8 @@ testCases:
 #- name: tuner-metis
 #  configFile: test/training_service/config/tuners/metis.yml
 
-- name: tuner-regularized_evolution
-  configFile: test/training_service/config/tuners/regularized_evolution_tuner.yml
+# - name: tuner-regularized_evolution
+#   configFile: test/training_service/config/tuners/regularized_evolution_tuner.yml
 
 #########################################################################
 # nni customized-tuners test
