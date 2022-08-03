@@ -73,16 +73,16 @@ class TensorHook(Hook):
             return hook
     """
 
-    def __init__(self, target: Tensor, target_name: str, hook_factory: Callable[[List], Callable[[Tensor], Any]]):
+    def __init__(self, target: Tensor, target_name: str, hook_factory: Callable[[List], Callable[[Tensor], Tensor | None]]):
         assert isinstance(target, Tensor)
         super().__init__(target, target_name, hook_factory)
 
-    def _register(self, hook_func: Callable[[Tensor], Any]) -> RemovableHandle:
+    def _register(self, hook_func: Callable[[Tensor], Tensor | None]) -> RemovableHandle:
         return self.target.register_hook(hook_func)  # type: ignore
 
 
 class ModuleHook(Hook):
-    def __init__(self, target: Module, target_name: str, hook_factory: Callable[[List], Callable[[Module, Tensor, Tensor], Any]]):
+    def __init__(self, target: Module, target_name: str, hook_factory: Callable[[List], Callable[[Module, Any, Any], Any]]):
         assert isinstance(target, Module)
         super().__init__(target, target_name, hook_factory)
 
@@ -97,7 +97,7 @@ class ForwardHook(ModuleHook):
             return hook
     """
 
-    def _register(self, hook_func: Callable[[Module, Tensor, Tensor], Any]):
+    def _register(self, hook_func: Callable[[Module, Tuple[Any], Any], Any]):
         return self.target.register_forward_hook(hook_func)  # type: ignore
 
 
@@ -111,7 +111,7 @@ class BackwardHook(ModuleHook):
             return hook
     """
 
-    def _register(self, hook_func: Callable[[Module, Tensor, Tensor], Any]):
+    def _register(self, hook_func: Callable[[Module, Tuple[Tensor] | Tensor, Tuple[Tensor] | Tensor], Any]):
         return self.target.register_backward_hook(hook_func)  # type: ignore
 
 
@@ -148,7 +148,8 @@ class Evaluator:
 
     def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None):
         """
-        Bind the model suitable for this ``Evaluator`` to use the evaluator's abilities of model modification, model training, and model evaluation.
+        Bind the model suitable for this ``Evaluator`` to use the evaluator's abilities of model modification,
+        model training, and model evaluation.
 
         Parameter
         ---------
@@ -246,10 +247,12 @@ class Evaluator:
     def evaluate(self) -> float | None | Tuple[float, Any] | Tuple[None, Any]:
         """
         NNI assume the evaluation function user passed in should return a float number or a dict as metric.
-        If the evaluation function returned a dict, take the value with dict key ``default`` as the first element of ``evaluate`` returned value,
+        If the evaluation function returned a dict, take the value with dict key ``default``
+        as the first element of ``evaluate`` returned value,
         and put the dict as the second element of the returned value.
         For any other type of the metric returned by evaluation function, ``evaluate`` will directly returned
-        (it should be a float, but NNI does not prevent other types from being returned, this will handle by the object calling ``evaluate``).
+        (it should be a float, but NNI does not prevent other types from being returned,
+        this will handle by the object calling ``evaluate``).
         """
         # Note that the first item of the returned value will be used as the default metric used by NNI.
         raise NotImplementedError
@@ -287,9 +290,11 @@ class LightningEvaluator(Evaluator):
 
     def __init__(self, trainer: pl.Trainer, data_module: pl.LightningDataModule,
                  dummy_input: Any | None = None):
-        err_msg = 'Only support traced {}, please use nni.trace({}) to initialize the trainer.'
-        assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), err_msg.format('pytorch_lightning.Trainer', 'pytorch_lightning.Trainer')
-        assert isinstance(data_module, pl.LightningDataModule) and is_traceable(data_module), err_msg.format('pytorch_lightning.LightningDataModule', 'pytorch_lightning.LightningDataModule')
+        err_msg_p = 'Only support traced {}, please use nni.trace({}) to initialize the trainer.'
+        err_msg = err_msg_p.format('pytorch_lightning.Trainer', 'pytorch_lightning.Trainer')
+        assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), err_msg
+        err_msg = err_msg_p.format('pytorch_lightning.LightningDataModule', 'pytorch_lightning.LightningDataModule')
+        assert isinstance(data_module, pl.LightningDataModule) and is_traceable(data_module), err_msg
         self.trainer = trainer
         self.data_module = data_module
         self._dummy_input = dummy_input
@@ -314,18 +319,20 @@ class LightningEvaluator(Evaluator):
         optimizers_lr_schedulers: Any = pure_model.configure_optimizers()
         # 1. None - Fit will run without any optimizer.
         if optimizers_lr_schedulers is None:
-            err_msg = 'NNI does not support `LightningModule.configure_optimizers` returned None, '
-            err_msg += 'if you have a reason why you must, please file an issue at https://github.com/microsoft/nni/issues'
+            err_msg = 'NNI does not support `LightningModule.configure_optimizers` returned None, ' + \
+                      'if you have a reason why you must, please file an issue at https://github.com/microsoft/nni/issues'
             raise ValueError(err_msg)
         # 2. Single optimizer.
-        # 3. Dictionary, with an "optimizer" key, and (optionally) a "lr_scheduler" key whose value is a single LR scheduler or lr_scheduler_config.
+        # 3. Dictionary, with an "optimizer" key, and (optionally) a "lr_scheduler" key whose
+        # value is a single LR scheduler or lr_scheduler_config.
         elif isinstance(optimizers_lr_schedulers, (Optimizer, dict)):
             optimizers_lr_schedulers = [optimizers_lr_schedulers]
 
         err_msg = f'Got an wrong returned value type of `LightningModule.configure_optimizers`: {type(optimizers_lr_schedulers).__name__}'
         assert isinstance(optimizers_lr_schedulers, (list, tuple)), err_msg
 
-        # 4. Two lists - the first list has multiple optimizers, and the second has multiple LR schedulers (or multiple lr_scheduler_config).
+        # 4. Two lists - the first list has multiple optimizers,
+        # and the second has multiple LR schedulers (or multiple lr_scheduler_config).
         if isinstance(optimizers_lr_schedulers[0], (list, tuple)):
             optimizers, lr_schedulers = optimizers_lr_schedulers
             self._optimizer_helpers = [OptimizerConstructHelper.from_trace(pure_model, optimizer) for optimizer in optimizers]
@@ -364,7 +371,8 @@ class LightningEvaluator(Evaluator):
         self._initialization_complete = True
 
     def bind_model(self, model: pl.LightningModule, param_names_map: Dict[str, str] | None = None):
-        assert self._initialization_complete is True, 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
+        err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
+        assert self._initialization_complete is True, err_msg
         assert isinstance(model, pl.LightningModule)
         if self.model is not None:
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
@@ -397,7 +405,8 @@ class LightningEvaluator(Evaluator):
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
-                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
+                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]])
+                                 for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
                 opt_lrs_dicts = deepcopy(self._opt_returned_dicts)
                 for opt_lrs_dict in opt_lrs_dicts:
                     opt_lrs_dict['optimizer'] = optimizers[opt_lrs_dict['optimizer']]
@@ -407,7 +416,8 @@ class LightningEvaluator(Evaluator):
         elif self._lr_scheduler_helpers:
             def new_configure_optimizers(_):  # type: ignore
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
-                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
+                lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]])
+                                 for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
                 return optimizers, lr_schedulers
         else:
             def new_configure_optimizers(_):
@@ -442,7 +452,8 @@ class LightningEvaluator(Evaluator):
         assert isinstance(self.model, pl.LightningModule)
 
         class OptimizerCallback(Callback):
-            def on_before_optimizer_step(self, trainer: pl.Trainer, pl_module: pl.LightningModule, optimizer: Optimizer, opt_idx: int) -> None:
+            def on_before_optimizer_step(self, trainer: pl.Trainer, pl_module: pl.LightningModule,
+                                         optimizer: Optimizer, opt_idx: int) -> None:
                 for task in before_step_tasks:
                     task()
 
@@ -486,10 +497,12 @@ class LightningEvaluator(Evaluator):
 
     def evaluate(self) -> Tuple[float | None, List[Dict[str, float]]]:
         """
-        NNI will use metric with key ``default`` for evaluating model, please make sure you have this key in your ``Trainer.test()`` returned metric dicts.
-        If ``Trainer.test()`` returned list contains multiple dicts with key ``default``, NNI will take their average as the final metric.
-        E.g., if ``Trainer.test()`` returned ``[{'default': 0.8, 'loss': 2.3}, {'default': 0.6, 'loss': 2.4}, {'default': 0.7, 'loss': 2.3}]``,
-        NNI will take the final metric ``(0.8 + 0.6 + 0.7) / 3 = 0.7``.
+        NNI will use metric with key ``default`` for evaluating model,
+        please make sure you have this key in your ``Trainer.test()`` returned metric dicts.
+        If ``Trainer.test()`` returned list contains multiple dicts with key ``default``,
+        NNI will take their average as the final metric.
+        E.g., if ``Trainer.test()`` returned ``[{'default': 0.8, 'loss': 2.3}, {'default': 0.6, 'loss': 2.4}]``,
+        NNI will take the final metric ``(0.8 + 0.6) / 2 = 0.7``.
         """
         assert isinstance(self.model, pl.LightningModule)
         # reset trainer
@@ -514,9 +527,11 @@ class LightningEvaluator(Evaluator):
             raise e
 
 
+_OPTIMIZERS = Union[Optimizer, List[Optimizer]]
 _CRITERION = Callable[[Any, Any], Any]
+_SCHEDULERS = Union[None, _LRScheduler, List[_LRScheduler]]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
-_TRAINING_FUNC = Callable[[Module, Union[Optimizer, List[Optimizer]], _CRITERION, Union[None, _LRScheduler, List[_LRScheduler]], Optional[int], Optional[int]], None]
+_TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _CRITERION, _SCHEDULERS, Optional[int], Optional[int]], None]
 
 
 class TorchEvaluator(Evaluator):
@@ -528,8 +543,10 @@ class TorchEvaluator(Evaluator):
     ----------
     training_func
         The training function is used to train the model, note that this a entire optimization training loop.
-        It should have three required parameters [model, optimizers, criterion] and three optional parameters [schedulers, max_steps, max_epochs].
-        ``optimizers`` can be an instance of ``torch.optim.Optimizer`` or a list of ``torch.optim.Optimizer``, it belongs to the ``optimizers`` pass to ``TorchEvaluator``.
+        It should have three required parameters [model, optimizers, criterion]
+        and three optional parameters [schedulers, max_steps, max_epochs].
+        ``optimizers`` can be an instance of ``torch.optim.Optimizer`` or a list of ``torch.optim.Optimizer``,
+        it belongs to the ``optimizers`` pass to ``TorchEvaluator``.
         ``criterion`` and ``schedulers`` are also belonging to the ``criterion`` and ``schedulers`` pass to ``TorchEvaluator``.
         ``max_steps`` and ``max_epochs`` are used to control the training duration.
 
@@ -574,7 +591,8 @@ class TorchEvaluator(Evaluator):
         Optional. The traced _LRScheduler instance which the lr scheduler class is wrapped by nni.trace.
         E.g. ``traced_lr_scheduler = nni.trace(ExponentialLR)(optimizer, 0.1)``.
     dummy_input
-        Optional. The dummy_input is used to trace the graph, the same with ``example_inputs`` in ``torch.jit.trace(func, example_inputs, ...)``.
+        Optional. The dummy_input is used to trace the graph,
+        the same with ``example_inputs`` in ``torch.jit.trace(func, example_inputs, ...)``.
     evaluating_func
         Optional. A function that input is model and return the evaluation metric.
         The return value can be a single float or a tuple (float, Any).
@@ -634,14 +652,16 @@ class TorchEvaluator(Evaluator):
         self._lr_scheduler_helpers = [LRSchedulerConstructHelper.from_trace(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers]
         optimizer_ids_map = {id(optimizer): i for i, optimizer in enumerate(self._tmp_optimizers)}
         # record i-th lr_scheduler scheduling j-th optimizer lr
-        self._lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)] for i, lr_scheduler in enumerate(self._tmp_lr_schedulers)}  # type: ignore
+        self._lrs_opt_map = {i: optimizer_ids_map[id(lr_scheduler.optimizer)]  # type: ignore
+                             for i, lr_scheduler in enumerate(self._tmp_lr_schedulers)}  # type: ignore
 
         delattr(self, '_tmp_optimizers')
         delattr(self, '_tmp_lr_schedulers')
         self._initialization_complete = True
 
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
-        assert self._initialization_complete is True, 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
+        err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
+        assert self._initialization_complete is True, err_msg
         assert isinstance(model, Module)
         if self.model is not None:
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
@@ -651,7 +671,8 @@ class TorchEvaluator(Evaluator):
         self._param_names_map = param_names_map
         # initialize optimizers & lr_schedulers for the bound model here
         self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
-        self._lr_schedulers = [lrs_helper.call(self._optimizers[self._lrs_opt_map[i]]) for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
+        self._lr_schedulers = [lrs_helper.call(self._optimizers[self._lrs_opt_map[i]]) \
+                               for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
         self._first_optimizer_step = self._optimizers[0].step
 
     def unbind_model(self):
@@ -717,7 +738,8 @@ class TorchEvaluator(Evaluator):
         if isinstance(metric, dict):
             nni_used_metric = metric.get('default', None)
             if nni_used_metric is None:
-                warn_msg = f'Evaluation function returns a dict metric without key `default`, will return None as the model evaluation metric value.'
+                warn_msg = f'Evaluation function returns a dict metric without key `default`,' + \
+                           'will return None as the model evaluation metric value.'
                 _logger.warning(warn_msg)
             return nni_used_metric, metric
         else:
