@@ -32,6 +32,8 @@ try:
     from nni.retiarii.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
     import nni.retiarii.evaluator.pytorch.cgo.trainer as cgo_trainer
 
+    import nni.retiarii.integration_api
+
     module_import_failed = False
 except ImportError:
     module_import_failed = True
