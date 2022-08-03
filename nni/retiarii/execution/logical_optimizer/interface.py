@@ -1,14 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from abc import ABC
+# pylint: disable=wildcard-import,unused-wildcard-import
 
-from .logical_plan import LogicalPlan
-
-
-class AbstractOptimizer(ABC):
-    def __init__(self) -> None:
-        pass
-
-    def convert(self, logical_plan: LogicalPlan) -> None:
-        raise NotImplementedError
+from nni.nas.execution.pytorch.cgo.logical_optimizer.interface import *

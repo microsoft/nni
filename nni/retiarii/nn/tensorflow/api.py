@@ -1,11 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from __future__ import annotations
+# pylint: disable=wildcard-import,unused-wildcard-import
 
-import tensorflow as tf
-
-
-class LayerChoice(tf.keras.Layer):
-    # FIXME: This is only a draft to test multi-framework support, it's not unimplemented at all.
-    pass
+from nni.nas.nn.tensorflow.api import *
