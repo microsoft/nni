@@ -518,11 +518,11 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_fit_end(self):
         return self.model.on_fit_end()
 
-    def on_train_batch_start(self, batch, batch_idx, unused=0):
-        return self.model.on_train_batch_start(batch, batch_idx, unused)
+    def on_train_batch_start(self, batch, batch_idx, *args, **kwargs):
+        return self.model.on_train_batch_start(batch, batch_idx, *args, **kwargs)
 
-    def on_train_batch_end(self, outputs, batch, batch_idx, unused=0):
-        return self.model.on_train_batch_end(outputs, batch, batch_idx, unused)
+    def on_train_batch_end(self, outputs, batch, batch_idx, *args, **kwargs):
+        return self.model.on_train_batch_end(outputs, batch, batch_idx, *args, **kwargs)
 
     def on_train_epoch_start(self):
         return self.model.on_train_epoch_start()
