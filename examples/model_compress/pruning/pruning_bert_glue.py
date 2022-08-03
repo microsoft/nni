@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from __future__ import annotations
 import functools
 from pathlib import Path
@@ -28,7 +31,7 @@ from nni.compression.pytorch.speedup import ModelSpeedup
 
 pretrained_model_name_or_path = 'bert-base-uncased'
 task_name = 'mnli'
-experiment_id = '0'
+experiment_id = 'exp_id'
 log_dir = Path(f'./pruning_log/{pretrained_model_name_or_path}/{task_name}/{experiment_id}')
 model_dir = Path(f'./models/{pretrained_model_name_or_path}/{task_name}')
 
@@ -186,10 +189,10 @@ if __name__ == '__main__':
 
     # block movement pruning attention
     # make sure you have used nni.trace to wrap the optimizer class before initialize
-    total_epochs = 12
+    total_epochs = 4
     total_steps = total_epochs * steps_per_epoch
     warmup_steps = 1 * steps_per_epoch
-    cooldown_steps = 4 * steps_per_epoch
+    cooldown_steps = 1 * steps_per_epoch
 
     movement_training = functools.partial(training, log_path=log_dir / 'movement_pruning.log')
 
@@ -209,7 +212,7 @@ if __name__ == '__main__':
                             training_epochs=total_epochs,
                             warm_up_step=warmup_steps,
                             cool_down_beginning_step=total_steps - cooldown_steps,
-                            regular_scale=30,
+                            regular_scale=10,
                             movement_mode='soft',
                             sparse_granularity='auto')
     simulated_pruning_model, attention_masks = pruner.compress()

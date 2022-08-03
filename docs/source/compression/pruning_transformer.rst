@@ -47,28 +47,23 @@ Result
       - 0%
       - 84.73 / 84.63
       - +0.0 / +0.0
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=1)
-      - :ref:`taylor-fo-weight-pruner`
-      - 51.85%
-      - 84.66 / 84.88
-      - -0.07 / +0.15
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=3)
-      - :ref:`taylor-fo-weight-pruner`
-      - 68.06%
-      - 83.59 / 83.84
-      - -1.14 / -0.79
     * - :ref:`movement-pruner` (soft, th=0.1, lambda=5)
       - :ref:`taylor-fo-weight-pruner`
-      - 72.69%
-      - 83.19 / 83.65
-      - -1.54 / -0.98
+      - 51.39%
+      - 84.25 / 84.96
+      - -0.48 / +0.33
     * - :ref:`movement-pruner` (soft, th=0.1, lambda=10)
       - :ref:`taylor-fo-weight-pruner`
-      - 80.50%
-      - 82.70 / 82.35
-      - -2.03 / -2.28
+      - 66.67%
+      - 83.98 / 83.75
+      - -0.75 / -0.88
     * - :ref:`movement-pruner` (soft, th=0.1, lambda=20)
       - :ref:`taylor-fo-weight-pruner`
-      - 87.50%
-      - 81.29/81.12
-      - -3.44 / -3.51
+      - 77.78%
+      - 83.02 / 83.06
+      - -1.71 / -1.57
+    * - :ref:`movement-pruner` (soft, th=0.1, lambda=30)
+      - :ref:`taylor-fo-weight-pruner`
+      - 89.81%
+      - 81.24 / 80.99
+      - -3.49 / -3.64
