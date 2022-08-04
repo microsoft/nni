@@ -7,11 +7,12 @@ schedules:
 
 jobs:
 - job: hybrid
-  pool: nni-it
+  pool: nni-it-1es-11
   timeoutInMinutes: 90
 
   steps:
   # FIXME: should use GPU here
+  - template: templates/fix-apt-1es.yml
 
   - template: templates/install-dependencies.yml
     parameters:

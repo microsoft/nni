@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 import nni.retiarii
+import nni.retiarii.integration_api
 from nni.retiarii import Model, submit_models
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.execution import set_execution_engine

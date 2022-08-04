@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import torch
 import torch.nn as nn
-from nni.retiarii.nn.pytorch import ValueChoice, Conv2d, BatchNorm2d, Linear, MultiheadAttention
+from nni.retiarii.nn.pytorch import ValueChoice, Conv2d, BatchNorm2d, LayerNorm, Linear, MultiheadAttention
 from nni.retiarii.oneshot.pytorch.base_lightning import traverse_and_mutate_submodules
 from nni.retiarii.oneshot.pytorch.supermodule.differentiable import (
     MixedOpDifferentiablePolicy, DifferentiableMixedLayer, DifferentiableMixedInput, GumbelSoftmax,
@@ -27,6 +27,12 @@ def test_slice():
     assert S(weight)[:, 1:3, :, 9:13].shape == (3, 2, 24, 4)
     assert S(weight)[:, 1:W(3)*2+1, :, 9:13].shape == (3, 6, 24, 4)
     assert S(weight)[:, 1:W(3)*2+1].shape == (3, 6, 24, 23)
+
+    # Ellipsis
+    assert S(weight)[..., 9:13].shape == (3, 7, 24, 4)
+    assert S(weight)[:2, ..., 1:W(3)+1].shape == (2, 7, 24, 3)
+    assert S(weight)[..., 1:W(3)*2+1].shape == (3, 7, 24, 6)
+    assert S(weight)[..., :10, 1:W(3)*2+1].shape == (3, 7, 10, 6)
 
     # no effect
     assert S(weight)[:] is weight
@@ -225,6 +231,23 @@ def test_mixed_batchnorm2d():
     assert _mixed_operation_sampling_sanity_check(bn, {'dim': 64}, torch.randn(2, 64, 3, 3)).size(1) == 64
 
     _mixed_operation_differentiable_sanity_check(bn, torch.randn(2, 64, 3, 3))
+
+
+def test_mixed_layernorm():
+    ln = LayerNorm(ValueChoice([32, 64], label='normalized_shape'), elementwise_affine=True)
+
+    assert _mixed_operation_sampling_sanity_check(ln, {'normalized_shape': 32}, torch.randn(2, 16, 32)).size(-1) == 32
+    assert _mixed_operation_sampling_sanity_check(ln, {'normalized_shape': 64}, torch.randn(2, 16, 64)).size(-1) == 64
+
+    _mixed_operation_differentiable_sanity_check(ln, torch.randn(2, 16, 64))
+    
+    import itertools
+    ln = LayerNorm(ValueChoice(list(itertools.product([16, 32, 64], [8, 16])), label='normalized_shape'))
+
+    assert list(_mixed_operation_sampling_sanity_check(ln, {'normalized_shape': (16, 8)}, torch.randn(2, 16, 8)).shape[-2:]) == [16, 8]
+    assert list(_mixed_operation_sampling_sanity_check(ln, {'normalized_shape': (64, 16)}, torch.randn(2, 64, 16)).shape[-2:]) == [64, 16]
+
+    _mixed_operation_differentiable_sanity_check(ln, torch.randn(2, 64, 16))
 
 
 def test_mixed_mhattn():

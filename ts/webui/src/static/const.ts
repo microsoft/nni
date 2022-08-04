@@ -14,7 +14,7 @@ const METRIC_GROUP_UPDATE_SIZE = 20;
 const prefix = getPrefix();
 const RESTAPI = '/api/v1/nni';
 const MANAGER_IP = prefix === undefined ? RESTAPI : `${prefix}${RESTAPI}`;
-const DOWNLOAD_IP = `${prefix}/logs`;
+const DOWNLOAD_IP = prefix === undefined ? '/logs' : `${prefix}/logs`;
 
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/experiment/webui.html';
 

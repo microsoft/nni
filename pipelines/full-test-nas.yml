@@ -31,15 +31,18 @@ stages:
   condition: and(succeeded(), ne(dependencies.filter.outputs['check.execution.skipsubsequent'], 'true'))
   jobs:
   - job: linux
-    # move back after we complete the 1ES pool...
-    pool:
-      vmImage: ubuntu-latest
+    pool: nni-it-1es-11
     timeoutInMinutes: 60
 
     steps:
+    - template: templates/fix-apt-1es.yml
+      parameters:
+        check_gpu: true
+
     - template: templates/install-dependencies.yml
       parameters:
-        platform: ubuntu-latest
+        platform: ubuntu-latest-gpu
+        python_env: venv
 
     - template: templates/install-nni.yml
 
@@ -51,15 +54,17 @@ stages:
       displayName: NAS test
 
   - job: windows
-    # move back after we complete the 1ES pool...
-    pool:
-      vmImage: windows-latest
+    pool: nni-it-1es-windows
     timeoutInMinutes: 60
 
     steps:
+    # FIXME: Windows should use GPU,
+    # but it's not used now since driver is not installed in the image.
+
     - template: templates/install-dependencies.yml
       parameters:
         platform: windows
+        python_env: noop
 
     - template: templates/install-nni.yml
       parameters:
