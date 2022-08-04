@@ -256,8 +256,14 @@ evaluator.fit(final_model)
 # They also train the networks for longer time (i.e., 600 epochs).
 #
 # To implement these tricks, we need to rewrite a few parts of evaluator.
-# Firstly, few more info about evaluator...
-# We inherit the corresponding lightning module of :class:`~nni.retiarii.evaluator.pytorch.Classification` evaluator and override the following methods.
+#
+# Working with one-shot strategies, evaluators need to be implemented in the style of :ref:`PyTorch-Lightning <lightning-evaluator>`,
+# The full tutorial can be found in :doc:`/nas/evaluator`.
+# High-level speaking, the fundamental part of writing a new evaluator is to to define a new LightningModule.
+# Since we are merely adding a few ingredients to :class:`~nni.retiarii.evaluator.pytorch.Classification`,
+# we can simply inherit :class:`~nni.retiarii.evaluator.pytorch.ClassificationModule`, which is the underlying LightningModule
+# behind :class:`~nni.retiarii.evaluator.pytorch.Classification`.
+# # We inherit the corresponding lightning module of :class:`~nni.retiarii.evaluator.pytorch.Classification` evaluator and override the following methods.
 # This could look intimidating at first, but most of them are just plug-and-play tricks which you don't need to know details about.
 
 from nni.retiarii.evaluator.pytorch import ClassificationModule
