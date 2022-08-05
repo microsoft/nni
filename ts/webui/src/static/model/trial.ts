@@ -114,6 +114,12 @@ class Trial {
             if (typeof params === 'string') {
                 params = JSON.parse(params);
             }
+            // for hpo experiment: search space choice value is None, and it shows null
+            for (const [key, value] of Object.entries(params)) {
+                if (Object.is(null, value)) {
+                    params[key] = 'null';
+                }
+            }
             const [updated, unexpectedEntries] = inferTrialParameters(params, axes);
             if (unexpectedEntries.size) {
                 throw unexpectedEntries;
