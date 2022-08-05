@@ -16,9 +16,9 @@ from torchvision.datasets import MNIST
 
 debug = False
 
-progress_bar_refresh_rate = 0
+enable_progress_bar = False
 if debug:
-    progress_bar_refresh_rate = 1
+    enable_progress_bar = True
 
 
 class MNISTModel(nn.Module):
@@ -96,7 +96,7 @@ def test_mnist():
     lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                   val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                   max_epochs=2, limit_train_batches=0.25,  # for faster training
-                                  progress_bar_refresh_rate=progress_bar_refresh_rate)
+                                  enable_progress_bar=enable_progress_bar)
     lightning._execute(MNISTModel)
     assert _get_final_result() > 0.7
     _reset()
@@ -113,7 +113,7 @@ def test_diabetes():
                               train_dataloader=pl.DataLoader(train_dataset, batch_size=20),
                               val_dataloaders=pl.DataLoader(test_dataset, batch_size=20),
                               max_epochs=100,
-                              progress_bar_refresh_rate=progress_bar_refresh_rate)
+                              enable_progress_bar=enable_progress_bar)
     lightning._execute(FCNet(train_dataset.x.shape[1], 1))
     assert _get_final_result() < 2e4
     _reset()
@@ -134,7 +134,7 @@ def test_fit_api():
     def lightning(): return pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                               val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                               max_epochs=1, limit_train_batches=0.1,  # for faster training
-                                              progress_bar_refresh_rate=progress_bar_refresh_rate)
+                                              enable_progress_bar=enable_progress_bar)
     # Lightning will have some cache in models / trainers,
     # which is problematic if we call fit multiple times.
     lightning().fit(lambda: MNISTModel())

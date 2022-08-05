@@ -1,18 +1,19 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
-import { TableObj, EventMap } from '@static/interface';
-import { filterDuration, convertDuration } from '@static/function';
+import { EventMap } from '@static/interface';
+import { Trial } from '@model/trial';
+import { convertDuration } from '@static/function';
 import 'echarts/lib/chart/bar';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
 
 interface Runtrial {
-    trialId: string[];
+    trialId: number[];
     trialTime: number[];
 }
 
 interface DurationProps {
-    source: Array<TableObj>;
+    source: Trial[];
 }
 
 interface DurationState {
@@ -31,12 +32,10 @@ class Duration extends React.Component<DurationProps, DurationState> {
         };
     }
 
-    initDuration = (source: Array<TableObj>): any => {
+    initDuration = (source: Trial[]): any => {
         const trialId: number[] = [];
         const trialTime: number[] = [];
-        const trialJobs = source.filter(filterDuration);
-
-        trialJobs.forEach(item => {
+        source.forEach(item => {
             trialId.push(item.sequenceId);
             trialTime.push(item.duration);
         });
@@ -146,17 +145,16 @@ class Duration extends React.Component<DurationProps, DurationState> {
         };
     };
 
-    drawDurationGraph = (source: Array<TableObj>): void => {
+    drawDurationGraph = (source: Trial[]): void => {
         // why this function run two times when props changed?
-        const trialId: string[] = [];
+        const trialId: number[] = [];
         const trialTime: number[] = [];
         const trialRun: Runtrial[] = [];
-        const trialJobs = source.filter(filterDuration);
-        Object.keys(trialJobs).map(item => {
-            const temp = trialJobs[item];
-            trialId.push(temp.sequenceId);
-            trialTime.push(temp.duration);
+        source.forEach(item => {
+            trialId.push(item.sequenceId);
+            trialTime.push(item.duration);
         });
+
         trialRun.push({
             trialId: trialId,
             trialTime: trialTime
