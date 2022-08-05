@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # DLC submit
     try:
-        
+
         # init client
         if args.region == 'share':
             client = Client(
