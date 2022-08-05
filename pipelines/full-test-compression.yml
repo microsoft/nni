@@ -44,6 +44,10 @@ stages:
         platform: ubuntu-latest-gpu
         python_env: venv
 
+    - script: |
+        python -m pip install "pytorch-lightning<1.7"
+      displayName: Pin PytorchLightning version
+
     - template: templates/install-nni.yml
 
     - template: templates/download-test-data.yml
