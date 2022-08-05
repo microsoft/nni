@@ -1,12 +1,10 @@
 import json
 from pathlib import Path
-import sys
 
+from nni.common.framework import get_default_framework, set_default_framework
 from nni.retiarii import *
 
-# FIXME
-import nni.retiarii.debug_configs
-original_framework = nni.retiarii.debug_configs.framework
+original_framework = get_default_framework()
 
 max_pool = Operation.new('MaxPool2D', {'pool_size': 2})
 avg_pool = Operation.new('AveragePooling2D', {'pool_size': 2})
@@ -14,11 +12,11 @@ global_pool = Operation.new('GlobalAveragePooling2D')
 
 
 def setup_module(module):
-    nni.retiarii.debug_configs.framework = 'tensorflow'
+    set_default_framework('tensorflow')
 
 
 def teardown_module(module):
-    nni.retiarii.debug_configs.framework = original_framework
+    set_default_framework(original_framework)
 
 
 class DebugSampler(Sampler):

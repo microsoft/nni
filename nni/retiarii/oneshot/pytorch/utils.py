@@ -12,7 +12,6 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 import nni.retiarii.nn.pytorch as nn
-from nni.nas.pytorch.mutables import InputChoice, LayerChoice
 
 _logger = logging.getLogger(__name__)
 
@@ -163,7 +162,7 @@ def replace_layer_choice(root_module, init_fn, modules=None):
     list[tuple[str, nn.Module]]
         A list from layer choice keys (names) and replaced modules.
     """
-    return _replace_module_with_type(root_module, init_fn, (LayerChoice, nn.LayerChoice), modules)
+    return _replace_module_with_type(root_module, init_fn, nn.LayerChoice, modules)
 
 
 def replace_input_choice(root_module, init_fn, modules=None):
@@ -184,7 +183,7 @@ def replace_input_choice(root_module, init_fn, modules=None):
     list[tuple[str, nn.Module]]
         A list from layer choice keys (names) and replaced modules.
     """
-    return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
+    return _replace_module_with_type(root_module, init_fn, nn.InputChoice, modules)
 
 
 class InterleavedTrainValDataLoader(DataLoader):

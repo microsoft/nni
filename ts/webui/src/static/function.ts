@@ -3,7 +3,7 @@ import axios from 'axios';
 import { IContextualMenuProps } from '@fluentui/react';
 import { RETIARIIPARAMETERS } from './const';
 import { EXPERIMENT } from './datamodel';
-import { MetricDataRecord, FinalType, TableObj, TensorboardTaskInfo } from './interface';
+import { MetricDataRecord, FinalType, TensorboardTaskInfo } from './interface';
 
 function getPrefix(): string | undefined {
     const pathName = window.location.pathname;
@@ -186,15 +186,6 @@ const intermediateGraphOption = (intermediateArr: number[], id: string): any => 
             }
         ]
     };
-};
-
-const filterByStatus = (item: TableObj): boolean => {
-    return item.status === 'SUCCEEDED';
-};
-
-// a waittiong trial may havn't start time
-const filterDuration = (item: TableObj): boolean => {
-    return item.status !== 'WAITING';
 };
 
 const downFile = (content: string, fileName: string): void => {
@@ -380,8 +371,8 @@ function _inferColumnTitle(columnKey: string): string {
 
 const getIntermediateAllKeys = (intermediateDialogTrial: any): string[] => {
     let intermediateAllKeysList: string[] = [];
-    if (intermediateDialogTrial!.intermediateMetrics !== undefined && intermediateDialogTrial!.intermediateMetrics[0]) {
-        const parsedMetric = parseMetrics(intermediateDialogTrial!.intermediateMetrics[0].data);
+    if (intermediateDialogTrial!.intermediates !== undefined && intermediateDialogTrial!.intermediates[0]) {
+        const parsedMetric = parseMetrics(intermediateDialogTrial!.intermediates[0].data);
         if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
             const allIntermediateKeys: string[] = [];
             // just add type=number keys
@@ -411,8 +402,6 @@ export {
     getFinal,
     downFile,
     intermediateGraphOption,
-    filterByStatus,
-    filterDuration,
     formatAccuracy,
     formatTimestamp,
     expformatTimestamp,

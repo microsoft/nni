@@ -114,20 +114,6 @@ testCases:
 #- name: nested-ss
 #  configFile: test/training_service/config/examples/mnist-nested-search-space.yml
 
-- name: classic-nas-gen-ss
-  configFile: test/training_service/config/examples/classic-nas-pytorch.yml
-  launchCommand: nnictl ss_gen --trial_command="python3 mnist.py --epochs 1" --trial_dir=../examples/nas/legacy/classic_nas --file=training_service/config/examples/nni-nas-search-space.json
-  stopCommand:
-  experimentStatusCheck: False
-  trainingService: local
-
-- name: classic-nas-pytorch
-  configFile: test/training_service/config/examples/classic-nas-pytorch.yml
-  # remove search space file
-  stopCommand: nnictl stop
-  onExitCommand: python3 -c "import os; os.remove('training_service/config/examples/nni-nas-search-space.json')"
-  trainingService: local
-
 #########################################################################
 # nni features test
 #########################################################################
@@ -247,8 +233,8 @@ testCases:
 #- name: tuner-metis
 #  configFile: test/training_service/config/tuners/metis.yml
 
-- name: tuner-regularized_evolution
-  configFile: test/training_service/config/tuners/regularized_evolution_tuner.yml
+# - name: tuner-regularized_evolution
+#   configFile: test/training_service/config/tuners/regularized_evolution_tuner.yml
 
 #########################################################################
 # nni customized-tuners test
