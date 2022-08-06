@@ -118,7 +118,7 @@ To update NNI to the latest version, add `--upgrade` flag to the above commands.
 <li><a href="https://nni.readthedocs.io/en/latest/compression/pruner.html#movement-pruner">Movement</a></li>
 <li><a href="https://nni.readthedocs.io/en/latest/compression/pruner.html#agp-pruner">AGP</a></li>
 <li><a href="https://nni.readthedocs.io/en/latest/compression/pruner.html#auto-compress-pruner">Auto Compress</a></li>
-<li><a href="https://nni.readthedocs.io/en/latest/compression/index.html">More...</a></li>
+<li><a href="https://nni.readthedocs.io/en/latest/compression/pruner.html">More...</a></li>
 </ul>
 <li><b>Quantization</b></li>
 <ul>

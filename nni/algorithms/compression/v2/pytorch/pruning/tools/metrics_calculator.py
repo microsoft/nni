@@ -11,7 +11,7 @@ from torch import Tensor
 from .base import MetricsCalculator
 from ...utils import Scaling
 
-__all__ = ['NormMetricsCalculator', 'MultiDataNormMetricsCalculator', 'DistMetricsCalculator',
+__all__ = ['NormMetricsCalculator', 'HookDataNormMetricsCalculator', 'DistMetricsCalculator',
            'APoZRankMetricsCalculator', 'MeanRankMetricsCalculator', 'StraightMetricsCalculator']
 
 
@@ -19,11 +19,12 @@ class StraightMetricsCalculator(MetricsCalculator):
     """
     This metrics calculator directly returns a copy of data as metrics.
     """
-    def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
+    def calculate_metrics(self, data: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         metrics = {}
-        for name, tensor in data.items():
-            # use inplace detach `detach_` here to avoid creating a new tensor
-            metrics[name] = tensor.clone().detach_()
+        for module_name, targets_data in data.items():
+            metrics[module_name] = {}
+            for target_name, target_data in targets_data.items():
+                metrics[module_name][target_name] = target_data.clone().detach()
         return metrics
 
 
@@ -44,27 +45,32 @@ class NormMetricsCalculator(MetricsCalculator):
         super().__init__(scalers=scalers)
         self.p = p if p is not None else 'fro'
 
-    def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
+    def calculate_metrics(self, data: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         def reduce_func(t: Tensor) -> Tensor:
             return t.norm(p=self.p, dim=-1)  # type: ignore
 
         metrics = {}
-        target_name = 'weight'
-        for module_name, target_data in data.items():
-            scaler = self._get_scaler(module_name, target_name)
-            metrics[module_name] = scaler.shrink(target_data, reduce_func)
+        for module_name, targets_data in data.items():
+            metrics[module_name] = {}
+            for target_name, target_data in targets_data.items():
+                scaler = self._get_scaler(module_name, target_name)
+                metrics[module_name][target_name] = scaler.shrink(target_data, reduce_func)
         return metrics
 
 
-class MultiDataNormMetricsCalculator(NormMetricsCalculator):
+class HookDataNormMetricsCalculator(NormMetricsCalculator):
     """
-    The data value format is a two-element list [batch_number, cumulative_data].
+    The hook data value format is a two-element list [batch_number, cumulative_data].
     Directly use the cumulative_data as new_data to calculate norm metric.
     TaylorFO pruner uses this to calculate metric.
     """
 
-    def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
-        new_data = {name: buffer[1] for name, buffer in data.items()}
+    def calculate_metrics(self, data: Dict[str, Dict[str, List[Tensor]]]) -> Dict[str, Dict[str, Tensor]]:
+        new_data = {}
+        for module_name, targets_data in data.items():
+            new_data[module_name] = {}
+            for target_name, (_, target_data) in targets_data.items():
+                new_data[module_name][target_name] = target_data
         return super().calculate_metrics(new_data)
 
 
@@ -85,7 +91,7 @@ class DistMetricsCalculator(MetricsCalculator):
         super().__init__(scalers=scalers)
         self.p = p if p is not None else 'fro'
 
-    def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
+    def calculate_metrics(self, data: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         def reduce_func(t: Tensor) -> Tensor:
             reshape_data = t.reshape(-1, t.shape[-1])
             metric = torch.zeros(reshape_data.shape[0], device=reshape_data.device)
@@ -94,10 +100,11 @@ class DistMetricsCalculator(MetricsCalculator):
             return metric.reshape(t.shape[:-1])
 
         metrics = {}
-        target_name = 'weight'
-        for module_name, target_data in data.items():
-            scaler = self._get_scaler(module_name, target_name)
-            metrics[module_name] = scaler.shrink(target_data, reduce_func)
+        for module_name, targets_data in data.items():
+            metrics[module_name] = {}
+            for target_name, target_data in targets_data.items():
+                scaler = self._get_scaler(module_name, target_name)
+                metrics[module_name][target_name] = scaler.shrink(target_data, reduce_func)
         return metrics
 
 
@@ -108,16 +115,18 @@ class APoZRankMetricsCalculator(MetricsCalculator):
     Note that the metric we return is (1 - apoz), because we assume a higher metric value has higher importance.
     APoZRank pruner uses this to calculate metric.
     """
-    def calculate_metrics(self, data: Dict[str, List]) -> Dict[str, Tensor]:
+
+    def calculate_metrics(self, data: Dict[str, Dict[str, List[Tensor]]]) -> Dict[str, Dict[str, Tensor]]:
         def reduce_func(t: Tensor) -> Tensor:
             return 1 - t.mean(dim=-1)
 
         metrics = {}
-        target_name = 'weight'
-        for module_name, target_data in data.items():
-            target_data = target_data[1] / target_data[0]
-            scaler = self._get_scaler(module_name, target_name)
-            metrics[module_name] = scaler.shrink(target_data, reduce_func)
+        for module_name, targets_data in data.items():
+            metrics[module_name] = {}
+            for target_name, target_data in targets_data.items():
+                target_data = target_data[1] / target_data[0]
+                scaler = self._get_scaler(module_name, target_name)
+                metrics[module_name][target_name] = scaler.shrink(target_data, reduce_func)
         return metrics
 
 
@@ -127,14 +136,15 @@ class MeanRankMetricsCalculator(MetricsCalculator):
     This metric simply calculate the average on `self.dim`, then divide by the batch_number.
     MeanRank pruner uses this to calculate metric.
     """
-    def calculate_metrics(self, data: Dict[str, List]) -> Dict[str, Tensor]:
+    def calculate_metrics(self, data: Dict[str, Dict[str, List[Tensor]]]) -> Dict[str, Dict[str, Tensor]]:
         def reduce_func(t: Tensor) -> Tensor:
             return t.mean(dim=-1)
 
         metrics = {}
-        target_name = 'weight'
-        for module_name, target_data in data.items():
-            target_data = target_data[1] / target_data[0]
-            scaler = self._get_scaler(module_name, target_name)
-            metrics[module_name] = scaler.shrink(target_data, reduce_func)
+        for module_name, targets_data in data.items():
+            metrics[module_name] = {}
+            for target_name, target_data in targets_data.items():
+                target_data = target_data[1] / target_data[0]
+                scaler = self._get_scaler(module_name, target_name)
+                metrics[module_name][target_name] = scaler.shrink(target_data, reduce_func)
         return metrics

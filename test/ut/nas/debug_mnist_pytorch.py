@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-import nni.retiarii.nn.pytorch
+import nni.nas.nn.pytorch
 
 import torch
 

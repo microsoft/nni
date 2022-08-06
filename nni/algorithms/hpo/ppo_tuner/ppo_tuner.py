@@ -633,7 +633,7 @@ class PPOTuner(Tuner):
             # use mean of finished trials as the result of this failed trial
             values = [val for val in self.trials_result if val is not None]
             logger.warning('In trial_end, values: %s', values)
-            self.trials_result[trial_info_idx] = (sum(values) / len(values)) if values else 0
+            self.trials_result[trial_info_idx] = (np.mean(values)) if values else 0
             self.finished_trials += 1
             if self.finished_trials == self.inf_batch_size:
                 logger.debug('Start next round inference in trial_end')

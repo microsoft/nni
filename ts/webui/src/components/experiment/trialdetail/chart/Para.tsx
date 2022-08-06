@@ -3,9 +3,9 @@ import * as d3 from 'd3';
 import { Dropdown, IDropdownOption, Stack, DefaultButton } from '@fluentui/react';
 import ParCoords from 'parcoord-es';
 import { SearchSpace } from '@model/searchspace';
-import { filterByStatus } from '@static/function';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
-import { TableObj, SingleAxis, MultipleAxes } from '@static/interface';
+import { SingleAxis, MultipleAxes } from '@static/interface';
+import { Trial } from '@model/trial';
 import ChangeColumnComponent from '../ChangeColumnComponent';
 import { optimizeModeValue } from './optimizeMode';
 
@@ -25,7 +25,7 @@ interface ParaState {
 }
 
 interface ParaProps {
-    trials: Array<TableObj>;
+    trials: Trial[];
     searchSpace: SearchSpace;
 }
 
@@ -304,9 +304,8 @@ class Para extends React.Component<ParaProps, ParaState> {
 
     private getTrialsAsObjectList(inferredSearchSpace: MultipleAxes, inferredMetricSpace: MultipleAxes): {}[] {
         const { trials } = this.props;
-        const succeededTrials = trials.filter(filterByStatus);
 
-        return succeededTrials.map(s => {
+        return trials.map(s => {
             const entries = Array.from(s.parameters(inferredSearchSpace).entries());
             entries.push(...Array.from(s.metrics(inferredMetricSpace).entries()));
             const ret = {};
