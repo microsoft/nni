@@ -10,7 +10,7 @@ import os
 import time
 import warnings
 from threading import Thread
-from typing import Any, List, cast, Union, Tuple
+from typing import Any, List, cast, Tuple
 
 import colorama
 

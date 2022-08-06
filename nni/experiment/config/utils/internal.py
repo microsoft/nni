@@ -15,7 +15,8 @@ __all__ = [
     'fields', 'is_instance', 'validate_type', 'is_path_like',
     'guess_config_type', 'guess_list_config_type',
     'training_service_config_factory', 'load_training_service_config',
-    'get_ipv4_address', 'init_experiment_config', 'get_experiment_class_using_config'
+    'load_experiment_config', 'get_experiment_class_using_config',
+    'get_ipv4_address'
 ]
 
 import copy
@@ -34,7 +35,7 @@ import nni.runtime.config
 from .public import is_missing
 
 if typing.TYPE_CHECKING:
-    from nni.retiarii.experiment.config.experiment_config import RetiariiExeConfig
+    from nni.nas.experiment.config import RetiariiExeConfig
     from ..base import ConfigBase
     from ..experiment_config import ExperimentConfig
     from ..training_service import TrainingServiceConfig
@@ -201,7 +202,9 @@ def get_ipv4_address() -> str:
     s.close()
     return addr
 
-def init_experiment_config(config_json) -> typing.Union[ExperimentConfig, RetiariiExeConfig]:
+def load_experiment_config(config_json) -> typing.Union[ExperimentConfig, RetiariiExeConfig]:
+    from nni.nas.experiment.config import RetiariiExeConfig
+    from ..experiment_config import ExperimentConfig
     if 'experimentType' in config_json:
         if config_json['experimentType'] == 'hpo':
             return ExperimentConfig(**config_json)
@@ -218,7 +221,7 @@ def init_experiment_config(config_json) -> typing.Union[ExperimentConfig, Retiar
 
 def get_experiment_class_using_config(config_json):
     from ...experiment import Experiment
-    from nni.retiarii.experiment.pytorch import RetiariiExperiment
+    from nni.nas.experiment.pytorch import RetiariiExperiment
     if 'experimentType' in config_json:
         if config_json['experimentType'] == 'hpo':
             return Experiment

@@ -1,16 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-__all__ = ['unpack_if_only_one', 'get_mutation_dict', 'mutation_dict_to_summary', 'get_mutation_summary']
+__all__ = ['unpack_if_only_one', 'get_mutation_dict', 'mutation_dict_to_summary', 'get_mutation_summary', 'init_execution_engine']
 
 from typing import Any, List, cast
 from nni.experiment.config.training_services import RemoteConfig
 from .engine import AbstractExecutionEngine
 from .graph import Model
-from ...experiment.config import (
-    BaseEngineConfig, PyEngineConfig,
-    CgoEngineConfig, BenchmarkEngineConfig
-)
 
 
 def unpack_if_only_one(ele: List[Any]):
@@ -40,6 +36,10 @@ def get_mutation_summary(model: Model) -> dict:
     return mutation_dict_to_summary(mutation)
 
 def init_execution_engine(config, port, url_prefix) -> AbstractExecutionEngine:
+    from ...experiment.config import (
+        BaseEngineConfig, PyEngineConfig,
+        CgoEngineConfig, BenchmarkEngineConfig
+    )
     if isinstance(config.execution_engine, BaseEngineConfig):
         from ..pytorch.graph import BaseExecutionEngine
         return BaseExecutionEngine(port, url_prefix)

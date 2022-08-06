@@ -5,6 +5,7 @@ import os
 import sys
 from dataclasses import dataclass, MISSING
 from typing import Any, Dict, Union, Optional
+from typing_extensions import Literal
 
 from nni.experiment.config import utils, ExperimentConfig
 
@@ -36,7 +37,7 @@ def _get_ee_config_class(engine_name):
 @dataclass(init=False)
 class RetiariiExeConfig(ExperimentConfig):
     # FIXME: refactor this class to inherit from a new common base class with HPO config
-    experiment_type: str = 'nas'
+    experiment_type: Literal['nas'] = 'nas'
     search_space: Any = ''
     trial_code_directory: utils.PathLike = '.'
     trial_command: str = '_reserved'
