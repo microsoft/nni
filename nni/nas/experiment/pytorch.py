@@ -18,7 +18,6 @@ import torch
 import torch.nn as nn
 from nni.common import dump, load
 from nni.experiment import Experiment, RunMode, launcher
-from nni.experiment.config.training_services import RemoteConfig
 
 from nni.nas.execution import list_models, set_execution_engine
 from nni.nas.execution.common import RetiariiAdvisor, get_mutation_dict, init_execution_engine, Model
@@ -173,10 +172,10 @@ class RetiariiExperiment(Experiment):
     """
 
     def __init__(self, base_model: nn.Module,
-                 evaluator: Union[BaseOneShotTrainer, Evaluator] = cast(Evaluator, None),
+                 evaluator: Evaluator = cast(Evaluator, None),
                  applied_mutators: List[Mutator] = cast(List[Mutator], None),
                  strategy: BaseStrategy = cast(BaseStrategy, None),
-                 trainer: BaseOneShotTrainer = cast(BaseOneShotTrainer, None)):
+                 trainer: Any = None):
         super().__init__(None)
         self.config: RetiariiExeConfig = cast(RetiariiExeConfig, None)
 
@@ -190,7 +189,7 @@ class RetiariiExperiment(Experiment):
             raise ValueError('Evaluator should not be none.')
 
         self.base_model = base_model
-        self.evaluator: Union[Evaluator, BaseOneShotTrainer] = evaluator
+        self.evaluator: Evaluator = evaluator
         self.applied_mutators = applied_mutators
         self.strategy = strategy
 
@@ -257,6 +256,7 @@ class RetiariiExperiment(Experiment):
         Run the experiment.
         This function will block until experiment finish or error.
         """
+        from nni.retiarii.oneshot.interface import BaseOneShotTrainer
         if isinstance(self.evaluator, BaseOneShotTrainer):
             # TODO: will throw a deprecation warning soon
             # warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
@@ -349,6 +349,7 @@ class RetiariiExperiment(Experiment):
             config = self.config.canonical_copy()
             assert not isinstance(config.execution_engine, PyEngineConfig), \
                 'You should use `dict` formatter when using Python execution engine.'
+        from nni.retiarii.oneshot.interface import BaseOneShotTrainer
         if isinstance(self.evaluator, BaseOneShotTrainer):
             assert top_k == 1, 'Only support top_k is 1 for now.'
             return self.evaluator.export()

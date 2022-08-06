@@ -11,7 +11,7 @@ import yaml
 
 from nni.experiment import Experiment, RunMode
 from nni.experiment.config import ExperimentConfig, convert, utils
-from nni.retiarii.experiment.pytorch import RetiariiExperiment
+from nni.nas.experiment.pytorch import RetiariiExperiment
 from nni.tools.annotation import expand_annotations, generate_search_space
 
 # used for v1-only legacy setup, remove them later
