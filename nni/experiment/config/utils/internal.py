@@ -15,7 +15,7 @@ __all__ = [
     'fields', 'is_instance', 'validate_type', 'is_path_like',
     'guess_config_type', 'guess_list_config_type',
     'training_service_config_factory', 'load_training_service_config',
-    'load_experiment_config', 'get_experiment_class_using_config',
+    'load_experiment_config', 'get_experiment_cls_using_config',
     'get_ipv4_address'
 ]
 
@@ -203,6 +203,7 @@ def get_ipv4_address() -> str:
     return addr
 
 def load_experiment_config(config_json) -> typing.Union[ExperimentConfig, RetiariiExeConfig]:
+    # avoid circular import
     from nni.nas.experiment.config import RetiariiExeConfig
     from ..experiment_config import ExperimentConfig
     if 'experimentType' in config_json:
@@ -219,9 +220,9 @@ def load_experiment_config(config_json) -> typing.Union[ExperimentConfig, Retiar
         else:
             return ExperimentConfig(**config_json)
 
-def get_experiment_class_using_config(config_json):
-    from ...experiment import Experiment
+def get_experiment_cls_using_config(config_json):
     from nni.nas.experiment.pytorch import RetiariiExperiment
+    from ...experiment import Experiment
     if 'experimentType' in config_json:
         if config_json['experimentType'] == 'hpo':
             return Experiment

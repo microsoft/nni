@@ -105,7 +105,7 @@ def resume_experiment(args):
         legacy_launcher.resume_experiment(args)
         exit()
 
-    exp_class = utils.get_experiment_class_using_config(config_json)
+    exp_class = utils.get_experiment_cls_using_config(config_json)
     if exp_class is RetiariiExperiment:
         RetiariiExperiment.resume(exp_id, port, True, debug)
     else:
@@ -123,7 +123,7 @@ def view_experiment(args):
         legacy_launcher.view_experiment(args)
         exit()
 
-    exp_class = utils.get_experiment_class_using_config(config_json)
+    exp_class = utils.get_experiment_cls_using_config(config_json)
     if exp_class is RetiariiExperiment:
         RetiariiExperiment.view(exp_id, port, non_blocking=True)
     else:
