@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import cpp from 'child-process-promise';
 import fs from 'fs';
 import path from 'path';
 import * as component from 'common/component';
@@ -85,7 +86,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
 
         const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
         
-        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, `nni/${this.experimentId}`, `${environment.id}_run.sh`), environment.command, { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, `${environment.id}_run.sh`), environment.command, { encoding: 'utf8' });
 
         //upload script files to sotrage
         const trialJobOutputUrl: string = await this.uploadFolder(this.environmentLocalTempFolder, `nni/${this.experimentId}`);
@@ -106,7 +107,10 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
             }
             return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, 2);
         } else {
-            // do not need to upload files to nfs server, temp folder already mounted to nfs
+            // copy envs and run.sh from environments-temp to nfs-root(mounted)
+            await cpp.exec(`mkdir -p ${this.nfsRootDir}/${destDirectory}`);
+            await cpp.exec(`cp -r ${srcDirectory}/* ${this.nfsRootDir}/${destDirectory}`);
+            await fs.promises.rename(srcDirectory, path.join(this.nfsRootDir, destDirectory));
             return `nfs://${this.config.storage.server}:${destDirectory}`;
         }
     }
