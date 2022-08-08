@@ -1,4 +1,5 @@
-import { SingleAxis, MultipleAxes, TableObj } from '../interface';
+import { SingleAxis, MultipleAxes } from '../interface';
+import { Trial } from './trial';
 import { SUPPORTED_SEARCH_SPACE_TYPE } from '../const';
 import { formatComplexTypeValue } from '../function';
 
@@ -111,7 +112,7 @@ export class SearchSpace implements MultipleAxes {
         });
     }
 
-    static inferFromTrials(searchSpace: SearchSpace, trials: TableObj[]): SearchSpace {
+    static inferFromTrials(searchSpace: SearchSpace, trials: Trial[]): SearchSpace {
         const newSearchSpace = new SearchSpace(searchSpace.baseName, searchSpace.fullName, undefined);
         for (const [k, v] of searchSpace.axes) {
             newSearchSpace.axes.set(k, v);
@@ -153,7 +154,7 @@ export class MetricSpace implements MultipleAxes {
     baseName = '';
     fullName = '';
 
-    constructor(trials: TableObj[]) {
+    constructor(trials: Trial[]) {
         const columns = new Map<string, any[]>();
         for (const trial of trials) {
             if (trial.acc === undefined) {

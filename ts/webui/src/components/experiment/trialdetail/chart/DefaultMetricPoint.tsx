@@ -138,16 +138,17 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 trial.sequenceId,
                 trial.acc === undefined ? 0 : this.formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
                 trial.id,
-                trial.description.parameters
+                trial.parameter
             ]);
         } else {
             data = trials.map(trial => [
                 trial.sequenceId,
                 this.formatAccuracy(trial.accuracy),
                 trial.id,
-                trial.description.parameters
+                trial.parameter
             ]);
         }
+
         return {
             symbolSize: 6,
             type: 'scatter',
@@ -163,7 +164,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 best.sequenceId,
                 best.acc === undefined ? 0 : this.formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
                 best.id,
-                best.description.parameters
+                best.parameter
             ]
         ];
         for (let i = 1; i < trials.length; i++) {
@@ -176,7 +177,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                     trial.sequenceId,
                     trial.acc === undefined ? 0 : this.formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
                     best.id,
-                    trial.description.parameters
+                    trial.parameter
                 ]);
                 best = trial;
             } else {
@@ -184,7 +185,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                     trial.sequenceId,
                     best.acc === undefined ? 0 : this.formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
                     best.id,
-                    trial.description.parameters
+                    trial.parameter
                 ]);
             }
         }
