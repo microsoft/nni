@@ -547,7 +547,8 @@ class TorchEvaluator(Evaluator):
         The training function is used to train the model, note that this a entire optimization training loop.
         Training function has three required parameters, ``model``, ``optimizers`` and ``criterion``,
         and three optional parameters, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
-        Let's explain how NNI passes in these six parameters, but in most cases, users don't need to care what NNI passes in.
+
+        Let's explain these six parameters NNI passed in, but in most cases, users don't need to care about these.
         Users only need to treat these six parameters as the original parameters during the training process.
 
         * The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned,
@@ -559,6 +560,28 @@ class TorchEvaluator(Evaluator):
         * ``max_steps`` is the NNI training duration limitation. An integer means that after ``max_steps`` steps, the training should stop.
           ``None`` means NNI doesn't limit the duration, it is up to users to decide when to stop.
         * ``max_epochs`` is similar to the ``max_steps``, it controls the longest training epochs.
+
+        .. code-block:: python
+
+            def training_func(model: torch.nn.Module, optimizers: torch.optim.Optimizer,
+                              criterion: Callable[[Any, Any], torch.Tensor],
+                              lr_schedulers: _LRScheduler | None = None, max_steps: int | None = None,
+                              max_epochs: int | None = None, *args, **kwargs):
+
+                ...
+
+                total_epochs = max_epochs if max_epochs else 20
+                total_steps = max_steps if max_steps else 1000000
+                current_steps = 0
+
+                ...
+
+                for epoch in range(total_epochs):
+
+                    ...
+
+                    if current_steps >= total_steps:
+                        return
 
         Note that ``optimizers`` and ``lr_schedulers`` passed to the ``training_func`` have the same type as the ``optimizers``
         and ``lr_schedulers`` passed to evaluator, a single ``torch.optim.Optimzier``/ ``torch.optim._LRScheduler`` instance or
@@ -596,7 +619,7 @@ class TorchEvaluator(Evaluator):
     Notes
     -----
     It is also worth to mention that not all the arguments of ``TorchEvaluator`` must be provided.
-    Some compressors only require ``evaluate_func`` as they do not train the model, some compressors only require ``training_func``.
+    Some compressors only require ``evaluating_func`` as they do not train the model, some compressors only require ``training_func``.
     Please refer to each compressor's doc to check the required arguments.
     But, it is fine to provide more arguments than the compressor's need.
     """
