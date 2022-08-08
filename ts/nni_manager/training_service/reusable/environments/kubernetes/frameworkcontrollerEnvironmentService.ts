@@ -107,10 +107,14 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             }
             return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, 2);
         } else {
-            // copy envs and run.sh from environments-temp to nfs-root(mounted)
-            await cpp.exec(`mkdir -p ${this.nfsRootDir}/${destDirectory}`);
-            await cpp.exec(`cp -r ${srcDirectory}/* ${this.nfsRootDir}/${destDirectory}`);
-            await fs.promises.rename(srcDirectory, path.join(this.nfsRootDir, destDirectory));
+            try {
+                // copy envs and run.sh from environments-temp to nfs-root(mounted)
+                await cpp.exec(`mkdir -p ${this.nfsRootDir}/${destDirectory}`);
+                await cpp.exec(`cp -r ${srcDirectory}/* ${this.nfsRootDir}/${destDirectory}`);
+            } catch (uploadError) {
+                return Promise.reject(uploadError);
+            }
+            return `nfs://${this.config.storage.server}:${destDirectory}`;
         }
     }
 
