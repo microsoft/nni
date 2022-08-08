@@ -57,6 +57,14 @@ Secondly, the output of cell is the concatenate of **all the nodes within the ce
 As the search space is based on cell, once the normal and reduction cell has been fixed, we can stack them for indefinite times.
 To save the search cost, the common practice is to reduce the number of filters (i.e., channels) and number of stacked cells
 during the search phase, and increase them back when training the final searched architecture.
+
+.. note::
+
+   DARTS is one of those papers that innovate both in search space and search strategy.
+   In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
+   We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
+   We did NOT imply that the DARTS space and DARTS strategy has to used together.
+   You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
 """
 
 # %%
@@ -66,14 +74,14 @@ during the search phase, and increase them back when training the final searched
 # The DARTS model space here is provided by :doc:`model space hub <./space_hub>`,
 # where we have supported multiple popular model spaces for plug-and-play.
 #
-# .. note::
-#
-#    Since we are going to search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
-#    To avoid confusion, we refer to them as *DARTS model space* and *DARTS strategy* respectively.
+# .. tip::
+# 
+#    The model space here can be replaced with any space provided in the hub,
+#    or even customized space built from scratch.
 
-from nni.retiarii.hub.pytorch import DARTS
+from nni.retiarii.hub.pytorch import DARTS as DartsSpace
 
-model_space = DARTS(16, 8, 'cifar')
+model_space = DartsSpace(16, 8, 'cifar')
 
 # %%
 #
@@ -117,12 +125,12 @@ indices = np.random.permutation(num_samples)
 split = num_samples // 2
 
 search_train_loader = DataLoader(
-    train_data, batch_size=64,
+    train_data, batch_size=64, num_workers=6,
     sampler=SubsetRandomSampler(indices[:split]),
 )
 
 search_valid_loader = DataLoader(
-    train_data, batch_size=64,
+    train_data, batch_size=64, num_workers=6,
     sampler=SubsetRandomSampler(indices[split:]),
 )
 
@@ -133,11 +141,12 @@ search_valid_loader = DataLoader(
 max_epochs = 1
 
 evaluator = Classification(
-    learning_rate=0.01,
+    learning_rate=1e-3,
     weight_decay=1e-4,
     train_dataloaders=search_train_loader,
     val_dataloaders=search_valid_loader,
-    max_epochs=max_epochs
+    max_epochs=max_epochs,
+    gpus=1
 )
 
 # %%
@@ -163,7 +172,7 @@ evaluator = Classification(
 #
 # .. image:: ../../img/darts_illustration.png
 #
-# Note that for DARTS model space, exactly two inputs are kept for every node. This fact is not reflected in the figure.
+# It's NOT reflected in the figure that, for DARTS model space, exactly two inputs are kept for every node.
 #
 # :class:`~nni.retiarii.strategy.DARTS` strategy is provided as one of NNI's :doc:`built-in search strategies </nas/exploration_strategy>`.
 # Using it can be as simple as one line of code.
@@ -173,6 +182,9 @@ from nni.retiarii.strategy import DARTS as DartsStrategy
 strategy = DartsStrategy()
 
 # %%
+#
+# .. tip:: The ``DartsStrategy`` here can be replaced by any search strategies, even multi-trial strategies.
+#
 #
 # Launching the experiment is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`,
 # except that the ``execution_engine`` argument should be set to ``oneshot``.
@@ -202,27 +214,29 @@ exported_arch
 # and then fully train it.
 #
 # To construct a fixed model based on the architecture dict exported from the experiment,
-# we can use :func:`nni.retiarii.fixed_arch`.
+# we can use :func:`nni.retiarii.fixed_arch`. Seemingly, we are still creating a space.
+# But under the with-context, we are actually creating a fixed model.
+#
 # Here, we increase the number of filters to 36, and number of cells to 20,
 # so as to reasonably increase the model size and boost the performance.
 
 from nni.retiarii import fixed_arch
 
 with fixed_arch(exported_arch):
-    final_model = DARTS(36, 20, 'cifar')
+    final_model = DartsSpace(36, 20, 'cifar')
 
 # %%
 #
 # We then train the model on full CIFAR-10 training dataset, and evaluate it on the original CIFAR-10 validation dataset.
 
-train_loader = DataLoader(train_data, batch_size=96)  # Use the original training data
+train_loader = DataLoader(train_data, batch_size=96, num_workers=6)  # Use the original training data
 
-transform = transforms.Compose([
+transform_valid = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
 ])
-valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform)
-valid_loader = DataLoader(train_data, batch_size=256)
+valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform_valid)
+valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
 
 # %%
 #
@@ -230,17 +244,18 @@ valid_loader = DataLoader(train_data, batch_size=256)
 # Also, we should avoid the underlying pytorch-lightning implementation of Classification evaluator from loading the wrong checkpoint.
 #
 # Here, to get an accuracy comparable to `pytorch-cifar repo <https://github.com/kuangliu/pytorch-cifar>`__,
-# ``max_epochs`` should be further increased to at least 200.
+# ``max_epochs`` should be further increased to at least 100.
 # We only set it to 1 here for tutorial demo purposes.
 
 max_epochs = 1
 
 evaluator = Classification(
-    learning_rate=0.01,
+    learning_rate=1e-3,
     weight_decay=1e-4,
     train_dataloaders=train_loader,
     val_dataloaders=valid_loader,
-    max_epochs=max_epochs
+    max_epochs=max_epochs,
+    export_onnx=False,  # Disable ONNX export for this experiment
 )
 
 evaluator.fit(final_model)
