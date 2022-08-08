@@ -9,4 +9,4 @@ Pruning
     Quickstart </tutorials/pruning_quick_start_mnist>
     Pruner <pruner>
     Speedup </tutorials/pruning_speedup>
-    Pruning Transformer <pruning_transformer>
+    Best Practices <best_practices>
