@@ -45,7 +45,19 @@ def fix_mask_conflict(masks, model, dummy_input, traced=None):
         if torch.__version__ >= '1.6.0':
             # only pytorch with version greater than 1.6.0 has the strict option
             kw_args['strict'] = False
-        traced = torch.jit.trace(model, dummy_input, **kw_args)
+        try:
+            import pytorch_lightning as pl
+        except ImportError:
+            is_lightning_module = False
+        else:
+            if isinstance(model, pl.LightningModule):
+                is_lightning_module = True
+            else:
+                is_lightning_module = False
+        if is_lightning_module:
+            traced = model.to_torchscript(method="trace", example_inputs=dummy_input, **kw_args)
+        else:
+            traced = torch.jit.trace(model, dummy_input, **kw_args)
         model.train(training)
 
     fix_group_mask = GroupMaskConflict(masks, model, dummy_input, traced)
