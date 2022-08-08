@@ -346,7 +346,7 @@ class Classification(Lightning):
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
             train_dataloaders = train_dataloader
         module = ClassificationModule(criterion=criterion, learning_rate=learning_rate,
-                                       weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
+                                      weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
         super().__init__(module, Trainer(**trainer_kwargs),
                          train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
 
@@ -411,7 +411,7 @@ class Regression(Lightning):
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
             train_dataloaders = train_dataloader
         module = RegressionModule(criterion=criterion, learning_rate=learning_rate,
-                                   weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
+                                  weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
         super().__init__(module, Trainer(**trainer_kwargs),
                          train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
 
