@@ -8,7 +8,7 @@ variables:
   gallery_name: nniImageGalleryV2
   network_security_group: nni-image-builder-nsg
   managed_image_name: nni-windows-image
-  image_name: nniWindowsImage
+  image_definition_name: nniWindowsImage
   packer_config: config_windows
 
 jobs:
