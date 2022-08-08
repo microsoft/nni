@@ -65,7 +65,6 @@ during the search phase, and increase them back when training the final searched
    We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
    We did NOT imply that the DARTS space and DARTS strategy has to used together.
    You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
-
 """
 
 # %%
@@ -125,12 +124,12 @@ num_samples = len(train_data)
 indices = np.random.permutation(num_samples)
 split = num_samples // 2
 
-train_loader = DataLoader(
+search_train_loader = DataLoader(
     train_data, batch_size=64, num_workers=6,
     sampler=SubsetRandomSampler(indices[:split]),
 )
 
-valid_loader = DataLoader(
+search_valid_loader = DataLoader(
     train_data, batch_size=64, num_workers=6,
     sampler=SubsetRandomSampler(indices[split:]),
 )
@@ -139,17 +138,15 @@ valid_loader = DataLoader(
 #
 # .. warning:: Max epochs is set to 1 here for tutorial purposes. To get a reasonable result, this should be at least 10.
 
-max_epochs = 10
-
-lr = 0.001
+max_epochs = 1
 
 evaluator = Classification(
-    learning_rate=lr,
+    learning_rate=1e-3,
     weight_decay=1e-4,
-    train_dataloaders=train_loader,
-    val_dataloaders=valid_loader,
+    train_dataloaders=search_train_loader,
+    val_dataloaders=search_valid_loader,
     max_epochs=max_epochs,
-    gpus=1,
+    gpus=1
 )
 
 # %%
@@ -204,13 +201,7 @@ experiment.run(config)
 
 exported_arch = experiment.export_top_models()[0]
 
-# TODO: delete
-print(exported_arch)
-
 exported_arch
-
-# import json
-# exported_arch = json.load(open('lightning_logs/arch.json'))
 
 # %%
 #
@@ -239,11 +230,11 @@ with fixed_arch(exported_arch):
 
 train_loader = DataLoader(train_data, batch_size=96, num_workers=6)  # Use the original training data
 
-transform = transforms.Compose([
+transform_valid = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
 ])
-valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform)
+valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform_valid)
 valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
 
 # %%
@@ -252,25 +243,208 @@ valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
 # Also, we should avoid the underlying pytorch-lightning implementation of Classification evaluator from loading the wrong checkpoint.
 #
 # Here, to get an accuracy comparable to `pytorch-cifar repo <https://github.com/kuangliu/pytorch-cifar>`__,
-# ``max_epochs`` should be further increased to at least 200.
+# ``max_epochs`` should be further increased to at least 100.
 # We only set it to 1 here for tutorial demo purposes.
 
-max_epochs = 200
-
-from pytorch_lightning.loggers import TensorBoardLogger
-import os
-
-# lr = float(os.environ["LR"])
+max_epochs = 1
 
 evaluator = Classification(
-    learning_rate=lr,
+    learning_rate=1e-3,
     weight_decay=1e-4,
     train_dataloaders=train_loader,
     val_dataloaders=valid_loader,
     max_epochs=max_epochs,
-    gpus=1,
-    # logger=TensorBoardLogger('lightning_logs', name='train-lr', version=f'lr-{lr}'),
-    export_onnx=False
+    export_onnx=False,  # Disable ONNX export for this experiment
 )
 
 evaluator.fit(final_model)
+
+# %%
+#
+# Reproduce results in DARTS paper
+# --------------------------------
+#
+# You might notice there's still a gap between our results and the results in the DARTS paper.
+# This is because we didn't introduce some extra training tricks, including `DropPath <https://arxiv.org/pdf/1605.07648v4.pdf>`__,
+# Auxiliary loss, gradient clipping and augmentations like `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
+# They also train the networks for longer time (i.e., 600 epochs).
+#
+# To implement these tricks, we need to rewrite a few parts of evaluator.
+#
+# Working with one-shot strategies, evaluators need to be implemented in the style of :ref:`PyTorch-Lightning <lightning-evaluator>`,
+# The full tutorial can be found in :doc:`/nas/evaluator`.
+# Putting it briefly, the core part of writing a new evaluator is to write a new LightningModule.
+# `LightingModule <https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html>`__ is a concept in
+# PyTorch-Lightning, which organizes the model training process into a list of functions, such as,
+# ``training_step``, ``validation_step``, ``configure_optimizers``, etc.
+# Since we are merely adding a few ingredients to :class:`~nni.retiarii.evaluator.pytorch.Classification`,
+# we can simply inherit :class:`~nni.retiarii.evaluator.pytorch.ClassificationModule`, which is the underlying LightningModule
+# behind :class:`~nni.retiarii.evaluator.pytorch.Classification`.
+# This could look intimidating at first, but most of them are just plug-and-play tricks which you don't need to know details about.
+
+import torch
+from nni.retiarii.evaluator.pytorch import ClassificationModule
+
+class DartsClassificationModule(ClassificationModule):
+    def __init__(
+        self,
+        learning_rate: float = 0.001,
+        weight_decay: float = 0.,
+        auxiliary_loss_weight: float = 0.4,
+        max_epochs: int = 600
+    ):
+        self.auxiliary_loss_weight = auxiliary_loss_weight
+        # Training length will be used in LR scheduler
+        self.max_epochs = max_epochs
+        super().__init__(learning_rate=learning_rate, weight_decay=weight_decay, export_onnx=False)
+
+    def configure_optimizers(self):
+        """Customized optimizer with momentum, as well as a scheduler."""
+        optimizer = torch.optim.SGD(
+            self.parameters(),
+            momentum=0.9,
+            lr=self.hparams.learning_rate,
+            weight_decay=self.hparams.weight_decay
+        )
+        return {
+            'optimizer': optimizer,
+            'lr_scheduler': torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.max_epochs, eta_min=1e-3)
+        }
+
+    def training_step(self, batch, batch_idx):
+        """Training step, customized with auxiliary loss."""
+        x, y = batch
+        if self.auxiliary_loss_weight:
+            y_hat, y_aux = self(x)
+            loss_main = self.criterion(y_hat, y)
+            loss_aux = self.criterion(y_aux, y)
+            self.log('train_loss_main', loss_main)
+            self.log('train_loss_aux', loss_aux)
+            loss = loss_main + self.auxiliary_loss_weight * loss_aux
+        else:
+            y_hat = self(x)
+            loss = self.criterion(y_hat, y)
+        self.log('train_loss', loss, prog_bar=True)
+        for name, metric in self.metrics.items():
+            self.log('train_' + name, metric(y_hat, y), prog_bar=True)
+        return loss
+
+    def on_train_epoch_start(self):
+        # Set drop path probability before every epoch. This has no effect if drop path is not enabled in model.
+        self.model.set_drop_path_prob(self.model.drop_path_prob * self.current_epoch / self.max_epochs)
+
+        # Logging learning rate at the beginning of every epoch
+        self.log('lr', self.trainer.optimizers[0].param_groups[0]['lr'])
+
+# %%
+#
+# The full evaluator is written as follows,
+# which simply wraps everything (except model space and search strategy of course), in a single object.
+# :class:`~nni.retiarii.evaluator.pytorch.Lightning` here is a special type of evaluator.
+# Don't forget to use the train/val data split specialized for search (1:1) here.
+#
+# .. tip:: For demo purposes, we set ``max_epochs`` to 1 here. It should be 50 following the original paper implementation.
+
+from nni.retiarii.evaluator.pytorch import Lightning, Trainer
+
+max_epochs = 1
+
+evaluator = Lightning(
+    DartsClassificationModule(0.025, 3e-4, 0., max_epochs),
+    Trainer(
+        gpus=1,
+        max_epochs=max_epochs,
+    ),
+    train_dataloaders=search_train_loader,
+    val_dataloaders=search_valid_loader
+)
+
+# DARTS strategy is created with gradient clip turned on.
+# If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
+# However, enabling gradient cip in the trainer above won't work, because the underlying
+# implementation of DARTS strategy is based on
+# `manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__.
+
+strategy = DartsStrategy(gradient_clip_val=5.)
+
+# Then we use the newly created evaluator and strategy to launch the experiment again.
+
+config = RetiariiExeConfig(execution_engine='oneshot')
+experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
+experiment.run(config)
+
+exported_arch = experiment.export_top_models()[0]
+
+exported_arch
+
+# %%
+#
+# When retraining,
+# we extend the original dataloader to introduce another trick called `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
+# Cutout is a data augmentation technique that randomly masks out rectangular regions in images.
+# In CIFAR-10, the typical masked size is 16x16 (the image sizes are 32x32 in the dataset).
+
+def cutout_transform(img, length: int = 16):
+    h, w = img.size(1), img.size(2)
+    mask = np.ones((h, w), np.float32)
+    y = np.random.randint(h)
+    x = np.random.randint(w)
+
+    y1 = np.clip(y - length // 2, 0, h)
+    y2 = np.clip(y + length // 2, 0, h)
+    x1 = np.clip(x - length // 2, 0, w)
+    x2 = np.clip(x + length // 2, 0, w)
+
+    mask[y1: y2, x1: x2] = 0.
+    mask = torch.from_numpy(mask)
+    mask = mask.expand_as(img)
+    img *= mask
+    return img
+
+transform_with_cutout = transforms.Compose([
+    transforms.RandomCrop(32, padding=4),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+    cutout_transform,
+])
+
+# %%
+#
+# The train dataloader needs to be reinstantiated with the new transform.
+# The validation dataloader is not affected, and thus can be reused.
+
+train_data_cutout = nni.trace(CIFAR10)(root='./data', train=True, download=True, transform=transform_with_cutout)
+train_loader_cutout = DataLoader(train_data_cutout, batch_size=96)
+
+# %%
+#
+# We then create the final model based on the new exported architecture.
+# This time, auxiliary loss and drop path probability is enabled.
+
+with fixed_arch(exported_arch):
+    final_model = DARTS(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
+
+# %%
+#
+# Launching the retraining requires creating another evaluator.
+# We can now put the gradient clipping in the keyword arguments of trainer.
+#
+# .. tip:: For demo purposes, we set ``max_epochs`` to 1 here. It should be 600 following the original paper implementation.
+
+evaluator = Lightning(
+    DartsClassificationModule(0.025, 3e-4, 0.4, 600),
+    Trainer(
+        gpus=1,
+        gradient_clip_val=5.,
+        max_epochs=1,
+    ),
+    train_dataloaders=train_loader_cutout,
+    val_dataloaders=valid_loader,
+)
+
+evaluator.fit(final_model)
+
+# %%
+#
+# .. note:: The full search and training takes around XX hours on a P100 GPU, and yields a top-1 accuracy of ~0.8%.
