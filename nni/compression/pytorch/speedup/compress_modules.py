@@ -46,6 +46,7 @@ replace_module = {
     'Upsample': lambda module, masks: no_replace(module, masks),
     'LayerNorm': lambda module, masks: replace_layernorm(module, masks),
     'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
+    'Embedding': lambda module, masks: replace_embedding(module, masks),
     'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks),
     'Flatten': lambda module, masks: no_replace(module, masks)
 }
@@ -85,6 +86,30 @@ def convert_to_coarse_mask(t_mask, dim):
     indexes = torch.nonzero(all_pruned, as_tuple=True)[0]
     remained_indexes = torch.nonzero(need_remain, as_tuple=True)[0]
     return indexes, remained_indexes
+
+
+def convert_dense_shape(mask):
+    """
+    Get the dense shape of the tensor after removing the sparsity
+    values.
+
+    Parameters
+    ----------
+    mask: torch.Tensor
+        The mask tensor.
+
+    Returns
+    -------
+    dense_shape: tuple
+        The dense shape after removing the sparsity values.
+    """
+    assert isinstance(mask, torch.Tensor)
+    n_dim = len(mask.size())
+    dense_shape = []
+    for dim in range(n_dim):
+        _, remained = convert_to_coarse_mask(mask, dim)
+        dense_shape.append(remained.size(0))
+    return tuple(dense_shape)
 
 
 def no_replace(module, masks):
@@ -606,8 +631,16 @@ def replace_layernorm(layernorm, masks):
                 tmp_bias_data = torch.index_select(tmp_bias_data, i, remained)
             new_layernorm.weight.data = tmp_weight_data
             new_layernorm.bias.data = tmp_bias_data
-
     return new_layernorm
+
+def replace_embedding(embedding, masks):
+    """
+    Replace the embedding layer according the infered masks.
+    We replace the embedding layer according the weight masks,
+    """
+    # currently we donnot support replace the embedding layer
+    # because we donnot have the corressponding pruner
+    return embedding
 
 
 def replace_pixelshuffle(pixelshuffle, masks):
