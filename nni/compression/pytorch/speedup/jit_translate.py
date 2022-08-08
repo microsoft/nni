@@ -182,25 +182,16 @@ class FuncAdapter:
 
     """
 
-    func: Callable
-    positional: List[Any]
-    keyword: Dict[str, Any]
-    undetermined: List[Union[int, str]]
-    special_treat: Dict[Union[int, str], Callable]
-
-    def __new__(cls, func: Callable, positional: List[Any], keyword: Dict[str, Any],
+    def __init__(self, func: Callable, positional: List[Any], keyword: Dict[str, Any],
                 undetermined: List[Union[int, str]], special_treat: Dict[Union[int, str], Callable]):
         if not callable(func):
             raise TypeError("the 'func' argument must be callable")
-
-        self = super(FuncAdapter, cls).__new__(cls)
 
         self.func = func
         self.positional = positional
         self.keyword = keyword
         self.undetermined = undetermined
         self.special_treat = special_treat
-        return self
 
     def __call__(self, /, *args):
         assert len(args) >= len(self.undetermined)
@@ -215,9 +206,11 @@ class FuncAdapter:
 
         for p, fs in self.special_treat.items():
             if isinstance(p, int):
-                for f in fs: self.positional[p] = f(self.positional[p])
+                for f in fs:
+                    self.positional[p] = f(self.positional[p])
             else:
-                for f in fs: self.keyword[p] = f(self.keyword[p])
+                for f in fs:
+                    self.keyword[p] = f(self.keyword[p])
         result = self.func(*self.positional, **self.keyword)
         if isinstance(result, int): # turn result of 'size' into tensor
             result = torch.as_tensor([result], dtype=torch.long)
