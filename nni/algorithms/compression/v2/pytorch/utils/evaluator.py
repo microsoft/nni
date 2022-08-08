@@ -538,7 +538,7 @@ _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _CRITERION, _SCHEDULERS, Optiona
 
 class TorchEvaluator(Evaluator):
     """
-    TorchEvaluator is the Evaluator for native Pytorch users.
+    TorchEvaluator is the Evaluator for native PyTorch users.
     Please refer to the :ref:`compression-evaluator` for the evaluator initialization example.
 
     Parameters
