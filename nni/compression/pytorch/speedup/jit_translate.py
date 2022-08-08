@@ -87,7 +87,7 @@ def parse_constant(cvalue: torch._C.Value, speedup: ModelSpeedup):
     inputs = op_node.inputs()
     input_values = [parse_constant(_i, speedup) for _i in inputs]
     if op_node.kind() not in trans_func_dict:
-        raise RuntimeError("Unsupported function op node type: {}".format(op_node.kind()))
+        raise RuntimeError('Unsupported function op node type: {}'.format(op_node.kind()))
 
     func = trans_func_dict[op_node.kind()](op_node, speedup)
     return func(*input_values)
@@ -185,7 +185,7 @@ class FuncAdapter:
     def __init__(self, func: Callable, positional: List[Any], keyword: Dict[str, Any],
                 undetermined: List[Union[int, str]], special_treat: Dict[Union[int, str], Callable]):
         if not callable(func):
-            raise TypeError("the 'func' argument must be callable")
+            raise TypeError('the \'func\' argument must be callable')
 
         self.func = func
         self.positional = positional
@@ -262,7 +262,7 @@ def dtype_trans(ivalue: Union[int, torch.dtype]):
         global enum_to_dtype_dict
         if ivalue in enum_to_dtype_dict:
             return enum_to_dtype_dict[ivalue]
-    raise TypeError("No torch.dtype corresponding to the value '%s'", ivalue)
+    raise TypeError('No torch.dtype corresponding to the value \'%s\'', ivalue)
 
 enum_to_memory_format_dict = {
     0: torch.contiguous_format,
@@ -288,7 +288,7 @@ def memory_format_trans(ivalue: Union[int, torch.memory_format]):
         global enum_to_memory_format_dict
         if ivalue in enum_to_memory_format_dict:
             return enum_to_memory_format_dict[ivalue]
-    raise TypeError("No torch.memory_format corresponding to the value '%s'", ivalue)
+    raise TypeError('No torch.memory_format corresponding to the value \'%s\'', ivalue)
 
 special_treat_dict = {
     'dtype': dtype_trans,
@@ -439,7 +439,7 @@ def init_add_functions(func_from: Union[ModuleType, Type[Any]]):
     new_trans_func_dict = dict()
     for name in dir(func_from):
         attr = getattr(func_from, name)
-        if callable(attr) and not name.startswith("__"):
+        if callable(attr) and not name.startswith('__'):
             new_trans_func_dict['aten::' + name] = partial(generate_aten_to_python, attr)
     trans_func_dict = {**new_trans_func_dict, **trans_func_dict}
 
