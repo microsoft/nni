@@ -41,14 +41,23 @@ if __name__ == "__main__":
     try:
 
         # init client
-        client = Client(
-            Config(
-                access_key_id=args.access_key_id,
-                access_key_secret=args.access_key_secret,
-                region_id=args.region,
-                endpoint=f'pai-dlc.{args.region}.aliyuncs.com'
+        if args.region == 'share':
+            client = Client(
+                Config(
+                    access_key_id=args.access_key_id,
+                    access_key_secret=args.access_key_secret,
+                    endpoint='pai-dlc-share.aliyuncs.com'
+                )
             )
-        )
+        else:
+            client = Client(
+                Config(
+                    access_key_id=args.access_key_id,
+                    access_key_secret=args.access_key_secret,
+                    region_id=args.region,
+                    endpoint=f'pai-dlc.{args.region}.aliyuncs.com'
+                )
+            )
 
         nas_1 = DataSourceItem(
             data_source_type='nas',
@@ -69,6 +78,11 @@ if __name__ == "__main__":
             pod_count=args.pod_count,
             ecs_spec=args.ecs_spec,
         )
+
+        
+        if args.workspace_id == 'None':
+            args.workspace_id = None
+            logging.info("args.workspace_id %s %s",args.workspace_id,type(args.workspace_id))
 
         data_sources = [nas_1]
         if oss:
