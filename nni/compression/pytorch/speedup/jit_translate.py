@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 
 import re
 import logging
-from functools import partial
+from functools import partial, lru_cache
 import torch
 
 
@@ -294,10 +294,35 @@ special_treat_dict = {
     'dtype': dtype_trans,
     'memory_format': memory_format_trans,
 }
+schema_fix_dict = {
+    # functinon 'to', 'randint', and 'sparse_coo_tensor' has different schema between python and c++.
+    # https://pytorch.org/docs/stable/jit_unsupported.html#ops-with-divergent-schemas-between-torch-python
+    'aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
+        'aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
+    'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
+        'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
+    'aten::to.other(Tensor(a) self, Tensor other, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
+        'aten::to.other(Tensor(a) self, Tensor other, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
+    
+    # todo: are the arguments 'pin_memory' and 'requires_grad' related? functions in the python have only 'requires_grad' and functions in the aten have only 'pin_memory'
+    
+    # 'aten::randint(int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
+    # 'aten::randint.generator(int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
+    # 'aten::randint.low(int low, int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
+    # 'aten::randint.low_generator(int low, int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
+
+    # 'aten::sparse_coo_tensor.size(int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=False) -> (Tensor)',
+    # 'aten::sparse_coo_tensor.indices(Tensor indices, Tensor values, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
+    # 'aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)'
+}
+@lru_cache(maxsize=256)
 def parse_aten_schema(schema: str):
     """
     Parse the schema, to positional_num and keyword_list, and detect if the argument should be specially treated.
     """
+    if schema in schema_fix_dict:
+        schema = schema_fix_dict[schema]
+        
     positional_num = 0
     keyword_list = list()
     special_treat = dict() # for dtype and memory_format trans now
@@ -360,10 +385,6 @@ def special_treat_to_constant_value(positional: List, keyword: Dict[str], undete
             for f in fs: keyword[p] = f(keyword[p])
     return undetermined_special_treat
 
-schema_fix_dict = {
-    'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
-        'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))'
-}
 def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpeedup) -> FuncAdapter:
     """
     parse a Return a callable object to inference the mask according to the node.op_type.
@@ -386,8 +407,6 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
     c_node = node.key_node
 
     schema = c_node.schema()
-    if schema in schema_fix_dict:
-        schema = schema_fix_dict[schema]
     positional_num, keyword_list, special_treat = parse_aten_schema(schema)
 
     input_nodes = list(c_node.inputs())
