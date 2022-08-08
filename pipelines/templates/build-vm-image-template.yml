@@ -96,7 +96,7 @@ steps:
 #    The workaround here is to use a monitor to detect the machine ready signal and change its WinRM port.
 - script: |
     cd test/vso_tools/build_vm
-    python3 packer_build_windows.py
+    python3 packer_build_windows.py $(packer_config).json $(resource_group)
   displayName: (Windows) Packer build
   condition: and(succeeded(), contains(variables['packer_config'], 'windows'))
 
