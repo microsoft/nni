@@ -40,7 +40,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
         this.genericK8sClient = new GeneralK8sClient();
         this.experimentRootDir = info.logDir;
         this.environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
-        this.nfsRootDir = path.job(this.experimentRootDir, "nfs-root");
+        this.nfsRootDir = path.join(this.experimentRootDir, "nfs-root");
         this.experimentId = info.experimentId;
         this.environmentWorkingFolder = path.join(this.CONTAINER_MOUNT_PATH, 'nni', this.experimentId);
     }
