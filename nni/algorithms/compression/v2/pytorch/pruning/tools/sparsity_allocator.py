@@ -125,10 +125,10 @@ class GlobalSparsityAllocator(SparsityAllocator):
             assert global_sparsity_rate == wrapper.config['total_sparsity']
 
         # find the largest metric value among all metrics
-        max_metric_value = list(list(metrics.values())[0].values())[0].max()
+        max_metric_value = list(list(metrics.values())[0].values())[0].max().item()
         for targets_metric in metrics.values():
             for target_metric in targets_metric.values():
-                max_metric_value = max_metric_value if max_metric_value >= target_metric.max() else target_metric.max()
+                max_metric_value = max_metric_value if max_metric_value >= target_metric.max().item() else target_metric.max().item()
 
         # prevent each module from being over-pruned, prevent ratio is 'max_sparsity_per_layer'
         for module_name, targets_metric in metrics.items():
