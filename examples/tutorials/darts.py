@@ -185,7 +185,6 @@ strategy = DartsStrategy()
 #
 # .. tip:: The ``DartsStrategy`` here can be replaced by any search strategies, even multi-trial strategies.
 #
-#
 # Launching the experiment is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`,
 # except that the ``execution_engine`` argument should be set to ``oneshot``.
 
@@ -194,6 +193,18 @@ from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfi
 config = RetiariiExeConfig(execution_engine='oneshot')
 experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
 experiment.run(config)
+
+# %%
+#
+# .. tip::
+#
+#    The search process can be visualized with tensorboard. For example::
+#
+#        tensorboard --logdir=./lightning_logs
+#
+#    Then, open the browser and go to http://localhost:6006/ to monitor the search process.
+#
+#    .. image:: ../../img/darts_search_process.png
 
 # %%
 #
@@ -360,6 +371,8 @@ evaluator = Lightning(
     val_dataloaders=search_valid_loader
 )
 
+# %%
+#
 # DARTS strategy is created with gradient clip turned on.
 # If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
 # However, enabling gradient cip in the trainer above won't work, because the underlying
@@ -368,7 +381,14 @@ evaluator = Lightning(
 
 strategy = DartsStrategy(gradient_clip_val=5.)
 
+# %%
+#
 # Then we use the newly created evaluator and strategy to launch the experiment again.
+#
+# .. warning::
+#
+#    ``model_space`` has to be re-instantiated because a known limitation,
+#    i.e., one model space can't be reused across multiple experiments.
 
 config = RetiariiExeConfig(execution_engine='oneshot')
 experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
@@ -424,7 +444,7 @@ train_loader_cutout = DataLoader(train_data_cutout, batch_size=96)
 # This time, auxiliary loss and drop path probability is enabled.
 
 with fixed_arch(exported_arch):
-    final_model = DARTS(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
+    final_model = DartsSpace(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
 
 # %%
 #
