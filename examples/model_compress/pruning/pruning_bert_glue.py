@@ -161,6 +161,24 @@ def fake_criterion(outputs, targets):
 
 
 if __name__ == '__main__':
+    ##########################################################################################################################
+    # The entire pruning process can be divided into the following steps:
+    # 1. Finetune the pretrained model on the downstream task. From our experience,
+    #    the final performance of pruning on the finetuned model is better than pruning directly on the pretrained model.
+    #    At the same time, the finetuned model obtained in this step will also be used as the teacher model for the following
+    #    distillation training.
+    # 2. Pruning the attention layer at first. Here we apply block-sparse on attention layer weight,
+    #    and directly prune the head (condense the weight) if the head was fully masked.
+    #    If the head was partial masked, we will not prune it and recover its weight.
+    # 3. Retrain the head-pruned model with distillation. Recover the model precision before pruning FFN layer.
+    # 4. Pruning the FFN layer. Here we apply the output channels pruning on the 1st FFN layer,
+    #    and the 2nd FFN layer input channels will be pruned due to the pruning of 1st layer output channels.
+    # 5. Retrain the final pruned model with distillation.
+    ##########################################################################################################################
+
+    ##########################################################################################################################
+    # Preparation: Set seed, lr, and intialize the model.
+    ##########################################################################################################################
     set_seed(1024)
     model_dir.mkdir(parents=True, exist_ok=True)
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -169,7 +187,10 @@ if __name__ == '__main__':
     lr = 3e-5
     steps_per_epoch = len(train_dataloader)
 
-    # finetuning model
+    ##########################################################################################################################
+    # Step 1: Finetune the pretrained model on down stream task.
+    #         The finetuned model got in this step will also be the teacher model.
+    ##########################################################################################################################
     finetuned_model_state_path = Path(model_dir) / 'finetuned_model_state.pth'
     if finetuned_model_state_path.exists():
         pretrained_model.load_state_dict(torch.load(finetuned_model_state_path))
@@ -180,15 +201,18 @@ if __name__ == '__main__':
             return max(0.0, float(3 * steps_per_epoch - current_step) / float(3 * steps_per_epoch))
 
         lr_scheduler = LambdaLR(optimizer, lr_lambda)
-        training(pretrained_model, optimizer, fake_criterion, lr_scheduler=lr_scheduler, max_epochs=3, save_best_model=True, save_path=finetuned_model_state_path)
+        training(pretrained_model, optimizer, fake_criterion, lr_scheduler=lr_scheduler, max_epochs=3, save_best_model=True,
+                 save_path=finetuned_model_state_path)
     finetuned_model = pretrained_model
 
-    # get teacher model
+    # set teacher model
     teacher_model = prepare_model().to(device)
     teacher_model.load_state_dict(torch.load(finetuned_model_state_path))
 
-    # block movement pruning attention
-    # make sure you have used nni.trace to wrap the optimizer class before initialize
+    ##########################################################################################################################
+    # Step 2: Apply block-soft-movement pruning on attention layers.
+    #         Note: make sure you have used nni.trace to wrap the optimizer class before initialize.
+    ##########################################################################################################################
     total_epochs = 4
     total_steps = total_epochs * steps_per_epoch
     warmup_steps = 1 * steps_per_epoch
@@ -222,7 +246,9 @@ if __name__ == '__main__':
     del pruner
     del finetuned_model
 
-    # pruning empty head & create config_list for FFN pruning
+    ##########################################################################################################################
+    # Load the finetuned state dict & if the head is entire masked, physically prune it & create config_list for FFN pruning
+    ##########################################################################################################################
     attention_pruned_model = prepare_model().to(device)
     attention_pruned_model.load_state_dict(torch.load(finetuned_model_state_path))
     ffn_config_list = []
@@ -239,16 +265,19 @@ if __name__ == '__main__':
         if len(head_idx) != 12:
             attention_pruned_model.bert.encoder.layer[i].attention.prune_heads(head_idx)
             module_list.append(attention_pruned_model.bert.encoder.layer[i])
+            # The final ffn weight remaining ratio is the half of the attention weight remaining ratio.
+            # This is just an empirical configuration, you can use any other method to determine this sparsity.
             sparsity = 1 - (1 - len(head_idx) / 12) * 0.5
+            # here we use a simple sparsity schedule, we will prune ffn in 12 iterations, each iteration prune `sparsity_per_iter`.
             sparsity_per_iter = 1 - (1 - sparsity) ** (1 / 12)
             ffn_config_list.append({'op_names': [f'bert.encoder.layer.{layer_count}.intermediate.dense'], 'sparsity': sparsity_per_iter})
             layer_count += 1
 
     attention_pruned_model.bert.encoder.layer = torch.nn.ModuleList(module_list)
-    print(attention_pruned_model)
-    print(ffn_config_list)
 
-    # finetuning speedup model
+    ##########################################################################################################################
+    # Step 3: Retrain the attention pruned model.
+    ##########################################################################################################################
     total_epochs = 5
     optimizer = Adam(attention_pruned_model.parameters(), lr=lr, eps=1e-8)
 
@@ -261,7 +290,10 @@ if __name__ == '__main__':
 
     attention_pruned_model.load_state_dict(torch.load(at_model_save_path))
 
-    # pruning FFN with TaylorFOWeightPruner
+    ##########################################################################################################################
+    # Step 4 & 5: Iterative pruning FFN with TaylorFOWeightPruner in 12 iterations.
+    #             Finetuning 2000 steps after each iteration, then finetuning 2 epochs after pruning finished.
+    ##########################################################################################################################
 
     distil_training = functools.partial(training, teacher_model=teacher_model, log_path=log_dir / 'taylor_pruning.log')
     traced_optimizer = nni.trace(Adam)(attention_pruned_model.parameters(), lr=3e-5, eps=1e-8)
@@ -289,16 +321,21 @@ if __name__ == '__main__':
                 optimizer = Adam(attention_pruned_model.parameters(), lr=init_lr)
             batch.to(device)
             optimizer.zero_grad()
+
             # manually schedule lr
             for params_group in optimizer.param_groups:
                 params_group['lr'] = (1 - current_step / (total_epochs * steps_per_epoch)) * init_lr
+
             outputs = attention_pruned_model(**batch)
             loss = outputs.loss
+
+            # distillation
             if teacher_model:
                 distil_loss = F.kl_div(F.log_softmax(outputs.logits / 2, dim=-1), F.softmax(teacher_model(**batch).logits / 2, dim=-1), reduction='batchmean') * (2 ** 2)
                 loss = 0.1 * loss + 0.9 * distil_loss
             loss.backward()
             optimizer.step()
+
             current_step += 1
             if current_step % 1000 == 0 or current_step % len(train_dataloader) == 0:
                 result = evaluation(attention_pruned_model)
