@@ -1,10 +1,14 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
-import { DetailsRow } from '@fluentui/react';
+import { DetailsRow, IDetailsRowBaseProps } from '@fluentui/react/lib/DetailsList';
 import OpenRow from './OpenRow';
 import '@style/table.scss';
 
-const ExpandableDetails = (props): any => {
+interface ExpandableDetailsProps {
+    detailsProps: IDetailsRowBaseProps;
+    isExpand: boolean;
+}
+
+const ExpandableDetails = (props: ExpandableDetailsProps): any => {
     const { detailsProps, isExpand } = props;
     return (
         <div>
@@ -12,11 +16,6 @@ const ExpandableDetails = (props): any => {
             {isExpand && <OpenRow trialId={detailsProps.item.id} />}
         </div>
     );
-};
-
-ExpandableDetails.propTypes = {
-    detailsProps: PropTypes.object,
-    isExpand: PropTypes.bool
 };
 
 export default ExpandableDetails;

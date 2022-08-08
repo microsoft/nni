@@ -1,8 +1,16 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { PrimaryButton, Dialog, DialogType, DialogFooter } from '@fluentui/react';
+import { KillJobIsError, TensorboardTaskInfo } from '@static/interface';
 
-function TensorboardDialog(props): any {
+interface TensorboardDialogProps {
+    isReaptedStartTensorboard: boolean;
+    isShowTensorboardDetail: boolean;
+    onHideDialog: () => void;
+    item: TensorboardTaskInfo;
+    errorMessage: KillJobIsError;
+}
+
+function TensorboardDialog(props: TensorboardDialogProps): any {
     const { isReaptedStartTensorboard, onHideDialog, item, isShowTensorboardDetail, errorMessage } = props;
 
     const dialogContentProps = {
@@ -19,7 +27,7 @@ function TensorboardDialog(props): any {
 
     return (
         <Dialog hidden={false} dialogContentProps={dialogContentProps} modalProps={{ className: 'dialog' }}>
-            {errorMessage.error ? (
+            {errorMessage.isError ? (
                 <div>
                     <span>Error message: {errorMessage.message}</span>
                 </div>
@@ -44,7 +52,7 @@ function TensorboardDialog(props): any {
                     </div>
                 </div>
             )}
-            {errorMessage.error ? (
+            {errorMessage.isError ? (
                 <DialogFooter>
                     <PrimaryButton onClick={onHideDialog} text='Close' />
                 </DialogFooter>
@@ -59,13 +67,5 @@ function TensorboardDialog(props): any {
         </Dialog>
     );
 }
-
-TensorboardDialog.propTypes = {
-    isReaptedStartTensorboard: PropTypes.bool,
-    isShowTensorboardDetail: PropTypes.bool,
-    onHideDialog: PropTypes.func,
-    item: PropTypes.object,
-    errorMessage: PropTypes.object
-};
 
 export default TensorboardDialog;

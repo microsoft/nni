@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
-import PropTypes from 'prop-types';
 import { Stack, PrimaryButton } from '@fluentui/react';
 import { gap10 } from '@components/fluent/ChildrenGap';
 import { AppContext } from '@/App';
+import { SearchItems } from '@static/interface';
 import { getSearchInputValueBySearchList } from './searchFunction';
 
 // This file is for search trial ['Trial id', 'Trial No.']
@@ -14,11 +14,19 @@ import { getSearchInputValueBySearchList } from './searchFunction';
 // 1 // only filter one trial that trial no is 1
 // bw // only filter that trial id include `bw`
 
-function GeneralSearch(props): any {
+interface GeneralSearchProps {
+    searchName: string;
+    searchFilter: SearchItems[];
+    dismiss: () => void;
+    setSearchInputVal: (a: string) => void;
+    changeSearchFilterList: (a: SearchItems[]) => void;
+}
+
+function GeneralSearch(props: GeneralSearchProps): any {
     const { updateDetailPage } = useContext(AppContext);
     // searchName val: Trial No. | Trial id
     const { searchName, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal } = props;
-    const [firstInputVal, setFirstInputVal] = useState(getSearchNameInit());
+    const [firstInputVal, setFirstInputVal] = useState(getSearchNameInit() as string);
 
     function updateFirstInputVal(ev: React.ChangeEvent<HTMLInputElement>): void {
         setFirstInputVal(ev.target.value);
@@ -78,13 +86,5 @@ function GeneralSearch(props): any {
         </Stack>
     );
 }
-
-GeneralSearch.propTypes = {
-    searchName: PropTypes.string,
-    searchFilter: PropTypes.array,
-    dismiss: PropTypes.func,
-    setSearchInputVal: PropTypes.func,
-    changeSearchFilterList: PropTypes.func
-};
 
 export default GeneralSearch;
