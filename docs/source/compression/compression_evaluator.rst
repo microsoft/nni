@@ -1,7 +1,9 @@
+.. _compression-evaluator:
+
 Compression Evaluator
 =====================
 
-The ``Evaluator`` is used to package the training and evaluation process for models with similar topologies.
+The ``Evaluator`` is used to package the training and evaluation process for a targeted model.
 To explain why NNI needs an ``Evaluator``, let's first look at the general process of model compression in NNI.
 
 In model pruning, some algorithms need to prune according to some intermediate variables (gradients, activations, etc.) generated during the training process,
@@ -18,19 +20,22 @@ NNI introduces the ``Evaluator`` as the carrier of the training and evaluation p
 .. note::
     For users prior to NNI v2.8: NNI previously provided APIs like ``trainer``, ``traced_optimizer``, ``criterion``, ``finetuner``.
     These APIs were maybe tedious in terms of user experience. Users need to exchange the corresponding API frequently if they want to switch compression algorithms.
-    ``Evaluator`` is an alternative to the above interface, users only need to consider one parameter to support NNI to complete the compression process.
+    ``Evaluator`` is an alternative to the above interface, users only need to create the evaluator once and it can be used in all compressors.
 
-For users of native Pytorch, ``TorchEvaluator`` requires the user to encapsulate the training process as a function and specifies the exposed interface,
+For users of native PyTorch, ``TorchEvaluator`` requires the user to encapsulate the training process as a function and exposes the specified interface,
 which will bring some complexity. But don't worry, in most cases, this will not change too much code.
 
-For users of `PytorchLightning <https://www.pytorchlightning.ai/>`__, ``LightningEvaluator`` can be created with only a few lines of code, and there is no need to make changes to the original code in most cases.
+For users of `PytorchLightning <https://www.pytorchlightning.ai/>`__, ``LightningEvaluator`` can be created with only a few lines of code based on your original Lightning code.
 
-Here we give two examples of how to create an ``Evaluator`` for both native Pytorch and PytorchLightning users.
+Here we give two examples of how to create an ``Evaluator`` for both native PyTorch and PytorchLightning users.
 
 TorchEvaluator
 --------------
 
-``TorchEvaluator`` is for the users who work in a native Pytorch environment. Here is an example for how to initialize a ``TorchEvaluator``.
+``TorchEvaluator`` is for the users who work in a native PyTorch environment. Here is an example for how to initialize a ``TorchEvaluator``.
+
+Please make sure each input arguments of the ``training_func`` is actually used,
+especially ``max_steps`` and ``max_epochs`` can correctly control the duration of training.
 
 .. code-block:: python
 
@@ -58,9 +63,11 @@ TorchEvaluator
         imagenet_train_data = datasets.ImageNet(root='data/imagenet', split='train', download=True)
         train_dataloader = DataLoader(imagenet_train_data, batch_size=4, shuffle=True)
 
+        #############################################################################
         # NNI may change the training duration by setting max_steps or max_epochs.
         # To ensure that NNI has the ability to control the training duration,
         # please add max_steps and max_epochs as constraints to the training loop.
+        #############################################################################
         total_epochs = max_epochs if max_epochs else 20
         total_steps = max_steps if max_steps else 1000000
         current_steps = 0
@@ -74,8 +81,9 @@ TorchEvaluator
                 loss = criterion(model(inputs), labels)
                 loss.backward()
                 optimizers.step()
-
+                ######################################################################
                 # stop the training loop when reach the total_steps
+                ######################################################################
                 current_steps += 1
                 if total_steps and current_steps == total_steps:
                     return
@@ -102,12 +110,16 @@ TorchEvaluator
 
     # initialize the optimizer, criterion, lr_scheduler, dummy_input
     model = models.resnet18().to(device)
+    ######################################################################
     # please use nni.trace wrap the optimizer class,
     # NNI will use the trace information to re-initialize the optimizer
+    ######################################################################
     optimizer = nni.trace(torch.optim.Adam)(model.parameters(), lr=1e-3)
     criterion = torch.nn.CrossEntropyLoss()
+    ######################################################################
     # please use nni.trace wrap the lr_scheduler class,
     # NNI will use the trace information to re-initialize the lr_scheduler
+    ######################################################################
     lr_scheduler = nni.trace(StepLR)(optimizer, step_size=5, gamma=0.1)
     dummy_input = torch.rand(4, 3, 224, 224).to(device)
 
@@ -115,64 +127,23 @@ TorchEvaluator
     evaluator = TorchEvaluator(training_func=training_func, optimizers=optimizer, criterion=criterion,
                                lr_schedulers=lr_scheduler, dummy_input=dummy_input, evaluating_func=evaluating_func)
 
-
-Let's introduce its API in detail.
-
-training_func
-^^^^^^^^^^^^^
-
-Training function has three required parameters, ``model``, ``optimizers`` and ``criterion``,
-and three optional parameters, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
-Let's explain how NNI passes in these six parameters, but in most cases, users don't need to care what NNI passes in.
-Users only need to treat these six parameters as the original parameters during the training process.
-
-* The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned, so it can share training function with the original model.
-* ``optimizers`` are re-initialized according to ``optimizers`` passed to the evaluator and the wrapped model's parameters.
-* ``criterion`` also based on the ``criterion`` passed to the evaluator, it might be modified in some algorithms.
-* If users use ``lr_schedulers`` in the ``training_func``, NNI will re-initialize the ``lr_schedulers`` with the re-initialized optimizers.
-* ``max_steps`` is the NNI training duration limitation. An integer means that after ``max_steps`` steps, the training should stop. ``None`` means NNI doesn't limit the duration, it is up to users to decide when to stop.
-* ``max_epochs`` is similar to the ``max_steps``, it controls the longest training epochs.
-
-Note that ``optimizers`` and ``lr_schedulers`` passed to the ``training_func`` have the same type as the ``optimizers`` and ``lr_schedulers`` passed to evaluator,
-a single ``torch.optim.Optimzier``/ ``torch.optim._LRScheduler`` instance or a list of them.
-
-optimizers
-^^^^^^^^^^
-A single traced optimizer instance or a list of traced optimizers by ``nni.trace``.
-
-NNI may modify the ``torch.optim.Optimizer`` member function ``step`` and/or optimize compressed models,
-so NNI needs to have the ability to re-initialize the optimizer. ``nni.trace`` can record the initialization parameters of a function/class,
-which can then be used by NNI to re-initialize the optimizer for a new but structurally similar model.
-
-criterion
-^^^^^^^^^
-``criterion`` function is used to compute the loss in the training function, the inputs of it are ``input`` and ``target``.
-Sometimes, NNI needs to add additional loss to sparse the model parameters. NNI will change the ``criterion`` to do that,
-e.g. in the ``training_func``, ``loss = criterion(input, target)`` will change to ``loss = patched_criterion(input, target)``.
-
-lr_schedulers
-^^^^^^^^^^^^^
-A single traced lr_scheduler instance or a list of traced lr_schedulers by ``nni.trace``.
-
-For the same reason with ``optimizers``, NNI needs the traced lr_scheduler to re-initialize it.
-
-dummy_input
-^^^^^^^^^^^
-``dummy_input`` is used to trace the model graph, it's same with ``example_inputs`` in `torch.jit.trace <https://pytorch.org/docs/stable/generated/torch.jit.trace.html?highlight=torch%20jit%20trace#torch.jit.trace>`_.
-It's only used by scheduled pruner intermediate model speedup right now.
-
-evaluating_func
-^^^^^^^^^^^^^^^
-This is the function used to evaluate the compressed model performance.
-The input is a model and the output is a float metric or a dict.
-NNI will take the float metric as the model score, and assume the higher score means the better performance.
-If you want to provide additional information, please put it into a dict and NNI will take the value of key ``default`` as evaluation metric.
+.. note::
+    It is also worth to mention that not all the arguments of ``TorchEvaluator`` must be provided.
+    Some compressors only require ``evaluate_func`` as they do not train the model, some compressors only require ``training_func``.
+    Please refer to each compressor's doc to check the required arguments.
+    But, it is fine to provide more arguments than the compressor's need.
 
 
 LightningEvaluator
 ------------------
 ``LightningEvaluator`` is for the users who work with PytorchLightning.
 Here is an example for how to initialize a ``LightningEvaluator``.
+
+Only three parts users need to modify compared with the original pytorch-lightning code:
+
+1. Wrap the ``Optimizer`` and ``_LRScheduler`` class with ``nni.trace``.
+2. Wrap the ``LightningModule`` class with ``nni.trace``.
+3. Wrap the ``LightningDataModule`` class with ``nni.trace``.
 
 .. code-block:: python
 
@@ -222,8 +193,10 @@ Here is an example for how to initialize a ``LightningEvaluator``.
         def test_step(self, batch, batch_idx):
             self.evaluate(batch, "test")
 
+        #####################################################################
         # please pay attention to this function,
         # using nni.trace trace the optimizer and lr_scheduler class.
+        #####################################################################
         def configure_optimizers(self):
             optimizer = nni.trace(torch.optim.SGD)(
                 self.parameters(),
@@ -275,8 +248,10 @@ Here is an example for how to initialize a ``LightningEvaluator``.
         def predict_dataloader(self):
             return DataLoader(self.imagenet_predict_data, batch_size=4)
 
+    #####################################################################
     # please use nni.trace wrap the pl.Trainer class,
     # NNI will use the trace information to re-initialize the trainer
+    #####################################################################
     pl_trainer = nni.trace(pl.Trainer)(
         accelerator='auto',
         devices=1,
@@ -284,9 +259,13 @@ Here is an example for how to initialize a ``LightningEvaluator``.
         max_steps=50,
         logger=TensorBoardLogger('./lightning_logs', name="resnet"),
     )
+
+    #####################################################################
     # please use nni.trace wrap the pl.LightningDataModule class,
     # NNI will use the trace information to re-initialize the datamodule
+    #####################################################################
     pl_data = nni.trace(ImageNetDataModule)(data_dir='./data/imagenet')
+
     evaluator = LightningEvaluator(pl_trainer, pl_data)
 
 

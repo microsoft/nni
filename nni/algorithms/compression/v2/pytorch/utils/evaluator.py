@@ -274,6 +274,8 @@ class LightningEvaluator(Evaluator):
     Additionally, please make sure the ``Optimizer`` class and ``LR_Scheduler`` class used in ``LightningModule.configure_optimizers()``
     are also be traced by ``nni.trace``.
 
+    Please refer to the :ref:`compression-evaluator` for the evaluator initialization example.
+
     Parameters
     ----------
     trainer
@@ -537,88 +539,66 @@ _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _CRITERION, _SCHEDULERS, Optiona
 class TorchEvaluator(Evaluator):
     """
     TorchEvaluator is the Evaluator for native Pytorch users.
-    It has some requirements for the writing of the training loop, please refer to the documentation for details.
+    Please refer to the :ref:`compression-evaluator` for the evaluator initialization example.
 
     Parameters
     ----------
     training_func
         The training function is used to train the model, note that this a entire optimization training loop.
-        It should have three required parameters [model, optimizers, criterion]
-        and three optional parameters [schedulers, max_steps, max_epochs].
-        ``optimizers`` can be an instance of ``torch.optim.Optimizer`` or a list of ``torch.optim.Optimizer``,
-        it belongs to the ``optimizers`` pass to ``TorchEvaluator``.
-        ``criterion`` and ``schedulers`` are also belonging to the ``criterion`` and ``schedulers`` pass to ``TorchEvaluator``.
-        ``max_steps`` and ``max_epochs`` are used to control the training duration.
+        Training function has three required parameters, ``model``, ``optimizers`` and ``criterion``,
+        and three optional parameters, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
+        Let's explain how NNI passes in these six parameters, but in most cases, users don't need to care what NNI passes in.
+        Users only need to treat these six parameters as the original parameters during the training process.
 
-        Example::
+        * The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned,
+          so it can share training function with the original model.
+        * ``optimizers`` are re-initialized according to ``optimizers`` passed to the evaluator and the wrapped model's parameters.
+        * ``criterion`` also based on the ``criterion`` passed to the evaluator, it might be modified in some algorithms.
+        * If users use ``lr_schedulers`` in the ``training_func``, NNI will re-initialize the ``lr_schedulers`` with the re-initialized
+          optimizers.
+        * ``max_steps`` is the NNI training duration limitation. An integer means that after ``max_steps`` steps, the training should stop.
+          ``None`` means NNI doesn't limit the duration, it is up to users to decide when to stop.
+        * ``max_epochs`` is similar to the ``max_steps``, it controls the longest training epochs.
 
-            def training_func(model: Module, optimizer: Optimizer, criterion: Callable, scheduler: _LRScheduler,
-                              max_steps: int | None = None, max_epochs: int | None = None, *args, **kwargs):
-                model.train()
-
-                # prepare data
-                data_dir = Path(__file__).parent / 'data'
-                MNIST(data_dir, train=True, download=True)
-                transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-                mnist_train = MNIST(data_dir, train=True, transform=transform)
-                train_dataloader = DataLoader(mnist_train, batch_size=32)
-
-                max_epochs = max_epochs if max_epochs else 3
-                max_steps = max_steps if max_steps else 6000
-                current_steps = 0
-
-                # training
-                for _ in range(max_epochs):
-                    for x, y in train_dataloader:
-                        optimizer.zero_grad()
-                        x, y = x.to(device), y.to(device)
-                        logits = model(x)
-                        loss: torch.Tensor = criterion(logits, y)
-                        loss.backward()
-                        optimizer.step()
-                        current_steps += 1
-                        if max_steps and current_steps == max_steps:
-                            return
-                    scheduler.step()
+        Note that ``optimizers`` and ``lr_schedulers`` passed to the ``training_func`` have the same type as the ``optimizers``
+        and ``lr_schedulers`` passed to evaluator, a single ``torch.optim.Optimzier``/ ``torch.optim._LRScheduler`` instance or
+        a list of them.
 
     optimziers
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+        A single traced optimizer instance or a list of traced optimizers by ``nni.trace``.
+
+        NNI may modify the ``torch.optim.Optimizer`` member function ``step`` and/or optimize compressed models,
+        so NNI needs to have the ability to re-initialize the optimizer. ``nni.trace`` can record the initialization parameters
+        of a function/class, which can then be used by NNI to re-initialize the optimizer for a new but structurally similar model.
+
         E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
     criterion
         The criterion function used in trainer. Take model output and target as input, and return the loss.
+
         E.g. ``criterion = torch.nn.functional.nll_loss``.
     lr_schedulers
-        Optional. The traced _LRScheduler instance which the lr scheduler class is wrapped by nni.trace.
+        Optional. A single traced lr_scheduler instance or a list of traced lr_schedulers by ``nni.trace``.
+        For the same reason with ``optimizers``, NNI needs the traced lr_scheduler to re-initialize it.
+
         E.g. ``traced_lr_scheduler = nni.trace(ExponentialLR)(optimizer, 0.1)``.
     dummy_input
-        Optional. The dummy_input is used to trace the graph,
-        the same with ``example_inputs`` in ``torch.jit.trace(func, example_inputs, ...)``.
+        Optional. The dummy_input is used to trace the graph, it's same with ``example_inputs`` in
+        `torch.jit.trace <https://pytorch.org/docs/stable/generated/torch.jit.trace.html?highlight=torch%20jit%20trace#torch.jit.trace>`_.
     evaluating_func
         Optional. A function that input is model and return the evaluation metric.
-        The return value can be a single float or dict. If the return value is a dict,
-        NNI will take the value of key ``default`` as evaluation metric.
+        This is the function used to evaluate the compressed model performance.
+        The input is a model and the output is a ``float`` metric or a ``dict``
+        (``dict`` should contains key ``default`` with a ``float`` value).
+        NNI will take the float number as the model score, and assume the higher score means the better performance.
+        If you want to provide additional information, please put it into a dict
+        and NNI will take the value of key ``default`` as evaluation metric.
 
-        Example::
-
-            def evaluating_func(model: Module):
-                model.eval()
-
-                # prepare data
-                data_dir = Path(__file__).parent / 'data'
-                MNIST(data_dir, train=False, download=True)
-                transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-                mnist_test = MNIST(data_dir, train=False, transform=transform)
-                test_dataloader = DataLoader(mnist_test, batch_size=32)
-
-                # testing
-                correct = 0
-                with torch.no_grad():
-                    for x, y in test_dataloader:
-                        x, y = x.to(device), y.to(device)
-                        logits = model(x)
-                        preds = torch.argmax(logits, dim=1)
-                        correct += preds.eq(y.view_as(preds)).sum().item()
-                return correct / len(mnist_test)
+    Notes
+    -----
+    It is also worth to mention that not all the arguments of ``TorchEvaluator`` must be provided.
+    Some compressors only require ``evaluate_func`` as they do not train the model, some compressors only require ``training_func``.
+    Please refer to each compressor's doc to check the required arguments.
+    But, it is fine to provide more arguments than the compressor's need.
     """
 
     def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
