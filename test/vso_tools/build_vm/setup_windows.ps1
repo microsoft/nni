@@ -46,6 +46,9 @@ Set-PSDebug -Trace 1
 $Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
 New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 
+# Add the user to Administrators group.
+Add-LocalGroupMember -Group "Administrators" -Member "$NewLocalAdmin"
+
 # These installation seems not working.
 
 # Visual Studio C++ Build tools (for Cython)
