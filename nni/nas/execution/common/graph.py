@@ -126,9 +126,10 @@ class Model:
         for graph_name, graph_data in ir.items():
             if graph_name not in ['_evaluator', 'model_id', 'python_class', 'python_init_params']:
                 Graph._load(model, graph_name, graph_data)._register()
-        model.model_id = ir['model_id']
-        model.python_class = ir['python_class']
-        model.python_init_params = ir['python_init_params']
+        if 'model_id' in ir: # backward compatibility
+            model.model_id = ir['model_id']
+            model.python_class = ir['python_class']
+            model.python_init_params = ir['python_init_params']
         if '_evaluator' in ir:
             model.evaluator = Evaluator._load(ir['_evaluator'])
         return model
