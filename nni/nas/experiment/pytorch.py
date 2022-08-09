@@ -171,7 +171,7 @@ class RetiariiExperiment(Experiment):
     ...     final_model = Net()
     """
 
-    def __init__(self, base_model: nn.Module,
+    def __init__(self, base_model: nn.Module = cast(nn.Module, None),
                  evaluator: Evaluator = cast(Evaluator, None),
                  applied_mutators: List[Mutator] = cast(List[Mutator], None),
                  strategy: BaseStrategy = cast(BaseStrategy, None),
@@ -185,8 +185,15 @@ class RetiariiExperiment(Experiment):
             evaluator = trainer
 
         # base_model is None means the experiment is in resume or view mode
-        if base_model is not None and evaluator is None:
-            raise ValueError('Evaluator should not be none.')
+        if base_model is not None:
+            if evaluator is None:
+                raise ValueError('Evaluator should not be none.')
+            # check for sanity
+            if not is_model_wrapped(base_model):
+                warnings.warn(colorama.Style.BRIGHT + colorama.Fore.RED +
+                            '`@model_wrapper` is missing for the base model. The experiment might still be able to run, '
+                            'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
+                            RuntimeWarning)
 
         self.base_model = base_model
         self.evaluator: Evaluator = evaluator
@@ -195,13 +202,6 @@ class RetiariiExperiment(Experiment):
 
         self._dispatcher = None
         self._dispatcher_thread = None
-
-        # check for sanity
-        if not is_model_wrapped(base_model):
-            warnings.warn(colorama.Style.BRIGHT + colorama.Fore.RED +
-                          '`@model_wrapper` is missing for the base model. The experiment might still be able to run, '
-                          'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
-                          RuntimeWarning)
 
     def _run_strategy(self, base_model_ir: Model, applied_mutators: List[Mutator]) -> None:
         _logger.info('Start strategy...')
@@ -422,7 +422,7 @@ class RetiariiExperiment(Experiment):
         exp = RetiariiExperiment(None)
         exp.id = exp_id
         exp._action = 'resume'
-        exp.config = launcher.get_stopped_experiment_config(exp_id, exp_dir)
+        exp.config = cast(RetiariiExeConfig, launcher.get_stopped_experiment_config(exp_id, exp_dir))
         return exp
 
     @staticmethod
@@ -430,5 +430,5 @@ class RetiariiExperiment(Experiment):
         exp = RetiariiExperiment(None)
         exp.id = exp_id
         exp._action = 'view'
-        exp.config = launcher.get_stopped_experiment_config(exp_id, exp_dir)
+        exp.config = cast(RetiariiExeConfig, launcher.get_stopped_experiment_config(exp_id, exp_dir))
         return exp

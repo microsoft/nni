@@ -53,7 +53,7 @@ class RetiariiExeConfig(ExperimentConfig):
                  **kwargs):
         super().__init__(training_service_platform, **kwargs)
 
-        if self.execution_engine != MISSING:
+        if not utils.is_missing(self.execution_engine):
             # this branch means kwargs is not {} and self.execution_engine has been assigned in super(),
             # reassign it because super() may instantiate ExecutionEngineConfig by mistake
             self.execution_engine = init_execution_engine_config(kwargs['executionEngine'])
