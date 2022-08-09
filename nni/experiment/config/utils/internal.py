@@ -205,20 +205,16 @@ def get_ipv4_address() -> str:
 def load_experiment_config(config_json) -> typing.Union[ExperimentConfig, RetiariiExeConfig]:
     # avoid circular import
     from nni.nas.experiment.config import RetiariiExeConfig
+    from nni.nas.experiment.pytorch import RetiariiExperiment
     from ..experiment_config import ExperimentConfig
-    if 'experimentType' in config_json:
-        if config_json['experimentType'] == 'hpo':
-            return ExperimentConfig(**config_json)
-        elif config_json['experimentType'] == 'nas':
-            return RetiariiExeConfig(**config_json)
-        else:
-            raise KeyError(f'Unknown experiment_type: {config_json["experimentType"]}')
+    from ...experiment import Experiment
+    exp_cls = get_experiment_cls_using_config(config_json)
+    if exp_cls is Experiment:
+        return ExperimentConfig(**config_json)
+    elif exp_cls is RetiariiExperiment:
+        return RetiariiExeConfig(**config_json)
     else:
-        # for backward compatibility, experiment config <= v2.8 does not have "experiment_type"
-        if 'executionEngine' in config_json:
-            return RetiariiExeConfig(**config_json)
-        else:
-            return ExperimentConfig(**config_json)
+        raise TypeError(f'Unsupported experiment type: {type(exp_cls)}')
 
 def get_experiment_cls_using_config(config_json):
     from nni.nas.experiment.pytorch import RetiariiExperiment
@@ -229,7 +225,7 @@ def get_experiment_cls_using_config(config_json):
         elif config_json['experimentType'] == 'nas':
             return RetiariiExperiment
         else:
-            raise KeyError(f'Unknown experiment_type: {config_json["experimentType"]}')
+            raise ValueError(f'Unknown experiment_type: {config_json["experimentType"]}')
     else:
         if 'executionEngine' in config_json:
             return RetiariiExperiment

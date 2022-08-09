@@ -20,7 +20,8 @@ from nni.common import dump, load
 from nni.experiment import Experiment, RunMode, launcher
 
 from nni.nas.execution import list_models, set_execution_engine
-from nni.nas.execution.common import RetiariiAdvisor, get_mutation_dict, init_execution_engine, Model
+from nni.nas.execution.api import init_execution_engine
+from nni.nas.execution.common import RetiariiAdvisor, get_mutation_dict, Model
 from nni.nas.execution.pytorch.codegen import model_to_pytorch_script
 from nni.nas.execution.pytorch.converter import convert_to_graph
 from nni.nas.execution.pytorch.converter.graph_gen import GraphConverterWithShape
