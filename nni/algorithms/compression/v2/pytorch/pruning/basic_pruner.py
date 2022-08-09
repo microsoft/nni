@@ -1,9 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from copy import deepcopy
+import functools
 import logging
-from typing import List, Dict, Tuple, Callable, Optional
+from typing import List, Dict, Tuple, Callable, Optional, overload
 
 from schema import And, Or, Optional as SchemaOptional, SchemaError
 import torch
@@ -17,7 +20,13 @@ from ..base import Pruner
 from .tools import (
     DataCollector,
     HookCollectorInfo,
-    WeightDataCollector,
+    TargetDataCollector,
+    EvaluatorBasedTargetDataCollector,
+    EvaluatorBasedHookDataCollector
+)
+
+# TODO: remove in nni v3.0.
+from .tools import (
     WeightTrainerBasedDataCollector,
     SingleHookTrainerBasedDataCollector
 )
@@ -25,7 +34,7 @@ from .tools import (
 from .tools import (
     MetricsCalculator,
     NormMetricsCalculator,
-    MultiDataNormMetricsCalculator,
+    HookDataNormMetricsCalculator,
     DistMetricsCalculator,
     APoZRankMetricsCalculator,
     MeanRankMetricsCalculator
@@ -39,7 +48,19 @@ from .tools import (
     DependencyAwareAllocator
 )
 
-from ..utils import CompressorSchema, config_list_canonical, OptimizerConstructHelper, Scaling
+from ..utils import (
+    CompressorSchema,
+    OptimizerConstructHelper,
+    Scaling,
+    Evaluator,
+    LightningEvaluator,
+    TorchEvaluator,
+    ForwardHook,
+    TensorHook,
+    config_list_canonical
+)
+
+from ..utils.docstring import _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
@@ -77,12 +98,9 @@ INTERNAL_SCHEMA = {
 
 
 class BasicPruner(Pruner):
-    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]]):
-        self.data_collector: Optional[DataCollector] = None
-        self.metrics_calculator: Optional[MetricsCalculator] = None
-        self.sparsity_allocator: Optional[SparsityAllocator] = None
-
-        super().__init__(model, config_list)
+    data_collector: DataCollector
+    metrics_calculator: MetricsCalculator
+    sparsity_allocator: SparsityAllocator
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         self._validate_config_before_canonical(model, config_list)
@@ -114,7 +132,8 @@ class BasicPruner(Pruner):
         Tuple[Module, Dict]
             Return the wrapped model and mask.
         """
-        assert self.bound_model is not None and self.config_list is not None, 'Model and/or config_list are not set in this pruner, please set them by reset() before compress().'
+        err_msg = 'Model and/or config_list are not set in this pruner, please set them by reset() before compress().'
+        assert self.bound_model is not None and self.config_list is not None, err_msg
         assert self.data_collector is not None and self.metrics_calculator is not None and self.sparsity_allocator is not None
         data = self.data_collector.collect()
         _logger.debug('Collected Data:\n%s', data)
@@ -126,6 +145,67 @@ class BasicPruner(Pruner):
         return self.bound_model, masks
 
 
+_LEGACY_TRAINER = Callable[[Module, Optimizer, Callable], None]
+_LEGACY_CRITERION = Callable[[Tensor, Tensor], Tensor]
+
+
+# TODO: remove in nni v3.0.
+class EvaluatorBasedPruner(BasicPruner):
+    evaluator: LightningEvaluator | TorchEvaluator
+    using_evaluator: bool
+    trainer: _LEGACY_TRAINER
+    traced_optimizer: Optimizer
+    criterion: _LEGACY_CRITERION
+
+    def _init_evaluator(self, model: Module, new_api: List[str], old_api: List[str], init_kwargs: Dict, args: Tuple,
+                        kwargs: Dict) -> Dict:
+        # for fake __init__ overload, parsing args and kwargs, initializing evaluator or [trainer, traced_optimizer, criterion],
+        # return the remaining arguments.
+        if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
+            init_kwargs = self._parse_args(new_api, args, kwargs, init_kwargs)
+            self.evaluator: LightningEvaluator | TorchEvaluator = init_kwargs.pop('evaluator')
+            if not self.evaluator._initialization_complete:
+                self.evaluator._init_optimizer_helpers(model)  # type: ignore
+            self.using_evaluator = True
+        else:
+            init_kwargs = self._parse_args(old_api, args, kwargs, init_kwargs)
+            self.trainer: _LEGACY_TRAINER = init_kwargs.pop('trainer')
+            traced_optimizer: Optimizer | OptimizerConstructHelper = init_kwargs.pop('traced_optimizer')
+            self.criterion: _LEGACY_CRITERION = init_kwargs.pop('criterion')
+            if isinstance(traced_optimizer, OptimizerConstructHelper):
+                self.optimizer_helper = traced_optimizer
+            else:
+                self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+            self.using_evaluator = False
+            warn_msg = f"The old API ...{','.join(old_api)} will be deprecated after NNI v3.0, " + \
+                       "please using the new one ...{','.join(new_api)}"
+            _logger.warning(warn_msg)
+        return init_kwargs
+
+    def _parse_args(self, arg_names: List, args: Tuple, kwargs: Dict, def_kwargs: Dict) -> Dict:
+        merged_kwargs = {arg_names[idx]: arg for idx, arg in enumerate(args)}
+        for key, value in kwargs.items():
+            if key in merged_kwargs:
+                raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{key}'")
+            merged_kwargs[key] = value
+        for key, value in def_kwargs.items():
+            if key not in merged_kwargs:
+                merged_kwargs[key] = value
+        diff = set(arg_names).difference(merged_kwargs.keys())
+        if diff:
+            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
+        diff = set(merged_kwargs.keys()).difference(arg_names)
+        if diff:
+            raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
+        return merged_kwargs
+
+    def compress(self) -> Tuple[Module, Dict]:
+        result = super().compress()
+        if self.using_evaluator:
+            self.evaluator.unbind_model()
+        return result
+
+
 class LevelPruner(BasicPruner):
     r"""
     This is a basic pruner, and in some papers called it magnitude pruning or fine-grained pruning.
@@ -133,9 +213,9 @@ class LevelPruner(BasicPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -143,7 +223,7 @@ class LevelPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode : str
+    mode
         'normal' or 'balance'.
         If setting 'normal' mode, target tensor will be pruned in the way of finegrained pruning.
         If setting 'balance' mode, a specal sparse pattern will chosen by pruner. Take linear
@@ -152,7 +232,7 @@ class LevelPruner(BasicPruner):
         pattern have more chance to achieve better trade-off between model performance and hardware
         acceleration. Please refer to releated paper for further information `Balanced Sparsity for
         Efficient DNN Inference on GPU <https://arxiv.org/pdf/1811.00206.pdf>`__.
-    balance_gran : list
+    balance_gran
         Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning
         without awaring balance, namely normal finegrained pruning.
         If passing list of int, LevelPruner will prune the model in the granularity of multi-dimension block.
@@ -195,7 +275,8 @@ class LevelPruner(BasicPruner):
         >>> pruner = LevelPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/level_pruning_torch.py <examples/model_compress/pruning/level_pruning_torch.py>`
+    For detailed example please refer to
+    :githublink:`examples/model_compress/pruning/level_pruning_torch.py <examples/model_compress/pruning/level_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: Optional[List] = None):
@@ -209,13 +290,13 @@ class LevelPruner(BasicPruner):
         schema.validate(config_list)
 
     def reset_tools(self):
-        if self.data_collector is None:
-            self.data_collector = WeightDataCollector(self)
+        if not hasattr(self, 'data_collector'):
+            self.data_collector = TargetDataCollector(self)
         else:
             self.data_collector.reset()
-        if self.metrics_calculator is None:
+        if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = NormMetricsCalculator()
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == "normal":
                 self.sparsity_allocator = NormalSparsityAllocator(self)
             elif self.mode == "balance":
@@ -228,9 +309,9 @@ class NormPruner(BasicPruner):
     """
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -238,9 +319,9 @@ class NormPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    p : int
+    p
         The order of norm.
-    mode : str
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the norm of weights and the channel-dependency or
@@ -249,7 +330,7 @@ class NormPruner(BasicPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
@@ -270,19 +351,20 @@ class NormPruner(BasicPruner):
         schema.validate(config_list)
 
     def reset_tools(self):
-        if self.data_collector is None:
-            self.data_collector = WeightDataCollector(self)
-        else:
-            self.data_collector.reset()
-        if self.metrics_calculator is None:
-            self.metrics_calculator = NormMetricsCalculator(p=self.p, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
-        if self.sparsity_allocator is None:
+        scalers = Scaling(kernel_size=[1], kernel_padding_mode='back')
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = NormalSparsityAllocator(self, scalers)
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, scalers)
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
+        if not hasattr(self, 'data_collector'):
+            self.data_collector = TargetDataCollector(self)
+        else:
+            self.data_collector.reset()
+        if not hasattr(self, 'metrics_calculator'):
+            self.metrics_calculator = NormMetricsCalculator(p=self.p, scalers=scalers)
 
 
 class L1NormPruner(NormPruner):
@@ -298,9 +380,9 @@ class L1NormPruner(NormPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -308,7 +390,7 @@ class L1NormPruner(NormPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode : str
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the l1-norm of weights and the channel-dependency or
@@ -317,7 +399,7 @@ class L1NormPruner(NormPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
@@ -330,15 +412,16 @@ class L1NormPruner(NormPruner):
 class L2NormPruner(NormPruner):
     r"""
     L2 norm pruner is a variant of L1 norm pruner.
-    The only different between L2 norm pruner and L1 norm pruner is L2 norm pruner prunes the weight with the smallest L2 norm of the weights.
+    The only different between L2 norm pruner and L1 norm pruner is
+    L2 norm pruner prunes the weight with the smallest L2 norm of the weights.
 
     L2 norm pruner also supports dependency-aware mode.
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -346,7 +429,7 @@ class L2NormPruner(NormPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode : str
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -355,7 +438,7 @@ class L2NormPruner(NormPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
@@ -367,7 +450,8 @@ class L2NormPruner(NormPruner):
         >>> pruner = L2NormPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/norm_pruning_torch.py <examples/model_compress/pruning/norm_pruning_torch.py>`
+    For detailed example please refer to
+    :githublink:`examples/model_compress/pruning/norm_pruning_torch.py <examples/model_compress/pruning/norm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict],
@@ -380,15 +464,16 @@ class FPGMPruner(BasicPruner):
     FPGM pruner prunes the blocks of the weight on the first dimension with the smallest geometric median.
     FPGM chooses the weight blocks with the most replaceable contribution.
 
-    For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/abs/1811.00250>`__.
+    For more details, please refer to
+    `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/abs/1811.00250>`__.
 
     FPGM pruner also supports dependency-aware mode.
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -396,7 +481,7 @@ class FPGMPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    mode : str
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the FPGM of weights and the channel-dependency or
@@ -405,7 +490,7 @@ class FPGMPruner(BasicPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
@@ -417,7 +502,8 @@ class FPGMPruner(BasicPruner):
         >>> pruner = FPGMPruner(model, config_list)
         >>> masked_model, masks = pruner.compress()
 
-    For detailed example please refer to :githublink:`examples/model_compress/pruning/fpgm_pruning_torch.py <examples/model_compress/pruning/fpgm_pruning_torch.py>`
+    For detailed example please refer to
+    :githublink:`examples/model_compress/pruning/fpgm_pruning_torch.py <examples/model_compress/pruning/fpgm_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict],
@@ -435,33 +521,33 @@ class FPGMPruner(BasicPruner):
         schema.validate(config_list)
 
     def reset_tools(self):
-        if self.data_collector is None:
-            self.data_collector = WeightDataCollector(self)
-        else:
-            self.data_collector.reset()
-        if self.metrics_calculator is None:
-            self.metrics_calculator = DistMetricsCalculator(p=2, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
-        if self.sparsity_allocator is None:
+        scalers = Scaling(kernel_size=[1], kernel_padding_mode='back')
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = NormalSparsityAllocator(self, scalers)
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, scalers)
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
+        if not hasattr(self, 'data_collector'):
+            self.data_collector = TargetDataCollector(self)
+        else:
+            self.data_collector.reset()
+        if not hasattr(self, 'metrics_calculator'):
+            self.metrics_calculator = DistMetricsCalculator(p=2, scalers=scalers)
 
 
-class SlimPruner(BasicPruner):
-    r"""
-    Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training to identify unimportant channels.
-    The channels with small scaling factor values will be pruned.
+class SlimPruner(EvaluatorBasedPruner):
+    __doc__ = r"""Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training
+    to identify unimportant channels. The channels with small scaling factor values will be pruned.
 
     For more details, please refer to `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/abs/1708.06519>`__\.
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -471,68 +557,46 @@ class SlimPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer : Callable[[Module, Optimizer, Callable], None]
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion : Callable[[Tensor, Tensor], Tensor]
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    training_epochs : int
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    training_epochs
         The epoch number for training model to sparsify the BN weight.
-    scale : float
+    scale
         Penalty parameter for sparsification, which could reduce overfitting.
-    mode : str
+    mode
         'normal' or 'global'.
         If prune the model in a global way, all layer weights with same config will be considered uniformly.
         That means a single layer may not reach or exceed the sparsity setting in config,
         but the total pruned weights meet the sparsity setting.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import SlimPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-        >>> pruner = SlimPruner(model, config_list, trainer, traced_optimizer, criterion, training_epochs=1)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/slim_pruning_torch.py <examples/model_compress/pruning/slim_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,
                  training_epochs: int, scale: float = 0.0001, mode='global'):
-        self.mode = mode
-        self.trainer = trainer
-        if isinstance(traced_optimizer, OptimizerConstructHelper):
-            self.optimizer_helper = traced_optimizer
-        else:
-            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
-        self.criterion = criterion
-        self.training_epochs = training_epochs
-        self._scale = scale
+        ...
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], trainer: _LEGACY_TRAINER, traced_optimizer: Optimizer,
+                 criterion: _LEGACY_CRITERION, training_epochs: int, scale: float = 0.0001, mode='global'):
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
+        # TODO: remove in nni v3.0. Fake overload.
+        new_api = ['evaluator', 'training_epochs', 'scale', 'mode']
+        old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_epochs', 'scale', 'mode']
+        init_kwargs = {'scale': 0.0001, 'mode': 'global'}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        self.training_epochs, self._scale, self.mode = init_kwargs['training_epochs'], init_kwargs['scale'], init_kwargs['mode']
+
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -549,26 +613,48 @@ class SlimPruner(BasicPruner):
             schema.validate(config_list)
         except SchemaError as e:
             if "Missing key: 'total_sparsity'" in str(e):
-                _logger.error('`config_list` validation failed. If global mode is set in this pruner, `sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.')
+                err_msg = '`config_list` validation failed. If global mode is set in this pruner, ' + \
+                          '`sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.'
+                _logger.error(err_msg)
             raise e
 
+    # TODO: remove in nni v3.0.
     def criterion_patch(self, criterion: Callable[[Tensor, Tensor], Tensor]) -> Callable[[Tensor, Tensor], Tensor]:
         def patched_criterion(input_tensor: Tensor, target: Tensor):
             sum_l1 = 0
             for wrapper in self.get_modules_wrapper().values():
-                sum_l1 += torch.norm(wrapper.module.weight, p=1)  # type: ignore
+                sum_l1 += torch.norm(wrapper.weight, p=1)  # type: ignore
             return criterion(input_tensor, target) + self._scale * sum_l1
         return patched_criterion
 
+    def loss_patch(self, origin_loss: Tensor):
+        # additional weight norm loss in Slim, used to sparse the weight value.
+        sum_l1 = 0
+        for wrapper in self.get_modules_wrapper().values():
+            target_name = 'weight'
+            sum_l1 += torch.norm(getattr(wrapper, target_name), p=1)  # type: ignore
+        return self._scale * sum_l1 + origin_loss
+
     def reset_tools(self):
-        if self.data_collector is None:
-            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
-                                                                  self.training_epochs, criterion_patch=self.criterion_patch)
+        if self.using_evaluator:
+            # TODO: move to other place in nni v3.0
+            self.evaluator.unbind_model()
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch,
+                                                                        max_epochs=self.training_epochs)
+            else:
+                self.data_collector.reset(loss_patch=self.loss_patch)
         else:
-            self.data_collector.reset()
-        if self.metrics_calculator is None:
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
+                                                                      self.training_epochs, criterion_patch=self.criterion_patch)
+            else:
+                self.data_collector.reset()
+
+        if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = NormMetricsCalculator()
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self)
             elif self.mode == 'global':
@@ -577,13 +663,12 @@ class SlimPruner(BasicPruner):
                 raise NotImplementedError('Only support mode `normal` and `global`')
 
 
-class ActivationPruner(BasicPruner):
-    """
-    Parameters
+class ActivationPruner(EvaluatorBasedPruner):
+    __doc__ = r"""Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -591,33 +676,15 @@ class ActivationPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer : Callable[[Module, Optimizer, Callable], None]
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion : Callable[[Tensor, Tensor], Tensor]
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    training_batches
-        The batch number used to collect activations.
-    mode : str
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    training_steps
+        The step number used to collect activations.
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the activation-based metrics and the channel-dependency or
@@ -626,24 +693,34 @@ class ActivationPruner(BasicPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_steps: int,
+                 activation: str = 'relu', mode: str = 'normal', dummy_input: Optional[Tensor] = None):
+        ...
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], trainer: _LEGACY_TRAINER, traced_optimizer: Optimizer,
+                 criterion: _LEGACY_CRITERION, training_batches: int, activation: str = 'relu',
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
-        self.mode = mode
-        self.dummy_input = dummy_input
-        self.trainer = trainer
-        if isinstance(traced_optimizer, OptimizerConstructHelper):
-            self.optimizer_helper = traced_optimizer
-        else:
-            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
-        self.criterion = criterion
-        self.training_batches = training_batches
-        self._activation = self._choose_activation(activation)
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
+        # TODO: remove in nni v3.0. Fake overload.
+        new_api = ['evaluator', 'training_steps', 'activation', 'mode', 'dummy_input']
+        old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_batches', 'activation', 'mode', 'dummy_input']
+        init_kwargs = {'activation': 'relu', 'mode': 'normal', 'dummy_input': None}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        self.training_steps: int = init_kwargs.get('training_steps', init_kwargs.get('training_batches'))
+        self._activation: Callable[[Tensor], Tensor] = self._choose_activation(init_kwargs['activation'])
+        self.mode: str = init_kwargs['mode']
+        self.dummy_input = init_kwargs['dummy_input']
+
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -670,10 +747,11 @@ class ActivationPruner(BasicPruner):
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
+            activation = self._activation_trans(output)
             if len(buffer) == 1:
-                buffer.append(torch.zeros_like(output))
-            if buffer[0] < self.training_batches:
-                buffer[1] += self._activation_trans(output)
+                buffer.append(torch.zeros_like(activation))
+            if buffer[0] < self.training_steps:
+                buffer[1] += activation
                 buffer[0] += 1
         return collect_activation
 
@@ -681,42 +759,60 @@ class ActivationPruner(BasicPruner):
         raise NotImplementedError()
 
     def reset_tools(self):
-        collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()], 'forward', self._collector)
-        if self.data_collector is None:
-            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
-                                                                      1, collector_infos=[collector_info])
-        else:
-            self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
-        if self.metrics_calculator is None:
-            self.metrics_calculator = self._create_metrics_calculator()
-        if self.sparsity_allocator is None:
+        scalers = Scaling(kernel_size=[1], kernel_padding_mode='back')
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = NormalSparsityAllocator(self, scalers)
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, scalers)
             else:
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
+
+        if self.using_evaluator:
+            # TODO: move to other place in nni v3.0
+            self.evaluator.unbind_model()
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
+            forward_hooks = {}
+            for module_name, wrapper in self.get_modules_wrapper().items():
+                target_name = 'weight'
+                forward_hooks[module_name] = {target_name: ForwardHook(wrapper, module_name, self._collector)}
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=forward_hooks,
+                                                                      max_steps=self.training_steps)
+            else:
+                self.data_collector.reset(hooks=forward_hooks)
+        else:
+            collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()],
+                                               'forward', self._collector)
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
+                                                                          1, collector_infos=[collector_info])
+            else:
+                self.data_collector.reset([collector_info])  # type: ignore
+
+        if not hasattr(self, 'metrics_calculator'):
+            self.metrics_calculator = self._create_metrics_calculator()
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         raise NotImplementedError()
 
 
 class ActivationAPoZRankPruner(ActivationPruner):
-    r"""
-    Activation APoZ rank pruner is a pruner which prunes on the first weight dimension,
+    __doc__ = r"""Activation APoZ rank pruner is a pruner which prunes on the first weight dimension,
     with the smallest importance criterion ``APoZ`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
     The pruning criterion ``APoZ`` is explained in the paper `Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures <https://arxiv.org/abs/1607.03250>`__.
 
     The APoZ is defined as:
     :math:`APoZ_{c}^{(i)} = APoZ\left(O_{c}^{(i)}\right)=\frac{\sum_{k}^{N} \sum_{j}^{M} f\left(O_{c, j}^{(i)}(k)=0\right)}{N \times M}`
+    """ + r"""
 
     Activation APoZ rank pruner also supports dependency-aware mode.
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -724,33 +820,15 @@ class ActivationAPoZRankPruner(ActivationPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer : Callable[[Module, Optimizer, Callable], None]
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``..
-    criterion : Callable[[Tensor, Tensor], Tensor]
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    training_batches
-        The batch number used to collect activations.
-    mode : str
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    training_steps
+        The step number used to collect activations.
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the activation-based metrics and the channel-dependency or
@@ -759,35 +837,25 @@ class ActivationAPoZRankPruner(ActivationPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import ActivationAPoZRankPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = ActivationAPoZRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return a matrix that the position of zero in `output` is one, others is zero.
-        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output)
+        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).mean(0)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
-        return APoZRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
+        return APoZRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
 
 
 class ActivationMeanRankPruner(ActivationPruner):
-    r"""
+    __doc__ = r"""
     Activation mean rank pruner is a pruner which prunes on the first weight dimension,
     with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
 
@@ -797,9 +865,9 @@ class ActivationMeanRankPruner(ActivationPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -807,33 +875,15 @@ class ActivationMeanRankPruner(ActivationPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer : Callable[[Module, Optimizer, Callable], None]
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``..
-    criterion : Callable[[Tensor, Tensor], Tensor]
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    training_batches
-        The batch number used to collect activations.
-    mode : str
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    training_steps
+        The step number used to collect activations.
+    mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the activation-based metrics and the channel-dependency or
@@ -842,40 +892,31 @@ class ActivationMeanRankPruner(ActivationPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import ActivationMeanRankPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = ActivationMeanRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     def _activation_trans(self, output: Tensor) -> Tensor:
         # return the activation of `output` directly.
-        return self._activation(output.detach())
+        return self._activation(output.detach()).mean(0)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
-        return MeanRankMetricsCalculator(Scaling(kernel_size=[-1, 1], kernel_padding_mode='back'))
+        return MeanRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
 
 
-class TaylorFOWeightPruner(BasicPruner):
-    r"""
+class TaylorFOWeightPruner(EvaluatorBasedPruner):
+    __doc__ = r"""
     Taylor FO weight pruner is a pruner which prunes on the first weight dimension,
     based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity.
     The estimated importance is defined as the paper `Importance Estimation for Neural Network Pruning <http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf>`__.
 
     :math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
+    """ + r"""
 
     Taylor FO weight pruner also supports dependency-aware mode.
 
@@ -883,9 +924,9 @@ class TaylorFOWeightPruner(BasicPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -895,33 +936,15 @@ class TaylorFOWeightPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer : Callable[[Module, Optimizer, Callable]
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion : Callable[[Tensor, Tensor], Tensor]
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    training_batches : int
-        The batch number used to collect activations.
-    mode : str
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    training_steps
+        The step number used to collect activations.
+    mode
         'normal', 'dependency_aware' or 'global'.
 
         If prune the model in a dependency-aware way, this pruner will
@@ -935,38 +958,36 @@ class TaylorFOWeightPruner(BasicPruner):
         If prune the model in a global way, all layer weights with same config will be considered uniformly.
         That means a single layer may not reach or exceed the sparsity setting in config,
         but the total pruned weights meet the sparsity setting.
-    dummy_input : Optional[torch.Tensor]
+    dummy_input
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import TaylorFOWeightPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/taylorfo_pruning_torch.py <examples/model_compress/pruning/taylorfo_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_steps: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
-        self.mode = mode
-        self.dummy_input = dummy_input
-        self.trainer = trainer
-        if isinstance(traced_optimizer, OptimizerConstructHelper):
-            self.optimizer_helper = traced_optimizer
-        else:
-            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
-        self.criterion = criterion
-        self.training_batches = training_batches
+        ...
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], trainer: _LEGACY_TRAINER, traced_optimizer: Optimizer,
+                 criterion: _LEGACY_CRITERION, training_batches: int, mode: str = 'normal', dummy_input: Optional[Tensor] = None):
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
+        # TODO: remove in nni v3.0. Fake overload.
+        new_api = ['evaluator', 'training_steps', 'mode', 'dummy_input']
+        old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_batches', 'mode', 'dummy_input']
+        init_kwargs = {'mode': 'normal', 'dummy_input': None}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        self.training_steps: int = init_kwargs.get('training_steps', init_kwargs.get('training_batches'))
+        self.mode: str = init_kwargs['mode']
+        self.dummy_input = init_kwargs['dummy_input']
+
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -983,16 +1004,19 @@ class TaylorFOWeightPruner(BasicPruner):
             schema.validate(config_list)
         except SchemaError as e:
             if "Missing key: 'total_sparsity'" in str(e):
-                _logger.error('`config_list` validation failed. If global mode is set in this pruner, `sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.')
+                err_msg = '`config_list` validation failed. If global mode is set in this pruner, ' + \
+                          '`sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.'
+                _logger.error(err_msg)
             raise e
 
     def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Tensor], None]:
         assert len(buffer) == 0, 'Buffer pass to taylor pruner collector is not empty.'
         buffer.append(0)
-        buffer.append(torch.zeros_like(weight_tensor))
 
         def collect_taylor(grad: Tensor):
-            if buffer[0] < self.training_batches:
+            if len(buffer) == 1:
+                buffer.append(torch.zeros_like(grad))
+            if buffer[0] < self.training_steps:
                 buffer[1] += self._calculate_taylor_expansion(weight_tensor, grad)
                 buffer[0] += 1
         return collect_taylor
@@ -1001,28 +1025,47 @@ class TaylorFOWeightPruner(BasicPruner):
         return (weight_tensor.detach() * grad.detach()).data.pow(2)
 
     def reset_tools(self):
-        hook_targets = {name: wrapper.weight for name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
-        collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)  # type: ignore
-        if self.data_collector is None:
-            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
-                                                                      1, collector_infos=[collector_info])
-        else:
-            self.data_collector.reset(collector_infos=[collector_info])  # type: ignore
-        if self.metrics_calculator is None:
-            self.metrics_calculator = MultiDataNormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
-        if self.sparsity_allocator is None:
+        scalers = Scaling(kernel_size=[1], kernel_padding_mode='back')
+        if not hasattr(self, 'sparsity_allocator'):
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = NormalSparsityAllocator(self, scalers)
             elif self.mode == 'global':
-                self.sparsity_allocator = GlobalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = GlobalSparsityAllocator(self, scalers)
             elif self.mode == 'dependency_aware':
-                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, Scaling(kernel_size=[1], kernel_padding_mode='back'))
+                self.sparsity_allocator = DependencyAwareAllocator(self, self.dummy_input, scalers)
             else:
                 raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
 
+        if self.using_evaluator:
+            # TODO: move to other place in nni v3.0
+            self.evaluator.unbind_model()
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
+            tensor_hooks = {}
+            for module_name, wrapper in self.get_modules_wrapper().items():
+                target_name = 'weight'
+                target = getattr(wrapper, target_name)
+                tensor_hooks[module_name] = {target_name: TensorHook(target, module_name,
+                                                                     functools.partial(self._collector, weight_tensor=target))}
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = EvaluatorBasedHookDataCollector(self, self.evaluator, hooks=tensor_hooks,
+                                                                      max_steps=self.training_steps)
+            else:
+                self.data_collector.reset(hooks=tensor_hooks)
+        else:
+            hook_targets = {name: wrapper.weight for name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
+            collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)  # type: ignore
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
+                                                                          1, collector_infos=[collector_info])
+            else:
+                self.data_collector.reset([collector_info])  # type: ignore
 
-class ADMMPruner(BasicPruner):
-    r"""
+        if not hasattr(self, 'metrics_calculator'):
+            self.metrics_calculator = HookDataNormMetricsCalculator(p=1, scalers=scalers)
+
+
+class ADMMPruner(EvaluatorBasedPruner):
+    __doc__ = r"""
     Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
     by decomposing the original nonconvex problem into two subproblems that can be solved iteratively.
     In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. 
@@ -1036,9 +1079,9 @@ class ADMMPruner(BasicPruner):
 
     Parameters
     ----------
-    model : torch.nn.Module
+    model
         Model to be pruned.
-    config_list : List[Dict]
+    config_list
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
@@ -1047,77 +1090,60 @@ class ADMMPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer : Callable[[Module, Optimizer, Callable]
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion : Callable[[Tensor, Tensor], Tensor]
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
-    iterations : int
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
+    iterations
         The total iteration number in admm pruning algorithm.
-    training_epochs : int
+    training_epochs
         The epoch number for training model in each iteration.
-    granularity : str
+    granularity
         'fine-grained' or 'coarse-grained'.
         If 'coarse-grained' is set, ADMM pruner will generate masks on output channels wise.
         In original admm pruning paper, author implemented a fine-grained admm pruning.
         In auto-compress paper, author used coarse-grained admm pruning.
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import ADMMPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=10, training_epochs=1)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/admm_pruning_torch.py <examples/model_compress/pruning/admm_pruning_torch.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int,
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, iterations: int,
                  training_epochs: int, granularity: str = 'fine-grained'):
-        self.trainer = trainer
-        if isinstance(traced_optimizer, OptimizerConstructHelper):
-            self.optimizer_helper = traced_optimizer
-        else:
-            assert model is not None, 'Model is required if traced_optimizer is provided.'
-            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
-        self.criterion = criterion
-        self.iterations = iterations
-        self.training_epochs = training_epochs
-        assert granularity in ['fine-grained', 'coarse-grained']
-        self.granularity = granularity
+        ...
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], trainer: _LEGACY_TRAINER,
+                 traced_optimizer: Optimizer, criterion: _LEGACY_CRITERION, iterations: int,
+                 training_epochs: int, granularity: str = 'fine-grained'):
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
+        # TODO: remove in nni v3.0. Fake overload.
+        new_api = ['evaluator', 'iterations', 'training_epochs', 'granularity']
+        old_api = ['trainer', 'traced_optimizer', 'criterion', 'iterations', 'training_epochs', 'granularity']
+        init_kwargs = {'granularity': 'fine-grained'}
+        init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
+
+        self.iterations: int = init_kwargs['iterations']
+        self.training_epochs: int = init_kwargs['training_epochs']
+        assert init_kwargs['granularity'] in ['fine-grained', 'coarse-grained']
+        self.granularity: str = init_kwargs['granularity']
+
         self.Z, self.U = {}, {}
         super().__init__(model, config_list)
 
     def reset(self, model: Module, config_list: List[Dict]):
         super().reset(model, config_list)
-        self.Z = {name: wrapper.module.weight.data.clone().detach() for name, wrapper in self.get_modules_wrapper().items()}  # type: ignore
-        self.U = {name: torch.zeros_like(z).to(z.device) for name, z in self.Z.items()}
+        # FIXME: Only support pruning 'weight' right now.
+        target_name = 'weight'
+        for module_name, wrapper in self.get_modules_wrapper().items():
+            self.Z[module_name] = {target_name: wrapper.weight.data.clone()}  # type: ignore
+        self.U = {module_name: {target_name: torch.zeros_like(z[target_name])} for module_name, z in self.Z.items()}
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
         schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
@@ -1127,53 +1153,72 @@ class ADMMPruner(BasicPruner):
         schema = CompressorSchema(schema_list, model, _logger)
         schema.validate(config_list)
 
+    # TODO: remove in nni v3.0.
     def criterion_patch(self, origin_criterion: Callable[[Tensor, Tensor], Tensor]):
         def patched_criterion(output: Tensor, target: Tensor):
             penalty = torch.tensor(0.0).to(output.device)
             for name, wrapper in self.get_modules_wrapper().items():
                 rho = wrapper.config.get('rho', 1e-4)
-                penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.module.weight - self.Z[name] + self.U[name]))
+                self.Z[name]['weight'] = self.Z[name]['weight'].to(wrapper.weight.device)  # type: ignore
+                self.U[name]['weight'] = self.U[name]['weight'].to(wrapper.weight.device)  # type: ignore
+                penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.weight - self.Z[name]['weight'] + self.U[name]['weight']))
             return origin_criterion(output, target) + penalty
         return patched_criterion
 
+    def loss_patch(self, origin_loss: Tensor):
+        penalty = 0
+        for name, wrapper in self.get_modules_wrapper().items():
+            rho = wrapper.config.get('rho', 1e-4)
+            self.Z[name]['weight'] = self.Z[name]['weight'].to(wrapper.weight.device)  # type: ignore
+            self.U[name]['weight'] = self.U[name]['weight'].to(wrapper.weight.device)  # type: ignore
+            penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.weight - self.Z[name]['weight'] + self.U[name]['weight']))
+        return origin_loss + penalty
+
     def reset_tools(self):
-        if self.data_collector is None:
-            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
-                                                                  self.training_epochs, criterion_patch=self.criterion_patch)
+        if self.using_evaluator:
+            # TODO: move to other place in nni v3.0
+            self.evaluator.unbind_model()
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = EvaluatorBasedTargetDataCollector(self, self.evaluator, loss_patch=self.loss_patch,
+                                                                        max_epochs=self.training_epochs)
+            else:
+                self.data_collector.reset(loss_patch=self.loss_patch)
         else:
-            self.data_collector.reset()
-        if self.metrics_calculator is None:
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
+                                                                      self.training_epochs, criterion_patch=self.criterion_patch)
+            else:
+                self.data_collector.reset()
+        if not hasattr(self, 'metrics_calculator'):
             if self.granularity == 'fine-grained':
                 self.metrics_calculator = NormMetricsCalculator(p=1)
             elif self.granularity == 'coarse-grained':
                 self.metrics_calculator = NormMetricsCalculator(p=1, scalers=Scaling(kernel_size=[1], kernel_padding_mode='back'))
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             if self.granularity == 'fine-grained':
                 self.sparsity_allocator = NormalSparsityAllocator(self)
             elif self.granularity == 'coarse-grained':
                 self.sparsity_allocator = NormalSparsityAllocator(self, Scaling(kernel_size=[1], kernel_padding_mode='back'))
 
     def compress(self) -> Tuple[Module, Dict]:
-        """
-        Returns
-        -------
-        Tuple[Module, Dict]
-            Return the wrapped model and mask.
-        """
         assert self.bound_model is not None
-        assert self.data_collector is not None and self.metrics_calculator is not None and self.sparsity_allocator is not None
         for i in range(self.iterations):
             _logger.info('======= ADMM Iteration %d Start =======', i)
             data = self.data_collector.collect()
 
-            for name, weight in data.items():
-                self.Z[name] = weight + self.U[name]
+            for module_name, targets_data in data.items():
+                for target_name, target_data in targets_data.items():
+                    self.U[module_name][target_name] = self.U[module_name][target_name].to(target_data.device)
+                    self.Z[module_name][target_name] = target_data + self.U[module_name][target_name]
             metrics = self.metrics_calculator.calculate_metrics(self.Z)
             masks = self.sparsity_allocator.generate_sparsity(metrics)
 
-            for name, mask in masks.items():
-                self.Z[name] = self.Z[name].mul(mask['weight'])
-                self.U[name] = self.U[name] + data[name] - self.Z[name]
+            for module_name, targets_mask in masks.items():
+                target_name = 'weight'
+                self.Z[module_name][target_name] = self.Z[module_name][target_name].mul(targets_mask[target_name])
+                self.U[module_name][target_name] = self.U[module_name][target_name] + data[module_name][target_name] - \
+                                                   self.Z[module_name][target_name]
 
         self.Z, self.U = {}, {}
         torch.cuda.empty_cache()
@@ -1182,4 +1227,8 @@ class ADMMPruner(BasicPruner):
         masks = self.sparsity_allocator.generate_sparsity(metrics)
 
         self.load_masks(masks)
+
+        if self.using_evaluator:
+            self.evaluator.unbind_model()
+
         return self.bound_model, masks

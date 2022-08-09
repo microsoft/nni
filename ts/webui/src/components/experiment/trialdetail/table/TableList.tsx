@@ -13,22 +13,15 @@ import {
 import { Trial } from '@model/trial';
 import { TOOLTIP_BACKGROUND_COLOR } from '@static/const';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
-import {
-    convertDuration,
-    formatTimestamp,
-    copyAndSort,
-    parametersType,
-    _inferColumnTitle,
-    getIntermediateAllKeys
-} from '@static/function';
-import { TableObj, SortInfo, SearchItems } from '@static/interface';
+import { convertDuration, formatTimestamp, copyAndSort, parametersType, _inferColumnTitle } from '@static/function';
+import { SortInfo, SearchItems } from '@static/interface';
 import { blocked, copy, LineChart, tableListIcon } from '@components/fluent/Icon';
 import Customize from './tableFunction/CustomizedTrial';
 import TensorboardUI from './tableFunction/tensorboard/TensorboardUI';
 import Search from './tableFunction/search/Search';
 import ExpandableDetails from '@components/common/ExpandableDetails/ExpandableIndex';
 import ChangeColumnComponent from '../ChangeColumnComponent';
-import Compare from './tableFunction/Compare';
+import Compare from './tableFunction/CompareIndex';
 import KillJobIndex from './tableFunction/killJob/KillJobIndex';
 import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction';
 import PaginationTable from '@components/common/PaginationTable';
@@ -43,7 +36,7 @@ type SearchOptionType = 'id' | 'trialnum' | 'status' | 'parameters';
 const defaultDisplayedColumns = ['sequenceId', 'id', 'duration', 'status', 'latestAccuracy'];
 
 interface TableListProps {
-    tableSource: TableObj[];
+    tableSource: Trial[];
 }
 
 interface TableListState {
@@ -55,12 +48,11 @@ interface TableListState {
     selectedRowIds: string[];
     customizeColumnsDialogVisible: boolean;
     compareDialogVisible: boolean;
-    intermediateDialogTrial: TableObj | undefined;
+    intermediateDialogTrial: Trial[] | undefined;
     copiedTrialId: string | undefined;
     sortInfo: SortInfo;
     searchItems: Array<SearchItems>;
     relation: Map<string, string>;
-    intermediateKeyList: string[];
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -86,8 +78,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             copiedTrialId: undefined,
             sortInfo: { field: '', isDescend: true },
             searchItems: [],
-            relation: parametersType(),
-            intermediateKeyList: []
+            relation: parametersType()
         };
 
         this._expandedTrialIds = new Set<string>();
@@ -113,8 +104,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectedRowIds,
             intermediateDialogTrial,
             copiedTrialId,
-            searchItems,
-            intermediateKeyList
+            searchItems
         } = this.state;
 
         return (
@@ -145,10 +135,23 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             text='Compare'
                             className='allList-compare'
                             onClick={(): void => {
-                                this.setState({ compareDialogVisible: true });
+                                this.setState({
+                                    compareDialogVisible: true
+                                });
                             }}
                             disabled={selectedRowIds.length === 0}
                         />
+                        {/* compare model: trial intermediates graph; table: id,no,status,default dict value */}
+                        {compareDialogVisible && (
+                            <Compare
+                                title='Compare trials'
+                                trials={this.props.tableSource.filter(trial => selectedRowIds.includes(trial.id))}
+                                onHideDialog={(): void => {
+                                    this.setState({ compareDialogVisible: false });
+                                }}
+                                changeSelectTrialIds={this.changeSelectTrialIds}
+                            />
+                        )}
                         <TensorboardUI
                             selectedRowIds={selectedRowIds}
                             changeSelectTrialIds={this.changeSelectTrialIds}
@@ -172,23 +175,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         }}
                     />
                 )}
-                {compareDialogVisible && (
-                    <Compare
-                        title='Compare trials'
-                        showDetails={true}
-                        trials={this.props.tableSource.filter(trial => selectedRowIds.includes(trial.id))}
-                        onHideDialog={(): void => {
-                            this.setState({ compareDialogVisible: false });
-                        }}
-                        changeSelectTrialIds={this.changeSelectTrialIds}
-                    />
-                )}
                 {intermediateDialogTrial !== undefined && (
                     <Compare
                         title='Intermediate results'
-                        showDetails={false}
-                        trials={[intermediateDialogTrial]}
-                        intermediateKeyList={intermediateKeyList}
+                        trials={intermediateDialogTrial}
                         onHideDialog={(): void => {
                             this.setState({ intermediateDialogTrial: undefined });
                         }}
@@ -236,32 +226,21 @@ class TableList extends React.Component<TableListProps, TableListState> {
         );
     }
 
-    private _trialsToTableItems(trials: TableObj[]): any[] {
+    private _trialsToTableItems(trials: Trial[]): any[] {
         // TODO: use search space and metrics space from TRIALS will cause update issues.
         const searchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
         const metricSpace = TRIALS.inferredMetricSpace();
         const { selectedRowIds } = this.state;
         const items = trials.map(trial => {
-            const ret = {
-                sequenceId: trial.sequenceId,
-                id: trial.id,
-                _checked: selectedRowIds.includes(trial.id) ? true : false,
-                startTime: (trial as Trial).info.startTime, // FIXME: why do we need info here?
-                endTime: (trial as Trial).info.endTime,
-                duration: trial.duration,
-                status: trial.status,
-                message: (trial as Trial).info.message || '--',
-                intermediateCount: trial.intermediates.length,
-                _expandDetails: this._expandedTrialIds.has(trial.id) // hidden field names should start with `_`
-            };
+            const ret = trial.tableRecord;
+            ret['_checked'] = selectedRowIds.includes(trial.id) ? true : false;
+            ret['_expandDetails'] = this._expandedTrialIds.has(trial.id); // hidden field names should start with `_`
             for (const [k, v] of trial.parameters(searchSpace)) {
                 ret[`space/${k.baseName}`] = v;
             }
             for (const [k, v] of trial.metrics(metricSpace)) {
                 ret[`metric/${k.baseName}`] = v;
             }
-            ret['latestAccuracy'] = (trial as Trial).latestAccuracy;
-            ret['_formattedLatestAccuracy'] = (trial as Trial).formatLatestAccuracy();
             return ret;
         });
 
@@ -397,9 +376,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ...(k === 'status' && {
                     // color status
                     onRender: (record): React.ReactNode => (
-                        // kill 成功之后，重新拉取的数据如果有 endtime 字段，会马上render出user_cancel
-                        // 的状态，反之，没有这个字段，table依然是部分刷新，只刷新duration，不会
-                        // 刷新 status
                         <span className={`${record.status} commonStyle`}>{record.status}</span>
                     )
                 }),
@@ -461,7 +437,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 }
                             }}
                         >
-                            <div className='ellipsis'>{record._formattedLatestAccuracy}</div>
+                            <div className='ellipsis'>{record.formattedLatestAccuracy}</div>
                         </TooltipHost>
                     )
                 }),
@@ -545,11 +521,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     title='Intermediate'
                     onClick={(): void => {
                         const { tableSource } = this.props;
-                        const trial = tableSource.find(trial => trial.id === record.id) as TableObj;
-                        const intermediateKeyListResult = getIntermediateAllKeys(trial);
+                        const trial = tableSource.find(trial => trial.id === record.id) as Trial;
                         this.setState({
-                            intermediateDialogTrial: trial,
-                            intermediateKeyList: intermediateKeyListResult
+                            intermediateDialogTrial: [trial]
                         });
                     }}
                 >

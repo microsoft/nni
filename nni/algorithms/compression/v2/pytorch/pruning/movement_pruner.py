@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from copy import deepcopy
 import logging
-from typing import Dict, List, Tuple, Callable
+from typing import Dict, List, Tuple, Callable, overload
 
 import torch
 from torch import autograd, Tensor
@@ -12,16 +14,22 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer, Adam
 
 from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper, LayerInfo
-from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
-from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, OptimizerConstructHelper
-from nni.common.serializer import Traceable
+from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import EvaluatorBasedPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema
 
-from .tools.base import TrainerBasedDataCollector
+from .tools.base import EvaluatorBasedDataCollector, TrainerBasedDataCollector
 
 from .tools import (
-    StraightMetricsCalculator,
-    NormalSparsityAllocator
+    NormalSparsityAllocator,
+    StraightMetricsCalculator
 )
+
+from ..utils import (
+    LightningEvaluator,
+    TorchEvaluator
+)
+
+from ..utils.docstring import _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
@@ -47,8 +55,7 @@ class PrunerScoredModuleWrapper(PrunerModuleWrapper):
 
     def forward(self, *inputs):
         # apply mask to weight, bias
-        # NOTE: I don't know why training getting slower and slower if only `self.weight_mask` without `detach()`
-        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask.detach()))  # type: ignore
+        self.module.weight = torch.mul(self.weight, _StraightThrough.apply(self.weight_score, self.weight_mask))  # type: ignore
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.module.bias = torch.mul(self.bias, self.bias_mask)  # type: ignore
         return self.module(*inputs)
@@ -77,13 +84,30 @@ class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
 
         data = {}
+        target_name = 'weight'
         for _, wrapper in self.compressor.get_modules_wrapper().items():
-            data[wrapper.name] = wrapper.weight_score.data  # type: ignore
+            data[wrapper.name] = {target_name: wrapper.weight_score.data}  # type: ignore
         return data
 
 
-class MovementPruner(BasicPruner):
-    r"""
+class EvaluatorBasedScoreDataCollector(EvaluatorBasedDataCollector):
+    """
+    Collect all weight_score in wrappers as data used to calculate metrics.
+    """
+    def collect(self) -> Dict[str, Tensor]:
+        assert self.compressor.bound_model is not None
+        self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
+
+        data = {}
+        target_name = 'weight'
+        for module_name, wrapper in self.compressor.get_modules_wrapper().items():
+            target_score: Tensor = getattr(wrapper, f'{target_name}_score')
+            data[module_name] = {target_name: target_score.data.clone()}
+        return data
+
+
+class MovementPruner(EvaluatorBasedPruner):
+    __doc__ = r"""
     Movement pruner is an implementation of movement pruning.
     This is a "fine-pruning" algorithm, which means the masks may change during each fine-tuning step.
     Each weight element will be scored by the opposite of the sum of the product of weight and its gradient during each step.
@@ -110,30 +134,12 @@ class MovementPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-    trainer : Callable[[Module, Optimizer, Callable]
-        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
-        The model will be trained or inferenced `training_epochs` epochs.
 
-        Example::
-
-            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                training = model.training
-                model.train(mode=True)
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
-                    optimizer.step()
-                model.train(mode=training)
-    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion : Callable[[Tensor, Tensor], Tensor]
-        The criterion function used in trainer. Take model output and target value as input, and return the loss.
+    evaluator
+        ``evaluator`` is used to replace the previous ``trainer``, ``traced_optimizer`` and ``criterion`` API.
+        {evaluator_docstring}
+        The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
+        If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
     training_epochs : int
         The total epoch number for training the model.
         Make sure the total `optimizer.step()` in `training_epochs` is bigger than `cool_down_beginning_step`.
@@ -145,33 +151,31 @@ class MovementPruner(BasicPruner):
         The sparsity after each `optimizer.step()` is:
         total_sparsity * (1 - (1 - (current_step - warm_up_step) / (cool_down_beginning_step - warm_up_step)) ** 3).
 
-    Examples
-    --------
-        >>> import nni
-        >>> from nni.compression.pytorch.pruning import MovementPruner
-        >>> model = ...
-        >>> # make sure you have used nni.trace to wrap the optimizer class before initialize
-        >>> traced_optimizer = nni.trace(torch.optim.Adam)(model.parameters())
-        >>> trainer = ...
-        >>> criterion = ...
-        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-        >>> pruner = MovementPruner(model, config_list, trainer, traced_optimizer, criterion, 10, 3000, 27000)
-        >>> masked_model, masks = pruner.compress()
-
+    Notes
+    -----
     For detailed example please refer to :githublink:`examples/model_compress/pruning/movement_pruning_glue.py <examples/model_compress/pruning/movement_pruning_glue.py>`
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
+    @overload
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_epochs: int,
+                 warm_up_step: int, cool_down_beginning_step: int):
+        ...
+
+    @overload
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  traced_optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
                  cool_down_beginning_step: int):
-        self.trainer = trainer
-        if isinstance(traced_optimizer, OptimizerConstructHelper):
-            self.optimizer_helper = traced_optimizer
-        else:
-            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
-        self.criterion = criterion
-        self.training_epochs = training_epochs
-        self.warm_up_step = warm_up_step
-        self.cool_down_beginning_step = cool_down_beginning_step
+        ...
+
+    def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
+        # TODO: remove in nni v3.0. Fake overload.
+        new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
+        old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
+        init_kwargs = self._init_evaluator(model, new_api, old_api, {}, args, kwargs)
+
+        self.training_epochs: int = init_kwargs['training_epochs']
+        self.warm_up_step: int = init_kwargs['warm_up_step']
+        self.cool_down_beginning_step: int = init_kwargs['cool_down_beginning_step']
         assert self.warm_up_step < self.cool_down_beginning_step, '`warm_up_step` should smaller than `cool_down_beginning_step`'
         super().__init__(model, config_list)
 
@@ -184,14 +188,16 @@ class MovementPruner(BasicPruner):
         if self.warm_up_step < current_step <= self.cool_down_beginning_step:
             wrapper_dict = self.get_modules_wrapper()
             for config in self.config_list:
-                current_sparsity = config['total_sparsity'] * (1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3)
+                scale = 1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3
+                current_sparsity = config['total_sparsity'] * scale
                 for op_name in config['op_names']:
-                    wrapper_dict[op_name].config['total_sparsity'] = current_sparsity
+                    wrapper = wrapper_dict[op_name]
+                    wrapper.config['total_sparsity'] = current_sparsity
 
     def reset_tools(self):
-        if self.metrics_calculator is None:
+        if not hasattr(self, 'metrics_calculator'):
             self.metrics_calculator = StraightMetricsCalculator()
-        if self.sparsity_allocator is None:
+        if not hasattr(self, 'sparsity_allocator'):
             self.sparsity_allocator = NormalSparsityAllocator(self, continuous_mask=False)
 
         # use Adam to update the weight_score
@@ -208,16 +214,30 @@ class MovementPruner(BasicPruner):
             if self.step_counter > self.warm_up_step:
                 self.cubic_schedule(self.step_counter)
                 data = {}
+                target_name = 'weight'
                 for wrapper in self.get_modules_wrapper().values():
-                    data[wrapper.name] = wrapper.weight_score.data
+                    data[wrapper.name] = {target_name: wrapper.weight_score.data}
                 metrics = self.metrics_calculator.calculate_metrics(data)  # type: ignore
                 masks = self.sparsity_allocator.generate_sparsity(metrics)  # type: ignore
                 self.load_masks(masks)
 
-        if self.data_collector is None:
-            self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
+        if self.using_evaluator:
+            # TODO: move to other place in nni v3.0
+            self.evaluator.unbind_model()
+            self.evaluator.bind_model(self.bound_model, self.get_origin2wrapped_parameter_name_map())  # type: ignore
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator,
+                                                                       after_opt_step_tasks=[_optimizer_patch],
+                                                                       max_epochs=self.training_epochs)
+            else:
+                self.data_collector.reset(after_opt_step_tasks=[_optimizer_patch])
         else:
-            self.data_collector.reset()
+            if not hasattr(self, 'data_collector'):
+                self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper,
+                                                                           self.criterion, self.training_epochs,
+                                                                           opt_after_tasks=[_optimizer_patch])
+            else:
+                self.data_collector.reset()
 
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
         """
@@ -243,7 +263,6 @@ class MovementPruner(BasicPruner):
         for wrapper in self.get_modules_wrapper().values():
             wrapper.config['total_sparsity'] = 0
         result = super().compress()
-        # del weight_score
-        for wrapper in self.get_modules_wrapper().values():
-            wrapper.weight_score = None
+        if self.using_evaluator:
+            self.evaluator.unbind_model()
         return result

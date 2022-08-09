@@ -56,20 +56,6 @@ testCases:
   configFile: test/training_service/config/examples/cifar10-pytorch-adl.yml
   trainingService: adl
 
-- name: classic-nas-gen-ss
-  configFile: test/training_service/config/examples/classic-nas-tf2.yml
-  launchCommand: nnictl ss_gen --trial_command="python3 train.py --epochs 1" --trial_dir=../examples/nas/legacy/classic_nas-tf --file=training_service/config/examples/nni-nas-search-space-tf2.json
-  stopCommand:
-  experimentStatusCheck: False
-  trainingService: local
-
-- name: classic-nas-tensorflow2
-  configFile: test/training_service/config/examples/classic-nas-tf2.yml
-  # remove search space file
-  stopCommand: nnictl stop
-  onExitCommand: python3 -c 'import os; os.remove("training_service/config/examples/nni-nas-search-space-tf2.json")'
-  trainingService: local
-
 #########################################################################
 # nni features test
 #########################################################################
