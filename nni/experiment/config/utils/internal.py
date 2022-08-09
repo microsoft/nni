@@ -218,7 +218,7 @@ def load_experiment_config(config_json: dict) -> ExperimentConfig | RetiariiExeC
     else:
         raise TypeError(f'Unsupported experiment type: {type(exp_cls)}')
 
-def get_experiment_cls_using_config(config_json: dict) -> Experiment | RetiariiExperiment:
+def get_experiment_cls_using_config(config_json: dict) -> type[Experiment] | type[RetiariiExperiment]:
     from nni.nas.experiment.pytorch import RetiariiExperiment
     from ...experiment import Experiment
     if 'experimentType' in config_json:

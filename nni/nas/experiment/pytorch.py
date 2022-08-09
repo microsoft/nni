@@ -39,7 +39,7 @@ from .config import (
 )
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from nni.experiment.config.utils import PathLike
 
 _logger = logging.getLogger(__name__)
 
@@ -195,9 +195,9 @@ class RetiariiExperiment(Experiment):
             # check for sanity
             if not is_model_wrapped(base_model):
                 warnings.warn(colorama.Style.BRIGHT + colorama.Fore.RED +
-                            '`@model_wrapper` is missing for the base model. The experiment might still be able to run, '
-                            'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
-                            RuntimeWarning)
+                    '`@model_wrapper` is missing for the base model. The experiment might still be able to run, '
+                    'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
+                    RuntimeWarning)
 
         self.base_model = base_model
         self.evaluator: Evaluator = evaluator
@@ -219,11 +219,8 @@ class RetiariiExperiment(Experiment):
         engine = init_execution_engine(config, self.port, self.url_prefix)
         set_execution_engine(engine)
 
-    def _save_experiment_checkpoint(self,
-                                    base_model_ir: Model,
-                                    applied_mutators: List[Mutator],
-                                    strategy: BaseStrategy,
-                                    exp_work_dir: Path) -> None:
+    def _save_experiment_checkpoint(self, base_model_ir: Model, applied_mutators: List[Mutator],
+                                    strategy: BaseStrategy, exp_work_dir: PathLike) -> None:
         ckp_path = os.path.join(exp_work_dir, self.id, 'checkpoint')
         with open(os.path.join(ckp_path, 'nas_model'), 'w') as fp:
             dump(base_model_ir._dump(), fp, pickle_size_limit=int(os.getenv('PICKLE_SIZE_LIMIT', 64 * 1024)))
@@ -232,7 +229,7 @@ class RetiariiExperiment(Experiment):
         with open(os.path.join(ckp_path, 'strategy'), 'w') as fp:
             dump(strategy, fp)
 
-    def _load_experiment_checkpoint(self, exp_work_dir: Path) -> Tuple[Model, List[Mutator], BaseStrategy]:
+    def _load_experiment_checkpoint(self, exp_work_dir: PathLike) -> Tuple[Model, List[Mutator], BaseStrategy]:
         ckp_path = os.path.join(exp_work_dir, self.id, 'checkpoint')
         with open(os.path.join(ckp_path, 'nas_model'), 'r') as fp:
             base_model_ir = load(fp=fp)
@@ -284,26 +281,26 @@ class RetiariiExperiment(Experiment):
             self.strategy.run(base_model_ir, self.applied_mutators)
         else:
             ws_url = f'ws://localhost:{port}/tuner'
-            canonicalized_config = self._start_impl(port, debug, RunMode.Background, ws_url, ['retiarii'])
-            canonicalized_config = cast(RetiariiExeConfig, canonicalized_config)
+            canoni_conf = self._start_impl(port, debug, RunMode.Background, ws_url, ['retiarii'])
+            canoni_conf = cast(RetiariiExeConfig, canoni_conf)
             self._dispatcher = RetiariiAdvisor(ws_url)
             self._dispatcher_thread = Thread(target=self._dispatcher.run, daemon=True)
             self._dispatcher_thread.start()
             # FIXME: engine cannot be created twice
-            self._create_execution_engine(canonicalized_config)
+            self._create_execution_engine(canoni_conf)
             try:
                 if self._action == 'create':
                     base_model_ir, self.applied_mutators = preprocess_model(
                         self.base_model, self.evaluator, self.applied_mutators,
-                        full_ir=not isinstance(canonicalized_config.execution_engine, (PyEngineConfig, BenchmarkEngineConfig)),
-                        dummy_input=canonicalized_config.execution_engine.dummy_input
-                            if isinstance(canonicalized_config.execution_engine, (BaseEngineConfig, CgoEngineConfig)) else None
+                        full_ir=not isinstance(canoni_conf.execution_engine, (PyEngineConfig, BenchmarkEngineConfig)),
+                        dummy_input=canoni_conf.execution_engine.dummy_input
+                            if isinstance(canoni_conf.execution_engine, (BaseEngineConfig, CgoEngineConfig)) else None
                     )
                     self._save_experiment_checkpoint(base_model_ir, self.applied_mutators, self.strategy,
-                                                     canonicalized_config.experiment_working_directory)
+                                                     canoni_conf.experiment_working_directory)
                 elif self._action == 'resume':
                     base_model_ir, self.applied_mutators, self.strategy = self._load_experiment_checkpoint(
-                        canonicalized_config.experiment_working_directory)
+                        canoni_conf.experiment_working_directory)
                 else:
                     raise RuntimeError(f'The experiment mode "{self._action}" is not supposed to invoke run() method.')
 
