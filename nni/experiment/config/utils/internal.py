@@ -35,7 +35,9 @@ import nni.runtime.config
 from .public import is_missing
 
 if typing.TYPE_CHECKING:
+    from nni.nas.experiment.pytorch import RetiariiExperiment
     from nni.nas.experiment.config import RetiariiExeConfig
+    from ...experiment import Experiment
     from ..base import ConfigBase
     from ..experiment_config import ExperimentConfig
     from ..training_service import TrainingServiceConfig
@@ -202,7 +204,7 @@ def get_ipv4_address() -> str:
     s.close()
     return addr
 
-def load_experiment_config(config_json) -> typing.Union[ExperimentConfig, RetiariiExeConfig]:
+def load_experiment_config(config_json: dict) -> ExperimentConfig | RetiariiExeConfig:
     # avoid circular import
     from nni.nas.experiment.config import RetiariiExeConfig
     from nni.nas.experiment.pytorch import RetiariiExperiment
@@ -216,7 +218,7 @@ def load_experiment_config(config_json) -> typing.Union[ExperimentConfig, Retiar
     else:
         raise TypeError(f'Unsupported experiment type: {type(exp_cls)}')
 
-def get_experiment_cls_using_config(config_json):
+def get_experiment_cls_using_config(config_json: dict) -> Experiment | RetiariiExperiment:
     from nni.nas.experiment.pytorch import RetiariiExperiment
     from ...experiment import Experiment
     if 'experimentType' in config_json:

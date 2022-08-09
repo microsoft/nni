@@ -10,7 +10,7 @@ import os
 import time
 import warnings
 from threading import Thread
-from typing import Any, List, cast, Tuple
+from typing import Any, List, cast, Tuple, TYPE_CHECKING
 
 import colorama
 
@@ -37,6 +37,9 @@ from .config import (
     RetiariiExeConfig, OneshotEngineConfig, BaseEngineConfig,
     PyEngineConfig, CgoEngineConfig, BenchmarkEngineConfig
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _logger = logging.getLogger(__name__)
 
@@ -219,9 +222,9 @@ class RetiariiExperiment(Experiment):
     def _save_experiment_checkpoint(self,
                                     base_model_ir: Model,
                                     applied_mutators: List[Mutator],
-                                    strategy: BaseStrategy) -> None:
-        ckp_path = os.path.join(os.path.expanduser(self.config.experiment_working_directory),
-                                self.id, 'checkpoint')
+                                    strategy: BaseStrategy,
+                                    exp_work_dir: Path) -> None:
+        ckp_path = os.path.join(exp_work_dir, self.id, 'checkpoint')
         with open(os.path.join(ckp_path, 'nas_model'), 'w') as fp:
             dump(base_model_ir._dump(), fp, pickle_size_limit=int(os.getenv('PICKLE_SIZE_LIMIT', 64 * 1024)))
         with open(os.path.join(ckp_path, 'applied_mutators'), 'w') as fp:
@@ -229,9 +232,8 @@ class RetiariiExperiment(Experiment):
         with open(os.path.join(ckp_path, 'strategy'), 'w') as fp:
             dump(strategy, fp)
 
-    def _load_experiment_checkpoint(self) -> Tuple[Model, List[Mutator], BaseStrategy]:
-        ckp_path = os.path.join(os.path.expanduser(self.config.experiment_working_directory),
-                                self.id, 'checkpoint')
+    def _load_experiment_checkpoint(self, exp_work_dir: Path) -> Tuple[Model, List[Mutator], BaseStrategy]:
+        ckp_path = os.path.join(exp_work_dir, self.id, 'checkpoint')
         with open(os.path.join(ckp_path, 'nas_model'), 'r') as fp:
             base_model_ir = load(fp=fp)
             base_model_ir = Model._load(base_model_ir)
@@ -297,9 +299,11 @@ class RetiariiExperiment(Experiment):
                         dummy_input=canonicalized_config.execution_engine.dummy_input
                             if isinstance(canonicalized_config.execution_engine, (BaseEngineConfig, CgoEngineConfig)) else None
                     )
-                    self._save_experiment_checkpoint(base_model_ir, self.applied_mutators, self.strategy)
+                    self._save_experiment_checkpoint(base_model_ir, self.applied_mutators, self.strategy,
+                                                     canonicalized_config.experiment_working_directory)
                 elif self._action == 'resume':
-                    base_model_ir, self.applied_mutators, self.strategy = self._load_experiment_checkpoint()
+                    base_model_ir, self.applied_mutators, self.strategy = self._load_experiment_checkpoint(
+                        canonicalized_config.experiment_working_directory)
                 else:
                     raise RuntimeError(f'The experiment mode "{self._action}" is not supposed to invoke run() method.')
 
@@ -369,7 +373,7 @@ class RetiariiExperiment(Experiment):
                 return [get_mutation_dict(model) for model in all_models[:top_k]]
 
     @staticmethod
-    def view(experiment_id: str, port: int = 8080, non_blocking: bool = False):
+    def view(experiment_id: str, port: int = 8080, non_blocking: bool = False) -> RetiariiExperiment | None:
         """
         View a stopped experiment.
 
@@ -397,7 +401,7 @@ class RetiariiExperiment(Experiment):
                 experiment.stop()
 
     @staticmethod
-    def resume(experiment_id: str, port: int = 8080, debug: bool = False):
+    def resume(experiment_id: str, port: int = 8080, debug: bool = False) -> RetiariiExperiment:
         """
         Resume a stopped experiment.
 
