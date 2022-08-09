@@ -396,7 +396,7 @@ class RetiariiExperiment(Experiment):
                 experiment.stop()
 
     @staticmethod
-    def resume(experiment_id: str, port: int = 8080, wait_completion: bool = True, debug: bool = False):
+    def resume(experiment_id: str, port: int = 8080, debug: bool = False):
         """
         Resume a stopped experiment.
 
@@ -406,8 +406,6 @@ class RetiariiExperiment(Experiment):
             The stopped experiment id.
         port
             The port of web UI.
-        wait_completion
-            If true, run in the foreground. If false, run in the background.
         debug
             Whether to start in debug mode.
         """
