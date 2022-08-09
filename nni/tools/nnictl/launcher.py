@@ -107,7 +107,7 @@ def resume_experiment(args):
 
     exp_class = utils.get_experiment_cls_using_config(config_json)
     if exp_class is RetiariiExperiment:
-        RetiariiExperiment.resume(exp_id, port, True, debug)
+        RetiariiExperiment.resume(exp_id, port, debug)
     else:
         exp = Experiment._resume(exp_id, exp_dir)
         run_mode = RunMode.Foreground if foreground else RunMode.Detach
