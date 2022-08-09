@@ -145,11 +145,15 @@ Here is an example of how to initialize a ``TorchEvaluator``.
     evaluator = TorchEvaluator(training_func=training_func, optimizers=optimizer, criterion=criterion,
                                lr_schedulers=lr_scheduler, dummy_input=dummy_input, evaluating_func=evaluating_func)
 
+
 .. note::
     It is also worth to note that not all the arguments of ``TorchEvaluator`` must be provided.
     Some compressors only require ``evaluate_func`` as they do not train the model, some compressors only require ``training_func``.
     Please refer to each compressor's doc to check the required arguments.
     But, it is fine to provide more arguments than the compressor's need.
+
+
+A complete example of pruner using ``TorchEvaluator`` to compress model can be found :githublink:`here <examples/model_compress/pruning/taylorfo_torch_evaluator.py>`.
 
 
 LightningEvaluator
@@ -302,3 +306,6 @@ Here is an example of how to initialize a ``LightningEvaluator``.
                 optimizers = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.001)
                 lr_schedulers = nni.trace(ExponentialLR)(optimizer=optimizers, gamma=0.1)
                 return optimizers, lr_schedulers
+
+
+A complete example of pruner using ``LightningEvaluator`` to compress model can be found :githublink:`here <examples/model_compress/pruning/taylorfo_lightning_evaluator.py>`.

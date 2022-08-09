@@ -627,7 +627,8 @@ class TorchEvaluator(Evaluator):
     Notes
     -----
     It is also worth to note that not all the arguments of ``TorchEvaluator`` must be provided.
-    Some pruners (or quantizers) only require ``evaluating_func`` as they do not train the model, some pruners (or quantizers) only require ``training_func``.
+    Some pruners (or quantizers) only require ``evaluating_func`` as they do not train the model,
+    some pruners (or quantizers) only require ``training_func``.
     Please refer to each pruner's (or quantizer's) doc to check the required arguments.
     But, it is fine to provide more arguments than the pruner's (or quantizer's) need.
     """
