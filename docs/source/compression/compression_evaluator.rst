@@ -14,7 +14,7 @@ In model quantization, NNI has quantization-aware training algorithm,
 it can adjust the scale and zero point required for model quantization from time to time during the training process,
 and may achieve a better performance compare to post-training quantization.
 
-In order to better support the above algorithms' need and maintain the consistency of the interface,
+In order to better support the above algorithms' needs and maintain the consistency of the interface,
 NNI introduces the ``Evaluator`` as the carrier of the training and evaluation process.
 
 .. note::
@@ -25,17 +25,34 @@ NNI introduces the ``Evaluator`` as the carrier of the training and evaluation p
 For users of native PyTorch, ``TorchEvaluator`` requires the user to encapsulate the training process as a function and exposes the specified interface,
 which will bring some complexity. But don't worry, in most cases, this will not change too much code.
 
-For users of `PytorchLightning <https://www.pytorchlightning.ai/>`__, ``LightningEvaluator`` can be created with only a few lines of code based on your original Lightning code.
+For users of `PyTorchLightning <https://www.pytorchlightning.ai/>`__, ``LightningEvaluator`` can be created with only a few lines of code based on your original Lightning code.
 
-Here we give two examples of how to create an ``Evaluator`` for both native PyTorch and PytorchLightning users.
+Here we give two examples of how to create an ``Evaluator`` for both native PyTorch and PyTorchLightning users.
 
 TorchEvaluator
 --------------
 
-``TorchEvaluator`` is for the users who work in a native PyTorch environment. Here is an example for how to initialize a ``TorchEvaluator``.
+``TorchEvaluator`` is for the users who work in a native PyTorch environment.
+It has six initialization parameters ``training_func``, ``optimizers``, ``criterion``, ``lr_schedulers``,
+``dummy_input``, ``evaluating_func``.
 
-Please make sure each input arguments of the ``training_func`` is actually used,
-especially ``max_steps`` and ``max_epochs`` can correctly control the duration of training.
+* ``training_func`` is the training loop to train the compressed model.
+  It is a callable function with six input parameters ``model``, ``optimizers``,
+  ``criterion``, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
+  Please make sure each input argument of the ``training_func`` is actually used,
+  especially ``max_steps`` and ``max_epochs`` can correctly control the duration of training.
+* ``optimizers`` is a single / a list of traced optimizer(s),
+  please make sure using ``nni.trace`` wrapping the ``Optimizer`` class before initializing it / them.
+* ``criterion`` is a callable function to compute loss, it has two input parameters ``input`` and ``target``, and returns a tensor as loss.
+* ``lr_schedulers`` is a single / a list of traced scheduler(s), same as ``optimizers``,
+  please make sure using ``nni.trace`` wrapping the ``_LRScheduler`` class before initializing it / them.
+* ``dummy_input`` is used to trace the model, same as ``example_inputs``
+  in `torch.jit.trace <https://pytorch.org/docs/stable/generated/torch.jit.trace.html?highlight=torch%20jit%20trace#torch.jit.trace>`_.
+* ``evaluating_func`` is a callable function to evaluate the compressed model performance. Its input is a compressed model and its output is metric.
+  The format of metric should be a float number or a dict with key ``default``.
+
+Please refer :ref:`compression-torch-evaluator` for more details.
+Here is an example of how to initialize a ``TorchEvaluator``.
 
 .. code-block:: python
 
@@ -136,14 +153,16 @@ especially ``max_steps`` and ``max_epochs`` can correctly control the duration o
 
 LightningEvaluator
 ------------------
-``LightningEvaluator`` is for the users who work with PytorchLightning.
-Here is an example for how to initialize a ``LightningEvaluator``.
+``LightningEvaluator`` is for the users who work with PyTorchLightning.
 
 Only three parts users need to modify compared with the original pytorch-lightning code:
 
 1. Wrap the ``Optimizer`` and ``_LRScheduler`` class with ``nni.trace``.
 2. Wrap the ``LightningModule`` class with ``nni.trace``.
 3. Wrap the ``LightningDataModule`` class with ``nni.trace``.
+
+Please refer :ref:`compression-lightning-evaluator` for more details.
+Here is an example of how to initialize a ``LightningEvaluator``.
 
 .. code-block:: python
 

@@ -266,9 +266,9 @@ class Evaluator:
 
 class LightningEvaluator(Evaluator):
     """
-    LightningEvaluator is the Evaluator based on PytorchLightning.
-    It is very friendly to the users who are familiar to PytorchLightning
-    or already have training/validation/testing code written in PytorchLightning.
+    LightningEvaluator is the Evaluator based on PyTorchLightning.
+    It is very friendly to the users who are familiar to PyTorchLightning
+    or already have training/validation/testing code written in PyTorchLightning.
     The only need is to use ``nni.trace`` to trace the Trainer & LightningDataModule.
 
     Additionally, please make sure the ``Optimizer`` class and ``LR_Scheduler`` class used in ``LightningModule.configure_optimizers()``
