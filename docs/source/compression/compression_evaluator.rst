@@ -32,8 +32,9 @@ Here we give two examples of how to create an ``Evaluator`` for both native PyTo
 TorchEvaluator
 --------------
 
-``TorchEvaluator`` is for the users who work in a native PyTorch environment.
-It has six initialization parameters ``training_func``, ``optimizers``, ``criterion``, ``lr_schedulers``,
+``TorchEvaluator`` is for the users who work in a native PyTorch environment (If you are using PyTorchLightning, please refer `LightningEvaluator`_).
+
+``TorchEvaluator`` has six initialization parameters ``training_func``, ``optimizers``, ``criterion``, ``lr_schedulers``,
 ``dummy_input``, ``evaluating_func``.
 
 * ``training_func`` is the training loop to train the compressed model.
