@@ -5,7 +5,6 @@ import unittest
 
 import torch
 import types
-import torch.fx
 import torch.nn.functional as F
 
 from nni.compression.pytorch.pruning import LevelPruner
@@ -136,7 +135,6 @@ class TorchModel1(torch.nn.Module):
 
         return x
 
-torch.fx.wrap('int')
 class AutoConvTestCase(unittest.TestCase):
     def test_level_pruner(self):
         model = TorchModel1()
