@@ -12,6 +12,21 @@ jobs:
 
   steps:
 
+  - powershell: |
+      $rsaFile = "$env:UserProfile\.ssh\id_rsa"
+      $sshHome = (Split-Path ${env:UserProfile}) + "\NNIUser\.ssh"
+      New-Item -ItemType Directory -Force -Path $sshHome
+      ssh-keygen -t rsa -N "" -f $rsaFile
+      Copy-Item "$rsaFile.pub" -Destination "$sshHome\authorized_keys"
+    displayName: Authorize to a user with privileges
+
+  - task: SSH@0
+    inputs:
+      sshEndpoint: NNIUser@localhost
+      runOptions: inline
+      inline: Start-Process -FilePath "$env:ProgramData\cuda_installer.exe" -ArgumentList "/s /n Display.Driver" -Wait
+    displayName: Install CUDA
+
   - template: templates/install-dependencies.yml
     parameters:
       platform: windows

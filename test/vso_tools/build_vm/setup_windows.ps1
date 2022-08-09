@@ -47,7 +47,7 @@ $Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
 New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 
 # Add the user to Administrators group.
-Add-LocalGroupMember -Group "Administrators" -Member "$NewLocalAdmin"
+Add-LocalGroupMember -Group "Administrators" -Member "NNIUser"
 
 # These installation seems not working.
 
