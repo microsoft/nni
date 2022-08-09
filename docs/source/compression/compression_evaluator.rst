@@ -146,7 +146,7 @@ Here is an example of how to initialize a ``TorchEvaluator``.
                                lr_schedulers=lr_scheduler, dummy_input=dummy_input, evaluating_func=evaluating_func)
 
 .. note::
-    It is also worth to mention that not all the arguments of ``TorchEvaluator`` must be provided.
+    It is also worth to note that not all the arguments of ``TorchEvaluator`` must be provided.
     Some compressors only require ``evaluate_func`` as they do not train the model, some compressors only require ``training_func``.
     Please refer to each compressor's doc to check the required arguments.
     But, it is fine to provide more arguments than the compressor's need.

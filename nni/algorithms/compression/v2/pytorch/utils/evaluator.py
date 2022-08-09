@@ -120,7 +120,7 @@ class Evaluator:
     Evaluator is a package for the training & evaluation process. In model compression,
     NNI have the need to intervene in the training process to collect intermediate information,
     and even modify part of the training loop. Evaluator provides a series of member functions that are convenient to modify these,
-    and the compressor can easily intervene in training by calling these functions.
+    and the pruner (or quantizer) can easily intervene in training by calling these functions.
 
     Notes
     -----
@@ -553,13 +553,21 @@ class TorchEvaluator(Evaluator):
 
         * The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned,
           so it can share training function with the original model.
-        * ``optimizers`` are re-initialized according to ``optimizers`` passed to the evaluator and the wrapped model's parameters.
-        * ``criterion`` also based on the ``criterion`` passed to the evaluator, it might be modified in some algorithms.
+        * ``optimizers`` are re-initialized from the ``optimizers`` passed to the evaluator and the wrapped model's parameters.
+        * ``criterion`` also based on the ``criterion`` passed to the evaluator,
+          it might be modified modified by the pruner during model pruning.
         * If users use ``lr_schedulers`` in the ``training_func``, NNI will re-initialize the ``lr_schedulers`` with the re-initialized
           optimizers.
-        * ``max_steps`` is the NNI training duration limitation. An integer means that after ``max_steps`` steps, the training should stop.
-          ``None`` means NNI doesn't limit the duration, it is up to users to decide when to stop.
-        * ``max_epochs`` is similar to the ``max_steps``, it controls the longest training epochs.
+        * ``max_steps`` is the NNI training duration limitation. It is for pruner (or quantizer) to control the number of training steps.
+          The user implemented ``training_func`` should respect ``max_steps`` by stopping the training loop after ``max_steps`` is reached.
+          Pruner may pass ``None`` to ``max_steps`` when it only controls ``max_epochs``.
+        * ``max_epochs`` is similar to the ``max_steps``, the only different is that it controls the number of training epochs.
+          The user implemented ``training_func`` should respect ``max_epochs`` by stopping the training loop
+          after ``max_epochs`` is reached. Pruner may pass ``None`` to ``max_epochs`` when it only controls ``max_steps``.
+
+        Note that when the pruner passes ``None`` to both ``max_steps`` and ``max_epochs``,
+        it treats ``training_func`` as a function of model fine-tuning.
+        Users should assign proper values to ``max_steps`` and ``max_epochs``.
 
         .. code-block:: python
 
@@ -618,10 +626,10 @@ class TorchEvaluator(Evaluator):
 
     Notes
     -----
-    It is also worth to mention that not all the arguments of ``TorchEvaluator`` must be provided.
-    Some compressors only require ``evaluating_func`` as they do not train the model, some compressors only require ``training_func``.
-    Please refer to each compressor's doc to check the required arguments.
-    But, it is fine to provide more arguments than the compressor's need.
+    It is also worth to note that not all the arguments of ``TorchEvaluator`` must be provided.
+    Some pruners (or quantizers) only require ``evaluating_func`` as they do not train the model, some pruners (or quantizers) only require ``training_func``.
+    Please refer to each pruner's (or quantizer's) doc to check the required arguments.
+    But, it is fine to provide more arguments than the pruner's (or quantizer's) need.
     """
 
     def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
