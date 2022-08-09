@@ -62,7 +62,9 @@ Add-LocalGroupMember -Group "Administrators" -Member "NNIUser"
 # Remove-Item "vc_redist.x64.exe"
 
 # Use choco instead.
-choco install -y --no-progress --ignore-checksums psexec  # For admin privileges on pipeline.
+choco install -y --no-progress --ignore-checksums psexec --version=2.34  # For admin privileges on pipeline.
+$env:path = "$env:path;$env:temp\chocolatey\psexec.2.34"
+
 choco install -y --no-progress visualstudio2019buildtools
 choco install -y --no-progress visualstudio2019-workload-vctools
 choco install -y --no-progress vcredist2012 vcredist2013 vcredist2015 vcredist2017
