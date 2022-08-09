@@ -449,14 +449,14 @@ _INIT_PARAMETER_DOCS = """
 
     Parameters
     ----------
-    width : int or tuple of int
+    width
         A fixed initial width or a tuple of widths to choose from.
-    num_cells : int or tuple of int
+    num_cells
         A fixed number of cells (depths) to stack, or a tuple of depths to choose from.
-    dataset : "cifar" | "imagenet"
+    dataset
         The essential differences are in "stem" cells, i.e., how they process the raw image input.
         Choosing "imagenet" means more downsampling at the beginning of the network.
-    auxiliary_loss : bool
+    auxiliary_loss
         If true, another auxiliary classification head will produce the another prediction.
         This makes the output of network two logits in the training phase.
 
@@ -476,12 +476,12 @@ class NDS(nn.Module):
 
     NDS has a speciality that it has mutable depths/widths.
     This is implemented by accepting a list of int as ``num_cells`` / ``width``.
-    """ + _INIT_PARAMETER_DOCS + """
-    op_candidates : list of str
+    """ + _INIT_PARAMETER_DOCS.rstrip() + """
+    op_candidates
         List of operator candidates. Must be from ``OPS``.
-    merge_op : ``all`` or ``loose_end``
+    merge_op
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
-    num_nodes_per_cell : int
+    num_nodes_per_cell
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
     """
 
@@ -630,8 +630,8 @@ class NASNet(NDS):
     __doc__ = """
     Search space proposed in `Learning Transferable Architectures for Scalable Image Recognition <https://arxiv.org/abs/1707.07012>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~NASNet.NASNET_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~NASNet.NASNET_OPS`.
     It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
     """ + _INIT_PARAMETER_DOCS
 
@@ -650,6 +650,7 @@ class NASNet(NDS):
         'sep_conv_5x5',
         'sep_conv_7x7',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
@@ -669,8 +670,8 @@ class NASNet(NDS):
 class ENAS(NDS):
     __doc__ = """Search space proposed in `Efficient neural architecture search via parameter sharing <https://arxiv.org/abs/1802.03268>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~ENAS.ENAS_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~ENAS.ENAS_OPS`.
     It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
     """ + _INIT_PARAMETER_DOCS
 
@@ -681,6 +682,7 @@ class ENAS(NDS):
         'avg_pool_3x3',
         'max_pool_3x3',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
@@ -701,8 +703,8 @@ class AmoebaNet(NDS):
     __doc__ = """Search space proposed in
     `Regularized evolution for image classifier architecture search <https://arxiv.org/abs/1802.01548>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~AmoebaNet.AMOEBA_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~AmoebaNet.AMOEBA_OPS`.
     It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
     """ + _INIT_PARAMETER_DOCS
 
@@ -716,6 +718,7 @@ class AmoebaNet(NDS):
         'dil_sep_conv_3x3',
         'conv_7x1_1x7',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
@@ -737,8 +740,8 @@ class PNAS(NDS):
     __doc__ = """Search space proposed in
     `Progressive neural architecture search <https://arxiv.org/abs/1712.00559>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~PNAS.PNAS_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~PNAS.PNAS_OPS`.
     It has 5 nodes per cell, and the output is concatenation of all nodes in the cell.
     """ + _INIT_PARAMETER_DOCS
 
@@ -752,6 +755,7 @@ class PNAS(NDS):
         'max_pool_3x3',
         'dil_conv_3x3',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
@@ -771,8 +775,8 @@ class PNAS(NDS):
 class DARTS(NDS):
     __doc__ = """Search space proposed in `Darts: Differentiable architecture search <https://arxiv.org/abs/1806.09055>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~DARTS.DARTS_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~DARTS.DARTS_OPS`.
     It has 4 nodes per cell, and the output is concatenation of all nodes in the cell.
     """ + _INIT_PARAMETER_DOCS
 
@@ -786,6 +790,7 @@ class DARTS(NDS):
         'dil_conv_3x3',
         'dil_conv_5x5',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
