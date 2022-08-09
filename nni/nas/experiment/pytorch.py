@@ -419,7 +419,7 @@ class RetiariiExperiment(Experiment):
 
     @staticmethod
     def _resume(exp_id, exp_dir=None):
-        exp = RetiariiExperiment(None)
+        exp = RetiariiExperiment(cast(nn.Module, None))
         exp.id = exp_id
         exp._action = 'resume'
         exp.config = cast(RetiariiExeConfig, launcher.get_stopped_experiment_config(exp_id, exp_dir))
@@ -427,7 +427,7 @@ class RetiariiExperiment(Experiment):
 
     @staticmethod
     def _view(exp_id, exp_dir=None):
-        exp = RetiariiExperiment(None)
+        exp = RetiariiExperiment(cast(nn.Module, None))
         exp.id = exp_id
         exp._action = 'view'
         exp.config = cast(RetiariiExeConfig, launcher.get_stopped_experiment_config(exp_id, exp_dir))
