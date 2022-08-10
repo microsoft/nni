@@ -124,14 +124,22 @@ class Model:
     def _load(ir: Any) -> 'Model':
         model = Model(_internal=True)
         for graph_name, graph_data in ir.items():
-            if graph_name != '_evaluator':
+            if graph_name not in ['_evaluator', 'model_id', 'python_class', 'python_init_params']:
                 Graph._load(model, graph_name, graph_data)._register()
+        if 'model_id' in ir: # backward compatibility
+            model.model_id = ir['model_id']
+            model.python_class = ir['python_class']
+            model.python_init_params = ir['python_init_params']
         if '_evaluator' in ir:
             model.evaluator = Evaluator._load(ir['_evaluator'])
         return model
 
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
+        # NOTE: only dump some necessary member variable, will be refactored
+        ret['model_id'] = self.model_id
+        ret['python_class'] = self.python_class
+        ret['python_init_params'] = self.python_init_params
         if self.evaluator is not None:
             ret['_evaluator'] = self.evaluator._dump()
         return ret
