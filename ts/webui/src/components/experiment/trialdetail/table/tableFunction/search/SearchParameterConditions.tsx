@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
-import PropTypes from 'prop-types';
 import { Stack, PrimaryButton, Dropdown, IDropdownOption } from '@fluentui/react';
 import { EXPERIMENT } from '@static/datamodel';
 import { getDropdownOptions, getSearchInputValueBySearchList } from './searchFunction';
 import { gap10 } from '@components/fluent/ChildrenGap';
 import { AppContext } from '@/App';
+import { SearchItems } from '@static/interface';
 
 /***
  * This file is for filtering trial parameters and trial status
@@ -30,14 +30,23 @@ import { AppContext } from '@/App';
  *         hidden_size≠1024  // please don't input this format!
  */
 
-function SearchParameterConditions(props): any {
+interface SearchParameterConditionsProps {
+    parameter: string;
+    searchFilter: SearchItems[];
+    dismiss: () => void;
+    setSearchInputVal: (a: string) => void;
+    changeSearchFilterList: (a: SearchItems[]) => void;
+    updatePage: () => void;
+}
+
+function SearchParameterConditions(props: SearchParameterConditionsProps): any {
     const { parameter, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal } = props;
     const { updateDetailPage } = useContext(AppContext);
     const isChoiceTypeSearchFilter = parameter === 'StatusNNI' || EXPERIMENT.searchSpace[parameter]._type === 'choice';
     const operatorList = isChoiceTypeSearchFilter ? ['=', '≠'] : ['between', '>', '<', '=', '≠'];
 
     const initValueList = getInitVal();
-    const [operatorVal, setOperatorVal] = useState(initValueList[0]);
+    const [operatorVal, setOperatorVal] = useState(initValueList[0] as string);
     const [firstInputVal, setFirstInputVal] = useState(initValueList[1] as string);
     const [secondInputVal, setSecondInputVal] = useState(initValueList[2] as string);
     // status or choice parameter dropdown selected value list
@@ -208,14 +217,5 @@ function SearchParameterConditions(props): any {
         </Stack>
     );
 }
-
-SearchParameterConditions.propTypes = {
-    parameter: PropTypes.string,
-    searchFilter: PropTypes.array,
-    dismiss: PropTypes.func,
-    setSearchInputVal: PropTypes.func,
-    changeSearchFilterList: PropTypes.func,
-    updatePage: PropTypes.func
-};
 
 export default SearchParameterConditions;

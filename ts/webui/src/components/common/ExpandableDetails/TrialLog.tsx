@@ -1,7 +1,11 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 
-const TrialLog = (props): any => {
+interface TrialLogProps {
+    logStr: string;
+    logName: string;
+}
+
+const TrialLog = (props: TrialLogProps): any => {
     const { logStr, logName } = props;
     const isHyperlink = logStr.toLowerCase().startsWith('http');
 
@@ -17,11 +21,6 @@ const TrialLog = (props): any => {
             )}
         </div>
     );
-};
-
-TrialLog.propTypes = {
-    logStr: PropTypes.string,
-    logName: PropTypes.string
 };
 
 export default TrialLog;

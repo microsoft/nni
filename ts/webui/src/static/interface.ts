@@ -26,23 +26,6 @@ interface MultipleAxes {
     axes: Map<string, SingleAxis>;
 }
 
-// draw accuracy graph data export interface
-interface TableObj {
-    key: number;
-    sequenceId: number;
-    id: string;
-    duration: number;
-    status: string;
-    acc?: FinalType; // draw accuracy graph
-    description: Parameters;
-    color?: string;
-    startTime?: number;
-    endTime?: number;
-    intermediates: (MetricDataRecord | undefined)[];
-    parameters(axes: MultipleAxes): Map<SingleAxis, any>;
-    metrics(axes: MultipleAxes): Map<SingleAxis, any>;
-}
-
 interface TableRecord {
     key: string;
     sequenceId: number;
@@ -53,7 +36,6 @@ interface TableRecord {
     status: string;
     message: string;
     intermediateCount: number;
-    accuracy?: number | any;
     latestAccuracy: number | undefined;
     formattedLatestAccuracy: string; // format (LATEST/FINAL),
 }
@@ -65,17 +47,6 @@ interface SearchSpace {
 
 interface FinalType {
     default: string;
-}
-
-interface ErrorParameter {
-    error?: string;
-}
-
-interface Parameters {
-    parameters: ErrorParameter;
-    logPath?: string;
-    intermediate: number[];
-    multiProgress?: number;
 }
 
 // trial accuracy
@@ -118,14 +89,6 @@ interface Dimobj {
 interface ParaObj {
     data: number[][];
     parallelAxis: Array<Dimobj>;
-}
-
-interface Intermedia {
-    name: string; // id
-    type: string;
-    data: Array<number | object>; // intermediate data
-    hyperPara: object; // each trial hyperpara value
-    trialNum: number;
 }
 
 interface MetricDataRecord {
@@ -204,13 +167,20 @@ interface AllExperimentList {
     prefixUrl: string;
 }
 
-interface Tensorboard {
+interface KillJobIsError {
+    isError: boolean;
+    message: string;
+}
+
+type TensorboardTaskStatus = 'RUNNING' | 'DOWNLOADING_DATA' | 'STOPPING' | 'STOPPED' | 'ERROR' | 'FAIL_DOWNLOAD_DATA';
+
+interface TensorboardTaskInfo {
     id: string;
-    status: string;
+    status: TensorboardTaskStatus;
     trialJobIdList: string[];
     trialLogDirectoryList: string[];
-    pid: number;
-    port: string;
+    pid?: number;
+    port?: string;
 }
 
 // for TableList search
@@ -223,20 +193,25 @@ interface SearchItems {
     isChoice: boolean; // for parameters: type = choice and status also as choice type
 }
 
+interface AllTrialsIntermediateChart {
+    name: string;
+    // id: string;
+    sequenceId: number;
+    data: number[];
+    parameter: object;
+    type: string;
+}
+
 export {
-    TableObj,
     TableRecord,
     SearchSpace,
     FinalType,
-    ErrorParameter,
-    Parameters,
     AccurPoint,
     DetailAccurPoint,
     TooltipForIntermediate,
     TooltipForAccuracy,
     Dimobj,
     ParaObj,
-    Intermedia,
     MetricDataRecord,
     TrialJobInfo,
     ExperimentProfile,
@@ -247,6 +222,8 @@ export {
     MultipleAxes,
     SortInfo,
     AllExperimentList,
-    Tensorboard,
-    SearchItems
+    TensorboardTaskInfo,
+    SearchItems,
+    KillJobIsError,
+    AllTrialsIntermediateChart
 };

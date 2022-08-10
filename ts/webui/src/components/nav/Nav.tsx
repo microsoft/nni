@@ -17,6 +17,7 @@ import {
 } from '@components/fluent/Icon';
 import '@style/nav/nav.scss';
 import '@style/icon.scss';
+import { ErrorMessage } from '@components/nav/ErrorMessage';
 
 interface NavState {
     version: string;
@@ -165,6 +166,8 @@ class NavCon extends React.Component<NavProps, NavState> {
                         />
                     )}
                 </React.Fragment>
+                {/* experiment error model */}
+                <ErrorMessage />
             </Stack>
         );
     }
