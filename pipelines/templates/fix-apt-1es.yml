@@ -19,13 +19,13 @@ parameters:
 
 steps:
 
-# Don't set -e
-# Always make sure the lock is released.
-- script: |
-    set -x
-    sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
-    sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
-  displayName: (1ES) Disable apt upgrade
+# # Don't set -e
+# # Always make sure the lock is released.
+# - script: |
+#     set -x
+#     sudo bash test/vso_tools/build_vm/disable_apt_daily.sh
+#     sudo apt-get -o DPkg::Lock::Timeout=120 --fix-broken -y install
+#   displayName: (1ES) Disable apt upgrade
 
 # Make sure GPU isn't broken.
 # Sometimes we can't save the GPU because upgrade runs too early.
