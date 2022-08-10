@@ -126,6 +126,7 @@ def training(model: BertForSequenceClassification, optimizer: torch.optim.Optimi
 
 
 def evaluation(model):
+    training = model.training
     model.eval()
     is_regression = task_name == 'stsb'
     metric = load_metric('glue', task_name)
@@ -151,6 +152,8 @@ def evaluation(model):
             )
         result = {'matched': result, 'mismatched': metric.compute()}
         return (result['matched']['accuracy'] + result['mismatched']['accuracy']) / 2, result
+
+    model.train(training)
 
     return result.get('f1', result.get('accuracy', None)), result
 
