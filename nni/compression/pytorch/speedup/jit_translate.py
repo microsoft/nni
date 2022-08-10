@@ -13,6 +13,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
 import re
 import logging
 from functools import partial, lru_cache
+import copy
 import torch
 
 
@@ -169,7 +170,7 @@ def getattr_python(node: NodePyGroup, _speedup: ModelSpeedup):
     # get the name of the attribute, for example
     # prim::GetAttr[name="module_list"](%self.1)
     assert node.kind() == 'prim::GetAttr'
-    pattern = '\\[name=\"(.*?)\"\\]'
+    pattern = '\[name=\"(.*?)\"\]'
     key_words = re.findall(pattern, str(node))
     assert len(key_words) == 1
     return GetModule(key_words[0])
@@ -188,7 +189,7 @@ class FuncAdapter:
     positional:
         Positional arguments values. The placeholder is None if it's non-constant.
     keyword:
-        Keyword arguments values. . The placeholder is None if it's non-constant.
+        Keyword arguments values. The placeholder is None if it's non-constant.
     undetermined:
         A list of the right positions of arguments.
         Position is an int in positional or a str in keyword.
@@ -313,23 +314,32 @@ special_treat_dict = {
 schema_fix_dict = {
     # functinon 'to', 'randint', and 'sparse_coo_tensor' has different schema between python and c++.
     # https://pytorch.org/docs/stable/jit_unsupported.html#ops-with-divergent-schemas-between-torch-python
-    'aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
-        'aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
+    """aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Ten
+    sor(a))""":
+        """aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None)
+         -> (Tensor(a))""",
     'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
         'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
     'aten::to.other(Tensor(a) self, Tensor other, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
         'aten::to.other(Tensor(a) self, Tensor other, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
-    
-    # todo: are the arguments 'pin_memory' and 'requires_grad' related? functions in the python have only 'requires_grad' and functions in the aten have only 'pin_memory'
-    
-    # 'aten::randint(int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
-    # 'aten::randint.generator(int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
-    # 'aten::randint.low(int low, int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
-    # 'aten::randint.low_generator(int low, int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
 
-    # 'aten::sparse_coo_tensor.size(int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=False) -> (Tensor)',
-    # 'aten::sparse_coo_tensor.indices(Tensor indices, Tensor values, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
-    # 'aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)'
+    # todo: are the arguments 'pin_memory' and 'requires_grad' related?
+    # functions in the python have only 'requires_grad' and functions in the aten have only 'pin_memory'
+
+    # 'aten::randint(int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
+    # """aten::randint.generator(int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? device=None, boo
+    # l? pin_memory=None) -> (Tensor)""",
+    # """aten::randint.low(int low, int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None)
+    # -> (Tensor)""",
+    # """aten::randint.low_generator(int low, int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? dev
+    # ice=None, bool? pin_memory=None) -> (Tensor)""",
+
+    # """aten::sparse_coo_tensor.size(int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=False) -> (Te
+    # nsor)""",
+    # """aten::sparse_coo_tensor.indices(Tensor indices, Tensor values, *, int? dtype=None, int? layout=None, Device? device=None, bool? pi
+    # n_memory=None) -> (Tensor)""",
+    # """aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? devi
+    # ce=None, bool? pin_memory=None) -> (Tensor"""'
 }
 @lru_cache(maxsize=256)
 def parse_aten_schema(schema: str):
@@ -338,7 +348,7 @@ def parse_aten_schema(schema: str):
     """
     if schema in schema_fix_dict:
         schema = schema_fix_dict[schema]
-        
+
     positional_num = 0
     keyword_list = list()
     special_treat = dict() # for dtype and memory_format trans now

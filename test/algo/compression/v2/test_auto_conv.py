@@ -4,11 +4,14 @@
 import unittest
 
 import torch
-import types
 import torch.nn.functional as F
 
-from nni.compression.pytorch.pruning import LevelPruner
-from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact
+from nni.compression.pytorch.pruning import L1NormPruner
+from nni.compression.pytorch.speedup import ModelSpeedup
+from nni.algorithms.compression.v2.pytorch.utils import (
+    compute_sparsity_compact2origin,
+    compute_sparsity_mask2compact
+)
 
 class CondModel(torch.nn.Module):
     """
@@ -83,8 +86,9 @@ class TorchModel1(torch.nn.Module):
 
         x = x.to(torch.float32)
 
-        y1 = self.pool1(F.relu(self.conv1(x)))
-        y2 = self.pool1(F.gelu(self.conv1(x)))
+        x = self.conv1(x)
+        y1 = self.pool1(F.relu(x))
+        y2 = self.pool1(F.gelu(x))
 
         x = y1 + y2
 
@@ -92,8 +96,9 @@ class TorchModel1(torch.nn.Module):
 
         x = x * 1.00001
 
-        y1 = self.pool2(F.silu(self.conv2(x)))
-        y2 = self.pool2(torch.tanh(self.conv2(x)))
+        x = self.conv2(x)
+        y1 = self.pool2(F.silu(x))
+        y2 = self.pool2(torch.tanh(x))
 
         x = y1 - y2
 
@@ -136,19 +141,25 @@ class TorchModel1(torch.nn.Module):
         return x
 
 class AutoConvTestCase(unittest.TestCase):
-    def test_level_pruner(self):
+    def test_l1norm_pruner(self):
         model = TorchModel1()
         dummy_input = torch.rand(3, 1, 28, 28)
-        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-        pruner = LevelPruner(model=model, config_list=config_list)
+        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.5}]
+        pruner = L1NormPruner(model=model, config_list=config_list)
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
-        assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
-        from nni.compression.pytorch.speedup import ModelSpeedup
         ModelSpeedup(model, dummy_input, masks).speedup_model()
-        print('the shape of output of the infer:')
-        print(model(dummy_input).shape)
+        real_sparsity_list = compute_sparsity_compact2origin(TorchModel1(), model, config_list)
+
+        print('sparsity_list:', sparsity_list)
+        assert 0.45 < sparsity_list[0]['total_sparsity'] < 0.55
+
+        print('real_sparsity_list:', real_sparsity_list)
+        assert 0.45 < real_sparsity_list[0]['total_sparsity'] < 0.75
+
+        print('the shape of output of the infer:', model(dummy_input).shape)
+        assert model(dummy_input).shape == torch.Size((5, 8))
 
 if __name__ == '__main__':
     unittest.main()
