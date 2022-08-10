@@ -13,8 +13,12 @@ jobs:
   steps:
 
   - powershell: |
-      psexec -accepteula -u NNIUser -p P@ssW0rD! "%ProgramData%\cuda_installer.exe /s /n Display.Driver"
+      psexec -accepteula -u NNIUser -p P@ssW0rD! "${env:ProgramData}\cuda_installer.exe /s /n Display.Driver"
     displayName: Install CUDA
+
+  - powershell: |
+      nvidia-smi
+    displayName: nvidia-smi
 
   - template: templates/install-dependencies.yml
     parameters:
