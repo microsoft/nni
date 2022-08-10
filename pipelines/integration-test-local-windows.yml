@@ -13,7 +13,7 @@ jobs:
   steps:
 
   - powershell: |
-      psexec -u NNIUser -p P@ssW0rD! "%ProgramData%\cuda_installer.exe /s /n Display.Driver"
+      psexec -accepteula -u NNIUser -p P@ssW0rD! "%ProgramData%\cuda_installer.exe /s /n Display.Driver"
     displayName: Install CUDA
 
   - template: templates/install-dependencies.yml
