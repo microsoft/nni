@@ -13,8 +13,9 @@ jobs:
   steps:
 
   - powershell: |
-      Get-ChildItem "${env:ProgramData}"
-      psexec -accepteula -h -u NNIUser -p P@ssW0rD! "${env:ProgramData}\cuda_installer.exe" /s /n Display.Driver
+      # Get-ChildItem "${env:ProgramData}"
+      # psexec -accepteula -h -u NNIUser -p P@ssW0rD! "${env:ProgramData}\cuda_installer.exe" /s /n Display.Driver
+      Start-Process -Verb RunAs -FilePath "$env:ProgramData\cuda_installer.exe" -ArgumentList "/s /n Display.Driver" -Wait
     displayName: Install CUDA
 
   - powershell: |
