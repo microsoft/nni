@@ -14,7 +14,7 @@ jobs:
 
   - powershell: |
       Get-ChildItem "${env:ProgramData}"
-      psexec -accepteula -u NNIUser -p P@ssW0rD! "${env:ProgramData}\cuda_installer.exe /s /n Display.Driver"
+      psexec -accepteula -u NNIUser -p P@ssW0rD! "${env:ProgramData}\cuda_installer.exe" /s /n Display.Driver
     displayName: Install CUDA
 
   - powershell: |
