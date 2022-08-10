@@ -81,7 +81,7 @@ One way to use the model space is to directly leverage the searched results. Not
 In the example above, ``MobileNetV3Space`` can be replaced with any model spaces in the hub, and ``mobilenetv3-small-100`` can be any model alias listed below.
 
 +-------------------+------------------------+----------+---------+-------------------------------+
-| Search space      | Model                  | Dataset  | Metric  | Eval Protocol                 |
+| Search space      | Model                  | Dataset  | Metric  | Eval configurations           |
 +===================+========================+==========+=========+===============================+
 | ProxylessNAS      | acenas-m1              | ImageNet | 75.176  | Default                       |
 +-------------------+------------------------+----------+---------+-------------------------------+
@@ -122,9 +122,9 @@ In the example above, ``MobileNetV3Space`` can be replaced with any model spaces
 
 .. note::
 
-   1. The metrics listed above are obtained by evaluating the checkpoints provided the original author and converted to NNI NAS format with `these scripts <https://github.com/ultmaster/spacehub-conversion>`__. Do note that some metrics can be higher / lower than the original report, because there could be subtle differences between data preprocessing, operation implementation (e.g., 3rd-party hswish vs ``nn.Hardswish``), or even library versions we are using. But most of these errors are acceptable (~0.1%).
+   1. The metrics listed above are obtained by evaluating the checkpoints provided by the original author and converted to NNI NAS format with `these scripts <https://github.com/ultmaster/spacehub-conversion>`__. Do note that some metrics can be higher / lower than the original report, because there could be subtle differences between data preprocessing, operation implementation (e.g., 3rd-party hswish vs ``nn.Hardswish``), or even library versions we are using. But most of these errors are acceptable (~0.1%).
    2. The default metric for ImageNet and CIFAR-10 is top-1 accuracy.
-   3. The default evaluation follows the protocols in `timm <https://github.com/rwightman/pytorch-image-models>`__.
+   3. Refer to `timm <https://github.com/rwightman/pytorch-image-models>`__ for the evaluation configurations.
 
 .. todos: measure latencies and flops, reproduce training.
 
