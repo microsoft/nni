@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 
 import nni
@@ -112,48 +111,6 @@ def test_multitrial_experiment(pytestconfig):
     ensure_success(exp)
     assert isinstance(exp.export_top_models()[0], dict)
     exp.stop()
-
-
-def test_multitrial_experiment_resume_view(pytestconfig):
-    # start a normal nas experiment
-    base_model = Net()
-    evaluator = get_mnist_evaluator()
-    search_strategy = strategy.Random()
-    exp = RetiariiExperiment(base_model, evaluator, strategy=search_strategy)
-    exp_id = exp.id
-    exp_config = RetiariiExeConfig('local')
-    exp_config.trial_concurrency = 1
-    exp_config.max_trial_number = 1
-    exp_config._trial_command_params = nas_experiment_trial_params(pytestconfig.rootpath)
-    exp.run(exp_config)
-    ensure_success(exp)
-    assert isinstance(exp.export_top_models()[0], dict)
-    exp.stop()
-
-    # resume the above nas experiment. only tested the resume logic in the python side,
-    # as no more trial is executed after resume, the above experiment is already finished
-    print('python api resume...')
-    exp = RetiariiExperiment.resume(exp_id)
-    ensure_success(exp)
-    # TODO: currently `export_top_models` does not work as strategy's states are not resumed
-    # assert isinstance(exp.export_top_models()[0], dict)
-    exp.stop()
-    # view the above experiment in non blocking mode then stop it
-    print('python api view...')
-    exp = RetiariiExperiment.view(exp_id, non_blocking=True)
-    exp.stop()
-
-    # the following is nnictl resume and view
-    print('nnictl resume...')
-    new_env = os.environ.copy()
-    new_env['PYTHONPATH'] = pytestconfig.rootpath
-    proc = subprocess.run(f'nnictl resume {exp_id}', shell=True, env=new_env)
-    assert proc.returncode == 0, 'resume nas experiment failed with code %d' % proc.returncode
-    print('nnictl view...')
-    proc = subprocess.run(f'nnictl view {exp_id}', shell=True)
-    assert proc.returncode == 0, 'view nas experiment failed with code %d' % proc.returncode
-    proc = subprocess.run(f'nnictl stop {exp_id}', shell=True)
-    assert proc.returncode == 0, 'stop viewed nas experiment failed with code %d' % proc.returncode
 
 
 def test_oneshot_experiment():
