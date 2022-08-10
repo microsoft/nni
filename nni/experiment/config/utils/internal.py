@@ -26,7 +26,7 @@ import json
 import os.path
 from pathlib import Path
 import socket
-import typing
+from typing import Tuple, TYPE_CHECKING, get_type_hints
 
 import typeguard
 
@@ -34,7 +34,7 @@ import nni.runtime.config
 
 from .public import is_missing
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from nni.nas.experiment.pytorch import RetiariiExperiment
     from nni.nas.experiment.config import RetiariiExeConfig
     from ...experiment import Experiment
@@ -83,7 +83,7 @@ def fields(config: ConfigBase) -> list[dataclasses.Field]:
     # Similar to `dataclasses.fields()`, but use `typing.get_types_hints()` to get `field.type`.
     # This is useful when postponed evaluation is enabled.
     ret = [copy.copy(field) for field in dataclasses.fields(config)]
-    types = typing.get_type_hints(type(config))
+    types = get_type_hints(type(config))
     for field in ret:
         field.type = types[field.name]
     return ret
@@ -205,31 +205,29 @@ def get_ipv4_address() -> str:
     return addr
 
 def load_experiment_config(config_json: dict) -> ExperimentConfig | RetiariiExeConfig:
-    # avoid circular import
-    from nni.nas.experiment.config import RetiariiExeConfig
-    from nni.nas.experiment.pytorch import RetiariiExperiment
-    from ..experiment_config import ExperimentConfig
-    from ...experiment import Experiment
-    exp_cls = get_experiment_cls_using_config(config_json)
-    if exp_cls is Experiment:
-        return ExperimentConfig(**config_json)
-    elif exp_cls is RetiariiExperiment:
-        return RetiariiExeConfig(**config_json)
-    else:
-        raise TypeError(f'Unsupported experiment type: {type(exp_cls)}')
+    _, exp_conf_cls = get_experiment_cls_using_config(config_json)
+    return exp_conf_cls(**config_json)
 
-def get_experiment_cls_using_config(config_json: dict) -> type[Experiment] | type[RetiariiExperiment]:
-    from nni.nas.experiment.pytorch import RetiariiExperiment
-    from ...experiment import Experiment
+def get_experiment_cls_using_config(config_json: dict) -> Tuple[type[Experiment] | type[RetiariiExperiment],
+                                                                type[ExperimentConfig] | type[RetiariiExeConfig]]:
+    # avoid circular import and unnecessary dependency on pytorch
     if 'experimentType' in config_json:
         if config_json['experimentType'] == 'hpo':
-            return Experiment
+            from ...experiment import Experiment
+            from ..experiment_config import ExperimentConfig
+            return Experiment, ExperimentConfig
         elif config_json['experimentType'] == 'nas':
-            return RetiariiExperiment
+            from nni.nas.experiment.pytorch import RetiariiExperiment
+            from nni.nas.experiment.config import RetiariiExeConfig
+            return RetiariiExperiment, RetiariiExeConfig
         else:
             raise ValueError(f'Unknown experiment_type: {config_json["experimentType"]}')
     else:
         if 'executionEngine' in config_json:
-            return RetiariiExperiment
+            from nni.nas.experiment.pytorch import RetiariiExperiment
+            from nni.nas.experiment.config import RetiariiExeConfig
+            return RetiariiExperiment, RetiariiExeConfig
         else:
-            return Experiment
+            from ...experiment import Experiment
+            from ..experiment_config import ExperimentConfig
+            return Experiment, ExperimentConfig

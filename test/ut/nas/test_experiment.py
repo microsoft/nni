@@ -113,6 +113,7 @@ def test_multitrial_experiment(pytestconfig):
     assert isinstance(exp.export_top_models()[0], dict)
     exp.stop()
 
+
 def test_multitrial_experiment_resume_view(pytestconfig):
     # start a normal nas experiment
     base_model = Net()
@@ -145,7 +146,7 @@ def test_multitrial_experiment_resume_view(pytestconfig):
     # the following is nnictl resume and view
     print('nnictl resume...')
     new_env = os.environ.copy()
-    new_env['PYTHONPATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+    new_env['PYTHONPATH'] = pytestconfig.rootpath
     proc = subprocess.run(f'nnictl resume {exp_id}', shell=True, env=new_env)
     assert proc.returncode == 0, 'resume nas experiment failed with code %d' % proc.returncode
     print('nnictl view...')
@@ -153,6 +154,7 @@ def test_multitrial_experiment_resume_view(pytestconfig):
     assert proc.returncode == 0, 'view nas experiment failed with code %d' % proc.returncode
     proc = subprocess.run(f'nnictl stop {exp_id}', shell=True)
     assert proc.returncode == 0, 'stop viewed nas experiment failed with code %d' % proc.returncode
+
 
 def test_oneshot_experiment():
     base_model = Net()

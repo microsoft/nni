@@ -258,11 +258,10 @@ class RetiariiExperiment(Experiment):
         """
         from nni.retiarii.oneshot.interface import BaseOneShotTrainer
         if isinstance(self.evaluator, BaseOneShotTrainer):
-            # TODO: will throw a deprecation warning soon
-            # warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
-            #               'We will try to convert this trainer to our new implementation to run the algorithm. '
-            #               'In case you want to stick to the old implementation, '
-            #               'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
+            warnings.warn('You are using the old implementation of one-shot algos based on One-shot trainer. '
+                          'We will try to convert this trainer to our new implementation to run the algorithm. '
+                          'In case you want to stick to the old implementation, '
+                          'please consider using ``trainer.fit()`` instead of experiment.', DeprecationWarning)
             self.evaluator.fit()
             return
 
