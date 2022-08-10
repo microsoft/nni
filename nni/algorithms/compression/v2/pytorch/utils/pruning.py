@@ -229,7 +229,8 @@ def compute_sparsity(origin_model: Module, compact_model: Module, compact_model_
     return current2origin_sparsity, compact2origin_sparsity, mask2compact_sparsity
 
 
-def get_model_weights_numel(model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]] = {}) -> Tuple[Dict[str, int], Dict[str, float]]:
+def get_model_weights_numel(model: Module, config_list: List[Dict],
+                            masks: Dict[str, Dict[str, Tensor]] = {}) -> Tuple[Dict[str, int], Dict[str, float]]:
     """
     Count the layer weight elements number in config_list.
     If masks is not empty, the masked weight will not be counted.

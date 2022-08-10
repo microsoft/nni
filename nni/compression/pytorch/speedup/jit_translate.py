@@ -18,6 +18,7 @@ import torch
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+jitid_2_dtype = {4: torch.long, 6:torch.float32}
 
 # to exclude partial
 
@@ -96,7 +97,10 @@ def slice_python(node: NodePyGroup, speedup: ModelSpeedup):
     class SliceMoudle(torch.nn.Module):
         def __init__(self, sliceobj):
             super(SliceMoudle, self).__init__()
-            self.sliceobj = sliceobj
+            # we need to deepcopy the value here, because, in the
+            # follwing steps, we may randomize the input tensor
+            # which will change the values of the sliceobj
+            self.sliceobj = copy.deepcopy(sliceobj)
 
         def forward(self, x, *args):
             # args is for the slice dimension and indexes, however,
@@ -116,12 +120,23 @@ def slice_python(node: NodePyGroup, speedup: ModelSpeedup):
     slice_end = parse_constant(inputs[3], speedup)
     slice_step = parse_constant(inputs[4], speedup)
     slice_obj = slice(slice_start, slice_end, slice_step)
+
     slice_list = []
     for _ in range(slice_dim):
         slice_list.append(slice(None, None))
     logger.info('Slice dim:%s, Slice obj:%s', str(slice_dim), str(slice_obj))
     slice_list.append(slice_obj)
-    return SliceMoudle(tuple(slice_list))
+
+    if inputs[0].debugName() not in speedup.internal_result:
+        # The inputs of slice operator may be the constant
+        target_tensor = parse_constant(inputs[0], speedup)
+        slice_list = tuple(slice_list)
+
+        def constant_slice(*args):
+            return target_tensor[slice_list]
+        return constant_slice
+    else:
+        return SliceMoudle(tuple(slice_list))
 
 def tupleunpack_python(_node: NodePyGroup, _speedup: ModelSpeedup) -> Optional[Callable]:
     # Note: tuple unpack should only exists at the
@@ -135,6 +150,7 @@ def getattr_python(node: NodePyGroup, _speedup: ModelSpeedup):
     """
     Note: Ops started with Prim:: is not taken as the key node,
     so we directly pass the Cpp node into this funciton.
+
     Parameters
     ----------
     node:

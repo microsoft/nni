@@ -56,7 +56,10 @@ class MockExecutionEngine(AbstractExecutionEngine):
 
 
 def _reset_execution_engine(engine=None):
-    nni.retiarii.execution.api._execution_engine = engine
+    # Use the new NAS reset
+    # nni.retiarii.execution.api._execution_engine = engine
+    import nni.nas.execution.api
+    nni.nas.execution.api._execution_engine = engine
 
 
 class Net(nn.Module):

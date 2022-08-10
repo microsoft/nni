@@ -154,7 +154,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
     componentDidMount(): void {
         const { copyTrialId } = this.props;
         if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
-            const originCopyTrialPara = TRIALS.getTrial(copyTrialId).description.parameters;
+            const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
             this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
         }
     }
@@ -163,7 +163,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         if (this.props.copyTrialId !== prevProps.copyTrialId) {
             const { copyTrialId } = this.props;
             if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
-                const originCopyTrialPara = TRIALS.getTrial(copyTrialId).description.parameters;
+                const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
                 this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
             }
         }

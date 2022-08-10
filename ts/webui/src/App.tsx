@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Outlet } from 'react-router-dom';
 import { Stack } from '@fluentui/react';
 import { SlideNavBtns } from '@components/nav/slideNav/SlideNavBtns';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
@@ -166,6 +167,7 @@ class App extends React.Component<{}, AppState> {
                                         closeTimer: this.closeTimer
                                     }}
                                 >
+                                    <Outlet />
                                     {this.props.children}
                                 </AppContext.Provider>
                             </Stack>

@@ -1,8 +1,14 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { PrimaryButton, Dialog, DialogType, DialogFooter } from '@fluentui/react';
+import { KillJobIsError } from '@static/interface';
 
-function KillJobDialog(props): any {
+interface KillJobDialogProps {
+    trialId: string;
+    isError: KillJobIsError;
+    onHideDialog: () => void;
+}
+
+function KillJobDialog(props: KillJobDialogProps): any {
     const { onHideDialog, trialId, isError } = props;
 
     const dialogContentProps = {
@@ -28,11 +34,5 @@ function KillJobDialog(props): any {
         </Dialog>
     );
 }
-
-KillJobDialog.propTypes = {
-    trialId: PropTypes.string,
-    isError: PropTypes.object,
-    onHideDialog: PropTypes.func
-};
 
 export default KillJobDialog;

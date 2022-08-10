@@ -72,24 +72,19 @@ $barHeight: 56px;
 }
 
 /* overview and detail tabs common style */
-a.common-tabs {
+.common-tabs {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 16px;
     color: #b8c7ce;
     text-decoration: none;
 }
 
-.common-tabs:visited,
-.selected:hover {
+.selected .common-tabs {
     color: #fff;
-    text-decoration: none;
-}
-
-.common-tabs:hover,
-.selected {
-    color: #fff;
+    padding-bottom: 2px;
     border-bottom: 1px solid #fff;
 }
+
 
 .left-right-margin {
     margin-left: 20px;
