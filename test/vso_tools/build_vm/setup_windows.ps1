@@ -46,9 +46,6 @@ Set-PSDebug -Trace 1
 $Password = ConvertTo-SecureString "P@ssW0rD!" -AsPlainText -Force
 New-LocalUser "NNIUser" -Password $Password -PasswordNeverExpires
 
-# Add the user to Administrators group.
-Add-LocalGroupMember -Group "Administrators" -Member "NNIUser"
-
 # These installation seems not working.
 
 # Visual Studio C++ Build tools (for Cython)
@@ -62,9 +59,6 @@ Add-LocalGroupMember -Group "Administrators" -Member "NNIUser"
 # Remove-Item "vc_redist.x64.exe"
 
 # Use choco instead.
-choco install -y --no-progress --ignore-checksums psexec --version=2.34  # For admin privileges on pipeline.
-$env:path = "$env:path;$env:temp\chocolatey\psexec.2.34"
-
 choco install -y --no-progress visualstudio2019buildtools
 choco install -y --no-progress visualstudio2019-workload-vctools
 choco install -y --no-progress vcredist2012 vcredist2013 vcredist2015 vcredist2017
@@ -82,6 +76,9 @@ $CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
 # Get-Command nvidia-smi
 Get-ChildItem $CudaDir
 $env:path = "$env:path;$CudaDir"
+
+# Download GPU driver.
+Invoke-WebRequest "https://us.download.nvidia.com/tesla/516.94/516.94-data-center-tesla-desktop-winserver-2016-2019-2022-dch-international.exe" -OutFile "$env:ProgramData\driver_installer.exe"
 
 Write-Host "Installing utilities..."
 
