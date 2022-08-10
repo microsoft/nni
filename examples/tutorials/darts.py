@@ -68,6 +68,7 @@ during the search phase, and increase them back when training the final searched
 """
 
 # %%
+#
 # In the following example, we initialize a DARTS model space, with only 16 initial filters and 8 stacked cells.
 # The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
 #
@@ -136,17 +137,21 @@ search_valid_loader = DataLoader(
 
 # %%
 #
-# .. warning:: Max epochs is set to 1 here for tutorial purposes. To get a reasonable result, this should be at least 10.
+# .. warning::
+#
+#    Please set ``fast_dev_run`` to False to reproduce the our claimed results.
+#    Otherwise, only a few mini-batches will be run.
 
-max_epochs = 1
+fast_dev_run = True
 
 evaluator = Classification(
     learning_rate=1e-3,
     weight_decay=1e-4,
     train_dataloaders=search_train_loader,
     val_dataloaders=search_valid_loader,
-    max_epochs=max_epochs,
-    gpus=1
+    max_epochs=10,
+    gpus=1,
+    fast_dev_run=fast_dev_run,
 )
 
 # %%
@@ -205,8 +210,6 @@ experiment.run(config)
 #    Then, open the browser and go to http://localhost:6006/ to monitor the search process.
 #
 #    .. image:: ../../img/darts_search_process.png
-
-# %%
 #
 # We can then retrieve the best model found by the strategy with ``export_top_models``.
 # Here, the retrieved model is a dict (called *architecture dict*) describing the selected normal cell and reduction cell.
@@ -253,12 +256,8 @@ valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
 #
 # Create a new evaluator here because we can using a different data split.
 # Also, we should avoid the underlying pytorch-lightning implementation of Classification evaluator from loading the wrong checkpoint.
-#
-# Here, to get an accuracy comparable to `pytorch-cifar repo <https://github.com/kuangliu/pytorch-cifar>`__,
-# ``max_epochs`` should be further increased to at least 100.
-# We only set it to 1 here for tutorial demo purposes.
 
-max_epochs = 1
+max_epochs = 100
 
 evaluator = Classification(
     learning_rate=1e-3,
@@ -267,11 +266,20 @@ evaluator = Classification(
     val_dataloaders=valid_loader,
     max_epochs=max_epochs,
     export_onnx=False,  # Disable ONNX export for this experiment
+    fast_dev_run=fast_dev_run,  # Should be false for fully training
 )
 
 evaluator.fit(final_model)
 
 # %%
+#
+# When ``fast_dev_run`` is turned off, we get a model with the following architecture:
+#
+# .. code-block:: python
+#
+#    {}
+#
+# It achieves a validation accuracy of XXX%.
 #
 # Reproduce results in DARTS paper
 # --------------------------------
@@ -354,18 +362,17 @@ class DartsClassificationModule(ClassificationModule):
 # which simply wraps everything (except model space and search strategy of course), in a single object.
 # :class:`~nni.retiarii.evaluator.pytorch.Lightning` here is a special type of evaluator.
 # Don't forget to use the train/val data split specialized for search (1:1) here.
-#
-# .. tip:: For demo purposes, we set ``max_epochs`` to 1 here. It should be 50 following the original paper implementation.
 
 from nni.retiarii.evaluator.pytorch import Lightning, Trainer
 
-max_epochs = 1
+max_epochs = 50
 
 evaluator = Lightning(
     DartsClassificationModule(0.025, 3e-4, 0., max_epochs),
     Trainer(
         gpus=1,
         max_epochs=max_epochs,
+        fast_dev_run=fast_dev_run,
     ),
     train_dataloaders=search_train_loader,
     val_dataloaders=search_valid_loader
@@ -389,6 +396,8 @@ strategy = DartsStrategy(gradient_clip_val=5.)
 #
 #    ``model_space`` has to be re-instantiated because a known limitation,
 #    i.e., one model space can't be reused across multiple experiments.
+
+model_space = DartsSpace(16, 8, 'cifar')
 
 config = RetiariiExeConfig(execution_engine='oneshot')
 experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
@@ -450,15 +459,16 @@ with fixed_arch(exported_arch):
 #
 # Launching the retraining requires creating another evaluator.
 # We can now put the gradient clipping in the keyword arguments of trainer.
-#
-# .. tip:: For demo purposes, we set ``max_epochs`` to 1 here. It should be 600 following the original paper implementation.
+
+max_epochs = 600
 
 evaluator = Lightning(
-    DartsClassificationModule(0.025, 3e-4, 0.4, 600),
+    DartsClassificationModule(0.025, 3e-4, 0.4, max_epochs),
     Trainer(
         gpus=1,
         gradient_clip_val=5.,
-        max_epochs=1,
+        max_epochs=max_epochs,
+        fast_dev_run=fast_dev_run
     ),
     train_dataloaders=train_loader_cutout,
     val_dataloaders=valid_loader,
