@@ -196,6 +196,18 @@ def test_hub_oneshot(space_type, strategy_type):
     if strategy_type in ['darts', 'gumbel'] and space_type == 'mobilenetv3':
         pytest.skip('Skip as it consumes too much memory.')
 
+    WINDOWS_SPACES = [
+        # Skip some spaces as Windows platform is slow.
+        'nasbench201',
+        'mobilenetv3',
+        'proxylessnas',
+        'shufflenet',
+        'autoformer',
+        'darts',
+    ]
+    if sys.platform == 'win32' and space_type not in WINDOWS_SPACES:
+        pytest.skip('Skip as Windows is too slow.')
+
     model_space = _hub_factory(space_type)
 
     dataset_type = 'cifar10'

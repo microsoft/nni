@@ -32,7 +32,7 @@ stages:
   jobs:
   - job: linux
     pool: nni-it-1es-11
-    timeoutInMinutes: 60
+    timeoutInMinutes: 90
 
     steps:
     - template: templates/fix-apt-1es.yml
@@ -55,7 +55,7 @@ stages:
 
   - job: windows
     pool: nni-it-1es-windows
-    timeoutInMinutes: 60
+    timeoutInMinutes: 90
 
     steps:
     - powershell: |
