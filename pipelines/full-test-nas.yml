@@ -75,9 +75,9 @@ stages:
       parameters:
         user: false
 
-    # NOTE: Data needs to be downloaded if Windows has GPU.
-    # Also, the download template needs to be updated with powershell syntax.
-    # - template: templates/download-test-data.yml
+    - template: templates/download-test-data.yml
+      parameters:
+        platform: windows
 
     - powershell: |
         python test/vso_tools/ssl_patch.py
