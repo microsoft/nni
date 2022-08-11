@@ -15,7 +15,7 @@ parameters:
 steps:
 
 - ${{ if contains(parameters.platform, 'windows') }}:
-    powershell:
+    powershell: |
       New-Item -Path test/data -ItemType directory -Force
       cd test
       azcopy copy 'https://nni.blob.core.windows.net/testdata/*' data
