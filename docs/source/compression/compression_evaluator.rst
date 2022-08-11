@@ -22,19 +22,19 @@ NNI introduces the ``Evaluator`` as the carrier of the training and evaluation p
     These APIs were maybe tedious in terms of user experience. Users need to exchange the corresponding API frequently if they want to switch compression algorithms.
     ``Evaluator`` is an alternative to the above interface, users only need to create the evaluator once and it can be used in all compressors.
 
-For users of native PyTorch, ``TorchEvaluator`` requires the user to encapsulate the training process as a function and exposes the specified interface,
+For users of native PyTorch, :class:`TorchEvaluator <nni.compression.pytorch.TorchEvaluator>` requires the user to encapsulate the training process as a function and exposes the specified interface,
 which will bring some complexity. But don't worry, in most cases, this will not change too much code.
 
-For users of `PyTorchLightning <https://www.pytorchlightning.ai/>`__, ``LightningEvaluator`` can be created with only a few lines of code based on your original Lightning code.
+For users of `PyTorchLightning <https://www.pytorchlightning.ai/>`__, :class:`LightningEvaluator <nni.compression.pytorch.LightningEvaluator>` can be created with only a few lines of code based on your original Lightning code.
 
 Here we give two examples of how to create an ``Evaluator`` for both native PyTorch and PyTorchLightning users.
 
 TorchEvaluator
 --------------
 
-``TorchEvaluator`` is for the users who work in a native PyTorch environment (If you are using PyTorchLightning, please refer `LightningEvaluator`_).
+:class:`TorchEvaluator <nni.compression.pytorch.TorchEvaluator>` is for the users who work in a native PyTorch environment (If you are using PyTorchLightning, please refer `LightningEvaluator`_).
 
-``TorchEvaluator`` has six initialization parameters ``training_func``, ``optimizers``, ``criterion``, ``lr_schedulers``,
+:class:`TorchEvaluator <nni.compression.pytorch.TorchEvaluator>` has six initialization parameters ``training_func``, ``optimizers``, ``criterion``, ``lr_schedulers``,
 ``dummy_input``, ``evaluating_func``.
 
 * ``training_func`` is the training loop to train the compressed model.
@@ -52,8 +52,8 @@ TorchEvaluator
 * ``evaluating_func`` is a callable function to evaluate the compressed model performance. Its input is a compressed model and its output is metric.
   The format of metric should be a float number or a dict with key ``default``.
 
-Please refer :ref:`compression-torch-evaluator` for more details.
-Here is an example of how to initialize a ``TorchEvaluator``.
+Please refer :class:`TorchEvaluator <nni.compression.pytorch.TorchEvaluator>` for more details.
+Here is an example of how to initialize a :class:`TorchEvaluator <nni.compression.pytorch.TorchEvaluator>`.
 
 .. code-block:: python
 
@@ -147,18 +147,18 @@ Here is an example of how to initialize a ``TorchEvaluator``.
 
 
 .. note::
-    It is also worth to note that not all the arguments of ``TorchEvaluator`` must be provided.
+    It is also worth to note that not all the arguments of :class:`TorchEvaluator <nni.compression.pytorch.TorchEvaluator>` must be provided.
     Some compressors only require ``evaluate_func`` as they do not train the model, some compressors only require ``training_func``.
     Please refer to each compressor's doc to check the required arguments.
     But, it is fine to provide more arguments than the compressor's need.
 
 
-A complete example of pruner using ``TorchEvaluator`` to compress model can be found :githublink:`here <examples/model_compress/pruning/taylorfo_torch_evaluator.py>`.
+A complete example of pruner using :class:`TorchEvaluator <nni.compression.pytorch.TorchEvaluator>` to compress model can be found :githublink:`here <examples/model_compress/pruning/taylorfo_torch_evaluator.py>`.
 
 
 LightningEvaluator
 ------------------
-``LightningEvaluator`` is for the users who work with PyTorchLightning.
+:class:`LightningEvaluator <nni.compression.pytorch.LightningEvaluator>` is for the users who work with PyTorchLightning.
 
 Only three parts users need to modify compared with the original pytorch-lightning code:
 
@@ -166,8 +166,8 @@ Only three parts users need to modify compared with the original pytorch-lightni
 2. Wrap the ``LightningModule`` class with ``nni.trace``.
 3. Wrap the ``LightningDataModule`` class with ``nni.trace``.
 
-Please refer :ref:`compression-lightning-evaluator` for more details.
-Here is an example of how to initialize a ``LightningEvaluator``.
+Please refer :class:`LightningEvaluator <nni.compression.pytorch.LightningEvaluator>` for more details.
+Here is an example of how to initialize a :class:`LightningEvaluator <nni.compression.pytorch.LightningEvaluator>`.
 
 .. code-block:: python
 
@@ -308,4 +308,4 @@ Here is an example of how to initialize a ``LightningEvaluator``.
                 return optimizers, lr_schedulers
 
 
-A complete example of pruner using ``LightningEvaluator`` to compress model can be found :githublink:`here <examples/model_compress/pruning/taylorfo_lightning_evaluator.py>`.
+A complete example of pruner using :class:`LightningEvaluator <nni.compression.pytorch.LightningEvaluator>` to compress model can be found :githublink:`here <examples/model_compress/pruning/taylorfo_lightning_evaluator.py>`.
