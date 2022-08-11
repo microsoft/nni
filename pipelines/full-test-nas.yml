@@ -35,9 +35,7 @@ stages:
     timeoutInMinutes: 90
 
     steps:
-    - template: templates/fix-apt-1es.yml
-      parameters:
-        check_gpu: true
+    - template: templates/check-gpu-status.yml
 
     - template: templates/install-dependencies.yml
       parameters:
@@ -58,13 +56,9 @@ stages:
     timeoutInMinutes: 90
 
     steps:
-    - powershell: |
-        Start-Process -Verb RunAs -FilePath "$env:ProgramData\driver_installer.exe" -ArgumentList "/s /n" -Wait
-      displayName: Install CUDA
-
-    - powershell: |
-        nvidia-smi
-      displayName: Verify CUDA installation
+    - template: templates/check-gpu-status.yml
+      parameters:
+        platform: windows
 
     - template: templates/install-dependencies.yml
       parameters:
