@@ -58,12 +58,17 @@ stages:
     timeoutInMinutes: 60
 
     steps:
-    # FIXME: Windows should use GPU,
-    # but it's not used now since driver is not installed in the image.
+    - powershell: |
+        Start-Process -Verb RunAs -FilePath "$env:ProgramData\driver_installer.exe" -ArgumentList "/s /n" -Wait
+      displayName: Install CUDA
+
+    - powershell: |
+        nvidia-smi
+      displayName: Verify CUDA installation
 
     - template: templates/install-dependencies.yml
       parameters:
-        platform: windows
+        platform: windows-gpu
         python_env: noop
 
     - template: templates/install-nni.yml
