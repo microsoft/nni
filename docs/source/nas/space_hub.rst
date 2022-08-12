@@ -68,11 +68,11 @@ One way to use the model space is to directly leverage the searched results. Not
 
    # MobileNetV3 model can be directly evaluated on ImageNet
    dataset = ImageNet(directory, 'val', transform=test_transform)
-   model.eval()
+   mobilenetv3.eval()
    with torch.no_grad():
        correct = total = 0
        for inputs, targets in pbar:
-           logits = model(inputs)
+           logits = mobilenetv3(inputs)
            _, predict = torch.max(logits, 1)
            correct += (predict == targets).sum().item()
            total += targets.size(0)
@@ -131,7 +131,10 @@ In the example above, ``MobileNetV3Space`` can be replaced with any model spaces
 Searching within model spaces
 -----------------------------
 
-To search for a new architecture on a particular dataset, you can use the following code.
+To search within a model space for a new architecture on a particular dataset,
+users need to create model space, search strategy, and evaluator following the :doc:`standard procedures </tutorials/hello_nas>`.
+
+Here is a short sample code snippet for reference.
 
 .. code-block:: python
 
