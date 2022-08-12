@@ -31,14 +31,22 @@ stages:
   condition: and(succeeded(), ne(dependencies.filter.outputs['check.execution.skipsubsequent'], 'true'))
   jobs:
   - job: linux
-    pool: nni-it
+    pool: nni-it-1es-11
     timeoutInMinutes: 60
 
     steps:
+    - template: templates/fix-apt-1es.yml
+      parameters:
+        check_gpu: true
+
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest-gpu
         python_env: venv
+
+    - script: |
+        python -m pip install "pytorch-lightning<1.7"
+      displayName: Pin PytorchLightning version
 
     - template: templates/install-nni.yml
 
@@ -47,7 +55,7 @@ stages:
     - script: |
         cd test/algo
         python -m pytest compression
-      displayName: compression unit test
+      displayName: Compression unit test
 
     - script: |
         cd test

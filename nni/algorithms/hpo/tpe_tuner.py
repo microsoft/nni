@@ -215,7 +215,21 @@ class TpeTuner(Tuner):
                 loss = -loss
             for key, value in param.items():
                 self._history[key].append(Record(value, loss))
-        _logger.info(f'Replayed {len(data)} trials')
+                self.dedup.add_history(param)
+        _logger.info(f'Replayed {len(data)} FINISHED trials')
+
+    def import_customized_data(self, data): # for dedup customized / resumed
+        if isinstance(data, str):
+            data = nni.load(data)
+
+        for trial in data:
+            # {'parameter_id': 0, 'parameter_source': 'resumed', 'parameters': {'batch_size': 128, ...}
+            if isinstance(trial, str):
+                trial = nni.load(trial)
+            param = format_parameters(trial['parameters'], self.space)
+            self._running_params[trial['parameter_id']] = param
+            self.dedup.add_history(param)
+        _logger.info(f'Replayed {len(data)} RUNING/WAITING trials')
 
 def suggest(args, rng, space, history):
     params = {}
@@ -411,7 +425,7 @@ def adaptive_parzen_normal(args, history_mus, prior_mu, prior_sigma):
     n = min(100, len(mus) + 1)
     sigmas = np.clip(sigmas, prior_sigma / n, prior_sigma)
 
-    weights = np.append(linear_forgetting_weights(args, len(mus)), args.prior_weight)
+    weights = np.append(linear_forgetting_weights(args, len(mus) - 1), args.prior_weight)
     weights = weights[order]
 
     return weights / np.sum(weights), mus, sigmas

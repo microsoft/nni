@@ -1,12 +1,17 @@
 import React, { useRef } from 'react';
-import PropTypes from 'prop-types';
 import copy from 'copy-to-clipboard';
 import { IconButton, FontSizes, TooltipHost } from '@fluentui/react';
 import { TOOLTIP_BACKGROUND_COLOR } from '@static/const';
 
+interface CopyButtonProps {
+    value: string;
+    hideTooltip?: boolean;
+}
+
 const COPIED_TOOLTIP_CLOSE_DELAY = 1000;
 
-const CopyButton = ({ value, hideTooltip }): any => {
+const CopyButton = (props: CopyButtonProps): any => {
+    const { value, hideTooltip } = props;
     const ref = useRef(null);
     return (
         <div>
@@ -45,11 +50,6 @@ const CopyButton = ({ value, hideTooltip }): any => {
             />
         </div>
     );
-};
-
-CopyButton.propTypes = {
-    value: PropTypes.string.isRequired,
-    hideTooltip: PropTypes.bool
 };
 
 export default CopyButton;

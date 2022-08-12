@@ -1,3 +1,5 @@
+# FIXME: This pipeline is broken due to resource group location limitation.
+
 trigger: none
 pr: none
 
@@ -11,7 +13,7 @@ variables:
 
 jobs:
 - job: windows
-  pool: nni-it
+  pool: nni-it-1es-11
   timeoutInMinutes: 90
   steps:
   - template: templates/build-vm-image-template.yml

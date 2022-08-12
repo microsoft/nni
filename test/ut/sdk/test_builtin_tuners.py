@@ -272,7 +272,7 @@ class BuiltinTunersTestCase(TestCase):
             search_space = {
                 "choice_str": {
                     "_type": "choice",
-                    "_value": ["cat", "dog", "elephant", "cow", "sheep", "panda"]
+                    "_value": ["cat", "dog", "elephant", "cow", "sheep", "panda", "tiger"]
                 }
             }
         elif stype == "choice_num":

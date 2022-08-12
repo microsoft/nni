@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui/react';
 import * as copy from 'copy-to-clipboard';
 import JSONTree from 'react-json-tree';
@@ -18,7 +17,11 @@ import '@style/experiment/overview/overview.scss';
  *  Remember to update it if the value is changed or this file is moved.
  **/
 
-const OpenRow = (props): any => {
+interface OpenRowProps {
+    trialId: string;
+}
+
+const OpenRow = (props: OpenRowProps): any => {
     const [typeInfo, setTypeInfo] = useState('');
     const [info, setInfo] = useState('');
     const [isHidenInfo, setHideninfo] = useState(true);
@@ -26,7 +29,7 @@ const OpenRow = (props): any => {
     const trialId = props.trialId;
     const trial = TRIALS.getTrial(trialId);
     const logPathRow = trial.info.logPath || "This trial's log path is not available.";
-    const originParameters = trial.description.parameters;
+    const originParameters = trial.parameter;
     const hasVisualHyperParams = RETIARIIPARAMETERS in originParameters;
 
     const hideMessageInfo = (): void => {
@@ -55,7 +58,7 @@ const OpenRow = (props): any => {
 
     const copyParams = (trial: Trial): void => {
         // get copy parameters
-        const params = JSON.stringify(reformatRetiariiParameter(trial.description.parameters as any), null, 4);
+        const params = JSON.stringify(reformatRetiariiParameter(trial.parameter as any), null, 4);
         if (copy.default(params)) {
             getCopyStatus('Successfully copy parameters to clipboard in form of python dict !', 'success');
         } else {
@@ -159,10 +162,6 @@ const OpenRow = (props): any => {
             </Stack>
         </Stack>
     );
-};
-
-OpenRow.propTypes = {
-    trialId: PropTypes.string
 };
 
 export default OpenRow;

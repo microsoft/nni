@@ -2,9 +2,9 @@
 # so that further offline investigations are possible.
 
 parameters:
-- name: remote
-  type: boolean
-  default: false
+- name: training_service
+  type: string
+  default: unknown
 
 steps:
 
@@ -17,10 +17,15 @@ steps:
   displayName: (failed) (POSIX) Latest experiment directory
 
 - script: |
+    cp -r /tmp/$USER/nni ${EXPERIMENT_DIR}/local && echo "Copy successful" || echo "Copy failed"
+  condition: and(variables['experiment_dir'], eq('${{ parameters.training_service }}', 'local'), not(contains(variables['Agent.OS'], 'Windows')))
+  displayName: (failed) (POSIX) Harvest GPU scheduler logs
+
+- script: |
     set -e
     export EXPERIMENT_ID=$(echo ${EXPERIMENT_DIR} | sed -e 's/\/.*\///g')
     sudo docker cp $(Build.BuildId):/tmp/nni-experiments/${EXPERIMENT_ID} ${EXPERIMENT_DIR}/remote && echo "Copy successful" || echo "Copy failed"
-  condition: and(variables['experiment_dir'], ${{ parameters.remote }}, not(contains(variables['Agent.OS'], 'Windows')))
+  condition: and(variables['experiment_dir'], eq('${{ parameters.training_service }}', 'remote'), not(contains(variables['Agent.OS'], 'Windows')))
   displayName: (failed) (POSIX) Harvest remote trial logs
 
 - powershell: |
@@ -29,6 +34,21 @@ steps:
     echo "##vso[task.setvariable variable=experiment_dir]$latestDir"
   condition: and(failed(), contains(variables['Agent.OS'], 'Windows'))
   displayName: (failed) (Windows) Latest experiment directory
+
+- powershell: |
+    $latestDir = Get-Item $(experiment_dir)
+    $tmpPath = "${env:Temp}\${env:UserName}\nni"
+    $destPath = "${latestDir}\local"
+
+    if (Test-Path $tmpPath) {
+      Write-Host "Copying $tmpPath to $destPath"
+      Copy-Item $tmpPath -Destination $destPath -Recurse
+    }
+    else {
+      Write-host "$tmpPath doesn't exist"
+    }
+  condition: and(variables['experiment_dir'], eq('${{ parameters.training_service }}', 'local'), contains(variables['Agent.OS'], 'Windows'))
+  displayName: (failed) (Windows) Harvest GPU scheduler logs
 
 - powershell: |
     $latestDir = Get-Item $(experiment_dir)
@@ -43,7 +63,7 @@ steps:
     else {
       Write-host "$remotePath doesn't exist"
     }
-  condition: and(variables['experiment_dir'], ${{ parameters.remote }}, contains(variables['Agent.OS'], 'Windows'))
+  condition: and(variables['experiment_dir'], eq('${{ parameters.training_service }}', 'remote'), contains(variables['Agent.OS'], 'Windows'))
   displayName: (failed) (Windows) Harvest remote trial logs
 
 - publish: $(experiment_dir)

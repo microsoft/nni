@@ -63,7 +63,7 @@ In bash:
 
     export NNI_RELEASE=2.0
     python setup.py build_ts
-    python bdist_wheel
+    python setup.py bdist_wheel
 
 In PowerShell:
 
@@ -71,7 +71,7 @@ In PowerShell:
 
     $env:NNI_RELEASE=2.0
     python setup.py build_ts
-    python bdist_wheel
+    python setup.py bdist_wheel
 
 If successful, you will find the wheel in ``dist`` directory.
 

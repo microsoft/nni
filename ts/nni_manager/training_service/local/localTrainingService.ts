@@ -193,7 +193,7 @@ class LocalTrainingService implements TrainingService {
     }
 
     public submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        const trialJobId: string = uniqueString(5);
+        const trialJobId: string = form.id === undefined ? uniqueString(5) : form.id;
         const trialJobDetail: LocalTrialJobDetail = new LocalTrialJobDetail(
             trialJobId,
             'WAITING',

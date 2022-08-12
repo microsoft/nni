@@ -121,8 +121,14 @@ class MsgDispatcher(MsgDispatcherBase):
 
     def handle_add_customized_trial(self, data):
         # data: parameters
-        id_ = _create_parameter_id()
-        _customized_parameter_ids.add(id_)
+        if not isinstance(data, list):
+            data = [data]
+
+        for _ in data:
+            id_ = _create_parameter_id()
+            _customized_parameter_ids.add(id_)
+
+        self.tuner.import_customized_data(data)
 
     def handle_report_metric_data(self, data):
         """
@@ -187,7 +193,8 @@ class MsgDispatcher(MsgDispatcherBase):
             self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized,
                                             trial_job_id=data.get('trial_job_id'))
         else:
-            _logger.warning('Find unknown job parameter id %s, maybe something goes wrong.', _trial_params[id_])
+            _logger.warning('Find unknown job parameter id %s, maybe something goes wrong.', id_)
+            _logger.warning('_trial_params %s', _trial_params)
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results
