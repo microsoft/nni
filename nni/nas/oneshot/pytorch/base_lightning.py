@@ -36,7 +36,7 @@ MANUAL_OPTIMIZATION_NOTE = """
         although we assume **the inner evaluator has enabled automatic optimization**.
         We call the optimizers and schedulers configured in evaluator, following the definition in Lightning at best effort,
         but we make no guarantee that the behaviors are exactly same as automatic optimization.
-        We call :meth:`~BaseSuperNetModule.advance_optimizers` and :meth:`~BaseSuperNetModule.advance_lr_schedulers`
+        We call :meth:`~BaseSuperNetModule.advance_optimization` and :meth:`~BaseSuperNetModule.advance_lr_schedulers`
         to invoke the optimizers and schedulers configured in evaluators.
         Moreover, some advanced features like gradient clipping will not be supported.
         If you encounter any issues, please contact us by `creating an issue <https://github.com/microsoft/nni/issues>`_.
@@ -356,6 +356,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         optim_conf: Any = self.model.configure_optimizers()
 
+        # 0. optimizer is none
+        if optim_conf is None:
+            return arch_optimizers
         # 1. single optimizer
         if isinstance(optim_conf, Optimizer):
             return [optim_conf] + arch_optimizers
@@ -407,7 +410,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         return None
 
-    def advance_optimizers(
+    def advance_optimization(
         self,
         loss: Any,
         batch_idx: int,

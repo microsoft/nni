@@ -206,7 +206,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 self.resample()
             step_output = self.model.training_step(batch, batch_idx)
             w_step_loss = step_output['loss'] if isinstance(step_output, dict) else step_output
-            self.advance_optimizers(w_step_loss, batch_idx)
+            self.advance_optimization(w_step_loss, batch_idx)
 
         else:
             # train ENAS agent
@@ -276,7 +276,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
 
     def export_probs(self):
         """Export the probability from ENAS controller directly."""
-        sample = self.controller.resample(prob=True)
+        sample = self.controller.resample(return_prob=True)
         result = self._interpret_controller_probability_result(sample)
         for module in self.nas_modules:
             module.resample(memo=result)
