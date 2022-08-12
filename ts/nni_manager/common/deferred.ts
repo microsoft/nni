@@ -3,6 +3,18 @@
 
 import util from 'util';
 
+/**
+ *  A more powerful `Deferred` that allows to await multiple times.
+ *
+ *  Example usage:
+ *
+ *      const deferred = new Deferred<void>();
+ *      deferred.promise.then(() => { console.log('hello'); });
+ *      deferred.promise.then(() => { console.log('world'); });
+ *      deferred.resolve();
+ *
+ *  In the example above, both "hello" and "world" will be logged, in arbitrary order.
+ **/
 export class Deferred<T> {
     private resolveCallbacks: any[] = [];
     private rejectCallbacks: any[] = [];

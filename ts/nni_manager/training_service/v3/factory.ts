@@ -4,7 +4,7 @@
 /**
  *  TODO
  *  This module will handle the code discovery logic for 3rd-party training services.
- * For now we only have "local_v3" and "remote_v3" as PoC.
+ *  For now we only have "local_v3" and "remote_v3" as PoC.
  **/
 
 import type { LocalConfig, RemoteConfig, TrainingServiceConfig } from 'common/experimentConfig';

@@ -21,11 +21,14 @@ type MutableTrialJobDetail = {
 export class V3asV1 implements TrainingService {
     private config: TrainingServiceConfig;
     private v3: TrainingServiceV3;
+
+    private emitter: EventEmitter = new EventEmitter();
     private runDeferred: Deferred<void> = new Deferred();
     private startDeferred: Deferred<void> = new Deferred();
+
     private trialJobs: Record<string, MutableTrialJobDetail> = {};
-    private emitter: EventEmitter = new EventEmitter();
     private parameters: Record<string, Parameter> = {};
+
     private environments: EnvironmentInfo[] = [];
     private lastEnvId: string = '';
 
@@ -57,18 +60,22 @@ export class V3asV1 implements TrainingService {
             const envId = this.schedule();
             trialId = await this.v3.createTrial(envId, this.config.trialCommand, 'trial_code');
         }
+
+        // In new interface, hyper parameters will be sent on demand.
         this.parameters[trialId] = form.hyperParameters.value;
+
         this.trialJobs[trialId] = {
             id: trialId,
             status: 'WAITING',
             submitTime: Date.now(),
-            workingDirectory: '_unset_',
+            workingDirectory: '_unset_',  // never set in current remote training service, so it's optional
             form: form,
         };
         return this.trialJobs[trialId];
     }
 
     public async updateTrialJob(_trialJobId: string, _form: TrialJobApplicationForm): Promise<TrialJobDetail> {
+        // Seems never used.
         throw new Error('Not implemented: V3asV1.updateTrialJob()');
     }
 
@@ -92,6 +99,9 @@ export class V3asV1 implements TrainingService {
         if (logPath !== null) {
             return await readFile(logPath, { encoding: 'utf8' });
         } else {
+            // FIXME
+            // Need to fix `model.onnx`.
+            // I guess it should be put inside `nni_outputs`.
             return await readFile(path.join(dir, 'output', fileName));
         }
     }
@@ -153,12 +163,15 @@ export class V3asV1 implements TrainingService {
         });
 
         this.environments = await this.v3.start();
-        await this.v3.uploadDirectory(this.config.trialCodeDirectory, 'trial_code');
+        await this.v3.uploadDirectory('trial_code', this.config.trialCodeDirectory);
 
         this.startDeferred.resolve();
     }
 
     private schedule(): string {
+        // Simple round-robin schedule.
+        // Find the last used environment and select next one.
+        // If the last used environment is not found (destroyed), use first environment.
         const prevIndex = this.environments.findIndex((env) => env.id === this.lastEnvId);
         const index = (prevIndex + 1) % this.environments.length;
         this.lastEnvId = this.environments[index].id;
