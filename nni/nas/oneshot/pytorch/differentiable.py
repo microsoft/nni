@@ -122,7 +122,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
         self.resample()
         loss_and_metrics = self.model.training_step(trn_batch, 2 * batch_idx + 1)
         w_step_loss = loss_and_metrics['loss'] if isinstance(loss_and_metrics, dict) else loss_and_metrics
-        self.advance_optimizers(w_step_loss, batch_idx, self.gradient_clip_val)
+        self.advance_optimization(w_step_loss, batch_idx, self.gradient_clip_val)
 
         # Update learning rates
         self.advance_lr_schedulers(batch_idx)

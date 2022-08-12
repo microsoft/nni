@@ -94,11 +94,11 @@ class ReinforceController(nn.Module):
             field.name: nn.Embedding(field.total, self.lstm_size) for field in fields
         })
 
-    def resample(self, prob=False):
+    def resample(self, return_prob=False):
         self._initialize()
         result = dict()
         for field in self.fields:
-            result[field.name] = self._sample_single(field, prob=prob)
+            result[field.name] = self._sample_single(field, return_prob=return_prob)
         return result
 
     def _initialize(self):
@@ -116,7 +116,7 @@ class ReinforceController(nn.Module):
     def _lstm_next_step(self):
         self._h, self._c = self.lstm(self._inputs, (self._h, self._c))
 
-    def _sample_single(self, field, prob):
+    def _sample_single(self, field, return_prob):
         self._lstm_next_step()
         logit = self.soft[field.name](self._h[-1])
         if self.temperature is not None:
@@ -150,6 +150,6 @@ class ReinforceController(nn.Module):
         if len(sampled) == 1:
             sampled = sampled[0]
 
-        if prob:
+        if return_prob:
             return sampled_dist.flatten().detach().cpu().numpy().tolist()
         return sampled
