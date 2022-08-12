@@ -14,7 +14,9 @@ import {
     ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
-import { ExperimentConfig, LocalConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
+import {
+    ExperimentConfig, LocalConfig, TrainingServiceConfig, toSeconds, toCudaVisibleDevices
+} from '../common/experimentConfig';
 import { getExperimentsManager } from 'extensions/experiments_manager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
@@ -488,6 +490,9 @@ class NNIManager implements Manager {
         } else if (platform === 'adl') {
             const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
             return new module_.AdlTrainingService();
+        } else if (platform.endsWith('v3')) {
+            const module_ = await import('../training_service/v3/compat');
+            return new module_.V3asV1(config.trainingService as TrainingServiceConfig);
         } else {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
