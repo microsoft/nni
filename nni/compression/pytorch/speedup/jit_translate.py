@@ -28,7 +28,6 @@ __all__ = [
     'translate_list', 'tupleunpack_python', 'dtype_trans', 'memory_format_trans'
 ]
 
-
 def translate_list(list_node: torch._C.Value, speedup: ModelSpeedup=None) -> List:
     """
     Get the list of values from the list construct node.
@@ -60,7 +59,6 @@ def translate_list(list_node: torch._C.Value, speedup: ModelSpeedup=None) -> Lis
             # if the corresponding value is a constant
             values.append(_i.toIValue())
     return values
-
 
 def parse_constant(cvalue: torch._C.Value, speedup: ModelSpeedup):
     """
@@ -202,7 +200,7 @@ class FuncAdapter:
     def __init__(self, func: Callable, positional: List[Any], keyword: Dict[str, Any],
                 undetermined: List[Union[int, str]], special_treat: Dict[Union[int, str], Callable]):
         if not callable(func):
-            raise TypeError('the \'func\' argument must be callable')
+            raise TypeError('the "func" argument must be callable')
 
         self.func = func
         self.positional = positional
@@ -213,7 +211,8 @@ class FuncAdapter:
     def __call__(self, /, *args):
         assert len(args) >= len(self.undetermined)
         if len(args) > len(self.undetermined):
-            logger.warning('throw some args away when calling the function \'%s\'', self.func.__name__)
+            logger.warning('throw some args away when calling the function "%s"', self.func.__name__)
+
         for i, p in enumerate(self.undetermined):
             v = args[i]
             if isinstance(p, int):
@@ -257,10 +256,13 @@ enum_to_dtype_names = {
     16: 'quint4x2',
     17: 'quint2x4',
 }
+
 enum_to_dtype_dict = {}
+
 for enum_value, dtype_name in enum_to_dtype_names.items():
     if hasattr(torch, dtype_name):
         enum_to_dtype_dict[enum_value] = getattr(torch, dtype_name)
+
 def dtype_trans(ivalue: Union[int, torch.dtype]):
     """
     Special process for dtype.
@@ -276,10 +278,9 @@ def dtype_trans(ivalue: Union[int, torch.dtype]):
     if ivalue is None or isinstance(ivalue, torch.dtype):
         return ivalue
     elif isinstance(ivalue, int):
-        global enum_to_dtype_dict
         if ivalue in enum_to_dtype_dict:
             return enum_to_dtype_dict[ivalue]
-    raise TypeError('No torch.dtype corresponding to the value \'%s\'', ivalue)
+    raise TypeError('No torch.dtype corresponding to the value "%s"', ivalue)
 
 enum_to_memory_format_dict = {
     0: torch.contiguous_format,
@@ -287,6 +288,7 @@ enum_to_memory_format_dict = {
     2: torch.channels_last,
     3: torch.channels_last_3d,
 }
+
 def memory_format_trans(ivalue: Union[int, torch.memory_format]):
     """
     Special process for memory_format.
@@ -305,12 +307,13 @@ def memory_format_trans(ivalue: Union[int, torch.memory_format]):
         global enum_to_memory_format_dict
         if ivalue in enum_to_memory_format_dict:
             return enum_to_memory_format_dict[ivalue]
-    raise TypeError('No torch.memory_format corresponding to the value \'%s\'', ivalue)
+    raise TypeError('No torch.memory_format corresponding to the value "%s"', ivalue)
 
 special_treat_dict = {
     'dtype': dtype_trans,
     'memory_format': memory_format_trans,
 }
+
 schema_fix_dict = {
     # functinon 'to', 'randint', and 'sparse_coo_tensor' has different schema between python and c++.
     # https://pytorch.org/docs/stable/jit_unsupported.html#ops-with-divergent-schemas-between-torch-python
