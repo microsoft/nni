@@ -226,7 +226,7 @@ class RemoteMachineTrainingService implements TrainingService {
      */
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         // Generate trial job id(random)
-        const trialJobId: string = uniqueString(5);
+        const trialJobId: string = form.id === undefined ? uniqueString(5) : form.id;
 
         const trialJobDetail: RemoteMachineTrialJobDetail = new RemoteMachineTrialJobDetail(
             trialJobId,

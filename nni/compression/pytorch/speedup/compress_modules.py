@@ -45,6 +45,7 @@ replace_module = {
     'Upsample': lambda module, masks: no_replace(module, masks),
     'LayerNorm': lambda module, masks: replace_layernorm(module, masks),
     'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
+    'Embedding': lambda module, masks: replace_embedding(module, masks),
     'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks),
     'Flatten': lambda module, masks: no_replace(module, masks)
 }
@@ -83,6 +84,30 @@ def convert_to_coarse_mask(t_mask, dim):
     indexes = torch.nonzero(all_pruned, as_tuple=True)[0]
     remained_indexes = torch.nonzero(need_remain, as_tuple=True)[0]
     return indexes, remained_indexes
+
+
+def convert_dense_shape(mask):
+    """
+    Get the dense shape of the tensor after removing the sparsity
+    values.
+
+    Parameters
+    ----------
+    mask: torch.Tensor
+        The mask tensor.
+
+    Returns
+    -------
+    dense_shape: tuple
+        The dense shape after removing the sparsity values.
+    """
+    assert isinstance(mask, torch.Tensor)
+    n_dim = len(mask.size())
+    dense_shape = []
+    for dim in range(n_dim):
+        _, remained = convert_to_coarse_mask(mask, dim)
+        dense_shape.append(remained.size(0))
+    return tuple(dense_shape)
 
 
 def no_replace(module, masks):
@@ -165,9 +190,12 @@ def replace_linear(linear, masks):
     in_mask = in_masks[0]
 
     weight_mask = weight_mask['weight']
+    # the input of the linear may have two dimensions(CV models) or three
+    # dimensions(Bert, for example)
+    n_dim = len(in_mask.size())
     # N C K
-    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
-    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
+    pruned_in, remained_in = convert_to_coarse_mask(in_mask, n_dim-1)
+    pruned_out, remained_out = convert_to_coarse_mask(output_mask, n_dim-1)
     n_remained_in = weight_mask.size(1) - pruned_in.size(0)
     n_remained_out = weight_mask.size(0) - pruned_out.size(0)
     remained_in, remained_out = remained_in.to(
@@ -582,16 +610,20 @@ def replace_layernorm(layernorm, masks):
     if len(in_masks) != 1:
         raise InputsNumberError()
     in_mask = in_masks[0]
-    dim_n = len(in_mask.size())
-    new_shape = []
-    for i in range(1, dim_n):
-        sum_dims = list(range(0, dim_n))
-        sum_dims.remove(i)
-        reduced = torch.sum(in_mask, sum_dims)
-        n_remained = torch.sum(reduced > 0)
-        new_shape.append(n_remained)
+    dense_shape = convert_dense_shape(in_mask)
+    norm_shape = layernorm.normalized_shape
+    dim_n = len(dense_shape) - len(norm_shape)
+    return nn.LayerNorm(dense_shape[dim_n:], layernorm.eps, layernorm.elementwise_affine)
 
-    return nn.LayerNorm(tuple(new_shape), layernorm.eps, layernorm.elementwise_affine)
+
+def replace_embedding(embedding, masks):
+    """
+    Replace the embedding layer according the infered masks.
+    We replace the embedding layer according the weight masks,
+    """
+    # currently we donnot support replace the embedding layer
+    # because we donnot have the corressponding pruner
+    return embedding
 
 
 def replace_pixelshuffle(pixelshuffle, masks):

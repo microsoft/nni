@@ -12,6 +12,7 @@ import json
 import logging
 from pathlib import Path
 from typing import Any, List, Optional, Union
+from typing_extensions import Literal
 
 import yaml
 
@@ -61,6 +62,7 @@ class ExperimentConfig(ConfigBase):
     # In latter case hybrid training services can have different settings.
 
     experiment_name: Optional[str] = None
+    experiment_type: Literal['hpo'] = 'hpo'
     search_space_file: Optional[utils.PathLike] = None
     search_space: Any = None
     trial_command: Optional[str] = None  # training service field

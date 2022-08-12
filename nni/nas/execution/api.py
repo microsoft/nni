@@ -3,8 +3,9 @@
 
 import time
 import warnings
-from typing import Iterable
+from typing import Iterable, cast
 
+from nni.experiment.config.training_services import RemoteConfig
 from nni.nas.execution.common import (
     Model, ModelStatus,
     AbstractExecutionEngine,
@@ -14,9 +15,42 @@ from nni.nas.execution.common import (
 _execution_engine = None
 _default_listener = None
 
-__all__ = ['get_execution_engine', 'get_and_register_default_listener',
+__all__ = ['init_execution_engine', 'get_execution_engine', 'get_and_register_default_listener',
            'list_models', 'submit_models', 'wait_models', 'query_available_resources',
            'set_execution_engine', 'is_stopped_exec', 'budget_exhausted']
+
+
+def init_execution_engine(config, port, url_prefix) -> AbstractExecutionEngine:
+    from ..experiment.config import (
+        BaseEngineConfig, PyEngineConfig,
+        CgoEngineConfig, BenchmarkEngineConfig
+    )
+    if isinstance(config.execution_engine, BaseEngineConfig):
+        from .pytorch.graph import BaseExecutionEngine
+        return BaseExecutionEngine(port, url_prefix)
+    elif isinstance(config.execution_engine, CgoEngineConfig):
+        from .pytorch.cgo.engine import CGOExecutionEngine
+
+        assert not isinstance(config.training_service, list) \
+            and config.training_service.platform == 'remote', \
+            "CGO execution engine currently only supports remote training service"
+        assert config.execution_engine.batch_waiting_time is not None \
+            and config.execution_engine.max_concurrency_cgo is not None
+        return CGOExecutionEngine(cast(RemoteConfig, config.training_service),
+                                    max_concurrency=config.execution_engine.max_concurrency_cgo,
+                                    batch_waiting_time=config.execution_engine.batch_waiting_time,
+                                    rest_port=port,
+                                    rest_url_prefix=url_prefix)
+    elif isinstance(config.execution_engine, PyEngineConfig):
+        from .pytorch.simplified import PurePythonExecutionEngine
+        return PurePythonExecutionEngine(port, url_prefix)
+    elif isinstance(config.execution_engine, BenchmarkEngineConfig):
+        from .pytorch.benchmark import BenchmarkExecutionEngine
+        assert config.execution_engine.benchmark is not None, \
+            '"benchmark" must be set when benchmark execution engine is used.'
+        return BenchmarkExecutionEngine(config.execution_engine.benchmark)
+    else:
+        raise ValueError(f'Unsupported engine type: {config.execution_engine}')
 
 
 def set_execution_engine(engine: AbstractExecutionEngine) -> None:

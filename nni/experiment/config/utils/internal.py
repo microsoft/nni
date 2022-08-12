@@ -15,6 +15,7 @@ __all__ = [
     'fields', 'is_instance', 'validate_type', 'is_path_like',
     'guess_config_type', 'guess_list_config_type',
     'training_service_config_factory', 'load_training_service_config',
+    'load_experiment_config', 'get_experiment_cls_using_config',
     'get_ipv4_address'
 ]
 
@@ -25,7 +26,7 @@ import json
 import os.path
 from pathlib import Path
 import socket
-import typing
+from typing import Tuple, TYPE_CHECKING, get_type_hints
 
 import typeguard
 
@@ -33,8 +34,12 @@ import nni.runtime.config
 
 from .public import is_missing
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
+    from nni.nas.experiment.pytorch import RetiariiExperiment
+    from nni.nas.experiment.config import RetiariiExeConfig
+    from ...experiment import Experiment
     from ..base import ConfigBase
+    from ..experiment_config import ExperimentConfig
     from ..training_service import TrainingServiceConfig
 
 ## handle relative path ##
@@ -78,7 +83,7 @@ def fields(config: ConfigBase) -> list[dataclasses.Field]:
     # Similar to `dataclasses.fields()`, but use `typing.get_types_hints()` to get `field.type`.
     # This is useful when postponed evaluation is enabled.
     ret = [copy.copy(field) for field in dataclasses.fields(config)]
-    types = typing.get_type_hints(type(config))
+    types = get_type_hints(type(config))
     for field in ret:
         field.type = types[field.name]
     return ret
@@ -198,3 +203,31 @@ def get_ipv4_address() -> str:
     addr = s.getsockname()[0]
     s.close()
     return addr
+
+def load_experiment_config(config_json: dict) -> ExperimentConfig | RetiariiExeConfig:
+    _, exp_conf_cls = get_experiment_cls_using_config(config_json)
+    return exp_conf_cls(**config_json)
+
+def get_experiment_cls_using_config(config_json: dict) -> Tuple[type[Experiment] | type[RetiariiExperiment],
+                                                                type[ExperimentConfig] | type[RetiariiExeConfig]]:
+    # avoid circular import and unnecessary dependency on pytorch
+    if 'experimentType' in config_json:
+        if config_json['experimentType'] == 'hpo':
+            from ...experiment import Experiment
+            from ..experiment_config import ExperimentConfig
+            return Experiment, ExperimentConfig
+        elif config_json['experimentType'] == 'nas':
+            from nni.nas.experiment.pytorch import RetiariiExperiment
+            from nni.nas.experiment.config import RetiariiExeConfig
+            return RetiariiExperiment, RetiariiExeConfig
+        else:
+            raise ValueError(f'Unknown experiment_type: {config_json["experimentType"]}')
+    else:
+        if 'executionEngine' in config_json:
+            from nni.nas.experiment.pytorch import RetiariiExperiment
+            from nni.nas.experiment.config import RetiariiExeConfig
+            return RetiariiExperiment, RetiariiExeConfig
+        else:
+            from ...experiment import Experiment
+            from ..experiment_config import ExperimentConfig
+            return Experiment, ExperimentConfig
