@@ -256,7 +256,7 @@ class AbsPosEmbed(nn.Module):
         super().__init__()
         self.pos_embed = nn.Parameter(torch.zeros(1, length, embed_dim))
         trunc_normal_(self.pos_embed, std=.02)
-    
+
     def truncation(self, name, sub_param_shape, sup_param_shape):
         assert name in ["pos_embed"]
         indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape, sup_param_shape)]

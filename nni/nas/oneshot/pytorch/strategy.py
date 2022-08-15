@@ -13,6 +13,7 @@ When adding/modifying a new strategy in this file, don't forget to link it in st
 from __future__ import annotations
 
 import warnings
+import itertools
 from typing import Any, Type
 
 import torch.nn as nn
@@ -20,6 +21,7 @@ import torch.nn as nn
 from nni.nas.execution.common import Model
 from nni.nas.strategy.base import BaseStrategy
 from nni.nas.evaluator.pytorch.lightning import Lightning, LightningModule
+from nni.nas.utils.misc import STATE_DICT_PY_MAPPING, STATE_DICT_PY_MAPPING_PARTIAL
 
 from .base_lightning import BaseOneShotLightningModule
 from .differentiable import DartsLightningModule, ProxylessLightningModule, GumbelDartsLightningModule
@@ -82,6 +84,86 @@ class OneShotStrategy(BaseStrategy):
         if top_k != 1:
             warnings.warn('One-shot strategy currently only supports exporting top-1 model.', RuntimeWarning)
         return [self.model.export()]
+
+    def super_state_dict(self):
+        """Return the state dict of the super-net"""
+        if self.model is None:
+            raise RuntimeError('One-shot strategy needs to be run before export.')
+        return self.model.model.model.state_dict()
+
+    @staticmethod
+    def sub_state_dict(model, super_state_dict):
+        """
+        Truncate the state dict of the fixed subnet from that of the search space.
+
+        For example, when you already have a state dict for the base model / search space (which often
+        happens when you have trained a supernet with one-shot strategies), the state dict isn't organized
+        in the same way as when a sub-model is sampled from the search space. This patch will help
+        the modules in the sub-model find the corresponding name and param in the base model.
+        """
+        assert isinstance(model, nn.Module), 'PyTorch is the only supported framework for now.'
+        # first get the full mapping
+        full_mapping = {}
+        state_dict = model.state_dict()
+        def update_state_dict(src_prefix, tar_prefix, module):
+            if hasattr(module, STATE_DICT_PY_MAPPING):
+                # only values are complete
+                local_map = getattr(module, STATE_DICT_PY_MAPPING)
+            elif hasattr(module, STATE_DICT_PY_MAPPING_PARTIAL):
+                # keys and values are both incomplete
+                local_map = getattr(module, STATE_DICT_PY_MAPPING_PARTIAL)
+                local_map = {k: tar_prefix + v for k, v in local_map.items()}
+            else:
+                # no mapping
+                local_map = {}
+
+            if '__self__' in local_map:
+                # special case, overwrite prefix
+                tar_prefix = local_map['__self__'] + '.'
+
+            for key, value in local_map.items():
+                if key != '' and key not in module._modules:  # not a sub-module, probably a parameter
+                    full_mapping[src_prefix + key] = value
+
+            # To deal with leaf nodes.
+            for name, sub_param in itertools.chain(module._parameters.items(), module._buffers.items()):  # direct children
+                if sub_param is None or name in module._non_persistent_buffers_set:
+                    # it won't appear in state dict
+                    continue
+                if (src_prefix + name) not in full_mapping:
+                    full_mapping[src_prefix + name] = tar_prefix + name
+
+                sup_param = super_state_dict[tar_prefix + name]
+
+                assert sub_param.ndim == sup_param.ndim
+                # truncation operation of custom defined mixed module
+                if hasattr(module, "truncation"):
+                    indices = module.truncation(name, sub_param.shape, sup_param.shape)
+                # conv2d weight truncation
+                # TODO: groups>1 unsupported, fixe me later.
+                elif isinstance(module, nn.Conv2d) and name == "weight":
+                    indices = [slice(0, min(i, j)) for i, j in zip(sub_param.shape[:2], sup_param.shape[:2])]
+                    kernel_a, kernel_b = module.kernel_size
+                    max_kernel_a, max_kernel_b = sup_param.shape[2:]
+                    kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a) // 2, (max_kernel_b - kernel_b) // 2
+                    indices.extend([slice(kernel_a_left, kernel_a_left + kernel_a), slice(kernel_b_top, kernel_b_top + kernel_b)])
+                # default head truncation
+                else:
+                    indices = [slice(0, min(i, j)) for i, j in zip(sub_param.shape, sup_param.shape)]
+
+                state_dict[src_prefix + name] = sup_param[indices]
+
+            for name, child in module.named_children():
+                # sub-modules
+                update_state_dict(
+                    src_prefix + name + '.',
+                    local_map.get(name, tar_prefix + name) + '.',  # if mapping doesn't exist, respect the prefix
+                    child
+                )
+
+        update_state_dict('', '', model)
+
+        return state_dict
 
 
 class DARTS(OneShotStrategy):
