@@ -49,11 +49,11 @@ def _iter_tensors(tensor: Any) -> Any:
             yield from _iter_tensors(t)
 
 
-def _pack_as_tuple(tensor: Any) -> Any:
+def _pack_as_tuple(tensor: Any) -> tuple:
     """Return a tuple of tensor with only one element if tensor it's not a tuple."""
-    if not isinstance(tensor, tuple):
-        return (tensor,)
-    return tensor
+    if isinstance(tensor, (tuple, list)):
+        return tuple(tensor)
+    return (tensor,)
 
 
 def element_product_sum(tensor1: tuple[torch.Tensor, ...], tensor2: tuple[torch.Tensor, ...]) -> torch.Tensor:
