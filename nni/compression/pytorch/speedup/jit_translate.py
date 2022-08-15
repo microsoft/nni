@@ -34,14 +34,14 @@ def translate_list(list_node: torch._C.Value, speedup: ModelSpeedup=None) -> Lis
 
     Parameters
     ----------
-    list_node:
+    list_node
         The cpp node of the target list.
-    speedup:
+    speedup
         The Module speedup module.
 
     Returns
     -------
-    values:
+    values
         The list of values in the target cpp list node.
     """
     # the node that create the list
@@ -60,20 +60,20 @@ def translate_list(list_node: torch._C.Value, speedup: ModelSpeedup=None) -> Lis
             values.append(_i.toIValue())
     return values
 
-def parse_constant(cvalue: torch._C.Value, speedup: ModelSpeedup):
+def parse_constant(cvalue: torch._C.Value, speedup: ModelSpeedup) -> Any:
     """
     Parse the constant values from this Node
 
     Parameters
     ----------
-    cvalue:
+    cvalue
         The cpp node of the target constant value.
-    speedup: ModelSpeedup
+    speedup
         The Model speedup module.
 
     Returns
     -------
-    value: int/float/tensor
+    value
         The constant values parsed from the node.
     """
     logger.debug('Try to parse the constant value: %s', cvalue.debugName())
@@ -152,9 +152,9 @@ def getattr_python(node: NodePyGroup, _speedup: ModelSpeedup):
 
     Parameters
     ----------
-    node:
+    node
         The cpp node of prim::Getattr
-    speedup:
+    speedup
         The corresponding speedup object.
     """
     class GetModule(torch.nn.Module):
@@ -182,16 +182,16 @@ class FuncAdapter:
 
     Attributes
     ----------
-    func:
+    func
         The function or method to be called.
-    positional:
+    positional
         Positional arguments values. The placeholder is None if it's non-constant.
-    keyword:
+    keyword
         Keyword arguments values. The placeholder is None if it's non-constant.
-    undetermined:
+    undetermined
         A list of the right positions of arguments.
         Position is an int in positional or a str in keyword.
-    special_treat:
+    special_treat
         A Dict of the positions and methods.
         The values of these positions should be treat by those methods.
 
@@ -271,7 +271,7 @@ def dtype_trans(ivalue: Union[int, torch.dtype]):
 
     Parameters
     ----------
-    ivalue: int | torch.dtype
+    ivalue
         The value of dtype or method to be recovered.
 
     """
@@ -297,7 +297,7 @@ def memory_format_trans(ivalue: Union[int, torch.memory_format]):
 
     Parameters
     ----------
-    ivalue:
+    ivalue
         The value of memory_format or method to be recovered.
 
     """
@@ -420,16 +420,16 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
 
     Parameters
     ---------
-    func:
+    func
         The torch function one-to-one correspondence with the node.
-    node:
+    node
         The target node to inference the mask
-    speedup:
+    speedup
         The speedup object of the target model.
 
     Returns
     ------
-    func:
+    func
         Return the translated function that used to inference the mask
         , if current op_type is not supported, then we return None.
     """
@@ -460,7 +460,7 @@ def init_add_functions(func_from: Union[ModuleType, Type[Any]]):
 
     Parameters
     ---------
-    func_from:
+    func_from
         The module/class include needed functions
 
     """
@@ -482,14 +482,14 @@ def jit_to_python_function(node: NodePyGroup, speedup: ModelSpeedup) -> FuncAdap
 
     Parameters
     ---------
-    node:
+    node
         The target node to inference the mask
-    speedup:
+    speedup
         The speedup object of the target model.
 
     Returns
     ------
-    func:
+    func
         Return the translated function that used to inference the mask
         , if current op_type is not supported, then we return None.
     """
