@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import torch
 import torch.nn as nn
-from nni.retiarii.nn.pytorch import ValueChoice, Conv2d, BatchNorm2d, LayerNorm, Linear, MultiheadAttention
+from nni.retiarii.nn.pytorch import ValueChoice, LayerChoice, Conv2d, BatchNorm2d, LayerNorm, Linear, MultiheadAttention
 from nni.retiarii.oneshot.pytorch.base_lightning import traverse_and_mutate_submodules
 from nni.retiarii.oneshot.pytorch.supermodule.differentiable import (
     MixedOpDifferentiablePolicy, DifferentiableMixedLayer, DifferentiableMixedInput, GumbelSoftmax,
@@ -144,6 +144,16 @@ def test_differentiable_valuechoice():
     assert set(conv.export({}).keys()) == {'123', '456'}
 
 
+def test_differentiable_layerchoice_dedup():
+    layerchoice1 = LayerChoice([Conv2d(3, 3, 3), Conv2d(3, 3, 3)], label='a')
+    layerchoice2 = LayerChoice([Conv2d(3, 3, 3), Conv2d(3, 3, 3)], label='a')
+
+    memo = {}
+    DifferentiableMixedLayer.mutate(layerchoice1, 'x', memo, {})
+    DifferentiableMixedLayer.mutate(layerchoice2, 'x', memo, {})
+    assert len(memo) == 1 and 'a' in memo
+
+
 def _mixed_operation_sampling_sanity_check(operation, memo, *input):
     for native_op in NATIVE_MIXED_OPERATIONS:
         if native_op.bound_type == type(operation):
@@ -160,7 +170,9 @@ def _mixed_operation_differentiable_sanity_check(operation, *input):
             mutate_op = native_op.mutate(operation, 'dummy', {}, {'mixed_op_sampling': MixedOpDifferentiablePolicy})
             break
 
-    return mutate_op(*input)
+    mutate_op(*input)
+    mutate_op.export({})
+    mutate_op.export_probs({})
 
 
 def test_mixed_linear():
@@ -319,6 +331,9 @@ def test_differentiable_layer_input():
     op = DifferentiableMixedLayer([('a', Linear(2, 3, bias=False)), ('b', Linear(2, 3, bias=True))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), 'eee')
     assert op(torch.randn(4, 2)).size(-1) == 3
     assert op.export({})['eee'] in ['a', 'b']
+    probs = op.export_probs({})
+    assert len(probs) == 2
+    assert abs(probs['eee/a'] + probs['eee/b'] - 1) < 1e-4
     assert len(list(op.parameters())) == 3
 
     with pytest.raises(ValueError):
@@ -328,6 +343,8 @@ def test_differentiable_layer_input():
     input = DifferentiableMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
     assert input([torch.randn(4, 2) for _ in range(5)]).size(-1) == 2
     assert len(input.export({})['ddd']) == 2
+    assert len(input.export_probs({})) == 5
+    assert 'ddd/3' in input.export_probs({})
 
 
 def test_proxyless_layer_input():
@@ -341,7 +358,8 @@ def test_proxyless_layer_input():
     input = ProxylessMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
     assert input.resample({})['ddd'] in list(range(5))
     assert input([torch.randn(4, 2) for _ in range(5)]).size() == torch.Size([4, 2])
-    assert input.export({})['ddd'] in list(range(5))
+    exported = input.export({})['ddd']
+    assert len(exported) == 2 and all(e in list(range(5)) for e in exported)
 
 
 def test_pathsampling_repeat():
@@ -373,6 +391,7 @@ def test_differentiable_repeat():
     assert op(torch.randn(2, 8)).size() == torch.Size([2, 16])
     sample = op.export({})
     assert 'ccc' in sample and sample['ccc'] in [0, 1]
+    assert sorted(op.export_probs({}).keys()) == ['ccc/0', 'ccc/1']
 
     class TupleModule(nn.Module):
         def __init__(self, num):
@@ -452,11 +471,16 @@ def test_differentiable_cell():
             result.update(module.export(memo=result))
         assert len(result) == model.cell.num_nodes * model.cell.num_ops_per_node * 2
 
+        result_prob = {}
+        for module in nas_modules:
+            result_prob.update(module.export_probs(memo=result_prob))
+
         ctrl_params = []
         for m in nas_modules:
             ctrl_params += list(m.parameters(arch=True))
         if cell_cls in [CellLooseEnd, CellOpFactory]:
             assert len(ctrl_params) == model.cell.num_nodes * (model.cell.num_nodes + 3) // 2
+            assert len(result_prob) == len(ctrl_params) * 2  # len(op_names) == 2
             assert isinstance(model.cell, DifferentiableMixedCell)
         else:
             assert not isinstance(model.cell, DifferentiableMixedCell)

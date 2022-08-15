@@ -5,29 +5,43 @@ from __future__ import annotations
 
 import warnings
 from itertools import chain
-from typing import Callable, Any, Dict, Union, Tuple, List, cast
+from typing import Callable, Any, Dict, Union, Tuple, cast
 
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
 from torch.optim import Optimizer
 
-from torch.optim.lr_scheduler import _LRScheduler
-
 import nni.nas.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
 from nni.nas.nn.pytorch.choice import ValueChoiceX
-from nni.typehint import Literal
 from .supermodule.base import BaseSuperNetModule
 
 __all__ = [
+    'MANUAL_OPTIMIZATION_NOTE',
     'MutationHook',
     'BaseSuperNetModule',
     'BaseOneShotLightningModule',
     'traverse_and_mutate_submodules',
     'no_default_hook'
 ]
+
+
+MANUAL_OPTIMIZATION_NOTE = """
+    .. warning::
+
+        The strategy, under the hood, creates a Lightning module that wraps the Lightning module defined in evaluator,
+        and enables `Manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`_,
+        although we assume **the inner evaluator has enabled automatic optimization**.
+        We call the optimizers and schedulers configured in evaluator, following the definition in Lightning at best effort,
+        but we make no guarantee that the behaviors are exactly same as automatic optimization.
+        We call :meth:`~BaseSuperNetModule.advance_optimization` and :meth:`~BaseSuperNetModule.advance_lr_schedulers`
+        to invoke the optimizers and schedulers configured in evaluators.
+        Moreover, some advanced features like gradient clipping will not be supported.
+        If you encounter any issues, please contact us by `creating an issue <https://github.com/microsoft/nni/issues>`_.
+
+"""
 
 
 MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Union[nn.Module, bool, Tuple[nn.Module, bool]]]
@@ -122,7 +136,7 @@ def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_k
         nas_nn.LayerChoice,
         nas_nn.InputChoice,
         nas_nn.Repeat,
-        # nas_nn.NasBench101Cell,   # FIXME: nasbench101 is moved to hub, can't check any more.
+        # nas_nn.NasBench101Cell,
         # nas_nn.ValueChoice,       # could be false positive
         # nas_nn.Cell,              # later
         # nas_nn.NasBench201Cell,   # forward = supernet
@@ -156,8 +170,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Extra mutation hooks to support customized mutation on primitives other than built-ins.
 
         Mutation hooks are callable that inputs an Module and returns a
-        :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule`.
-        They are invoked in :func:`~nni.nas.oneshot.pytorch.base_lightning.traverse_and_mutate_submodules`, on each submodules.
+        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`.
+        They are invoked in :func:`~nni.retiarii.oneshot.pytorch.base_lightning.traverse_and_mutate_submodules`, on each submodules.
         For each submodule, the hook list are invoked subsequently,
         the later hooks can see the result from previous hooks.
         The modules that are processed by ``mutation_hooks`` will be replaced by the returned module,
@@ -177,21 +191,21 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         The returned arguments can be also one of the three kinds:
 
-        1. tuple of: :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None, and boolean,
+        1. tuple of: :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None, and boolean,
         2. boolean,
-        3. :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None.
+        3. :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule` or None.
 
         The boolean value is ``suppress`` indicates whether the following hooks should be called.
         When it's true, it suppresses the subsequent hooks, and they will never be invoked.
         Without boolean value specified, it's assumed to be false.
         If a none value appears on the place of
-        :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
+        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
         it means the hook suggests to
         keep the module unchanged, and nothing will happen.
 
-        An example of mutation hook is given in :func:`~nni.nas.oneshot.pytorch.base_lightning.no_default_hook`.
+        An example of mutation hook is given in :func:`~nni.retiarii.oneshot.pytorch.base_lightning.no_default_hook`.
         However it's recommended to implement mutation hooks by deriving
-        :class:`~nni.nas.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
+        :class:`~nni.retiarii.oneshot.pytorch.supermodule.base.BaseSuperNetModule`,
         and add its classmethod ``mutate`` to this list.
     """
 
@@ -295,67 +309,205 @@ class BaseOneShotLightningModule(pl.LightningModule):
             result.update(module.export(memo=result))
         return result
 
+    def export_probs(self) -> dict[str, Any]:
+        """
+        Export the probability of every choice in the search space got chosen.
+
+        .. note:: If such method of some modules is not implemented, they will be simply ignored.
+
+        Returns
+        -------
+        dict
+            In most cases, keys are names of ``nas_modules`` suffixed with ``/`` and choice name.
+            Values are the probability / logits depending on the implementation.
+        """
+        result = {}
+        for module in self.nas_modules:
+            try:
+                result.update(module.export_probs(memo=result))
+            except NotImplementedError:
+                warnings.warn(
+                    'Some super-modules you have used did not implement export_probs. You might find some logs are missing.',
+                    UserWarning
+                )
+        return result
+
     def forward(self, x):
         return self.model(x)
 
-    def training_step(self, batch, batch_idx):
-        """This is the implementation of what happens in training loops of one-shot algos.
-        It usually calls ``self.model.training_step`` which implements the real training recipe of the users' model.
+    def configure_optimizers(self) -> Any:
         """
-        return self.model.training_step(batch, batch_idx)
+        Transparently configure optimizers for the inner model,
+        unless one-shot algorithm has its own optimizer (via :meth:`configure_architecture_optimizers`),
+        in which case, the optimizer will be appended to the list.
 
-    def configure_optimizers(self):
+        The return value is still one of the 6 types defined in PyTorch-Lightning.
         """
-        Combine architecture optimizers and user's model optimizers.
-        You can overwrite :meth:`configure_architecture_optimizers` if architecture optimizers are needed in your NAS algorithm.
-
-        For now :attr:`model` is tested against evaluators in :mod:`nni.nas.evaluator.pytorch.lightning`
-        and it only returns 1 optimizer.
-        But for extendibility, codes for other return value types are also implemented.
-        """
-        # pylint: disable=assignment-from-none
-        arc_optimizers = self.configure_architecture_optimizers()
-        if arc_optimizers is None:
+        arch_optimizers = self.configure_architecture_optimizers() or []
+        if not arch_optimizers:  # no architecture optimizer available
             return self.model.configure_optimizers()
 
-        if isinstance(arc_optimizers, optim.Optimizer):
-            arc_optimizers = [arc_optimizers]
-        self.arc_optim_count = len(arc_optimizers)
+        if isinstance(arch_optimizers, optim.Optimizer):
+            arch_optimizers = [arch_optimizers]
 
-        # FIXME: this part uses non-official lightning API.
-        # The return values ``frequency`` and ``monitor`` are ignored because lightning requires
-        # ``len(optimizers) == len(frequency)``, and gradient backword is handled manually.
-        # For data structure of variables below, please see pytorch lightning docs of ``configure_optimizers``.
+        # Set the flag to True so that they can differ from other optimizers
+        for optimizer in arch_optimizers:
+            optimizer.is_arch_optimizer = True  # type: ignore
+
+        optim_conf: Any = self.model.configure_optimizers()
+
+        # 0. optimizer is none
+        if optim_conf is None:
+            return arch_optimizers
+        # 1. single optimizer
+        if isinstance(optim_conf, Optimizer):
+            return [optim_conf] + arch_optimizers
+        # 2. two lists, optimizer + lr schedulers
+        if (
+            isinstance(optim_conf, (list, tuple))
+            and len(optim_conf) == 2
+            and isinstance(optim_conf[0], list)
+            and all(isinstance(opt, Optimizer) for opt in optim_conf[0])
+        ):
+            return list(optim_conf[0]) + arch_optimizers, optim_conf[1]
+        # 3. single dictionary
+        if isinstance(optim_conf, dict):
+            return [optim_conf] + [{'optimizer': optimizer} for optimizer in arch_optimizers]
+        # 4. multiple dictionaries
+        if isinstance(optim_conf, (list, tuple)) and all(isinstance(d, dict) for d in optim_conf):
+            return list(optim_conf) + [{'optimizer': optimizer} for optimizer in arch_optimizers]
+        # 5. single list or tuple, multiple optimizer
+        if isinstance(optim_conf, (list, tuple)) and all(isinstance(opt, Optimizer) for opt in optim_conf):
+            return list(optim_conf) + arch_optimizers
+        # unknown configuration
+        warnings.warn('Unknown optimizer configuration. Architecture optimizers will be ignored. Strategy might fail.', UserWarning)
+
+        return optim_conf
+
+    def setup(self, stage=None):
+        # redirect the access to trainer/log to this module
+        # but note that we might be missing other attributes,
+        # which could potentially be a problem
+        self.model.trainer = self.trainer  # type: ignore
+        self.model.log = self.log
+
+        # Reset the optimizer progress (only once at the very beginning)
+        self._optimizer_progress = 0
+
+        return self.model.setup(stage)
+
+    def teardown(self, stage=None):
+        return self.model.teardown(stage)
+
+    def configure_architecture_optimizers(self) -> list[optim.Optimizer] | optim.Optimizer | None:
+        """
+        Hook kept for subclasses. A specific NAS method inheriting this base class should return its architecture optimizers here
+        if architecture parameters are needed. Note that lr schedulers are not supported now for architecture_optimizers.
+
+        Returns
+        -------
+        Optimizers used by a specific NAS algorithm. Return None if no architecture optimizers are needed.
+        """
+        return None
+
+    def advance_optimization(
+        self,
+        loss: Any,
+        batch_idx: int,
+        gradient_clip_val: int | float | None = None,
+        gradient_clip_algorithm: str | None = None
+    ):
+        """
+        Run the optimizer defined in evaluators, when manual optimization is turned on.
+
+        Call this method when the model should be optimized.
+        To keep it as neat as possible, we only implement the basic ``zero_grad``, ``backward``, ``grad_clip``, and ``step`` here.
+        Many hooks and pre/post-processing are omitted.
+        Inherit this method if you need more advanced behavior.
+
+        The full optimizer step could be found
+        `here <https://github.com/Lightning-AI/lightning/blob/0e531283/src/pytorch_lightning/loops/optimization/optimizer_loop.py>`__.
+        We only implement part of the optimizer loop here.
+
+        Parameters
+        ----------
+        batch_idx: int
+            The current batch index.
+        """
+        if self.automatic_optimization:
+            raise ValueError('This method should not be used when automatic optimization is turned on.')
+
+        if self.trainer.optimizer_frequencies:
+            warnings.warn('optimizer_frequencies is not supported in NAS. It will be ignored.', UserWarning)
+
+        # Filter out optimizers for architecture parameters
+        optimizers = [opt for opt in self.trainer.optimizers if not getattr(opt, 'is_arch_optimizer', False)]
+
+        opt_idx = self._optimizer_progress % len(optimizers)
+        optimizer = optimizers[opt_idx]
+
+        # There should be many before/after hooks called here, but they are omitted in this implementation.
+        # 1. zero gradient
+        self.model.optimizer_zero_grad(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)
+        # 2. backward
+        self.manual_backward(loss)
+        # 3. grad clip
+        self.model.configure_gradient_clipping(optimizer, opt_idx, gradient_clip_val, gradient_clip_algorithm)
+        # 4. optimizer step
+        self.model.optimizer_step(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)
+
+        self._optimizer_progress += 1
+
+    def advance_lr_schedulers(self, batch_idx: int):
+        """
+        Advance the learning rates, when manual optimization is turned on.
+
+        The full implementation is
+        `here <https://github.com/Lightning-AI/lightning/blob/0e531283/src/pytorch_lightning/loops/epoch/training_epoch_loop.py>`__.
+        We only include a partial implementation here.
+        Advanced features like Reduce-lr-on-plateau are not supported.
+        """
+        if self.automatic_optimization:
+            raise ValueError('This method should not be used when automatic optimization is turned on.')
+
+        self._advance_lr_schedulers_impl(batch_idx, 'step')
+        if self.trainer.is_last_batch:
+            self._advance_lr_schedulers_impl(batch_idx, 'epoch')
+
+    def _advance_lr_schedulers_impl(self, batch_idx: int, interval: str):
+        current_idx = batch_idx if interval == 'step' else self.trainer.current_epoch
+        current_idx += 1  # account for both batch and epoch starts from 0
+
         try:
-            # above v1.6
-            from pytorch_lightning.core.optimizer import (  # pylint: disable=import-error
-                _configure_optimizers,  # type: ignore
-                _configure_schedulers_automatic_opt,  # type: ignore
-                _configure_schedulers_manual_opt  # type: ignore
-            )
-            w_optimizers, lr_schedulers, self.frequencies, monitor = \
-                _configure_optimizers(self.model.configure_optimizers())  # type: ignore
-            lr_schedulers = (
-                _configure_schedulers_automatic_opt(lr_schedulers, monitor)
-                if self.automatic_optimization
-                else _configure_schedulers_manual_opt(lr_schedulers)
-            )
-        except ImportError:
-            # under v1.5
-            w_optimizers, lr_schedulers, self.frequencies, monitor = \
-                self.trainer._configure_optimizers(self.model.configure_optimizers())  # type: ignore
-            lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)  # type: ignore
+            # lightning >= 1.6
+            for config in self.trainer.lr_scheduler_configs:
+                scheduler, opt_idx = config.scheduler, config.opt_idx
+                if config.reduce_on_plateau:
+                    warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
+                if config.interval == interval and current_idx % config.frequency == 0:
+                    self.model.lr_scheduler_step(cast(Any, scheduler), cast(int, opt_idx), None)
+        except AttributeError:
+            # lightning < 1.6
+            for lr_scheduler in self.trainer.lr_schedulers:
+                if lr_scheduler['reduce_on_plateau']:
+                    warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
+                if lr_scheduler['interval'] == interval and current_idx % lr_scheduler['frequency']:
+                    lr_scheduler['scheduler'].step()
 
-        if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):  # type: ignore
-            raise Exception(
-                "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
-            )
+    def architecture_optimizers(self) -> list[Optimizer] | Optimizer | None:
+        """
+        Get the optimizers configured in :meth:`configure_architecture_optimizers`.
+        """
+        optimizers = [opt for opt in self.trainer.optimizers if getattr(opt, 'is_arch_optimizer', False)]
+        if not optimizers:
+            return None
+        if len(optimizers) == 1:
+            return optimizers[0]
+        return optimizers
 
-        # variables used to handle optimizer frequency
-        self.cur_optimizer_step = 0
-        self.cur_optimizer_index = 0
-
-        return arc_optimizers + w_optimizers, lr_schedulers
+    # The following methods redirects the callbacks to inner module.
+    # It's not the complete list though.
+    # More methods can be added if needed.
 
     def on_train_start(self):
         return self.model.on_train_start()
@@ -364,11 +516,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return self.model.on_train_end()
 
     def on_fit_start(self):
-        # redirect the access to trainer/log to this module
-        # but note that we might be missing other attributes,
-        # which could potentially be a problem
-        self.model.trainer = self.trainer  # type: ignore
-        self.model.log = self.log
         return self.model.on_fit_start()
 
     def on_fit_end(self):
@@ -379,13 +526,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def on_train_batch_end(self, outputs, batch, batch_idx, *args, **kwargs):
         return self.model.on_train_batch_end(outputs, batch, batch_idx, *args, **kwargs)
-
-    # Deprecated hooks in pytorch-lightning
-    def on_epoch_start(self):
-        return self.model.on_epoch_start()
-
-    def on_epoch_end(self):
-        return self.model.on_epoch_end()
 
     def on_train_epoch_start(self):
         return self.model.on_train_epoch_start()
@@ -398,133 +538,3 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def on_after_backward(self):
         return self.model.on_after_backward()
-
-    def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val=None, gradient_clip_algorithm=None):
-        return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
-
-    def configure_architecture_optimizers(self):
-        """
-        Hook kept for subclasses. A specific NAS method inheriting this base class should return its architecture optimizers here
-        if architecture parameters are needed. Note that lr schedulers are not supported now for architecture_optimizers.
-
-        Returns
-        ----------
-        arc_optimizers : list[Optimizer], Optimizer
-            Optimizers used by a specific NAS algorithm. Return None if no architecture optimizers are needed.
-        """
-        return None
-
-    def call_lr_schedulers(self, batch_index):
-        """
-        Function that imitates lightning trainer's behaviour of calling user's lr schedulers. Since auto_optimization is turned off
-        by this class, you can use this function to make schedulers behave as they were automatically handled by the lightning trainer.
-
-        Parameters
-        ----------
-        batch_idx : int
-            batch index
-        """
-        def apply(lr_scheduler):
-            # single scheduler is called every epoch
-            if isinstance(lr_scheduler, _LRScheduler):
-                if self.trainer.is_last_batch:
-                    lr_scheduler.step()
-            # lr_scheduler_config is called as configured
-            elif isinstance(lr_scheduler, dict):
-                interval = lr_scheduler['interval']
-                frequency = lr_scheduler['frequency']
-                if (
-                        interval == 'step' and
-                        batch_index % frequency == 0
-                    ) or \
-                    (
-                        interval == 'epoch' and
-                        self.trainer.is_last_batch and
-                        (self.trainer.current_epoch + 1) % frequency == 0
-                ):
-                    lr_scheduler['scheduler'].step()
-
-        lr_schedulers = self.lr_schedulers()
-
-        if isinstance(lr_schedulers, list):
-            for lr_scheduler in lr_schedulers:
-                apply(lr_scheduler)
-        else:
-            apply(lr_schedulers)
-
-    def call_weight_optimizers(self, method: Literal['step', 'zero_grad']):
-        """
-        Function that imitates lightning trainer's behavior of calling user's optimizers. Since auto_optimization is turned off by this
-        class, you can use this function to make user optimizers behave as they were automatically handled by the lightning trainer.
-
-        Parameters
-        ----------
-        method : str
-            Method to call. Only ``step`` and ``zero_grad`` are supported now.
-        """
-        def apply_method(optimizer, method):
-            if method == 'step':
-                optimizer.step()
-            elif method == 'zero_grad':
-                optimizer.zero_grad()
-
-        optimizers = self.weight_optimizers()
-        if optimizers is None:
-            return
-
-        assert isinstance(optimizers, list), 'Did you forget to set use_pl_optimizers to true?'
-
-        if len(self.frequencies) > 0:
-            self.cur_optimizer_step += 1
-            if self.frequencies[self.cur_optimizer_index] == self.cur_optimizer_step:
-                self.cur_optimizer_step = 0
-                self.cur_optimizer_index = self.cur_optimizer_index + 1 \
-                    if self.cur_optimizer_index + 1 < len(optimizers) \
-                    else 0
-            apply_method(optimizers[self.cur_optimizer_index], method)
-        else:
-            for optimizer in optimizers:
-                apply_method(optimizer, method)
-
-    def architecture_optimizers(self) -> list[Optimizer] | Optimizer | None:
-        """
-        Get architecture optimizers from all optimizers. Use this to get your architecture optimizers in :meth:`training_step`.
-
-        Returns
-        ----------
-        opts : list[Optimizer], Optimizer, None
-            Architecture optimizers defined in :meth:`configure_architecture_optimizers`. This will be None if there is no
-            architecture optimizers.
-        """
-        opts = self.optimizers()
-        if isinstance(opts, list):
-            # pylint: disable=unsubscriptable-object
-            arc_opts = opts[:self.arc_optim_count]
-            if len(arc_opts) == 1:
-                return cast(Optimizer, arc_opts[0])
-            return cast(List[Optimizer], arc_opts)
-        # If there is only 1 optimizer and it is the architecture optimizer
-        if self.arc_optim_count == 1:
-            return cast(Union[List[Optimizer], Optimizer], opts)
-        return None
-
-    def weight_optimizers(self) -> list[Optimizer] | Optimizer | None:
-        """
-        Get user optimizers from all optimizers. Use this to get user optimizers in :meth:`training_step`.
-
-        Returns
-        ----------
-        opts : list[Optimizer], Optimizer, None
-            Optimizers defined by user's model. This will be None if there is no user optimizers.
-        """
-        # Since use_pl_optimizer is set true (by default) here.
-        # opts always return a list
-        opts = self.optimizers()
-        if isinstance(opts, list):
-            # pylint: disable=unsubscriptable-object
-            return cast(List[Optimizer], opts[self.arc_optim_count:])
-        # FIXME: this case is actually not correctly handled
-        # If there is only 1 optimizer and no architecture optimizer
-        if self.arc_optim_count == 0:
-            return cast(Union[List[Optimizer], Optimizer], opts)
-        return None
