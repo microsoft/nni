@@ -31,6 +31,7 @@ We first load the CIFAR-10 dataset with torchvision.
 import nni
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
+from nni.retiarii.evaluator.pytorch import DataLoader
 
 CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
 CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
@@ -46,7 +47,8 @@ valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
 #
 # .. note::
 #
-#    If you are to use multi-trial strategies, wrapping CIFAR10 with :func:`nni.trace` is mandatory.
+#    If you are to use multi-trial strategies, wrapping CIFAR10 with :func:`nni.trace` and
+#    use DataLoader from ``nni.retiarii.evaluator.pytorch`` (instead of ``torch.utils.data``) are mandatory.
 #    Otherwise, it's optional.
 #
 # When working with famous datasets like CIFAR-10 or ImageNet,
@@ -171,9 +173,8 @@ model_space = DartsSpace(16, 8, 'cifar')
 # As we are going to use the provided by DARTS paper, the recommended train/val split is 1:1.
 
 import numpy as np
-from nni.retiarii.evaluator.pytorch import (
-    Classification,
-    DataLoader  # might also use torch.utils.data.DataLoader if not using multi-trial strategy
+from nni.retiarii.evaluator.pytorch import Classification,
+    
 )
 from torch.utils.data import SubsetRandomSampler
 
