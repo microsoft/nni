@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from nni.nas.hub.pytorch.nasbench201 import OPS_WITH_STRIDE
-from nni.retiarii.oneshot.pytorch.supermodule.proxyless import ProxylessMixedLayer, ProxylessMixedInput, _iter_tensors
+from nni.nas.oneshot.pytorch.supermodule.proxyless import ProxylessMixedLayer, ProxylessMixedInput, _iter_tensors
 
 
 def test_proxyless_bp():
