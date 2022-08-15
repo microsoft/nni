@@ -46,3 +46,11 @@ jobs:
   - template: templates/cache-dependencies-template.yml
     parameters:
       platform: ubuntu-latest-gpu
+
+- job: windows_gpu
+  pool:
+    vmImage: windows-latest
+  steps:
+  - template: templates/cache-dependencies-template.yml
+    parameters:
+      platform: windows-gpu

@@ -15,8 +15,8 @@ import subprocess
 import sys
 import time
 
-BUILD_COMMAND = 'PACKER_LOG=1 packer build packer_windows.json'
-RESOURCE_GROUP = 'nni'
+BUILD_COMMAND = 'PACKER_LOG=1 packer build ' + sys.argv[1]
+RESOURCE_GROUP = sys.argv[2]
 
 
 def monitor_print(*args):
@@ -24,6 +24,9 @@ def monitor_print(*args):
 
 
 def main():
+    monitor_print('Build command:', BUILD_COMMAND)
+    monitor_print('Resource group:', RESOURCE_GROUP)
+
     process = subprocess.Popen(BUILD_COMMAND, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     while True:
         retcode = process.poll()

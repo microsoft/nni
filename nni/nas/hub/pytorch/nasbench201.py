@@ -153,7 +153,7 @@ class ResNetBasicblock(nn.Module):
 class NasBench201(nn.Module):
     """The full search space proposed by `NAS-Bench-201 <https://arxiv.org/abs/2001.00326>`__.
 
-    It's a stack of :class:`NasBench201Cell`.
+    It's a stack of :class:`~nni.retiarii.nn.pytorch.NasBench201Cell`.
     """
     def __init__(self,
                  stem_out_channels: int = 16,
