@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Stack } from '@fluentui/react';
 import { EXPERIMENT } from '@static/datamodel';
-import { leftProgress, rightEidtParam } from './count/commonStyle';
+import { leftProgress, rightEditParam } from './count/commonStyle';
 import TooltipHostIndex from '@components/common/TooltipHostIndex';
 import '@style/experiment/overview/command.scss';
 
@@ -37,7 +37,7 @@ const Config = (): any => {
                 <p className='lineMargin'>Trial command</p>
                 <TooltipHostIndex value={EXPERIMENT.config.trialCommand || 'unknown'} />
             </div>
-            <div className='basic' style={rightEidtParam}>
+            <div className='basic' style={rightEditParam}>
                 <div>
                     <p className='command'>Training platform</p>
                     <div className='ellipsis'>{EXPERIMENT.trainingServicePlatform}</div>

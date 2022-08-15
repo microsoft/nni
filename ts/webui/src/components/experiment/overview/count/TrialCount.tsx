@@ -6,7 +6,7 @@ import { EditExperimentParam } from './EditExperimentParam';
 import ProgressBar from './ProgressBar';
 import { EditExpeParamContext } from './context';
 import { ExpDurationContext } from './ExpDurationContext';
-import { leftProgress, rightEidtParam } from './commonStyle';
+import { leftProgress, rightEditParam } from './commonStyle';
 
 const line1Tokens: IStackTokens = {
     childrenGap: 60
@@ -64,7 +64,7 @@ export const TrialCount = (): any => {
                                 </Stack>
                             </div>
 
-                            <div style={rightEidtParam}>
+                            <div style={rightEditParam}>
                                 <EditExpeParamContext.Provider
                                     value={{
                                         title: MAX_TRIAL_NUMBERS,
