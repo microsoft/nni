@@ -6,8 +6,7 @@ from datetime import datetime
 import logging
 from pathlib import Path
 import types
-from typing import List, Dict, Tuple, Optional, Callable, Union
-from typing_extensions import Literal
+from typing import List, Dict, Literal, Tuple, Optional, Callable, Union
 
 import json_tricks
 import torch

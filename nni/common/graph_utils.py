@@ -6,9 +6,9 @@ import logging
 import queue
 import re
 from collections import defaultdict
+from typing import List, Dict
 import torch
 from torch.utils.tensorboard._pytorch_graph import NodePy, NodePyIO, NodePyOP, GraphPy
-from typing import List, Dict
 CLASSTYPE_KIND = 'ClassType'
 GETATTR_KIND = 'prim::GetAttr'
 CAT_KIND = 'aten::cat'

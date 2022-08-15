@@ -8,7 +8,6 @@ import torch.nn as nn
 from .error_code import EmptyLayerError, ShapeMisMatchError, InputsNumberError, OutputTypeError, UnBalancedGroupError
 
 _logger = logging.getLogger(__name__)
-_logger.setLevel(logging.DEBUG)
 
 replace_module = {
     'BatchNorm2d': lambda module, masks: replace_batchnorm2d(module, masks),
@@ -49,7 +48,7 @@ replace_module = {
     'Embedding': lambda module, masks: replace_embedding(module, masks),
     'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks),
     'Flatten': lambda module, masks: no_replace(module, masks),
-    "GroupNorm": lambda module, masks: replace_groupnorm(module, masks)
+    "GroupNorm": lambda module, masks: replace_groupnorm(module, masks),
 }
 
 
@@ -317,8 +316,8 @@ def replace_groupnorm(norm: nn.GroupNorm, masks):
     """
     Parameters
     ----------
-    norm : torch.nn.InstanceNorm2d
-        The instancenorm module to be replace
+    norm : torch.nn.GroupNorm
+        The group norm module to be replace
     masks : Tuple of the input masks, output masks and weight masks
         Tuple of the masks, for example
         ([input_m1, input_m2], [output_m], {'weight':weight_m})
@@ -326,7 +325,7 @@ def replace_groupnorm(norm: nn.GroupNorm, masks):
     Returns
     -------
     torch.nn.GroupNorm
-        The new instancenorm module
+        The new group norm module
     """
     in_masks, output_mask, _ = masks
     assert isinstance(norm, nn.GroupNorm)
@@ -337,11 +336,13 @@ def replace_groupnorm(norm: nn.GroupNorm, masks):
     _, remained_out = convert_to_coarse_mask(output_mask, 1)
 
     assert len(remained_in.size()) == 1
+    if remained_in.size(0) != remained_out.size(0):
+        raise ShapeMisMatchError()
     new_num_channels = remained_in.size()[0]
 
     assert new_num_channels % norm.num_groups == 0
 
-    _logger.info(f"replace groupnorm (remain/total) ({norm.num_channels}, {new_num_channels})")
+    _logger.debug(f"replace groupnorm (remain/total) ({norm.num_channels}, {new_num_channels})")
 
     new_module = nn.GroupNorm(
         norm.num_groups,

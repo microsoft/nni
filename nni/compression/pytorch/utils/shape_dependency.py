@@ -423,7 +423,7 @@ class GroupDependency(Dependency):
 
     def _get_group_norm_group(self, node_group) -> int:
         """
-        Get the number of groups for a convolutional layer.
+        Get the number of groups for a group norm layer.
         Parameters
         ----------
         node_group : NodePyGroup
@@ -431,7 +431,7 @@ class GroupDependency(Dependency):
         Returns
         -------
         group : int
-            the number of the groups of the target conv layer.
+            the number of the groups of the target group norm layer.
         """
         node_name = node_group.name
         _, leaf_module = get_module_by_name(self.model, node_name)
@@ -467,7 +467,6 @@ class GroupDependency(Dependency):
         self.groups = {}
         for node in self.graph.nodes_py.nodes_op:
             if node.op_type in ['Conv2d', 'ConvTranspose2d', "GroupNorm"]:
-
                 if node.op_type in ['Conv2d', 'ConvTranspose2d']:
                     group = self._get_conv_groups(node)
                 elif node.op_type == "GroupNorm":
