@@ -85,12 +85,6 @@ class OneShotStrategy(BaseStrategy):
             warnings.warn('One-shot strategy currently only supports exporting top-1 model.', RuntimeWarning)
         return [self.model.export()]
 
-    def super_state_dict(self):
-        """Return the state dict of the super-net"""
-        if self.model is None:
-            raise RuntimeError('One-shot strategy needs to be run before export.')
-        return self.model.model.model.state_dict()
-
     @staticmethod
     def sub_state_dict(model, super_state_dict):
         """
@@ -138,7 +132,7 @@ class OneShotStrategy(BaseStrategy):
                 assert sub_param.ndim == sup_param.ndim
                 # truncation operation of custom defined mixed module
                 if hasattr(module, "truncation"):
-                    indices = module.truncation(name, sub_param.shape, sup_param.shape)
+                    indices = getattr(module, "truncation")(name, sub_param.shape, sup_param.shape)
                 # conv2d weight truncation
                 # TODO: groups>1 unsupported, fixe me later.
                 elif isinstance(module, nn.Conv2d) and name == "weight":
