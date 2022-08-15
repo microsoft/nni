@@ -245,7 +245,7 @@ def copy_nni_node(version):
 
     if sys.platform == 'win32':
         # On Windows, manually install node-gyp for sqlite3.
-        _yarn('global', 'add', 'node-gyp')
+        _yarn('ts/nni_manager', 'global', 'add', 'node-gyp')
 
     # reinstall without development dependencies
     _yarn('ts/nni_manager', '--prod', '--cwd', str(Path('nni_node').resolve()))
