@@ -1,5 +1,3 @@
-.. _compression-evaluator:
-
 Compression Evaluator
 =====================
 
