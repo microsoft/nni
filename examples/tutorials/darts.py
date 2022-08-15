@@ -173,9 +173,7 @@ model_space = DartsSpace(16, 8, 'cifar')
 # As we are going to use the provided by DARTS paper, the recommended train/val split is 1:1.
 
 import numpy as np
-from nni.retiarii.evaluator.pytorch import Classification,
-    
-)
+from nni.retiarii.evaluator.pytorch import Classification
 from torch.utils.data import SubsetRandomSampler
 
 transform = transforms.Compose([
