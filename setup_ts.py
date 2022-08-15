@@ -243,6 +243,10 @@ def copy_nni_node(version):
         package_json['version'] = version
     json.dump(package_json, open('nni_node/package.json', 'w'), indent=2)
 
+    if sys.platform == 'win32':
+        # On Windows, manually install node-gyp for sqlite3.
+        _yarn('global', 'add', 'node-gyp')
+
     # reinstall without development dependencies
     _yarn('ts/nni_manager', '--prod', '--cwd', str(Path('nni_node').resolve()))
 
