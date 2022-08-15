@@ -29,6 +29,7 @@ We first load the CIFAR-10 dataset with torchvision.
 """
 
 import nni
+import torch
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 from nni.retiarii.evaluator.pytorch import DataLoader
