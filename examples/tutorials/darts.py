@@ -75,14 +75,13 @@ from nni.retiarii.hub.pytorch import DARTS as DartsSpace
 darts_v2_model = DartsSpace.load_searched_model('darts-v2', pretrained=True, download=True)
 
 def evaluate_model(model, cuda=False):
-    if cuda:
-        model.cuda()
+    device = torch.device('cuda' if cuda else 'cpu')
+    model.to(device)
     model.eval()
     with torch.no_grad():
         correct = total = 0
         for inputs, targets in valid_loader:
-            if cuda:
-                inputs, targets = inputs.cuda(), targets.cuda()
+            inputs, targets = inputs.to(device), targets.to(device)
             logits = model(inputs)
             _, predict = torch.max(logits, 1)
             correct += (predict == targets).sum().cpu().item()
@@ -207,7 +206,7 @@ search_valid_loader = DataLoader(
 #    Please set ``fast_dev_run`` to False to reproduce the our claimed results.
 #    Otherwise, only a few mini-batches will be run.
 
-fast_dev_run = True
+fast_dev_run = False
 
 evaluator = Classification(
     learning_rate=1e-3,
