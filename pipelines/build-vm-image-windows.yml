@@ -4,11 +4,11 @@ trigger: none
 pr: none
 
 variables:
-  resource_group: nni
-  gallery_name: nniImageGallery
+  resource_group: nni-image-builder
+  gallery_name: nniImageGalleryV2
   network_security_group: nni-image-builder-nsg
   managed_image_name: nni-windows-image
-  image_name: nniWindowsImage
+  image_definition_name: nniWindowsImage
   packer_config: config_windows
 
 jobs:

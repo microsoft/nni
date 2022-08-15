@@ -114,7 +114,7 @@ class NasBench101TrainingModule(pl.LightningModule):
                               momentum=0.9, alpha=0.9, eps=1.0)
         return {
             'optimizer': optimizer,
-            'scheduler': CosineAnnealingLR(optimizer, self.hparams.max_epochs)
+            'lr_scheduler': CosineAnnealingLR(optimizer, self.hparams.max_epochs)
         }
 
     def on_validation_epoch_end(self):

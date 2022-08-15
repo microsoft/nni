@@ -248,7 +248,7 @@ class PAITrainingService implements TrainingService {
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         this.log.info('submitTrialJob: form:',  form);
 
-        const trialJobId: string = uniqueString(5);
+        const trialJobId: string = form.id === undefined ? uniqueString(5) : form.id;
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;

@@ -71,6 +71,10 @@ class MixedOperationSamplingPolicy:
         """The handler of :meth:`MixedOperation.export`."""
         raise NotImplementedError()
 
+    def export_probs(self, operation: 'MixedOperation', memo: dict[str, Any]) -> dict[str, Any]:
+        """The handler of :meth:`MixedOperation.export_probs`."""
+        raise NotImplementedError()
+
     def forward_argument(self, operation: 'MixedOperation', name: str) -> Any:
         """Computing the argument with ``name`` used in operation's forward.
         Usually a value, or a distribution of value.
@@ -161,6 +165,10 @@ class MixedOperation(BaseSuperNetModule):
     def resample(self, memo):
         """Delegates to :meth:`MixedOperationSamplingPolicy.resample`."""
         return self.sampling_policy.resample(self, memo)
+
+    def export_probs(self, memo):
+        """Delegates to :meth:`MixedOperationSamplingPolicy.export_probs`."""
+        return self.sampling_policy.export_probs(self, memo)
 
     def export(self, memo):
         """Delegates to :meth:`MixedOperationSamplingPolicy.export`."""

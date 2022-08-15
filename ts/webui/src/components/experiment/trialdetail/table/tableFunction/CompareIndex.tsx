@@ -1,11 +1,12 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { renderToString } from 'react-dom/server';
 import { Stack, Modal, IconButton, IDragOptions, ContextualMenu, Dropdown, IDropdownOption } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
-import { TooltipForIntermediate, TableObj, SingleAxis } from '@static/interface';
-import { contentStyles, iconButtonStyles } from '@components/fluent/ModalTheme';
-import { convertDuration, parseMetrics } from '@static/function';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { Trial } from '@model/trial';
+import { TooltipForIntermediate, SingleAxis } from '@static/interface';
+import { contentStyles, iconButtonStyles } from '@components/fluent/ModalTheme';
+import { convertDuration, parseMetrics, getIntermediateAllKeys } from '@static/function';
 import '@style/experiment/trialdetail/compare.scss';
 
 /***
@@ -26,7 +27,7 @@ const dragOptions: IDragOptions = {
 
 // TODO: this should be refactored to the common modules
 // copied from trial.ts
-function _parseIntermediates(trial: TableObj, key: string): number[] {
+function _parseIntermediates(trial: Trial, key: string): number[] {
     const intermediates: number[] = [];
     for (const metric of trial.intermediates) {
         if (metric === undefined) {
@@ -53,30 +54,46 @@ interface Item {
 }
 
 interface CompareProps {
-    trials: TableObj[];
+    trials: Trial[];
     title: string;
-    showDetails: boolean;
-    intermediateKeyList?: string[];
     onHideDialog: () => void;
     changeSelectTrialIds?: () => void;
 }
 
-interface CompareState {
-    intermediateKey: string; // default, dict other keys
-}
+function CompareIndex(props: CompareProps): any {
+    const { trials, title } = props;
+    const atrial = trials.find(item => item.intermediates.length > 0);
+    const intermediateAllKeysList = getIntermediateAllKeys(atrial === undefined ? trials[0] : atrial);
+    const [intermediateKey, setIntermediateKey] = useState(
+        intermediateAllKeysList.length > 0 ? intermediateAllKeysList[0] : 'default'
+    );
+    const runningTrial = trials.find(item => item.status === 'RUNNING');
+    const runningTrialIntermediateListLength = runningTrial !== undefined ? runningTrial.intermediates.length : -1;
 
-class Compare extends React.Component<CompareProps, CompareState> {
-    constructor(props: CompareProps) {
-        super(props);
-
-        this.state = {
-            // intermediate result maybe don't have the 'default' key...
-            intermediateKey:
-                this.props.intermediateKeyList !== undefined ? this.props.intermediateKeyList[0] : 'default'
+    function itemsList(): Item[] {
+        const inferredSearchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
+        const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
+            return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
         };
+        return trials.map(trial => ({
+            id: trial.id,
+            sequenceId: trial.sequenceId,
+            duration: convertDuration(trial.duration),
+            parameters: flatten(trial.parameters(inferredSearchSpace)),
+            metrics: flatten(trial.metrics(TRIALS.inferredMetricSpace())),
+            intermediates: _parseIntermediates(trial, intermediateKey)
+        }));
     }
 
-    private _generateTooltipSummary = (row: Item, value: string): string =>
+    const [items, setItems] = useState(itemsList());
+
+    // react componentDidMount & componentDidUpdate
+    useEffect(() => {
+        setItems(itemsList());
+    }, [intermediateKey, runningTrialIntermediateListLength]); // update condition
+
+    // page related function
+    const _generateTooltipSummary = (row: Item, value: string): string =>
         renderToString(
             <div className='tooldetailAccuracy'>
                 <div>Trial No.: {row.sequenceId}</div>
@@ -85,7 +102,7 @@ class Compare extends React.Component<CompareProps, CompareState> {
             </div>
         );
 
-    private _intermediates(items: Item[]): React.ReactNode {
+    function _intermediates(items: Item[]): React.ReactNode {
         // Precondition: make sure `items` is not empty
         const xAxisMax = Math.max(...items.map(item => item.intermediates.length));
         const xAxis = Array(xAxisMax)
@@ -104,7 +121,7 @@ class Compare extends React.Component<CompareProps, CompareState> {
                 confine: true,
                 formatter: (data: TooltipForIntermediate): string => {
                     const item = items.find(k => k.id === data.seriesName) as Item;
-                    return this._generateTooltipSummary(item, data.data);
+                    return _generateTooltipSummary(item, data.data);
                 }
             },
             grid: {
@@ -141,7 +158,7 @@ class Compare extends React.Component<CompareProps, CompareState> {
         );
     }
 
-    private _renderRow(
+    function _renderRow(
         key: string,
         rowName: string,
         className: string,
@@ -160,7 +177,7 @@ class Compare extends React.Component<CompareProps, CompareState> {
         );
     }
 
-    private _overlapKeys(s: Map<string, any>[]): string[] {
+    function _overlapKeys(s: Map<string, any>[]): string[] {
         // Calculate the overlapped keys for multiple
         const intersection: string[] = [];
         for (const i of s[0].keys()) {
@@ -179,7 +196,7 @@ class Compare extends React.Component<CompareProps, CompareState> {
     }
 
     // render table column ---
-    private _columns(items: Item[]): React.ReactNode {
+    function _columns(items: Item[]): React.ReactNode {
         // Precondition: make sure `items` is not empty
         const width = _getWebUIWidth();
         let scrollClass: string = '';
@@ -190,23 +207,21 @@ class Compare extends React.Component<CompareProps, CompareState> {
         } else {
             scrollClass = items.length > 2 ? 'flex' : '';
         }
-        const parameterKeys = this._overlapKeys(items.map(item => item.parameters));
-        const metricKeys = this._overlapKeys(items.map(item => item.metrics));
+        const parameterKeys = _overlapKeys(items.map(item => item.parameters));
+        const metricKeys = _overlapKeys(items.map(item => item.metrics));
 
         return (
             <table className={`compare-modal-table ${scrollClass} fontColor333`}>
                 <tbody>
-                    {this._renderRow('id', 'ID', 'value idList', items, item => item.id)}
-                    {this._renderRow('trialnum', 'Trial No.', 'value', items, item => item.sequenceId.toString())}
-                    {this._renderRow('duration', 'Duration', 'value', items, item => item.duration)}
+                    {_renderRow('id', 'ID', 'value idList', items, item => item.id)}
+                    {_renderRow('trialnum', 'Trial No.', 'value', items, item => item.sequenceId.toString())}
+                    {_renderRow('duration', 'Duration', 'value', items, item => item.duration)}
                     {parameterKeys.map(k =>
-                        this._renderRow(`space_${k}`, k, 'value', items, item => item.parameters.get(k))
+                        _renderRow(`space_${k}`, k, 'value', items, item => item.parameters.get(k))
                     )}
                     {metricKeys !== undefined
                         ? metricKeys.map(k =>
-                              this._renderRow(`metrics_${k}`, `Metric: ${k}`, 'value', items, item =>
-                                  item.metrics.get(k)
-                              )
+                              _renderRow(`metrics_${k}`, `Metric: ${k}`, 'value', items, item => item.metrics.get(k))
                           )
                         : null}
                 </tbody>
@@ -214,80 +229,62 @@ class Compare extends React.Component<CompareProps, CompareState> {
         );
     }
 
-    private closeCompareModal = (): void => {
-        const { showDetails, changeSelectTrialIds, onHideDialog } = this.props;
-        if (showDetails === true) {
+    const closeCompareModal = (): void => {
+        const { title, changeSelectTrialIds, onHideDialog } = props;
+        if (title === 'Compare trials') {
             // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
             changeSelectTrialIds!();
         }
         onHideDialog();
     };
 
-    private selectOtherKeys = (_event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+    const selectOtherKeys = (_event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            this.setState(() => ({ intermediateKey: item.text }));
+            setIntermediateKey(item.text);
         }
     };
 
-    render(): React.ReactNode {
-        const { trials, title, showDetails, intermediateKeyList } = this.props;
-        const { intermediateKey } = this.state;
-        const intermediateAllKeysList: string[] = intermediateKeyList !== undefined ? intermediateKeyList : [];
-        const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
-            return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
-        };
-        const inferredSearchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
-        const items: Item[] = trials.map(trial => ({
-            id: trial.id,
-            sequenceId: trial.sequenceId,
-            duration: convertDuration(trial.duration),
-            parameters: flatten(trial.parameters(inferredSearchSpace)),
-            metrics: flatten(trial.metrics(TRIALS.inferredMetricSpace())),
-            intermediates: _parseIntermediates(trial, intermediateKey)
-        }));
-
-        return (
-            <Modal
-                isOpen={true}
-                containerClassName={contentStyles.container}
-                className='compare-modal'
-                allowTouchBodyScroll={true}
-                dragOptions={dragOptions}
-                onDismiss={this.closeCompareModal}
-            >
-                <div>
-                    <div className={contentStyles.header}>
-                        <span>{title}</span>
-                        <IconButton
-                            styles={iconButtonStyles}
-                            iconProps={{ iconName: 'Cancel' }}
-                            ariaLabel='Close popup modal'
-                            onClick={this.closeCompareModal}
-                        />
-                    </div>
-                    {intermediateAllKeysList.length > 1 ||
-                    (intermediateAllKeysList.length === 1 && intermediateAllKeysList !== ['default']) ? (
-                        <Stack horizontalAlign='end' className='selectKeys'>
-                            <Dropdown
-                                className='select'
-                                selectedKey={intermediateKey}
-                                options={intermediateAllKeysList.map((key, item) => ({
-                                    key: key,
-                                    text: intermediateAllKeysList[item]
-                                }))}
-                                onChange={this.selectOtherKeys}
-                            />
-                        </Stack>
-                    ) : null}
-                    <Stack className='compare-modal-intermediate'>
-                        {this._intermediates(items)}
-                        <Stack className='compare-yAxis fontColor333'># Intermediate result</Stack>
-                    </Stack>
-                    {showDetails && <Stack>{this._columns(items)}</Stack>}
+    return (
+        <Modal
+            isOpen={true}
+            containerClassName={contentStyles.container}
+            className='compare-modal'
+            allowTouchBodyScroll={true}
+            dragOptions={dragOptions}
+            onDismiss={closeCompareModal}
+        >
+            <div>
+                <div className={contentStyles.header}>
+                    <span>{title}</span>
+                    <IconButton
+                        styles={iconButtonStyles}
+                        iconProps={{ iconName: 'Cancel' }}
+                        ariaLabel='Close popup modal'
+                        onClick={closeCompareModal}
+                    />
                 </div>
-            </Modal>
-        );
-    }
+                {intermediateAllKeysList.length > 1 ||
+                (intermediateAllKeysList.length === 1 && intermediateAllKeysList !== ['default']) ? (
+                    <Stack horizontalAlign='end' className='selectKeys'>
+                        <Dropdown
+                            className='select'
+                            selectedKey={intermediateKey}
+                            options={intermediateAllKeysList.map((key, item) => ({
+                                key: key,
+                                text: intermediateAllKeysList[item]
+                            }))}
+                            onChange={selectOtherKeys}
+                        />
+                    </Stack>
+                ) : null}
+                <Stack className='compare-modal-intermediate'>
+                    {_intermediates(items)}
+                    <Stack className='compare-yAxis fontColor333'># Intermediate result</Stack>
+                </Stack>
+                {title === 'Compare trials' && <Stack>{_columns(items)}</Stack>}
+            </div>
+        </Modal>
+    );
 }
 
-export default Compare;
+export default CompareIndex;
