@@ -328,6 +328,7 @@ evaluator = Classification(
     train_dataloaders=train_loader,
     val_dataloaders=valid_loader,
     max_epochs=max_epochs,
+    gpus=1,
     export_onnx=False,  # Disable ONNX export for this experiment
     fast_dev_run=fast_dev_run,  # Should be false for fully training
 )
