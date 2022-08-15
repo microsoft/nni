@@ -18,56 +18,130 @@ In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves
    If you don't have one, you can set ``gpus`` in :class:`~nni.retiarii.evaluator.pytorch.Classification` to be 0,
    but do note that it will be much slower.
 
-Use the model space
--------------------
+Use a pre-searched model
+------------------------
 
-The model space provided in DARTS originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
-where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
-There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
-The key difference between normal and reduction cell is that the reduction cell will downsample the input feature map,
-and decrease its resolution. Normal and reduction cells are stacked alternately, as shown in the following figure.
+Similar to `the beginner tutorial of PyTorch <https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html>`__,
+we begin with CIFAR-10 dataset, which is a image classification dataset of 10 categories.
+The images in CIFAR-10 are of size 3x32x32, i.e., RGB-colored images of 32x32 pixels in size.
 
-.. image:: ../../img/nasnet_cell_stack.png
-
-A cell takes outputs from two previous cells as inputs and contains a collection of *nodes*.
-Each node takes two previous nodes within the same cell (or the two cell inputs),
-and applies an *operator* (e.g., convolution, or max-pooling) to each input,
-and sums the outputs of operators as the output of the node.
-The output of cell is the concatenation of all the nodes that are never used as inputs of another node.
-We recommend reading `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for details.
-
-We illustrate an example of cells in the following figure.
-
-.. image:: ../../img/nasnet_cell.png
-
-The search space proposed in DARTS paper introduced two modifications to the original space in `NASNet <https://arxiv.org/abs/1707.07012>`__.
-
-Firstly, the operator candidates have been narrowed down to seven:
-
-- Max pooling 3x3
-- Average pooling 3x3
-- Skip connect (Identity)
-- Separable convolution 3x3
-- Separable convolution 5x5
-- Dilated convolution 3x3
-- Dilated convolution 5x5
-
-Secondly, the output of cell is the concatenate of **all the nodes within the cell**.
-
-As the search space is based on cell, once the normal and reduction cell has been fixed, we can stack them for indefinite times.
-To save the search cost, the common practice is to reduce the number of filters (i.e., channels) and number of stacked cells
-during the search phase, and increase them back when training the final searched architecture.
-
-.. note::
-
-   DARTS is one of those papers that innovate both in search space and search strategy.
-   In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
-   We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
-   We did NOT imply that the DARTS space and DARTS strategy has to used together.
-   You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
+We first load the CIFAR-10 dataset with torchvision.
 """
 
+import nni
+from torchvision import transforms
+from torchvision.datasets import CIFAR10
+
+CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
+CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
+
+transform_valid = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+])
+valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform_valid)
+valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
+
 # %%
+#
+# .. note::
+#
+#    If you are to use multi-trial strategies, wrapping CIFAR10 with :func:`nni.trace` is mandatory.
+#    Otherwise, it's optional.
+#
+# When working with famous datasets like CIFAR-10 or ImageNet,
+# it's tempting to use or finetune from a pretrained model, like ResNet.
+# There's nothing wrong with doing so, and sometimes it might be beneficial.
+# Thanks to the development of NAS, we now have quite a large number of *pre-searched models*,
+# which are produced by most popular NAS literatures.
+# You can easily load these models, validate their performances, and finetune them if you need.
+#
+# We present :doc:`model space hub </nas/space_hub>`, where you can find many built-in model spaces,
+# along with many pre-searched models.
+# We choose one from DARTS search space, which is natively trained on our target dataset, CIFAR-10,
+# so as to save the tedious steps of finetuning.
+#
+# .. tip::
+#
+#    We recommend reading
+#    `this tutorial of object detection finetuning <https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html>`__
+#    if you are not so lucky to have a model ready-to-serve for your dataset.
+
+from nni.retiarii.hub.pytorch import DARTS as DartsSpace
+
+darts_v2_model = DartsSpace.load_searched_model('darts-v2', pretrained=True, download=True)
+
+def evaluate_model(model, cuda=False):
+    if cuda:
+        model.cuda()
+    model.eval()
+    with torch.no_grad():
+        correct = total = 0
+        for inputs, targets in valid_loader:
+            if cuda:
+                inputs, targets = inputs.cuda(), targets.cuda()
+            logits = model(inputs)
+            _, predict = torch.max(logits, 1)
+            correct += (predict == targets).sum().cpu().item()
+            total += targets.size(0)
+    print('Accuracy:', correct / total)
+    return correct / total
+
+evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
+
+# %%
+#
+# The journey could end here. Or you are interested,
+# we can go a step further to search a model within DARTS space on our own.
+#
+# Use the model space
+# -------------------
+
+# The model space provided in DARTS originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
+# where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
+# There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
+# The key difference between normal and reduction cell is that the reduction cell will downsample the input feature map,
+# and decrease its resolution. Normal and reduction cells are stacked alternately, as shown in the following figure.
+#
+# .. image:: ../../img/nasnet_cell_stack.png
+#
+# A cell takes outputs from two previous cells as inputs and contains a collection of *nodes*.
+# Each node takes two previous nodes within the same cell (or the two cell inputs),
+# and applies an *operator* (e.g., convolution, or max-pooling) to each input,
+# and sums the outputs of operators as the output of the node.
+# The output of cell is the concatenation of all the nodes that are never used as inputs of another node.
+# We recommend reading `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for details.
+#
+# We illustrate an example of cells in the following figure.
+#
+# .. image:: ../../img/nasnet_cell.png
+#
+# The search space proposed in DARTS paper introduced two modifications to the original space
+# in `NASNet <https://arxiv.org/abs/1707.07012>`__.
+#
+# Firstly, the operator candidates have been narrowed down to seven:
+#
+# - Max pooling 3x3
+# - Average pooling 3x3
+# - Skip connect (Identity)
+# - Separable convolution 3x3
+# - Separable convolution 5x5
+# - Dilated convolution 3x3
+# - Dilated convolution 5x5
+#
+# Secondly, the output of cell is the concatenate of **all the nodes within the cell**.
+#
+# As the search space is based on cell, once the normal and reduction cell has been fixed, we can stack them for indefinite times.
+# To save the search cost, the common practice is to reduce the number of filters (i.e., channels) and number of stacked cells
+# during the search phase, and increase them back when training the final searched architecture.
+#
+# .. note::
+#
+#    DARTS is one of those papers that innovate both in search space and search strategy.
+#    In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
+#    We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
+#    We did NOT imply that the DARTS space and DARTS strategy has to used together.
+#    You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
 #
 # In the following example, we initialize a DARTS model space, with only 16 initial filters and 8 stacked cells.
 # The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
@@ -79,8 +153,6 @@ during the search phase, and increase them back when training the final searched
 # 
 #    The model space here can be replaced with any space provided in the hub,
 #    or even customized space built from scratch.
-
-from nni.retiarii.hub.pytorch import DARTS as DartsSpace
 
 model_space = DartsSpace(16, 8, 'cifar')
 
@@ -98,18 +170,12 @@ model_space = DartsSpace(16, 8, 'cifar')
 # we have to split the original training set into a training set and a validation set.
 # As we are going to use the provided by DARTS paper, the recommended train/val split is 1:1.
 
-import nni
 import numpy as np
 from nni.retiarii.evaluator.pytorch import (
     Classification,
     DataLoader  # might also use torch.utils.data.DataLoader if not using multi-trial strategy
 )
 from torch.utils.data import SubsetRandomSampler
-from torchvision import transforms
-from torchvision.datasets import CIFAR10
-
-CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
-CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
 
 transform = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
@@ -118,7 +184,6 @@ transform = transforms.Compose([
     transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
 ])
 
-# If you are to use multi-trial strategies, please wrap CIFAR10 with :func:`nni.trace`.
 train_data = nni.trace(CIFAR10)(root='./data', train=True, download=True, transform=transform)
 
 num_samples = len(train_data)
@@ -245,12 +310,11 @@ with fixed_arch(exported_arch):
 
 train_loader = DataLoader(train_data, batch_size=96, num_workers=6)  # Use the original training data
 
-transform_valid = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-])
-valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform_valid)
-valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
+# %%
+#
+# The validation data loader can be reused.
+
+valid_loader
 
 # %%
 #
