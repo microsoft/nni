@@ -358,7 +358,8 @@ def test_proxyless_layer_input():
     input = ProxylessMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
     assert input.resample({})['ddd'] in list(range(5))
     assert input([torch.randn(4, 2) for _ in range(5)]).size() == torch.Size([4, 2])
-    assert input.export({})['ddd'] in list(range(5))
+    exported = input.export({})['ddd']
+    assert len(exported) == 2 and all(e in list(range(5)) for e in exported)
 
 
 def test_pathsampling_repeat():
