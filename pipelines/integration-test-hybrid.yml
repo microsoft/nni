@@ -4,6 +4,7 @@ schedules:
 - cron: 0 20 * * *
   branches:
     include: [ master ]
+  always: true
 
 jobs:
 - job: hybrid

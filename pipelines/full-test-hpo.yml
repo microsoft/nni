@@ -4,6 +4,7 @@ schedules:
 - cron: 0 18 * * *
   branches:
     include: [ master ]
+  always: true
 
 resources:
   repositories:

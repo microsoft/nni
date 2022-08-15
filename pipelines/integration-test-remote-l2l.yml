@@ -4,6 +4,7 @@ schedules:
 - cron: 0 20 * * *
   branches:
     include: [ master ]
+  always: true
 
 # variables set on VSO: (for security concern)
 #   manager_ip
