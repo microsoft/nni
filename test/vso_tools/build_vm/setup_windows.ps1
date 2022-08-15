@@ -66,9 +66,9 @@ choco install -y --no-progress vcredist2012 vcredist2013 vcredist2015 vcredist20
 # Install CUDA.
 Write-Host "Installing CUDA..."
 $CudaUrl = "https://developer.download.nvidia.com/compute/cuda/11.7.0/network_installers/cuda_11.7.0_windows_network.exe"
-Invoke-WebRequest $CudaUrl -OutFile "cuda_installer.exe"
-Start-Process -FilePath "cuda_installer.exe" -ArgumentList "/s /n" -Wait
-Remove-Item "cuda_installer.exe"
+Invoke-WebRequest $CudaUrl -OutFile "$env:ProgramData\cuda_installer.exe"
+Start-Process -FilePath "$env:ProgramData\cuda_installer.exe" -ArgumentList "/s /n" -Wait
+# Remove-Item "cuda_installer.exe"
 # Verify CUDA.
 Write-Host "Verify CUDA installation..."
 $CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
@@ -76,6 +76,9 @@ $CudaDir = "$env:ProgramFiles\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin"
 # Get-Command nvidia-smi
 Get-ChildItem $CudaDir
 $env:path = "$env:path;$CudaDir"
+
+# Download GPU driver.
+Invoke-WebRequest "https://us.download.nvidia.com/tesla/516.94/516.94-data-center-tesla-desktop-winserver-2016-2019-2022-dch-international.exe" -OutFile "$env:ProgramData\driver_installer.exe"
 
 Write-Host "Installing utilities..."
 
