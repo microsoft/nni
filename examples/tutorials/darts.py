@@ -72,7 +72,7 @@ during the search phase, and increase them back when training the final searched
 # In the following example, we initialize a DARTS model space, with only 16 initial filters and 8 stacked cells.
 # The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
 #
-# The DARTS model space here is provided by :doc:`model space hub <./space_hub>`,
+# The DARTS model space here is provided by :doc:`model space hub </nas/space_hub>`,
 # where we have supported multiple popular model spaces for plug-and-play.
 #
 # .. tip::
