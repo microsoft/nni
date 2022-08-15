@@ -8,6 +8,7 @@ import torch.nn as nn
 from .error_code import EmptyLayerError, ShapeMisMatchError, InputsNumberError, OutputTypeError, UnBalancedGroupError
 
 _logger = logging.getLogger(__name__)
+_logger.setLevel(logging.DEBUG)
 
 replace_module = {
     'BatchNorm2d': lambda module, masks: replace_batchnorm2d(module, masks),
@@ -47,7 +48,8 @@ replace_module = {
     'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
     'Embedding': lambda module, masks: replace_embedding(module, masks),
     'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks),
-    'Flatten': lambda module, masks: no_replace(module, masks)
+    'Flatten': lambda module, masks: no_replace(module, masks),
+    "GroupNorm": lambda module, masks: replace_groupnorm(module, masks)
 }
 
 
@@ -309,6 +311,56 @@ def replace_batchnorm2d(norm, masks):
     new_norm.running_var.data = torch.index_select(
         norm.running_var.data, 0, remained_in)
     return new_norm
+
+
+def replace_groupnorm(norm: nn.GroupNorm, masks):
+    """
+    Parameters
+    ----------
+    norm : torch.nn.InstanceNorm2d
+        The instancenorm module to be replace
+    masks : Tuple of the input masks, output masks and weight masks
+        Tuple of the masks, for example
+        ([input_m1, input_m2], [output_m], {'weight':weight_m})
+
+    Returns
+    -------
+    torch.nn.GroupNorm
+        The new instancenorm module
+    """
+    in_masks, output_mask, _ = masks
+    assert isinstance(norm, nn.GroupNorm)
+    in_mask = in_masks[0]
+
+    # N, C, H, W
+    _, remained_in = convert_to_coarse_mask(in_mask, 1)
+    _, remained_out = convert_to_coarse_mask(output_mask, 1)
+
+    assert len(remained_in.size()) == 1
+    new_num_channels = remained_in.size()[0]
+
+    assert new_num_channels % norm.num_groups == 0
+
+    _logger.info(f"replace groupnorm (remain/total) ({norm.num_channels}, {new_num_channels})")
+
+    new_module = nn.GroupNorm(
+        norm.num_groups,
+        new_num_channels,
+        eps=norm.eps,
+        affine=norm.affine,
+    )
+    if new_module.affine:
+        new_module.weight.data = torch.index_select(
+            norm.weight.data,
+            0,
+            remained_in,
+        )
+        new_module.bias.data = torch.index_select(
+            norm.bias.data,
+            0,
+            remained_in,
+        )
+    return new_module
 
 
 def replace_instancenorm2d(norm, masks):
