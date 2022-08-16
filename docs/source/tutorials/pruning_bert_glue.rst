@@ -230,7 +230,7 @@ Training function & evaluation function.
         from datasets import load_metric
 
         def training(train_dataloader: DataLoader,
-                     model: BertForSequenceClassification,
+                     model: torch.nn.Module,
                      optimizer: torch.optim.Optimizer,
                      criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
                      lr_scheduler: torch.optim.lr_scheduler._LRScheduler = None,
@@ -284,7 +284,7 @@ Training function & evaluation function.
 
         def evaluation(validation_dataloader: DataLoader,
                        validation_dataloader2: DataLoader,
-                       model: BertForSequenceClassification):
+                       model: torch.nn.Module):
             training = model.training
             model.eval()
             is_regression = task_name == 'stsb'
