@@ -60,7 +60,17 @@ sudo apt-get install -y cuda-drivers
 # Reference: https://dev.to/akaszynski/create-an-azure-self-hosted-agent-without-going-insane-173g
 # We only need Python 3.7 and 3.9 for now.
 sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt-get install -y python3.7-dev python3.7-venv python3.9-dev python3.9-venv
+sudo apt-get install -y python3.7-dev python3.7-venv python3.9-dev python3.9-venv python3.10-dev python3.10-venv python3.11-dev python3.11-venv
+
+# Disable the periodical apt-get upgrade.
+# Sometimes, unattended upgrade blocks apt-get install
+sudo sed -i -e "s/Update-Package-Lists \"1\"/Update-Package-Lists \"0\"/g" /etc/apt/apt.conf.d/10periodic
+sudo sed -i -e "s/Update-Package-Lists \"1\"/Update-Package-Lists \"0\"/g" /etc/apt/apt.conf.d/20auto-upgrades
+sudo sed -i -e "s/Unattended-Upgrade \"1\"/Unattended-Upgrade \"0\"/g" /etc/apt/apt.conf.d/20auto-upgrades
+sudo systemctl disable apt-daily.timer
+sudo systemctl disable apt-daily.service
+sudo systemctl disable apt-daily-upgrade.timer
+sudo systemctl disable apt-daily-upgrade.service
 
 # Deprovision
 sudo /usr/sbin/waagent -force -deprovision

@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# If you've seen lint errors like `"Sequential" is not a known member of module`,
+# please run `python test/vso_tools/trigger_import.py` to generate `_layers.py`.
+
 from pathlib import Path
 
 # To make auto-completion happy, we generate a _layers.py that lists out all the classes.

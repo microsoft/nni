@@ -233,3 +233,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
             else:
                 return value
         return value
+
+    def handle_import_data(self, data):
+        # FIXME: ignore imported data for now, as strategy has not supported resume
+        pass

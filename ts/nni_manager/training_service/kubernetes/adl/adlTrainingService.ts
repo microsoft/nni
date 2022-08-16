@@ -116,7 +116,7 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
             this.kubernetesRestServerPort = restServer.clusterRestServerPort;
         }
 
-        const trialJobId: string = uniqueString(5);
+        const trialJobId: string = form.id === undefined ? uniqueString(5) : form.id;
         const adlJobName: string = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         const initStatus: TrialJobStatus = 'WAITING';
         const codeDir = this.adlTrialConfig.codeDir;
