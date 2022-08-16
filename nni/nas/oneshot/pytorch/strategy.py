@@ -77,6 +77,28 @@ class OneShotStrategy(BaseStrategy):
         train_loader, val_loader = self.preprocess_dataloader(evaluator.train_dataloaders, evaluator.val_dataloaders)
         evaluator.trainer.fit(self.model, train_loader, val_loader)
 
+    def attach_model(self, base_model: Model, applied_mutators):
+        # one-shot strategy doesn't use ``applied_mutators``
+        # but get the "mutators" on their own
+
+        _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
+
+        if not isinstance(base_model.python_object, nn.Module):
+            raise TypeError('Model is not a nn.Module. ' + _reason)
+        py_model: nn.Module = base_model.python_object
+
+        if applied_mutators:
+            raise ValueError('Mutator is not empty. ' + _reason)
+
+        if not isinstance(base_model.evaluator, Lightning):
+            raise TypeError('Evaluator needs to be a lightning evaluator to make one-shot strategy work.')
+
+        evaluator_module: LightningModule = base_model.evaluator.module
+        evaluator_module.running_mode = 'oneshot'
+        evaluator_module.set_model(py_model)
+
+        self.model = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
+
     def export_top_models(self, top_k: int = 1) -> list[Any]:
         """The behavior of export top models in strategy depends on the implementation of inner one-shot module."""
         if self.model is None:
