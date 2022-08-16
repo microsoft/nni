@@ -148,16 +148,21 @@ class MovementPruner(EvaluatorBasedPruner):
         {evaluator_docstring}
         The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
         If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
-    training_epochs
-        The total epoch number for training the model.
-        Make sure the total `optimizer.step()` in `training_epochs` is bigger than `cool_down_beginning_step`.
     warm_up_step
         The total `optimizer.step()` number before start pruning for warm up.
-        Make sure `warm_up_step` is smaller than `cool_down_beginning_step`.
+        Make sure ``warm_up_step`` is smaller than ``cool_down_beginning_step``.
     cool_down_beginning_step
         The number of steps at which sparsity stops growing, note that the sparsity stop growing doesn't mean masks not changed.
         The sparsity after each `optimizer.step()` is:
         total_sparsity * (1 - (1 - (current_step - warm_up_step) / (cool_down_beginning_step - warm_up_step)) ** 3).
+    training_epochs
+        The total epoch number for training the model.
+        Make sure the total `optimizer.step()` in ``training_epochs`` is bigger than `cool_down_beginning_step`.
+        If both ``training_epochs`` and ``training_steps`` are set, pruning will stop when either is reached.
+    training_steps
+        The total step number for training the model.
+        Make sure ``training_epochs`` is bigger than ``cool_down_beginning_step``.
+        If both ``training_epochs`` and ``training_steps`` are set, pruning will stop when either is reached.
     regular_scale
         Use to scale the movement score regular loss. In 'soft' mode, higher regular scale means higher final sparsity.
         The recommended range is 1 ~ 30.
@@ -183,9 +188,10 @@ class MovementPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_epochs: int,
-                 warm_up_step: int, cool_down_beginning_step: int, regular_scale: float | None = None,
-                 movement_mode: Literal['hard', 'soft'] = 'hard', sparse_granularity: Literal['auto', 'finegrained'] = 'finegrained'):
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, warm_up_step: int,
+                 cool_down_beginning_step: int, training_epochs: int | None = None, training_steps: int | None = None,
+                 regular_scale: float | None = None, movement_mode: Literal['hard', 'soft'] = 'hard',
+                 sparse_granularity: Literal['auto', 'finegrained'] = 'finegrained'):
         ...
 
     @overload
@@ -196,13 +202,15 @@ class MovementPruner(EvaluatorBasedPruner):
 
     def __init__(self, model: Module, config_list: List[Dict], *args, **kwargs):
         # TODO: remove in nni v3.0. Fake overload.
-        new_api = ['evaluator', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step', 'regular_scale', 'movement_mode',
-                   'sparse_granularity']
+        new_api = ['evaluator', 'warm_up_step', 'cool_down_beginning_step', 'training_epochs', 'training_steps', 'regular_scale',
+                   'movement_mode', 'sparse_granularity']
         old_api = ['trainer', 'traced_optimizer', 'criterion', 'training_epochs', 'warm_up_step', 'cool_down_beginning_step']
-        init_kwargs = {'regular_scale': None, 'movement_mode': 'hard', 'sparse_granularity': 'finegrained'}
+        init_kwargs = {'training_epochs': None, 'training_steps': None, 'regular_scale': None, 'movement_mode': 'hard',
+                       'sparse_granularity': 'finegrained'}
         init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
 
         self.training_epochs: int = init_kwargs['training_epochs']
+        self.training_steps: int = init_kwargs['training_steps'] if self.using_evaluator else None
         self.warm_up_step: int = init_kwargs['warm_up_step']
         self.cool_down_beginning_step: int = init_kwargs['cool_down_beginning_step']
         self.regular_scale: int | None = init_kwargs['regular_scale'] if self.using_evaluator else None
@@ -323,6 +331,7 @@ class MovementPruner(EvaluatorBasedPruner):
                 self.data_collector = EvaluatorBasedScoreDataCollector(self, self.evaluator,
                                                                        after_opt_step_tasks=[_optimizer_patch],
                                                                        max_epochs=self.training_epochs,
+                                                                       max_steps=self.training_steps,
                                                                        loss_patch=_loss_patch)
             else:
                 self.data_collector.reset(after_opt_step_tasks=[_optimizer_patch])
