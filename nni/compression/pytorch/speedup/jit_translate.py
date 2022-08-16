@@ -137,6 +137,20 @@ def slice_python(node: NodePyGroup, speedup: ModelSpeedup):
     else:
         return SliceMoudle(tuple(slice_list))
 
+def cat_python(node: NodePyGroup, speedup: ModelSpeedup):
+    class CatModule(torch.nn.Module):
+        def __init__(self, cat_dim):
+            super(CatModule, self).__init__()
+            self.cat_dim = cat_dim
+
+        def forward(self, *args):
+            return torch.cat(args, dim=self.cat_dim)
+
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    dim = inputs[1].toIValue()
+    return CatModule(dim)
+
 def tupleunpack_python(_node: NodePyGroup, _speedup: ModelSpeedup) -> Optional[Callable]:
     # Note: tuple unpack should only exists at the
     # the end of the model, and is no need to replace/propagate mask
@@ -447,6 +461,7 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
 
 trans_func_dict = {
     'aten::slice': slice_python,
+    'aten::cat': cat_python,
     'aten::Int': partial(generate_aten_to_python, torch._C._TensorBase.int),
 
     'prim::TupleUnpack': tupleunpack_python,
