@@ -375,6 +375,21 @@ Prepare pre-trained model and finetuning on downstream task.
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.bias', 'cls.predictions.transform.dense.weight']
+    - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+    - This IS NOT expected if you are initializing BertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.weight', 'classifier.bias']
+    You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+    Reusing dataset glue (./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
+      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1213.84it/s]
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-9c32a3d5eca55607.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-6f0849c5f6325016.arrow
+      0%|          | 0/10 [00:00<?, ?ba/s]     40%|####      | 4/10 [00:00<00:00, 34.52ba/s]     90%|######### | 9/10 [00:00<00:00, 38.77ba/s]    100%|##########| 10/10 [00:00<00:00, 38.78ba/s]
+
 
 
 
@@ -398,6 +413,16 @@ Add 'teacher_logits' to dataset, it is used to do the distillation, it can be se
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Reusing dataset glue (./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
+      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1249.79it/s]
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-9c32a3d5eca55607.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-6f0849c5f6325016.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-5db72911f5dfb448.arrow
 
 
 
@@ -469,6 +494,14 @@ First, using MovementPruner to prune attention head.
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Did not bind any model, no need to unbind model.
+    Did not bind any model, no need to unbind model.
+
+
 
 
 .. GENERATED FROM PYTHON SOURCE LINES 368-372
@@ -511,6 +544,33 @@ If the head is entire masked, physically prune it and create config_list for FFN
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.bias', 'cls.predictions.transform.dense.weight']
+    - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+    - This IS NOT expected if you are initializing BertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.weight', 'classifier.bias']
+    You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+    Reusing dataset glue (./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
+      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1141.12it/s]
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-9c32a3d5eca55607.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-6f0849c5f6325016.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-5db72911f5dfb448.arrow
+    layer 0 pruner 0 head: []
+    layer 1 pruner 0 head: []
+    layer 2 pruner 0 head: []
+    layer 3 pruner 0 head: []
+    layer 4 pruner 0 head: []
+    layer 5 pruner 0 head: []
+    layer 6 pruner 0 head: []
+    layer 7 pruner 0 head: []
+    layer 8 pruner 0 head: []
+    layer 9 pruner 0 head: []
+    layer 10 pruner 0 head: []
+    layer 11 pruner 0 head: []
 
 
 
@@ -626,7 +686,7 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
             loss = outputs.loss
 
             # distillation
-            if teacher_logits:
+            if teacher_logits is not None:
                 distil_loss = F.kl_div(F.log_softmax(outputs.logits / 2, dim=-1),
                                         F.softmax(teacher_logits / 2, dim=-1), reduction='batchmean') * (2 ** 2)
                 loss = 0.1 * loss + 0.9 * distil_loss
@@ -648,14 +708,30 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Did not bind any model, no need to unbind model.
+    no multi-dimension masks found.
+    /home/nishang/anaconda3/envs/nni-dev/lib/python3.7/site-packages/torch/_tensor.py:1083: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:477.)
+      return self._grad
+    Did not bind any model, no need to unbind model.
+    no multi-dimension masks found.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 509-553
+
+.. GENERATED FROM PYTHON SOURCE LINES 509-564
 
 Result
 ------
 The speedup is test on the entire validation dataset with batch size 32 on A100.
+We test under two pytorch version and found the latency varying widely.
+
+Setting 1: pytorch 1.12.1
+
+Setting 2: pytorch 1.10.0
 
 .. list-table:: Prune Bert-base-uncased on MNLI
     :header-rows: 1
@@ -666,42 +742,48 @@ The speedup is test on the entire validation dataset with batch size 32 on A100.
       - Total Sparsity
       - Accuracy
       - Acc. Drop
-      - Speedup
+      - Speedup (S1)
+      - Speedup (S2)
     * -
       -
       - 0%
       - 84.73 / 84.63
       - +0.0 / +0.0
-      - x1.00
+      - 12.56s (x1.00)
+      - 4.05s (x1.00)
     * - :ref:`movement-pruner` (soft, th=0.1, lambda=5)
       - :ref:`taylor-fo-weight-pruner`
       - 51.39%
       - 84.25 / 84.96
       - -0.48 / +0.33
-      - x1.88
+      - 6.85s (x1.83)
+      - 2.7s (x1.50)
     * - :ref:`movement-pruner` (soft, th=0.1, lambda=10)
       - :ref:`taylor-fo-weight-pruner`
       - 66.67%
       - 83.98 / 83.75
       - -0.75 / -0.88
-      - x2.64
+      - 4.73s (x2.66)
+      - 2.16s (x1.86)
     * - :ref:`movement-pruner` (soft, th=0.1, lambda=20)
       - :ref:`taylor-fo-weight-pruner`
       - 77.78%
       - 83.02 / 83.06
       - -1.71 / -1.57
-      - x3.73
+      - 3.35s (x3.75)
+      - 1.72s (x2.35)
     * - :ref:`movement-pruner` (soft, th=0.1, lambda=30)
       - :ref:`taylor-fo-weight-pruner`
-      - 89.81%
+      - 87.04%
       - 81.24 / 80.99
       - -3.49 / -3.64
-      - x5.78
+      - 2.19s (x5.74)
+      - 1.31s (x3.09)
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  37.098 seconds)
+   **Total running time of the script:** ( 0 minutes  27.206 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_bert_glue.py:

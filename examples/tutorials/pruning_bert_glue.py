@@ -487,7 +487,7 @@ for current_epoch in range(total_epochs):
         loss = outputs.loss
 
         # distillation
-        if teacher_logits:
+        if teacher_logits is not None:
             distil_loss = F.kl_div(F.log_softmax(outputs.logits / 2, dim=-1),
                                     F.softmax(teacher_logits / 2, dim=-1), reduction='batchmean') * (2 ** 2)
             loss = 0.1 * loss + 0.9 * distil_loss
@@ -509,6 +509,11 @@ for current_epoch in range(total_epochs):
 # Result
 # ------
 # The speedup is test on the entire validation dataset with batch size 32 on A100.
+# We test under two pytorch version and found the latency varying widely.
+# 
+# Setting 1: pytorch 1.12.1
+#
+# Setting 2: pytorch 1.10.0
 # 
 # .. list-table:: Prune Bert-base-uncased on MNLI
 #     :header-rows: 1
@@ -519,34 +524,40 @@ for current_epoch in range(total_epochs):
 #       - Total Sparsity
 #       - Accuracy
 #       - Acc. Drop
-#       - Speedup
+#       - Speedup (S1)
+#       - Speedup (S2)
 #     * -
 #       -
 #       - 0%
 #       - 84.73 / 84.63
 #       - +0.0 / +0.0
-#       - x1.00
+#       - 12.56s (x1.00)
+#       - 4.05s (x1.00)
 #     * - :ref:`movement-pruner` (soft, th=0.1, lambda=5)
 #       - :ref:`taylor-fo-weight-pruner`
 #       - 51.39%
 #       - 84.25 / 84.96
 #       - -0.48 / +0.33
-#       - x1.88
+#       - 6.85s (x1.83)
+#       - 2.7s (x1.50)
 #     * - :ref:`movement-pruner` (soft, th=0.1, lambda=10)
 #       - :ref:`taylor-fo-weight-pruner`
 #       - 66.67%
 #       - 83.98 / 83.75
 #       - -0.75 / -0.88
-#       - x2.64
+#       - 4.73s (x2.66)
+#       - 2.16s (x1.86)
 #     * - :ref:`movement-pruner` (soft, th=0.1, lambda=20)
 #       - :ref:`taylor-fo-weight-pruner`
 #       - 77.78%
 #       - 83.02 / 83.06
 #       - -1.71 / -1.57
-#       - x3.73
+#       - 3.35s (x3.75)
+#       - 1.72s (x2.35)
 #     * - :ref:`movement-pruner` (soft, th=0.1, lambda=30)
 #       - :ref:`taylor-fo-weight-pruner`
-#       - 89.81%
+#       - 87.04%
 #       - 81.24 / 80.99
 #       - -3.49 / -3.64
-#       - x5.78
+#       - 2.19s (x5.74)
+#       - 1.31s (x3.09)
