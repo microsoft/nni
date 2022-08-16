@@ -40,6 +40,10 @@ class NormalSparsityAllocator(SparsityAllocator):
 
 
 class ThresholdSparsityAllocator(SparsityAllocator):
+    """
+    Note: This allocator is an experimental allocator.
+    It takes 'total_sparsity' as threshold to mask the pruning target where metric is lower then threshold.
+    """
     def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         masks = {}
         # TODO: Support more target type in wrapper & config list refactor
