@@ -210,7 +210,7 @@ class MovementPruner(EvaluatorBasedPruner):
         init_kwargs = self._init_evaluator(model, new_api, old_api, init_kwargs, args, kwargs)
 
         self.training_epochs: int = init_kwargs['training_epochs']
-        self.training_steps: int = init_kwargs['training_steps'] if self.using_evaluator else None
+        self.training_steps: int | None = init_kwargs['training_steps'] if self.using_evaluator else None
         self.warm_up_step: int = init_kwargs['warm_up_step']
         self.cool_down_beginning_step: int = init_kwargs['cool_down_beginning_step']
         self.regular_scale: int | None = init_kwargs['regular_scale'] if self.using_evaluator else None
