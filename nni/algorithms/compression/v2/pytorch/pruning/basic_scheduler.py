@@ -60,7 +60,7 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
                 raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{key}'")
             merged_kwargs[key] = value
         for key, value in def_kwargs.items():
-            if key not in merged_kwargs:
+            if key not in merged_kwargs and key in arg_names:
                 merged_kwargs[key] = value
         diff = set(arg_names).difference(merged_kwargs.keys())
         if diff:
