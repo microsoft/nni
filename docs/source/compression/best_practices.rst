@@ -5,4 +5,4 @@ Best Practices
     :hidden:
     :maxdepth: 2
 
-    Pruning Transformer <pruning_transformer>
+    Pruning Transformer </tutorials/pruning_bert_glue>
