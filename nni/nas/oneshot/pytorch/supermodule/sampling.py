@@ -169,7 +169,7 @@ class PathSamplingInput(BaseSuperNetModule):
 
 
 class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
-    """Implementes the path sampling in mixed operation.
+    """Implements the path sampling in mixed operation.
 
     One mixed operation can have multiple value choices in its arguments.
     Each value choice can be further decomposed into "leaf value choices".
@@ -388,6 +388,10 @@ class PathSamplingCell(BaseSuperNetModule):
 
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
+        """
+        Mutate only handles cells of specific configurations (e.g., with loose end).
+        Fallback to the default mutate if the cell is not handled here.
+        """
         if isinstance(module, Cell):
             op_factory = None  # not all the cells need to be replaced
             if module.op_candidates_factory is not None:

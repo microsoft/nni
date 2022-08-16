@@ -261,6 +261,7 @@ _yarn_env['PATH'] = str(Path().resolve() / 'nni_node') + path_env_seperator + os
 _yarn_path = Path().resolve() / 'toolchain/yarn/bin' / yarn_executable
 
 def _yarn(path, *args):
+    _print('yarn ' + ' '.join(args) + f' (path: {path})')
     if os.environ.get('GLOBAL_TOOLCHAIN'):
         subprocess.run(['yarn', *args], cwd=path, check=True)
     else:

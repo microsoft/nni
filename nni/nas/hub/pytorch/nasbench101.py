@@ -63,9 +63,9 @@ Projection = Conv1x1BNReLU
 
 @model_wrapper
 class NasBench101(nn.Module):
-    """The full search space, proposed by `NAS-Bench-101 <http://proceedings.mlr.press/v97/ying19a/ying19a.pdf>`__.
+    """The full search space proposed by `NAS-Bench-101 <http://proceedings.mlr.press/v97/ying19a/ying19a.pdf>`__.
 
-    It's simply a stack of :class:`NasBench101Cell`. Operations are conv3x3, conv1x1 and maxpool respectively.
+    It's simply a stack of :class:`~nni.retiarii.nn.pytorch.NasBench101Cell`. Operations are conv3x3, conv1x1 and maxpool respectively.
     """
 
     def __init__(self,

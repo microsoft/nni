@@ -7,7 +7,6 @@ The implementation is based on NDS.
 It's called ``nasnet.py`` simply because NASNet is the first to propose such structure.
 """
 
-from collections import OrderedDict
 from functools import partial
 from typing import Tuple, List, Union, Iterable, Dict, Callable, Optional, cast
 
@@ -235,20 +234,6 @@ class AuxiliaryHead(nn.Module):
         return x
 
 
-class SequentialBreakdown(nn.Sequential):
-    """Return all layers of a sequential."""
-
-    def __init__(self, sequential: nn.Sequential):
-        super().__init__(OrderedDict(sequential.named_children()))
-
-    def forward(self, inputs):
-        result = []
-        for module in self:
-            inputs = module(inputs)
-            result.append(inputs)
-        return result
-
-
 class CellPreprocessor(nn.Module):
     """
     Aligning the shape of predecessors.
@@ -296,7 +281,8 @@ class CellBuilder:
                  C: nn.MaybeChoice[int],
                  num_nodes: int,
                  merge_op: Literal['all', 'loose_end'],
-                 first_cell_reduce: bool, last_cell_reduce: bool):
+                 first_cell_reduce: bool, last_cell_reduce: bool,
+                 drop_path_prob: float):
         self.C_prev_in = C_prev_in      # This is the out channels of the cell before last cell.
         self.C_in = C_in                # This is the out channesl of last cell.
         self.C = C                      # This is NOT C_out of this stage, instead, C_out = C * len(cell.output_node_indices)
@@ -305,6 +291,7 @@ class CellBuilder:
         self.merge_op: Literal['all', 'loose_end'] = merge_op
         self.first_cell_reduce = first_cell_reduce
         self.last_cell_reduce = last_cell_reduce
+        self.drop_path_prob = drop_path_prob
         self._expect_idx = 0
 
         # It takes an index that is the index in the repeat.
@@ -318,11 +305,16 @@ class CellBuilder:
                    op: str, channels: int, is_reduction_cell: bool):
         if is_reduction_cell and (
             input_index is None or input_index < self.num_predecessors
-        ):  # could be none when constructing search sapce
+        ):  # could be none when constructing search space
             stride = 2
         else:
             stride = 1
-        return OPS[op](channels, stride, True)
+        operation = OPS[op](channels, stride, True)
+        if self.drop_path_prob > 0 and not isinstance(operation, nn.Identity):
+            # Omit drop-path when operation is skip connect.
+            # https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/model.py#L54
+            return nn.Sequential(operation, DropPath_(self.drop_path_prob))
+        return operation
 
     def __call__(self, repeat_idx: int):
         if self._expect_idx != repeat_idx:
@@ -449,14 +441,14 @@ _INIT_PARAMETER_DOCS = """
 
     Parameters
     ----------
-    width : int or tuple of int
+    width
         A fixed initial width or a tuple of widths to choose from.
-    num_cells : int or tuple of int
+    num_cells
         A fixed number of cells (depths) to stack, or a tuple of depths to choose from.
-    dataset : "cifar" | "imagenet"
+    dataset
         The essential differences are in "stem" cells, i.e., how they process the raw image input.
         Choosing "imagenet" means more downsampling at the beginning of the network.
-    auxiliary_loss : bool
+    auxiliary_loss
         If true, another auxiliary classification head will produce the another prediction.
         This makes the output of network two logits in the training phase.
 
@@ -476,13 +468,15 @@ class NDS(nn.Module):
 
     NDS has a speciality that it has mutable depths/widths.
     This is implemented by accepting a list of int as ``num_cells`` / ``width``.
-    """ + _INIT_PARAMETER_DOCS + """
-    op_candidates : list of str
+    """ + _INIT_PARAMETER_DOCS.rstrip() + """
+    op_candidates
         List of operator candidates. Must be from ``OPS``.
-    merge_op : ``all`` or ``loose_end``
+    merge_op
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
-    num_nodes_per_cell : int
+    num_nodes_per_cell
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
+    drop_path_prob : float
+        Apply drop path. Enabled when it's set to be greater than 0.
     """
 
     def __init__(self,
@@ -492,12 +486,14 @@ class NDS(nn.Module):
                  width: Union[Tuple[int, ...], int] = 16,
                  num_cells: Union[Tuple[int, ...], int] = 20,
                  dataset: Literal['cifar', 'imagenet'] = 'imagenet',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__()
 
         self.dataset = dataset
         self.num_labels = 10 if dataset == 'cifar' else 1000
         self.auxiliary_loss = auxiliary_loss
+        self.drop_path_prob = drop_path_prob
 
         # preprocess the specified width and depth
         if isinstance(width, Iterable):
@@ -546,7 +542,7 @@ class NDS(nn.Module):
             # C_curr is number of channels for each operator in current stage.
             # C_out is usually `C * num_nodes_per_cell` because of concat operator.
             cell_builder = CellBuilder(op_candidates, C_pprev, C_prev, C_curr, num_nodes_per_cell,
-                                       merge_op, stage_idx > 0, last_cell_reduce)
+                                       merge_op, stage_idx > 0, last_cell_reduce, drop_path_prob)
             stage: Union[NDSStage, nn.Sequential] = NDSStage(cell_builder, num_cells_per_stage[stage_idx])
 
             if isinstance(stage, NDSStage):
@@ -581,7 +577,6 @@ class NDS(nn.Module):
 
         if auxiliary_loss:
             assert isinstance(self.stages[2], nn.Sequential), 'Auxiliary loss can only be enabled in retrain mode.'
-            self.stages[2] = SequentialBreakdown(cast(nn.Sequential, self.stages[2]))
             self.auxiliary_head = AuxiliaryHead(C_to_auxiliary, self.num_labels, dataset=self.dataset)  # type: ignore
 
         self.global_pooling = nn.AdaptiveAvgPool2d((1, 1))
@@ -595,12 +590,13 @@ class NDS(nn.Module):
             s0 = s1 = self.stem(inputs)
 
         for stage_idx, stage in enumerate(self.stages):
-            if stage_idx == 2 and self.auxiliary_loss:
-                s = list(stage([s0, s1]).values())
-                s0, s1 = s[-1]
-                if self.training:
+            if stage_idx == 2 and self.auxiliary_loss and self.training:
+                assert isinstance(stage, nn.Sequential), 'Auxiliary loss is only supported for fixed architecture.'
+                for block_idx, block in enumerate(stage):
                     # auxiliary loss is attached to the first cell of the last stage.
-                    logits_aux = self.auxiliary_head(s[0][1])
+                    s0, s1 = block([s0, s1])
+                    if block_idx == 0:
+                        logits_aux = self.auxiliary_head(s1)
             else:
                 s0, s1 = stage([s0, s1])
 
@@ -630,8 +626,8 @@ class NASNet(NDS):
     __doc__ = """
     Search space proposed in `Learning Transferable Architectures for Scalable Image Recognition <https://arxiv.org/abs/1707.07012>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~NASNet.NASNET_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~NASNet.NASNET_OPS`.
     It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
     """ + _INIT_PARAMETER_DOCS
 
@@ -650,27 +646,30 @@ class NASNet(NDS):
         'sep_conv_5x5',
         'sep_conv_7x7',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__(self.NASNET_OPS,
                          merge_op='loose_end',
                          num_nodes_per_cell=5,
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
 
 @model_wrapper
 class ENAS(NDS):
     __doc__ = """Search space proposed in `Efficient neural architecture search via parameter sharing <https://arxiv.org/abs/1802.03268>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~ENAS.ENAS_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~ENAS.ENAS_OPS`.
     It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
     """ + _INIT_PARAMETER_DOCS
 
@@ -681,19 +680,22 @@ class ENAS(NDS):
         'avg_pool_3x3',
         'max_pool_3x3',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__(self.ENAS_OPS,
                          merge_op='loose_end',
                          num_nodes_per_cell=5,
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
 
 @model_wrapper
@@ -701,8 +703,8 @@ class AmoebaNet(NDS):
     __doc__ = """Search space proposed in
     `Regularized evolution for image classifier architecture search <https://arxiv.org/abs/1802.01548>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~AmoebaNet.AMOEBA_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~AmoebaNet.AMOEBA_OPS`.
     It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
     """ + _INIT_PARAMETER_DOCS
 
@@ -716,12 +718,14 @@ class AmoebaNet(NDS):
         'dil_sep_conv_3x3',
         'conv_7x1_1x7',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
 
         super().__init__(self.AMOEBA_OPS,
                          merge_op='loose_end',
@@ -729,7 +733,8 @@ class AmoebaNet(NDS):
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
 
 @model_wrapper
@@ -737,8 +742,8 @@ class PNAS(NDS):
     __doc__ = """Search space proposed in
     `Progressive neural architecture search <https://arxiv.org/abs/1712.00559>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~PNAS.PNAS_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~PNAS.PNAS_OPS`.
     It has 5 nodes per cell, and the output is concatenation of all nodes in the cell.
     """ + _INIT_PARAMETER_DOCS
 
@@ -752,32 +757,41 @@ class PNAS(NDS):
         'max_pool_3x3',
         'dil_conv_3x3',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__(self.PNAS_OPS,
                          merge_op='all',
                          num_nodes_per_cell=5,
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
 
 @model_wrapper
 class DARTS(NDS):
     __doc__ = """Search space proposed in `Darts: Differentiable architecture search <https://arxiv.org/abs/1806.09055>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~NDS`.
-    Its operator candidates are :attribute:`~DARTS.DARTS_OPS`.
+    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    Its operator candidates are :attr:`~DARTS.DARTS_OPS`.
     It has 4 nodes per cell, and the output is concatenation of all nodes in the cell.
+
+    .. note::
+
+        ``none`` is not included in the operator candidates.
+        It has already been handled in the differentiable implementation of cell.
+
     """ + _INIT_PARAMETER_DOCS
 
     DARTS_OPS = [
-        'none',
+        # 'none',
         'max_pool_3x3',
         'avg_pool_3x3',
         'skip_connect',
@@ -786,19 +800,22 @@ class DARTS(NDS):
         'dil_conv_3x3',
         'dil_conv_5x5',
     ]
+    """The candidate operations."""
 
     def __init__(self,
                  width: Union[Tuple[int, ...], int] = (16, 24, 32),
                  num_cells: Union[Tuple[int, ...], int] = (4, 8, 12, 16, 20),
                  dataset: Literal['cifar', 'imagenet'] = 'cifar',
-                 auxiliary_loss: bool = False):
+                 auxiliary_loss: bool = False,
+                 drop_path_prob: float = 0.):
         super().__init__(self.DARTS_OPS,
                          merge_op='all',
                          num_nodes_per_cell=4,
                          width=width,
                          num_cells=num_cells,
                          dataset=dataset,
-                         auxiliary_loss=auxiliary_loss)
+                         auxiliary_loss=auxiliary_loss,
+                         drop_path_prob=drop_path_prob)
 
     @classmethod
     def load_searched_model(

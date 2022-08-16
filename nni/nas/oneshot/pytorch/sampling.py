@@ -5,14 +5,14 @@
 
 from __future__ import annotations
 import warnings
-from typing import Any
+from typing import Any, cast
 
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from .base_lightning import BaseOneShotLightningModule, MutationHook, no_default_hook
+from .base_lightning import MANUAL_OPTIMIZATION_NOTE, BaseOneShotLightningModule, MutationHook, no_default_hook
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
 from .supermodule.sampling import (
     PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy,
@@ -36,6 +36,9 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
     * :class:`nni.retiarii.nn.pytorch.Repeat`.
     * :class:`nni.retiarii.nn.pytorch.Cell`.
     * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
+
+    This strategy assumes inner evaluator has set
+    `automatic optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__ to true.
 
     Parameters
     ----------
@@ -73,9 +76,9 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
             'mixed_op_sampling': MixedOpPathSamplingPolicy
         }
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, *args, **kwargs):
         self.resample()
-        return self.model.training_step(batch, batch_idx)
+        return self.model.training_step(*args, **kwargs)
 
     def export(self) -> dict[str, Any]:
         """
@@ -115,6 +118,8 @@ class EnasLightningModule(RandomSamplingLightningModule):
 
     {{module_notes}}
 
+    {optimization_note}
+
     Parameters
     ----------
     {{module_params}}
@@ -133,6 +138,8 @@ class EnasLightningModule(RandomSamplingLightningModule):
         before updating the weights of RL controller.
     ctrl_grad_clip : float
         Gradient clipping value of controller.
+    log_prob_every_n_step : int
+        Log the probability of choices every N steps. Useful for visualization and debugging.
     reward_metric_name : str or None
         The name of the metric which is treated as reward.
         This will be not effective when there's only one metric returned from evaluator.
@@ -141,11 +148,12 @@ class EnasLightningModule(RandomSamplingLightningModule):
         Otherwise it raises an exception indicating multiple metrics are found.
     """.format(
         base_params=BaseOneShotLightningModule._mutation_hooks_note,
-        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
+        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES),
+        optimization_note=MANUAL_OPTIMIZATION_NOTE
     )
 
     __doc__ = _enas_note.format(
-        module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.utils.ConcatenateTrainValDataloader`.',
+        module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.pytorch.dataloader.ConcatLoader`.',
         module_params=BaseOneShotLightningModule._inner_module_note,
     )
 
@@ -162,6 +170,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
                  baseline_decay: float = .999,
                  ctrl_steps_aggregate: float = 20,
                  ctrl_grad_clip: float = 0,
+                 log_prob_every_n_step: int = 10,
                  reward_metric_name: str | None = None,
                  mutation_hooks: list[MutationHook] | None = None):
         super().__init__(inner_module, mutation_hooks)
@@ -181,33 +190,29 @@ class EnasLightningModule(RandomSamplingLightningModule):
         self.baseline = 0.
         self.ctrl_steps_aggregate = ctrl_steps_aggregate
         self.ctrl_grad_clip = ctrl_grad_clip
+        self.log_prob_every_n_step = log_prob_every_n_step
         self.reward_metric_name = reward_metric_name
 
     def configure_architecture_optimizers(self):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
 
     def training_step(self, batch_packed, batch_idx):
+        # The received batch is a tuple of (data, "train" | "val")
         batch, mode = batch_packed
 
         if mode == 'train':
             # train model params
             with torch.no_grad():
                 self.resample()
-            self.call_weight_optimizers('zero_grad')
             step_output = self.model.training_step(batch, batch_idx)
-            w_step_loss = step_output['loss'] \
-                if isinstance(step_output, dict) else step_output
-            self.manual_backward(w_step_loss)
-            self.call_weight_optimizers('step')
+            w_step_loss = step_output['loss'] if isinstance(step_output, dict) else step_output
+            self.advance_optimization(w_step_loss, batch_idx)
 
         else:
             # train ENAS agent
-            arc_opt = self.architecture_optimizers()
-            if not isinstance(arc_opt, optim.Optimizer):
-                raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
-            arc_opt.zero_grad()
-            self.resample()
 
+            # Run a sample to retrieve the reward
+            self.resample()
             step_output = self.model.validation_step(batch, batch_idx)
 
             # use the default metric of self.model as reward function
@@ -218,11 +223,13 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 if metric_name not in self.trainer.callback_metrics:
                     raise KeyError(f'Model reported metrics should contain a ``{metric_name}`` key but '
                                    f'found multiple (or zero) metrics without default: {list(self.trainer.callback_metrics.keys())}. '
-                                   f'Try to use self.log to report metrics with the specified key ``{metric_name}`` in validation_step, '
-                                   'and remember to set on_step=True.')
+                                   f'Please try to set ``reward_metric_name`` to be one of the keys listed above. '
+                                   f'If it is not working use self.log to report metrics with the specified key ``{metric_name}`` '
+                                   'in validation_step, and remember to set on_step=True.')
                 metric = self.trainer.callback_metrics[metric_name]
             reward: float = metric.item()
 
+            # Compute the loss and run back propagation
             if self.entropy_weight:
                 reward = reward + self.entropy_weight * self.controller.sample_entropy.item()  # type: ignore
             self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
@@ -236,15 +243,41 @@ class EnasLightningModule(RandomSamplingLightningModule):
             if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
                 if self.ctrl_grad_clip > 0:
                     nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
+
+                # Update the controller and zero out its gradients
+                arc_opt = cast(optim.Optimizer, self.architecture_optimizers())
                 arc_opt.step()
                 arc_opt.zero_grad()
 
+        self.advance_lr_schedulers(batch_idx)
+
+        if (batch_idx + 1) % self.log_prob_every_n_step == 0:
+            with torch.no_grad():
+                self.log_dict({'prob/' + k: v for k, v in self.export_probs().items()})
+
         return step_output
+
+    def on_train_epoch_start(self):
+        # Always zero out the gradients of ENAS controller at the beginning of epochs.
+        arc_opt = self.architecture_optimizers()
+        if not isinstance(arc_opt, optim.Optimizer):
+            raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
+        arc_opt.zero_grad()
+
+        return self.model.on_train_epoch_start()
 
     def resample(self):
         """Resample the architecture with ENAS controller."""
         sample = self.controller.resample()
         result = self._interpret_controller_sampling_result(sample)
+        for module in self.nas_modules:
+            module.resample(memo=result)
+        return result
+
+    def export_probs(self):
+        """Export the probability from ENAS controller directly."""
+        sample = self.controller.resample(return_prob=True)
+        result = self._interpret_controller_probability_result(sample)
         for module in self.nas_modules:
             module.resample(memo=result)
         return result
@@ -261,3 +294,14 @@ class EnasLightningModule(RandomSamplingLightningModule):
         for key in list(sample.keys()):
             sample[key] = space_spec[key].values[sample[key]]
         return sample
+
+    def _interpret_controller_probability_result(self, sample: dict[str, list[float]]) -> dict[str, Any]:
+        """Convert ``{label: [prob1, prob2, prob3]} to ``{label/choice: prob}``"""
+        space_spec = self.search_space_spec()
+        result = {}
+        for key in list(sample.keys()):
+            if len(space_spec[key].values) != len(sample[key]):
+                raise ValueError(f'Expect {space_spec[key].values} to be of the same length as {sample[key]}')
+            for value, weight in zip(space_spec[key].values, sample[key]):
+                result[f'{key}/{value}'] = weight
+        return result
