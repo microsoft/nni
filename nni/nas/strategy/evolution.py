@@ -167,36 +167,3 @@ class RegularizedEvolution(BaseStrategy):
             self._running_models = [g for g in self._running_models if g[1].status != ModelStatus.Failed]
             if number_of_failed_models > 0:
                 _logger.info('%d failed models are ignored. Will retry.', number_of_failed_models)
-
-
-class RandomEvolution(RegularizedEvolution):
-    """
-    Algorithm for random evolution.
-    """
-    def __init__(self, optimize_mode='maximize', population_size=10000, on_failure='ignore', model_filter=None):
-        super().__init__(optimize_mode=optimize_mode, population_size=population_size, sample_size=25, cycles=100,
-                 mutation_prob=0.1, on_failure=on_failure, model_filter=model_filter)
-
-    def random(self, search_space, fixed):
-        sampled = {k: random.choice(v) for k, v in search_space.items()}
-        sampled.update(fixed)
-        return sampled
-
-    def run(self, base_model, applied_mutators):
-        search_space = dry_run_for_search_space(base_model, applied_mutators)
-        # Run the first population regardless concurrency
-        _logger.info('Initializing the first population.')
-        while len(self._population) + len(self._running_models) <= self.population_size:
-            # try to submit new models
-            while query_available_resources() > 0:
-                config = self.random(search_space, {})
-                self._submit_config(config, base_model, applied_mutators)
-            # collect results
-            self._move_succeeded_models_to_population()
-            self._remove_failed_models_from_running_list()
-            time.sleep(self._polling_interval)
-
-            if len(self._population) >= self.population_size:
-                break
-
-

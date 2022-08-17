@@ -347,6 +347,21 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         else:
             return max(traverse_all_options(value_choice))
 
+    @staticmethod
+    def sliced_param(name: str, sub_param_shape, sup_param_shape, **kwargs):
+        assert name in ["weight", "bias"]
+        assert "module" in kwargs
+        module = kwargs["module"]
+        if name == "weight":
+            indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape[:2], sup_param_shape[:2])]
+            kernel_a, kernel_b = module.kernel_size
+            max_kernel_a, max_kernel_b = sup_param_shape[2:]
+            kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a) // 2, (max_kernel_b - kernel_b) // 2
+            indices.extend([slice(kernel_a_left, kernel_a_left + kernel_a), slice(kernel_b_top, kernel_b_top + kernel_b)])
+        else:
+            indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape, sup_param_shape)]
+        return indices
+
     def forward_with_args(self,
                           in_channels: int_or_int_dict,
                           out_channels: int_or_int_dict,

@@ -216,11 +216,6 @@ class ClsToken(nn.Module):
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         trunc_normal_(self.cls_token, std=.02)
 
-    def truncation(self, name, sub_param_shape, sup_param_shape):
-        assert name in ["cls_token"]
-        indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape, sup_param_shape)]
-        return indices
-
     def forward(self, x):
         return torch.cat((self.cls_token.expand(x.shape[0], -1, -1), x), dim=1)
 
@@ -240,6 +235,12 @@ class MixedClsToken(MixedOperation, ClsToken):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
+    @staticmethod
+    def sliced_param(name: str, sub_param_shape, sup_param_shape, **kwargs):
+        assert name in ["cls_token"]
+        indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape, sup_param_shape)]
+        return indices
+
     def forward_with_args(self, embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
         embed_dim_ = _W(embed_dim)
@@ -256,11 +257,6 @@ class AbsPosEmbed(nn.Module):
         super().__init__()
         self.pos_embed = nn.Parameter(torch.zeros(1, length, embed_dim))
         trunc_normal_(self.pos_embed, std=.02)
-
-    def truncation(self, name, sub_param_shape, sup_param_shape):
-        assert name in ["pos_embed"]
-        indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape, sup_param_shape)]
-        return indices
 
     def forward(self, x):
         return x + self.pos_embed
@@ -280,6 +276,12 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
 
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
+
+    @staticmethod
+    def sliced_param(name: str, sub_param_shape, sup_param_shape, **kwargs):
+        assert name in ["pos_embed"]
+        indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape, sup_param_shape)]
+        return indices
 
     def forward_with_args(self,  embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
@@ -387,6 +389,10 @@ class AutoformerSpace(nn.Module):
     @classmethod
     def get_extra_mutation_hooks(cls):
         return [MixedAbsPosEmbed.mutate, MixedClsToken.mutate]
+
+    @classmethod
+    def get_extra_mixed_oprations(cls):
+        return [MixedAbsPosEmbed, MixedClsToken]
 
     @classmethod
     def load_searched_model(
