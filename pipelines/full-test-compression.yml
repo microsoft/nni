@@ -35,18 +35,12 @@ stages:
     timeoutInMinutes: 60
 
     steps:
-    - template: templates/fix-apt-1es.yml
-      parameters:
-        check_gpu: true
+    - template: templates/check-gpu-status.yml
 
     - template: templates/install-dependencies.yml
       parameters:
         platform: ubuntu-latest-gpu
         python_env: venv
-
-    - script: |
-        python -m pip install "pytorch-lightning<1.7"
-      displayName: Pin PytorchLightning version
 
     - template: templates/install-nni.yml
 

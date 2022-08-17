@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 import nni
 
-from ..lightning import LightningModule, _AccuracyWithLogits, Lightning
+from ..lightning import LightningModule, AccuracyWithLogits, Lightning
 from .trainer import Trainer
 
 __all__ = [
@@ -148,7 +148,7 @@ class _ClassificationModule(_MultiModelSupervisedLearningModule):
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: optim.Optimizer = optim.Adam):
-        super().__init__(criterion, {'acc': _AccuracyWithLogits},
+        super().__init__(criterion, {'acc': AccuracyWithLogits},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 

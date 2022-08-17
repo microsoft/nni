@@ -160,7 +160,7 @@ class TrialDispatcher implements TrainingService {
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialDetail> {
-        const trialId: string = uniqueString(5);
+        const trialId: string = form.id === undefined ? uniqueString(5) : form.id;
 
         const trialJobDetail: TrialDetail = new TrialDetail(trialId, "WAITING", Date.now(), "", form);
 

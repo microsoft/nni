@@ -16,9 +16,8 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
-  - template: templates/fix-apt-1es.yml
-  # FIXME: GPU is not supported yet.
-  # Change to ubuntu-latest-gpu when it's done.
+  # TODO: We don't currently have a test for GPU.
+  # And nvidia-docker is not installed yet.
 
   - template: templates/install-dependencies.yml
     parameters:

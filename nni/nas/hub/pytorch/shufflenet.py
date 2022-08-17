@@ -224,29 +224,29 @@ class ShuffleNetSpace(nn.Module):
         for name, m in self.named_modules():
             if isinstance(m, nn.Conv2d):
                 if 'first' in name:
-                    torch.nn.init.normal_(m.weight, 0, 0.01)
+                    torch.nn.init.normal_(m.weight, 0, 0.01)  # type: ignore
                 else:
-                    torch.nn.init.normal_(m.weight, 0, 1.0 / m.weight.shape[1])
+                    torch.nn.init.normal_(m.weight, 0, 1.0 / m.weight.shape[1])  # type: ignore
                 if m.bias is not None:
-                    torch.nn.init.constant_(m.bias, 0)
+                    torch.nn.init.constant_(m.bias, 0)  # type: ignore
             elif isinstance(m, nn.BatchNorm2d):
                 if m.weight is not None:
-                    torch.nn.init.constant_(m.weight, 1)
+                    torch.nn.init.constant_(m.weight, 1)  # type: ignore
                 if m.bias is not None:
-                    torch.nn.init.constant_(m.bias, 0.0001)
+                    torch.nn.init.constant_(m.bias, 0.0001)  # type: ignore
                 if m.running_mean is not None:
-                    torch.nn.init.constant_(m.running_mean, 0)
+                    torch.nn.init.constant_(m.running_mean, 0)  # type: ignore
             elif isinstance(m, nn.BatchNorm1d):
                 if m.weight is not None:
-                    torch.nn.init.constant_(m.weight, 1)
+                    torch.nn.init.constant_(m.weight, 1)  # type: ignore
                 if m.bias is not None:
-                    torch.nn.init.constant_(m.bias, 0.0001)
+                    torch.nn.init.constant_(m.bias, 0.0001)  # type: ignore
                 if m.running_mean is not None:
-                    torch.nn.init.constant_(m.running_mean, 0)
+                    torch.nn.init.constant_(m.running_mean, 0)  # type: ignore
             elif isinstance(m, nn.Linear):
-                torch.nn.init.normal_(m.weight, 0, 0.01)
+                torch.nn.init.normal_(m.weight, 0, 0.01)  # type: ignore
                 if m.bias is not None:
-                    torch.nn.init.constant_(m.bias, 0)
+                    torch.nn.init.constant_(m.bias, 0)  # type: ignore
 
     @classmethod
     def fixed_arch(cls, arch: dict) -> FixedFactory:

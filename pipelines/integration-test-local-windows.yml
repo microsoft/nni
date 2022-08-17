@@ -11,6 +11,9 @@ jobs:
   timeoutInMinutes: 120
 
   steps:
+  - template: templates/check-gpu-status.yml
+    parameters:
+      platform: windows
 
   - template: templates/install-dependencies.yml
     parameters:
@@ -38,8 +41,7 @@ jobs:
   # We can't install it on-the-fly because we can't elevate the permission here.
   - powershell: |
       cd test
-      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local `
-        --exclude mnist-pytorch-local-gpu
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts local
     displayName: Integration test
 
   - template: templates/save-crashed-info.yml

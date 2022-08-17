@@ -20,11 +20,11 @@
       "gallery_name": "<gallery_name>",
       "image_name": "<image_name>",
       "image_version": "<image_version>",
-      "replication_regions": ["southeastasia", "westus2", "eastus"],
+      "replication_regions": ["southeastasia", "westus3", "eastus"],
       "storage_account_type": "Standard_LRS"
     },
 
-    "build_resource_group_name": "nni",
+    "build_resource_group_name": "<resource_group>",
     "vm_size": "Standard_D2s_v4",
 
     "allowed_inbound_ip_addresses": ["<ip_address>"],

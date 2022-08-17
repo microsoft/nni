@@ -75,7 +75,19 @@ class TorchGraph:
         if torch.__version__ >= '1.6.0':
             # only pytorch with version greater than 1.6.0 has the strict option
             kw_args['strict'] = False
-        self.trace = torch.jit.trace(model, dummy_input, **kw_args)
+        try:
+            import pytorch_lightning as pl
+        except ImportError:
+            is_lightning_module = False
+        else:
+            if isinstance(model, pl.LightningModule):
+                is_lightning_module = True
+            else:
+                is_lightning_module = False
+        if is_lightning_module:
+            self.trace = model.to_torchscript(method="trace", example_inputs=dummy_input, **kw_args)
+        else:
+            self.trace = torch.jit.trace(model, dummy_input, **kw_args)
         torch._C._jit_pass_inline(self.trace.graph)
         model.train(training)
 

@@ -56,6 +56,17 @@ class BaseSuperNetModule(nn.Module):
         """
         raise NotImplementedError()
 
+    def export_probs(self, memo: dict[str, Any]) -> dict[str, Any]:
+        """
+        Export the probability / logits of every choice got chosen.
+
+        Parameters
+        ----------
+        memo : dict[str, Any]
+            Use memo to avoid the same label gets exported multiple times.
+        """
+        raise NotImplementedError()
+
     def search_space_spec(self) -> dict[str, ParameterSpec]:
         """
         Space specification (sample points).
