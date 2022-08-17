@@ -37,6 +37,10 @@ def _test_file(json_path):
     # skip comparison of _evaluator
     orig_ir.pop('_evaluator')
     dump_ir.pop('_evaluator')
+    # skip three experiment fields
+    dump_ir.pop('model_id')
+    dump_ir.pop('python_class')
+    dump_ir.pop('python_init_params')
 
     assert orig_ir == dump_ir
 

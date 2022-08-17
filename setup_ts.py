@@ -243,6 +243,10 @@ def copy_nni_node(version):
         package_json['version'] = version
     json.dump(package_json, open('nni_node/package.json', 'w'), indent=2)
 
+    if sys.platform == 'win32':
+        # On Windows, manually install node-gyp for sqlite3.
+        _yarn('ts/nni_manager', 'global', 'add', 'node-gyp')
+
     # reinstall without development dependencies
     _yarn('ts/nni_manager', '--prod', '--cwd', str(Path('nni_node').resolve()))
 
@@ -261,6 +265,7 @@ _yarn_env['PATH'] = str(Path().resolve() / 'nni_node') + path_env_seperator + os
 _yarn_path = Path().resolve() / 'toolchain/yarn/bin' / yarn_executable
 
 def _yarn(path, *args):
+    _print('yarn ' + ' '.join(args) + f' (path: {path})')
     if os.environ.get('GLOBAL_TOOLCHAIN'):
         subprocess.run(['yarn', *args], cwd=path, check=True)
     else:

@@ -1,0 +1,18 @@
+parameters:
+- name: platform
+  type: string
+  default: linux
+
+steps:
+
+# Install GPU driver on Windows.
+# Installer has already been downloaded and saved in the image.
+- powershell: |
+    Start-Process -Verb RunAs -FilePath "$env:ProgramData\driver_installer.exe" -ArgumentList "/s /n" -Wait
+  displayName: (Windows) Install GPU driver
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
+
+# Make sure GPU isn't broken.
+- script: |
+    nvidia-smi
+  displayName: Check GPU status

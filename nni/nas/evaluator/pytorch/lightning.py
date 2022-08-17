@@ -27,7 +27,7 @@ from nni.typehint import Literal
 
 __all__ = [
     'LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression',
-    '_AccuracyWithLogits', '_SupervisedLearningModule', '_ClassificationModule', '_RegressionModule',
+    'SupervisedLearningModule', 'ClassificationModule', 'RegressionModule', 'AccuracyWithLogits',
     # FIXME: hack to make it importable for tests
 ]
 
@@ -102,12 +102,15 @@ class Lightning(Evaluator):
         Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list of them, specifying validation samples.
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
         It can be `any types of dataloader supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
+    fit_kwargs
+        Keyword arguments passed to ``trainer.fit()``.
     """
 
     def __init__(self, lightning_module: LightningModule, trainer: Trainer,
                  train_dataloaders: Optional[Any] = None,
                  val_dataloaders: Optional[Any] = None,
-                 train_dataloader: Optional[Any] = None):
+                 train_dataloader: Optional[Any] = None,
+                 fit_kwargs: Optional[Dict[str, Any]] = None):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
         if train_dataloader is not None:
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
@@ -117,7 +120,7 @@ class Lightning(Evaluator):
         else:
             # this is not isinstance(trainer, Trainer) because with a different trace call, it can be different
             assert (isinstance(trainer, pl.Trainer) and is_traceable(trainer)) or isinstance(trainer, cgo_trainer.Trainer), \
-                f'Trainer must be imported from {__name__} or nni.nas.evaluator.pytorch.cgo.trainer'
+                f'Trainer must be imported from {__name__} or nni.retiarii.evaluator.pytorch.cgo.trainer'
         if not _check_dataloader(train_dataloaders):
             warnings.warn(f'Please try to wrap PyTorch DataLoader with nni.trace or '
                           f'import DataLoader from {__name__}: {train_dataloaders}',
@@ -130,6 +133,7 @@ class Lightning(Evaluator):
         self.trainer = trainer
         self.train_dataloaders = train_dataloaders
         self.val_dataloaders = val_dataloaders
+        self.fit_kwargs = fit_kwargs or {}
 
     @staticmethod
     def _load(ir):
@@ -178,7 +182,7 @@ class Lightning(Evaluator):
             The model to fit.
         """
         self.module.set_model(model)
-        return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders)
+        return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders, **self.fit_kwargs)
 
 
 def _check_dataloader(dataloader):
@@ -194,7 +198,7 @@ def _check_dataloader(dataloader):
 
 ### The following are some commonly used Lightning modules ###
 
-class _SupervisedLearningModule(LightningModule):
+class SupervisedLearningModule(LightningModule):
 
     trainer: pl.Trainer
 
@@ -273,19 +277,19 @@ class _SupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-class _AccuracyWithLogits(torchmetrics.Accuracy):
+class AccuracyWithLogits(torchmetrics.Accuracy):
     def update(self, pred, target):
         return super().update(nn_functional.softmax(pred, dim=-1), target)
 
 
 @nni.trace
-class _ClassificationModule(_SupervisedLearningModule):
+class ClassificationModule(SupervisedLearningModule):
     def __init__(self, criterion: Type[nn.Module] = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: Type[optim.Optimizer] = optim.Adam,
                  export_onnx: bool = True):
-        super().__init__(criterion, {'acc': _AccuracyWithLogits},
+        super().__init__(criterion, {'acc': AccuracyWithLogits},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer,
                          export_onnx=export_onnx)
 
@@ -341,14 +345,14 @@ class Classification(Lightning):
         if train_dataloader is not None:
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
             train_dataloaders = train_dataloader
-        module = _ClassificationModule(criterion=criterion, learning_rate=learning_rate,
-                                       weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
+        module = ClassificationModule(criterion=criterion, learning_rate=learning_rate,
+                                      weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
         super().__init__(module, Trainer(**trainer_kwargs),
                          train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
 
 
 @nni.trace
-class _RegressionModule(_SupervisedLearningModule):
+class RegressionModule(SupervisedLearningModule):
     def __init__(self, criterion: Type[nn.Module] = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
@@ -406,7 +410,14 @@ class Regression(Lightning):
         if train_dataloader is not None:
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
             train_dataloaders = train_dataloader
-        module = _RegressionModule(criterion=criterion, learning_rate=learning_rate,
-                                   weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
+        module = RegressionModule(criterion=criterion, learning_rate=learning_rate,
+                                  weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
         super().__init__(module, Trainer(**trainer_kwargs),
                          train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
+
+
+# Alias for backwards compatibility
+_SupervisedLearningModule = SupervisedLearningModule
+_AccuracyWithLogits = AccuracyWithLogits
+_ClassificationModule = ClassificationModule
+_RegressionModule = RegressionModule

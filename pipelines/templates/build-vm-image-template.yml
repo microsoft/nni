@@ -1,16 +1,51 @@
+# BEFORE READING:
+#
+# 1. We are now running agents on 1ES, all the notes about VMSS can be safely ignored.
+# 2. Many actions can be done on both cloud shell and web portal. Choose whichever you prefer.
+
 steps:
 - script: |
     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
   displayName: Install azcli
 
-# Please follow the tutorial of [image builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview)
-# to set up a managed identity, and,
-# 1. Assign the role following the instruction.
-# 2. Assign contributor role of the resource group to the identity.
-# 3. Add the identity to VMSS.
-#
-# Update 2022/7 (running on Microsoft-hosted agents).
+# Update 2022/7 (running on Microsoft-hosted agents / 1ES agents).
 # Use a service principal. This service principal must be assigned contributor access to the resource group.
+#
+# Alternative option: managed identity.
+# Follow tutorial of [image builder](https://docs.microsoft.com/en-us/azure/virtual-machines/image-builder-overview).
+#
+# Either way, the identity / service principal must be assigned contributor access to the resource group.
+# We also added the following role (but I'm not sure whether it's necessary):
+#
+# {
+#   "properties": {
+#     "roleName": "ImageBuilderRole",
+#     "description": "Image Builder access to create resources for the image build, you should delete or split out as appropriate",
+#     "assignableScopes": [
+#       "/subscriptions/<subscription_id>/resourceGroups/<resource_group>"
+#     ],
+#     "permissions": [
+#       {
+#         "actions": [
+#           "Microsoft.Compute/galleries/read",
+#           "Microsoft.Compute/galleries/images/read",
+#           "Microsoft.Compute/galleries/images/versions/read",
+#           "Microsoft.Compute/galleries/images/versions/write",
+#           "Microsoft.Compute/images/write",
+#           "Microsoft.Compute/images/read",
+#           "Microsoft.Compute/images/delete",
+#           "Microsoft.VirtualMachineImages/imageTemplates/write",
+#           "Microsoft.VirtualMachineImages/imageTemplates/read",
+#           "Microsoft.VirtualMachineImages/imageTemplates/delete"
+#         ],
+#         "notActions": [],
+#         "dataActions": [],
+#         "notDataActions": []
+#       }
+#     ]
+#   }
+# }
+#
 - script: |
     az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
   displayName: Login to Azure
@@ -28,10 +63,12 @@ steps:
     az provider show -n Microsoft.Network -o json
   displayName: Register features
 
-# Need to create an image gallerybefore this.
-# Only need to create once.
+# Need to create an image gallery before this.
+# Only need to create once (can be done on web portal).
 # az sig create --resource-group <resource_group> --gallery-name <sig_name>
-
+#
+# NOTE: Remember to add READER access to the image gallery for "1ES Resource Management".
+#
 # Add a image definition (also only once).
 # az sig image-definition create -g <resource_group> \
 #   --gallery-name <sig_name> \
@@ -45,6 +82,8 @@ steps:
 #   --sku 20_04-nni \
 #   --os-type Linux \
 #   --hyper-v-generation V2
+#
+# This can be done on web portal, remember to choose V2 for Hyper-V generation.
 
 - script: |
     set -e
@@ -96,7 +135,7 @@ steps:
 #    The workaround here is to use a monitor to detect the machine ready signal and change its WinRM port.
 - script: |
     cd test/vso_tools/build_vm
-    python3 packer_build_windows.py
+    python3 packer_build_windows.py $(packer_config).json $(resource_group)
   displayName: (Windows) Packer build
   condition: and(succeeded(), contains(variables['packer_config'], 'windows'))
 
@@ -109,14 +148,14 @@ steps:
 # TODO: Should delete the managed image after build is done.
 # Image gallery alone is enough. Keeping it for now for debugging purposes.
 
+# No further actions are needed here. VM images are already set to latest. They should be auto-updated.
+# In case you want to do it on your own:
+#
 # To deploy the image on VMSS, run this in Cloud Shell:
 # az vmss update --resource-group nni --name nni-windows-it \
 #   --set virtualMachineProfile.storageProfile.imageReference.id=/subscriptions/{subscriptionId}/resourceGroups/nni/providers/Microsoft.Compute/galleries/nniImageGallery/images/nniWindowsImage/versions/Latest
 #
+# To deploy the image on 1ES, similar actions need to be performed on the web portal of 1ES managed images.
+#
 # Probably need to enlarge the disk size, in case it's too small:
 # az vmss update -n nni-it -g nni --set virtualMachineProfile.storageProfile.osDisk.diskSizeGb=50
-#
-# No need to update the image every time, because it's already set to latest.
-#
-# NOTE: After using 1ES pool, the pool image has to be updated manually to the latest version.
-# However, no successful build has been performed yet, because of resource shortage in Southeast Asia.

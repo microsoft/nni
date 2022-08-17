@@ -28,7 +28,6 @@ def create_lighting_evaluator() -> LightningEvaluator:
         max_steps=50,
         logger=TensorBoardLogger(Path(__file__).parent.parent / 'lightning_logs', name="resnet"),
     )
-    pl.Trainer()
     pl_trainer.num_sanity_val_steps = 0
     pl_data = nni.trace(MNISTDataModule)(data_dir='data/mnist')
     evaluator = LightningEvaluator(pl_trainer, pl_data, dummy_input=torch.rand(8, 1, 28, 28))
