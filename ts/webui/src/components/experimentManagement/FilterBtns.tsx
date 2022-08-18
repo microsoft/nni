@@ -60,6 +60,7 @@ class FilterBtns extends React.Component<FilterBtnsProps, {}> {
                     ariaLabel='Select a date'
                     value={selectedStartDate}
                     onSelectDate={getSelectedData.bind(this, 'start')}
+                    className='filter-condition-date'
                 />
                 <DatePicker
                     label='End time'
@@ -69,6 +70,7 @@ class FilterBtns extends React.Component<FilterBtnsProps, {}> {
                     ariaLabel='Select a date'
                     value={selectedEndDate}
                     onSelectDate={getSelectedData.bind(this, 'end')}
+                    className='filter-condition-date'
                 />
                 <DefaultButton onClick={setSearchSource.bind(this)} className='reset'>
                     <Icon iconName='Refresh' />

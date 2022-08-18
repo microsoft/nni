@@ -70,6 +70,15 @@ const SUPPORTED_SEARCH_SPACE_TYPE = [
 ];
 
 const TOOLTIP_BACKGROUND_COLOR = '#484848';
+const TOOLTIPSTYLE = {
+    calloutProps: {
+        styles: {
+            beak: { background: TOOLTIP_BACKGROUND_COLOR },
+            beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+            calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+        }
+    }
+};
 const MAX_TRIAL_NUMBERS = 'Max trial No.';
 const RETIARIIPARAMETERS = 'mutation_summary';
 
@@ -88,7 +97,7 @@ export {
     METRIC_GROUP_UPDATE_SIZE,
     CONCURRENCYTOOLTIP,
     SUPPORTED_SEARCH_SPACE_TYPE,
-    TOOLTIP_BACKGROUND_COLOR,
+    TOOLTIPSTYLE,
     MAX_TRIAL_NUMBERS,
     RETIARIIPARAMETERS
 };

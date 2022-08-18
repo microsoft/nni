@@ -1,17 +1,6 @@
 import React from 'react';
-import {
-    DefaultButton,
-    IColumn,
-    Icon,
-    PrimaryButton,
-    Stack,
-    StackItem,
-    TooltipHost,
-    DirectionalHint,
-    Checkbox
-} from '@fluentui/react';
+import { DefaultButton, IColumn, Icon, PrimaryButton, Stack, StackItem, Checkbox } from '@fluentui/react';
 import { Trial } from '@model/trial';
-import { TOOLTIP_BACKGROUND_COLOR } from '@static/const';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { convertDuration, formatTimestamp, copyAndSort, parametersType, _inferColumnTitle } from '@static/function';
 import { SortInfo, SearchItems } from '@static/interface';
@@ -26,6 +15,7 @@ import KillJobIndex from './tableFunction/killJob/KillJobIndex';
 import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction';
 import PaginationTable from '@components/common/PaginationTable';
 import CopyButton from '@components/common/CopyButton';
+import TooltipHostIndex from '@components/common/TooltipHostIndex';
 
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -380,66 +370,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     )
                 }),
                 ...(k === 'message' && {
-                    onRender: (record): React.ReactNode =>
-                        record.message.length > 15 ? (
-                            <TooltipHost
-                                content={record.message}
-                                directionalHint={DirectionalHint.bottomCenter}
-                                tooltipProps={{
-                                    calloutProps: {
-                                        styles: {
-                                            beak: { background: TOOLTIP_BACKGROUND_COLOR },
-                                            beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
-                                            calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
-                                        }
-                                    }
-                                }}
-                            >
-                                <div>{record.message}</div>
-                            </TooltipHost>
-                        ) : (
-                            <div>{record.message}</div>
-                        )
+                    onRender: (record): React.ReactNode => <TooltipHostIndex value={record.message} />
                 }),
                 ...((k.startsWith('metric/') || k.startsWith('space/')) && {
                     // show tooltip
-                    onRender: (record): React.ReactNode => (
-                        <TooltipHost
-                            content={record[k]}
-                            directionalHint={DirectionalHint.bottomCenter}
-                            tooltipProps={{
-                                calloutProps: {
-                                    styles: {
-                                        beak: { background: TOOLTIP_BACKGROUND_COLOR },
-                                        beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
-                                        calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
-                                    }
-                                }
-                            }}
-                        >
-                            <div className='ellipsis'>{record[k]}</div>
-                        </TooltipHost>
-                    )
+                    onRender: (record): React.ReactNode => <TooltipHostIndex value={record[k]} />
                 }),
                 ...(k === 'latestAccuracy' && {
                     // FIXME: this is ad-hoc
-                    onRender: (record): React.ReactNode => (
-                        <TooltipHost
-                            content={record._formattedLatestAccuracy}
-                            directionalHint={DirectionalHint.bottomCenter}
-                            tooltipProps={{
-                                calloutProps: {
-                                    styles: {
-                                        beak: { background: TOOLTIP_BACKGROUND_COLOR },
-                                        beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
-                                        calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
-                                    }
-                                }
-                            }}
-                        >
-                            <div className='ellipsis'>{record.formattedLatestAccuracy}</div>
-                        </TooltipHost>
-                    )
+                    onRender: (record): React.ReactNode => <TooltipHostIndex value={record._formattedLatestAccuracy} />
                 }),
                 ...(['startTime', 'endTime'].includes(k) && {
                     onRender: (record): React.ReactNode => <span>{formatTimestamp(record[k], '--')}</span>
