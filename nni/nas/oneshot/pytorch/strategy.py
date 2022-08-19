@@ -13,7 +13,6 @@ When adding/modifying a new strategy in this file, don't forget to link it in st
 from __future__ import annotations
 
 import warnings
-import itertools
 from typing import Any, Type
 
 import torch.nn as nn
@@ -150,89 +149,14 @@ class RandomOneShot(OneShotStrategy):
 
     def attach_model(self, base_model):
         # This may conflict with the `self.run`` method. In the `run`, the base_model and evaluator are wrapped in `Model`. 
-        from nni.nas.oneshot.pytorch.base_lightning import traverse_and_mutate_submodules
         _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
 
         if not isinstance(base_model, nn.Module):
             raise TypeError('Model is not a nn.Module. ' + _reason)
-        
-        extra_mixed_ops = getattr(base_model, "get_extra_mixed_oprations")() if hasattr(base_model, "get_extra_mixed_oprations") else []
-        self.mixed_ops_mappings = {op.bound_type:op for op in extra_mixed_ops+NATIVE_MIXED_OPERATIONS}
 
-        mutation_hooks = self.oneshot_kwargs.get("mutation_hooks", []) + RandomSamplingLightningModule.default_mutation_hooks(None)
-        module_list = traverse_and_mutate_submodules(base_model, mutation_hooks, RandomSamplingLightningModule.mutate_kwargs(None), topdown=True)
-        self.base_model = base_model
-        return module_list
+        self.model = self.oneshot_module(base_model, **self.oneshot_kwargs)
 
-    def sub_state_dict(self, model):
-        """
-        Truncate the state dict of the fixed subnet from that of the search space.
-
-        For example, when you already have a state dict for the base model / search space (which often
-        happens when you have trained a supernet with one-shot strategies), the state dict isn't organized
-        in the same way as when a sub-model is sampled from the search space. This patch will help
-        the modules in the sub-model find the corresponding name and param in the base model.
-        """
-        # first get the full mapping
-        full_mapping = {}
-        super_state_dict = self.base_model.state_dict()
-        state_dict = model.state_dict()
-        unupdates = list(state_dict.keys())
-        
-        def update_state_dict(src_prefix, tar_prefix, module):
-            if hasattr(module, STATE_DICT_PY_MAPPING):
-                # only values are complete
-                local_map = getattr(module, STATE_DICT_PY_MAPPING)
-            elif hasattr(module, STATE_DICT_PY_MAPPING_PARTIAL):
-                # keys and values are both incomplete
-                local_map = getattr(module, STATE_DICT_PY_MAPPING_PARTIAL)
-                local_map = {k: tar_prefix + v for k, v in local_map.items()}
-            else:
-                # no mapping
-                local_map = {}
-
-            if '__self__' in local_map:
-                # special case, overwrite prefix
-                tar_prefix = local_map['__self__'] + '.'
-
-            for key, value in local_map.items():
-                if key != '' and key not in module._modules:  # not a sub-module, probably a parameter
-                    full_mapping[src_prefix + key] = value
-
-            # To deal with leaf nodes.
-            for name, sub_param in itertools.chain(module._parameters.items(), module._buffers.items()):  # direct children
-                if sub_param is None or name in module._non_persistent_buffers_set:
-                    # it won't appear in state dict
-                    continue
-                if (src_prefix + name) not in full_mapping:
-                    full_mapping[src_prefix + name] = tar_prefix + name
-
-                sup_param = super_state_dict[tar_prefix + name]
-
-                assert sub_param.ndim == sup_param.ndim
-
-                mixedop = self.mixed_ops_mappings.get(type(module), None)
-                # slice the params according to the custom defined method.
-                if hasattr(mixedop, "sliced_param"):
-                    indices = getattr(mixedop, "sliced_param")(name, sub_param.shape, sup_param.shape, module=module)
-                # default param slice method.
-                else:
-                    indices = [slice(0, min(i, j)) for i, j in zip(sub_param.shape, sup_param.shape)]
-
-                state_dict[src_prefix + name] = sup_param[indices]
-                unupdates.remove(src_prefix + name)
-
-            for name, child in module.named_children():
-                # sub-modules
-                update_state_dict(
-                    src_prefix + name + '.',
-                    local_map.get(name, tar_prefix + name) + '.',  # if mapping doesn't exist, respect the prefix
-                    child
-                )
-
-        update_state_dict('', '', model)
-
-        if len(unupdates) != 0:
-            warnings.warn('Some parameters of the subnetwork are not updated.', RuntimeWarning)
-
-        return state_dict
+    def sub_state_dict(self, arch, destination=None, prefix='', keep_vars=False):
+        self.model.resample(arch)
+        base_model = self.model.model
+        return base_model.sub_state_dict(destination, prefix, keep_vars)

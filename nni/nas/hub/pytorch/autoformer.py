@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import itertools
 from typing import Optional, Tuple, cast, Any, Dict
 
 import torch
@@ -235,16 +236,24 @@ class MixedClsToken(MixedOperation, ClsToken):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    @staticmethod
-    def sliced_param(name: str, sub_param_shape, sup_param_shape, **kwargs):
-        assert name in ["cls_token"]
-        indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape, sup_param_shape)]
-        return indices
+    def _slice_param(self, embed_dim, **kwargs):
+        embed_dim_ = _W(embed_dim)
+        cls_token = _S(self.cls_token)[..., :embed_dim_]
+        return cls_token
+
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
+        cls_token = self._slice_param(**kwargs)
+        params = {"cls_token": cls_token}
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
+            if value is None or name in self._non_persistent_buffers_set:
+                continue
+            value = params.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
 
     def forward_with_args(self, embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
-        embed_dim_ = _W(embed_dim)
-        cls_token = _S(self.cls_token)[..., :embed_dim_]
+        cls_token = self._slice_param(embed_dim)
 
         return torch.cat((cls_token.expand(inputs.shape[0], -1, -1), inputs), dim=1)
 
@@ -277,16 +286,24 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    @staticmethod
-    def sliced_param(name: str, sub_param_shape, sup_param_shape, **kwargs):
-        assert name in ["pos_embed"]
-        indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape, sup_param_shape)]
-        return indices
+    def _slice_param(self, embed_dim, **kwargs):
+        embed_dim_ = _W(embed_dim)
+        pos_embed = _S(self.pos_embed)[..., :embed_dim_]
+        return pos_embed
+
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
+        pos_embed = self._slice_param(**kwargs)
+        params = {"pos_embed": pos_embed}
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
+            if value is None or name in self._non_persistent_buffers_set:
+                continue
+            value = params.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
 
     def forward_with_args(self,  embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
-        embed_dim_ = _W(embed_dim)
-        pos_embed = _S(self.pos_embed)[..., :embed_dim_]
+        pos_embed = self._slice_param(embed_dim)
 
         return inputs + pos_embed
 
@@ -389,10 +406,6 @@ class AutoformerSpace(nn.Module):
     @classmethod
     def get_extra_mutation_hooks(cls):
         return [MixedAbsPosEmbed.mutate, MixedClsToken.mutate]
-
-    @classmethod
-    def get_extra_mixed_oprations(cls):
-        return [MixedAbsPosEmbed, MixedClsToken]
 
     @classmethod
     def load_searched_model(

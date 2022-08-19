@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
+import itertools
 from typing import Any
 
 import torch.nn as nn
@@ -104,3 +106,29 @@ class BaseSuperNetModule(nn.Module):
             See :class:`BaseOneShotLightningModule <nni.retiarii.oneshot.pytorch.base_lightning.BaseOneShotLightningModule>` for details.
         """
         raise NotImplementedError()
+
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
+            if value is None or name in self._non_persistent_buffers_set:
+                # it won't appear in state dict
+                continue
+            destination[prefix + name] = value if keep_vars else value.detach()
+
+    def sub_state_dict(self, destination=None, prefix='', keep_vars=False):
+        if destination is None:
+            destination = OrderedDict()
+            destination._metadata = OrderedDict()
+
+        local_metadata = dict(version=self._version)
+        if hasattr(destination, "_metadata"):
+            destination._metadata[prefix[:-1]] = local_metadata
+
+        self._save_to_sub_state_dict(destination, prefix, keep_vars)
+        for name, module in self._modules.items():
+            if module is not None:
+                module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+        for hook in self._state_dict_hooks.values():
+            hook_result = hook(self, destination, prefix, local_metadata)
+            if hook_result is not None:
+                destination = hook_result
+        return destination

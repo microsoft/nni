@@ -250,20 +250,32 @@ class MixedLinear(MixedOperation, nn.Linear):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def forward_with_args(self,
-                          in_features: int_or_int_dict,
-                          out_features: int_or_int_dict,
-                          inputs: torch.Tensor) -> torch.Tensor:
-
+    def _slice_param(self, in_features: int_or_int_dict, out_features: int_or_int_dict, **kwargs):
         in_features_ = _W(in_features)
         out_features_ = _W(out_features)
 
         weight = _S(self.weight)[:out_features_]
         weight = _S(weight)[:, :in_features_]
-        if self.bias is None:
-            bias = self.bias
-        else:
-            bias = _S(self.bias)[:out_features_]
+        bias = self.bias if self.bias is None else _S(self.bias)[:out_features_]
+
+        return weight, bias
+
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
+        weight, bias = self._slice_param(**kwargs)
+        params = {"weight": weight, "bias": bias}
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
+            if value is None or name in self._non_persistent_buffers_set:
+                continue
+            value = params.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
+
+    def forward_with_args(self,
+                          in_features: int_or_int_dict,
+                          out_features: int_or_int_dict,
+                          inputs: torch.Tensor) -> torch.Tensor:
+
+        weight, bias = self._slice_param(in_features, out_features)
 
         return F.linear(inputs, weight, bias)
 
@@ -347,34 +359,23 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         else:
             return max(traverse_all_options(value_choice))
 
-    @staticmethod
-    def sliced_param(name: str, sub_param_shape, sup_param_shape, **kwargs):
-        assert name in ["weight", "bias"]
-        assert "module" in kwargs
-        module = kwargs["module"]
-        if name == "weight":
-            indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape[:2], sup_param_shape[:2])]
-            kernel_a, kernel_b = module.kernel_size
-            max_kernel_a, max_kernel_b = sup_param_shape[2:]
-            kernel_a_left, kernel_b_top = (max_kernel_a - kernel_a) // 2, (max_kernel_b - kernel_b) // 2
-            indices.extend([slice(kernel_a_left, kernel_a_left + kernel_a), slice(kernel_b_top, kernel_b_top + kernel_b)])
-        else:
-            indices = [slice(0, min(i, j)) for i, j in zip(sub_param_shape, sup_param_shape)]
-        return indices
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
+        weight, bias, _ = self._slice_param(**kwargs)
+        params = {"weight": weight, "bias": bias}
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
+            if value is None or name in self._non_persistent_buffers_set:
+                continue
+            value = params.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
 
-    def forward_with_args(self,
-                          in_channels: int_or_int_dict,
-                          out_channels: int_or_int_dict,
-                          kernel_size: scalar_or_scalar_dict[_int_or_tuple],
-                          stride: _int_or_tuple,
-                          padding: scalar_or_scalar_dict[_int_or_tuple],
-                          dilation: int,
-                          groups: int_or_int_dict,
-                          inputs: torch.Tensor) -> torch.Tensor:
-
-        if any(isinstance(arg, dict) for arg in [stride, dilation]):
-            raise ValueError(_diff_not_compatible_error.format('stride, dilation', 'Conv2d'))
-
+    def _slice_param(self, 
+                    in_channels: int_or_int_dict,
+                    out_channels: int_or_int_dict,
+                    kernel_size: scalar_or_scalar_dict[_int_or_tuple],
+                    groups: int_or_int_dict,
+                    **kwargs
+        ):
         in_channels_ = _W(in_channels)
         out_channels_ = _W(out_channels)
 
@@ -384,6 +385,8 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
 
         if not isinstance(groups, dict):
             weight = _S(weight)[:, :in_channels_ // groups]
+            # palce holder
+            in_channels_per_group = None
         else:
             assert 'groups' in self.mutable_arguments
             err_message = 'For differentiable one-shot strategy, when groups is a ValueChoice, ' \
@@ -398,22 +401,9 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
                 raise ValueError(err_message)
             if in_channels_per_group != int(in_channels_per_group):
                 raise ValueError(f'Input channels per group is found to be a non-integer: {in_channels_per_group}')
-            if inputs.size(1) % in_channels_per_group != 0:
-                raise RuntimeError(
-                    f'Input channels must be divisible by in_channels_per_group, but the input shape is {inputs.size()}, '
-                    f'while in_channels_per_group = {in_channels_per_group}'
-                )
 
             # Compute sliced weights and groups (as an integer)
             weight = _S(weight)[:, :int(in_channels_per_group)]
-            groups = inputs.size(1) // int(in_channels_per_group)
-
-        # slice center
-        if isinstance(kernel_size, dict):
-            # If kernel size is a dict, ignore choices in padding.
-            if isinstance(self.padding, str):
-                raise ValueError(f'Use "{self.padding}" in padding is not supported.')
-            padding = self.padding  # max padding, must be a tuple
 
         kernel_a, kernel_b = self._to_tuple(kernel_size)
         kernel_a_, kernel_b_ = _W(kernel_a), _W(kernel_b)
@@ -422,6 +412,39 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         weight = _S(weight)[:, :, kernel_a_left:kernel_a_left + kernel_a_, kernel_b_top:kernel_b_top + kernel_b_]
 
         bias = _S(self.bias)[:out_channels_] if self.bias is not None else None
+
+        return weight, bias, in_channels_per_group
+
+    def forward_with_args(self,
+                          in_channels: int_or_int_dict,
+                          out_channels: int_or_int_dict,
+                          kernel_size: scalar_or_scalar_dict[_int_or_tuple],
+                          stride: _int_or_tuple,
+                          padding: scalar_or_scalar_dict[_int_or_tuple],
+                          dilation: int,
+                          groups: int_or_int_dict,
+                          inputs: torch.Tensor) -> torch.Tensor:
+
+        if any(isinstance(arg, dict) for arg in [stride, dilation]):
+            raise ValueError(_diff_not_compatible_error.format('stride, dilation', 'Conv2d'))
+
+        weight, bias, in_channels_per_group = self._slice_param(in_channels, out_channels, kernel_size, groups)
+
+        if isinstance(groups, dict):
+            if inputs.size(1) % in_channels_per_group != 0:
+                raise RuntimeError(
+                    f'Input channels must be divisible by in_channels_per_group, but the input shape is {inputs.size()}, '
+                    f'while in_channels_per_group = {in_channels_per_group}'
+                )
+            else:
+                groups = inputs.size(1) // int(in_channels_per_group)
+
+        # slice center
+        if isinstance(kernel_size, dict):
+            # If kernel size is a dict, ignore choices in padding.
+            if isinstance(self.padding, str):
+                raise ValueError(f'Use "{self.padding}" in padding is not supported.')
+            padding = self.padding  # max padding, must be a tuple
 
         # The rest parameters only need to be converted to tuple
         stride_ = self._to_tuple(stride)
@@ -456,6 +479,30 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
+    def _slice_param(self, num_features: int_or_int_dict, **kwargs):
+        if isinstance(num_features, dict):
+            num_features = self.num_features
+        weight, bias = self.weight, self.bias
+        running_mean, running_var = self.running_mean, self.running_var
+
+        if num_features < self.num_features:
+            weight = weight[:num_features]
+            bias = bias[:num_features]
+            running_mean = None if running_mean is None else running_mean[:num_features]
+            running_var = None if running_var is None else running_var[:num_features]
+
+        return weight, bias, running_mean, running_var
+
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
+        weight, bias, running_mean, running_var = self._slice_param(**kwargs)
+        params = {"weight": weight, "bias": bias, "running_mean": running_mean, "running_var": running_var}
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
+            if value is None or name in self._non_persistent_buffers_set:
+                continue
+            value = params.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
+
     def forward_with_args(self,
                           num_features: int_or_int_dict,
                           eps: float,
@@ -465,19 +512,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
         if any(isinstance(arg, dict) for arg in [eps, momentum]):
             raise ValueError(_diff_not_compatible_error.format('eps and momentum', 'BatchNorm2d'))
 
-        if isinstance(num_features, dict):
-            num_features = self.num_features
-
-        weight, bias = self.weight, self.bias
-        running_mean, running_var = self.running_mean, self.running_var
-
-        if num_features < self.num_features:
-            weight = weight[:num_features]
-            bias = bias[:num_features]
-            if running_mean is not None:
-                running_mean = running_mean[:num_features]
-            if running_var is not None:
-                running_var = running_var[:num_features]
+        weight, bias, running_mean, running_var = self._slice_param(num_features)
 
         if self.training:
             bn_training = True
@@ -532,14 +567,7 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
         else:
             return max(all_sizes)
 
-    def forward_with_args(self,
-                          normalized_shape,
-                          eps: float,
-                          inputs: torch.Tensor) -> torch.Tensor:
-
-        if any(isinstance(arg, dict) for arg in [eps]):
-            raise ValueError(_diff_not_compatible_error.format('eps', 'LayerNorm'))
-
+    def _slice_param(self, normalized_shape, **kwargs):
         if isinstance(normalized_shape, dict):
             normalized_shape = self.normalized_shape
 
@@ -555,6 +583,28 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
         # remove _S(*)
         weight = self.weight[indices] if self.weight is not None else None
         bias = self.bias[indices] if self.bias is not None else None
+
+        return weight, bias, normalized_shape
+
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
+        weight, bias, _ = self._slice_param(**kwargs)
+        params = {"weight": weight, "bias": bias}
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
+            if value is None or name in self._non_persistent_buffers_set:
+                continue
+            value = params.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
+
+    def forward_with_args(self,
+                          normalized_shape,
+                          eps: float,
+                          inputs: torch.Tensor) -> torch.Tensor:
+
+        if any(isinstance(arg, dict) for arg in [eps]):
+            raise ValueError(_diff_not_compatible_error.format('eps', 'LayerNorm'))
+
+        weight, bias, normalized_shape = self._slice_param(normalized_shape)
 
         return F.layer_norm(
             inputs,

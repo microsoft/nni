@@ -77,8 +77,12 @@ def traverse_and_mutate_submodules(
     memo = {}
 
     module_list = []
-
+    import types
     def apply(m):
+        # Binding instance methods for nn.Module
+        if not hasattr(m, "sub_state_dict"):
+            m._save_to_sub_state_dict = types.MethodType(BaseSuperNetModule._save_to_sub_state_dict, m)
+            m.sub_state_dict = types.MethodType(BaseSuperNetModule.sub_state_dict, m)
         # Need to call list() here because the loop body might replace some children in-place.
         for name, child in list(m.named_children()):
             # post-order DFS
@@ -257,7 +261,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def __init__(self, model: pl.LightningModule, mutation_hooks: list[MutationHook] | None = None):
         super().__init__()
-        assert isinstance(model, pl.LightningModule)
+        assert isinstance(model, (pl.LightningModule, nn.Module))
         self.model = model
 
         # append the default hooks
@@ -280,7 +284,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             result.update(module.search_space_spec())
         return result
 
-    def resample(self) -> dict[str, Any]:
+    def resample(self, result=None) -> dict[str, Any]:
         """Trigger the resample for each :attr:`nas_modules`.
         Sometimes (e.g., in differentiable cases), it does nothing.
 
@@ -289,7 +293,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         dict
             Sampled architecture.
         """
-        result = {}
+        result = result or {}
         for module in self.nas_modules:
             result.update(module.resample(memo=result))
         return result
