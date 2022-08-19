@@ -674,7 +674,11 @@ plot_double_cells({
 # This architecture, after retraining, yields a top-1 accuracy of 97.12%. If we take the best snapshot throughout the retrain process,
 # there is a chance that the top-1 accuracy will be 97.28%.
 #
-# .. image:: ../../img/darts_val_acc.jpg
+# .. image:: ../../img/darts_val_acc.png
+#
+# In the figure, the orange line is the validation accuracy curve after training for 600 epochs,
+# while the red line corresponding the previous version in this tutorial before adding all the training tricks and
+# only trains for 100 epochs.
 #
 # The results outperforms "DARTS (first order) + cutout" in `DARTS`_ paper, which is only 97.00±0.14%.
 # It's even comparable with "DARTS (second order) + cutout" in the paper (97.24±0.09%),
