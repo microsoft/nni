@@ -21,7 +21,7 @@
 Searching on DARTS search space
 ===============================
 
-In this tutorial, we demonstrate how to search on the famous model space proposed in `DARTS <https://arxiv.org/abs/1806.09055>`__.
+In this tutorial, we demonstrate how to search on the famous model space proposed in `DARTS`_.
 
 Through this process, you will learn:
 
@@ -29,7 +29,7 @@ Through this process, you will learn:
 * How to use one-shot exploration strategies to explore a model space.
 * How to customize evaluators to achieve the best performance.
 
-In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves xx.xx% accuracy.
+In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves up to 97.28% accuracy.
 
 .. attention::
 
@@ -37,73 +37,189 @@ In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves
    If you don't have one, you can set ``gpus`` in :class:`~nni.retiarii.evaluator.pytorch.Classification` to be 0,
    but do note that it will be much slower.
 
-Use the model space
--------------------
+.. _DARTS: https://arxiv.org/abs/1806.09055
 
-The model space provided in DARTS originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
-where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
-There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
-The key difference between normal and reduction cell is that the reduction cell will downsample the input feature map,
-and decrease its resolution. Normal and reduction cells are stacked alternately, as shown in the following figure.
+Use a pre-searched model
+------------------------
 
-.. image:: ../../img/nasnet_cell_stack.png
+Similar to `the beginner tutorial of PyTorch <https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html>`__,
+we begin with CIFAR-10 dataset, which is a image classification dataset of 10 categories.
+The images in CIFAR-10 are of size 3x32x32, i.e., RGB-colored images of 32x32 pixels in size.
 
-A cell takes outputs from two previous cells as inputs and contains a collection of *nodes*.
-Each node takes two previous nodes within the same cell (or the two cell inputs),
-and applies an *operator* (e.g., convolution, or max-pooling) to each input,
-and sums the outputs of operators as the output of the node.
-The output of cell is the concatenation of all the nodes that are never used as inputs of another node.
-We recommend reading `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for details.
+We first load the CIFAR-10 dataset with torchvision.
 
-We illustrate an example of cells in the following figure.
+.. GENERATED FROM PYTHON SOURCE LINES 32-49
 
-.. image:: ../../img/nasnet_cell.png
+.. code-block:: default
 
-The search space proposed in DARTS paper introduced two modifications to the original space in `NASNet <https://arxiv.org/abs/1707.07012>`__.
 
-Firstly, the operator candidates have been narrowed down to seven:
+    import nni
+    import torch
+    from torchvision import transforms
+    from torchvision.datasets import CIFAR10
+    from nni.retiarii.evaluator.pytorch import DataLoader
 
-- Max pooling 3x3
-- Average pooling 3x3
-- Skip connect (Identity)
-- Separable convolution 3x3
-- Separable convolution 5x5
-- Dilated convolution 3x3
-- Dilated convolution 5x5
+    CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
+    CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
 
-Secondly, the output of cell is the concatenate of **all the nodes within the cell**.
+    transform_valid = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+    ])
+    valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform_valid)
+    valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
 
-As the search space is based on cell, once the normal and reduction cell has been fixed, we can stack them for indefinite times.
-To save the search cost, the common practice is to reduce the number of filters (i.e., channels) and number of stacked cells
-during the search phase, and increase them back when training the final searched architecture.
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Files already downloaded and verified
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 50-74
 
 .. note::
 
-   DARTS is one of those papers that innovate both in search space and search strategy.
-   In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
-   We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
-   We did NOT imply that the DARTS space and DARTS strategy has to used together.
-   You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
+   If you are to use multi-trial strategies, wrapping CIFAR10 with :func:`nni.trace` and
+   use DataLoader from ``nni.retiarii.evaluator.pytorch`` (instead of ``torch.utils.data``) are mandatory.
+   Otherwise, it's optional.
 
-.. GENERATED FROM PYTHON SOURCE LINES 71-81
+When working with famous datasets like CIFAR-10 or ImageNet,
+it's tempting to use or finetune from a pretrained model, like ResNet.
+There's nothing wrong with doing so, and sometimes it might be beneficial.
+Thanks to the development of NAS, we now have quite a large number of *pre-searched models*,
+which are produced by most popular NAS literatures.
+You can easily load these models, validate their performances, and finetune them if you need.
 
-In the following example, we initialize a DARTS model space, with only 16 initial filters and 8 stacked cells.
-The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
-
-The DARTS model space here is provided by :doc:`model space hub <./space_hub>`,
-where we have supported multiple popular model spaces for plug-and-play.
+We present :doc:`model space hub </nas/space_hub>`, where you can find many built-in model spaces,
+along with many pre-searched models.
+We choose one from `DARTS`_ search space, which is natively trained on our target dataset, CIFAR-10,
+so as to save the tedious steps of finetuning.
 
 .. tip::
 
-   The model space here can be replaced with any space provided in the hub,
-   or even customized space built from scratch.
+   Finetuning a pre-searched model on other datasets is no different from finetuning *any model*.
+   We recommend reading
+   `this tutorial of object detection finetuning <https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html>`__
+   if you want to know how finetuning is generally done in PyTorch.
 
-.. GENERATED FROM PYTHON SOURCE LINES 82-87
+.. GENERATED FROM PYTHON SOURCE LINES 75-97
 
 .. code-block:: default
 
 
     from nni.retiarii.hub.pytorch import DARTS as DartsSpace
+
+    darts_v2_model = DartsSpace.load_searched_model('darts-v2', pretrained=True, download=True)
+
+    def evaluate_model(model, cuda=False):
+        device = torch.device('cuda' if cuda else 'cpu')
+        model.to(device)
+        model.eval()
+        with torch.no_grad():
+            correct = total = 0
+            for inputs, targets in valid_loader:
+                inputs, targets = inputs.to(device), targets.to(device)
+                logits = model(inputs)
+                _, predict = torch.max(logits, 1)
+                correct += (predict == targets).sum().cpu().item()
+                total += targets.size(0)
+        print('Accuracy:', correct / total)
+        return correct / total
+
+    evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Accuracy: 0.9737
+
+    0.9737
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 98-103
+
+The journey could end here. Or you are interested,
+we can go a step further to search a model within :class:`~nni.retiarii.hub.pytorch.DARTS` space on our own.
+
+Use the model space
+-------------------
+
+.. GENERATED FROM PYTHON SOURCE LINES 104-166
+
+.. code-block:: default
+
+
+    # The model space provided in `DARTS`_ originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
+    # where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
+    # There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
+    # The key difference between normal and reduction cell is that the reduction cell will downsample the input feature map,
+    # and decrease its resolution. Normal and reduction cells are stacked alternately, as shown in the following figure.
+    #
+    # .. image:: ../../img/nasnet_cell_stack.png
+    #
+    # A cell takes outputs from two previous cells as inputs and contains a collection of *nodes*.
+    # Each node takes two previous nodes within the same cell (or the two cell inputs),
+    # and applies an *operator* (e.g., convolution, or max-pooling) to each input,
+    # and sums the outputs of operators as the output of the node.
+    # The output of cell is the concatenation of all the nodes that are never used as inputs of another node.
+    # We recommend reading `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for details.
+    #
+    # We illustrate an example of cells in the following figure.
+    #
+    # .. image:: ../../img/nasnet_cell.png
+    #
+    # The search space proposed in `DARTS`_ paper introduced two modifications to the original space
+    # in `NASNet <https://arxiv.org/abs/1707.07012>`__.
+    #
+    # Firstly, the operator candidates have been narrowed down to seven:
+    #
+    # - Max pooling 3x3
+    # - Average pooling 3x3
+    # - Skip connect (Identity)
+    # - Separable convolution 3x3
+    # - Separable convolution 5x5
+    # - Dilated convolution 3x3
+    # - Dilated convolution 5x5
+    #
+    # Secondly, the output of cell is the concatenate of **all the nodes within the cell**.
+    #
+    # As the search space is based on cell, once the normal and reduction cell has been fixed, we can stack them for indefinite times.
+    # To save the search cost, the common practice is to reduce the number of filters (i.e., channels) and number of stacked cells
+    # during the search phase, and increase them back when training the final searched architecture.
+    #
+    # .. note::
+    #
+    #    `DARTS`_ is one of those papers that innovate both in search space and search strategy.
+    #    In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
+    #    We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
+    #    We did NOT imply that the :class:`~nni.retiarii.hub.pytorch.DARTS` space and
+    #    :class:`~nni.retiarii.strategy.DARTS` strategy has to used together.
+    #    You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
+    #
+    # In the following example, we initialize a :class:`~nni.retiarii.hub.pytorch.DARTS`
+    # model space, with only 16 initial filters and 8 stacked cells.
+    # The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
+    #
+    # The :class:`~nni.retiarii.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
+    # where we have supported multiple popular model spaces for plug-and-play.
+    #
+    # .. tip::
+    #
+    #    The model space here can be replaced with any space provided in the hub,
+    #    or even customized space built from scratch.
 
     model_space = DartsSpace(16, 8, 'cifar')
 
@@ -114,7 +230,7 @@ where we have supported multiple popular model spaces for plug-and-play.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 88-99
+.. GENERATED FROM PYTHON SOURCE LINES 167-178
 
 Search on the model space
 -------------------------
@@ -126,25 +242,16 @@ as a starting point.
 Note that for a typical setup of NAS, the model search should be on validation set, and the evaluation of the final searched model
 should be on test set. However, as CIFAR-10 dataset only has a training set of 50k images and a validation set (10k images),
 we have to split the original training set into a training set and a validation set.
-As we are going to use the provided by DARTS paper, the recommended train/val split is 1:1.
+As we are going to use the provided by `DARTS`_ paper, the recommended train/val split is 1:1.
 
-.. GENERATED FROM PYTHON SOURCE LINES 100-138
+.. GENERATED FROM PYTHON SOURCE LINES 179-207
 
 .. code-block:: default
 
 
-    import nni
     import numpy as np
-    from nni.retiarii.evaluator.pytorch import (
-        Classification,
-        DataLoader  # might also use torch.utils.data.DataLoader if not using multi-trial strategy
-    )
+    from nni.retiarii.evaluator.pytorch import Classification
     from torch.utils.data import SubsetRandomSampler
-    from torchvision import transforms
-    from torchvision.datasets import CIFAR10
-
-    CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
-    CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
 
     transform = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
@@ -153,7 +260,6 @@ As we are going to use the provided by DARTS paper, the recommended train/val sp
         transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
     ])
 
-    # If you are to use multi-trial strategies, please wrap CIFAR10 with :func:`nni.trace`.
     train_data = nni.trace(CIFAR10)(root='./data', train=True, download=True, transform=transform)
 
     num_samples = len(train_data)
@@ -183,14 +289,14 @@ As we are going to use the provided by DARTS paper, the recommended train/val sp
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 139-143
+.. GENERATED FROM PYTHON SOURCE LINES 208-212
 
 .. warning::
 
    Please set ``fast_dev_run`` to False to reproduce the our claimed results.
    Otherwise, only a few mini-batches will be run.
 
-.. GENERATED FROM PYTHON SOURCE LINES 144-157
+.. GENERATED FROM PYTHON SOURCE LINES 213-226
 
 .. code-block:: default
 
@@ -231,10 +337,10 @@ As we are going to use the provided by DARTS paper, the recommended train/val sp
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 158-183
+.. GENERATED FROM PYTHON SOURCE LINES 227-252
 
-We will use DARTS (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
-DARTS strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
+We will use `DARTS`_ (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
+:class:`~nni.retiarii.strategy.DARTS` strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
 The fundamental differences between One-shot strategies and :ref:`multi-trial strategies <multi-trial-nas>` is that,
 one-shot strategy combines search with model training into a single run.
 Compared to multi-trial strategies, one-shot NAS doesn't need to iteratively spawn new trials (i.e., models),
@@ -259,7 +365,7 @@ It's NOT reflected in the figure that, for DARTS model space, exactly two inputs
 :class:`~nni.retiarii.strategy.DARTS` strategy is provided as one of NNI's :doc:`built-in search strategies </nas/exploration_strategy>`.
 Using it can be as simple as one line of code.
 
-.. GENERATED FROM PYTHON SOURCE LINES 184-189
+.. GENERATED FROM PYTHON SOURCE LINES 253-258
 
 .. code-block:: default
 
@@ -275,14 +381,14 @@ Using it can be as simple as one line of code.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 190-194
+.. GENERATED FROM PYTHON SOURCE LINES 259-263
 
 .. tip:: The ``DartsStrategy`` here can be replaced by any search strategies, even multi-trial strategies.
 
 Launching the experiment is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`,
 except that the ``execution_engine`` argument should be set to ``oneshot``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 195-202
+.. GENERATED FROM PYTHON SOURCE LINES 264-271
 
 .. code-block:: default
 
@@ -313,13 +419,13 @@ except that the ``execution_engine`` argument should be set to ``oneshot``.
     12.164    Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.77s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.77s/it, v_num=, train_loss=2.480, train_acc=0.0312]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.78s/it, v_num=, train_loss=2.480, train_acc=0.0312]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.78s/it, v_num=, train_loss=2.480, train_acc=0.0312]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.16s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.16s/it, v_num=, train_loss=2.440, train_acc=0.0781]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.17s/it, v_num=, train_loss=2.440, train_acc=0.0781]`Trainer.fit` stopped: `max_epochs=1` reached.
+    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.17s/it, v_num=, train_loss=2.440, train_acc=0.0781]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 203-215
+.. GENERATED FROM PYTHON SOURCE LINES 272-284
 
 .. tip::
 
@@ -334,7 +440,7 @@ except that the ``execution_engine`` argument should be set to ``oneshot``.
 We can then retrieve the best model found by the strategy with ``export_top_models``.
 Here, the retrieved model is a dict (called *architecture dict*) describing the selected normal cell and reduction cell.
 
-.. GENERATED FROM PYTHON SOURCE LINES 216-221
+.. GENERATED FROM PYTHON SOURCE LINES 285-290
 
 .. code-block:: default
 
@@ -352,11 +458,79 @@ Here, the retrieved model is a dict (called *architecture dict*) describing the 
  .. code-block:: none
 
 
-    {'normal/op_2_0': 'sep_conv_3x3', 'normal/input_2_0': 1, 'normal/op_2_1': 'avg_pool_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'skip_connect', 'normal/input_3_0': 0, 'normal/op_3_1': 'skip_connect', 'normal/input_3_1': 1, 'normal/op_4_0': 'sep_conv_3x3', 'normal/input_4_0': 2, 'normal/op_4_1': 'dil_conv_5x5', 'normal/input_4_1': 3, 'normal/op_5_0': 'sep_conv_3x3', 'normal/input_5_0': 4, 'normal/op_5_1': 'dil_conv_3x3', 'normal/input_5_1': 1, 'reduce/op_2_0': 'dil_conv_3x3', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'skip_connect', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'max_pool_3x3', 'reduce/input_3_0': 2, 'reduce/op_3_1': 'skip_connect', 'reduce/input_3_1': 1, 'reduce/op_4_0': 'sep_conv_5x5', 'reduce/input_4_0': 2, 'reduce/op_4_1': 'dil_conv_5x5', 'reduce/input_4_1': 0, 'reduce/op_5_0': 'skip_connect', 'reduce/input_5_0': 2, 'reduce/op_5_1': 'dil_conv_3x3', 'reduce/input_5_1': 1}
+    {'normal/op_2_0': 'dil_conv_3x3', 'normal/input_2_0': 0, 'normal/op_2_1': 'sep_conv_3x3', 'normal/input_2_1': 1, 'normal/op_3_0': 'dil_conv_3x3', 'normal/input_3_0': 2, 'normal/op_3_1': 'dil_conv_3x3', 'normal/input_3_1': 1, 'normal/op_4_0': 'sep_conv_3x3', 'normal/input_4_0': 3, 'normal/op_4_1': 'sep_conv_3x3', 'normal/input_4_1': 1, 'normal/op_5_0': 'skip_connect', 'normal/input_5_0': 0, 'normal/op_5_1': 'dil_conv_3x3', 'normal/input_5_1': 1, 'reduce/op_2_0': 'skip_connect', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'max_pool_3x3', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'avg_pool_3x3', 'reduce/input_3_0': 1, 'reduce/op_3_1': 'skip_connect', 'reduce/input_3_1': 2, 'reduce/op_4_0': 'dil_conv_3x3', 'reduce/input_4_0': 1, 'reduce/op_4_1': 'sep_conv_5x5', 'reduce/input_4_1': 3, 'reduce/op_5_0': 'dil_conv_5x5', 'reduce/input_5_0': 3, 'reduce/op_5_1': 'sep_conv_3x3', 'reduce/input_5_1': 1}
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 222-235
+.. GENERATED FROM PYTHON SOURCE LINES 291-293
+
+The cell can be visualized with the following code snippet
+(copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
+
+.. GENERATED FROM PYTHON SOURCE LINES 294-339
+
+.. code-block:: default
+
+
+    import graphviz
+    from IPython.display import display_svg
+
+    def plot_single_cell(arch_dict, cell_name):
+        g = graphviz.Digraph(
+            node_attr=dict(style='filled', shape='rect', align='center'),
+            format='svg'
+        )
+        g.body.extend(['rankdir=LR'])
+
+        g.node('c_{k-2}', fillcolor='darkseagreen2')
+        g.node('c_{k-1}', fillcolor='darkseagreen2')
+        assert len(arch_dict) % 2 == 0
+
+        for i in range(2, 6):
+            g.node(str(i), fillcolor='lightblue')
+
+        for i in range(2, 6):
+            for j in range(2):
+                op = arch_dict[f'{cell_name}/op_{i}_{j}']
+                from_ = arch_dict[f'{cell_name}/input_{i}_{j}']
+                if from_ == 0:
+                    u = 'c_{k-2}'
+                elif from_ == 1:
+                    u = 'c_{k-1}'
+                else:
+                    u = str(from_)
+                v = str(i)
+                g.edge(u, v, label=op, fillcolor='gray')
+
+        g.node('c_{k}', fillcolor='palegoldenrod')
+        for i in range(2, 6):
+            g.edge(str(i), 'c_{k}', fillcolor='gray')
+
+        g.attr(label=f'{cell_name.capitalize()} cell')
+
+        display_svg(g.pipe().decode(), raw=True)
+
+    def plot_double_cells(arch_dict):
+        plot_single_cell(arch_dict, 'normal')
+        plot_single_cell(arch_dict, 'reduce')
+
+    plot_double_cells(exported_arch)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    {'image/svg+xml': '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n<!-- Generated by graphviz version 2.43.0 (0)\n -->\n<!-- Title: %3 Pages: 1 -->\n<svg width="774pt" height="240pt"\n viewBox="0.00 0.00 774.00 240.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 236)">\n<title>%3</title>\n<polygon fill="white" stroke="transparent" points="-4,4 -4,-236 770,-236 770,4 -4,4"/>\n<text text-anchor="middle" x="383" y="-7.8" font-family="Times,serif" font-size="14.00">Normal cell</text>\n<!-- c_{k&#45;2} -->\n<g id="node1" class="node">\n<title>c_{k&#45;2}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-232 0,-232 0,-196 71,-196 71,-232"/>\n<text text-anchor="middle" x="35.5" y="-210.3" font-family="Times,serif" font-size="14.00">c_{k&#45;2}</text>\n</g>\n<!-- 2 -->\n<g id="node3" class="node">\n<title>2</title>\n<polygon fill="lightblue" stroke="black" points="277.5,-153 223.5,-153 223.5,-117 277.5,-117 277.5,-153"/>\n<text text-anchor="middle" x="250.5" y="-131.3" font-family="Times,serif" font-size="14.00">2</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;2 -->\n<g id="edge1" class="edge">\n<title>c_{k&#45;2}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M71.15,-198.31C77.03,-195.98 83.14,-193.78 89,-192 131.46,-179.14 145.62,-189 187,-173 196.77,-169.22 206.74,-163.93 215.75,-158.5"/>\n<polygon fill="gray" stroke="black" points="217.8,-161.35 224.41,-153.07 214.08,-155.42 217.8,-161.35"/>\n<text text-anchor="middle" x="138" y="-195.8" font-family="Times,serif" font-size="14.00">dil_conv_3x3</text>\n</g>\n<!-- 5 -->\n<g id="node6" class="node">\n<title>5</title>\n<polygon fill="lightblue" stroke="black" points="277.5,-210 223.5,-210 223.5,-174 277.5,-174 277.5,-210"/>\n<text text-anchor="middle" x="250.5" y="-188.3" font-family="Times,serif" font-size="14.00">5</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;5 -->\n<g id="edge7" class="edge">\n<title>c_{k&#45;2}&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M71.11,-215.99C101.77,-217.12 147.64,-217.25 187,-211 195.77,-209.61 205.03,-207.29 213.66,-204.74"/>\n<polygon fill="gray" stroke="black" points="214.92,-208.01 223.42,-201.68 212.83,-201.33 214.92,-208.01"/>\n<text text-anchor="middle" x="138" y="-219.8" font-family="Times,serif" font-size="14.00">skip_connect</text>\n</g>\n<!-- c_{k&#45;1} -->\n<g id="node2" class="node">\n<title>c_{k&#45;1}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-121 0,-121 0,-85 71,-85 71,-121"/>\n<text text-anchor="middle" x="35.5" y="-99.3" font-family="Times,serif" font-size="14.00">c_{k&#45;1}</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;2 -->\n<g id="edge2" class="edge">\n<title>c_{k&#45;1}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M71.04,-105.68C101.66,-108.35 147.51,-113.06 187,-120 195.69,-121.53 204.97,-123.54 213.65,-125.6"/>\n<polygon fill="gray" stroke="black" points="212.95,-129.03 223.5,-128 214.61,-122.23 212.95,-129.03"/>\n<text text-anchor="middle" x="138" y="-123.8" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 3 -->\n<g id="node4" class="node">\n<title>3</title>\n<polygon fill="lightblue" stroke="black" points="484,-59 430,-59 430,-23 484,-23 484,-59"/>\n<text text-anchor="middle" x="457" y="-37.3" font-family="Times,serif" font-size="14.00">3</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;3 -->\n<g id="edge4" class="edge">\n<title>c_{k&#45;1}&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M62.46,-84.87C70.62,-79.95 79.89,-75.13 89,-72 204.66,-32.25 352.36,-34.6 419.66,-38.32"/>\n<polygon fill="gray" stroke="black" points="419.56,-41.82 429.75,-38.92 419.98,-34.83 419.56,-41.82"/>\n<text text-anchor="middle" x="250.5" y="-48.8" font-family="Times,serif" font-size="14.00">dil_conv_3x3</text>\n</g>\n<!-- 4 -->\n<g id="node5" class="node">\n<title>4</title>\n<polygon fill="lightblue" stroke="black" points="672,-105 618,-105 618,-69 672,-69 672,-105"/>\n<text text-anchor="middle" x="645" y="-83.3" font-family="Times,serif" font-size="14.00">4</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;4 -->\n<g id="edge6" class="edge">\n<title>c_{k&#45;1}&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M71.07,-99.71C123.52,-94.89 226.39,-86.15 314,-83 357.53,-81.43 368.45,-82.62 412,-83 481.18,-83.6 561.95,-85.19 607.62,-86.18"/>\n<polygon fill="gray" stroke="black" points="607.83,-89.68 617.91,-86.4 607.99,-82.69 607.83,-89.68"/>\n<text text-anchor="middle" x="363" y="-86.8" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;5 -->\n<g id="edge8" class="edge">\n<title>c_{k&#45;1}&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M61.99,-121.04C70.28,-126.21 79.74,-131.42 89,-135 130.37,-151.02 145.62,-138 187,-154 196.77,-157.78 206.74,-163.07 215.75,-168.5"/>\n<polygon fill="gray" stroke="black" points="214.08,-171.58 224.41,-173.93 217.8,-165.65 214.08,-171.58"/>\n<text text-anchor="middle" x="138" y="-157.8" font-family="Times,serif" font-size="14.00">dil_conv_3x3</text>\n</g>\n<!-- 2&#45;&gt;3 -->\n<g id="edge3" class="edge">\n<title>2&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M277.76,-130.67C320.34,-123.5 400.83,-109.23 412,-102 424.84,-93.69 435.14,-80.21 442.54,-68.04"/>\n<polygon fill="gray" stroke="black" points="445.73,-69.51 447.63,-59.09 439.64,-66.05 445.73,-69.51"/>\n<text text-anchor="middle" x="363" y="-126.8" font-family="Times,serif" font-size="14.00">dil_conv_3x3</text>\n</g>\n<!-- c_{k} -->\n<g id="node7" class="node">\n<title>c_{k}</title>\n<polygon fill="palegoldenrod" stroke="black" points="766,-153 709,-153 709,-117 766,-117 766,-153"/>\n<text text-anchor="middle" x="737.5" y="-131.3" font-family="Times,serif" font-size="14.00">c_{k}</text>\n</g>\n<!-- 2&#45;&gt;c_{k} -->\n<g id="edge9" class="edge">\n<title>2&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M277.62,-137.56C288.81,-138.53 302.04,-139.52 314,-140 455.82,-145.66 624.61,-139.91 698.59,-136.76"/>\n<polygon fill="gray" stroke="black" points="698.97,-140.25 708.8,-136.32 698.66,-133.26 698.97,-140.25"/>\n</g>\n<!-- 3&#45;&gt;4 -->\n<g id="edge5" class="edge">\n<title>3&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M484.22,-40.58C513.37,-40.91 561.41,-43.87 600,-58 604.06,-59.49 608.12,-61.41 612.04,-63.56"/>\n<polygon fill="gray" stroke="black" points="610.51,-66.73 620.88,-68.9 614.12,-60.73 610.51,-66.73"/>\n<text text-anchor="middle" x="551" y="-61.8" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 3&#45;&gt;c_{k} -->\n<g id="edge10" class="edge">\n<title>3&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M484.22,-35.98C527.27,-29.22 613.91,-22.07 672,-60 691.17,-72.52 707.86,-92.34 719.46,-108.46"/>\n<polygon fill="gray" stroke="black" points="716.79,-110.75 725.37,-116.97 722.54,-106.75 716.79,-110.75"/>\n</g>\n<!-- 4&#45;&gt;c_{k} -->\n<g id="edge11" class="edge">\n<title>4&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M672.18,-100.88C680.79,-105.45 690.53,-110.62 699.78,-115.52"/>\n<polygon fill="gray" stroke="black" points="698.33,-118.72 708.81,-120.31 701.61,-112.53 698.33,-118.72"/>\n</g>\n<!-- 5&#45;&gt;c_{k} -->\n<g id="edge12" class="edge">\n<title>5&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M277.6,-191.78C346.18,-190.74 536.79,-184.77 691,-151 693.67,-150.42 696.4,-149.72 699.12,-148.95"/>\n<polygon fill="gray" stroke="black" points="700.39,-152.22 708.9,-145.92 698.31,-145.54 700.39,-152.22"/>\n</g>\n</g>\n</svg>\n'}
+    {'image/svg+xml': '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n<!-- Generated by graphviz version 2.43.0 (0)\n -->\n<!-- Title: %3 Pages: 1 -->\n<svg width="781pt" height="214pt"\n viewBox="0.00 0.00 781.00 214.32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 210.32)">\n<title>%3</title>\n<polygon fill="white" stroke="transparent" points="-4,4 -4,-210.32 777,-210.32 777,4 -4,4"/>\n<text text-anchor="middle" x="386.5" y="-7.8" font-family="Times,serif" font-size="14.00">Reduce cell</text>\n<!-- c_{k&#45;2} -->\n<g id="node1" class="node">\n<title>c_{k&#45;2}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-206.32 0,-206.32 0,-170.32 71,-170.32 71,-206.32"/>\n<text text-anchor="middle" x="35.5" y="-184.62" font-family="Times,serif" font-size="14.00">c_{k&#45;2}</text>\n</g>\n<!-- 2 -->\n<g id="node3" class="node">\n<title>2</title>\n<polygon fill="lightblue" stroke="black" points="282,-192.32 228,-192.32 228,-156.32 282,-156.32 282,-192.32"/>\n<text text-anchor="middle" x="255" y="-170.62" font-family="Times,serif" font-size="14.00">2</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;2 -->\n<g id="edge1" class="edge">\n<title>c_{k&#45;2}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M71.45,-186.07C111.54,-183.49 176.99,-179.27 217.67,-176.66"/>\n<polygon fill="gray" stroke="black" points="217.94,-180.15 227.69,-176.01 217.49,-173.16 217.94,-180.15"/>\n<text text-anchor="middle" x="139" y="-188.12" font-family="Times,serif" font-size="14.00">skip_connect</text>\n</g>\n<!-- c_{k&#45;1} -->\n<g id="node2" class="node">\n<title>c_{k&#45;1}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-112.32 0,-112.32 0,-76.32 71,-76.32 71,-112.32"/>\n<text text-anchor="middle" x="35.5" y="-90.62" font-family="Times,serif" font-size="14.00">c_{k&#45;1}</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;2 -->\n<g id="edge2" class="edge">\n<title>c_{k&#45;1}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M60.99,-112.36C69.53,-118.06 79.4,-123.99 89,-128.32 111.93,-138.65 176.61,-155.41 217.84,-165.6"/>\n<polygon fill="gray" stroke="black" points="217.23,-169.05 227.78,-168.03 218.9,-162.25 217.23,-169.05"/>\n<text text-anchor="middle" x="139" y="-161.12" font-family="Times,serif" font-size="14.00">max_pool_3x3</text>\n</g>\n<!-- 3 -->\n<g id="node4" class="node">\n<title>3</title>\n<polygon fill="lightblue" stroke="black" points="491,-160.32 437,-160.32 437,-124.32 491,-124.32 491,-160.32"/>\n<text text-anchor="middle" x="464" y="-138.62" font-family="Times,serif" font-size="14.00">3</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;3 -->\n<g id="edge3" class="edge">\n<title>c_{k&#45;1}&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M71.04,-98.2C150.47,-107.14 345.48,-129.09 426.64,-138.22"/>\n<polygon fill="gray" stroke="black" points="426.53,-141.73 436.86,-139.37 427.32,-134.78 426.53,-141.73"/>\n<text text-anchor="middle" x="255" y="-127.12" font-family="Times,serif" font-size="14.00">avg_pool_3x3</text>\n</g>\n<!-- 4 -->\n<g id="node5" class="node">\n<title>4</title>\n<polygon fill="lightblue" stroke="black" points="679,-144.32 625,-144.32 625,-108.32 679,-108.32 679,-144.32"/>\n<text text-anchor="middle" x="652" y="-122.62" font-family="Times,serif" font-size="14.00">4</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;4 -->\n<g id="edge5" class="edge">\n<title>c_{k&#45;1}&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M71.18,-93.43C149.31,-91.48 345.12,-86.88 509,-85.32 552.55,-84.9 566.47,-69.36 607,-85.32 609.52,-86.31 617.21,-93.22 625.47,-101.09"/>\n<polygon fill="gray" stroke="black" points="623.14,-103.7 632.76,-108.13 628,-98.67 623.14,-103.7"/>\n<text text-anchor="middle" x="370" y="-91.12" font-family="Times,serif" font-size="14.00">dil_conv_3x3</text>\n</g>\n<!-- 5 -->\n<g id="node6" class="node">\n<title>5</title>\n<polygon fill="lightblue" stroke="black" points="679,-90.32 625,-90.32 625,-54.32 679,-54.32 679,-90.32"/>\n<text text-anchor="middle" x="652" y="-68.62" font-family="Times,serif" font-size="14.00">5</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;5 -->\n<g id="edge8" class="edge">\n<title>c_{k&#45;1}&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M56.78,-76.31C65.99,-69.16 77.4,-61.63 89,-57.32 226.79,-6.02 272.25,-25.37 419,-34.32 503.02,-39.44 524.95,-38.52 607,-57.32 609.64,-57.92 612.34,-58.62 615.04,-59.39"/>\n<polygon fill="gray" stroke="black" points="614.14,-62.77 624.73,-62.37 616.2,-56.09 614.14,-62.77"/>\n<text text-anchor="middle" x="370" y="-38.12" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 2&#45;&gt;3 -->\n<g id="edge4" class="edge">\n<title>2&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M282.22,-170.26C318.92,-164.59 385.76,-154.26 427.08,-147.87"/>\n<polygon fill="gray" stroke="black" points="427.65,-151.32 437,-146.34 426.58,-144.41 427.65,-151.32"/>\n<text text-anchor="middle" x="370" y="-167.12" font-family="Times,serif" font-size="14.00">skip_connect</text>\n</g>\n<!-- c_{k} -->\n<g id="node7" class="node">\n<title>c_{k}</title>\n<polygon fill="palegoldenrod" stroke="black" points="773,-167.32 716,-167.32 716,-131.32 773,-131.32 773,-167.32"/>\n<text text-anchor="middle" x="744.5" y="-145.62" font-family="Times,serif" font-size="14.00">c_{k}</text>\n</g>\n<!-- 2&#45;&gt;c_{k} -->\n<g id="edge9" class="edge">\n<title>2&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M282.18,-178.28C294.01,-179.88 308.18,-181.53 321,-182.32 412.7,-187.94 658.9,-177.23 679,-174.32 688.25,-172.97 697.84,-170.14 706.71,-166.84"/>\n<polygon fill="gray" stroke="black" points="708.01,-170.09 715.99,-163.13 705.41,-163.59 708.01,-170.09"/>\n</g>\n<!-- 3&#45;&gt;4 -->\n<g id="edge6" class="edge">\n<title>3&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M491.25,-140.06C523.52,-137.28 578.44,-132.56 614.72,-129.44"/>\n<polygon fill="gray" stroke="black" points="615.22,-132.91 624.88,-128.56 614.62,-125.93 615.22,-132.91"/>\n<text text-anchor="middle" x="558" y="-142.12" font-family="Times,serif" font-size="14.00">sep_conv_5x5</text>\n</g>\n<!-- 3&#45;&gt;5 -->\n<g id="edge7" class="edge">\n<title>3&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M486.83,-124.02C493.61,-119.02 501.33,-113.98 509,-110.32 543.2,-94 585.5,-83.83 615,-78.16"/>\n<polygon fill="gray" stroke="black" points="615.67,-81.6 624.87,-76.34 614.4,-74.71 615.67,-81.6"/>\n<text text-anchor="middle" x="558" y="-114.12" font-family="Times,serif" font-size="14.00">dil_conv_5x5</text>\n</g>\n<!-- 3&#45;&gt;c_{k} -->\n<g id="edge10" class="edge">\n<title>3&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M491.16,-152.8C496.95,-154.67 503.11,-156.34 509,-157.32 577.74,-168.71 659.32,-161.31 705.89,-155.14"/>\n<polygon fill="gray" stroke="black" points="706.4,-158.6 715.83,-153.77 705.45,-151.67 706.4,-158.6"/>\n</g>\n<!-- 4&#45;&gt;c_{k} -->\n<g id="edge11" class="edge">\n<title>4&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M679.18,-132.97C687.52,-135.09 696.92,-137.48 705.91,-139.76"/>\n<polygon fill="gray" stroke="black" points="705.25,-143.21 715.81,-142.28 706.98,-136.42 705.25,-143.21"/>\n</g>\n<!-- 5&#45;&gt;c_{k} -->\n<g id="edge12" class="edge">\n<title>5&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M674.45,-90.56C686.39,-100.73 701.44,-113.53 714.43,-124.58"/>\n<polygon fill="gray" stroke="black" points="712.32,-127.38 722.21,-131.2 716.86,-122.05 712.32,-127.38"/>\n</g>\n</g>\n</svg>\n'}
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 340-350
 
 Retrain the searched model
 --------------------------
@@ -369,10 +543,7 @@ To construct a fixed model based on the architecture dict exported from the expe
 we can use :func:`nni.retiarii.fixed_arch`. Seemingly, we are still creating a space.
 But under the with-context, we are actually creating a fixed model.
 
-Here, we increase the number of filters to 36, and number of cells to 20,
-so as to reasonably increase the model size and boost the performance.
-
-.. GENERATED FROM PYTHON SOURCE LINES 236-242
+.. GENERATED FROM PYTHON SOURCE LINES 351-357
 
 .. code-block:: default
 
@@ -380,7 +551,7 @@ so as to reasonably increase the model size and boost the performance.
     from nni.retiarii import fixed_arch
 
     with fixed_arch(exported_arch):
-        final_model = DartsSpace(36, 20, 'cifar')
+        final_model = DartsSpace(16, 8, 'cifar')
 
 
 
@@ -389,23 +560,34 @@ so as to reasonably increase the model size and boost the performance.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 243-244
+.. GENERATED FROM PYTHON SOURCE LINES 358-359
 
 We then train the model on full CIFAR-10 training dataset, and evaluate it on the original CIFAR-10 validation dataset.
 
-.. GENERATED FROM PYTHON SOURCE LINES 245-255
+.. GENERATED FROM PYTHON SOURCE LINES 360-363
 
 .. code-block:: default
 
 
     train_loader = DataLoader(train_data, batch_size=96, num_workers=6)  # Use the original training data
 
-    transform_valid = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-    ])
-    valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform_valid)
-    valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 364-365
+
+The validation data loader can be reused.
+
+.. GENERATED FROM PYTHON SOURCE LINES 366-369
+
+.. code-block:: default
+
+
+    valid_loader
 
 
 
@@ -415,17 +597,17 @@ We then train the model on full CIFAR-10 training dataset, and evaluate it on th
 
  .. code-block:: none
 
-    Files already downloaded and verified
+
+    <torch.utils.data.dataloader.DataLoader object at 0x7fbb4e1b3b50>
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 256-258
+.. GENERATED FROM PYTHON SOURCE LINES 370-372
 
 Create a new evaluator here because we can using a different data split.
 Also, we should avoid the underlying pytorch-lightning implementation of Classification evaluator from loading the wrong checkpoint.
 
-.. GENERATED FROM PYTHON SOURCE LINES 259-274
+.. GENERATED FROM PYTHON SOURCE LINES 373-389
 
 .. code-block:: default
 
@@ -438,6 +620,7 @@ Also, we should avoid the underlying pytorch-lightning implementation of Classif
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader,
         max_epochs=max_epochs,
+        gpus=1,
         export_onnx=False,  # Disable ONNX export for this experiment
         fast_dev_run=fast_dev_run,  # Should be false for fully training
     )
@@ -452,59 +635,114 @@ Also, we should avoid the underlying pytorch-lightning implementation of Classif
 
  .. code-block:: none
 
-    GPU available: True (cuda), used: False
+    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:445: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
+      rank_zero_deprecation(
+    GPU available: True (cuda), used: True
     TPU available: False, using: 0 TPU cores
     IPU available: False, using: 0 IPUs
     HPU available: False, using: 0 HPUs
-    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1763: PossibleUserWarning: GPU available but not used. Set `accelerator` and `devices` using `Trainer(accelerator='gpu', devices=1)`.
-      rank_zero_warn(
     Running in `fast_dev_run` mode: will run the requested loop using 1 batch(es). Logging and checkpointing is suppressed.
     `Trainer(limit_train_batches=1)` was configured so 1 batch per epoch will be used.
     `Trainer(limit_val_batches=1)` was configured so 1 batch will be used.
     `Trainer(limit_test_batches=1)` was configured so 1 batch will be used.
     `Trainer(limit_predict_batches=1)` was configured so 1 batch will be used.
     `Trainer(val_check_interval=1.0)` was configured so validation will run at the end of the training epoch..
+    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
 
       | Name      | Type             | Params
     -----------------------------------------------
     0 | criterion | CrossEntropyLoss | 0     
     1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 3.0 M 
+    2 | model     | DARTS            | 279 K 
     -----------------------------------------------
-    3.0 M     Trainable params
+    279 K     Trainable params
     0         Non-trainable params
-    3.0 M     Total params
-    12.153    Total estimated model params size (MB)
+    279 K     Total params
+    1.119     Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:05<00:05,  5.98s/it]    Epoch 0:  50%|#####     | 1/2 [00:05<00:05,  5.98s/it, loss=2.29, v_num=, train_loss=2.290, train_acc=0.0938]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.88it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.87it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.104]
     Validation: 0it [00:00, ?it/s]
     Validation:   0%|          | 0/1 [00:00<?, ?it/s]
     Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:05<00:00,  5.44s/it]    Epoch 0: 100%|##########| 2/2 [00:11<00:00,  5.98s/it, loss=2.29, v_num=, train_loss=2.290, train_acc=0.0938]    Epoch 0: 100%|##########| 2/2 [00:11<00:00,  5.98s/it, loss=2.29, v_num=, train_loss=2.290, train_acc=0.0938, val_loss=2.300, val_acc=0.0938]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:11<00:00,  5.98s/it, loss=2.29, v_num=, train_loss=2.290, train_acc=0.0938, val_loss=2.300, val_acc=0.0938]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:11<00:00,  5.98s/it, loss=2.29, v_num=, train_loss=2.290, train_acc=0.0938, val_loss=2.300, val_acc=0.0938]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00, 14.77it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.96it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.104]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.96it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.104, val_loss=2.300, val_acc=0.102]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.95it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.104, val_loss=2.300, val_acc=0.102]`Trainer.fit` stopped: `max_steps=1` reached.
+    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.94it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.104, val_loss=2.300, val_acc=0.102]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 275-303
+.. GENERATED FROM PYTHON SOURCE LINES 390-391
 
-When ``fast_dev_run`` is turned off, we get a model with the following architecture:
+When ``fast_dev_run`` is turned off, we get a model with the following architecture.
 
-.. code-block:: python
+.. GENERATED FROM PYTHON SOURCE LINES 392-428
 
-   {}
+.. code-block:: default
 
-It achieves a validation accuracy of XXX%.
+
+    plot_double_cells({
+        'normal/op_2_0': 'sep_conv_3x3',
+        'normal/input_2_0': 1,
+        'normal/op_2_1': 'sep_conv_3x3',
+        'normal/input_2_1': 0,
+        'normal/op_3_0': 'sep_conv_3x3',
+        'normal/input_3_0': 1,
+        'normal/op_3_1': 'sep_conv_3x3',
+        'normal/input_3_1': 2,
+        'normal/op_4_0': 'sep_conv_3x3',
+        'normal/input_4_0': 1,
+        'normal/op_4_1': 'sep_conv_3x3',
+        'normal/input_4_1': 0,
+        'normal/op_5_0': 'sep_conv_3x3',
+        'normal/input_5_0': 1,
+        'normal/op_5_1': 'max_pool_3x3',
+        'normal/input_5_1': 0,
+        'reduce/op_2_0': 'sep_conv_3x3',
+        'reduce/input_2_0': 0,
+        'reduce/op_2_1': 'sep_conv_3x3',
+        'reduce/input_2_1': 1,
+        'reduce/op_3_0': 'dil_conv_5x5',
+        'reduce/input_3_0': 2,
+        'reduce/op_3_1': 'sep_conv_3x3',
+        'reduce/input_3_1': 0,
+        'reduce/op_4_0': 'dil_conv_5x5',
+        'reduce/input_4_0': 2,
+        'reduce/op_4_1': 'sep_conv_5x5',
+        'reduce/input_4_1': 1,
+        'reduce/op_5_0': 'sep_conv_5x5',
+        'reduce/input_5_0': 4,
+        'reduce/op_5_1': 'dil_conv_5x5',
+        'reduce/input_5_1': 2
+    })
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    {'image/svg+xml': '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n<!-- Generated by graphviz version 2.43.0 (0)\n -->\n<!-- Title: %3 Pages: 1 -->\n<svg width="595pt" height="253pt"\n viewBox="0.00 0.00 595.00 252.50" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 248.5)">\n<title>%3</title>\n<polygon fill="white" stroke="transparent" points="-4,4 -4,-248.5 591,-248.5 591,4 -4,4"/>\n<text text-anchor="middle" x="293.5" y="-7.8" font-family="Times,serif" font-size="14.00">Normal cell</text>\n<!-- c_{k&#45;2} -->\n<g id="node1" class="node">\n<title>c_{k&#45;2}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-224.5 0,-224.5 0,-188.5 71,-188.5 71,-224.5"/>\n<text text-anchor="middle" x="35.5" y="-202.8" font-family="Times,serif" font-size="14.00">c_{k&#45;2}</text>\n</g>\n<!-- 2 -->\n<g id="node3" class="node">\n<title>2</title>\n<polygon fill="lightblue" stroke="black" points="283,-90.5 229,-90.5 229,-54.5 283,-54.5 283,-90.5"/>\n<text text-anchor="middle" x="256" y="-68.8" font-family="Times,serif" font-size="14.00">2</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;2 -->\n<g id="edge2" class="edge">\n<title>c_{k&#45;2}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M43.55,-188.34C51.65,-169.97 66.77,-142.26 89,-127.5 126.69,-102.48 146.4,-123.74 189,-108.5 192.5,-107.25 205.98,-99.97 219.85,-92.28"/>\n<polygon fill="gray" stroke="black" points="221.89,-95.15 228.92,-87.23 218.48,-89.04 221.89,-95.15"/>\n<text text-anchor="middle" x="139" y="-131.3" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 4 -->\n<g id="node5" class="node">\n<title>4</title>\n<polygon fill="lightblue" stroke="black" points="283,-144.5 229,-144.5 229,-108.5 283,-108.5 283,-144.5"/>\n<text text-anchor="middle" x="256" y="-122.8" font-family="Times,serif" font-size="14.00">4</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;4 -->\n<g id="edge6" class="edge">\n<title>c_{k&#45;2}&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M71.17,-203.11C113.14,-198.75 179.41,-190.98 189,-184.5 202.2,-175.59 195.66,-164.69 207,-153.5 210.91,-149.64 215.49,-146.15 220.24,-143.06"/>\n<polygon fill="gray" stroke="black" points="222.05,-146.06 228.85,-137.94 218.47,-140.04 222.05,-146.06"/>\n<text text-anchor="middle" x="139" y="-204.3" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 5 -->\n<g id="node6" class="node">\n<title>5</title>\n<polygon fill="lightblue" stroke="black" points="283,-198.5 229,-198.5 229,-162.5 283,-162.5 283,-198.5"/>\n<text text-anchor="middle" x="256" y="-176.8" font-family="Times,serif" font-size="14.00">5</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;5 -->\n<g id="edge8" class="edge">\n<title>c_{k&#45;2}&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M71.19,-218.64C77.06,-220.24 83.16,-221.63 89,-222.5 132.96,-229.05 146.33,-234.93 189,-222.5 201.86,-218.76 214.61,-211.66 225.42,-204.36"/>\n<polygon fill="gray" stroke="black" points="227.52,-207.16 233.64,-198.51 223.47,-201.45 227.52,-207.16"/>\n<text text-anchor="middle" x="139" y="-233.3" font-family="Times,serif" font-size="14.00">max_pool_3x3</text>\n</g>\n<!-- c_{k&#45;1} -->\n<g id="node2" class="node">\n<title>c_{k&#45;1}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-91.5 0,-91.5 0,-55.5 71,-55.5 71,-91.5"/>\n<text text-anchor="middle" x="35.5" y="-69.8" font-family="Times,serif" font-size="14.00">c_{k&#45;1}</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;2 -->\n<g id="edge1" class="edge">\n<title>c_{k&#45;1}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M71.1,-59.85C76.99,-58.05 83.11,-56.48 89,-55.5 132.84,-48.2 144.91,-49.92 189,-55.5 198.93,-56.76 209.51,-59.04 219.22,-61.54"/>\n<polygon fill="gray" stroke="black" points="218.39,-64.94 228.96,-64.18 220.22,-58.18 218.39,-64.94"/>\n<text text-anchor="middle" x="139" y="-59.3" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 3 -->\n<g id="node4" class="node">\n<title>3</title>\n<polygon fill="lightblue" stroke="black" points="493,-60.5 439,-60.5 439,-24.5 493,-24.5 493,-60.5"/>\n<text text-anchor="middle" x="466" y="-38.8" font-family="Times,serif" font-size="14.00">3</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;3 -->\n<g id="edge3" class="edge">\n<title>c_{k&#45;1}&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M67.41,-55.42C74.33,-52 81.77,-48.78 89,-46.5 208.4,-8.93 359.87,-25.4 428.39,-36.03"/>\n<polygon fill="gray" stroke="black" points="428.23,-39.55 438.66,-37.68 429.34,-32.64 428.23,-39.55"/>\n<text text-anchor="middle" x="256" y="-28.3" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;4 -->\n<g id="edge5" class="edge">\n<title>c_{k&#45;1}&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M71.11,-74.77C102.48,-76.67 149.68,-81.47 189,-93.5 199.4,-96.68 210.15,-101.38 219.89,-106.25"/>\n<polygon fill="gray" stroke="black" points="218.38,-109.4 228.87,-110.91 221.61,-103.19 218.38,-109.4"/>\n<text text-anchor="middle" x="139" y="-97.3" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;5 -->\n<g id="edge7" class="edge">\n<title>c_{k&#45;1}&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M44.55,-91.58C53.08,-108.54 68.2,-133.24 89,-146.5 127.15,-170.82 144.71,-156.27 189,-165.5 198.73,-167.53 209.24,-169.86 218.95,-172.06"/>\n<polygon fill="gray" stroke="black" points="218.18,-175.48 228.71,-174.3 219.75,-168.66 218.18,-175.48"/>\n<text text-anchor="middle" x="139" y="-169.3" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 2&#45;&gt;3 -->\n<g id="edge4" class="edge">\n<title>2&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M283.25,-66.86C295.32,-64.39 309.85,-61.58 323,-59.5 358.82,-53.84 399.99,-49.1 428.75,-46.08"/>\n<polygon fill="gray" stroke="black" points="429.16,-49.56 438.75,-45.05 428.44,-42.59 429.16,-49.56"/>\n<text text-anchor="middle" x="372" y="-63.3" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- c_{k} -->\n<g id="node7" class="node">\n<title>c_{k}</title>\n<polygon fill="palegoldenrod" stroke="black" points="587,-125.5 530,-125.5 530,-89.5 587,-89.5 587,-125.5"/>\n<text text-anchor="middle" x="558.5" y="-103.8" font-family="Times,serif" font-size="14.00">c_{k}</text>\n</g>\n<!-- 2&#45;&gt;c_{k} -->\n<g id="edge9" class="edge">\n<title>2&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M283.14,-75.55C336.46,-81.76 457.93,-95.91 519.79,-103.11"/>\n<polygon fill="gray" stroke="black" points="519.57,-106.61 529.9,-104.29 520.38,-99.65 519.57,-106.61"/>\n</g>\n<!-- 3&#45;&gt;c_{k} -->\n<g id="edge10" class="edge">\n<title>3&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M492.73,-60.74C499.04,-65.23 505.77,-70.03 512,-74.5 515.95,-77.34 520.09,-80.33 524.2,-83.29"/>\n<polygon fill="gray" stroke="black" points="522.35,-86.27 532.5,-89.3 526.45,-80.61 522.35,-86.27"/>\n</g>\n<!-- 4&#45;&gt;c_{k} -->\n<g id="edge11" class="edge">\n<title>4&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M283.14,-124.85C336.46,-121.48 457.93,-113.8 519.79,-109.89"/>\n<polygon fill="gray" stroke="black" points="520.14,-113.37 529.9,-109.25 519.7,-106.39 520.14,-113.37"/>\n</g>\n<!-- 5&#45;&gt;c_{k} -->\n<g id="edge12" class="edge">\n<title>5&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M283.32,-175.69C329.87,-166.93 429.58,-147.12 512,-123.5 514.63,-122.75 517.32,-121.93 520.03,-121.07"/>\n<polygon fill="gray" stroke="black" points="521.37,-124.31 529.76,-117.84 519.16,-117.67 521.37,-124.31"/>\n</g>\n</g>\n</svg>\n'}
+    {'image/svg+xml': '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n<!-- Generated by graphviz version 2.43.0 (0)\n -->\n<!-- Title: %3 Pages: 1 -->\n<svg width="811pt" height="207pt"\n viewBox="0.00 0.00 811.00 207.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 203)">\n<title>%3</title>\n<polygon fill="white" stroke="transparent" points="-4,4 -4,-203 807,-203 807,4 -4,4"/>\n<text text-anchor="middle" x="401.5" y="-7.8" font-family="Times,serif" font-size="14.00">Reduce cell</text>\n<!-- c_{k&#45;2} -->\n<g id="node1" class="node">\n<title>c_{k&#45;2}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-128 0,-128 0,-92 71,-92 71,-128"/>\n<text text-anchor="middle" x="35.5" y="-106.3" font-family="Times,serif" font-size="14.00">c_{k&#45;2}</text>\n</g>\n<!-- 2 -->\n<g id="node3" class="node">\n<title>2</title>\n<polygon fill="lightblue" stroke="black" points="281,-116 227,-116 227,-80 281,-80 281,-116"/>\n<text text-anchor="middle" x="254" y="-94.3" font-family="Times,serif" font-size="14.00">2</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;2 -->\n<g id="edge1" class="edge">\n<title>c_{k&#45;2}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M71.28,-108.07C111.11,-105.86 176.07,-102.26 216.57,-100.02"/>\n<polygon fill="gray" stroke="black" points="217.02,-103.5 226.81,-99.45 216.63,-96.51 217.02,-103.5"/>\n<text text-anchor="middle" x="138" y="-109.8" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 3 -->\n<g id="node4" class="node">\n<title>3</title>\n<polygon fill="lightblue" stroke="black" points="502.5,-199 448.5,-199 448.5,-163 502.5,-163 502.5,-199"/>\n<text text-anchor="middle" x="475.5" y="-177.3" font-family="Times,serif" font-size="14.00">3</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;3 -->\n<g id="edge4" class="edge">\n<title>c_{k&#45;2}&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M71.41,-122.23C124.5,-140.11 229.09,-172.5 321,-184 360.92,-189 407.13,-187.06 438.33,-184.63"/>\n<polygon fill="gray" stroke="black" points="438.63,-188.11 448.31,-183.79 438.05,-181.14 438.63,-188.11"/>\n<text text-anchor="middle" x="254" y="-183.8" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- c_{k&#45;1} -->\n<g id="node2" class="node">\n<title>c_{k&#45;1}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-59 0,-59 0,-23 71,-23 71,-59"/>\n<text text-anchor="middle" x="35.5" y="-37.3" font-family="Times,serif" font-size="14.00">c_{k&#45;1}</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;2 -->\n<g id="edge2" class="edge">\n<title>c_{k&#45;1}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M71.28,-50.16C111.28,-60.69 176.62,-77.89 217.09,-88.55"/>\n<polygon fill="gray" stroke="black" points="216.25,-91.94 226.81,-91.11 218.03,-85.17 216.25,-91.94"/>\n<text text-anchor="middle" x="138" y="-83.8" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 4 -->\n<g id="node5" class="node">\n<title>4</title>\n<polygon fill="lightblue" stroke="black" points="502.5,-106 448.5,-106 448.5,-70 502.5,-70 502.5,-106"/>\n<text text-anchor="middle" x="475.5" y="-84.3" font-family="Times,serif" font-size="14.00">4</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;4 -->\n<g id="edge6" class="edge">\n<title>c_{k&#45;1}&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M71.12,-41.53C122.08,-42.64 220.19,-45.99 303,-56 350.01,-61.68 403.56,-72.36 438.13,-79.81"/>\n<polygon fill="gray" stroke="black" points="437.7,-83.3 448.22,-82.01 439.2,-76.46 437.7,-83.3"/>\n<text text-anchor="middle" x="254" y="-59.8" font-family="Times,serif" font-size="14.00">sep_conv_5x5</text>\n</g>\n<!-- 2&#45;&gt;3 -->\n<g id="edge3" class="edge">\n<title>2&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M275.33,-116.14C287.73,-126.31 304.36,-138.44 321,-146 331.63,-150.83 396.48,-164.81 438.42,-173.57"/>\n<polygon fill="gray" stroke="black" points="437.78,-177.01 448.28,-175.62 439.21,-170.16 437.78,-177.01"/>\n<text text-anchor="middle" x="366.5" y="-170.8" font-family="Times,serif" font-size="14.00">dil_conv_5x5</text>\n</g>\n<!-- 2&#45;&gt;4 -->\n<g id="edge5" class="edge">\n<title>2&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M281.04,-96.81C320.15,-95.03 394.18,-91.66 438.45,-89.64"/>\n<polygon fill="gray" stroke="black" points="438.66,-93.14 448.49,-89.18 438.34,-86.14 438.66,-93.14"/>\n<text text-anchor="middle" x="366.5" y="-98.8" font-family="Times,serif" font-size="14.00">dil_conv_5x5</text>\n</g>\n<!-- 5 -->\n<g id="node6" class="node">\n<title>5</title>\n<polygon fill="lightblue" stroke="black" points="709,-70 655,-70 655,-34 709,-34 709,-70"/>\n<text text-anchor="middle" x="682" y="-48.3" font-family="Times,serif" font-size="14.00">5</text>\n</g>\n<!-- 2&#45;&gt;5 -->\n<g id="edge8" class="edge">\n<title>2&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M281.15,-87.63C314.9,-74.86 375.74,-53.89 430,-46 505.75,-34.98 595.69,-41.91 644.7,-47.34"/>\n<polygon fill="gray" stroke="black" points="644.48,-50.83 654.81,-48.5 645.28,-43.88 644.48,-50.83"/>\n<text text-anchor="middle" x="475.5" y="-49.8" font-family="Times,serif" font-size="14.00">dil_conv_5x5</text>\n</g>\n<!-- c_{k} -->\n<g id="node7" class="node">\n<title>c_{k}</title>\n<polygon fill="palegoldenrod" stroke="black" points="803,-135 746,-135 746,-99 803,-99 803,-135"/>\n<text text-anchor="middle" x="774.5" y="-113.3" font-family="Times,serif" font-size="14.00">c_{k}</text>\n</g>\n<!-- 2&#45;&gt;c_{k} -->\n<g id="edge9" class="edge">\n<title>2&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M281.09,-105.69C293.13,-108.88 307.67,-112.25 321,-114 468.22,-133.38 506.52,-120.22 655,-122 687.44,-122.39 695.6,-123.77 728,-122 730.5,-121.86 733.07,-121.68 735.66,-121.48"/>\n<polygon fill="gray" stroke="black" points="735.99,-124.96 745.63,-120.55 735.35,-117.99 735.99,-124.96"/>\n</g>\n<!-- 3&#45;&gt;c_{k} -->\n<g id="edge10" class="edge">\n<title>3&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M502.52,-181.99C549.36,-182.87 650.22,-180.62 728,-150 733.7,-147.76 739.34,-144.63 744.61,-141.18"/>\n<polygon fill="gray" stroke="black" points="746.93,-143.83 753.07,-135.19 742.88,-138.12 746.93,-143.83"/>\n</g>\n<!-- 4&#45;&gt;5 -->\n<g id="edge7" class="edge">\n<title>4&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M502.69,-78.92C513.78,-75.36 526.9,-71.54 539,-69 574.6,-61.52 615.96,-57.03 644.83,-54.56"/>\n<polygon fill="gray" stroke="black" points="645.18,-58.05 654.86,-53.74 644.61,-51.07 645.18,-58.05"/>\n<text text-anchor="middle" x="588" y="-72.8" font-family="Times,serif" font-size="14.00">sep_conv_5x5</text>\n</g>\n<!-- 4&#45;&gt;c_{k} -->\n<g id="edge11" class="edge">\n<title>4&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M502.6,-90.55C555.32,-95.7 674.69,-107.35 735.85,-113.32"/>\n<polygon fill="gray" stroke="black" points="735.56,-116.81 745.85,-114.3 736.24,-109.84 735.56,-116.81"/>\n</g>\n<!-- 5&#45;&gt;c_{k} -->\n<g id="edge12" class="edge">\n<title>5&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M708.73,-70.23C715.04,-74.72 721.77,-79.53 728,-84 731.95,-86.84 736.09,-89.82 740.2,-92.79"/>\n<polygon fill="gray" stroke="black" points="738.35,-95.77 748.5,-98.8 742.45,-90.1 738.35,-95.77"/>\n</g>\n</g>\n</svg>\n'}
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 429-453
+
+You might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
+This architecture achieves a validation accuracy of 89.69% after training for 100 epochs.
 
 Reproduce results in DARTS paper
 --------------------------------
 
-You might notice there's still a gap between our results and the results in the DARTS paper.
+After a brief walkthrough of search + retrain process with one-shot strategy,
+we then fill the gap between our results and the results in the `DARTS` paper.
 This is because we didn't introduce some extra training tricks, including `DropPath <https://arxiv.org/pdf/1605.07648v4.pdf>`__,
 Auxiliary loss, gradient clipping and augmentations like `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
-They also train the networks for longer time (i.e., 600 epochs).
+They also train the deeper (20 cells) and wider (36 channels) networks for longer time (600 epochs).
 
 To implement these tricks, we need to rewrite a few parts of evaluator.
 
@@ -519,7 +757,7 @@ we can simply inherit :class:`~nni.retiarii.evaluator.pytorch.ClassificationModu
 behind :class:`~nni.retiarii.evaluator.pytorch.Classification`.
 This could look intimidating at first, but most of them are just plug-and-play tricks which you don't need to know details about.
 
-.. GENERATED FROM PYTHON SOURCE LINES 304-359
+.. GENERATED FROM PYTHON SOURCE LINES 454-509
 
 .. code-block:: default
 
@@ -585,14 +823,14 @@ This could look intimidating at first, but most of them are just plug-and-play t
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 360-364
+.. GENERATED FROM PYTHON SOURCE LINES 510-514
 
 The full evaluator is written as follows,
 which simply wraps everything (except model space and search strategy of course), in a single object.
 :class:`~nni.retiarii.evaluator.pytorch.Lightning` here is a special type of evaluator.
 Don't forget to use the train/val data split specialized for search (1:1) here.
 
-.. GENERATED FROM PYTHON SOURCE LINES 365-381
+.. GENERATED FROM PYTHON SOURCE LINES 515-531
 
 .. code-block:: default
 
@@ -636,15 +874,15 @@ Don't forget to use the train/val data split specialized for search (1:1) here.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 382-387
+.. GENERATED FROM PYTHON SOURCE LINES 532-537
 
-DARTS strategy is created with gradient clip turned on.
+:class:`~nni.retiarii.strategy.DARTS` strategy is created with gradient clip turned on.
 If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
 However, enabling gradient cip in the trainer above won't work, because the underlying
-implementation of DARTS strategy is based on
+implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
 `manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__.
 
-.. GENERATED FROM PYTHON SOURCE LINES 388-391
+.. GENERATED FROM PYTHON SOURCE LINES 538-541
 
 .. code-block:: default
 
@@ -658,7 +896,7 @@ implementation of DARTS strategy is based on
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 392-398
+.. GENERATED FROM PYTHON SOURCE LINES 542-548
 
 Then we use the newly created evaluator and strategy to launch the experiment again.
 
@@ -667,7 +905,7 @@ Then we use the newly created evaluator and strategy to launch the experiment ag
    ``model_space`` has to be re-instantiated because a known limitation,
    i.e., one model space can't be reused across multiple experiments.
 
-.. GENERATED FROM PYTHON SOURCE LINES 399-410
+.. GENERATED FROM PYTHON SOURCE LINES 549-560
 
 .. code-block:: default
 
@@ -702,21 +940,21 @@ Then we use the newly created evaluator and strategy to launch the experiment ag
     12.164    Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.08s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.09s/it, v_num=, train_loss=2.350, train_acc=0.109]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.10s/it, v_num=, train_loss=2.350, train_acc=0.109]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.10s/it, v_num=, train_loss=2.350, train_acc=0.109]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.11s/it]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.12s/it, v_num=, train_loss=2.340, train_acc=0.0938]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.12s/it, v_num=, train_loss=2.340, train_acc=0.0938]`Trainer.fit` stopped: `max_epochs=1` reached.
+    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.12s/it, v_num=, train_loss=2.340, train_acc=0.0938]
 
-    {'normal/op_2_0': 'sep_conv_5x5', 'normal/input_2_0': 1, 'normal/op_2_1': 'dil_conv_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'dil_conv_5x5', 'normal/input_3_0': 1, 'normal/op_3_1': 'sep_conv_5x5', 'normal/input_3_1': 0, 'normal/op_4_0': 'sep_conv_3x3', 'normal/input_4_0': 1, 'normal/op_4_1': 'dil_conv_3x3', 'normal/input_4_1': 0, 'normal/op_5_0': 'sep_conv_3x3', 'normal/input_5_0': 2, 'normal/op_5_1': 'dil_conv_5x5', 'normal/input_5_1': 4, 'reduce/op_2_0': 'max_pool_3x3', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'sep_conv_5x5', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'skip_connect', 'reduce/input_3_0': 1, 'reduce/op_3_1': 'avg_pool_3x3', 'reduce/input_3_1': 2, 'reduce/op_4_0': 'max_pool_3x3', 'reduce/input_4_0': 0, 'reduce/op_4_1': 'dil_conv_3x3', 'reduce/input_4_1': 1, 'reduce/op_5_0': 'sep_conv_3x3', 'reduce/input_5_0': 1, 'reduce/op_5_1': 'dil_conv_3x3', 'reduce/input_5_1': 2}
+    {'normal/op_2_0': 'max_pool_3x3', 'normal/input_2_0': 0, 'normal/op_2_1': 'sep_conv_5x5', 'normal/input_2_1': 1, 'normal/op_3_0': 'sep_conv_3x3', 'normal/input_3_0': 2, 'normal/op_3_1': 'avg_pool_3x3', 'normal/input_3_1': 0, 'normal/op_4_0': 'sep_conv_5x5', 'normal/input_4_0': 3, 'normal/op_4_1': 'dil_conv_5x5', 'normal/input_4_1': 1, 'normal/op_5_0': 'max_pool_3x3', 'normal/input_5_0': 2, 'normal/op_5_1': 'dil_conv_5x5', 'normal/input_5_1': 3, 'reduce/op_2_0': 'max_pool_3x3', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'sep_conv_3x3', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'avg_pool_3x3', 'reduce/input_3_0': 0, 'reduce/op_3_1': 'max_pool_3x3', 'reduce/input_3_1': 1, 'reduce/op_4_0': 'max_pool_3x3', 'reduce/input_4_0': 2, 'reduce/op_4_1': 'max_pool_3x3', 'reduce/input_4_1': 0, 'reduce/op_5_0': 'dil_conv_3x3', 'reduce/input_5_0': 4, 'reduce/op_5_1': 'dil_conv_5x5', 'reduce/input_5_1': 2}
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 411-415
+.. GENERATED FROM PYTHON SOURCE LINES 561-565
 
 When retraining,
 we extend the original dataloader to introduce another trick called `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
 Cutout is a data augmentation technique that randomly masks out rectangular regions in images.
 In CIFAR-10, the typical masked size is 16x16 (the image sizes are 32x32 in the dataset).
 
-.. GENERATED FROM PYTHON SOURCE LINES 416-442
+.. GENERATED FROM PYTHON SOURCE LINES 566-592
 
 .. code-block:: default
 
@@ -753,12 +991,12 @@ In CIFAR-10, the typical masked size is 16x16 (the image sizes are 32x32 in the 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 443-445
+.. GENERATED FROM PYTHON SOURCE LINES 593-595
 
 The train dataloader needs to be reinstantiated with the new transform.
 The validation dataloader is not affected, and thus can be reused.
 
-.. GENERATED FROM PYTHON SOURCE LINES 446-450
+.. GENERATED FROM PYTHON SOURCE LINES 596-600
 
 .. code-block:: default
 
@@ -779,12 +1017,15 @@ The validation dataloader is not affected, and thus can be reused.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 451-453
+.. GENERATED FROM PYTHON SOURCE LINES 601-606
 
 We then create the final model based on the new exported architecture.
 This time, auxiliary loss and drop path probability is enabled.
 
-.. GENERATED FROM PYTHON SOURCE LINES 454-458
+Following the same procedure as paper, we also increase the number of filters to 36, and number of cells to 20,
+so as to reasonably increase the model size and boost the performance.
+
+.. GENERATED FROM PYTHON SOURCE LINES 607-611
 
 .. code-block:: default
 
@@ -799,12 +1040,12 @@ This time, auxiliary loss and drop path probability is enabled.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 459-461
+.. GENERATED FROM PYTHON SOURCE LINES 612-614
 
 Launching the retraining requires creating another evaluator.
 We can now put the gradient clipping in the keyword arguments of trainer.
 
-.. GENERATED FROM PYTHON SOURCE LINES 462-479
+.. GENERATED FROM PYTHON SOURCE LINES 615-632
 
 .. code-block:: default
 
@@ -851,35 +1092,106 @@ We can now put the gradient clipping in the keyword arguments of trainer.
     -----------------------------------------------
     0 | criterion | CrossEntropyLoss | 0     
     1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 4.4 M 
+    2 | model     | DARTS            | 3.5 M 
     -----------------------------------------------
-    4.4 M     Trainable params
+    3.5 M     Trainable params
     0         Non-trainable params
-    4.4 M     Total params
-    17.416    Total estimated model params size (MB)
+    3.5 M     Total params
+    14.191    Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:219: PossibleUserWarning: The dataloader, train_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 6 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
       rank_zero_warn(
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.29it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.29it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0625]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.59it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.58it/s, loss=3.5, v_num=, train_loss=3.500, train_acc=0.125]
     Validation: 0it [00:00, ?it/s]
     Validation:   0%|          | 0/1 [00:00<?, ?it/s]
     Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  3.09it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.19it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0625]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.19it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0625, val_loss=2.300, val_acc=0.0938]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.18it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0625, val_loss=2.300, val_acc=0.0938]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.18it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0625, val_loss=2.300, val_acc=0.0938]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  3.45it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.55it/s, loss=3.5, v_num=, train_loss=3.500, train_acc=0.125]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.55it/s, loss=3.5, v_num=, train_loss=3.500, train_acc=0.125, val_loss=2.300, val_acc=0.113]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.53it/s, loss=3.5, v_num=, train_loss=3.500, train_acc=0.125, val_loss=2.300, val_acc=0.113]`Trainer.fit` stopped: `max_steps=1` reached.
+    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.53it/s, loss=3.5, v_num=, train_loss=3.500, train_acc=0.125, val_loss=2.300, val_acc=0.113]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 480-481
+.. GENERATED FROM PYTHON SOURCE LINES 633-635
 
-.. note:: The full search and training takes around XX hours on a P100 GPU, and yields a top-1 accuracy of ~0.8%.
+The full search and training, when ``fast_dev_run`` is off, takes around 60 hours (search 8 hours + retrain 53 hours) on a P100 GPU.
+The exported architecture dict looks like this.
+
+.. GENERATED FROM PYTHON SOURCE LINES 636-672
+
+.. code-block:: default
+
+
+    plot_double_cells({
+        'normal/op_2_0': 'sep_conv_3x3',
+        'normal/input_2_0': 0,
+        'normal/op_2_1': 'sep_conv_3x3',
+        'normal/input_2_1': 1,
+        'normal/op_3_0': 'sep_conv_3x3',
+        'normal/input_3_0': 1,
+        'normal/op_3_1': 'skip_connect',
+        'normal/input_3_1': 0,
+        'normal/op_4_0': 'sep_conv_3x3',
+        'normal/input_4_0': 0,
+        'normal/op_4_1': 'max_pool_3x3',
+        'normal/input_4_1': 1,
+        'normal/op_5_0': 'sep_conv_3x3',
+        'normal/input_5_0': 0,
+        'normal/op_5_1': 'sep_conv_3x3',
+        'normal/input_5_1': 1,
+        'reduce/op_2_0': 'max_pool_3x3',
+        'reduce/input_2_0': 0,
+        'reduce/op_2_1': 'sep_conv_5x5',
+        'reduce/input_2_1': 1,
+        'reduce/op_3_0': 'dil_conv_5x5',
+        'reduce/input_3_0': 2,
+        'reduce/op_3_1': 'max_pool_3x3',
+        'reduce/input_3_1': 0,
+        'reduce/op_4_0': 'max_pool_3x3',
+        'reduce/input_4_0': 0,
+        'reduce/op_4_1': 'sep_conv_3x3',
+        'reduce/input_4_1': 2,
+        'reduce/op_5_0': 'max_pool_3x3',
+        'reduce/input_5_0': 0,
+        'reduce/op_5_1': 'skip_connect',
+        'reduce/input_5_1': 2
+    })
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    {'image/svg+xml': '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n<!-- Generated by graphviz version 2.43.0 (0)\n -->\n<!-- Title: %3 Pages: 1 -->\n<svg width="363pt" height="302pt"\n viewBox="0.00 0.00 363.00 302.04" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 298.04)">\n<title>%3</title>\n<polygon fill="white" stroke="transparent" points="-4,4 -4,-298.04 359,-298.04 359,4 -4,4"/>\n<text text-anchor="middle" x="177.5" y="-7.8" font-family="Times,serif" font-size="14.00">Normal cell</text>\n<!-- c_{k&#45;2} -->\n<g id="node1" class="node">\n<title>c_{k&#45;2}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-226.04 0,-226.04 0,-190.04 71,-190.04 71,-226.04"/>\n<text text-anchor="middle" x="35.5" y="-204.34" font-family="Times,serif" font-size="14.00">c_{k&#45;2}</text>\n</g>\n<!-- 2 -->\n<g id="node3" class="node">\n<title>2</title>\n<polygon fill="lightblue" stroke="black" points="261,-265.04 207,-265.04 207,-229.04 261,-229.04 261,-265.04"/>\n<text text-anchor="middle" x="234" y="-243.34" font-family="Times,serif" font-size="14.00">2</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;2 -->\n<g id="edge1" class="edge">\n<title>c_{k&#45;2}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M46.25,-226.26C55.2,-240.86 69.95,-260.3 89,-269.04 129.4,-287.57 145.74,-279.25 189,-269.04 191.81,-268.38 194.64,-267.51 197.44,-266.5"/>\n<polygon fill="gray" stroke="black" points="198.88,-269.69 206.76,-262.61 196.18,-263.23 198.88,-269.69"/>\n<text text-anchor="middle" x="139" y="-282.84" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 3 -->\n<g id="node4" class="node">\n<title>3</title>\n<polygon fill="lightblue" stroke="black" points="261,-103.04 207,-103.04 207,-67.04 261,-67.04 261,-103.04"/>\n<text text-anchor="middle" x="234" y="-81.34" font-family="Times,serif" font-size="14.00">3</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;3 -->\n<g id="edge4" class="edge">\n<title>c_{k&#45;2}&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M48.43,-189.97C55.45,-178.96 64.24,-164.47 71,-151.04 80.5,-132.17 72.4,-120.11 89,-107.04 105.23,-94.26 159.39,-88.83 196.46,-86.58"/>\n<polygon fill="gray" stroke="black" points="197.1,-90.05 206.89,-86 196.71,-83.06 197.1,-90.05"/>\n<text text-anchor="middle" x="139" y="-110.84" font-family="Times,serif" font-size="14.00">skip_connect</text>\n</g>\n<!-- 4 -->\n<g id="node5" class="node">\n<title>4</title>\n<polygon fill="lightblue" stroke="black" points="261,-157.04 207,-157.04 207,-121.04 261,-121.04 261,-157.04"/>\n<text text-anchor="middle" x="234" y="-135.34" font-family="Times,serif" font-size="14.00">4</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;4 -->\n<g id="edge5" class="edge">\n<title>c_{k&#45;2}&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M71.21,-192.52C77.08,-190.18 83.17,-187.92 89,-186.04 132.41,-172.07 146.36,-179.22 189,-163.04 191.84,-161.96 194.72,-160.74 197.58,-159.42"/>\n<polygon fill="gray" stroke="black" points="199.15,-162.54 206.56,-154.97 196.05,-156.27 199.15,-162.54"/>\n<text text-anchor="middle" x="139" y="-189.84" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 5 -->\n<g id="node6" class="node">\n<title>5</title>\n<polygon fill="lightblue" stroke="black" points="261,-211.04 207,-211.04 207,-175.04 261,-175.04 261,-211.04"/>\n<text text-anchor="middle" x="234" y="-189.34" font-family="Times,serif" font-size="14.00">5</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;5 -->\n<g id="edge7" class="edge">\n<title>c_{k&#45;2}&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M60.9,-226.09C69.36,-231.33 79.2,-236.36 89,-239.04 131.87,-250.75 148.17,-256.6 189,-239.04 199.69,-234.44 198.97,-228.45 207,-220.04 207.42,-219.6 207.85,-219.15 208.28,-218.71"/>\n<polygon fill="gray" stroke="black" points="210.96,-220.96 215.36,-211.32 205.91,-216.12 210.96,-220.96"/>\n<text text-anchor="middle" x="139" y="-253.84" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- c_{k&#45;1} -->\n<g id="node2" class="node">\n<title>c_{k&#45;1}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-142.04 0,-142.04 0,-106.04 71,-106.04 71,-142.04"/>\n<text text-anchor="middle" x="35.5" y="-120.34" font-family="Times,serif" font-size="14.00">c_{k&#45;1}</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;2 -->\n<g id="edge2" class="edge">\n<title>c_{k&#45;1}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M46.61,-142.08C58.35,-162.39 77.56,-193.55 89,-201.04 126.84,-225.84 146.81,-203.72 189,-220.04 191.92,-221.17 194.85,-222.49 197.75,-223.93"/>\n<polygon fill="gray" stroke="black" points="196.35,-227.15 206.81,-228.85 199.7,-221 196.35,-227.15"/>\n<text text-anchor="middle" x="139" y="-223.84" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;3 -->\n<g id="edge3" class="edge">\n<title>c_{k&#45;1}&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M41.64,-106.01C48.6,-85.35 63.22,-52.51 89,-38.04 127.76,-16.29 148.22,-20.36 189,-38.04 199.26,-42.49 208.22,-50.64 215.33,-58.91"/>\n<polygon fill="gray" stroke="black" points="212.6,-61.11 221.56,-66.77 218.09,-56.76 212.6,-61.11"/>\n<text text-anchor="middle" x="139" y="-41.84" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;4 -->\n<g id="edge6" class="edge">\n<title>c_{k&#45;1}&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M48.84,-105.9C58.25,-93.79 72.39,-78.87 89,-72.04 130.1,-55.13 151.68,-47.91 189,-72.04 205.37,-82.63 196.08,-95.89 207,-112.04 207.19,-112.32 207.39,-112.61 207.58,-112.89"/>\n<polygon fill="gray" stroke="black" points="204.97,-115.22 213.93,-120.88 210.45,-110.87 204.97,-115.22"/>\n<text text-anchor="middle" x="139" y="-75.84" font-family="Times,serif" font-size="14.00">max_pool_3x3</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;5 -->\n<g id="edge8" class="edge">\n<title>c_{k&#45;1}&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M71.22,-125.64C109.85,-127.93 169.4,-133.14 189,-144.04 200.04,-150.18 198.61,-156.59 207,-166.04 207.41,-166.5 207.82,-166.96 208.23,-167.42"/>\n<polygon fill="gray" stroke="black" points="205.82,-169.96 215.17,-174.93 210.96,-165.21 205.82,-169.96"/>\n<text text-anchor="middle" x="139" y="-147.84" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- c_{k} -->\n<g id="node7" class="node">\n<title>c_{k}</title>\n<polygon fill="palegoldenrod" stroke="black" points="355,-183.04 298,-183.04 298,-147.04 355,-147.04 355,-183.04"/>\n<text text-anchor="middle" x="326.5" y="-161.34" font-family="Times,serif" font-size="14.00">c_{k}</text>\n</g>\n<!-- 2&#45;&gt;c_{k} -->\n<g id="edge9" class="edge">\n<title>2&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M255.08,-228.84C267.62,-217.48 283.94,-202.7 297.71,-190.22"/>\n<polygon fill="gray" stroke="black" points="300.41,-192.5 305.47,-183.19 295.71,-187.31 300.41,-192.5"/>\n</g>\n<!-- 3&#45;&gt;c_{k} -->\n<g id="edge10" class="edge">\n<title>3&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M255.54,-103.19C267.92,-114.14 283.86,-128.23 297.4,-140.2"/>\n<polygon fill="gray" stroke="black" points="295.23,-142.96 305.05,-146.96 299.87,-137.71 295.23,-142.96"/>\n</g>\n<!-- 4&#45;&gt;c_{k} -->\n<g id="edge11" class="edge">\n<title>4&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M261.18,-146.56C269.52,-148.96 278.92,-151.66 287.91,-154.24"/>\n<polygon fill="gray" stroke="black" points="287.23,-157.69 297.81,-157.08 289.16,-150.96 287.23,-157.69"/>\n</g>\n<!-- 5&#45;&gt;c_{k} -->\n<g id="edge12" class="edge">\n<title>5&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M261.18,-184.94C269.61,-182.33 279.13,-179.39 288.2,-176.58"/>\n<polygon fill="gray" stroke="black" points="289.29,-179.91 297.81,-173.61 287.22,-173.22 289.29,-179.91"/>\n</g>\n</g>\n</svg>\n'}
+    {'image/svg+xml': '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"\n "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n<!-- Generated by graphviz version 2.43.0 (0)\n -->\n<!-- Title: %3 Pages: 1 -->\n<svg width="597pt" height="289pt"\n viewBox="0.00 0.00 597.00 289.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 285)">\n<title>%3</title>\n<polygon fill="white" stroke="transparent" points="-4,4 -4,-285 593,-285 593,4 -4,4"/>\n<text text-anchor="middle" x="294.5" y="-7.8" font-family="Times,serif" font-size="14.00">Reduce cell</text>\n<!-- c_{k&#45;2} -->\n<g id="node1" class="node">\n<title>c_{k&#45;2}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-203 0,-203 0,-167 71,-167 71,-203"/>\n<text text-anchor="middle" x="35.5" y="-181.3" font-family="Times,serif" font-size="14.00">c_{k&#45;2}</text>\n</g>\n<!-- 2 -->\n<g id="node3" class="node">\n<title>2</title>\n<polygon fill="lightblue" stroke="black" points="284,-168 230,-168 230,-132 284,-132 284,-168"/>\n<text text-anchor="middle" x="257" y="-146.3" font-family="Times,serif" font-size="14.00">2</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;2 -->\n<g id="edge1" class="edge">\n<title>c_{k&#45;2}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M71.28,-179.45C111.87,-172.98 178.67,-162.33 219.84,-155.77"/>\n<polygon fill="gray" stroke="black" points="220.65,-159.18 229.97,-154.15 219.55,-152.27 220.65,-159.18"/>\n<text text-anchor="middle" x="139" y="-179.8" font-family="Times,serif" font-size="14.00">max_pool_3x3</text>\n</g>\n<!-- 3 -->\n<g id="node4" class="node">\n<title>3</title>\n<polygon fill="lightblue" stroke="black" points="495,-252 441,-252 441,-216 495,-216 495,-252"/>\n<text text-anchor="middle" x="468" y="-230.3" font-family="Times,serif" font-size="14.00">3</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;3 -->\n<g id="edge4" class="edge">\n<title>c_{k&#45;2}&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M52.91,-203.04C62.56,-212.64 75.49,-223.89 89,-231 136.89,-256.19 153.31,-254.28 207,-261 302.52,-272.95 328.49,-263.28 423,-245 425.5,-244.52 428.08,-243.98 430.66,-243.41"/>\n<polygon fill="gray" stroke="black" points="431.63,-246.78 440.58,-241.1 430.04,-239.96 431.63,-246.78"/>\n<text text-anchor="middle" x="257" y="-269.8" font-family="Times,serif" font-size="14.00">max_pool_3x3</text>\n</g>\n<!-- 4 -->\n<g id="node5" class="node">\n<title>4</title>\n<polygon fill="lightblue" stroke="black" points="495,-198 441,-198 441,-162 495,-162 495,-198"/>\n<text text-anchor="middle" x="468" y="-176.3" font-family="Times,serif" font-size="14.00">4</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;4 -->\n<g id="edge5" class="edge">\n<title>c_{k&#45;2}&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M71.05,-198.36C140.47,-223.05 300.72,-269.14 423,-221 425.52,-220.01 433.21,-213.1 441.47,-205.23"/>\n<polygon fill="gray" stroke="black" points="444,-207.65 448.76,-198.19 439.14,-202.61 444,-207.65"/>\n<text text-anchor="middle" x="257" y="-245.8" font-family="Times,serif" font-size="14.00">max_pool_3x3</text>\n</g>\n<!-- 5 -->\n<g id="node6" class="node">\n<title>5</title>\n<polygon fill="lightblue" stroke="black" points="495,-106 441,-106 441,-70 495,-70 495,-106"/>\n<text text-anchor="middle" x="468" y="-84.3" font-family="Times,serif" font-size="14.00">5</text>\n</g>\n<!-- c_{k&#45;2}&#45;&gt;5 -->\n<g id="edge7" class="edge">\n<title>c_{k&#45;2}&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M69.3,-166.88C75.77,-163.49 82.56,-160.05 89,-157 188.13,-110.12 215.85,-95.54 325,-85 360.85,-81.54 402.02,-83 430.76,-84.9"/>\n<polygon fill="gray" stroke="black" points="430.54,-88.39 440.76,-85.61 431.03,-81.41 430.54,-88.39"/>\n<text text-anchor="middle" x="257" y="-108.8" font-family="Times,serif" font-size="14.00">max_pool_3x3</text>\n</g>\n<!-- c_{k&#45;1} -->\n<g id="node2" class="node">\n<title>c_{k&#45;1}</title>\n<polygon fill="#b4eeb4" stroke="black" points="71,-59 0,-59 0,-23 71,-23 71,-59"/>\n<text text-anchor="middle" x="35.5" y="-37.3" font-family="Times,serif" font-size="14.00">c_{k&#45;1}</text>\n</g>\n<!-- c_{k&#45;1}&#45;&gt;2 -->\n<g id="edge2" class="edge">\n<title>c_{k&#45;1}&#45;&gt;2</title>\n<path fill="none" stroke="black" d="M71.28,-58.27C112.21,-78.6 179.8,-112.16 220.88,-132.56"/>\n<polygon fill="gray" stroke="black" points="219.46,-135.76 229.97,-137.08 222.57,-129.49 219.46,-135.76"/>\n<text text-anchor="middle" x="139" y="-117.8" font-family="Times,serif" font-size="14.00">sep_conv_5x5</text>\n</g>\n<!-- 2&#45;&gt;3 -->\n<g id="edge3" class="edge">\n<title>2&#45;&gt;3</title>\n<path fill="none" stroke="black" d="M284.09,-163.71C296.36,-169.93 311.27,-177.18 325,-183 360.48,-198.05 402.09,-212.65 431.06,-222.34"/>\n<polygon fill="gray" stroke="black" points="430.16,-225.73 440.75,-225.56 432.36,-219.09 430.16,-225.73"/>\n<text text-anchor="middle" x="374" y="-222.8" font-family="Times,serif" font-size="14.00">dil_conv_5x5</text>\n</g>\n<!-- 2&#45;&gt;4 -->\n<g id="edge6" class="edge">\n<title>2&#45;&gt;4</title>\n<path fill="none" stroke="black" d="M284.19,-151.58C316.9,-153.84 374.45,-158.79 423,-168 425.52,-168.48 428.1,-169.03 430.7,-169.62"/>\n<polygon fill="gray" stroke="black" points="430.08,-173.07 440.63,-172.08 431.77,-166.28 430.08,-173.07"/>\n<text text-anchor="middle" x="374" y="-171.8" font-family="Times,serif" font-size="14.00">sep_conv_3x3</text>\n</g>\n<!-- 2&#45;&gt;5 -->\n<g id="edge8" class="edge">\n<title>2&#45;&gt;5</title>\n<path fill="none" stroke="black" d="M279.18,-131.95C291.7,-122.31 308.32,-111.19 325,-105 359.31,-92.27 401.19,-88.56 430.54,-87.71"/>\n<polygon fill="gray" stroke="black" points="430.82,-91.2 440.75,-87.51 430.69,-84.21 430.82,-91.2"/>\n<text text-anchor="middle" x="374" y="-108.8" font-family="Times,serif" font-size="14.00">skip_connect</text>\n</g>\n<!-- c_{k} -->\n<g id="node7" class="node">\n<title>c_{k}</title>\n<polygon fill="palegoldenrod" stroke="black" points="589,-164 532,-164 532,-128 589,-128 589,-164"/>\n<text text-anchor="middle" x="560.5" y="-142.3" font-family="Times,serif" font-size="14.00">c_{k}</text>\n</g>\n<!-- 2&#45;&gt;c_{k} -->\n<g id="edge9" class="edge">\n<title>2&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M284.23,-149.65C337.72,-148.94 459.6,-147.33 521.67,-146.5"/>\n<polygon fill="gray" stroke="black" points="521.86,-150 531.81,-146.37 521.77,-143 521.86,-150"/>\n</g>\n<!-- 3&#45;&gt;c_{k} -->\n<g id="edge10" class="edge">\n<title>3&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M487.75,-215.77C500.98,-202.91 518.87,-185.51 533.48,-171.31"/>\n<polygon fill="gray" stroke="black" points="536.04,-173.69 540.77,-164.21 531.16,-168.67 536.04,-173.69"/>\n</g>\n<!-- 4&#45;&gt;c_{k} -->\n<g id="edge11" class="edge">\n<title>4&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M495.18,-170.17C503.61,-167 513.13,-163.42 522.2,-160.01"/>\n<polygon fill="gray" stroke="black" points="523.67,-163.2 531.81,-156.4 521.21,-156.65 523.67,-163.2"/>\n</g>\n<!-- 5&#45;&gt;c_{k} -->\n<g id="edge12" class="edge">\n<title>5&#45;&gt;c_{k}</title>\n<path fill="none" stroke="black" d="M495.18,-104.78C503.97,-110.41 513.94,-116.8 523.36,-122.84"/>\n<polygon fill="gray" stroke="black" points="521.5,-125.8 531.81,-128.25 525.27,-119.91 521.5,-125.8"/>\n</g>\n</g>\n</svg>\n'}
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 673-686
+
+This architecture, after retraining, yields a top-1 accuracy of 97.12%. If we take the best snapshot throughout the retrain process,
+there is a chance that the top-1 accuracy will be 97.28%.
+
+.. image:: ../../img/darts_val_acc.png
+
+In the figure, the orange line is the validation accuracy curve after training for 600 epochs,
+while the red line corresponding the previous version in this tutorial before adding all the training tricks and
+only trains for 100 epochs.
+
+The results outperforms "DARTS (first order) + cutout" in `DARTS`_ paper, which is only 97.00±0.14%.
+It's even comparable with "DARTS (second order) + cutout" in the paper (97.24±0.09%),
+though we didn't implement the second order version.
+The implementation of second order DARTS is in our future plan, and we also welcome your contribution.
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  37.907 seconds)
+   **Total running time of the script:** ( 1 minutes  36.683 seconds)
 
 
 .. _sphx_glr_download_tutorials_darts.py:

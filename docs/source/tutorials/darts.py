@@ -2,7 +2,7 @@
 Searching on DARTS search space
 ===============================
 
-In this tutorial, we demonstrate how to search on the famous model space proposed in `DARTS <https://arxiv.org/abs/1806.09055>`__.
+In this tutorial, we demonstrate how to search on the famous model space proposed in `DARTS`_.
 
 Through this process, you will learn:
 
@@ -10,7 +10,7 @@ Through this process, you will learn:
 * How to use one-shot exploration strategies to explore a model space.
 * How to customize evaluators to achieve the best performance.
 
-In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves xx.xx% accuracy.
+In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves up to 97.28% accuracy.
 
 .. attention::
 
@@ -18,69 +18,148 @@ In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves
    If you don't have one, you can set ``gpus`` in :class:`~nni.retiarii.evaluator.pytorch.Classification` to be 0,
    but do note that it will be much slower.
 
-Use the model space
--------------------
+.. _DARTS: https://arxiv.org/abs/1806.09055
 
-The model space provided in DARTS originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
-where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
-There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
-The key difference between normal and reduction cell is that the reduction cell will downsample the input feature map,
-and decrease its resolution. Normal and reduction cells are stacked alternately, as shown in the following figure.
+Use a pre-searched model
+------------------------
 
-.. image:: ../../img/nasnet_cell_stack.png
+Similar to `the beginner tutorial of PyTorch <https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html>`__,
+we begin with CIFAR-10 dataset, which is a image classification dataset of 10 categories.
+The images in CIFAR-10 are of size 3x32x32, i.e., RGB-colored images of 32x32 pixels in size.
 
-A cell takes outputs from two previous cells as inputs and contains a collection of *nodes*.
-Each node takes two previous nodes within the same cell (or the two cell inputs),
-and applies an *operator* (e.g., convolution, or max-pooling) to each input,
-and sums the outputs of operators as the output of the node.
-The output of cell is the concatenation of all the nodes that are never used as inputs of another node.
-We recommend reading `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for details.
-
-We illustrate an example of cells in the following figure.
-
-.. image:: ../../img/nasnet_cell.png
-
-The search space proposed in DARTS paper introduced two modifications to the original space in `NASNet <https://arxiv.org/abs/1707.07012>`__.
-
-Firstly, the operator candidates have been narrowed down to seven:
-
-- Max pooling 3x3
-- Average pooling 3x3
-- Skip connect (Identity)
-- Separable convolution 3x3
-- Separable convolution 5x5
-- Dilated convolution 3x3
-- Dilated convolution 5x5
-
-Secondly, the output of cell is the concatenate of **all the nodes within the cell**.
-
-As the search space is based on cell, once the normal and reduction cell has been fixed, we can stack them for indefinite times.
-To save the search cost, the common practice is to reduce the number of filters (i.e., channels) and number of stacked cells
-during the search phase, and increase them back when training the final searched architecture.
-
-.. note::
-
-   DARTS is one of those papers that innovate both in search space and search strategy.
-   In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
-   We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
-   We did NOT imply that the DARTS space and DARTS strategy has to used together.
-   You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
+We first load the CIFAR-10 dataset with torchvision.
 """
+
+import nni
+import torch
+from torchvision import transforms
+from torchvision.datasets import CIFAR10
+from nni.retiarii.evaluator.pytorch import DataLoader
+
+CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
+CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
+
+transform_valid = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+])
+valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform_valid)
+valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
 
 # %%
 #
-# In the following example, we initialize a DARTS model space, with only 16 initial filters and 8 stacked cells.
+# .. note::
+#
+#    If you are to use multi-trial strategies, wrapping CIFAR10 with :func:`nni.trace` and
+#    use DataLoader from ``nni.retiarii.evaluator.pytorch`` (instead of ``torch.utils.data``) are mandatory.
+#    Otherwise, it's optional.
+#
+# When working with famous datasets like CIFAR-10 or ImageNet,
+# it's tempting to use or finetune from a pretrained model, like ResNet.
+# There's nothing wrong with doing so, and sometimes it might be beneficial.
+# Thanks to the development of NAS, we now have quite a large number of *pre-searched models*,
+# which are produced by most popular NAS literatures.
+# You can easily load these models, validate their performances, and finetune them if you need.
+#
+# We present :doc:`model space hub </nas/space_hub>`, where you can find many built-in model spaces,
+# along with many pre-searched models.
+# We choose one from `DARTS`_ search space, which is natively trained on our target dataset, CIFAR-10,
+# so as to save the tedious steps of finetuning.
+#
+# .. tip::
+#
+#    Finetuning a pre-searched model on other datasets is no different from finetuning *any model*.
+#    We recommend reading
+#    `this tutorial of object detection finetuning <https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html>`__
+#    if you want to know how finetuning is generally done in PyTorch.
+
+from nni.retiarii.hub.pytorch import DARTS as DartsSpace
+
+darts_v2_model = DartsSpace.load_searched_model('darts-v2', pretrained=True, download=True)
+
+def evaluate_model(model, cuda=False):
+    device = torch.device('cuda' if cuda else 'cpu')
+    model.to(device)
+    model.eval()
+    with torch.no_grad():
+        correct = total = 0
+        for inputs, targets in valid_loader:
+            inputs, targets = inputs.to(device), targets.to(device)
+            logits = model(inputs)
+            _, predict = torch.max(logits, 1)
+            correct += (predict == targets).sum().cpu().item()
+            total += targets.size(0)
+    print('Accuracy:', correct / total)
+    return correct / total
+
+evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
+
+# %%
+#
+# The journey could end here. Or you are interested,
+# we can go a step further to search a model within :class:`~nni.retiarii.hub.pytorch.DARTS` space on our own.
+#
+# Use the model space
+# -------------------
+
+# The model space provided in `DARTS`_ originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
+# where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
+# There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
+# The key difference between normal and reduction cell is that the reduction cell will downsample the input feature map,
+# and decrease its resolution. Normal and reduction cells are stacked alternately, as shown in the following figure.
+#
+# .. image:: ../../img/nasnet_cell_stack.png
+#
+# A cell takes outputs from two previous cells as inputs and contains a collection of *nodes*.
+# Each node takes two previous nodes within the same cell (or the two cell inputs),
+# and applies an *operator* (e.g., convolution, or max-pooling) to each input,
+# and sums the outputs of operators as the output of the node.
+# The output of cell is the concatenation of all the nodes that are never used as inputs of another node.
+# We recommend reading `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for details.
+#
+# We illustrate an example of cells in the following figure.
+#
+# .. image:: ../../img/nasnet_cell.png
+#
+# The search space proposed in `DARTS`_ paper introduced two modifications to the original space
+# in `NASNet <https://arxiv.org/abs/1707.07012>`__.
+#
+# Firstly, the operator candidates have been narrowed down to seven:
+#
+# - Max pooling 3x3
+# - Average pooling 3x3
+# - Skip connect (Identity)
+# - Separable convolution 3x3
+# - Separable convolution 5x5
+# - Dilated convolution 3x3
+# - Dilated convolution 5x5
+#
+# Secondly, the output of cell is the concatenate of **all the nodes within the cell**.
+#
+# As the search space is based on cell, once the normal and reduction cell has been fixed, we can stack them for indefinite times.
+# To save the search cost, the common practice is to reduce the number of filters (i.e., channels) and number of stacked cells
+# during the search phase, and increase them back when training the final searched architecture.
+#
+# .. note::
+#
+#    `DARTS`_ is one of those papers that innovate both in search space and search strategy.
+#    In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
+#    We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
+#    We did NOT imply that the :class:`~nni.retiarii.hub.pytorch.DARTS` space and
+#    :class:`~nni.retiarii.strategy.DARTS` strategy has to used together.
+#    You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
+#
+# In the following example, we initialize a :class:`~nni.retiarii.hub.pytorch.DARTS`
+# model space, with only 16 initial filters and 8 stacked cells.
 # The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
 #
-# The DARTS model space here is provided by :doc:`model space hub <./space_hub>`,
+# The :class:`~nni.retiarii.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
 # where we have supported multiple popular model spaces for plug-and-play.
 #
 # .. tip::
-# 
+#
 #    The model space here can be replaced with any space provided in the hub,
 #    or even customized space built from scratch.
-
-from nni.retiarii.hub.pytorch import DARTS as DartsSpace
 
 model_space = DartsSpace(16, 8, 'cifar')
 
@@ -96,20 +175,11 @@ model_space = DartsSpace(16, 8, 'cifar')
 # Note that for a typical setup of NAS, the model search should be on validation set, and the evaluation of the final searched model
 # should be on test set. However, as CIFAR-10 dataset only has a training set of 50k images and a validation set (10k images),
 # we have to split the original training set into a training set and a validation set.
-# As we are going to use the provided by DARTS paper, the recommended train/val split is 1:1.
+# As we are going to use the provided by `DARTS`_ paper, the recommended train/val split is 1:1.
 
-import nni
 import numpy as np
-from nni.retiarii.evaluator.pytorch import (
-    Classification,
-    DataLoader  # might also use torch.utils.data.DataLoader if not using multi-trial strategy
-)
+from nni.retiarii.evaluator.pytorch import Classification
 from torch.utils.data import SubsetRandomSampler
-from torchvision import transforms
-from torchvision.datasets import CIFAR10
-
-CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
-CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
 
 transform = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
@@ -118,7 +188,6 @@ transform = transforms.Compose([
     transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
 ])
 
-# If you are to use multi-trial strategies, please wrap CIFAR10 with :func:`nni.trace`.
 train_data = nni.trace(CIFAR10)(root='./data', train=True, download=True, transform=transform)
 
 num_samples = len(train_data)
@@ -156,8 +225,8 @@ evaluator = Classification(
 
 # %%
 #
-# We will use DARTS (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
-# DARTS strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
+# We will use `DARTS`_ (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
+# :class:`~nni.retiarii.strategy.DARTS` strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
 # The fundamental differences between One-shot strategies and :ref:`multi-trial strategies <multi-trial-nas>` is that,
 # one-shot strategy combines search with model training into a single run.
 # Compared to multi-trial strategies, one-shot NAS doesn't need to iteratively spawn new trials (i.e., models),
@@ -220,6 +289,55 @@ exported_arch
 
 # %%
 #
+# The cell can be visualized with the following code snippet
+# (copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
+
+import graphviz
+from IPython.display import display_svg
+
+def plot_single_cell(arch_dict, cell_name):
+    g = graphviz.Digraph(
+        node_attr=dict(style='filled', shape='rect', align='center'),
+        format='svg'
+    )
+    g.body.extend(['rankdir=LR'])
+
+    g.node('c_{k-2}', fillcolor='darkseagreen2')
+    g.node('c_{k-1}', fillcolor='darkseagreen2')
+    assert len(arch_dict) % 2 == 0
+
+    for i in range(2, 6):
+        g.node(str(i), fillcolor='lightblue')
+
+    for i in range(2, 6):
+        for j in range(2):
+            op = arch_dict[f'{cell_name}/op_{i}_{j}']
+            from_ = arch_dict[f'{cell_name}/input_{i}_{j}']
+            if from_ == 0:
+                u = 'c_{k-2}'
+            elif from_ == 1:
+                u = 'c_{k-1}'
+            else:
+                u = str(from_)
+            v = str(i)
+            g.edge(u, v, label=op, fillcolor='gray')
+
+    g.node('c_{k}', fillcolor='palegoldenrod')
+    for i in range(2, 6):
+        g.edge(str(i), 'c_{k}', fillcolor='gray')
+
+    g.attr(label=f'{cell_name.capitalize()} cell')
+
+    display_svg(g.pipe().decode(), raw=True)
+
+def plot_double_cells(arch_dict):
+    plot_single_cell(arch_dict, 'normal')
+    plot_single_cell(arch_dict, 'reduce')
+
+plot_double_cells(exported_arch)
+
+# %%
+#
 # Retrain the searched model
 # --------------------------
 #
@@ -230,14 +348,11 @@ exported_arch
 # To construct a fixed model based on the architecture dict exported from the experiment,
 # we can use :func:`nni.retiarii.fixed_arch`. Seemingly, we are still creating a space.
 # But under the with-context, we are actually creating a fixed model.
-#
-# Here, we increase the number of filters to 36, and number of cells to 20,
-# so as to reasonably increase the model size and boost the performance.
 
 from nni.retiarii import fixed_arch
 
 with fixed_arch(exported_arch):
-    final_model = DartsSpace(36, 20, 'cifar')
+    final_model = DartsSpace(16, 8, 'cifar')
 
 # %%
 #
@@ -245,12 +360,11 @@ with fixed_arch(exported_arch):
 
 train_loader = DataLoader(train_data, batch_size=96, num_workers=6)  # Use the original training data
 
-transform_valid = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-])
-valid_data = nni.trace(CIFAR10)(root='./data', train=False, download=True, transform=transform_valid)
-valid_loader = DataLoader(train_data, batch_size=256, num_workers=6)
+# %%
+#
+# The validation data loader can be reused.
+
+valid_loader
 
 # %%
 #
@@ -265,6 +379,7 @@ evaluator = Classification(
     train_dataloaders=train_loader,
     val_dataloaders=valid_loader,
     max_epochs=max_epochs,
+    gpus=1,
     export_onnx=False,  # Disable ONNX export for this experiment
     fast_dev_run=fast_dev_run,  # Should be false for fully training
 )
@@ -273,21 +388,56 @@ evaluator.fit(final_model)
 
 # %%
 #
-# When ``fast_dev_run`` is turned off, we get a model with the following architecture:
+# When ``fast_dev_run`` is turned off, we get a model with the following architecture.
+
+plot_double_cells({
+    'normal/op_2_0': 'sep_conv_3x3',
+    'normal/input_2_0': 1,
+    'normal/op_2_1': 'sep_conv_3x3',
+    'normal/input_2_1': 0,
+    'normal/op_3_0': 'sep_conv_3x3',
+    'normal/input_3_0': 1,
+    'normal/op_3_1': 'sep_conv_3x3',
+    'normal/input_3_1': 2,
+    'normal/op_4_0': 'sep_conv_3x3',
+    'normal/input_4_0': 1,
+    'normal/op_4_1': 'sep_conv_3x3',
+    'normal/input_4_1': 0,
+    'normal/op_5_0': 'sep_conv_3x3',
+    'normal/input_5_0': 1,
+    'normal/op_5_1': 'max_pool_3x3',
+    'normal/input_5_1': 0,
+    'reduce/op_2_0': 'sep_conv_3x3',
+    'reduce/input_2_0': 0,
+    'reduce/op_2_1': 'sep_conv_3x3',
+    'reduce/input_2_1': 1,
+    'reduce/op_3_0': 'dil_conv_5x5',
+    'reduce/input_3_0': 2,
+    'reduce/op_3_1': 'sep_conv_3x3',
+    'reduce/input_3_1': 0,
+    'reduce/op_4_0': 'dil_conv_5x5',
+    'reduce/input_4_0': 2,
+    'reduce/op_4_1': 'sep_conv_5x5',
+    'reduce/input_4_1': 1,
+    'reduce/op_5_0': 'sep_conv_5x5',
+    'reduce/input_5_0': 4,
+    'reduce/op_5_1': 'dil_conv_5x5',
+    'reduce/input_5_1': 2
+})
+
+# %%
 #
-# .. code-block:: python
-#
-#    {}
-#
-# It achieves a validation accuracy of XXX%.
+# You might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
+# This architecture achieves a validation accuracy of 89.69% after training for 100 epochs.
 #
 # Reproduce results in DARTS paper
 # --------------------------------
 #
-# You might notice there's still a gap between our results and the results in the DARTS paper.
+# After a brief walkthrough of search + retrain process with one-shot strategy,
+# we then fill the gap between our results and the results in the `DARTS` paper.
 # This is because we didn't introduce some extra training tricks, including `DropPath <https://arxiv.org/pdf/1605.07648v4.pdf>`__,
 # Auxiliary loss, gradient clipping and augmentations like `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
-# They also train the networks for longer time (i.e., 600 epochs).
+# They also train the deeper (20 cells) and wider (36 channels) networks for longer time (600 epochs).
 #
 # To implement these tricks, we need to rewrite a few parts of evaluator.
 #
@@ -380,10 +530,10 @@ evaluator = Lightning(
 
 # %%
 #
-# DARTS strategy is created with gradient clip turned on.
+# :class:`~nni.retiarii.strategy.DARTS` strategy is created with gradient clip turned on.
 # If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
 # However, enabling gradient cip in the trainer above won't work, because the underlying
-# implementation of DARTS strategy is based on
+# implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
 # `manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__.
 
 strategy = DartsStrategy(gradient_clip_val=5.)
@@ -451,6 +601,9 @@ train_loader_cutout = DataLoader(train_data_cutout, batch_size=96)
 #
 # We then create the final model based on the new exported architecture.
 # This time, auxiliary loss and drop path probability is enabled.
+#
+# Following the same procedure as paper, we also increase the number of filters to 36, and number of cells to 20,
+# so as to reasonably increase the model size and boost the performance.
 
 with fixed_arch(exported_arch):
     final_model = DartsSpace(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
@@ -478,4 +631,56 @@ evaluator.fit(final_model)
 
 # %%
 #
-# .. note:: The full search and training takes around XX hours on a P100 GPU, and yields a top-1 accuracy of ~0.8%.
+# The full search and training, when ``fast_dev_run`` is off, takes around 60 hours (search 8 hours + retrain 53 hours) on a P100 GPU.
+# The exported architecture dict looks like this.
+
+plot_double_cells({
+    'normal/op_2_0': 'sep_conv_3x3',
+    'normal/input_2_0': 0,
+    'normal/op_2_1': 'sep_conv_3x3',
+    'normal/input_2_1': 1,
+    'normal/op_3_0': 'sep_conv_3x3',
+    'normal/input_3_0': 1,
+    'normal/op_3_1': 'skip_connect',
+    'normal/input_3_1': 0,
+    'normal/op_4_0': 'sep_conv_3x3',
+    'normal/input_4_0': 0,
+    'normal/op_4_1': 'max_pool_3x3',
+    'normal/input_4_1': 1,
+    'normal/op_5_0': 'sep_conv_3x3',
+    'normal/input_5_0': 0,
+    'normal/op_5_1': 'sep_conv_3x3',
+    'normal/input_5_1': 1,
+    'reduce/op_2_0': 'max_pool_3x3',
+    'reduce/input_2_0': 0,
+    'reduce/op_2_1': 'sep_conv_5x5',
+    'reduce/input_2_1': 1,
+    'reduce/op_3_0': 'dil_conv_5x5',
+    'reduce/input_3_0': 2,
+    'reduce/op_3_1': 'max_pool_3x3',
+    'reduce/input_3_1': 0,
+    'reduce/op_4_0': 'max_pool_3x3',
+    'reduce/input_4_0': 0,
+    'reduce/op_4_1': 'sep_conv_3x3',
+    'reduce/input_4_1': 2,
+    'reduce/op_5_0': 'max_pool_3x3',
+    'reduce/input_5_0': 0,
+    'reduce/op_5_1': 'skip_connect',
+    'reduce/input_5_1': 2
+})
+
+# %%
+#
+# This architecture, after retraining, yields a top-1 accuracy of 97.12%. If we take the best snapshot throughout the retrain process,
+# there is a chance that the top-1 accuracy will be 97.28%.
+#
+# .. image:: ../../img/darts_val_acc.png
+#
+# In the figure, the orange line is the validation accuracy curve after training for 600 epochs,
+# while the red line corresponding the previous version in this tutorial before adding all the training tricks and
+# only trains for 100 epochs.
+#
+# The results outperforms "DARTS (first order) + cutout" in `DARTS`_ paper, which is only 97.00±0.14%.
+# It's even comparable with "DARTS (second order) + cutout" in the paper (97.24±0.09%),
+# though we didn't implement the second order version.
+# The implementation of second order DARTS is in our future plan, and we also welcome your contribution.
