@@ -379,16 +379,16 @@ Prepare pre-trained model and finetuning on downstream task.
 
  .. code-block:: none
 
-    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.bias', 'cls.predictions.transform.dense.weight']
+    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.seq_relationship.weight', 'cls.predictions.bias', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.dense.bias']
     - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
     - This IS NOT expected if you are initializing BertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.weight', 'classifier.bias']
+    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight']
     You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
     Reusing dataset glue (./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
-      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1213.84it/s]
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-9c32a3d5eca55607.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-6f0849c5f6325016.arrow
-      0%|          | 0/10 [00:00<?, ?ba/s]     40%|####      | 4/10 [00:00<00:00, 34.52ba/s]     90%|######### | 9/10 [00:00<00:00, 38.77ba/s]    100%|##########| 10/10 [00:00<00:00, 38.78ba/s]
+      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1100.23it/s]
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-5253c5fc7244b519.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-a2326a9f4044d5d6.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-ef1961b8896a939e.arrow
 
 
 
@@ -419,10 +419,10 @@ Add 'teacher_logits' to dataset, it is used to do the distillation, it can be se
  .. code-block:: none
 
     Reusing dataset glue (./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
-      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1249.79it/s]
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-9c32a3d5eca55607.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-6f0849c5f6325016.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-5db72911f5dfb448.arrow
+      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1232.24it/s]
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-5253c5fc7244b519.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-a2326a9f4044d5d6.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-ef1961b8896a939e.arrow
 
 
 
@@ -499,6 +499,8 @@ First, using MovementPruner to prune attention head.
  .. code-block:: none
 
     Did not bind any model, no need to unbind model.
+    /home/nishang/anaconda3/envs/nni/lib/python3.8/site-packages/torch/optim/lr_scheduler.py:122: UserWarning: Seems like `optimizer.step()` has been overridden after learning rate scheduler initialization. Please, make sure to call `optimizer.step()` before `lr_scheduler.step()`. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+      warnings.warn("Seems like `optimizer.step()` has been overridden after learning rate scheduler "
     Did not bind any model, no need to unbind model.
 
 
@@ -549,16 +551,16 @@ If the head is entire masked, physically prune it and create config_list for FFN
 
  .. code-block:: none
 
-    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.bias', 'cls.predictions.transform.dense.weight']
+    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.seq_relationship.weight', 'cls.predictions.bias', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.dense.bias']
     - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
     - This IS NOT expected if you are initializing BertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.weight', 'classifier.bias']
+    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.bias', 'classifier.weight']
     You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
     Reusing dataset glue (./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
-      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1141.12it/s]
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-9c32a3d5eca55607.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-6f0849c5f6325016.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-5db72911f5dfb448.arrow
+      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1238.94it/s]
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-5253c5fc7244b519.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-a2326a9f4044d5d6.arrow
+    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-ef1961b8896a939e.arrow
     layer 0 pruner 0 head: []
     layer 1 pruner 0 head: []
     layer 2 pruner 0 head: []
@@ -714,10 +716,298 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
 
     Did not bind any model, no need to unbind model.
     no multi-dimension masks found.
-    /home/nishang/anaconda3/envs/nni-dev/lib/python3.7/site-packages/torch/_tensor.py:1083: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:477.)
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    /home/nishang/anaconda3/envs/nni/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
       return self._grad
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
     Did not bind any model, no need to unbind model.
     no multi-dimension masks found.
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
 
 
 
@@ -751,28 +1041,28 @@ Setting 2: pytorch 1.10.0
       - +0.0 / +0.0
       - 12.56s (x1.00)
       - 4.05s (x1.00)
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=5)
+    * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=5)
       - :ref:`taylor-fo-weight-pruner`
       - 51.39%
       - 84.25 / 84.96
       - -0.48 / +0.33
       - 6.85s (x1.83)
       - 2.7s (x1.50)
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=10)
+    * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=10)
       - :ref:`taylor-fo-weight-pruner`
       - 66.67%
       - 83.98 / 83.75
       - -0.75 / -0.88
       - 4.73s (x2.66)
       - 2.16s (x1.86)
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=20)
+    * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=20)
       - :ref:`taylor-fo-weight-pruner`
       - 77.78%
       - 83.02 / 83.06
       - -1.71 / -1.57
       - 3.35s (x3.75)
       - 1.72s (x2.35)
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=30)
+    * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=30)
       - :ref:`taylor-fo-weight-pruner`
       - 87.04%
       - 81.24 / 80.99
@@ -783,7 +1073,7 @@ Setting 2: pytorch 1.10.0
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  27.206 seconds)
+   **Total running time of the script:** ( 0 minutes  33.164 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_bert_glue.py:

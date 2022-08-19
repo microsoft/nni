@@ -533,28 +533,28 @@ for current_epoch in range(total_epochs):
 #       - +0.0 / +0.0
 #       - 12.56s (x1.00)
 #       - 4.05s (x1.00)
-#     * - :ref:`movement-pruner` (soft, th=0.1, lambda=5)
+#     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=5)
 #       - :ref:`taylor-fo-weight-pruner`
 #       - 51.39%
 #       - 84.25 / 84.96
 #       - -0.48 / +0.33
 #       - 6.85s (x1.83)
 #       - 2.7s (x1.50)
-#     * - :ref:`movement-pruner` (soft, th=0.1, lambda=10)
+#     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=10)
 #       - :ref:`taylor-fo-weight-pruner`
 #       - 66.67%
 #       - 83.98 / 83.75
 #       - -0.75 / -0.88
 #       - 4.73s (x2.66)
 #       - 2.16s (x1.86)
-#     * - :ref:`movement-pruner` (soft, th=0.1, lambda=20)
+#     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=20)
 #       - :ref:`taylor-fo-weight-pruner`
 #       - 77.78%
 #       - 83.02 / 83.06
 #       - -1.71 / -1.57
 #       - 3.35s (x3.75)
 #       - 1.72s (x2.35)
-#     * - :ref:`movement-pruner` (soft, th=0.1, lambda=30)
+#     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=30)
 #       - :ref:`taylor-fo-weight-pruner`
 #       - 87.04%
 #       - 81.24 / 80.99
