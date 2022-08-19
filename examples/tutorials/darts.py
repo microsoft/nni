@@ -331,16 +331,17 @@ def plot_single_cell(arch_dict, cell_name):
     g.attr(label=f'{cell_name.capitalize()} cell')
 
     image = Image.open(io.BytesIO(g.pipe()))
-    width, height = image.size
-    plt.figure(figsize=(width / 70, height / 70))
-    plt.imshow(image)
-    plt.axis('off')
-    plt.show()
-    plt.close()
+    return image
 
 def plot_double_cells(arch_dict):
-    plot_single_cell(arch_dict, 'normal')
-    plot_single_cell(arch_dict, 'reduce')
+    image1 = plot_single_cell(arch_dict, 'normal')
+    image2 = plot_single_cell(arch_dict, 'reduce')
+    _, axs = plt.subplots(1, 2, figsize=(20, 10))
+    axs[0].imshow(image1)
+    axs[1].imshow(image2)
+    axs[0].axis('off')
+    axs[1].axis('off')
+    plt.show()
 
 plot_double_cells(exported_arch)
 
