@@ -10,7 +10,7 @@ Through this process, you will learn:
 * How to use one-shot exploration strategies to explore a model space.
 * How to customize evaluators to achieve the best performance.
 
-In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves xx.xx% accuracy.
+In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves up to 97.28% accuracy.
 
 .. attention::
 
@@ -157,7 +157,7 @@ evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
 # where we have supported multiple popular model spaces for plug-and-play.
 #
 # .. tip::
-# 
+#
 #    The model space here can be replaced with any space provided in the hub,
 #    or even customized space built from scratch.
 
@@ -211,7 +211,7 @@ search_valid_loader = DataLoader(
 #    Please set ``fast_dev_run`` to False to reproduce the our claimed results.
 #    Otherwise, only a few mini-batches will be run.
 
-fast_dev_run = False
+fast_dev_run = True
 
 evaluator = Classification(
     learning_rate=1e-3,
@@ -289,6 +289,55 @@ exported_arch
 
 # %%
 #
+# The cell can be visualized with the following code snippet
+# (copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
+
+import graphviz
+from IPython.display import display_svg
+
+def plot_single_cell(arch_dict, cell_name):
+    g = graphviz.Digraph(
+        node_attr=dict(style='filled', shape='rect', align='center'),
+        format='svg'
+    )
+    g.body.extend(['rankdir=LR'])
+
+    g.node('c_{k-2}', fillcolor='darkseagreen2')
+    g.node('c_{k-1}', fillcolor='darkseagreen2')
+    assert len(arch_dict) % 2 == 0
+
+    for i in range(2, 6):
+        g.node(str(i), fillcolor='lightblue')
+
+    for i in range(2, 6):
+        for j in range(2):
+            op = arch_dict[f'{cell_name}/op_{i}_{j}']
+            from_ = arch_dict[f'{cell_name}/input_{i}_{j}']
+            if from_ == 0:
+                u = 'c_{k-2}'
+            elif from_ == 1:
+                u = 'c_{k-1}'
+            else:
+                u = str(from_)
+            v = str(i)
+            g.edge(u, v, label=op, fillcolor='gray')
+
+    g.node('c_{k}', fillcolor='palegoldenrod')
+    for i in range(2, 6):
+        g.edge(str(i), 'c_{k}', fillcolor='gray')
+
+    g.attr(label=f'{cell_name.capitalize()} cell')
+
+    display_svg(g.pipe().decode(), raw=True)
+
+def plot_double_cells(arch_dict):
+    plot_single_cell(arch_dict, 'normal')
+    plot_single_cell(arch_dict, 'reduce')
+
+plot_double_cells(exported_arch)
+
+# %%
+#
 # Retrain the searched model
 # --------------------------
 #
@@ -337,23 +386,55 @@ evaluator = Classification(
 
 evaluator.fit(final_model)
 
-import sys
-sys.exit(0)
+# %%
+#
+# When ``fast_dev_run`` is turned off, we get a model with the following architecture.
+
+plot_double_cells({
+    'normal/op_2_0': 'sep_conv_3x3',
+    'normal/input_2_0': 1,
+    'normal/op_2_1': 'sep_conv_3x3',
+    'normal/input_2_1': 0,
+    'normal/op_3_0': 'sep_conv_3x3',
+    'normal/input_3_0': 1,
+    'normal/op_3_1': 'sep_conv_3x3',
+    'normal/input_3_1': 2,
+    'normal/op_4_0': 'sep_conv_3x3',
+    'normal/input_4_0': 1,
+    'normal/op_4_1': 'sep_conv_3x3',
+    'normal/input_4_1': 0,
+    'normal/op_5_0': 'sep_conv_3x3',
+    'normal/input_5_0': 1,
+    'normal/op_5_1': 'max_pool_3x3',
+    'normal/input_5_1': 0,
+    'reduce/op_2_0': 'sep_conv_3x3',
+    'reduce/input_2_0': 0,
+    'reduce/op_2_1': 'sep_conv_3x3',
+    'reduce/input_2_1': 1,
+    'reduce/op_3_0': 'dil_conv_5x5',
+    'reduce/input_3_0': 2,
+    'reduce/op_3_1': 'sep_conv_3x3',
+    'reduce/input_3_1': 0,
+    'reduce/op_4_0': 'dil_conv_5x5',
+    'reduce/input_4_0': 2,
+    'reduce/op_4_1': 'sep_conv_5x5',
+    'reduce/input_4_1': 1,
+    'reduce/op_5_0': 'sep_conv_5x5',
+    'reduce/input_5_0': 4,
+    'reduce/op_5_1': 'dil_conv_5x5',
+    'reduce/input_5_1': 2
+})
 
 # %%
 #
-# When ``fast_dev_run`` is turned off, we get a model with the following architecture:
-#
-# .. code-block:: python
-#
-#    {}
-#
-# It achieves a validation accuracy of XXX%.
+# You might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
+# This architecture achieves a validation accuracy of 89.69% after training for 100 epochs.
 #
 # Reproduce results in DARTS paper
 # --------------------------------
 #
-# You might notice there's still a gap between our results and the results in the `DARTS` paper.
+# After a brief walkthrough of search + retrain process with one-shot strategy,
+# we then fill the gap between our results and the results in the `DARTS` paper.
 # This is because we didn't introduce some extra training tricks, including `DropPath <https://arxiv.org/pdf/1605.07648v4.pdf>`__,
 # Auxiliary loss, gradient clipping and augmentations like `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
 # They also train the deeper (20 cells) and wider (36 channels) networks for longer time (600 epochs).
@@ -550,8 +631,47 @@ evaluator.fit(final_model)
 
 # %%
 #
-# The full search and training takes around 60 hours (search 8 hours + retrain 53 hours) on a P100 GPU,
-# and yields a top-1 accuracy of 97.12%. If we take the best snapshot throughout the retrain process,
+# The full search and training, when ``fast_dev_run`` is off, takes around 60 hours (search 8 hours + retrain 53 hours) on a P100 GPU.
+# The exported architecture dict looks like this.
+
+plot_double_cells({
+    'normal/op_2_0': 'sep_conv_3x3',
+    'normal/input_2_0': 0,
+    'normal/op_2_1': 'sep_conv_3x3',
+    'normal/input_2_1': 1,
+    'normal/op_3_0': 'sep_conv_3x3',
+    'normal/input_3_0': 1,
+    'normal/op_3_1': 'skip_connect',
+    'normal/input_3_1': 0,
+    'normal/op_4_0': 'sep_conv_3x3',
+    'normal/input_4_0': 0,
+    'normal/op_4_1': 'max_pool_3x3',
+    'normal/input_4_1': 1,
+    'normal/op_5_0': 'sep_conv_3x3',
+    'normal/input_5_0': 0,
+    'normal/op_5_1': 'sep_conv_3x3',
+    'normal/input_5_1': 1,
+    'reduce/op_2_0': 'max_pool_3x3',
+    'reduce/input_2_0': 0,
+    'reduce/op_2_1': 'sep_conv_5x5',
+    'reduce/input_2_1': 1,
+    'reduce/op_3_0': 'dil_conv_5x5',
+    'reduce/input_3_0': 2,
+    'reduce/op_3_1': 'max_pool_3x3',
+    'reduce/input_3_1': 0,
+    'reduce/op_4_0': 'max_pool_3x3',
+    'reduce/input_4_0': 0,
+    'reduce/op_4_1': 'sep_conv_3x3',
+    'reduce/input_4_1': 2,
+    'reduce/op_5_0': 'max_pool_3x3',
+    'reduce/input_5_0': 0,
+    'reduce/op_5_1': 'skip_connect',
+    'reduce/input_5_1': 2
+})
+
+# %%
+#
+# This architecture, after retraining, yields a top-1 accuracy of 97.12%. If we take the best snapshot throughout the retrain process,
 # there is a chance that the top-1 accuracy will be 97.28%.
 #
 # .. image:: ../../img/darts_val_acc.jpg
