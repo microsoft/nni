@@ -336,6 +336,9 @@ evaluator = Classification(
 
 evaluator.fit(final_model)
 
+import sys
+sys.exit(0)
+
 # %%
 #
 # When ``fast_dev_run`` is turned off, we get a model with the following architecture:
