@@ -121,8 +121,6 @@ if __name__ == "__main__":
                 ecs_spec=args.ecs_spec,
             )
 
-            
-            
             req = CreateJobRequest(
                 display_name=args.experiment_name,
                 job_type=args.job_type,

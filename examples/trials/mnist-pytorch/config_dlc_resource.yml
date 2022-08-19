@@ -15,7 +15,7 @@ trainingService:
   image: registry-vpc.cn-beijing.aliyuncs.com/pai-dlc/pytorch-training:1.6.0-gpu-py37-cu101-ubuntu18.04
   jobType: PyTorchJob                             # choices: [TFJob, PyTorchJob]
   podCount: 1
-  ecsSpec: "{'resource_id':'rg19d2oleg252kke','cpu':2,'memory':8,'gpu':0,'gputype':'','shared_memory':''}"
+  ecsSpec: "{'resource_id':'rg19d2oleg252kke','cpu':2,'memory':8,'gpu':0,'gputype':'','shared_memory':''}" # resource ID，e.g., rg19d2oleg252kke
   region: cn-hangzhou
   workspaceId: ${your_workspace_id}
   accessKeyId: ${your_ak_id}
