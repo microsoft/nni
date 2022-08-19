@@ -148,18 +148,18 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="In this tutorial, we demonstrate how to search on the famous model space proposed in `DARTS`_.">
+    <div class="sphx-glr-thumbcontainer" tooltip="In this tutorial, we demonstrate how to search in the famous model space proposed in `DARTS`_.">
 
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_darts_thumb.png
-    :alt: Searching on DARTS search space
+    :alt: Searching in DARTS search space
 
   :ref:`sphx_glr_tutorials_darts.py`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Searching on DARTS search space</div>
+      <div class="sphx-glr-thumbnail-title">Searching in DARTS search space</div>
     </div>
 
 

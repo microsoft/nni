@@ -1,8 +1,8 @@
 """
-Searching on DARTS search space
+Searching in DARTS search space
 ===============================
 
-In this tutorial, we demonstrate how to search on the famous model space proposed in `DARTS`_.
+In this tutorial, we demonstrate how to search in the famous model space proposed in `DARTS`_.
 
 Through this process, you will learn:
 
@@ -293,12 +293,12 @@ exported_arch
 # (copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
 
 import graphviz
-from IPython.display import display_svg
+from IPython.display import display_png
 
 def plot_single_cell(arch_dict, cell_name):
     g = graphviz.Digraph(
         node_attr=dict(style='filled', shape='rect', align='center'),
-        format='svg'
+        format='png'
     )
     g.body.extend(['rankdir=LR'])
 
@@ -328,7 +328,7 @@ def plot_single_cell(arch_dict, cell_name):
 
     g.attr(label=f'{cell_name.capitalize()} cell')
 
-    display_svg(g.pipe().decode(), raw=True)
+    display_png(g.pipe(), raw=True)
 
 def plot_double_cells(arch_dict):
     plot_single_cell(arch_dict, 'normal')
