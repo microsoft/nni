@@ -68,9 +68,10 @@ valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
 #
 # .. tip::
 #
+#    Finetuning a pre-searched model on other datasets is no different from finetuning *any model*.
 #    We recommend reading
 #    `this tutorial of object detection finetuning <https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html>`__
-#    if you are not so lucky to have a model ready-to-serve for your dataset.
+#    if you want to know how finetuning is generally done in PyTorch.
 
 from nni.retiarii.hub.pytorch import DARTS as DartsSpace
 
@@ -355,7 +356,7 @@ sys.exit(0)
 # You might notice there's still a gap between our results and the results in the `DARTS` paper.
 # This is because we didn't introduce some extra training tricks, including `DropPath <https://arxiv.org/pdf/1605.07648v4.pdf>`__,
 # Auxiliary loss, gradient clipping and augmentations like `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
-# They also train the networks for longer time (i.e., 600 epochs).
+# They also train the deeper (20 cells) and wider (36 channels) networks for longer time (600 epochs).
 #
 # To implement these tricks, we need to rewrite a few parts of evaluator.
 #
