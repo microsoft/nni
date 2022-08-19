@@ -101,7 +101,7 @@ evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
 #
 # Use the model space
 # -------------------
-
+#
 # The model space provided in `DARTS`_ originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
 # where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
 # There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
@@ -336,7 +336,8 @@ def plot_single_cell(arch_dict, cell_name):
 def plot_double_cells(arch_dict):
     image1 = plot_single_cell(arch_dict, 'normal')
     image2 = plot_single_cell(arch_dict, 'reduce')
-    _, axs = plt.subplots(1, 2, figsize=(20, 10))
+    height_ratio = max(image1.size[1] / image1.size[0], image2.size[1] / image2.size[0]) 
+    _, axs = plt.subplots(1, 2, figsize=(20, 10 * height_ratio))
     axs[0].imshow(image1)
     axs[1].imshow(image2)
     axs[0].axis('off')

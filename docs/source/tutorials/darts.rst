@@ -149,7 +149,7 @@ so as to save the tedious steps of finetuning.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 98-103
+.. GENERATED FROM PYTHON SOURCE LINES 98-162
 
 The journey could end here. Or you are interested,
 we can go a step further to search a model within :class:`~nni.retiarii.hub.pytorch.DARTS` space on our own.
@@ -157,69 +157,69 @@ we can go a step further to search a model within :class:`~nni.retiarii.hub.pyto
 Use the model space
 -------------------
 
-.. GENERATED FROM PYTHON SOURCE LINES 104-166
+The model space provided in `DARTS`_ originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
+where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
+There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
+The key difference between normal and reduction cell is that the reduction cell will downsample the input feature map,
+and decrease its resolution. Normal and reduction cells are stacked alternately, as shown in the following figure.
+
+.. image:: ../../img/nasnet_cell_stack.png
+
+A cell takes outputs from two previous cells as inputs and contains a collection of *nodes*.
+Each node takes two previous nodes within the same cell (or the two cell inputs),
+and applies an *operator* (e.g., convolution, or max-pooling) to each input,
+and sums the outputs of operators as the output of the node.
+The output of cell is the concatenation of all the nodes that are never used as inputs of another node.
+We recommend reading `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for details.
+
+We illustrate an example of cells in the following figure.
+
+.. image:: ../../img/nasnet_cell.png
+
+The search space proposed in `DARTS`_ paper introduced two modifications to the original space
+in `NASNet <https://arxiv.org/abs/1707.07012>`__.
+
+Firstly, the operator candidates have been narrowed down to seven:
+
+- Max pooling 3x3
+- Average pooling 3x3
+- Skip connect (Identity)
+- Separable convolution 3x3
+- Separable convolution 5x5
+- Dilated convolution 3x3
+- Dilated convolution 5x5
+
+Secondly, the output of cell is the concatenate of **all the nodes within the cell**.
+
+As the search space is based on cell, once the normal and reduction cell has been fixed, we can stack them for indefinite times.
+To save the search cost, the common practice is to reduce the number of filters (i.e., channels) and number of stacked cells
+during the search phase, and increase them back when training the final searched architecture.
+
+.. note::
+
+   `DARTS`_ is one of those papers that innovate both in search space and search strategy.
+   In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
+   We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
+   We did NOT imply that the :class:`~nni.retiarii.hub.pytorch.DARTS` space and
+   :class:`~nni.retiarii.strategy.DARTS` strategy has to used together.
+   You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
+
+In the following example, we initialize a :class:`~nni.retiarii.hub.pytorch.DARTS`
+model space, with only 16 initial filters and 8 stacked cells.
+The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
+
+The :class:`~nni.retiarii.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
+where we have supported multiple popular model spaces for plug-and-play.
+
+.. tip::
+
+   The model space here can be replaced with any space provided in the hub,
+   or even customized space built from scratch.
+
+.. GENERATED FROM PYTHON SOURCE LINES 163-166
 
 .. code-block:: default
 
-
-    # The model space provided in `DARTS`_ originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
-    # where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
-    # There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
-    # The key difference between normal and reduction cell is that the reduction cell will downsample the input feature map,
-    # and decrease its resolution. Normal and reduction cells are stacked alternately, as shown in the following figure.
-    #
-    # .. image:: ../../img/nasnet_cell_stack.png
-    #
-    # A cell takes outputs from two previous cells as inputs and contains a collection of *nodes*.
-    # Each node takes two previous nodes within the same cell (or the two cell inputs),
-    # and applies an *operator* (e.g., convolution, or max-pooling) to each input,
-    # and sums the outputs of operators as the output of the node.
-    # The output of cell is the concatenation of all the nodes that are never used as inputs of another node.
-    # We recommend reading `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for details.
-    #
-    # We illustrate an example of cells in the following figure.
-    #
-    # .. image:: ../../img/nasnet_cell.png
-    #
-    # The search space proposed in `DARTS`_ paper introduced two modifications to the original space
-    # in `NASNet <https://arxiv.org/abs/1707.07012>`__.
-    #
-    # Firstly, the operator candidates have been narrowed down to seven:
-    #
-    # - Max pooling 3x3
-    # - Average pooling 3x3
-    # - Skip connect (Identity)
-    # - Separable convolution 3x3
-    # - Separable convolution 5x5
-    # - Dilated convolution 3x3
-    # - Dilated convolution 5x5
-    #
-    # Secondly, the output of cell is the concatenate of **all the nodes within the cell**.
-    #
-    # As the search space is based on cell, once the normal and reduction cell has been fixed, we can stack them for indefinite times.
-    # To save the search cost, the common practice is to reduce the number of filters (i.e., channels) and number of stacked cells
-    # during the search phase, and increase them back when training the final searched architecture.
-    #
-    # .. note::
-    #
-    #    `DARTS`_ is one of those papers that innovate both in search space and search strategy.
-    #    In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
-    #    We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
-    #    We did NOT imply that the :class:`~nni.retiarii.hub.pytorch.DARTS` space and
-    #    :class:`~nni.retiarii.strategy.DARTS` strategy has to used together.
-    #    You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
-    #
-    # In the following example, we initialize a :class:`~nni.retiarii.hub.pytorch.DARTS`
-    # model space, with only 16 initial filters and 8 stacked cells.
-    # The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
-    #
-    # The :class:`~nni.retiarii.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
-    # where we have supported multiple popular model spaces for plug-and-play.
-    #
-    # .. tip::
-    #
-    #    The model space here can be replaced with any space provided in the hub,
-    #    or even customized space built from scratch.
 
     model_space = DartsSpace(16, 8, 'cifar')
 
@@ -419,8 +419,8 @@ except that the ``execution_engine`` argument should be set to ``oneshot``.
     12.164    Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.35s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.35s/it, v_num=, train_loss=2.400, train_acc=0.0781]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.36s/it, v_num=, train_loss=2.400, train_acc=0.0781]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.36s/it, v_num=, train_loss=2.400, train_acc=0.0781]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.21s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.22s/it, v_num=, train_loss=2.360, train_acc=0.0469]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.22s/it, v_num=, train_loss=2.360, train_acc=0.0469]`Trainer.fit` stopped: `max_epochs=1` reached.
+    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.23s/it, v_num=, train_loss=2.360, train_acc=0.0469]
 
 
 
@@ -458,7 +458,7 @@ Here, the retrieved model is a dict (called *architecture dict*) describing the 
  .. code-block:: none
 
 
-    {'normal/op_2_0': 'dil_conv_5x5', 'normal/input_2_0': 0, 'normal/op_2_1': 'avg_pool_3x3', 'normal/input_2_1': 1, 'normal/op_3_0': 'sep_conv_5x5', 'normal/input_3_0': 2, 'normal/op_3_1': 'sep_conv_5x5', 'normal/input_3_1': 1, 'normal/op_4_0': 'dil_conv_3x3', 'normal/input_4_0': 3, 'normal/op_4_1': 'dil_conv_5x5', 'normal/input_4_1': 0, 'normal/op_5_0': 'sep_conv_3x3', 'normal/input_5_0': 4, 'normal/op_5_1': 'dil_conv_3x3', 'normal/input_5_1': 2, 'reduce/op_2_0': 'max_pool_3x3', 'reduce/input_2_0': 1, 'reduce/op_2_1': 'avg_pool_3x3', 'reduce/input_2_1': 0, 'reduce/op_3_0': 'max_pool_3x3', 'reduce/input_3_0': 2, 'reduce/op_3_1': 'skip_connect', 'reduce/input_3_1': 1, 'reduce/op_4_0': 'avg_pool_3x3', 'reduce/input_4_0': 2, 'reduce/op_4_1': 'avg_pool_3x3', 'reduce/input_4_1': 3, 'reduce/op_5_0': 'sep_conv_3x3', 'reduce/input_5_0': 3, 'reduce/op_5_1': 'sep_conv_3x3', 'reduce/input_5_1': 2}
+    {'normal/op_2_0': 'sep_conv_5x5', 'normal/input_2_0': 1, 'normal/op_2_1': 'avg_pool_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'sep_conv_3x3', 'normal/input_3_0': 2, 'normal/op_3_1': 'dil_conv_3x3', 'normal/input_3_1': 1, 'normal/op_4_0': 'dil_conv_3x3', 'normal/input_4_0': 3, 'normal/op_4_1': 'sep_conv_5x5', 'normal/input_4_1': 1, 'normal/op_5_0': 'avg_pool_3x3', 'normal/input_5_0': 3, 'normal/op_5_1': 'sep_conv_3x3', 'normal/input_5_1': 2, 'reduce/op_2_0': 'skip_connect', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'max_pool_3x3', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'dil_conv_5x5', 'reduce/input_3_0': 0, 'reduce/op_3_1': 'avg_pool_3x3', 'reduce/input_3_1': 2, 'reduce/op_4_0': 'dil_conv_3x3', 'reduce/input_4_0': 0, 'reduce/op_4_1': 'avg_pool_3x3', 'reduce/input_4_1': 1, 'reduce/op_5_0': 'skip_connect', 'reduce/input_5_0': 4, 'reduce/op_5_1': 'avg_pool_3x3', 'reduce/input_5_1': 0}
 
 
 
@@ -467,7 +467,7 @@ Here, the retrieved model is a dict (called *architecture dict*) describing the 
 The cell can be visualized with the following code snippet
 (copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
 
-.. GENERATED FROM PYTHON SOURCE LINES 294-348
+.. GENERATED FROM PYTHON SOURCE LINES 294-349
 
 .. code-block:: default
 
@@ -516,7 +516,8 @@ The cell can be visualized with the following code snippet
     def plot_double_cells(arch_dict):
         image1 = plot_single_cell(arch_dict, 'normal')
         image2 = plot_single_cell(arch_dict, 'reduce')
-        _, axs = plt.subplots(1, 2, figsize=(20, 10))
+        height_ratio = max(image1.size[1] / image1.size[0], image2.size[1] / image2.size[0]) 
+        _, axs = plt.subplots(1, 2, figsize=(20, 10 * height_ratio))
         axs[0].imshow(image1)
         axs[1].imshow(image2)
         axs[0].axis('off')
@@ -537,7 +538,7 @@ The cell can be visualized with the following code snippet
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 349-359
+.. GENERATED FROM PYTHON SOURCE LINES 350-360
 
 Retrain the searched model
 --------------------------
@@ -550,7 +551,7 @@ To construct a fixed model based on the architecture dict exported from the expe
 we can use :func:`nni.retiarii.fixed_arch`. Seemingly, we are still creating a space.
 But under the with-context, we are actually creating a fixed model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 360-366
+.. GENERATED FROM PYTHON SOURCE LINES 361-367
 
 .. code-block:: default
 
@@ -567,11 +568,11 @@ But under the with-context, we are actually creating a fixed model.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 367-368
+.. GENERATED FROM PYTHON SOURCE LINES 368-369
 
 We then train the model on full CIFAR-10 training dataset, and evaluate it on the original CIFAR-10 validation dataset.
 
-.. GENERATED FROM PYTHON SOURCE LINES 369-372
+.. GENERATED FROM PYTHON SOURCE LINES 370-373
 
 .. code-block:: default
 
@@ -585,11 +586,11 @@ We then train the model on full CIFAR-10 training dataset, and evaluate it on th
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 373-374
+.. GENERATED FROM PYTHON SOURCE LINES 374-375
 
 The validation data loader can be reused.
 
-.. GENERATED FROM PYTHON SOURCE LINES 375-378
+.. GENERATED FROM PYTHON SOURCE LINES 376-379
 
 .. code-block:: default
 
@@ -605,16 +606,16 @@ The validation data loader can be reused.
  .. code-block:: none
 
 
-    <torch.utils.data.dataloader.DataLoader object at 0x7f6cb0ecab20>
+    <torch.utils.data.dataloader.DataLoader object at 0x7f5a8ba1d4c0>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 379-381
+.. GENERATED FROM PYTHON SOURCE LINES 380-382
 
 Create a new evaluator here because we can using a different data split.
 Also, we should avoid the underlying pytorch-lightning implementation of Classification evaluator from loading the wrong checkpoint.
 
-.. GENERATED FROM PYTHON SOURCE LINES 382-398
+.. GENERATED FROM PYTHON SOURCE LINES 383-399
 
 .. code-block:: default
 
@@ -660,30 +661,30 @@ Also, we should avoid the underlying pytorch-lightning implementation of Classif
     -----------------------------------------------
     0 | criterion | CrossEntropyLoss | 0     
     1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 284 K 
+    2 | model     | DARTS            | 266 K 
     -----------------------------------------------
-    284 K     Trainable params
+    266 K     Trainable params
     0         Non-trainable params
-    284 K     Total params
-    1.138     Total estimated model params size (MB)
+    266 K     Total params
+    1.066     Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.86it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.85it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.146]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.91it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.91it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417]
     Validation: 0it [00:00, ?it/s]
     Validation:   0%|          | 0/1 [00:00<?, ?it/s]
     Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00, 15.08it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.95it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.146]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.95it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.146, val_loss=2.300, val_acc=0.117]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.94it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.146, val_loss=2.300, val_acc=0.117]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.93it/s, loss=2.35, v_num=, train_loss=2.350, train_acc=0.146, val_loss=2.300, val_acc=0.117]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00, 17.15it/s]    Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.02it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417]    Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.02it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417, val_loss=2.300, val_acc=0.117]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.01it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417, val_loss=2.300, val_acc=0.117]`Trainer.fit` stopped: `max_steps=1` reached.
+    Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.01it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417, val_loss=2.300, val_acc=0.117]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 399-400
+.. GENERATED FROM PYTHON SOURCE LINES 400-401
 
 When ``fast_dev_run`` is turned off, we get a model with the following architecture.
 
-.. GENERATED FROM PYTHON SOURCE LINES 401-437
+.. GENERATED FROM PYTHON SOURCE LINES 402-438
 
 .. code-block:: default
 
@@ -735,7 +736,7 @@ When ``fast_dev_run`` is turned off, we get a model with the following architect
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 438-462
+.. GENERATED FROM PYTHON SOURCE LINES 439-463
 
 You might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
 This architecture achieves a validation accuracy of 89.69% after training for 100 epochs.
@@ -762,7 +763,7 @@ we can simply inherit :class:`~nni.retiarii.evaluator.pytorch.ClassificationModu
 behind :class:`~nni.retiarii.evaluator.pytorch.Classification`.
 This could look intimidating at first, but most of them are just plug-and-play tricks which you don't need to know details about.
 
-.. GENERATED FROM PYTHON SOURCE LINES 463-518
+.. GENERATED FROM PYTHON SOURCE LINES 464-519
 
 .. code-block:: default
 
@@ -828,14 +829,14 @@ This could look intimidating at first, but most of them are just plug-and-play t
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 519-523
+.. GENERATED FROM PYTHON SOURCE LINES 520-524
 
 The full evaluator is written as follows,
 which simply wraps everything (except model space and search strategy of course), in a single object.
 :class:`~nni.retiarii.evaluator.pytorch.Lightning` here is a special type of evaluator.
 Don't forget to use the train/val data split specialized for search (1:1) here.
 
-.. GENERATED FROM PYTHON SOURCE LINES 524-540
+.. GENERATED FROM PYTHON SOURCE LINES 525-541
 
 .. code-block:: default
 
@@ -879,7 +880,7 @@ Don't forget to use the train/val data split specialized for search (1:1) here.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 541-546
+.. GENERATED FROM PYTHON SOURCE LINES 542-547
 
 :class:`~nni.retiarii.strategy.DARTS` strategy is created with gradient clip turned on.
 If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
@@ -887,7 +888,7 @@ However, enabling gradient cip in the trainer above won't work, because the unde
 implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
 `manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__.
 
-.. GENERATED FROM PYTHON SOURCE LINES 547-550
+.. GENERATED FROM PYTHON SOURCE LINES 548-551
 
 .. code-block:: default
 
@@ -901,7 +902,7 @@ implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 551-557
+.. GENERATED FROM PYTHON SOURCE LINES 552-558
 
 Then we use the newly created evaluator and strategy to launch the experiment again.
 
@@ -910,7 +911,7 @@ Then we use the newly created evaluator and strategy to launch the experiment ag
    ``model_space`` has to be re-instantiated because a known limitation,
    i.e., one model space can't be reused across multiple experiments.
 
-.. GENERATED FROM PYTHON SOURCE LINES 558-569
+.. GENERATED FROM PYTHON SOURCE LINES 559-570
 
 .. code-block:: default
 
@@ -945,21 +946,21 @@ Then we use the newly created evaluator and strategy to launch the experiment ag
     12.164    Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.29s/it]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.30s/it, v_num=, train_loss=2.420, train_acc=0.0469]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.31s/it, v_num=, train_loss=2.420, train_acc=0.0469]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.31s/it, v_num=, train_loss=2.420, train_acc=0.0469]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.26s/it]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.27s/it, v_num=, train_loss=2.360, train_acc=0.125]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.27s/it, v_num=, train_loss=2.360, train_acc=0.125]`Trainer.fit` stopped: `max_epochs=1` reached.
+    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.28s/it, v_num=, train_loss=2.360, train_acc=0.125]
 
-    {'normal/op_2_0': 'skip_connect', 'normal/input_2_0': 0, 'normal/op_2_1': 'dil_conv_5x5', 'normal/input_2_1': 1, 'normal/op_3_0': 'dil_conv_3x3', 'normal/input_3_0': 1, 'normal/op_3_1': 'sep_conv_5x5', 'normal/input_3_1': 2, 'normal/op_4_0': 'dil_conv_5x5', 'normal/input_4_0': 2, 'normal/op_4_1': 'sep_conv_3x3', 'normal/input_4_1': 1, 'normal/op_5_0': 'sep_conv_5x5', 'normal/input_5_0': 4, 'normal/op_5_1': 'dil_conv_3x3', 'normal/input_5_1': 1, 'reduce/op_2_0': 'max_pool_3x3', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'dil_conv_3x3', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'max_pool_3x3', 'reduce/input_3_0': 0, 'reduce/op_3_1': 'sep_conv_3x3', 'reduce/input_3_1': 1, 'reduce/op_4_0': 'dil_conv_5x5', 'reduce/input_4_0': 3, 'reduce/op_4_1': 'dil_conv_3x3', 'reduce/input_4_1': 1, 'reduce/op_5_0': 'max_pool_3x3', 'reduce/input_5_0': 1, 'reduce/op_5_1': 'max_pool_3x3', 'reduce/input_5_1': 4}
+    {'normal/op_2_0': 'dil_conv_3x3', 'normal/input_2_0': 1, 'normal/op_2_1': 'dil_conv_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'skip_connect', 'normal/input_3_0': 1, 'normal/op_3_1': 'avg_pool_3x3', 'normal/input_3_1': 2, 'normal/op_4_0': 'avg_pool_3x3', 'normal/input_4_0': 3, 'normal/op_4_1': 'avg_pool_3x3', 'normal/input_4_1': 2, 'normal/op_5_0': 'sep_conv_5x5', 'normal/input_5_0': 3, 'normal/op_5_1': 'skip_connect', 'normal/input_5_1': 1, 'reduce/op_2_0': 'dil_conv_5x5', 'reduce/input_2_0': 1, 'reduce/op_2_1': 'sep_conv_5x5', 'reduce/input_2_1': 0, 'reduce/op_3_0': 'dil_conv_3x3', 'reduce/input_3_0': 2, 'reduce/op_3_1': 'skip_connect', 'reduce/input_3_1': 1, 'reduce/op_4_0': 'dil_conv_3x3', 'reduce/input_4_0': 2, 'reduce/op_4_1': 'skip_connect', 'reduce/input_4_1': 3, 'reduce/op_5_0': 'max_pool_3x3', 'reduce/input_5_0': 3, 'reduce/op_5_1': 'max_pool_3x3', 'reduce/input_5_1': 0}
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 570-574
+.. GENERATED FROM PYTHON SOURCE LINES 571-575
 
 When retraining,
 we extend the original dataloader to introduce another trick called `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
 Cutout is a data augmentation technique that randomly masks out rectangular regions in images.
 In CIFAR-10, the typical masked size is 16x16 (the image sizes are 32x32 in the dataset).
 
-.. GENERATED FROM PYTHON SOURCE LINES 575-601
+.. GENERATED FROM PYTHON SOURCE LINES 576-602
 
 .. code-block:: default
 
@@ -996,12 +997,12 @@ In CIFAR-10, the typical masked size is 16x16 (the image sizes are 32x32 in the 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 602-604
+.. GENERATED FROM PYTHON SOURCE LINES 603-605
 
 The train dataloader needs to be reinstantiated with the new transform.
 The validation dataloader is not affected, and thus can be reused.
 
-.. GENERATED FROM PYTHON SOURCE LINES 605-609
+.. GENERATED FROM PYTHON SOURCE LINES 606-610
 
 .. code-block:: default
 
@@ -1022,7 +1023,7 @@ The validation dataloader is not affected, and thus can be reused.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 610-615
+.. GENERATED FROM PYTHON SOURCE LINES 611-616
 
 We then create the final model based on the new exported architecture.
 This time, auxiliary loss and drop path probability is enabled.
@@ -1030,7 +1031,7 @@ This time, auxiliary loss and drop path probability is enabled.
 Following the same procedure as paper, we also increase the number of filters to 36, and number of cells to 20,
 so as to reasonably increase the model size and boost the performance.
 
-.. GENERATED FROM PYTHON SOURCE LINES 616-620
+.. GENERATED FROM PYTHON SOURCE LINES 617-621
 
 .. code-block:: default
 
@@ -1045,12 +1046,12 @@ so as to reasonably increase the model size and boost the performance.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 621-623
+.. GENERATED FROM PYTHON SOURCE LINES 622-624
 
 Launching the retraining requires creating another evaluator.
 We can now put the gradient clipping in the keyword arguments of trainer.
 
-.. GENERATED FROM PYTHON SOURCE LINES 624-641
+.. GENERATED FROM PYTHON SOURCE LINES 625-642
 
 .. code-block:: default
 
@@ -1097,33 +1098,33 @@ We can now put the gradient clipping in the keyword arguments of trainer.
     -----------------------------------------------
     0 | criterion | CrossEntropyLoss | 0     
     1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 3.9 M 
+    2 | model     | DARTS            | 2.8 M 
     -----------------------------------------------
-    3.9 M     Trainable params
+    2.8 M     Trainable params
     0         Non-trainable params
-    3.9 M     Total params
-    15.744    Total estimated model params size (MB)
+    2.8 M     Total params
+    11.171    Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:219: PossibleUserWarning: The dataloader, train_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 6 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
       rank_zero_warn(
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.45it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.45it/s, loss=3.27, v_num=, train_loss=3.270, train_acc=0.0938]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  2.21it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  2.20it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729]
     Validation: 0it [00:00, ?it/s]
     Validation:   0%|          | 0/1 [00:00<?, ?it/s]
     Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  3.41it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.46it/s, loss=3.27, v_num=, train_loss=3.270, train_acc=0.0938]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.46it/s, loss=3.27, v_num=, train_loss=3.270, train_acc=0.0938, val_loss=2.300, val_acc=0.113]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.44it/s, loss=3.27, v_num=, train_loss=3.270, train_acc=0.0938, val_loss=2.300, val_acc=0.113]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.44it/s, loss=3.27, v_num=, train_loss=3.270, train_acc=0.0938, val_loss=2.300, val_acc=0.113]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  4.91it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.95it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.94it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729, val_loss=2.300, val_acc=0.113]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.92it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729, val_loss=2.300, val_acc=0.113]`Trainer.fit` stopped: `max_steps=1` reached.
+    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.92it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729, val_loss=2.300, val_acc=0.113]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 642-644
+.. GENERATED FROM PYTHON SOURCE LINES 643-645
 
 The full search and training, when ``fast_dev_run`` is off, takes around 60 hours (search 8 hours + retrain 53 hours) on a P100 GPU.
 The exported architecture dict looks like this.
 
-.. GENERATED FROM PYTHON SOURCE LINES 645-681
+.. GENERATED FROM PYTHON SOURCE LINES 646-682
 
 .. code-block:: default
 
@@ -1175,7 +1176,7 @@ The exported architecture dict looks like this.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 682-695
+.. GENERATED FROM PYTHON SOURCE LINES 683-696
 
 This architecture, after retraining, yields a top-1 accuracy of 97.12%. If we take the best snapshot throughout the retrain process,
 there is a chance that the top-1 accuracy will be 97.28%.
@@ -1194,7 +1195,7 @@ The implementation of second order DARTS is in our future plan, and we also welc
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  38.212 seconds)
+   **Total running time of the script:** ( 1 minutes  37.287 seconds)
 
 
 .. _sphx_glr_download_tutorials_darts.py:
