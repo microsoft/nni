@@ -2,7 +2,7 @@
 Searching on DARTS search space
 ===============================
 
-In this tutorial, we demonstrate how to search on the famous model space proposed in `DARTS <https://arxiv.org/abs/1806.09055>`__.
+In this tutorial, we demonstrate how to search on the famous model space proposed in `DARTS`_.
 
 Through this process, you will learn:
 
@@ -17,6 +17,8 @@ In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves
    Running this tutorial requires a GPU.
    If you don't have one, you can set ``gpus`` in :class:`~nni.retiarii.evaluator.pytorch.Classification` to be 0,
    but do note that it will be much slower.
+
+.. _DARTS: https://arxiv.org/abs/1806.09055
 
 Use a pre-searched model
 ------------------------
@@ -61,7 +63,7 @@ valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
 #
 # We present :doc:`model space hub </nas/space_hub>`, where you can find many built-in model spaces,
 # along with many pre-searched models.
-# We choose one from DARTS search space, which is natively trained on our target dataset, CIFAR-10,
+# We choose one from `DARTS`_ search space, which is natively trained on our target dataset, CIFAR-10,
 # so as to save the tedious steps of finetuning.
 #
 # .. tip::
@@ -94,12 +96,12 @@ evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
 # %%
 #
 # The journey could end here. Or you are interested,
-# we can go a step further to search a model within DARTS space on our own.
+# we can go a step further to search a model within :class:`~nni.retiarii.hub.pytorch.DARTS` space on our own.
 #
 # Use the model space
 # -------------------
 
-# The model space provided in DARTS originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
+# The model space provided in `DARTS`_ originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
 # where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
 # There are two types of cells within a network. The first type is called *normal cell*, and the second type is called *reduction cell*.
 # The key difference between normal and reduction cell is that the reduction cell will downsample the input feature map,
@@ -118,7 +120,7 @@ evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
 #
 # .. image:: ../../img/nasnet_cell.png
 #
-# The search space proposed in DARTS paper introduced two modifications to the original space
+# The search space proposed in `DARTS`_ paper introduced two modifications to the original space
 # in `NASNet <https://arxiv.org/abs/1707.07012>`__.
 #
 # Firstly, the operator candidates have been narrowed down to seven:
@@ -139,16 +141,18 @@ evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
 #
 # .. note::
 #
-#    DARTS is one of those papers that innovate both in search space and search strategy.
+#    `DARTS`_ is one of those papers that innovate both in search space and search strategy.
 #    In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
 #    We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
-#    We did NOT imply that the DARTS space and DARTS strategy has to used together.
+#    We did NOT imply that the :class:`~nni.retiarii.hub.pytorch.DARTS` space and
+#    :class:`~nni.retiarii.strategy.DARTS` strategy has to used together.
 #    You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
 #
-# In the following example, we initialize a DARTS model space, with only 16 initial filters and 8 stacked cells.
+# In the following example, we initialize a :class:`~nni.retiarii.hub.pytorch.DARTS`
+# model space, with only 16 initial filters and 8 stacked cells.
 # The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
 #
-# The DARTS model space here is provided by :doc:`model space hub </nas/space_hub>`,
+# The :class:`~nni.retiarii.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
 # where we have supported multiple popular model spaces for plug-and-play.
 #
 # .. tip::
@@ -170,7 +174,7 @@ model_space = DartsSpace(16, 8, 'cifar')
 # Note that for a typical setup of NAS, the model search should be on validation set, and the evaluation of the final searched model
 # should be on test set. However, as CIFAR-10 dataset only has a training set of 50k images and a validation set (10k images),
 # we have to split the original training set into a training set and a validation set.
-# As we are going to use the provided by DARTS paper, the recommended train/val split is 1:1.
+# As we are going to use the provided by `DARTS`_ paper, the recommended train/val split is 1:1.
 
 import numpy as np
 from nni.retiarii.evaluator.pytorch import Classification
@@ -220,8 +224,8 @@ evaluator = Classification(
 
 # %%
 #
-# We will use DARTS (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
-# DARTS strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
+# We will use `DARTS`_ (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
+# :class:`~nni.retiarii.strategy.DARTS` strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
 # The fundamental differences between One-shot strategies and :ref:`multi-trial strategies <multi-trial-nas>` is that,
 # one-shot strategy combines search with model training into a single run.
 # Compared to multi-trial strategies, one-shot NAS doesn't need to iteratively spawn new trials (i.e., models),
@@ -294,14 +298,11 @@ exported_arch
 # To construct a fixed model based on the architecture dict exported from the experiment,
 # we can use :func:`nni.retiarii.fixed_arch`. Seemingly, we are still creating a space.
 # But under the with-context, we are actually creating a fixed model.
-#
-# Here, we increase the number of filters to 36, and number of cells to 20,
-# so as to reasonably increase the model size and boost the performance.
 
 from nni.retiarii import fixed_arch
 
 with fixed_arch(exported_arch):
-    final_model = DartsSpace(36, 20, 'cifar')
+    final_model = DartsSpace(16, 8, 'cifar')
 
 # %%
 #
@@ -348,7 +349,7 @@ evaluator.fit(final_model)
 # Reproduce results in DARTS paper
 # --------------------------------
 #
-# You might notice there's still a gap between our results and the results in the DARTS paper.
+# You might notice there's still a gap between our results and the results in the `DARTS` paper.
 # This is because we didn't introduce some extra training tricks, including `DropPath <https://arxiv.org/pdf/1605.07648v4.pdf>`__,
 # Auxiliary loss, gradient clipping and augmentations like `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
 # They also train the networks for longer time (i.e., 600 epochs).
@@ -444,10 +445,10 @@ evaluator = Lightning(
 
 # %%
 #
-# DARTS strategy is created with gradient clip turned on.
+# :class:`~nni.retiarii.strategy.DARTS` strategy is created with gradient clip turned on.
 # If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
 # However, enabling gradient cip in the trainer above won't work, because the underlying
-# implementation of DARTS strategy is based on
+# implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
 # `manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__.
 
 strategy = DartsStrategy(gradient_clip_val=5.)
@@ -515,6 +516,9 @@ train_loader_cutout = DataLoader(train_data_cutout, batch_size=96)
 #
 # We then create the final model based on the new exported architecture.
 # This time, auxiliary loss and drop path probability is enabled.
+#
+# Following the same procedure as paper, we also increase the number of filters to 36, and number of cells to 20,
+# so as to reasonably increase the model size and boost the performance.
 
 with fixed_arch(exported_arch):
     final_model = DartsSpace(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
@@ -542,4 +546,13 @@ evaluator.fit(final_model)
 
 # %%
 #
-# .. note:: The full search and training takes around XX hours on a P100 GPU, and yields a top-1 accuracy of ~0.8%.
+# The full search and training takes around 60 hours (search 8 hours + retrain 53 hours) on a P100 GPU,
+# and yields a top-1 accuracy of 97.12%. If we take the best snapshot throughout the retrain process,
+# there is a chance that the top-1 accuracy will be 97.28%.
+#
+# .. image:: ../../img/darts_val_acc.jpg
+#
+# The results outperforms "DARTS (first order) + cutout" in `DARTS`_ paper, which is only 97.00±0.14%.
+# It's even comparable with "DARTS (second order) + cutout" in the paper (97.24±0.09%),
+# though we didn't implement the second order version.
+# The implementation of second order DARTS is in our future plan, and we also welcome your contribution.
