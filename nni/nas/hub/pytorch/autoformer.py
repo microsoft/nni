@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import itertools
 from typing import Optional, Tuple, cast, Any, Dict
 
 import torch
@@ -241,15 +240,10 @@ class MixedClsToken(MixedOperation, ClsToken):
         cls_token = _S(self.cls_token)[..., :embed_dim_]
         return cls_token
 
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+    def _slice_params_mapping(self):
         kwargs = {name: self.forward_argument(name) for name in self.argument_list}
         cls_token = self._slice_param(**kwargs)
-        params = {"cls_token": cls_token}
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
-            if value is None or name in self._non_persistent_buffers_set:
-                continue
-            value = params.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
+        return {"cls_token": cls_token}
 
     def forward_with_args(self, embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
@@ -291,15 +285,10 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
         pos_embed = _S(self.pos_embed)[..., :embed_dim_]
         return pos_embed
 
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+    def _slice_params_mapping(self):
         kwargs = {name: self.forward_argument(name) for name in self.argument_list}
         pos_embed = self._slice_param(**kwargs)
-        params = {"pos_embed": pos_embed}
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
-            if value is None or name in self._non_persistent_buffers_set:
-                continue
-            value = params.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
+        return {"pos_embed": pos_embed}
 
     def forward_with_args(self,  embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:

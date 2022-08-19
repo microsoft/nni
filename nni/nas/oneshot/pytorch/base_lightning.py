@@ -81,7 +81,7 @@ def traverse_and_mutate_submodules(
     def apply(m):
         # Binding instance methods for nn.Module
         if not hasattr(m, "sub_state_dict"):
-            m._save_to_sub_state_dict = types.MethodType(BaseSuperNetModule._save_to_sub_state_dict, m)
+            m._slice_params_mapping = types.MethodType(BaseSuperNetModule._slice_params_mapping, m)
             m.sub_state_dict = types.MethodType(BaseSuperNetModule.sub_state_dict, m)
         # Need to call list() here because the loop body might replace some children in-place.
         for name, child in list(m.named_children()):

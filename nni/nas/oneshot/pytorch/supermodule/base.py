@@ -107,12 +107,8 @@ class BaseSuperNetModule(nn.Module):
         """
         raise NotImplementedError()
 
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
-            if value is None or name in self._non_persistent_buffers_set:
-                # it won't appear in state dict
-                continue
-            destination[prefix + name] = value if keep_vars else value.detach()
+    def _slice_params_mapping(self):
+        return {}
 
     def sub_state_dict(self, destination=None, prefix='', keep_vars=False):
         if destination is None:
@@ -123,7 +119,14 @@ class BaseSuperNetModule(nn.Module):
         if hasattr(destination, "_metadata"):
             destination._metadata[prefix[:-1]] = local_metadata
 
-        self._save_to_sub_state_dict(destination, prefix, keep_vars)
+        params_mapping = self._slice_params_mapping()
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
+            if value is None or name in self._non_persistent_buffers_set:
+                # it won't appear in state dict
+                continue
+            value = params_mapping.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
+
         for name, module in self._modules.items():
             if module is not None:
                 module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)

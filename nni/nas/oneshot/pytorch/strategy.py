@@ -20,8 +20,6 @@ import torch.nn as nn
 from nni.nas.execution.common import Model
 from nni.nas.strategy.base import BaseStrategy
 from nni.nas.evaluator.pytorch.lightning import Lightning, LightningModule
-from nni.nas.utils.misc import STATE_DICT_PY_MAPPING, STATE_DICT_PY_MAPPING_PARTIAL
-from nni.nas.oneshot.pytorch.supermodule.operation import NATIVE_MIXED_OPERATIONS
 
 from .base_lightning import BaseOneShotLightningModule
 from .differentiable import DartsLightningModule, ProxylessLightningModule, GumbelDartsLightningModule
@@ -148,7 +146,7 @@ class RandomOneShot(OneShotStrategy):
         super().__init__(RandomSamplingLightningModule, **kwargs)
 
     def attach_model(self, base_model):
-        # This may conflict with the `self.run`` method. In the `run`, the base_model and evaluator are wrapped in `Model`. 
+        # This may conflict with the `self.run`` method. In the `run`, the base_model and evaluator are wrapped in `Model`.
         _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
 
         if not isinstance(base_model, nn.Module):
@@ -156,7 +154,8 @@ class RandomOneShot(OneShotStrategy):
 
         self.model = self.oneshot_module(base_model, **self.oneshot_kwargs)
 
-    def sub_state_dict(self, arch, destination=None, prefix='', keep_vars=False):
-        self.model.resample(arch)
+    def sub_state_dict(self, arch=None, destination=None, prefix='', keep_vars=False):
+        if isinstance(arch, dict):
+            self.model.resample(arch)
         base_model = self.model.model
         return base_model.sub_state_dict(destination, prefix, keep_vars)

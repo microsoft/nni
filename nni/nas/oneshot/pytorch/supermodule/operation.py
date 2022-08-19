@@ -12,6 +12,7 @@ import inspect
 import itertools
 import warnings
 from typing import Any, Type, TypeVar, cast, Union, Tuple, List
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -260,15 +261,10 @@ class MixedLinear(MixedOperation, nn.Linear):
 
         return weight, bias
 
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+    def _slice_params_mapping(self):
         kwargs = {name: self.forward_argument(name) for name in self.argument_list}
         weight, bias = self._slice_param(**kwargs)
-        params = {"weight": weight, "bias": bias}
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
-            if value is None or name in self._non_persistent_buffers_set:
-                continue
-            value = params.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
+        return {"weight": weight, "bias": bias}
 
     def forward_with_args(self,
                           in_features: int_or_int_dict,
@@ -359,17 +355,12 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         else:
             return max(traverse_all_options(value_choice))
 
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+    def _slice_params_mapping(self):
         kwargs = {name: self.forward_argument(name) for name in self.argument_list}
         weight, bias, _ = self._slice_param(**kwargs)
-        params = {"weight": weight, "bias": bias}
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
-            if value is None or name in self._non_persistent_buffers_set:
-                continue
-            value = params.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
+        return {"weight": weight, "bias": bias}
 
-    def _slice_param(self, 
+    def _slice_param(self,
                     in_channels: int_or_int_dict,
                     out_channels: int_or_int_dict,
                     kernel_size: scalar_or_scalar_dict[_int_or_tuple],
@@ -493,15 +484,10 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
 
         return weight, bias, running_mean, running_var
 
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+    def _slice_params_mapping(self):
         kwargs = {name: self.forward_argument(name) for name in self.argument_list}
         weight, bias, running_mean, running_var = self._slice_param(**kwargs)
-        params = {"weight": weight, "bias": bias, "running_mean": running_mean, "running_var": running_var}
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
-            if value is None or name in self._non_persistent_buffers_set:
-                continue
-            value = params.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
+        return {"weight": weight, "bias": bias, "running_mean": running_mean, "running_var": running_var}
 
     def forward_with_args(self,
                           num_features: int_or_int_dict,
@@ -586,15 +572,10 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
 
         return weight, bias, normalized_shape
 
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+    def _slice_params_mapping(self):
         kwargs = {name: self.forward_argument(name) for name in self.argument_list}
         weight, bias, _ = self._slice_param(**kwargs)
-        params = {"weight": weight, "bias": bias}
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
-            if value is None or name in self._non_persistent_buffers_set:
-                continue
-            value = params.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
+        return {"weight": weight, "bias": bias}
 
     def forward_with_args(self,
                           normalized_shape,
@@ -687,19 +668,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             slice(self.embed_dim * 2, self.embed_dim * 2 + embed_dim)
         ]
 
-    def forward_with_args(
-        self,
-        embed_dim: int_or_int_dict, num_heads: int,
-        kdim: int_or_int_dict | None, vdim: int_or_int_dict | None,
-        dropout: float,
-        query: torch.Tensor, key: torch.Tensor, value: torch.Tensor,
-        key_padding_mask: torch.Tensor | None = None,
-        need_weights: bool = True, attn_mask: torch.Tensor | None = None
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
-
-        if any(isinstance(arg, dict) for arg in [num_heads, dropout]):
-            raise ValueError(_diff_not_compatible_error.format('num_heads and dropout', 'MultiHeadAttention'))
-
+    def _slice_param(self, embed_dim, kdim, vdim, **kwargs):
         # by default, kdim, vdim can be none
         if kdim is None:
             kdim = embed_dim
@@ -707,15 +676,6 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             vdim = embed_dim
 
         qkv_same_embed_dim = kdim == embed_dim and vdim == embed_dim
-
-        if getattr(self, 'batch_first', False):
-            # for backward compatibility: v1.7 doesn't have batch_first
-            query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
-
-        if isinstance(embed_dim, dict):
-            used_embed_dim = self.embed_dim
-        else:
-            used_embed_dim = embed_dim
 
         embed_dim_ = _W(embed_dim)
 
@@ -738,32 +698,97 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             k_proj = _S(k_proj)[:, :_W(kdim)]
             v_proj = _S(cast(Tensor, self.v_proj_weight))[:embed_dim_]
             v_proj = _S(v_proj)[:, :_W(vdim)]
-
-            # The rest part is basically same as pytorch
-            attn_output, attn_output_weights = F.multi_head_attention_forward(
-                query, key, value, used_embed_dim, num_heads,
-                cast(Tensor, in_proj_weight), cast(Tensor, in_proj_bias),
-                bias_k, bias_v, self.add_zero_attn,
-                dropout, out_proj_weight, cast(Tensor, out_proj_bias),
-                training=self.training,
-                key_padding_mask=key_padding_mask, need_weights=need_weights,
-                attn_mask=attn_mask, use_separate_proj_weight=True,
-                q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
         else:
-            # Cast tensor here because of a bug in pytorch stub
-            attn_output, attn_output_weights = F.multi_head_attention_forward(
-                query, key, value, used_embed_dim, num_heads,
-                cast(Tensor, in_proj_weight), cast(Tensor, in_proj_bias),
-                bias_k, bias_v, self.add_zero_attn,
-                dropout, out_proj_weight, cast(Tensor, out_proj_bias),
-                training=self.training,
-                key_padding_mask=key_padding_mask, need_weights=need_weights,
-                attn_mask=attn_mask)
+            q_proj = k_proj = v_proj = None
+
+        return in_proj_bias, in_proj_weight, bias_k, bias_v, out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim
+
+    def _slice_params_mapping(self):
+        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
+        in_proj_bias, in_proj_weight, bias_k, bias_v, \
+            out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, _ = self._slice_param(**kwargs)
+        return {
+            "in_proj_bias": in_proj_bias, "in_proj_weight": in_proj_weight,
+            "bias_k": bias_k, "bias_v": bias_v,
+            "out_proj.weight": out_proj_weight, "out_proj.bias": out_proj_bias,
+            "q_proj_weight": q_proj, "k_proj_weight": k_proj, "v_proj_weight": v_proj
+        }
+
+    def sub_state_dict(self, destination=None, prefix='', keep_vars=False):
+        if destination is None:
+            destination = OrderedDict()
+            destination._metadata = OrderedDict()
+
+        local_metadata = dict(version=self._version)
+        if hasattr(destination, "_metadata"):
+            destination._metadata[prefix[:-1]] = local_metadata
+
+        params_mapping = self._slice_params_mapping()
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
+            if value is None or name in self._non_persistent_buffers_set:
+                # it won't appear in state dict
+                continue
+            value = params_mapping.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
+        for name in ["out_proj.weight", "out_proj.bias"]:
+            value = params_mapping.get(name, value)
+            if value is None:
+                continue
+            destination[prefix + name] = value if keep_vars else value.detach()
+
+        for name, module in self._modules.items():
+            if isinstance(module, nn.modules.linear.NonDynamicallyQuantizableLinear):
+                continue
+            if module is not None:
+                module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+        for hook in self._state_dict_hooks.values():
+            hook_result = hook(self, destination, prefix, local_metadata)
+            if hook_result is not None:
+                destination = hook_result
+        return destination
+
+    def forward_with_args(
+        self,
+        embed_dim: int_or_int_dict, num_heads: int,
+        kdim: int_or_int_dict | None, vdim: int_or_int_dict | None,
+        dropout: float,
+        query: torch.Tensor, key: torch.Tensor, value: torch.Tensor,
+        key_padding_mask: torch.Tensor | None = None,
+        need_weights: bool = True, attn_mask: torch.Tensor | None = None
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+
+        if any(isinstance(arg, dict) for arg in [num_heads, dropout]):
+            raise ValueError(_diff_not_compatible_error.format('num_heads and dropout', 'MultiHeadAttention'))
+
+        if getattr(self, 'batch_first', False):
+            # for backward compatibility: v1.7 doesn't have batch_first
+            query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
+
+        if isinstance(embed_dim, dict):
+            used_embed_dim = self.embed_dim
+        else:
+            used_embed_dim = embed_dim
+
+        in_proj_bias, in_proj_weight, bias_k, bias_v, \
+            out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim = self._slice_param(embed_dim, kdim, vdim)
+
+        # The rest part is basically same as pytorch
+        attn_output, attn_output_weights = F.multi_head_attention_forward(
+            query, key, value, used_embed_dim, num_heads,
+            cast(Tensor, in_proj_weight), cast(Tensor, in_proj_bias),
+            bias_k, bias_v, self.add_zero_attn,
+            dropout, out_proj_weight, cast(Tensor, out_proj_bias),
+            training=self.training,
+            key_padding_mask=key_padding_mask, need_weights=need_weights,
+            attn_mask=attn_mask, use_separate_proj_weight=not qkv_same_embed_dim,
+            q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
+
 
         if getattr(self, 'batch_first', False):  # backward compatibility
             return attn_output.transpose(1, 0), attn_output_weights
         else:
             return attn_output, attn_output_weights
+
 
 
 NATIVE_MIXED_OPERATIONS: list[Type[MixedOperation]] = [

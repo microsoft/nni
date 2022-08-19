@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import copy
 import random
+from collections import OrderedDict
+import itertools
 from typing import Any, List, Dict, Sequence, cast
 
 import torch
@@ -75,6 +77,36 @@ class PathSamplingLayer(BaseSuperNetModule):
     def reduction(self, items: list[Any], sampled: list[Any]):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
+
+    def sub_state_dict(self, destination=None, prefix='', keep_vars=False):
+        if destination is None:
+            destination = OrderedDict()
+            destination._metadata = OrderedDict()
+
+        local_metadata = dict(version=self._version)
+        if hasattr(destination, "_metadata"):
+            destination._metadata[prefix[:-1]] = local_metadata
+
+        params_mapping = self._slice_params_mapping()
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
+            if value is None or name in self._non_persistent_buffers_set:
+                # it won't appear in state dict
+                continue
+            value = params_mapping.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
+
+        sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
+
+        for samp in sampled:
+            module = getattr(self, str(samp))
+            if module is not None:
+                module.sub_state_dict(destination=destination, prefix=prefix, keep_vars=keep_vars)
+
+        for hook in self._state_dict_hooks.values():
+            hook_result = hook(self, destination, prefix, local_metadata)
+            if hook_result is not None:
+                destination = hook_result
+        return destination
 
     def forward(self, *args, **kwargs):
         if self._sampled is None:
@@ -267,6 +299,37 @@ class PathSamplingRepeat(BaseSuperNetModule):
     def reduction(self, items: list[Any], sampled: list[Any]):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
+
+    def sub_state_dict(self, destination=None, prefix='', keep_vars=False):
+        if destination is None:
+            destination = OrderedDict()
+            destination._metadata = OrderedDict()
+
+        local_metadata = dict(version=self._version)
+        if hasattr(destination, "_metadata"):
+            destination._metadata[prefix[:-1]] = local_metadata
+
+        params_mapping = self._slice_params_mapping()
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
+            if value is None or name in self._non_persistent_buffers_set:
+                # it won't appear in state dict
+                continue
+            value = params_mapping.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
+
+        sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
+
+        for cur_depth, (name, module) in enumerate(self.blocks._modules.items(), start=1):
+            if module is not None:
+                module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+            if not any(d > cur_depth for d in sampled):
+                break
+
+        for hook in self._state_dict_hooks.values():
+            hook_result = hook(self, destination, prefix, local_metadata)
+            if hook_result is not None:
+                destination = hook_result
+        return destination
 
     def forward(self, x):
         if self._sampled is None:

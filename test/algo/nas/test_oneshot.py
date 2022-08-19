@@ -389,3 +389,20 @@ def test_optimizer_lr_scheduler():
 
     assert len(learning_rates) == 10 and abs(learning_rates[0] - 0.1) < 1e-5 and \
         abs(learning_rates[2] - 0.01) < 1e-5 and abs(learning_rates[-1] - 1e-5) < 1e-6
+
+@torch.no_grad()
+def test_one_shot_sub_state_dict():
+    from nni.nas.strategy import RandomOneShot
+    from nni.nas.hub.pytorch.utils.fixed import FixedFactory
+    init_kwargs = {}
+    x = torch.rand(1, 1, 28, 28)
+    for model_space_cls in [SimpleNet, ValueChoiceConvNet, RepeatNet]:
+        strategy = RandomOneShot()
+        model_space = model_space_cls()
+        strategy.attach_model(model_space)
+        arch = strategy.model.resample()
+        strategy.model(x)
+        model_factory = FixedFactory(model_space.__class__, arch)
+        model = model_factory(**init_kwargs)
+        model.load_state_dict(strategy.sub_state_dict(arch))
+        model(x)
