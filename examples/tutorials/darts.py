@@ -1,8 +1,8 @@
 """
-Searching on DARTS search space
+Searching in DARTS search space
 ===============================
 
-In this tutorial, we demonstrate how to search on the famous model space proposed in `DARTS`_.
+In this tutorial, we demonstrate how to search in the famous model space proposed in `DARTS`_.
 
 Through this process, you will learn:
 
@@ -328,7 +328,7 @@ def plot_single_cell(arch_dict, cell_name):
 
     g.attr(label=f'{cell_name.capitalize()} cell')
 
-    display_png(g.pipe().decode(), raw=True)
+    display_png(g.pipe(), raw=True)
 
 def plot_double_cells(arch_dict):
     plot_single_cell(arch_dict, 'normal')
