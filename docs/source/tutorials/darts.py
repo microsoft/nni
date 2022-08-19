@@ -292,8 +292,10 @@ exported_arch
 # The cell can be visualized with the following code snippet
 # (copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
 
+import io
 import graphviz
-from IPython.display import display_png
+import matplotlib.pyplot as plt
+from PIL import Image
 
 def plot_single_cell(arch_dict, cell_name):
     g = graphviz.Digraph(
@@ -328,11 +330,18 @@ def plot_single_cell(arch_dict, cell_name):
 
     g.attr(label=f'{cell_name.capitalize()} cell')
 
-    display_png(g.pipe(), raw=True)
+    image = Image.open(io.BytesIO(g.pipe()))
+    return image
 
 def plot_double_cells(arch_dict):
-    plot_single_cell(arch_dict, 'normal')
-    plot_single_cell(arch_dict, 'reduce')
+    image1 = plot_single_cell(arch_dict, 'normal')
+    image2 = plot_single_cell(arch_dict, 'reduce')
+    _, axs = plt.subplots(1, 2, figsize=(20, 10))
+    axs[0].imshow(image1)
+    axs[1].imshow(image2)
+    axs[0].axis('off')
+    axs[1].axis('off')
+    plt.show()
 
 plot_double_cells(exported_arch)
 
