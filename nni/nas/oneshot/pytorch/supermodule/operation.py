@@ -422,7 +422,10 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         weight, bias, in_channels_per_group = self._slice_param(in_channels, out_channels, kernel_size, groups)
 
         if isinstance(groups, dict):
-            if inputs.size(1) % (in_channels_per_group) != 0:
+            if not isinstance(in_channels_per_group, (int, float)):
+                raise ValueError(f'Input channels per group is found to be a non-numberic: {in_channels_per_group}')
+
+            if inputs.size(1) % in_channels_per_group != 0:
                 raise RuntimeError(
                     f'Input channels must be divisible by in_channels_per_group, but the input shape is {inputs.size()}, '
                     f'while in_channels_per_group = {in_channels_per_group}'
