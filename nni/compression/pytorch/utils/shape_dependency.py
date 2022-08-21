@@ -365,8 +365,8 @@ class GroupDependency(Dependency):
 
     def __init__(
             self,
-            model: torch.nn.Module,
-            dummy_input: torch.Tensor,
+            model,
+            dummy_input,
             traced_model=None,
             group_norm_target: str="instancenorm",
         ):
