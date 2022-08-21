@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 import itertools
-from typing import Any
+from typing import Any, Dict
 
 import torch.nn as nn
 
@@ -110,7 +110,7 @@ class BaseSuperNetModule(nn.Module):
     def _slice_params_mapping(self):
         return {}
 
-    def sub_state_dict(self, destination=None, prefix='', keep_vars=False):
+    def sub_state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
         if destination is None:
             destination = OrderedDict()
             destination._metadata = OrderedDict()
@@ -129,6 +129,7 @@ class BaseSuperNetModule(nn.Module):
 
         for name, module in self._modules.items():
             if module is not None:
+                module: Any = module    # temporarily suppress type checking
                 module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
         for hook in self._state_dict_hooks.values():
             hook_result = hook(self, destination, prefix, local_metadata)

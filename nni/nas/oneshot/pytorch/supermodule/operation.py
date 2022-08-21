@@ -422,7 +422,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         weight, bias, in_channels_per_group = self._slice_param(in_channels, out_channels, kernel_size, groups)
 
         if isinstance(groups, dict):
-            if inputs.size(1) % in_channels_per_group != 0:
+            if inputs.size(1) % (in_channels_per_group) != 0:
                 raise RuntimeError(
                     f'Input channels must be divisible by in_channels_per_group, but the input shape is {inputs.size()}, '
                     f'while in_channels_per_group = {in_channels_per_group}'
@@ -714,7 +714,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             "q_proj_weight": q_proj, "k_proj_weight": k_proj, "v_proj_weight": v_proj
         }
 
-    def sub_state_dict(self, destination=None, prefix='', keep_vars=False):
+    def sub_state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> dict[str, torch.Tensor]:
         if destination is None:
             destination = OrderedDict()
             destination._metadata = OrderedDict()
@@ -731,7 +731,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             value = params_mapping.get(name, value)
             destination[prefix + name] = value if keep_vars else value.detach()
         for name in ["out_proj.weight", "out_proj.bias"]:
-            value = params_mapping.get(name, value)
+            value = params_mapping.get(name, None)
             if value is None:
                 continue
             destination[prefix + name] = value if keep_vars else value.detach()
@@ -740,7 +740,9 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             if isinstance(module, nn.modules.linear.NonDynamicallyQuantizableLinear):
                 continue
             if module is not None:
+                module: Any = module    # temporarily suppress type checking
                 module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+
         for hook in self._state_dict_hooks.values():
             hook_result = hook(self, destination, prefix, local_metadata)
             if hook_result is not None:

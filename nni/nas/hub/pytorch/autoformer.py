@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Optional, Tuple, cast, Any, Dict
+from typing import Optional, Tuple, cast, Any, Dict, Union
 
 import torch
 import torch.nn.functional as F
@@ -135,7 +135,7 @@ class TransformerEncoderLayer(nn.Module):
     The pytorch build-in nn.TransformerEncoderLayer() does not support customed attention.
     """
     def __init__(
-        self, embed_dim, num_heads, mlp_ratio=4.,
+        self, embed_dim, num_heads, mlp_ratio: Union[int, float, nn.ValueChoice]=4.,
         qkv_bias=False, qk_scale=None, rpe=False,
         drop_rate=0., attn_drop=0., proj_drop=0., drop_path=0.,
         pre_norm=True, rpe_length=14, head_dim=64

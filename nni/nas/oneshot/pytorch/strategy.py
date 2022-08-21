@@ -13,7 +13,7 @@ When adding/modifying a new strategy in this file, don't forget to link it in st
 from __future__ import annotations
 
 import warnings
-from typing import Any, Type
+from typing import Any, OrderedDict, Type, Union, Dict, Optional, Mapping
 
 import torch.nn as nn
 
@@ -145,17 +145,60 @@ class RandomOneShot(OneShotStrategy):
     def __init__(self, **kwargs):
         super().__init__(RandomSamplingLightningModule, **kwargs)
 
-    def attach_model(self, base_model):
+    def attach_model(self, base_model: Union[Model, nn.Module]):
         # This may conflict with the `self.run`` method. In the `run`, the base_model and evaluator are wrapped in `Model`.
         _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
 
-        if not isinstance(base_model, nn.Module):
-            raise TypeError('Model is not a nn.Module. ' + _reason)
+        if isinstance(base_model, Model):
+            if not isinstance(base_model.python_object, nn.Module):
+                raise TypeError('Model is not a nn.Module. ' + _reason)
+            py_model: nn.Module = base_model.python_object
+            if not isinstance(base_model.evaluator, Lightning):
+                raise TypeError('Evaluator needs to be a lightning evaluator to make one-shot strategy work.')
+            evaluator_module: LightningModule = base_model.evaluator.module
+            evaluator_module.running_mode = 'oneshot'
+            evaluator_module.set_model(py_model)
+        else:
+            from nni.retiarii.evaluator.pytorch.lightning import ClassificationModule
+            evaluator_module = ClassificationModule()
+            evaluator_module.running_mode = 'oneshot'
+            evaluator_module.set_model(base_model)
+        self.model: BaseOneShotLightningModule = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
 
-        self.model = self.oneshot_module(base_model, **self.oneshot_kwargs)
+    def run(self, base_model: Model, applied_mutators):
+        # one-shot strategy doesn't use ``applied_mutators``
+        # but get the "mutators" on their own
 
-    def sub_state_dict(self, arch=None, destination=None, prefix='', keep_vars=False):
+        _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
+
+        if applied_mutators:
+            raise ValueError('Mutator is not empty. ' + _reason)
+
+        if not isinstance(base_model.evaluator, Lightning):
+            raise TypeError('Evaluator needs to be a lightning evaluator to make one-shot strategy work.')
+
+        self.attach_model(base_model)
+        state_dict = self.oneshot_kwargs.get("state_dict", None)
+        if isinstance(state_dict, OrderedDict):
+            self.load_state_dict(state_dict)
+        evaluator: Lightning = base_model.evaluator
+        if evaluator.train_dataloaders is None or evaluator.val_dataloaders is None:
+            raise TypeError('Training and validation dataloader are both required to set in evaluator for one-shot strategy.')
+        train_loader, val_loader = self.preprocess_dataloader(evaluator.train_dataloaders, evaluator.val_dataloaders)
+        evaluator.trainer.fit(self.model, train_loader, val_loader)
+
+    def state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
+        base_model: Any = self.model.model.model
+        state_dict = base_model.state_dict(destination, prefix, keep_vars)
+        return state_dict
+
+    def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool=True):
+        base_model: Any = self.model.model.model
+        base_model.load_state_dict(state_dict=state_dict, strict=strict)
+
+    def sub_state_dict(self, arch: Optional[dict]=None, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
         if isinstance(arch, dict):
             self.model.resample(arch)
-        base_model = self.model.model
-        return base_model.sub_state_dict(destination, prefix, keep_vars)
+        base_model: Any = self.model.model.model
+        sub_state_dict = base_model.sub_state_dict(destination, prefix, keep_vars)
+        return sub_state_dict

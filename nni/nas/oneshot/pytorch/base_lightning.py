@@ -261,7 +261,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def __init__(self, model: pl.LightningModule, mutation_hooks: list[MutationHook] | None = None):
         super().__init__()
-        assert isinstance(model, (pl.LightningModule, nn.Module))
+        assert isinstance(model, pl.LightningModule)
         self.model = model
 
         # append the default hooks

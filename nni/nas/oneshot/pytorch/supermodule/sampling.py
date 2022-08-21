@@ -78,7 +78,7 @@ class PathSamplingLayer(BaseSuperNetModule):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
 
-    def sub_state_dict(self, destination=None, prefix='', keep_vars=False):
+    def sub_state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False):
         if destination is None:
             destination = OrderedDict()
             destination._metadata = OrderedDict()
@@ -261,7 +261,7 @@ class PathSamplingRepeat(BaseSuperNetModule):
 
     def __init__(self, blocks: list[nn.Module], depth: ChoiceOf[int]):
         super().__init__()
-        self.blocks = blocks
+        self.blocks: Any = blocks
         self.depth = depth
         self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices([depth])
         self._sampled: list[int] | int | None = None
@@ -300,7 +300,7 @@ class PathSamplingRepeat(BaseSuperNetModule):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
 
-    def sub_state_dict(self, destination=None, prefix='', keep_vars=False):
+    def sub_state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> dict[str, torch.Tensor]:
         if destination is None:
             destination = OrderedDict()
             destination._metadata = OrderedDict()
@@ -317,7 +317,7 @@ class PathSamplingRepeat(BaseSuperNetModule):
             value = params_mapping.get(name, value)
             destination[prefix + name] = value if keep_vars else value.detach()
 
-        sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
+        sampled: Any = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
 
         for cur_depth, (name, module) in enumerate(self.blocks._modules.items(), start=1):
             if module is not None:
