@@ -27,7 +27,7 @@ interface MultipleAxes {
 }
 
 interface TableRecord {
-    key: string;
+    _key: string;
     sequenceId: number;
     startTime: number;
     endTime?: number;
@@ -37,7 +37,7 @@ interface TableRecord {
     message: string;
     intermediateCount: number;
     latestAccuracy: number | undefined;
-    formattedLatestAccuracy: string; // format (LATEST/FINAL),
+    _formattedLatestAccuracy: string; // format (LATEST/FINAL),
 }
 
 interface SearchSpace {

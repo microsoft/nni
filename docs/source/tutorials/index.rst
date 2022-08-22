@@ -165,6 +165,23 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Workable Pruning Process ------------------------">
+
+.. only:: html
+
+  .. image:: /tutorials/images/thumb/sphx_glr_pruning_bert_glue_thumb.png
+    :alt: Pruning Transformer with NNI
+
+  :ref:`sphx_glr_tutorials_pruning_bert_glue.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Pruning Transformer with NNI</div>
+    </div>
+
+
+.. raw:: html
+
     </div>
 
 
@@ -180,6 +197,7 @@ Tutorials
    /tutorials/pruning_customize
    /tutorials/hello_nas
    /tutorials/darts
+   /tutorials/pruning_bert_glue
 
 
 

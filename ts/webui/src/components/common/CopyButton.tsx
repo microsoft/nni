@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import copy from 'copy-to-clipboard';
 import { IconButton, FontSizes, TooltipHost } from '@fluentui/react';
-import { TOOLTIP_BACKGROUND_COLOR } from '@static/const';
+import { TOOLTIPSTYLE } from '@static/const';
 
 interface CopyButtonProps {
     value: string;
@@ -38,15 +38,7 @@ const CopyButton = (props: CopyButtonProps): any => {
                 content='Copied'
                 componentRef={ref}
                 delay={0}
-                tooltipProps={{
-                    calloutProps: {
-                        styles: {
-                            beak: { background: TOOLTIP_BACKGROUND_COLOR },
-                            beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
-                            calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
-                        }
-                    }
-                }}
+                tooltipProps={TOOLTIPSTYLE}
             />
         </div>
     );
