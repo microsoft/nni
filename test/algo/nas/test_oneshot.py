@@ -390,7 +390,7 @@ def test_optimizer_lr_scheduler():
     assert len(learning_rates) == 10 and abs(learning_rates[0] - 0.1) < 1e-5 and \
         abs(learning_rates[2] - 0.01) < 1e-5 and abs(learning_rates[-1] - 1e-5) < 1e-6
 
-@torch.no_grad()
+
 def test_one_shot_sub_state_dict():
     from nni.nas.strategy import RandomOneShot
     from nni.retiarii import fixed_arch
@@ -402,8 +402,10 @@ def test_one_shot_sub_state_dict():
         model_space = model_space_cls()
         strategy.attach_model(model_space)
         arch = strategy.model.resample()
-        strategy.model(x)
         with fixed_arch(arch):
             model = model_space_cls(**init_kwargs)
         model.load_state_dict(strategy.sub_state_dict(arch))
+        model.eval()
+        model_space.eval()
+        assert (~ torch.isclose(model(x), strategy.model(x))).sum().item() == 0
         model(x)

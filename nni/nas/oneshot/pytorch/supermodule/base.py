@@ -14,6 +14,26 @@ from nni.common.hpo_utils import ParameterSpec
 __all__ = ['BaseSuperNetModule']
 
 
+def sub_state_dict(module: Any, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
+    if destination is None:
+        destination = OrderedDict()
+        destination._metadata = OrderedDict()
+
+    local_metadata = dict(version=module._version)
+    if hasattr(destination, "_metadata"):
+        destination._metadata[prefix[:-1]] = local_metadata
+
+    if isinstance(module, BaseSuperNetModule):
+        module._save_to_sub_state_dict(destination, prefix, keep_vars)
+    else:
+        module._save_to_state_dict(destination, prefix, keep_vars)
+        for name, m in module._modules.items():
+            if m is not None:
+                sub_state_dict(m, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+
+    return destination
+
+
 class BaseSuperNetModule(nn.Module):
     """
     Mutated module in super-net.
@@ -118,25 +138,9 @@ class BaseSuperNetModule(nn.Module):
                 continue
             value = params_mapping.get(name, value)
             destination[prefix + name] = value if keep_vars else value.detach()
-
-        for name, module in self._modules.items():
-            if module is not None:
-                module: Any = module    # temporarily suppress type checking
-                module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+        for name, m in self._modules.items():
+            if m is not None:
+                sub_state_dict(m, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
 
     def sub_state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
-        if destination is None:
-            destination = OrderedDict()
-            destination._metadata = OrderedDict()
-
-        local_metadata = dict(version=self._version)
-        if hasattr(destination, "_metadata"):
-            destination._metadata[prefix[:-1]] = local_metadata
-
-        self._save_to_sub_state_dict(destination, prefix, keep_vars)
-
-        # for hook in self._state_dict_hooks.values():
-        #     hook_result = hook(self, destination, prefix, local_metadata)
-        #     if hook_result is not None:
-        #         destination = hook_result
-        return destination
+        return sub_state_dict(self, destination, prefix, keep_vars)

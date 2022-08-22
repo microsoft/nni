@@ -13,7 +13,7 @@ When adding/modifying a new strategy in this file, don't forget to link it in st
 from __future__ import annotations
 
 import warnings
-from typing import Any, OrderedDict, Type, Union, Dict, Optional, Mapping
+from typing import Any, OrderedDict, Type, Union, Dict, Mapping
 
 import torch.nn as nn
 
@@ -196,9 +196,11 @@ class RandomOneShot(OneShotStrategy):
         base_model: Any = self.model.model.model
         base_model.load_state_dict(state_dict=state_dict, strict=strict)
 
-    def sub_state_dict(self, arch: Optional[dict]=None, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
-        if isinstance(arch, dict):
-            self.model.resample(arch)
-        base_model: Any = self.model.model.model
-        sub_state_dict = base_model.sub_state_dict(destination, prefix, keep_vars)
-        return sub_state_dict
+    def sub_state_dict(self, arch):
+        return self.model.sub_state_dict(arch)
+    # def sub_state_dict(self, arch: Optional[dict]=None, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
+    #     if isinstance(arch, dict):
+    #         self.model.resample(arch)
+    #     base_model: Any = self.model.model.model
+    #     sub_state_dict = base_model.sub_state_dict(destination, prefix, keep_vars)
+    #     return sub_state_dict

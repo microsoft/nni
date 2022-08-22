@@ -12,7 +12,6 @@ import inspect
 import itertools
 import warnings
 from typing import Any, Type, TypeVar, cast, Union, Tuple, List
-from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -24,7 +23,7 @@ from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
 from nni.nas.nn.pytorch.choice import ValueChoiceX
 
-from .base import BaseSuperNetModule
+from .base import BaseSuperNetModule, sub_state_dict
 from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, evaluate_constant
 from ._operation_utils import Slicable as _S, MaybeWeighted as _W, int_or_int_dict, scalar_or_scalar_dict
 
@@ -520,6 +519,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
             eps,
         )
 
+
 class MixedLayerNorm(MixedOperation, nn.LayerNorm):
     """
     Mixed LayerNorm operation.
@@ -725,6 +725,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
                 continue
             value = params_mapping.get(name, value)
             destination[prefix + name] = value if keep_vars else value.detach()
+
         for name in ["out_proj.weight", "out_proj.bias"]:
             value = params_mapping.get(name, None)
             if value is None:
@@ -735,8 +736,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             if isinstance(module, nn.modules.linear.NonDynamicallyQuantizableLinear):
                 continue
             if module is not None:
-                module: Any = module    # temporarily suppress type checking
-                module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+                sub_state_dict(module, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
 
     def forward_with_args(
         self,

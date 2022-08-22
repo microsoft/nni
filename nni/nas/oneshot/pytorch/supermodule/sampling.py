@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import copy
 import random
-from collections import OrderedDict
 import itertools
 from typing import Any, List, Dict, Sequence, cast
 
@@ -17,7 +16,7 @@ from nni.nas.nn.pytorch import LayerChoice, InputChoice, Repeat, ChoiceOf, Cell
 from nni.nas.nn.pytorch.choice import ValueChoiceX
 from nni.nas.nn.pytorch.cell import CellOpFactory, create_cell_op_candidates, preprocess_cell_inputs
 
-from .base import BaseSuperNetModule
+from .base import BaseSuperNetModule, sub_state_dict
 from ._valuechoice_utils import evaluate_value_choice_with_dict, dedup_inner_choices, weighted_sum
 from .operation import MixedOperationSamplingPolicy, MixedOperation
 
@@ -92,7 +91,7 @@ class PathSamplingLayer(BaseSuperNetModule):
         for samp in sampled:
             module = getattr(self, str(samp))
             if module is not None:
-                module.sub_state_dict(destination=destination, prefix=prefix, keep_vars=keep_vars)
+                sub_state_dict(module, destination=destination, prefix=prefix, keep_vars=keep_vars)
 
     def forward(self, *args, **kwargs):
         if self._sampled is None:
@@ -299,7 +298,8 @@ class PathSamplingRepeat(BaseSuperNetModule):
 
         for cur_depth, (name, module) in enumerate(self.blocks._modules.items(), start=1):
             if module is not None:
-                module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+                sub_state_dict(module, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+
             if not any(d > cur_depth for d in sampled):
                 break
 

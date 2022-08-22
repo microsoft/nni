@@ -16,7 +16,7 @@ import nni.nas.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
 from nni.nas.nn.pytorch.choice import ValueChoiceX
-from .supermodule.base import BaseSuperNetModule
+from .supermodule.base import BaseSuperNetModule, sub_state_dict
 
 __all__ = [
     'MANUAL_OPTIMIZATION_NOTE',
@@ -77,13 +77,7 @@ def traverse_and_mutate_submodules(
     memo = {}
 
     module_list = []
-    import types
     def apply(m):
-        # Binding instance methods for nn.Module
-        if not hasattr(m, "sub_state_dict"):
-            m._slice_params_mapping = types.MethodType(BaseSuperNetModule._slice_params_mapping, m)
-            m._save_to_sub_state_dict = types.MethodType(BaseSuperNetModule._save_to_sub_state_dict, m)
-            m.sub_state_dict = types.MethodType(BaseSuperNetModule.sub_state_dict, m)
         # Need to call list() here because the loop body might replace some children in-place.
         for name, child in list(m.named_children()):
             # post-order DFS
@@ -344,6 +338,13 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def forward(self, x):
         return self.model(x)
+
+    def sub_state_dict(self, arch: Any=None, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
+        if isinstance(arch, dict):
+            self.resample(arch)
+        base_model: Any = self.model.model
+        state_dict = sub_state_dict(base_model, destination, prefix, keep_vars)
+        return state_dict
 
     def configure_optimizers(self) -> Any:
         """
