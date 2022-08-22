@@ -439,6 +439,19 @@ class NDSStageDifferentiable(DifferentiableMixedRepeat):
 
 _INIT_PARAMETER_DOCS = """
 
+    Notes
+    -----
+
+    To use NDS spaces with one-shot strategies,
+    especially when depth is mutating (i.e., ``num_cells`` is set to a tuple / list),
+    please use :class:`~nni.retiarii.hub.pytorch.nasnet.NDSStagePathSampling` (with ENAS and RandomOneShot)
+    and :class:`~nni.retiarii.hub.pytorch.nasnet.NDSStageDifferentiable` (with DARTS and Proxyless) into ``mutation_hooks``.
+    This is because the output shape of each stacked block in :class:`~nni.retiarii.hub.pytorch.nasnet.NDSStage` can be different.
+    For example::
+
+        from nni.retiarii.hub.pytorch.nasnet import NDSStageDifferentiable
+        darts_strategy = strategy.DARTS(mutation_hooks=[NDSStageDifferentiable.mutate])
+
     Parameters
     ----------
     width
