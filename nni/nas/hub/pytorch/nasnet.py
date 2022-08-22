@@ -451,6 +451,8 @@ _INIT_PARAMETER_DOCS = """
     auxiliary_loss
         If true, another auxiliary classification head will produce the another prediction.
         This makes the output of network two logits in the training phase.
+    drop_path_prob
+        Apply drop path. Enabled when it's set to be greater than 0.
 
 """
 
@@ -475,8 +477,6 @@ class NDS(nn.Module):
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
     num_nodes_per_cell
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
-    drop_path_prob : float
-        Apply drop path. Enabled when it's set to be greater than 0.
     """
 
     def __init__(self,
