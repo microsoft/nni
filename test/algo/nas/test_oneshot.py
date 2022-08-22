@@ -393,7 +393,8 @@ def test_optimizer_lr_scheduler():
 @torch.no_grad()
 def test_one_shot_sub_state_dict():
     from nni.nas.strategy import RandomOneShot
-    from nni.nas.hub.pytorch.utils.fixed import FixedFactory
+    from nni.retiarii import fixed_arch
+
     init_kwargs = {}
     x = torch.rand(1, 1, 28, 28)
     for model_space_cls in [SimpleNet, ValueChoiceConvNet, RepeatNet]:
@@ -402,7 +403,7 @@ def test_one_shot_sub_state_dict():
         strategy.attach_model(model_space)
         arch = strategy.model.resample()
         strategy.model(x)
-        model_factory = FixedFactory(model_space.__class__, arch)
-        model = model_factory(**init_kwargs)
+        with fixed_arch(arch):
+            model = model_space_cls(**init_kwargs)
         model.load_state_dict(strategy.sub_state_dict(arch))
         model(x)

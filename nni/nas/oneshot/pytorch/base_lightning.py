@@ -82,6 +82,7 @@ def traverse_and_mutate_submodules(
         # Binding instance methods for nn.Module
         if not hasattr(m, "sub_state_dict"):
             m._slice_params_mapping = types.MethodType(BaseSuperNetModule._slice_params_mapping, m)
+            m._save_to_sub_state_dict = types.MethodType(BaseSuperNetModule._save_to_sub_state_dict, m)
             m.sub_state_dict = types.MethodType(BaseSuperNetModule.sub_state_dict, m)
         # Need to call list() here because the loop body might replace some children in-place.
         for name, child in list(m.named_children()):
@@ -284,16 +285,21 @@ class BaseOneShotLightningModule(pl.LightningModule):
             result.update(module.search_space_spec())
         return result
 
-    def resample(self, result=None) -> dict[str, Any]:
+    def resample(self, memo=None) -> dict[str, Any]:
         """Trigger the resample for each :attr:`nas_modules`.
         Sometimes (e.g., in differentiable cases), it does nothing.
+
+        Parameters
+        ----------
+        memo : dict[str, Any]
+            Used to ensure the consistency of samples with the same label.
 
         Returns
         -------
         dict
             Sampled architecture.
         """
-        result = result or {}
+        result = memo or {}
         for module in self.nas_modules:
             result.update(module.resample(memo=result))
         return result

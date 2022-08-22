@@ -717,15 +717,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             "q_proj_weight": q_proj, "k_proj_weight": k_proj, "v_proj_weight": v_proj
         }
 
-    def sub_state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> dict[str, torch.Tensor]:
-        if destination is None:
-            destination = OrderedDict()
-            destination._metadata = OrderedDict()
-
-        local_metadata = dict(version=self._version)
-        if hasattr(destination, "_metadata"):
-            destination._metadata[prefix[:-1]] = local_metadata
-
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
         params_mapping = self._slice_params_mapping()
         for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
             if value is None or name in self._non_persistent_buffers_set:
@@ -745,12 +737,6 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             if module is not None:
                 module: Any = module    # temporarily suppress type checking
                 module.sub_state_dict(destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
-
-        for hook in self._state_dict_hooks.values():
-            hook_result = hook(self, destination, prefix, local_metadata)
-            if hook_result is not None:
-                destination = hook_result
-        return destination
 
     def forward_with_args(
         self,
