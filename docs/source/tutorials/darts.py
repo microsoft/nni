@@ -291,6 +291,8 @@ exported_arch
 #
 # The cell can be visualized with the following code snippet
 # (copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
+#
+# .. warning:: The cell here is obtained via ``fast_dev_run`` (i.e., running only 2 mini-batches).
 
 import io
 import graphviz
@@ -348,6 +350,46 @@ plot_double_cells(exported_arch)
 
 # %%
 #
+# When ``fast_dev_run`` is turned off, we get a model with the following architecture,
+# where you might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
+
+plot_double_cells({
+    'normal/op_2_0': 'sep_conv_3x3',
+    'normal/input_2_0': 1,
+    'normal/op_2_1': 'sep_conv_3x3',
+    'normal/input_2_1': 0,
+    'normal/op_3_0': 'sep_conv_3x3',
+    'normal/input_3_0': 1,
+    'normal/op_3_1': 'sep_conv_3x3',
+    'normal/input_3_1': 2,
+    'normal/op_4_0': 'sep_conv_3x3',
+    'normal/input_4_0': 1,
+    'normal/op_4_1': 'sep_conv_3x3',
+    'normal/input_4_1': 0,
+    'normal/op_5_0': 'sep_conv_3x3',
+    'normal/input_5_0': 1,
+    'normal/op_5_1': 'max_pool_3x3',
+    'normal/input_5_1': 0,
+    'reduce/op_2_0': 'sep_conv_3x3',
+    'reduce/input_2_0': 0,
+    'reduce/op_2_1': 'sep_conv_3x3',
+    'reduce/input_2_1': 1,
+    'reduce/op_3_0': 'dil_conv_5x5',
+    'reduce/input_3_0': 2,
+    'reduce/op_3_1': 'sep_conv_3x3',
+    'reduce/input_3_1': 0,
+    'reduce/op_4_0': 'dil_conv_5x5',
+    'reduce/input_4_0': 2,
+    'reduce/op_4_1': 'sep_conv_5x5',
+    'reduce/input_4_1': 1,
+    'reduce/op_5_0': 'sep_conv_5x5',
+    'reduce/input_5_0': 4,
+    'reduce/op_5_1': 'dil_conv_5x5',
+    'reduce/input_5_1': 2
+})
+
+# %%
+#
 # Retrain the searched model
 # --------------------------
 #
@@ -398,47 +440,7 @@ evaluator.fit(final_model)
 
 # %%
 #
-# When ``fast_dev_run`` is turned off, we get a model with the following architecture.
-
-plot_double_cells({
-    'normal/op_2_0': 'sep_conv_3x3',
-    'normal/input_2_0': 1,
-    'normal/op_2_1': 'sep_conv_3x3',
-    'normal/input_2_1': 0,
-    'normal/op_3_0': 'sep_conv_3x3',
-    'normal/input_3_0': 1,
-    'normal/op_3_1': 'sep_conv_3x3',
-    'normal/input_3_1': 2,
-    'normal/op_4_0': 'sep_conv_3x3',
-    'normal/input_4_0': 1,
-    'normal/op_4_1': 'sep_conv_3x3',
-    'normal/input_4_1': 0,
-    'normal/op_5_0': 'sep_conv_3x3',
-    'normal/input_5_0': 1,
-    'normal/op_5_1': 'max_pool_3x3',
-    'normal/input_5_1': 0,
-    'reduce/op_2_0': 'sep_conv_3x3',
-    'reduce/input_2_0': 0,
-    'reduce/op_2_1': 'sep_conv_3x3',
-    'reduce/input_2_1': 1,
-    'reduce/op_3_0': 'dil_conv_5x5',
-    'reduce/input_3_0': 2,
-    'reduce/op_3_1': 'sep_conv_3x3',
-    'reduce/input_3_1': 0,
-    'reduce/op_4_0': 'dil_conv_5x5',
-    'reduce/input_4_0': 2,
-    'reduce/op_4_1': 'sep_conv_5x5',
-    'reduce/input_4_1': 1,
-    'reduce/op_5_0': 'sep_conv_5x5',
-    'reduce/input_5_0': 4,
-    'reduce/op_5_1': 'dil_conv_5x5',
-    'reduce/input_5_1': 2
-})
-
-# %%
-#
-# You might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
-# This architecture achieves a validation accuracy of 89.69% after training for 100 epochs.
+# .. note:: When ``fast_dev_run`` is turned off, we achieve a validation accuracy of 89.69% after training for 100 epochs.
 #
 # Reproduce results in DARTS paper
 # --------------------------------
@@ -569,6 +571,45 @@ exported_arch
 
 # %%
 #
+# We get the following architecture when ``fast_dev_run`` is set to False. It takes around 8 hours on a P100 GPU.
+
+plot_double_cells({
+    'normal/op_2_0': 'sep_conv_3x3',
+    'normal/input_2_0': 0,
+    'normal/op_2_1': 'sep_conv_3x3',
+    'normal/input_2_1': 1,
+    'normal/op_3_0': 'sep_conv_3x3',
+    'normal/input_3_0': 1,
+    'normal/op_3_1': 'skip_connect',
+    'normal/input_3_1': 0,
+    'normal/op_4_0': 'sep_conv_3x3',
+    'normal/input_4_0': 0,
+    'normal/op_4_1': 'max_pool_3x3',
+    'normal/input_4_1': 1,
+    'normal/op_5_0': 'sep_conv_3x3',
+    'normal/input_5_0': 0,
+    'normal/op_5_1': 'sep_conv_3x3',
+    'normal/input_5_1': 1,
+    'reduce/op_2_0': 'max_pool_3x3',
+    'reduce/input_2_0': 0,
+    'reduce/op_2_1': 'sep_conv_5x5',
+    'reduce/input_2_1': 1,
+    'reduce/op_3_0': 'dil_conv_5x5',
+    'reduce/input_3_0': 2,
+    'reduce/op_3_1': 'max_pool_3x3',
+    'reduce/input_3_1': 0,
+    'reduce/op_4_0': 'max_pool_3x3',
+    'reduce/input_4_0': 0,
+    'reduce/op_4_1': 'sep_conv_3x3',
+    'reduce/input_4_1': 2,
+    'reduce/op_5_0': 'max_pool_3x3',
+    'reduce/input_5_0': 0,
+    'reduce/op_5_1': 'skip_connect',
+    'reduce/input_5_1': 2
+})
+
+# %%
+#
 # When retraining,
 # we extend the original dataloader to introduce another trick called `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
 # Cutout is a data augmentation technique that randomly masks out rectangular regions in images.
@@ -641,47 +682,8 @@ evaluator.fit(final_model)
 
 # %%
 #
-# The full search and training, when ``fast_dev_run`` is off, takes around 60 hours (search 8 hours + retrain 53 hours) on a P100 GPU.
-# The exported architecture dict looks like this.
-
-plot_double_cells({
-    'normal/op_2_0': 'sep_conv_3x3',
-    'normal/input_2_0': 0,
-    'normal/op_2_1': 'sep_conv_3x3',
-    'normal/input_2_1': 1,
-    'normal/op_3_0': 'sep_conv_3x3',
-    'normal/input_3_0': 1,
-    'normal/op_3_1': 'skip_connect',
-    'normal/input_3_1': 0,
-    'normal/op_4_0': 'sep_conv_3x3',
-    'normal/input_4_0': 0,
-    'normal/op_4_1': 'max_pool_3x3',
-    'normal/input_4_1': 1,
-    'normal/op_5_0': 'sep_conv_3x3',
-    'normal/input_5_0': 0,
-    'normal/op_5_1': 'sep_conv_3x3',
-    'normal/input_5_1': 1,
-    'reduce/op_2_0': 'max_pool_3x3',
-    'reduce/input_2_0': 0,
-    'reduce/op_2_1': 'sep_conv_5x5',
-    'reduce/input_2_1': 1,
-    'reduce/op_3_0': 'dil_conv_5x5',
-    'reduce/input_3_0': 2,
-    'reduce/op_3_1': 'max_pool_3x3',
-    'reduce/input_3_1': 0,
-    'reduce/op_4_0': 'max_pool_3x3',
-    'reduce/input_4_0': 0,
-    'reduce/op_4_1': 'sep_conv_3x3',
-    'reduce/input_4_1': 2,
-    'reduce/op_5_0': 'max_pool_3x3',
-    'reduce/input_5_0': 0,
-    'reduce/op_5_1': 'skip_connect',
-    'reduce/input_5_1': 2
-})
-
-# %%
-#
-# This architecture, after retraining, yields a top-1 accuracy of 97.12%. If we take the best snapshot throughout the retrain process,
+# When ``fast_dev_run`` is turned off, after retraining, the architecture yields a top-1 accuracy of 97.12%.
+# If we take the best snapshot throughout the retrain process,
 # there is a chance that the top-1 accuracy will be 97.28%.
 #
 # .. image:: ../../img/darts_val_acc.png

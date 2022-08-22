@@ -419,8 +419,8 @@ except that the ``execution_engine`` argument should be set to ``oneshot``.
     12.164    Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.21s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.22s/it, v_num=, train_loss=2.360, train_acc=0.0469]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.22s/it, v_num=, train_loss=2.360, train_acc=0.0469]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.23s/it, v_num=, train_loss=2.360, train_acc=0.0469]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.16s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.16s/it, v_num=, train_loss=2.350, train_acc=0.0938]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.17s/it, v_num=, train_loss=2.350, train_acc=0.0938]`Trainer.fit` stopped: `max_epochs=1` reached.
+    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.17s/it, v_num=, train_loss=2.350, train_acc=0.0938]
 
 
 
@@ -458,16 +458,18 @@ Here, the retrieved model is a dict (called *architecture dict*) describing the 
  .. code-block:: none
 
 
-    {'normal/op_2_0': 'sep_conv_5x5', 'normal/input_2_0': 1, 'normal/op_2_1': 'avg_pool_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'sep_conv_3x3', 'normal/input_3_0': 2, 'normal/op_3_1': 'dil_conv_3x3', 'normal/input_3_1': 1, 'normal/op_4_0': 'dil_conv_3x3', 'normal/input_4_0': 3, 'normal/op_4_1': 'sep_conv_5x5', 'normal/input_4_1': 1, 'normal/op_5_0': 'avg_pool_3x3', 'normal/input_5_0': 3, 'normal/op_5_1': 'sep_conv_3x3', 'normal/input_5_1': 2, 'reduce/op_2_0': 'skip_connect', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'max_pool_3x3', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'dil_conv_5x5', 'reduce/input_3_0': 0, 'reduce/op_3_1': 'avg_pool_3x3', 'reduce/input_3_1': 2, 'reduce/op_4_0': 'dil_conv_3x3', 'reduce/input_4_0': 0, 'reduce/op_4_1': 'avg_pool_3x3', 'reduce/input_4_1': 1, 'reduce/op_5_0': 'skip_connect', 'reduce/input_5_0': 4, 'reduce/op_5_1': 'avg_pool_3x3', 'reduce/input_5_1': 0}
+    {'normal/op_2_0': 'dil_conv_3x3', 'normal/input_2_0': 1, 'normal/op_2_1': 'max_pool_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'dil_conv_5x5', 'normal/input_3_0': 2, 'normal/op_3_1': 'dil_conv_5x5', 'normal/input_3_1': 1, 'normal/op_4_0': 'dil_conv_3x3', 'normal/input_4_0': 2, 'normal/op_4_1': 'dil_conv_5x5', 'normal/input_4_1': 0, 'normal/op_5_0': 'dil_conv_5x5', 'normal/input_5_0': 3, 'normal/op_5_1': 'dil_conv_3x3', 'normal/input_5_1': 1, 'reduce/op_2_0': 'sep_conv_5x5', 'reduce/input_2_0': 1, 'reduce/op_2_1': 'sep_conv_3x3', 'reduce/input_2_1': 0, 'reduce/op_3_0': 'skip_connect', 'reduce/input_3_0': 1, 'reduce/op_3_1': 'avg_pool_3x3', 'reduce/input_3_1': 0, 'reduce/op_4_0': 'sep_conv_5x5', 'reduce/input_4_0': 0, 'reduce/op_4_1': 'dil_conv_3x3', 'reduce/input_4_1': 1, 'reduce/op_5_0': 'avg_pool_3x3', 'reduce/input_5_0': 0, 'reduce/op_5_1': 'max_pool_3x3', 'reduce/input_5_1': 4}
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 291-293
+.. GENERATED FROM PYTHON SOURCE LINES 291-295
 
 The cell can be visualized with the following code snippet
 (copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
 
-.. GENERATED FROM PYTHON SOURCE LINES 294-349
+.. warning:: The cell here is obtained via ``fast_dev_run`` (i.e., running only 2 mini-batches).
+
+.. GENERATED FROM PYTHON SOURCE LINES 296-351
 
 .. code-block:: default
 
@@ -538,153 +540,12 @@ The cell can be visualized with the following code snippet
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 350-360
+.. GENERATED FROM PYTHON SOURCE LINES 352-354
 
-Retrain the searched model
---------------------------
+When ``fast_dev_run`` is turned off, we get a model with the following architecture,
+where you might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
 
-What we have got in the last step, is only a cell structure.
-To get a final usable model with trained weights, we need to construct a real model based on this structure,
-and then fully train it.
-
-To construct a fixed model based on the architecture dict exported from the experiment,
-we can use :func:`nni.retiarii.fixed_arch`. Seemingly, we are still creating a space.
-But under the with-context, we are actually creating a fixed model.
-
-.. GENERATED FROM PYTHON SOURCE LINES 361-367
-
-.. code-block:: default
-
-
-    from nni.retiarii import fixed_arch
-
-    with fixed_arch(exported_arch):
-        final_model = DartsSpace(16, 8, 'cifar')
-
-
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 368-369
-
-We then train the model on full CIFAR-10 training dataset, and evaluate it on the original CIFAR-10 validation dataset.
-
-.. GENERATED FROM PYTHON SOURCE LINES 370-373
-
-.. code-block:: default
-
-
-    train_loader = DataLoader(train_data, batch_size=96, num_workers=6)  # Use the original training data
-
-
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 374-375
-
-The validation data loader can be reused.
-
-.. GENERATED FROM PYTHON SOURCE LINES 376-379
-
-.. code-block:: default
-
-
-    valid_loader
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-
-    <torch.utils.data.dataloader.DataLoader object at 0x7f5a8ba1d4c0>
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 380-382
-
-Create a new evaluator here because we can using a different data split.
-Also, we should avoid the underlying pytorch-lightning implementation of Classification evaluator from loading the wrong checkpoint.
-
-.. GENERATED FROM PYTHON SOURCE LINES 383-399
-
-.. code-block:: default
-
-
-    max_epochs = 100
-
-    evaluator = Classification(
-        learning_rate=1e-3,
-        weight_decay=1e-4,
-        train_dataloaders=train_loader,
-        val_dataloaders=valid_loader,
-        max_epochs=max_epochs,
-        gpus=1,
-        export_onnx=False,  # Disable ONNX export for this experiment
-        fast_dev_run=fast_dev_run,  # Should be false for fully training
-    )
-
-    evaluator.fit(final_model)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:445: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
-      rank_zero_deprecation(
-    GPU available: True (cuda), used: True
-    TPU available: False, using: 0 TPU cores
-    IPU available: False, using: 0 IPUs
-    HPU available: False, using: 0 HPUs
-    Running in `fast_dev_run` mode: will run the requested loop using 1 batch(es). Logging and checkpointing is suppressed.
-    `Trainer(limit_train_batches=1)` was configured so 1 batch per epoch will be used.
-    `Trainer(limit_val_batches=1)` was configured so 1 batch will be used.
-    `Trainer(limit_test_batches=1)` was configured so 1 batch will be used.
-    `Trainer(limit_predict_batches=1)` was configured so 1 batch will be used.
-    `Trainer(val_check_interval=1.0)` was configured so validation will run at the end of the training epoch..
-    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-
-      | Name      | Type             | Params
-    -----------------------------------------------
-    0 | criterion | CrossEntropyLoss | 0     
-    1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 266 K 
-    -----------------------------------------------
-    266 K     Trainable params
-    0         Non-trainable params
-    266 K     Total params
-    1.066     Total estimated model params size (MB)
-    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
-      rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.91it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.91it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417]
-    Validation: 0it [00:00, ?it/s]
-    Validation:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00, 17.15it/s]    Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.02it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417]    Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.02it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417, val_loss=2.300, val_acc=0.117]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.01it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417, val_loss=2.300, val_acc=0.117]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.01it/s, loss=2.34, v_num=, train_loss=2.340, train_acc=0.0417, val_loss=2.300, val_acc=0.117]
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 400-401
-
-When ``fast_dev_run`` is turned off, we get a model with the following architecture.
-
-.. GENERATED FROM PYTHON SOURCE LINES 402-438
+.. GENERATED FROM PYTHON SOURCE LINES 355-391
 
 .. code-block:: default
 
@@ -736,10 +597,151 @@ When ``fast_dev_run`` is turned off, we get a model with the following architect
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 439-463
+.. GENERATED FROM PYTHON SOURCE LINES 392-402
 
-You might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
-This architecture achieves a validation accuracy of 89.69% after training for 100 epochs.
+Retrain the searched model
+--------------------------
+
+What we have got in the last step, is only a cell structure.
+To get a final usable model with trained weights, we need to construct a real model based on this structure,
+and then fully train it.
+
+To construct a fixed model based on the architecture dict exported from the experiment,
+we can use :func:`nni.retiarii.fixed_arch`. Seemingly, we are still creating a space.
+But under the with-context, we are actually creating a fixed model.
+
+.. GENERATED FROM PYTHON SOURCE LINES 403-409
+
+.. code-block:: default
+
+
+    from nni.retiarii import fixed_arch
+
+    with fixed_arch(exported_arch):
+        final_model = DartsSpace(16, 8, 'cifar')
+
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 410-411
+
+We then train the model on full CIFAR-10 training dataset, and evaluate it on the original CIFAR-10 validation dataset.
+
+.. GENERATED FROM PYTHON SOURCE LINES 412-415
+
+.. code-block:: default
+
+
+    train_loader = DataLoader(train_data, batch_size=96, num_workers=6)  # Use the original training data
+
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 416-417
+
+The validation data loader can be reused.
+
+.. GENERATED FROM PYTHON SOURCE LINES 418-421
+
+.. code-block:: default
+
+
+    valid_loader
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+
+    <torch.utils.data.dataloader.DataLoader object at 0x7fb868289370>
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 422-424
+
+Create a new evaluator here because we can using a different data split.
+Also, we should avoid the underlying pytorch-lightning implementation of Classification evaluator from loading the wrong checkpoint.
+
+.. GENERATED FROM PYTHON SOURCE LINES 425-441
+
+.. code-block:: default
+
+
+    max_epochs = 100
+
+    evaluator = Classification(
+        learning_rate=1e-3,
+        weight_decay=1e-4,
+        train_dataloaders=train_loader,
+        val_dataloaders=valid_loader,
+        max_epochs=max_epochs,
+        gpus=1,
+        export_onnx=False,  # Disable ONNX export for this experiment
+        fast_dev_run=fast_dev_run,  # Should be false for fully training
+    )
+
+    evaluator.fit(final_model)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:445: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
+      rank_zero_deprecation(
+    GPU available: True (cuda), used: True
+    TPU available: False, using: 0 TPU cores
+    IPU available: False, using: 0 IPUs
+    HPU available: False, using: 0 HPUs
+    Running in `fast_dev_run` mode: will run the requested loop using 1 batch(es). Logging and checkpointing is suppressed.
+    `Trainer(limit_train_batches=1)` was configured so 1 batch per epoch will be used.
+    `Trainer(limit_val_batches=1)` was configured so 1 batch will be used.
+    `Trainer(limit_test_batches=1)` was configured so 1 batch will be used.
+    `Trainer(limit_predict_batches=1)` was configured so 1 batch will be used.
+    `Trainer(val_check_interval=1.0)` was configured so validation will run at the end of the training epoch..
+    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+      | Name      | Type             | Params
+    -----------------------------------------------
+    0 | criterion | CrossEntropyLoss | 0     
+    1 | metrics   | ModuleDict       | 0     
+    2 | model     | DARTS            | 262 K 
+    -----------------------------------------------
+    262 K     Trainable params
+    0         Non-trainable params
+    262 K     Total params
+    1.049     Total estimated model params size (MB)
+    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
+      rank_zero_warn(
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  2.07it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  2.06it/s, loss=2.39, v_num=, train_loss=2.390, train_acc=0.0833]
+    Validation: 0it [00:00, ?it/s]
+    Validation:   0%|          | 0/1 [00:00<?, ?it/s]
+    Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00, 15.25it/s]    Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.24it/s, loss=2.39, v_num=, train_loss=2.390, train_acc=0.0833]    Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.24it/s, loss=2.39, v_num=, train_loss=2.390, train_acc=0.0833, val_loss=2.310, val_acc=0.0781]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.22it/s, loss=2.39, v_num=, train_loss=2.390, train_acc=0.0833, val_loss=2.310, val_acc=0.0781]`Trainer.fit` stopped: `max_steps=1` reached.
+    Epoch 0: 100%|##########| 2/2 [00:00<00:00,  2.22it/s, loss=2.39, v_num=, train_loss=2.390, train_acc=0.0833, val_loss=2.310, val_acc=0.0781]
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 442-465
+
+.. note:: When ``fast_dev_run`` is turned off, we achieve a validation accuracy of 89.69% after training for 100 epochs.
 
 Reproduce results in DARTS paper
 --------------------------------
@@ -763,7 +765,7 @@ we can simply inherit :class:`~nni.retiarii.evaluator.pytorch.ClassificationModu
 behind :class:`~nni.retiarii.evaluator.pytorch.Classification`.
 This could look intimidating at first, but most of them are just plug-and-play tricks which you don't need to know details about.
 
-.. GENERATED FROM PYTHON SOURCE LINES 464-519
+.. GENERATED FROM PYTHON SOURCE LINES 466-521
 
 .. code-block:: default
 
@@ -829,14 +831,14 @@ This could look intimidating at first, but most of them are just plug-and-play t
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 520-524
+.. GENERATED FROM PYTHON SOURCE LINES 522-526
 
 The full evaluator is written as follows,
 which simply wraps everything (except model space and search strategy of course), in a single object.
 :class:`~nni.retiarii.evaluator.pytorch.Lightning` here is a special type of evaluator.
 Don't forget to use the train/val data split specialized for search (1:1) here.
 
-.. GENERATED FROM PYTHON SOURCE LINES 525-541
+.. GENERATED FROM PYTHON SOURCE LINES 527-543
 
 .. code-block:: default
 
@@ -880,7 +882,7 @@ Don't forget to use the train/val data split specialized for search (1:1) here.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 542-547
+.. GENERATED FROM PYTHON SOURCE LINES 544-549
 
 :class:`~nni.retiarii.strategy.DARTS` strategy is created with gradient clip turned on.
 If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
@@ -888,7 +890,7 @@ However, enabling gradient cip in the trainer above won't work, because the unde
 implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
 `manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__.
 
-.. GENERATED FROM PYTHON SOURCE LINES 548-551
+.. GENERATED FROM PYTHON SOURCE LINES 550-553
 
 .. code-block:: default
 
@@ -902,7 +904,7 @@ implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 552-558
+.. GENERATED FROM PYTHON SOURCE LINES 554-560
 
 Then we use the newly created evaluator and strategy to launch the experiment again.
 
@@ -911,7 +913,7 @@ Then we use the newly created evaluator and strategy to launch the experiment ag
    ``model_space`` has to be re-instantiated because a known limitation,
    i.e., one model space can't be reused across multiple experiments.
 
-.. GENERATED FROM PYTHON SOURCE LINES 559-570
+.. GENERATED FROM PYTHON SOURCE LINES 561-572
 
 .. code-block:: default
 
@@ -946,185 +948,18 @@ Then we use the newly created evaluator and strategy to launch the experiment ag
     12.164    Total estimated model params size (MB)
     /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.26s/it]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.27s/it, v_num=, train_loss=2.360, train_acc=0.125]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.27s/it, v_num=, train_loss=2.360, train_acc=0.125]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.28s/it, v_num=, train_loss=2.360, train_acc=0.125]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.12s/it]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.13s/it, v_num=, train_loss=2.430, train_acc=0.0938]    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.13s/it, v_num=, train_loss=2.430, train_acc=0.0938]`Trainer.fit` stopped: `max_epochs=1` reached.
+    Epoch 0: 100%|##########| 1/1 [01:03<00:00, 63.14s/it, v_num=, train_loss=2.430, train_acc=0.0938]
 
-    {'normal/op_2_0': 'dil_conv_3x3', 'normal/input_2_0': 1, 'normal/op_2_1': 'dil_conv_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'skip_connect', 'normal/input_3_0': 1, 'normal/op_3_1': 'avg_pool_3x3', 'normal/input_3_1': 2, 'normal/op_4_0': 'avg_pool_3x3', 'normal/input_4_0': 3, 'normal/op_4_1': 'avg_pool_3x3', 'normal/input_4_1': 2, 'normal/op_5_0': 'sep_conv_5x5', 'normal/input_5_0': 3, 'normal/op_5_1': 'skip_connect', 'normal/input_5_1': 1, 'reduce/op_2_0': 'dil_conv_5x5', 'reduce/input_2_0': 1, 'reduce/op_2_1': 'sep_conv_5x5', 'reduce/input_2_1': 0, 'reduce/op_3_0': 'dil_conv_3x3', 'reduce/input_3_0': 2, 'reduce/op_3_1': 'skip_connect', 'reduce/input_3_1': 1, 'reduce/op_4_0': 'dil_conv_3x3', 'reduce/input_4_0': 2, 'reduce/op_4_1': 'skip_connect', 'reduce/input_4_1': 3, 'reduce/op_5_0': 'max_pool_3x3', 'reduce/input_5_0': 3, 'reduce/op_5_1': 'max_pool_3x3', 'reduce/input_5_1': 0}
+    {'normal/op_2_0': 'sep_conv_5x5', 'normal/input_2_0': 0, 'normal/op_2_1': 'dil_conv_3x3', 'normal/input_2_1': 1, 'normal/op_3_0': 'sep_conv_5x5', 'normal/input_3_0': 2, 'normal/op_3_1': 'dil_conv_5x5', 'normal/input_3_1': 0, 'normal/op_4_0': 'skip_connect', 'normal/input_4_0': 0, 'normal/op_4_1': 'skip_connect', 'normal/input_4_1': 1, 'normal/op_5_0': 'dil_conv_5x5', 'normal/input_5_0': 2, 'normal/op_5_1': 'sep_conv_5x5', 'normal/input_5_1': 0, 'reduce/op_2_0': 'dil_conv_5x5', 'reduce/input_2_0': 1, 'reduce/op_2_1': 'max_pool_3x3', 'reduce/input_2_1': 0, 'reduce/op_3_0': 'max_pool_3x3', 'reduce/input_3_0': 1, 'reduce/op_3_1': 'max_pool_3x3', 'reduce/input_3_1': 0, 'reduce/op_4_0': 'avg_pool_3x3', 'reduce/input_4_0': 0, 'reduce/op_4_1': 'dil_conv_5x5', 'reduce/input_4_1': 3, 'reduce/op_5_0': 'sep_conv_3x3', 'reduce/input_5_0': 3, 'reduce/op_5_1': 'sep_conv_3x3', 'reduce/input_5_1': 2}
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 571-575
+.. GENERATED FROM PYTHON SOURCE LINES 573-574
 
-When retraining,
-we extend the original dataloader to introduce another trick called `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
-Cutout is a data augmentation technique that randomly masks out rectangular regions in images.
-In CIFAR-10, the typical masked size is 16x16 (the image sizes are 32x32 in the dataset).
+We get the following architecture when ``fast_dev_run`` is set to False. It takes around 8 hours on a P100 GPU.
 
-.. GENERATED FROM PYTHON SOURCE LINES 576-602
-
-.. code-block:: default
-
-
-    def cutout_transform(img, length: int = 16):
-        h, w = img.size(1), img.size(2)
-        mask = np.ones((h, w), np.float32)
-        y = np.random.randint(h)
-        x = np.random.randint(w)
-
-        y1 = np.clip(y - length // 2, 0, h)
-        y2 = np.clip(y + length // 2, 0, h)
-        x1 = np.clip(x - length // 2, 0, w)
-        x2 = np.clip(x + length // 2, 0, w)
-
-        mask[y1: y2, x1: x2] = 0.
-        mask = torch.from_numpy(mask)
-        mask = mask.expand_as(img)
-        img *= mask
-        return img
-
-    transform_with_cutout = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-        cutout_transform,
-    ])
-
-
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 603-605
-
-The train dataloader needs to be reinstantiated with the new transform.
-The validation dataloader is not affected, and thus can be reused.
-
-.. GENERATED FROM PYTHON SOURCE LINES 606-610
-
-.. code-block:: default
-
-
-    train_data_cutout = nni.trace(CIFAR10)(root='./data', train=True, download=True, transform=transform_with_cutout)
-    train_loader_cutout = DataLoader(train_data_cutout, batch_size=96)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Files already downloaded and verified
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 611-616
-
-We then create the final model based on the new exported architecture.
-This time, auxiliary loss and drop path probability is enabled.
-
-Following the same procedure as paper, we also increase the number of filters to 36, and number of cells to 20,
-so as to reasonably increase the model size and boost the performance.
-
-.. GENERATED FROM PYTHON SOURCE LINES 617-621
-
-.. code-block:: default
-
-
-    with fixed_arch(exported_arch):
-        final_model = DartsSpace(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
-
-
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 622-624
-
-Launching the retraining requires creating another evaluator.
-We can now put the gradient clipping in the keyword arguments of trainer.
-
-.. GENERATED FROM PYTHON SOURCE LINES 625-642
-
-.. code-block:: default
-
-
-    max_epochs = 600
-
-    evaluator = Lightning(
-        DartsClassificationModule(0.025, 3e-4, 0.4, max_epochs),
-        Trainer(
-            gpus=1,
-            gradient_clip_val=5.,
-            max_epochs=max_epochs,
-            fast_dev_run=fast_dev_run
-        ),
-        train_dataloaders=train_loader_cutout,
-        val_dataloaders=valid_loader,
-    )
-
-    evaluator.fit(final_model)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:445: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
-      rank_zero_deprecation(
-    GPU available: True (cuda), used: True
-    TPU available: False, using: 0 TPU cores
-    IPU available: False, using: 0 IPUs
-    HPU available: False, using: 0 HPUs
-    Running in `fast_dev_run` mode: will run the requested loop using 1 batch(es). Logging and checkpointing is suppressed.
-    `Trainer(limit_train_batches=1)` was configured so 1 batch per epoch will be used.
-    `Trainer(limit_val_batches=1)` was configured so 1 batch will be used.
-    `Trainer(limit_test_batches=1)` was configured so 1 batch will be used.
-    `Trainer(limit_predict_batches=1)` was configured so 1 batch will be used.
-    `Trainer(val_check_interval=1.0)` was configured so validation will run at the end of the training epoch..
-    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-
-      | Name      | Type             | Params
-    -----------------------------------------------
-    0 | criterion | CrossEntropyLoss | 0     
-    1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 2.8 M 
-    -----------------------------------------------
-    2.8 M     Trainable params
-    0         Non-trainable params
-    2.8 M     Total params
-    11.171    Total estimated model params size (MB)
-    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:219: PossibleUserWarning: The dataloader, train_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 6 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
-      rank_zero_warn(
-    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
-      rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  2.21it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  2.20it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729]
-    Validation: 0it [00:00, ?it/s]
-    Validation:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  4.91it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.95it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.94it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729, val_loss=2.300, val_acc=0.113]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.92it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729, val_loss=2.300, val_acc=0.113]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.92it/s, loss=3.33, v_num=, train_loss=3.330, train_acc=0.0729, val_loss=2.300, val_acc=0.113]
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 643-645
-
-The full search and training, when ``fast_dev_run`` is off, takes around 60 hours (search 8 hours + retrain 53 hours) on a P100 GPU.
-The exported architecture dict looks like this.
-
-.. GENERATED FROM PYTHON SOURCE LINES 646-682
+.. GENERATED FROM PYTHON SOURCE LINES 575-611
 
 .. code-block:: default
 
@@ -1176,9 +1011,176 @@ The exported architecture dict looks like this.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 683-696
+.. GENERATED FROM PYTHON SOURCE LINES 612-616
 
-This architecture, after retraining, yields a top-1 accuracy of 97.12%. If we take the best snapshot throughout the retrain process,
+When retraining,
+we extend the original dataloader to introduce another trick called `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
+Cutout is a data augmentation technique that randomly masks out rectangular regions in images.
+In CIFAR-10, the typical masked size is 16x16 (the image sizes are 32x32 in the dataset).
+
+.. GENERATED FROM PYTHON SOURCE LINES 617-643
+
+.. code-block:: default
+
+
+    def cutout_transform(img, length: int = 16):
+        h, w = img.size(1), img.size(2)
+        mask = np.ones((h, w), np.float32)
+        y = np.random.randint(h)
+        x = np.random.randint(w)
+
+        y1 = np.clip(y - length // 2, 0, h)
+        y2 = np.clip(y + length // 2, 0, h)
+        x1 = np.clip(x - length // 2, 0, w)
+        x2 = np.clip(x + length // 2, 0, w)
+
+        mask[y1: y2, x1: x2] = 0.
+        mask = torch.from_numpy(mask)
+        mask = mask.expand_as(img)
+        img *= mask
+        return img
+
+    transform_with_cutout = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+        cutout_transform,
+    ])
+
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 644-646
+
+The train dataloader needs to be reinstantiated with the new transform.
+The validation dataloader is not affected, and thus can be reused.
+
+.. GENERATED FROM PYTHON SOURCE LINES 647-651
+
+.. code-block:: default
+
+
+    train_data_cutout = nni.trace(CIFAR10)(root='./data', train=True, download=True, transform=transform_with_cutout)
+    train_loader_cutout = DataLoader(train_data_cutout, batch_size=96)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Files already downloaded and verified
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 652-657
+
+We then create the final model based on the new exported architecture.
+This time, auxiliary loss and drop path probability is enabled.
+
+Following the same procedure as paper, we also increase the number of filters to 36, and number of cells to 20,
+so as to reasonably increase the model size and boost the performance.
+
+.. GENERATED FROM PYTHON SOURCE LINES 658-662
+
+.. code-block:: default
+
+
+    with fixed_arch(exported_arch):
+        final_model = DartsSpace(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
+
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 663-665
+
+Launching the retraining requires creating another evaluator.
+We can now put the gradient clipping in the keyword arguments of trainer.
+
+.. GENERATED FROM PYTHON SOURCE LINES 666-683
+
+.. code-block:: default
+
+
+    max_epochs = 600
+
+    evaluator = Lightning(
+        DartsClassificationModule(0.025, 3e-4, 0.4, max_epochs),
+        Trainer(
+            gpus=1,
+            gradient_clip_val=5.,
+            max_epochs=max_epochs,
+            fast_dev_run=fast_dev_run
+        ),
+        train_dataloaders=train_loader_cutout,
+        val_dataloaders=valid_loader,
+    )
+
+    evaluator.fit(final_model)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:445: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
+      rank_zero_deprecation(
+    GPU available: True (cuda), used: True
+    TPU available: False, using: 0 TPU cores
+    IPU available: False, using: 0 IPUs
+    HPU available: False, using: 0 HPUs
+    Running in `fast_dev_run` mode: will run the requested loop using 1 batch(es). Logging and checkpointing is suppressed.
+    `Trainer(limit_train_batches=1)` was configured so 1 batch per epoch will be used.
+    `Trainer(limit_val_batches=1)` was configured so 1 batch will be used.
+    `Trainer(limit_test_batches=1)` was configured so 1 batch will be used.
+    `Trainer(limit_predict_batches=1)` was configured so 1 batch will be used.
+    `Trainer(val_check_interval=1.0)` was configured so validation will run at the end of the training epoch..
+    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+      | Name      | Type             | Params
+    -----------------------------------------------
+    0 | criterion | CrossEntropyLoss | 0     
+    1 | metrics   | ModuleDict       | 0     
+    2 | model     | DARTS            | 3.8 M 
+    -----------------------------------------------
+    3.8 M     Trainable params
+    0         Non-trainable params
+    3.8 M     Total params
+    15.345    Total estimated model params size (MB)
+    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:219: PossibleUserWarning: The dataloader, train_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 6 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
+      rank_zero_warn(
+    /home/yugzhan/miniconda3/envs/nni/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1891: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
+      rank_zero_warn(
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.51it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.51it/s, loss=3.23, v_num=, train_loss=3.230, train_acc=0.146]
+    Validation: 0it [00:00, ?it/s]
+    Validation:   0%|          | 0/1 [00:00<?, ?it/s]
+    Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  3.34it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.54it/s, loss=3.23, v_num=, train_loss=3.230, train_acc=0.146]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.54it/s, loss=3.23, v_num=, train_loss=3.230, train_acc=0.146, val_loss=2.300, val_acc=0.113]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.52it/s, loss=3.23, v_num=, train_loss=3.230, train_acc=0.146, val_loss=2.300, val_acc=0.113]`Trainer.fit` stopped: `max_steps=1` reached.
+    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.52it/s, loss=3.23, v_num=, train_loss=3.230, train_acc=0.146, val_loss=2.300, val_acc=0.113]
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 684-698
+
+When ``fast_dev_run`` is turned off, after retraining, the architecture yields a top-1 accuracy of 97.12%.
+If we take the best snapshot throughout the retrain process,
 there is a chance that the top-1 accuracy will be 97.28%.
 
 .. image:: ../../img/darts_val_acc.png
@@ -1195,7 +1197,7 @@ The implementation of second order DARTS is in our future plan, and we also welc
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  37.287 seconds)
+   **Total running time of the script:** ( 1 minutes  36.866 seconds)
 
 
 .. _sphx_glr_download_tutorials_darts.py:
