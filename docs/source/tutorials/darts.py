@@ -150,7 +150,7 @@ evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
 #    You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
 #
 # In the following example, we initialize a :class:`~nni.retiarii.hub.pytorch.DARTS`
-# model space, with only 16 initial filters and 8 stacked cells.
+# model space, with 16 initial filters and 8 stacked cells.
 # The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
 #
 # The :class:`~nni.retiarii.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
@@ -159,7 +159,7 @@ evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
 # .. tip::
 #
 #    The model space here can be replaced with any space provided in the hub,
-#    or even customized space built from scratch.
+#    or even customized spaces built from scratch.
 
 model_space = DartsSpace(16, 8, 'cifar')
 
@@ -168,14 +168,26 @@ model_space = DartsSpace(16, 8, 'cifar')
 # Search on the model space
 # -------------------------
 #
+# .. warning::
+#
+#    Please set ``fast_dev_run`` to False to reproduce the our claimed results.
+#    Otherwise, only a few mini-batches will be run.
+
+fast_dev_run = True
+
+# %%
+#
+# Evaluator
+# ^^^^^^^^^
+#
 # To begin exploring the model space, one firstly need to have an evaluator to provide the criterion of a "good model".
 # As we are searching on CIFAR-10 dataset, one can easily use the :class:`~nni.retiarii.evaluator.pytorch.Classification`
 # as a starting point.
 #
 # Note that for a typical setup of NAS, the model search should be on validation set, and the evaluation of the final searched model
-# should be on test set. However, as CIFAR-10 dataset only has a training set of 50k images and a validation set (10k images),
+# should be on test set. However, as CIFAR-10 dataset doesn't have a test dataset (only 50k train + 10k valid),
 # we have to split the original training set into a training set and a validation set.
-# As we are going to use the provided by `DARTS`_ paper, the recommended train/val split is 1:1.
+# The recommended train/val split by `DARTS`_ strategy is 1:1.
 
 import numpy as np
 from nni.retiarii.evaluator.pytorch import Classification
@@ -204,15 +216,6 @@ search_valid_loader = DataLoader(
     sampler=SubsetRandomSampler(indices[split:]),
 )
 
-# %%
-#
-# .. warning::
-#
-#    Please set ``fast_dev_run`` to False to reproduce the our claimed results.
-#    Otherwise, only a few mini-batches will be run.
-
-fast_dev_run = True
-
 evaluator = Classification(
     learning_rate=1e-3,
     weight_decay=1e-4,
@@ -224,6 +227,9 @@ evaluator = Classification(
 )
 
 # %%
+#
+# Strategy
+# ^^^^^^^^
 #
 # We will use `DARTS`_ (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
 # :class:`~nni.retiarii.strategy.DARTS` strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
@@ -237,17 +243,6 @@ evaluator = Classification(
 # and
 # `How Does Supernet Help in Neural Architecture Search? <https://arxiv.org/abs/2010.08219>`__ for interested readers.
 #
-# If you want to know how DARTS strategy works, here is a brief version.
-# Under the hood, DARTS converts the cell into a densely connected graph, and put operators on edges (see the following figure).
-# Since the operators are not decided yet, every edge is a weighted mixture of multiple operators (multiple color in the figure).
-# DARTS then learns to assign the optimal "color" for each edge during the network training.
-# It finally selects one "color" for each edge, and drops redundant edges.
-# The weights on the edges are called *architecture weights*.
-#
-# .. image:: ../../img/darts_illustration.png
-#
-# It's NOT reflected in the figure that, for DARTS model space, exactly two inputs are kept for every node.
-#
 # :class:`~nni.retiarii.strategy.DARTS` strategy is provided as one of NNI's :doc:`built-in search strategies </nas/exploration_strategy>`.
 # Using it can be as simple as one line of code.
 
@@ -259,7 +254,22 @@ strategy = DartsStrategy()
 #
 # .. tip:: The ``DartsStrategy`` here can be replaced by any search strategies, even multi-trial strategies.
 #
-# Launching the experiment is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`,
+# If you want to know how DARTS strategy works, here is a brief version.
+# Under the hood, DARTS converts the cell into a densely connected graph, and put operators on edges (see the following figure).
+# Since the operators are not decided yet, every edge is a weighted mixture of multiple operators (multiple color in the figure).
+# DARTS then learns to assign the optimal "color" for each edge during the network training.
+# It finally selects one "color" for each edge, and drops redundant edges.
+# The weights on the edges are called *architecture weights*.
+#
+# .. image:: ../../img/darts_illustration.png
+#
+# It's NOT reflected in the figure that, for DARTS model space, exactly two inputs are kept for every node.
+#
+# Launch experiment
+# ^^^^^^^^^^^^^^^^^
+#
+# We then come to the step of launching the experiment.
+# This step is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`,
 # except that the ``execution_engine`` argument should be set to ``oneshot``.
 
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
@@ -291,8 +301,6 @@ exported_arch
 #
 # The cell can be visualized with the following code snippet
 # (copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
-#
-# .. warning:: The cell here is obtained via ``fast_dev_run`` (i.e., running only 2 mini-batches).
 
 import io
 import graphviz
@@ -349,6 +357,8 @@ def plot_double_cells(arch_dict):
 plot_double_cells(exported_arch)
 
 # %%
+#
+# .. warning:: The cell above is obtained via ``fast_dev_run`` (i.e., running only 1 mini-batch).
 #
 # When ``fast_dev_run`` is turned off, we get a model with the following architecture,
 # where you might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
@@ -420,8 +430,9 @@ valid_loader
 
 # %%
 #
-# Create a new evaluator here because we can using a different data split.
-# Also, we should avoid the underlying pytorch-lightning implementation of Classification evaluator from loading the wrong checkpoint.
+# We must create a new evaluator here because a different data split is used.
+# Also, we should avoid the underlying pytorch-lightning implementation of :class:`~nni.retiarii.evaluator.pytorch.Classification`
+# evaluator from loading the wrong checkpoint.
 
 max_epochs = 100
 
@@ -446,12 +457,16 @@ evaluator.fit(final_model)
 # --------------------------------
 #
 # After a brief walkthrough of search + retrain process with one-shot strategy,
-# we then fill the gap between our results and the results in the `DARTS` paper.
+# we then fill the gap between our results (89.69%) and the results in the `DARTS` paper.
 # This is because we didn't introduce some extra training tricks, including `DropPath <https://arxiv.org/pdf/1605.07648v4.pdf>`__,
 # Auxiliary loss, gradient clipping and augmentations like `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
 # They also train the deeper (20 cells) and wider (36 channels) networks for longer time (600 epochs).
 #
-# To implement these tricks, we need to rewrite a few parts of evaluator.
+#
+# Evaluator
+# ^^^^^^^^^
+#
+# To implement these tricks, we first need to rewrite a few parts of evaluator.
 #
 # Working with one-shot strategies, evaluators need to be implemented in the style of :ref:`PyTorch-Lightning <lightning-evaluator>`,
 # The full tutorial can be found in :doc:`/nas/evaluator`.
@@ -542,6 +557,9 @@ evaluator = Lightning(
 
 # %%
 #
+# Strategy
+# ^^^^^^^^
+#
 # :class:`~nni.retiarii.strategy.DARTS` strategy is created with gradient clip turned on.
 # If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
 # However, enabling gradient cip in the trainer above won't work, because the underlying
@@ -551,6 +569,9 @@ evaluator = Lightning(
 strategy = DartsStrategy(gradient_clip_val=5.)
 
 # %%
+#
+# Launch experiment
+# ^^^^^^^^^^^^^^^^^
 #
 # Then we use the newly created evaluator and strategy to launch the experiment again.
 #
@@ -610,6 +631,9 @@ plot_double_cells({
 
 # %%
 #
+# Retrain
+# ^^^^^^^
+#
 # When retraining,
 # we extend the original dataloader to introduce another trick called `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
 # Cutout is a data augmentation technique that randomly masks out rectangular regions in images.
@@ -661,8 +685,7 @@ with fixed_arch(exported_arch):
 
 # %%
 #
-# Launching the retraining requires creating another evaluator.
-# We can now put the gradient clipping in the keyword arguments of trainer.
+# We create a new evaluator for the retraining process, where the gradient clipping is put into the keyword arguments of trainer.
 
 max_epochs = 600
 
