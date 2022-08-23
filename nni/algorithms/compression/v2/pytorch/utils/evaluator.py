@@ -772,41 +772,42 @@ from transformers.trainer import Trainer
 
 class HuggingfaceEvaluator(Evaluator):
     def __init__(self, trainer: Trainer, dummy_input: Any | None = None) -> None:
-        self.trainer = trainer
+        assert is_traceable(trainer)
+        self.traced_trainer = trainer
         self.dummy_input = dummy_input
 
         self.model: Module | None = None
         self._ori_trainer_attr = {
-            'get_optimizer_cls_and_kwargs': Trainer.get_optimizer_cls_and_kwargs,
-            'compute_loss': self.trainer.compute_loss
+            'get_optimizer_cls_and_kwargs': Trainer.get_optimizer_cls_and_kwargs
         }
+
+        self._initialization_complete = False
 
     def _init_optimizer_helpers(self, pure_model: Module | pl.LightningModule):
         assert self._initialization_complete is False, 'Evaluator initialization is already complete.'
 
-        if self.trainer.optimizer is not None:
-            if is_traceable(self.trainer.optimizer):
-                self._optimizer_helper = OptimizerConstructHelper.from_trace(pure_model, self.trainer.optimizer)
+        if self.traced_trainer.optimizer is not None and is_traceable(self.traced_trainer.optimizer):
+            self._optimizer_helper = OptimizerConstructHelper.from_trace(pure_model, self.traced_trainer.optimizer)
         else:
             _logger.warning('trainer.optimzer is not wrapped by nni.trace, or trainer.optimzer is None, will using huggingface default optimizer.')
-            self.trainer.optimizer = None
+            self.traced_trainer.optimizer = None
 
             import nni
             def patched_get_optimizer_cls_and_kwargs(args) -> Tuple[Any, Any]:
-                optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(args)
+                optimizer_cls, optimizer_kwargs = self._ori_trainer_attr['get_optimizer_cls_and_kwargs'](args)
                 return nni.trace(optimizer_cls), optimizer_kwargs
 
             Trainer.get_optimizer_cls_and_kwargs = patched_get_optimizer_cls_and_kwargs
-            self._optimizer_helper = OptimizerConstructHelper.from_trace(pure_model, self.trainer.create_optimizer())
+            self._optimizer_helper = OptimizerConstructHelper.from_trace(pure_model, self.traced_trainer.create_optimizer())
             Trainer.get_optimizer_cls_and_kwargs = self._ori_trainer_attr['get_optimizer_cls_and_kwargs']
-            self.trainer.optimizer = None
+            self.traced_trainer.optimizer = None
 
-        if self.trainer.lr_scheduler is not None:
-            if is_traceable(self.trainer.lr_scheduler):
-                self._lr_scheduler_helper = LRSchedulerConstructHelper.from_trace(self.trainer.lr_scheduler)
+        if self.traced_trainer.lr_scheduler is not None:
+            if is_traceable(self.traced_trainer.lr_scheduler):
+                self._lr_scheduler_helper = LRSchedulerConstructHelper.from_trace(self.traced_trainer.lr_scheduler)
         else:
             _logger.warning('trainer.lr_scheduler is not wrapped by nni.trace, or trainer.lr_scheduler is None, will using huggingface default lr_scheduler.')
-            self.trainer.lr_scheduler = None
+            self.traced_trainer.lr_scheduler = None
             self._lr_scheduler_helper = None
 
         self._initialization_complete = True
@@ -820,6 +821,18 @@ class HuggingfaceEvaluator(Evaluator):
             self.unbind_model()
 
         self.model = model
+
+        args = list(self.traced_trainer.trace_args)
+        kwargs = dict()
+        kwargs.update(self.traced_trainer.trace_kwargs)
+        if len(args) != 0:
+            assert isinstance(args[0], Module) or args[0] is None
+            args[0] = self.model
+        else:
+            kwargs['model'] = self.model
+        self.trainer: Trainer = self.traced_trainer.trace_symbol(*args, **kwargs)
+        self._ori_trainer_attr['compute_loss'] = self.trainer.compute_loss
+
         self._param_names_map = param_names_map
         self.trainer.optimizer = self._optimizer_helper.call(self.model, self._param_names_map)
         self._ori_trainer_attr['optimizer.step'] = self.trainer.optimizer.step
@@ -832,6 +845,8 @@ class HuggingfaceEvaluator(Evaluator):
             self._ori_trainer_attr.pop('optimizer.step', None)
             self.trainer.optimizer = None
             self._param_names_map = None
+            self._ori_trainer_attr.pop('compute_loss', None)
+            self.trainer = None
             self.model = None
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
@@ -877,7 +892,7 @@ class HuggingfaceEvaluator(Evaluator):
             self.trainer.args.num_train_epochs = max_epochs
         if max_steps is not None:
             self.trainer.args.max_steps = max_steps
-        self.trainer.lr_scheduler = self._lr_scheduler_helper.call(self.trainer.optimizer) if self._lr_scheduler_helper else self.trainer.create_scheduler()
+        self.trainer.lr_scheduler = self._lr_scheduler_helper.call(self.trainer.optimizer) if self._lr_scheduler_helper else None
 
         self.trainer.train()
 
