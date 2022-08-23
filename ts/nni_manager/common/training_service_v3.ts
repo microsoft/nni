@@ -48,7 +48,7 @@ export interface TrainingServiceV3 {
     stop(): Promise<void>;
 
 
-    /** Following methods are guaranteed to be invoked after `start()` and before `stop()`. **/
+    /* Following methods are guaranteed to be invoked after start() and before stop(). */
 
     /**
      *  "Upload" a directory and assign a name.
@@ -58,6 +58,9 @@ export interface TrainingServiceV3 {
 
     /**
      *  Create a trial process in specified environment, using the uploaded directory as PWD.
+     *
+     *  Return trial ID on success.
+     *  Return null if the environment is not available.
      **/
     createTrial(environmentId: string, trialCommand: string, directoryName: string): Promise<string | null>;
 
@@ -67,13 +70,51 @@ export interface TrainingServiceV3 {
      **/
     stopTrial(trialId: string): Promise<void>;
 
+    // TODO: resume trial
+
+    /**
+     *  Send a hyperparameter configuration to a trial.
+     *  Will only be invoked after onRequestParameter().
+     **/
     sendParameter(trialId: string, parameter: Parameter): Promise<void>;
 
-    /** Following methods are guaranteed to be invoked after `init()` and before `start()`. **/
+    /* Following methods are guaranteed to be invoked after init() and before start(). */
 
+    /**
+     *  Invoke the callback when a trial invokes nni.get_next_parameter().
+     **/
     onRequestParameter(callback: (trialId: string) => Promise<void>): void;
+
+    /**
+     *  Invoke the callback when a trial invokes nni.report_final_result() and nni.report_intermediate_result().
+     **/
     onMetric(callback: (trialId: string, metric: Metric) => Promise<void>): void;
+
+    /**
+     *  Invoke the callback when a trial process is launched.
+     *
+     *  If there are multiple listeners, `timestamp` should be consistent.
+     *
+     *  If the training platform automatically retries failed jobs, the callback should only be invoked on first start.
+     **/
     onTrialStart(callback: (trialId: string, timestamp: number) => Promise<void>): void;
+
+    /**
+     *  Invoke the callback when a trial stops.
+     *
+     *  If the trial stops on its own, provide the exit code.
+     *  If the trial is killed for any reason, set `exitCode` to null.
+     *
+     *  If there are multiple listeners, `timestamp` should be consistent.
+     *
+     *  If the training platform automatically retries failed jobs, the callback should only be invoked on last end.
+     **/
     onTrialEnd(callback: (trialId: string, timestamp: number, exitCode: number | null) => Promise<void>): void;
+
+    /**
+     *  Invoke the callback when any environment's status changes.
+     *
+     *  Note that `environments` object should be immutable.
+     **/
     onEnvironmentUpdate(callback: (environments: EnvironmentInfo[]) => Promise<void>): void;
 }
