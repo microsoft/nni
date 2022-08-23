@@ -279,7 +279,7 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def slice_param(self, embed_dim, **kwargs) -> Union[torch.Tensor, dict[str, torch.Tensor]]:
+    def slice_param(self, embed_dim, **kwargs) -> Any:
         embed_dim_ = _W(embed_dim)
         pos_embed = _S(self.pos_embed)[..., :embed_dim_]
 
