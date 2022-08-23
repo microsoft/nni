@@ -198,7 +198,7 @@ class RandomOneShot(OneShotStrategy):
         state_dict = base_model.state_dict(destination=destination, prefix=prefix, keep_vars=keep_vars)
         return state_dict
 
-    def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool=True) -> None:
+    def load_state_dict(self, state_dict, strict: bool=True) -> None:
         base_model = self._get_base_model()
         base_model.load_state_dict(state_dict=state_dict, strict=strict)
 
