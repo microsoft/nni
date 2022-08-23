@@ -11,7 +11,7 @@ from __future__ import annotations
 import inspect
 import itertools
 import warnings
-from typing import Any, Type, TypeVar, cast, Union, Tuple, List, Optional, Mapping
+from typing import Any, Type, TypeVar, cast, Union, Tuple, List
 
 import torch
 import torch.nn as nn
