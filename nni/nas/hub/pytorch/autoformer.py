@@ -235,7 +235,7 @@ class MixedClsToken(MixedOperation, ClsToken):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def slice_param(self, embed_dim, **kwargs) -> Union[torch.Tensor, dict[str, torch.Tensor]]:
+    def slice_param(self, embed_dim, **kwargs) -> Any:
         embed_dim_ = _W(embed_dim)
         cls_token = _S(self.cls_token)[..., :embed_dim_]
 
