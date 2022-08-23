@@ -13,7 +13,7 @@ When adding/modifying a new strategy in this file, don't forget to link it in st
 from __future__ import annotations
 
 import warnings
-from typing import Any, OrderedDict, Type, Union, Dict, Mapping
+from typing import Any, OrderedDict, Type, Union, Dict
 
 import torch.nn as nn
 
