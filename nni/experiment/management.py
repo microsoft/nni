@@ -2,22 +2,12 @@
 # Licensed under the MIT license.
 
 from pathlib import Path
-import logging
-import random
+from random import Random
 import string
-
-_logger = logging.getLogger(__name__)
 
 
 def generate_experiment_id() -> str:
-    try:
-        # This try..catch is for backward-compatibility,
-        # in case shortuuid is not installed for some reason.
-        import shortuuid
-        return shortuuid.ShortUUID(alphabet=string.ascii_lowercase + string.digits).random(length=8)
-    except ImportError:
-        _logger.warning('shortuuid is not installed, use legacy random string to generate experiment id instead.')
-        return ''.join(random.sample(string.ascii_lowercase + string.digits, 8))
+    return ''.join(Random().sample(string.ascii_lowercase + string.digits, 8))
 
 
 def create_experiment_directory(experiment_id: str) -> Path:
