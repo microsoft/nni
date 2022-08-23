@@ -146,7 +146,6 @@ class RandomOneShot(OneShotStrategy):
         super().__init__(RandomSamplingLightningModule, **kwargs)
 
     def attach_model(self, base_model: Union[Model, nn.Module]):
-        # This may conflict with the `self.run`` method. In the `run`, the base_model and evaluator are wrapped in `Model`.
         _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
 
         if isinstance(base_model, Model):
@@ -187,20 +186,33 @@ class RandomOneShot(OneShotStrategy):
         train_loader, val_loader = self.preprocess_dataloader(evaluator.train_dataloaders, evaluator.val_dataloaders)
         evaluator.trainer.fit(self.model, train_loader, val_loader)
 
+    def _get_base_model(self):
+        if self.model is None:
+            raise RuntimeError('model space need to be attached to one-shot strategy before export state dict.')
+        assert isinstance(self.model.model.model, nn.Module)
+        base_model: nn.Module = self.model.model.model
+        return base_model
+
     def state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
-        base_model: Any = self.model.model.model
-        state_dict = base_model.state_dict(destination, prefix, keep_vars)
+        base_model = self._get_base_model()
+        state_dict = base_model.state_dict(destination=destination, prefix=prefix, keep_vars=keep_vars)
         return state_dict
 
-    def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool=True):
-        base_model: Any = self.model.model.model
+    def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool=True) -> None:
+        base_model = self._get_base_model()
         base_model.load_state_dict(state_dict=state_dict, strict=strict)
 
-    def sub_state_dict(self, arch):
+    def sub_state_dict(self, arch: dict[str, Any]):
+        """Given the architecture dict, return the state_dict which can be directly loaded by the fixed subnet.
+
+        Parameters
+        ----------
+        arch : dict[str, Any]
+            subnet architecture dict.
+
+        Returns
+        -------
+        dict
+            Subnet state dict.
+        """
         return self.model.sub_state_dict(arch)
-    # def sub_state_dict(self, arch: Optional[dict]=None, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
-    #     if isinstance(arch, dict):
-    #         self.model.resample(arch)
-    #     base_model: Any = self.model.model.model
-    #     sub_state_dict = base_model.sub_state_dict(destination, prefix, keep_vars)
-    #     return sub_state_dict

@@ -127,20 +127,23 @@ class BaseSuperNetModule(nn.Module):
         """
         raise NotImplementedError()
 
-    def _slice_params_mapping(self):
-        return {}
-
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
-        params_mapping = self._slice_params_mapping()
+    def _save_param_buff_to_state_dict(self, destination, prefix, keep_vars):
+        """Save the params and buffers of the current module to state dict."""
         for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
             if value is None or name in self._non_persistent_buffers_set:
                 # it won't appear in state dict
                 continue
-            value = params_mapping.get(name, value)
             destination[prefix + name] = value if keep_vars else value.detach()
-        for name, m in self._modules.items():
-            if m is not None:
-                sub_state_dict(m, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
 
-    def sub_state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
-        return sub_state_dict(self, destination, prefix, keep_vars)
+    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
+        """Save the sub-module to state dict."""
+        for name, module in self._modules.items():
+            if module is not None:
+                sub_state_dict(module, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+        """Save to state dict."""
+        self._save_param_buff_to_state_dict(destination, prefix, keep_vars)
+        self._save_module_to_state_dict(destination, prefix, keep_vars)
+
+

@@ -235,19 +235,18 @@ class MixedClsToken(MixedOperation, ClsToken):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def _slice_param(self, embed_dim, **kwargs):
+    def slice_param(self, embed_dim, **kwargs):
         embed_dim_ = _W(embed_dim)
         cls_token = _S(self.cls_token)[..., :embed_dim_]
-        return cls_token
 
-    def _slice_params_mapping(self):
-        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
-        cls_token = self._slice_param(**kwargs)
-        return {"cls_token": cls_token}
+        if kwargs.get("mapping", False):
+            return {"cls_token": cls_token}
+        else:
+            return cls_token
 
     def forward_with_args(self, embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
-        cls_token = self._slice_param(embed_dim)
+        cls_token = self.slice_param(embed_dim)
 
         return torch.cat((cls_token.expand(inputs.shape[0], -1, -1), inputs), dim=1)
 
@@ -280,19 +279,18 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def _slice_param(self, embed_dim, **kwargs):
+    def slice_param(self, embed_dim, **kwargs):
         embed_dim_ = _W(embed_dim)
         pos_embed = _S(self.pos_embed)[..., :embed_dim_]
-        return pos_embed
 
-    def _slice_params_mapping(self):
-        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
-        pos_embed = self._slice_param(**kwargs)
-        return {"pos_embed": pos_embed}
+        if kwargs.get("mapping", False):
+            return {"pos_embed": pos_embed}
+        else:
+            return pos_embed
 
     def forward_with_args(self,  embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
-        pos_embed = self._slice_param(embed_dim)
+        pos_embed = self.slice_param(embed_dim)
 
         return inputs + pos_embed
 

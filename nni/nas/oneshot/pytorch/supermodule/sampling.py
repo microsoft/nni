@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import copy
 import random
-import itertools
 from typing import Any, List, Dict, Sequence, cast
 
 import torch
@@ -77,15 +76,7 @@ class PathSamplingLayer(BaseSuperNetModule):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
 
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
-        params_mapping = self._slice_params_mapping()
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
-            if value is None or name in self._non_persistent_buffers_set:
-                # it won't appear in state dict
-                continue
-            value = params_mapping.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
-
+    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
         sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
 
         for samp in sampled:
@@ -285,21 +276,12 @@ class PathSamplingRepeat(BaseSuperNetModule):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
 
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
-        params_mapping = self._slice_params_mapping()
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
-            if value is None or name in self._non_persistent_buffers_set:
-                # it won't appear in state dict
-                continue
-            value = params_mapping.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
-
+    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
         sampled: Any = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
 
-        for cur_depth, (name, module) in enumerate(self.blocks._modules.items(), start=1):
+        for cur_depth, (name, module) in enumerate(self.blocks.named_children(), start=1):
             if module is not None:
                 sub_state_dict(module, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
-
             if not any(d > cur_depth for d in sampled):
                 break
 

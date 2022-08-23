@@ -407,5 +407,5 @@ def test_one_shot_sub_state_dict():
         model.load_state_dict(strategy.sub_state_dict(arch))
         model.eval()
         model_space.eval()
-        assert (~ torch.isclose(model(x), strategy.model(x))).sum().item() == 0
+        assert torch.allclose(model(x), strategy.model(x))
         model(x)

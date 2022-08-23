@@ -11,7 +11,7 @@ from __future__ import annotations
 import inspect
 import itertools
 import warnings
-from typing import Any, Type, TypeVar, cast, Union, Tuple, List
+from typing import Any, Type, TypeVar, cast, Union, Tuple, List, Optional, Mapping
 
 import torch
 import torch.nn as nn
@@ -232,6 +232,22 @@ class MixedOperation(BaseSuperNetModule):
             if param.default is not param.empty and param.name not in self.init_arguments:
                 self.init_arguments[param.name] = param.default
 
+    def slice_param(self, **kwargs):
+        """Slice the params and buffers for subnet forward and state dict.
+        When there is a `mapping=True` in kwargs, the return result will be wrapped in dict.
+        """
+        raise NotImplementedError()
+
+    def _save_param_buff_to_state_dict(self, destination, prefix, keep_vars):
+        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
+        params_mapping: dict[str, Any] = self.slice_param(**kwargs, mapping=True)
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
+            if value is None or name in self._non_persistent_buffers_set:
+                # it won't appear in state dict
+                continue
+            value = params_mapping.get(name, value)
+            destination[prefix + name] = value if keep_vars else value.detach()
+
 
 class MixedLinear(MixedOperation, nn.Linear):
     """Mixed linear operation.
@@ -250,7 +266,7 @@ class MixedLinear(MixedOperation, nn.Linear):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def _slice_param(self, in_features: int_or_int_dict, out_features: int_or_int_dict, **kwargs):
+    def slice_param(self, in_features: int_or_int_dict, out_features: int_or_int_dict, **kwargs) -> Any:
         in_features_ = _W(in_features)
         out_features_ = _W(out_features)
 
@@ -258,19 +274,17 @@ class MixedLinear(MixedOperation, nn.Linear):
         weight = _S(weight)[:, :in_features_]
         bias = self.bias if self.bias is None else _S(self.bias)[:out_features_]
 
-        return weight, bias
-
-    def _slice_params_mapping(self):
-        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
-        weight, bias = self._slice_param(**kwargs)
-        return {"weight": weight, "bias": bias}
+        if kwargs.get("mapping", False):
+            return {"weight": weight, "bias": bias}
+        else:
+            return weight, bias
 
     def forward_with_args(self,
                           in_features: int_or_int_dict,
                           out_features: int_or_int_dict,
                           inputs: torch.Tensor) -> torch.Tensor:
 
-        weight, bias = self._slice_param(in_features, out_features)
+        weight, bias = self.slice_param(in_features, out_features)
 
         return F.linear(inputs, weight, bias)
 
@@ -354,18 +368,13 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         else:
             return max(traverse_all_options(value_choice))
 
-    def _slice_params_mapping(self):
-        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
-        weight, bias, _ = self._slice_param(**kwargs)
-        return {"weight": weight, "bias": bias}
-
-    def _slice_param(self,
+    def slice_param(self,
                     in_channels: int_or_int_dict,
                     out_channels: int_or_int_dict,
                     kernel_size: scalar_or_scalar_dict[_int_or_tuple],
                     groups: int_or_int_dict,
                     **kwargs
-        ):
+        ) -> Any:
         in_channels_ = _W(in_channels)
         out_channels_ = _W(out_channels)
 
@@ -403,7 +412,10 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
 
         bias = _S(self.bias)[:out_channels_] if self.bias is not None else None
 
-        return weight, bias, in_channels_per_group
+        if kwargs.get("mapping", False):
+            return {"weight": weight, "bias": bias}
+        else:
+            return weight, bias, in_channels_per_group
 
     def forward_with_args(self,
                           in_channels: int_or_int_dict,
@@ -418,7 +430,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         if any(isinstance(arg, dict) for arg in [stride, dilation]):
             raise ValueError(_diff_not_compatible_error.format('stride, dilation', 'Conv2d'))
 
-        weight, bias, in_channels_per_group = self._slice_param(in_channels, out_channels, kernel_size, groups)
+        weight, bias, in_channels_per_group = self.slice_param(in_channels, out_channels, kernel_size, groups)
 
         if isinstance(groups, dict):
             if not isinstance(in_channels_per_group, (int, float)):
@@ -472,7 +484,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def _slice_param(self, num_features: int_or_int_dict, **kwargs):
+    def slice_param(self, num_features: int_or_int_dict, **kwargs) -> Any:
         if isinstance(num_features, dict):
             num_features = self.num_features
         weight, bias = self.weight, self.bias
@@ -484,12 +496,11 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
             running_mean = None if running_mean is None else running_mean[:num_features]
             running_var = None if running_var is None else running_var[:num_features]
 
-        return weight, bias, running_mean, running_var
-
-    def _slice_params_mapping(self):
-        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
-        weight, bias, running_mean, running_var = self._slice_param(**kwargs)
-        return {"weight": weight, "bias": bias, "running_mean": running_mean, "running_var": running_var}
+        if kwargs.get("mapping", False):
+            return {"weight": weight, "bias": bias,
+                "running_mean": running_mean, "running_var": running_var}
+        else:
+            return weight, bias, running_mean, running_var
 
     def forward_with_args(self,
                           num_features: int_or_int_dict,
@@ -500,7 +511,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
         if any(isinstance(arg, dict) for arg in [eps, momentum]):
             raise ValueError(_diff_not_compatible_error.format('eps and momentum', 'BatchNorm2d'))
 
-        weight, bias, running_mean, running_var = self._slice_param(num_features)
+        weight, bias, running_mean, running_var = self.slice_param(num_features)
 
         if self.training:
             bn_training = True
@@ -556,7 +567,7 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
         else:
             return max(all_sizes)
 
-    def _slice_param(self, normalized_shape, **kwargs):
+    def slice_param(self, normalized_shape, **kwargs) -> Any:
         if isinstance(normalized_shape, dict):
             normalized_shape = self.normalized_shape
 
@@ -573,12 +584,10 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
         weight = self.weight[indices] if self.weight is not None else None
         bias = self.bias[indices] if self.bias is not None else None
 
-        return weight, bias, normalized_shape
-
-    def _slice_params_mapping(self):
-        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
-        weight, bias, _ = self._slice_param(**kwargs)
-        return {"weight": weight, "bias": bias}
+        if kwargs.get("mapping", False):
+            return {"weight": weight, "bias": bias}
+        else:
+            return weight, bias, normalized_shape
 
     def forward_with_args(self,
                           normalized_shape,
@@ -588,7 +597,7 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
         if any(isinstance(arg, dict) for arg in [eps]):
             raise ValueError(_diff_not_compatible_error.format('eps', 'LayerNorm'))
 
-        weight, bias, normalized_shape = self._slice_param(normalized_shape)
+        weight, bias, normalized_shape = self.slice_param(normalized_shape)
 
         return F.layer_norm(
             inputs,
@@ -671,7 +680,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             slice(self.embed_dim * 2, self.embed_dim * 2 + embed_dim)
         ]
 
-    def _slice_param(self, embed_dim, kdim, vdim, **kwargs):
+    def slice_param(self, embed_dim, kdim, vdim, **kwargs):
         # by default, kdim, vdim can be none
         if kdim is None:
             kdim = embed_dim
@@ -704,35 +713,36 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
         else:
             q_proj = k_proj = v_proj = None
 
-        return in_proj_bias, in_proj_weight, bias_k, bias_v, out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim
+        if kwargs.get("mapping", False):
+            return {
+                "in_proj_bias": in_proj_bias, "in_proj_weight": in_proj_weight,
+                "bias_k": bias_k, "bias_v": bias_v,
+                "out_proj.weight": out_proj_weight, "out_proj.bias": out_proj_bias,
+                "q_proj_weight": q_proj, "k_proj_weight": k_proj, "v_proj_weight": v_proj
+            }
+        else:
+            return in_proj_bias, in_proj_weight, bias_k, bias_v, out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim
 
-    def _slice_params_mapping(self):
+    def _save_param_buff_to_state_dict(self, destination, prefix, keep_vars):
         kwargs = {name: self.forward_argument(name) for name in self.argument_list}
-        in_proj_bias, in_proj_weight, bias_k, bias_v, \
-            out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, _ = self._slice_param(**kwargs)
-        return {
-            "in_proj_bias": in_proj_bias, "in_proj_weight": in_proj_weight,
-            "bias_k": bias_k, "bias_v": bias_v,
-            "out_proj.weight": out_proj_weight, "out_proj.bias": out_proj_bias,
-            "q_proj_weight": q_proj, "k_proj_weight": k_proj, "v_proj_weight": v_proj
-        }
-
-    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
-        params_mapping = self._slice_params_mapping()
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
+        params_mapping = self.slice_param(**kwargs, mapping=True)
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
             if value is None or name in self._non_persistent_buffers_set:
-                # it won't appear in state dict
                 continue
             value = params_mapping.get(name, value)
             destination[prefix + name] = value if keep_vars else value.detach()
 
+        # params of out_proj is handled in ``MixedMultiHeadAttention`` rather than
+        # ``NonDynamicallyQuantizableLinear`` sub-module. We also convert it to state dict here.
         for name in ["out_proj.weight", "out_proj.bias"]:
             value = params_mapping.get(name, None)
             if value is None:
                 continue
             destination[prefix + name] = value if keep_vars else value.detach()
 
+    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
         for name, module in self._modules.items():
+            # the weights of ``NonDynamicallyQuantizableLinear`` has been handled in `_save_param_buff_to_state_dict`.
             if isinstance(module, nn.modules.linear.NonDynamicallyQuantizableLinear):
                 continue
             if module is not None:
@@ -761,7 +771,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             used_embed_dim = embed_dim
 
         in_proj_bias, in_proj_weight, bias_k, bias_v, \
-            out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim = self._slice_param(embed_dim, kdim, vdim)
+            out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim = self.slice_param(embed_dim, kdim, vdim)
 
         # The rest part is basically same as pytorch
         attn_output, attn_output_weights = F.multi_head_attention_forward(

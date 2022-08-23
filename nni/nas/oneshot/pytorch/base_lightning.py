@@ -339,9 +339,20 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def forward(self, x):
         return self.model(x)
 
-    def sub_state_dict(self, arch: Any=None, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
-        if isinstance(arch, dict):
-            self.resample(arch)
+    def sub_state_dict(self, arch: dict[str, Any], destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
+        """Given the architecture dict, return the state_dict which can be directly loaded by the fixed subnet.
+
+        Parameters
+        ----------
+        arch : dict[str, Any]
+            subnet architecture dict.
+
+        Returns
+        -------
+        dict
+            Subnet state dict.
+        """
+        self.resample(arch)
         base_model: Any = self.model.model
         state_dict = sub_state_dict(base_model, destination, prefix, keep_vars)
         return state_dict
