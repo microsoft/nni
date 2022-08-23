@@ -1,6 +1,6 @@
 """
-Pruning Transformer with NNI
-============================
+Pruning Bert on Task MNLI
+=========================
 
 Workable Pruning Process
 ------------------------
@@ -32,11 +32,15 @@ During the process of pruning transformer, we gained some of the following exper
 Experiment
 ----------
 
+The complete pruning process takes about 8 hours on one A100.
+
 Preparation
 ^^^^^^^^^^^
-Please set ``dev_mode`` to ``False`` to run this tutorial. Here ``dev_mode`` is ``True`` by default is for generating documents.
 
-The complete pruning process takes about 8 hours on one A100.
+.. note::
+
+    Please set ``dev_mode`` to ``False`` to run this tutorial. Here ``dev_mode`` is ``True`` by default is for generating documents.
+
 """
 
 dev_mode = True
@@ -70,8 +74,8 @@ import torch
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # %%
-# The function used to create dataloaders, note that 'mnli' has two evaluation dataset.
-# If teacher_model is set, will run all dataset on teacher model to get the 'teacher_logits' for distillation.
+# The function used to create dataloaders, note that ``mnli`` has two evaluation dataset.
+# If ``teacher_model`` is set, will run all dataset on teacher model to get the ``teacher_logits`` for distillation.
 
 from torch.utils.data import DataLoader
 
