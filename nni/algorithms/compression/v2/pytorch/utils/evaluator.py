@@ -752,7 +752,10 @@ class TorchEvaluator(Evaluator):
 
     def evaluate(self) -> float | None | Tuple[float, Dict[str, Any]] | Tuple[None, Dict[str, Any]]:
         assert self.model is not None
-        assert self.evaluating_func is not None
+        if self.evaluating_func is None:
+            warn_msg = f'Did not pass evaluation_func to {self.__class__.__name__}, will return None for calling evaluate()'
+            _logger.warning(warn_msg)
+            return None
         metric = self.evaluating_func(self.model)
         if isinstance(metric, dict):
             nni_used_metric = metric.get('default', None)
