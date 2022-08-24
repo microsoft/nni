@@ -16,7 +16,7 @@ import nni.nas.nn.pytorch as nas_nn
 from nni.common.hpo_utils import ParameterSpec
 from nni.common.serializer import is_traceable
 from nni.nas.nn.pytorch.choice import ValueChoiceX
-from .supermodule.base import BaseSuperNetModule, sub_state_dict
+from .supermodule.base import BaseSuperNetModule
 
 __all__ = [
     'MANUAL_OPTIMIZATION_NOTE',
@@ -338,24 +338,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def forward(self, x):
         return self.model(x)
-
-    def sub_state_dict(self, arch: dict[str, Any], destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
-        """Given the architecture dict, return the state_dict which can be directly loaded by the fixed subnet.
-
-        Parameters
-        ----------
-        arch : dict[str, Any]
-            subnet architecture dict.
-
-        Returns
-        -------
-        dict
-            Subnet state dict.
-        """
-        self.resample(arch)
-        base_model: Any = self.model.model
-        state_dict = sub_state_dict(base_model, destination, prefix, keep_vars)
-        return state_dict
 
     def configure_optimizers(self) -> Any:
         """

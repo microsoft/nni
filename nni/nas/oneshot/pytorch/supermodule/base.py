@@ -11,10 +11,37 @@ import torch.nn as nn
 
 from nni.common.hpo_utils import ParameterSpec
 
-__all__ = ['BaseSuperNetModule']
+__all__ = ['BaseSuperNetModule', 'sub_state_dict']
 
 
 def sub_state_dict(module: Any, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
+    """Returns a dictionary containing a whole state of the BaseSuperNetModule.
+
+    Both parameters and persistent buffers (e.g. running averages) are
+    included. Keys are corresponding parameter and buffer names.
+    Parameters and buffers set to ``None`` are not included.
+
+    Parameters
+    ----------
+    arch : dict[str, Any]
+        subnet architecture dict.
+    destination (dict, optional):
+        If provided, the state of module will be updated into the dict
+        and the same object is returned. Otherwise, an ``OrderedDict``
+        will be created and returned. Default: ``None``.
+    prefix (str, optional):
+        a prefix added to parameter and buffer names to compose the keys in state_dict.
+        Default: ``''``.
+    keep_vars (bool, optional):
+        by default the :class:`~torch.Tensor` s returned in the state dict are
+        detached from autograd. If it's set to ``True``, detaching will not be performed.
+        Default: ``False``.
+
+    Returns
+    -------
+    dict
+        Subnet state dictionary.
+    """
     if destination is None:
         destination = OrderedDict()
         destination._metadata = OrderedDict()
@@ -145,5 +172,3 @@ class BaseSuperNetModule(nn.Module):
         """Save to state dict."""
         self._save_param_buff_to_state_dict(destination, prefix, keep_vars)
         self._save_module_to_state_dict(destination, prefix, keep_vars)
-
-

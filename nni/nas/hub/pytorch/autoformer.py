@@ -239,14 +239,11 @@ class MixedClsToken(MixedOperation, ClsToken):
         embed_dim_ = _W(embed_dim)
         cls_token = _S(self.cls_token)[..., :embed_dim_]
 
-        if kwargs.get("mapping", False):
-            return {"cls_token": cls_token}
-        else:
-            return cls_token
+        return {'cls_token': cls_token}
 
     def forward_with_args(self, embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
-        cls_token = self.slice_param(embed_dim)
+        cls_token = self.slice_param(embed_dim)['cls_token']
         assert isinstance(cls_token, torch.Tensor)
 
         return torch.cat((cls_token.expand(inputs.shape[0], -1, -1), inputs), dim=1)
@@ -283,14 +280,11 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
         embed_dim_ = _W(embed_dim)
         pos_embed = _S(self.pos_embed)[..., :embed_dim_]
 
-        if kwargs.get("mapping", False):
-            return {"pos_embed": pos_embed}
-        else:
-            return pos_embed
+        return {'pos_embed': pos_embed}
 
     def forward_with_args(self,  embed_dim,
                         inputs: torch.Tensor) -> torch.Tensor:
-        pos_embed = self.slice_param(embed_dim)
+        pos_embed = self.slice_param(embed_dim)['pos_embed']
         assert isinstance(pos_embed, torch.Tensor)
 
         return inputs + pos_embed
