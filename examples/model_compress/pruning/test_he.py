@@ -45,7 +45,7 @@ training_args = TrainingArguments(
 
 #################################################################################################
 import nni
-from nni.algorithms.compression.v2.pytorch import HuggingfaceEvaluator
+from nni.algorithms.compression.v2.pytorch import TransformersEvaluator
 from nni.algorithms.compression.v2.pytorch.pruning import TaylorFOWeightPruner
 
 trainer = nni.trace(Trainer)(
@@ -56,7 +56,7 @@ trainer = nni.trace(Trainer)(
     compute_metrics=compute_metrics
 )
 
-evaluator = HuggingfaceEvaluator(trainer)
+evaluator = TransformersEvaluator(trainer)
 evaluator._init_optimizer_helpers(model)
 evaluator.bind_model(model)
 evaluator.finetune()
