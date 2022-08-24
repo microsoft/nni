@@ -37,10 +37,11 @@ from transformers import TrainingArguments, Trainer
 training_args = TrainingArguments(
     output_dir="test_trainer",
     evaluation_strategy="epoch",
-    per_device_train_batch_size=2,
+    per_device_train_batch_size=32,
     num_train_epochs=3,
     max_steps=-1
 )
+
 
 #################################################################################################
 import nni
@@ -56,6 +57,9 @@ trainer = nni.trace(Trainer)(
 )
 
 evaluator = HuggingfaceEvaluator(trainer)
+evaluator._init_optimizer_helpers(model)
+evaluator.bind_model(model)
+evaluator.finetune()
 pruner = TaylorFOWeightPruner(model, [{'op_types': ['Linear'], 'sparsity': 0.5}], evaluator, 20)
 _, masks = pruner.compress()
 pruner.show_pruned_weights()
