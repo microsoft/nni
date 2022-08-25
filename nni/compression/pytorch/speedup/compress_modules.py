@@ -143,8 +143,8 @@ def replace_prelu(prelu, masks):
     weight_mask = weight_mask['weight']
     if weight_mask.size(0) == 1:
         return prelu
-    _, remained_in = convert_to_coarse_mask(in_mask, 1)
-    _, remained_out = convert_to_coarse_mask(output_mask, 1)
+    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
+    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
     n_remained_in = weight_mask.size(0) - pruned_in.size(0)
     n_remained_out = weight_mask.size(0) - pruned_out.size(0)
     remained_in, remained_out = remained_in.to(
@@ -332,8 +332,8 @@ def replace_groupnorm(norm: nn.GroupNorm, masks):
     in_mask = in_masks[0]
 
     # N, C, H, W
-    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
-    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
+    _, remained_in = convert_to_coarse_mask(in_mask, 1)
+    _, remained_out = convert_to_coarse_mask(output_mask, 1)
 
     assert len(remained_in.size()) == 1
     if remained_in.size(0) != remained_out.size(0):
@@ -495,17 +495,20 @@ def replace_conv2d(conv, masks):
         in_end = in_start + ori_inchannel_step
         out_start = groupid * ori_outchannel_step
         out_end = out_start + ori_outchannel_step
-        current_input_index = list(filter(lambda x: in_start <= x and x < in_end, remained_in.tolist()))
-        current_output_index = list(
-            filter(lambda x: out_start <= x and x < out_end, remained_out.tolist()))
+
+        new_inchannel_step: int = torch.logical_and(
+            in_start <= remained_in,
+            remained_in < in_end
+        ).sum().item()
+        new_outchannel_step: int = torch.logical_and(
+            out_start <= remained_out,
+            remained_out < out_end
+        ).sum().item()
         # remap the global index to the group index
-        if len(current_input_index) == 0:
+        if new_inchannel_step == 0:
             # if the whole group are pruned
             continue
         else:
-
-            new_inchannel_step = len(current_input_index)
-            new_outchannel_step = len(current_output_index)
             break
     tmp_weight = torch.ones(
         n_remained_out, new_inchannel_step, k_size1, k_size2)
@@ -521,12 +524,15 @@ def replace_conv2d(conv, masks):
         in_end = in_start + ori_inchannel_step
         out_start = groupid * ori_outchannel_step
         out_end = out_start + ori_outchannel_step
-        current_input_index = list(
-            filter(lambda x: in_start <= x and x < in_end, remained_in.tolist()))
-        current_output_index = list(
-            filter(lambda x: out_start <= x and x < out_end, remained_out.tolist()))
+
+        current_input_mask = torch.logical_and(in_start <= remained_in, remained_in < in_end)
+        current_input_index = remained_in[current_input_mask]
+
+        current_output_mask = torch.logical_and(out_start <= remained_out, remained_out < out_end)
+        current_output_index = remained_out[current_output_mask]
+
         # remap the global index to the group index
-        current_input_index = [x-in_start for x in current_input_index]
+        current_input_index = current_input_index - in_start
         if len(current_input_index) == 0:
             # if the whole group are pruned
             assert len(current_output_index) == 0
