@@ -143,8 +143,8 @@ def replace_prelu(prelu, masks):
     weight_mask = weight_mask['weight']
     if weight_mask.size(0) == 1:
         return prelu
-    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
-    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
+    _, remained_in = convert_to_coarse_mask(in_mask, 1)
+    _, remained_out = convert_to_coarse_mask(output_mask, 1)
     n_remained_in = weight_mask.size(0) - pruned_in.size(0)
     n_remained_out = weight_mask.size(0) - pruned_out.size(0)
     remained_in, remained_out = remained_in.to(
@@ -326,94 +326,58 @@ def replace_groupnorm(norm: nn.GroupNorm, masks):
     -------
     torch.nn.GroupNorm
         The new group norm module
-
-    Notes
-    ------
-    This is the default logic for replace GroupNorm
-        to Instance Norm
     """
     in_masks, output_mask, _ = masks
     assert isinstance(norm, nn.GroupNorm)
     in_mask = in_masks[0]
 
     # N, C, H, W
-    _, remained_in = convert_to_coarse_mask(in_mask, 1)
-    _, remained_out = convert_to_coarse_mask(output_mask, 1)
-
-    assert len(remained_in.size()) == 1
-    if remained_in.size(0) != remained_out.size(0):
-        raise ShapeMisMatchError()
-    new_num_channels = remained_in.size()[0]
-
-    assert new_num_channels % norm.num_groups == 0
-
-    _logger.debug(f"replace groupnorm (remain/total) ({new_num_channels}, {norm.num_channels})")
-
-    new_module = nn.GroupNorm(
-        norm.num_groups,
-        new_num_channels,
-        eps=norm.eps,
-        affine=norm.affine,
-    )
-    if new_module.affine:
-        new_module.weight.data = torch.index_select(
-            norm.weight.data,
-            0,
-            remained_in,
-        )
-        new_module.bias.data = torch.index_select(
-            norm.bias.data,
-            0,
-            remained_in,
-        )
-    return new_module
-
-
-def replace_groupnorm_to_layernorm(norm: nn.GroupNorm, masks):
-    """
-    Parameters
-    ----------
-    norm : torch.nn.GroupNorm
-        The group norm module to be replace
-    masks : Tuple of the input masks, output masks and weight masks
-        Tuple of the masks, for example
-        ([input_m1, input_m2], [output_m], {'weight':weight_m})
-
-    Returns
-    -------
-    torch.nn.GroupNorm
-        The new group norm module
-
-    Notes
-    ------
-    This is logic for replace GroupNorm
-        to Layer Norm
-    """
-    in_masks, output_mask, _ = masks
-    assert isinstance(norm, nn.GroupNorm)
-    in_mask = in_masks[0]
-
-    # N, C, H, W
-    _, remained_in = convert_to_coarse_mask(in_mask, 1)
-    _, remained_out = convert_to_coarse_mask(output_mask, 1)
+    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
+    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
 
     assert len(remained_in.size()) == 1
     if remained_in.size(0) != remained_out.size(0):
         raise ShapeMisMatchError()
 
-    num_channel_per_group = norm.num_channels // norm.num_groups
+    ori_channel_step = norm.num_channels // norm.num_groups
+    for groupid in range(norm.num_groups):
+        in_start = groupid * ori_channel_step
+        in_end = in_start + ori_channel_step
+
+        new_channel_step = torch.logical_and(
+            in_start <= remained_in,
+            remained_in < in_end,
+        ).sum().item()
+
+        # this group fully pruned
+        if new_channel_step == 0:
+            continue
+
+        break
+
+
+    new_groups = 0
+
+    # Validate
+    for groupid in range(norm.num_groups):
+        in_start = groupid * ori_channel_step
+        in_end = in_start + ori_channel_step
+        masks = torch.logical_and(in_start <= remained_in, remained_in < in_end)
+        current_input_index = remained_in[masks]
+        if len(current_input_index) == 0:
+            continue
+
+        # remap the global index to the group index
+        current_input_index = current_input_index - in_start
+        # check if the number of remained channel of each group are the same
+        if len(current_input_index) != new_channel_step:
+            raise UnBalancedGroupError()
+
+        new_groups += 1
+
     new_num_channels = remained_in.size()[0]
-
-    assert new_num_channels % num_channel_per_group == 0
-    new_num_groups = new_num_channels // num_channel_per_group
-
-    _logger.debug(
-        "replace groupnorm to layernorm (remain/total)"\
-        f"({new_num_channels}, {norm.num_channels})"
-    )
-
     new_module = nn.GroupNorm(
-        new_num_groups,
+        new_groups,
         new_num_channels,
         eps=norm.eps,
         affine=norm.affine,
@@ -531,8 +495,7 @@ def replace_conv2d(conv, masks):
         in_end = in_start + ori_inchannel_step
         out_start = groupid * ori_outchannel_step
         out_end = out_start + ori_outchannel_step
-        current_input_index = list(
-            filter(lambda x: in_start <= x and x < in_end, remained_in.tolist()))
+        current_input_index = list(filter(lambda x: in_start <= x and x < in_end, remained_in.tolist()))
         current_output_index = list(
             filter(lambda x: out_start <= x and x < out_end, remained_out.tolist()))
         # remap the global index to the group index
