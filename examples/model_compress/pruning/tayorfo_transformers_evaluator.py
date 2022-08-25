@@ -1,31 +1,31 @@
 from datasets import load_dataset
 
-dataset = load_dataset("yelp_review_full")
+dataset = load_dataset('yelp_review_full')
 
 from transformers import AutoTokenizer
 
-tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
+tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
 
 def tokenize_function(examples):
-    return tokenizer(examples["text"], padding="max_length", truncation=True)
+    return tokenizer(examples['text'], padding='max_length', truncation=True)
 
 tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
-small_train_dataset = tokenized_datasets["train"].shuffle(seed=42).select(range(1000))
-small_eval_dataset = tokenized_datasets["test"].shuffle(seed=42).select(range(1000))
+small_train_dataset = tokenized_datasets['train'].shuffle(seed=42).select(range(1000))
+small_eval_dataset = tokenized_datasets['test'].shuffle(seed=42).select(range(1000))
 
 from transformers import AutoModelForSequenceClassification
 
-model = AutoModelForSequenceClassification.from_pretrained("bert-base-cased", num_labels=5)
+model = AutoModelForSequenceClassification.from_pretrained('bert-base-cased', num_labels=5)
 
 from transformers import TrainingArguments
 
-training_args = TrainingArguments(output_dir="test_trainer")
+training_args = TrainingArguments(output_dir='test_trainer')
 
 import numpy as np
 from datasets import load_metric
 
-metric = load_metric("accuracy")
+metric = load_metric('accuracy')
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
@@ -35,8 +35,8 @@ def compute_metrics(eval_pred):
 from transformers import TrainingArguments, Trainer
 
 training_args = TrainingArguments(
-    output_dir="test_trainer",
-    evaluation_strategy="epoch",
+    output_dir='./log',
+    evaluation_strategy='epoch',
     per_device_train_batch_size=32,
     num_train_epochs=3,
     max_steps=-1

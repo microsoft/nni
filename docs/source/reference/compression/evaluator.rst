@@ -10,3 +10,8 @@ LightningEvaluator
 ------------------
 
 ..  autoclass:: nni.compression.pytorch.LightningEvaluator
+
+TransformersEvaluator
+---------------------
+
+..  autoclass:: nni.compression.pytorch.TransformersEvaluator
