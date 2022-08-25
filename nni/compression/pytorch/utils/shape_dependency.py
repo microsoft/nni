@@ -359,20 +359,10 @@ class GroupDependency(Dependency):
     traced_model : torch._C.Graph
         if we alreay has the traced graph of the target model, we donnot
         need to trace the model again.
-    group_norm_target: Literal["instancenorm", "layernorm"]
-        Target layer type to prune GroupNorm into.
     """
 
-    def __init__(
-            self,
-            model,
-            dummy_input,
-            traced_model=None,
-            group_norm_target: str="instancenorm",
-        ):
+    def __init__(self, model, dummy_input, traced_model=None):
         self.min_groups = {}
-        assert group_norm_target in ["instancenorm", "layernorm"]
-        self.group_norm_target = group_norm_target
         super(GroupDependency, self).__init__(model, dummy_input, traced_model)
 
     def _get_parent_convs(self, node):
@@ -451,12 +441,7 @@ class GroupDependency(Dependency):
             leaf_module = leaf_module.module
         assert isinstance(leaf_module, (torch.nn.GroupNorm))
 
-        if self.group_norm_target == "instancenorm":
-            condition = leaf_module.num_groups
-        else:
-            condition = leaf_module.num_channels // leaf_module.num_groups
-
-        return condition
+        return leaf_module.num_groups
 
 
     def build_dependency(self):
