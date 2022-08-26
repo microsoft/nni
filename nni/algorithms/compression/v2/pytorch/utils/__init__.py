@@ -14,6 +14,7 @@ from .evaluator import (
     Evaluator,
     LightningEvaluator,
     TorchEvaluator,
+    TransformersEvaluator,
     Hook,
     BackwardHook,
     ForwardHook,

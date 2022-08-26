@@ -18,7 +18,7 @@ from nni.compression.pytorch.utils import count_flops_params
 from .iterative_pruner import IterativePruner, PRUNER_DICT
 from .tools import TaskGenerator
 from .tools.rl_env import DDPG, AMCEnv
-from ..utils import LightningEvaluator, TorchEvaluator, compute_sparsity, config_list_canonical
+from ..utils import Evaluator, compute_sparsity, config_list_canonical
 from ..utils.docstring import _EVALUATOR_DOCSTRING
 
 
@@ -234,7 +234,7 @@ class AMCPruner(IterativePruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, total_episode: int, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,
+    def __init__(self, total_episode: int, model: Module, config_list: List[Dict], evaluator: Evaluator,
                  pruning_algorithm: str = 'l1', log_dir: str = '.', keep_intermediate_result: bool = False,
                  ddpg_params: dict = {}, pruning_params: dict = {}, target: str = 'flops'):
         ...

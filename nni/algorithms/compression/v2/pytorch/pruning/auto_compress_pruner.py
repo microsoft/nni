@@ -13,7 +13,7 @@ from torch.nn import Module
 from .basic_pruner import ADMMPruner
 from .iterative_pruner import IterativePruner, SimulatedAnnealingPruner
 from .tools import LotteryTicketTaskGenerator
-from ..utils import LightningEvaluator, TorchEvaluator, OptimizerConstructHelper
+from ..utils import Evaluator, OptimizerConstructHelper
 from ..utils.docstring import _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class AutoCompressPruner(IterativePruner):
     admm_params
         The parameters passed to the ADMMPruner.
 
-        - evaluator : LightningEvaluator or TorchEvaluator.
+        - evaluator : LightningEvaluator or TorchEvaluator or TransformersEvaluator.
             The same with the evaluator of AutoCompressPruner input parameter.
         - iterations : int.
             The total iteration number in admm pruning algorithm.
@@ -92,7 +92,7 @@ class AutoCompressPruner(IterativePruner):
     sa_params
         The parameters passed to the SimulatedAnnealingPruner.
 
-        - evaluator : LightningEvaluator or TorchEvaluator.
+        - evaluator : LightningEvaluator or TorchEvaluator or TransformersEvaluator.
             The same with the evaluator of AutoCompressPruner input parameter.
         - start_temperature : float. Default: `100`.
             Start temperature of the simulated annealing process.
@@ -127,7 +127,7 @@ class AutoCompressPruner(IterativePruner):
     @overload
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False):
+                 evaluator: Evaluator | None = None, speedup: bool = False):
         ...
 
     @overload
