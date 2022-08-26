@@ -22,7 +22,8 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 
 * **New release**: [v2.8 is available](https://github.com/microsoft/nni/releases/tag/v2.8) - _released on June-22-2022_
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on June-22-2022_
-* **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
+* **New research paper**: [SparTA: Deep-Learning Model Sparsity via Tensor-with-Sparsity-Attribute](https://www.usenix.org/system/files/osdi22-zheng-ningxin.pdf) - _published in OSDI 2022_
+* **New research paper**: [Privacy-preserving Online AutoML for Domain-Specific Face Detection](https://openaccess.thecvf.com/content/CVPR2022/papers/Yan_Privacy-Preserving_Online_AutoML_for_Domain-Specific_Face_Detection_CVPR_2022_paper.pdf) - _published in CVPR 2022_
 * **Newly upgraded documentation**: [Doc upgraded](https://nni.readthedocs.io/en/stable)
 
 
