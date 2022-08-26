@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { Stack, TooltipHost, ProgressIndicator, DirectionalHint, IStackTokens } from '@fluentui/react';
+import { Stack, IStackTokens } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
-import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR, MAX_TRIAL_NUMBERS } from '@static/const';
+import { CONTROLTYPE, MAX_TRIAL_NUMBERS } from '@static/const';
 import { EditExperimentParam } from './EditExperimentParam';
+import ProgressBar from './ProgressBar';
 import { EditExpeParamContext } from './context';
 import { ExpDurationContext } from './ExpDurationContext';
-import { leftProgress, rightEidtParam, progressHeight } from './commonStyle';
+import { leftProgress, rightEditParam } from './commonStyle';
 
 const line1Tokens: IStackTokens = {
     childrenGap: 60
@@ -29,34 +30,12 @@ export const TrialCount = (): any => {
                 const { updateOverviewPage } = value;
                 return (
                     <React.Fragment>
-                        <Stack horizontal className='ExpDuration'>
-                            <div style={leftProgress}>
-                                <TooltipHost
-                                    content={`${bar2.toString()} trials`}
-                                    directionalHint={DirectionalHint.bottomCenter}
-                                    tooltipProps={{
-                                        calloutProps: {
-                                            styles: {
-                                                beak: { background: TOOLTIP_BACKGROUND_COLOR },
-                                                beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
-                                                calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
-                                            }
-                                        }
-                                    }}
-                                >
-                                    <ProgressIndicator
-                                        className={EXPERIMENT.status}
-                                        percentComplete={bar2Percent}
-                                        barHeight={progressHeight}
-                                    />
-                                </TooltipHost>
-                                <div className='exp-progress'>
-                                    <span className={`${EXPERIMENT.status} bold`}>{bar2}</span>
-                                    <span className='joiner'>/</span>
-                                    <span>{maxTrialNum}</span>
-                                </div>
-                            </div>
-                        </Stack>
+                        <ProgressBar
+                            tooltip={`${bar2.toString()} trials`}
+                            percent={bar2Percent}
+                            latestVal={String(bar2)}
+                            presetVal={String(maxTrialNum)}
+                        />
                         <Stack horizontal className='marginTop'>
                             <div style={leftProgress}>
                                 <Stack horizontal className='status-count' tokens={line1Tokens}>
@@ -85,7 +64,7 @@ export const TrialCount = (): any => {
                                 </Stack>
                             </div>
 
-                            <div style={rightEidtParam}>
+                            <div style={rightEditParam}>
                                 <EditExpeParamContext.Provider
                                     value={{
                                         title: MAX_TRIAL_NUMBERS,

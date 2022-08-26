@@ -48,7 +48,7 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
             self._evaluator: _LEGACY_EVALUATOR = init_kwargs.pop('evaluator')
             self.dummy_input = init_kwargs.pop('dummy_input')
             self.using_evaluator = False
-            warn_msg = f'The old API ...{",".join(old_api)} will be deprecated after NNI v3.0,' +\
+            warn_msg = f'The old API ...{",".join(old_api)} will be deprecated after NNI v3.0,' + \
                        f'please using the new one ...{",".join(new_api)}'
             _logger.warning(warn_msg)
         return init_kwargs
@@ -60,7 +60,7 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
                 raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{key}'")
             merged_kwargs[key] = value
         for key, value in def_kwargs.items():
-            if key not in merged_kwargs:
+            if key not in merged_kwargs and key in arg_names:
                 merged_kwargs[key] = value
         diff = set(arg_names).difference(merged_kwargs.keys())
         if diff:

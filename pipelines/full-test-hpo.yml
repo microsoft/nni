@@ -4,6 +4,7 @@ schedules:
 - cron: 0 18 * * *
   branches:
     include: [ master ]
+  always: true
 
 resources:
   repositories:
@@ -35,9 +36,7 @@ stages:
     timeoutInMinutes: 60
 
     steps:
-    - template: templates/fix-apt-1es.yml
-      parameters:
-        check_gpu: true
+    - template: templates/check-gpu-status.yml
 
     - template: templates/install-dependencies.yml
       parameters:

@@ -9,6 +9,7 @@ const completed = <Icon iconName='Completed' />;
 const blocked = <Icon iconName='StatusCircleBlock' />;
 const copy = <Icon iconName='Copy' />;
 const tableListIcon = <Icon iconName='BulletedList' />;
+const Important = <Icon iconName='Important' />;
 const downLoadIcon = { iconName: 'Download' };
 const infoIconAbout = { iconName: 'info' };
 const timeIcon = { iconName: 'ReminderTime' };
@@ -43,5 +44,6 @@ export {
     Cancel,
     ReplyAll,
     RevToggleKey,
-    ChevronRightMed
+    ChevronRightMed,
+    Important
 };

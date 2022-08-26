@@ -13,7 +13,7 @@ from typing import (TYPE_CHECKING, Any, Dict, Iterable, List,
                     Optional, Set, Tuple, Type, Union, cast, overload)
 
 if TYPE_CHECKING:
-    from .mutator import Mutator
+    from nni.nas.mutable import Mutator
 
 from nni.nas.evaluator import Evaluator
 from nni.nas.utils import uid

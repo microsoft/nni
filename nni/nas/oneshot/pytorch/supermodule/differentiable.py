@@ -104,6 +104,13 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
             return {}  # nothing new to export
         return {self.label: self.op_names[int(torch.argmax(self._arch_alpha).item())]}
 
+    def export_probs(self, memo):
+        if any(k.startswith(self.label + '/') for k in memo):
+            return {}  # nothing new
+        weights = self._softmax(self._arch_alpha).cpu().tolist()
+        ret = {f'{self.label}/{name}': value for name, value in zip(self.op_names, weights)}
+        return ret
+
     def search_space_spec(self):
         return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ),
                                           True, size=len(self.op_names))}
@@ -117,7 +124,8 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
                 if len(alpha) != size:
                     raise ValueError(f'Architecture parameter size of same label {module.label} conflict: {len(alpha)} vs. {size}')
             else:
-                alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
+                alpha = nn.Parameter(torch.randn(size) * 1E-3)  # the numbers in the parameter can be reinitialized later
+                memo[module.label] = alpha
 
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
             return cls(list(module.named_children()), alpha, softmax, module.label)
@@ -208,6 +216,13 @@ class DifferentiableMixedInput(BaseSuperNetModule):
             chosen = chosen[0]
         return {self.label: chosen}
 
+    def export_probs(self, memo):
+        if any(k.startswith(self.label + '/') for k in memo):
+            return {}  # nothing new
+        weights = self._softmax(self._arch_alpha).cpu().tolist()
+        ret = {f'{self.label}/{index}': value for index, value in enumerate(weights)}
+        return ret
+
     def search_space_spec(self):
         return {
             self.label: ParameterSpec(self.label, 'choice', list(range(self.n_candidates)),
@@ -225,7 +240,8 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                 if len(alpha) != size:
                     raise ValueError(f'Architecture parameter size of same label {module.label} conflict: {len(alpha)} vs. {size}')
             else:
-                alpha = nn.Parameter(torch.randn(size) * 1E-3)  # this can be reinitialized later
+                alpha = nn.Parameter(torch.randn(size) * 1E-3)  # the numbers in the parameter can be reinitialized later
+                memo[module.label] = alpha
 
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
             return cls(module.n_candidates, module.n_chosen, alpha, softmax, module.label)
@@ -284,6 +300,7 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
                     raise ValueError(f'Architecture parameter size of same label {name} conflict: {len(alpha)} vs. {spec.size}')
             else:
                 alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
+                memo[name] = alpha
             operation._arch_alpha[name] = alpha
 
         operation.parameters = functools.partial(self.parameters, module=operation)                # bind self
@@ -320,6 +337,16 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
             chosen_index = int(torch.argmax(cast(dict, operation._arch_alpha)[name]).item())
             result[name] = spec.values[chosen_index]
         return result
+
+    def export_probs(self, operation: MixedOperation, memo: dict[str, Any]):
+        """Export the weight for every leaf value choice."""
+        ret = {}
+        for name, spec in operation.search_space_spec().items():
+            if any(k.startswith(name + '/') for k in memo):
+                continue
+            weights = operation._softmax(operation._arch_alpha[name]).cpu().tolist()  # type: ignore
+            ret.update({f'{name}/{value}': weight for value, weight in zip(spec.values, weights)})
+        return ret
 
     def forward_argument(self, operation: MixedOperation, name: str) -> dict[Any, float] | Any:
         if name in operation.mutable_arguments:
@@ -360,6 +387,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
                     raise ValueError(f'Architecture parameter size of same label {name} conflict: {len(alpha)} vs. {spec.size}')
             else:
                 alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
+                memo[name] = alpha
             self._arch_alpha[name] = alpha
 
     def resample(self, memo):
@@ -375,6 +403,16 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
             chosen_index = int(torch.argmax(self._arch_alpha[name]).item())
             result[name] = spec.values[chosen_index]
         return result
+
+    def export_probs(self, memo):
+        """Export the weight for every leaf value choice."""
+        ret = {}
+        for name, spec in self.search_space_spec().items():
+            if any(k.startswith(name + '/') for k in memo):
+                continue
+            weights = self._softmax(self._arch_alpha[name]).cpu().tolist()
+            ret.update({f'{name}/{value}': weight for value, weight in zip(spec.values, weights)})
+        return ret
 
     def search_space_spec(self):
         return self._space_spec
@@ -427,6 +465,8 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
 class DifferentiableMixedCell(PathSamplingCell):
     """Implementation of Cell under differentiable context.
 
+    Similar to PathSamplingCell, this cell only handles cells of specific kinds (e.g., with loose end).
+
     An architecture parameter is created on each edge of the full-connected graph.
     """
 
@@ -450,13 +490,21 @@ class DifferentiableMixedCell(PathSamplingCell):
                 op = cast(List[Dict[str, nn.Module]], self.ops[i - self.num_predecessors])[j]
                 if edge_label in memo:
                     alpha = memo[edge_label]
-                    if len(alpha) != len(op):
-                        raise ValueError(
-                            f'Architecture parameter size of same label {edge_label} conflict: '
-                            f'{len(alpha)} vs. {len(op)}'
+                    if len(alpha) != len(op) + 1:
+                        if len(alpha) != len(op):
+                            raise ValueError(
+                                f'Architecture parameter size of same label {edge_label} conflict: '
+                                f'{len(alpha)} vs. {len(op)}'
+                            )
+                        warnings.warn(
+                            f'Architecture parameter size {len(alpha)} is not same as expected: {len(op) + 1}. '
+                            'This is likely due to the label being shared by a LayerChoice inside the cell and outside.',
+                            UserWarning
                         )
                 else:
-                    alpha = nn.Parameter(torch.randn(len(op)) * 1E-3)
+                    # +1 to emulate the input choice.
+                    alpha = nn.Parameter(torch.randn(len(op) + 1) * 1E-3)
+                    memo[edge_label] = alpha
                 self._arch_alpha[edge_label] = alpha
 
         self._softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
@@ -465,18 +513,32 @@ class DifferentiableMixedCell(PathSamplingCell):
         """Differentiable doesn't need to resample."""
         return {}
 
+    def export_probs(self, memo):
+        """When export probability, we follow the structure in arch alpha."""
+        ret = {}
+        for name, parameter in self._arch_alpha.items():
+            if any(k.startswith(name + '/') for k in memo):
+                continue
+            weights = self._softmax(parameter).cpu().tolist()
+            ret.update({f'{name}/{value}': weight for value, weight in zip(self.op_names, weights)})
+        return ret
+
     def export(self, memo):
         """Tricky export.
 
         Reference: https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/model_search.py#L135
-        We don't avoid selecting operations like ``none`` here, because it looks like a different search space.
         """
         exported = {}
         for i in range(self.num_predecessors, self.num_nodes + self.num_predecessors):
+            # If label already exists, no need to re-export.
+            if all(f'{self.label}/op_{i}_{k}' in memo and f'{self.label}/input_{i}_{k}' in memo for k in range(self.num_ops_per_node)):
+                continue
+
             # Tuple of (weight, input_index, op_name)
             all_weights: list[tuple[float, int, str]] = []
             for j in range(i):
                 for k, name in enumerate(self.op_names):
+                    # The last appended weight is automatically skipped in export.
                     all_weights.append((
                         float(self._arch_alpha[f'{self.label}/{i}_{j}'][k].item()),
                         j, name,
@@ -497,7 +559,7 @@ class DifferentiableMixedCell(PathSamplingCell):
             all_weights = [all_weights[k] for k in first_occurrence_index] + \
                 [w for j, w in enumerate(all_weights) if j not in first_occurrence_index]
 
-            _logger.info('Sorted weights in differentiable cell export (node %d): %s', i, all_weights)
+            _logger.info('Sorted weights in differentiable cell export (%s cell, node %d): %s', self.label, i, all_weights)
 
             for k in range(self.num_ops_per_node):
                 # all_weights could be too short in case ``num_ops_per_node`` is too large.
@@ -515,7 +577,11 @@ class DifferentiableMixedCell(PathSamplingCell):
 
             for j in range(i):  # for every previous tensors
                 op_results = torch.stack([op(states[j]) for op in ops[j].values()])
-                alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
+                alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)  # (-1, 1, 1, 1, 1, ...)
+                op_weights = self._softmax(self._arch_alpha[f'{self.label}/{i}_{j}'])
+                if len(op_weights) == len(op_results) + 1:
+                    # concatenate with a zero operation, indicating this path is not chosen at all.
+                    op_results = torch.cat((op_results, torch.zeros_like(op_results[:1])), 0)
                 edge_sum = torch.sum(op_results * self._softmax(self._arch_alpha[f'{self.label}/{i}_{j}']).view(*alpha_shape), 0)
                 current_state.append(edge_sum)
 

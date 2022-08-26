@@ -4,6 +4,7 @@ schedules:
 - cron: 0 20 * * *
   branches:
     include: [ master ]
+  always: true
 
 variables:
   ssh_user: NNIUser

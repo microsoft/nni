@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 import pytest
 from torchvision import transforms
 from torchvision.datasets import MNIST
+from torch import nn
 from torch.utils.data import Dataset, RandomSampler
 
 import nni
@@ -13,7 +14,11 @@ from nni.retiarii import strategy, model_wrapper, basic_unit
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.evaluator.pytorch.lightning import Classification, Regression, DataLoader
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice, ValueChoice
+from nni.retiarii.oneshot.pytorch import DartsLightningModule
 from nni.retiarii.strategy import BaseStrategy
+from pytorch_lightning import LightningModule, Trainer
+
+from .test_oneshot_utils import RandomDataset
 
 
 pytestmark = pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
@@ -338,17 +343,49 @@ def test_gumbel_darts():
     _test_strategy(strategy.GumbelDARTS())
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--exp', type=str, default='all', metavar='E',
-                        help='experiment to run, default = all')
-    args = parser.parse_args()
+def test_optimizer_lr_scheduler():
+    learning_rates = []
 
-    if args.exp == 'all':
-        test_darts()
-        test_proxyless()
-        test_enas()
-        test_random()
-        test_gumbel_darts()
-    else:
-        globals()[f'test_{args.exp}']()
+    class CustomLightningModule(LightningModule):
+        def __init__(self):
+            super().__init__()
+            self.layer1 = nn.Linear(32, 2)
+            self.layer2 = nn.LayerChoice([nn.Linear(2, 2), nn.Linear(2, 2, bias=False)])
+
+        def forward(self, x):
+            return self.layer2(self.layer1(x))
+
+        def configure_optimizers(self):
+            opt1 = torch.optim.SGD(self.layer1.parameters(), lr=0.1)
+            opt2 = torch.optim.Adam(self.layer2.parameters(), lr=0.2)
+            return [opt1, opt2], [torch.optim.lr_scheduler.StepLR(opt1, step_size=2, gamma=0.1)]
+
+        def training_step(self, batch, batch_idx):
+            loss = self(batch).sum()
+            self.log('train_loss', loss)
+            return {'loss': loss}
+
+        def on_train_epoch_start(self) -> None:
+            learning_rates.append(self.optimizers()[0].param_groups[0]['lr'])
+
+        def validation_step(self, batch, batch_idx):
+            loss = self(batch).sum()
+            self.log('valid_loss', loss)
+
+        def test_step(self, batch, batch_idx):
+            loss = self(batch).sum()
+            self.log('test_loss', loss)
+
+    train_data = RandomDataset(32, 32)
+    valid_data = RandomDataset(32, 16)
+
+    model = CustomLightningModule()
+    darts_module = DartsLightningModule(model, gradient_clip_val=5)
+    trainer = Trainer(max_epochs=10)
+    trainer.fit(
+        darts_module,
+        dict(train=DataLoader(train_data, batch_size=8), val=DataLoader(valid_data, batch_size=8))
+    )
+
+    assert len(learning_rates) == 10 and abs(learning_rates[0] - 0.1) < 1e-5 and \
+        abs(learning_rates[2] - 0.01) < 1e-5 and abs(learning_rates[-1] - 1e-5) < 1e-6

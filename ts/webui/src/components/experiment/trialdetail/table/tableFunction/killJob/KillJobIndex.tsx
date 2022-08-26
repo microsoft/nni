@@ -1,5 +1,4 @@
 import React, { useState, useRef, useContext } from 'react';
-import PropTypes from 'prop-types';
 import axios from 'axios';
 import { Stack, FocusTrapCallout, DefaultButton, FocusZone, PrimaryButton } from '@fluentui/react';
 import { MANAGER_IP } from '@static/const';
@@ -9,7 +8,11 @@ import { gap10 } from '@components/fluent/ChildrenGap';
 import { styles } from '@components/experiment/overview/params/basicInfoStyles';
 import { AppContext } from '@/App';
 
-function KillJobIndex(props): any {
+interface KillJobIndexProps {
+    trialId: string;
+}
+
+function KillJobIndex(props: KillJobIndexProps): any {
     const menuButtonElement = useRef(null);
     const { startTimer, closeTimer, interval, refreshDetailTable } = useContext(AppContext);
     const { trialId } = props;
@@ -117,10 +120,5 @@ function KillJobIndex(props): any {
         </div>
     );
 }
-
-KillJobIndex.propTypes = {
-    trialId: PropTypes.string,
-    updatePage: PropTypes.func
-};
 
 export default KillJobIndex;

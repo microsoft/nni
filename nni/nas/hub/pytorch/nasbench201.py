@@ -153,7 +153,7 @@ class ResNetBasicblock(nn.Module):
 class NasBench201(nn.Module):
     """The full search space proposed by `NAS-Bench-201 <https://arxiv.org/abs/2001.00326>`__.
 
-    It's a stack of :class:`NasBench201Cell`.
+    It's a stack of :class:`~nni.retiarii.nn.pytorch.NasBench201Cell`.
     """
     def __init__(self,
                  stem_out_channels: int = 16,
@@ -179,7 +179,7 @@ class NasBench201(nn.Module):
                 cell = ResNetBasicblock(C_prev, C_curr, 2)
             else:
                 ops: Dict[str, Callable[[int, int], nn.Module]] = {
-                    prim: lambda C_in, C_out: OPS_WITH_STRIDE[prim](C_in, C_out, 1) for prim in PRIMITIVES
+                    prim: self._make_op_factory(prim) for prim in PRIMITIVES
                 }
                 cell = NasBench201Cell(ops, C_prev, C_curr, label='cell')
             self.cells.append(cell)
@@ -191,6 +191,9 @@ class NasBench201(nn.Module):
         )
         self.global_pooling = nn.AdaptiveAvgPool2d(1)
         self.classifier = nn.Linear(C_prev, self.num_labels)
+
+    def _make_op_factory(self, prim):
+        return lambda C_in, C_out: OPS_WITH_STRIDE[prim](C_in, C_out, 1)
 
     def forward(self, inputs):
         feature = self.stem(inputs)

@@ -3,7 +3,7 @@ import { MetricDataRecord, TableRecord, TrialJobInfo, MultipleAxes } from '../in
 import { Trial } from './trial';
 import { SearchSpace, MetricSpace } from './searchspace';
 import { requestAxios, parseMetrics } from '../function';
-import { allTrialsIntermediateChart } from '../interface';
+import { AllTrialsIntermediateChart } from '../interface';
 
 function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
     const ret = new Map<string, MetricDataRecord[]>();
@@ -91,8 +91,8 @@ class TrialManager {
         return this.filter(trial => trial.status !== 'WAITING');
     }
 
-    public allTrialsIntermediateChart(): allTrialsIntermediateChart[] {
-        const ret: allTrialsIntermediateChart[] = [];
+    public allTrialsIntermediateChart(): AllTrialsIntermediateChart[] {
+        const ret: AllTrialsIntermediateChart[] = [];
         for (const trial of this.trials.values()) {
             const mediate: number[] = [];
             for (const items of trial.intermediates) {

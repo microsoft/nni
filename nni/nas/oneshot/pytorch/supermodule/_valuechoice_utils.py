@@ -168,11 +168,11 @@ def weighted_sum(items: list[T], weights: Sequence[float | None] = cast(Sequence
 
     assert len(items) == len(weights) > 0
     elem = items[0]
-    unsupported_msg = f'Unsupported element type in weighted sum: {type(elem)}. Value is: {elem}'
+    unsupported_msg = 'Unsupported element type in weighted sum: {}. Value is: {}'
 
     if isinstance(elem, str):
         # Need to check this first. Otherwise it goes into sequence and causes infinite recursion.
-        raise TypeError(unsupported_msg)
+        raise TypeError(unsupported_msg.format(type(elem), elem))
 
     try:
         if isinstance(elem, (torch.Tensor, np.ndarray, float, int, np.number)):

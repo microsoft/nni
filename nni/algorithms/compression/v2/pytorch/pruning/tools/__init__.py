@@ -29,6 +29,7 @@ from .metrics_calculator import (
 )
 from .sparsity_allocator import (
     NormalSparsityAllocator,
+    ThresholdSparsityAllocator,
     BankSparsityAllocator,
     GlobalSparsityAllocator,
     DependencyAwareAllocator

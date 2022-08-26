@@ -4,6 +4,7 @@ schedules:
 - cron: 0 20 * * *
   branches:
     include: [ master ]
+  always: true
 
 jobs:
 - job: hybrid
@@ -11,8 +12,7 @@ jobs:
   timeoutInMinutes: 90
 
   steps:
-  # FIXME: should use GPU here
-  - template: templates/fix-apt-1es.yml
+  # TODO: consider adding GPU tests here
 
   - template: templates/install-dependencies.yml
     parameters:
