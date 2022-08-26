@@ -9,8 +9,8 @@ from transformers import (
 )
 
 import nni
-from nni.algorithms.compression.v2.pytorch import TransformersEvaluator
-from nni.algorithms.compression.v2.pytorch.pruning import TaylorFOWeightPruner
+from nni.compression.pytorch import TransformersEvaluator
+from nni.compression.pytorch.pruning import TaylorFOWeightPruner
 
 
 dataset = load_dataset('yelp_review_full')
