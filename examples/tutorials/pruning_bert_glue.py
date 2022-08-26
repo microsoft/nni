@@ -241,7 +241,7 @@ def distil_loss_func(stu_outputs: SequenceClassifierOutput, tea_outputs: Sequenc
     return distil_loss
 
 
-def evaluation(model: torch.nn.Module, validation_dataloaders: Dict[DataLoader] = None, device=None):
+def evaluation(model: torch.nn.Module, validation_dataloaders: Dict[str, DataLoader] = None, device=None):
     assert validation_dataloaders is not None
     training = model.training
     model.eval()
@@ -261,7 +261,7 @@ def evaluation(model: torch.nn.Module, validation_dataloaders: Dict[DataLoader] 
                 references=batch['labels'],
             )
         result[val_name] = metric.compute()
-        default_result += result[val_name].get('f1', result.get('accuracy', 0))
+        default_result += result[val_name].get('f1', result[val_name].get('accuracy', 0))
     result['default'] = default_result / len(result)
 
     model.train(training)
@@ -285,7 +285,9 @@ from transformers import BertForSequenceClassification
 def create_pretrained_model():
     is_regression = task_name == 'stsb'
     num_labels = 1 if is_regression else (3 if task_name == 'mnli' else 2)
-    return BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path, num_labels=num_labels)
+    model = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path, num_labels=num_labels)
+    model.bert.config.output_hidden_states = True
+    return model
 
 
 def create_finetuned_model():
@@ -453,11 +455,11 @@ if not dev_mode:
 # NNI will support per-step-pruning-schedule in the future, then can use an pruner to replace the following code.
 
 if not dev_mode:
-    total_epochs = 4
+    total_epochs = 7
     total_steps = None
     taylor_pruner_steps = 1000
-    steps_per_iteration = 2000
-    total_pruning_steps = 24000
+    steps_per_iteration = 3000
+    total_pruning_steps = 36000
     distillation = True
 else:
     total_epochs = 1

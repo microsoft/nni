@@ -5,10 +5,10 @@
 
 Computation times
 =================
-**00:33.164** total execution time for **tutorials** files:
+**00:28.205** total execution time for **tutorials** files:
 
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_pruning_bert_glue.py` (``pruning_bert_glue.py``)                           | 00:33.164 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_pruning_bert_glue.py` (``pruning_bert_glue.py``)                           | 00:28.205 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_hello_nas.py` (``hello_nas.py``)                                           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
