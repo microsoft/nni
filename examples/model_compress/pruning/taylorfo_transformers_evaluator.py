@@ -57,9 +57,6 @@ trainer = nni.trace(Trainer)(
 )
 
 evaluator = TransformersEvaluator(trainer)
-evaluator._init_optimizer_helpers(model)
-evaluator.bind_model(model)
-evaluator.finetune()
 pruner = TaylorFOWeightPruner(model, [{'op_types': ['Linear'], 'sparsity': 0.5}], evaluator, 20)
 _, masks = pruner.compress()
 pruner.show_pruned_weights()
