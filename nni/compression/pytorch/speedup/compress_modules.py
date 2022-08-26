@@ -48,7 +48,7 @@ replace_module = {
     'Embedding': lambda module, masks: replace_embedding(module, masks),
     'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks),
     'Flatten': lambda module, masks: no_replace(module, masks),
-    "GroupNorm": lambda module, masks: replace_groupnorm(module, masks),
+    'GroupNorm': lambda module, masks: replace_groupnorm(module, masks),
 }
 
 
@@ -362,15 +362,15 @@ def replace_groupnorm(norm: nn.GroupNorm, masks):
     for groupid in range(norm.num_groups):
         in_start = groupid * ori_channel_step
         in_end = in_start + ori_channel_step
-        masks = torch.logical_and(in_start <= remained_in, remained_in < in_end)
-        current_input_index = remained_in[masks]
-        if len(current_input_index) == 0:
+        num_item = torch.logical_and(
+            in_start <= remained_in,
+            remained_in < in_end,
+        ).sum().item()
+        if num_item == 0:
             continue
 
-        # remap the global index to the group index
-        current_input_index = current_input_index - in_start
         # check if the number of remained channel of each group are the same
-        if len(current_input_index) != new_channel_step:
+        if num_item != new_channel_step:
             raise UnBalancedGroupError()
 
         new_groups += 1
