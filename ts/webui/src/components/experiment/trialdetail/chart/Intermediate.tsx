@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import { Stack, PrimaryButton, Toggle, IStackTokens } from '@fluentui/react';
 import { TooltipForIntermediate, EventMap, AllTrialsIntermediateChart } from '@static/interface';
 import { reformatRetiariiParameter } from '@static/function';
@@ -10,6 +10,11 @@ const stackTokens: IStackTokens = {
     childrenGap: 20
 };
 
+
+
+interface IntermediateProps {
+    source: AllTrialsIntermediateChart[];
+}
 interface IntermediateState {
     detailSource: AllTrialsIntermediateChart[];
     interSource: object;
@@ -21,30 +26,34 @@ interface IntermediateState {
     startMediaY: number;
     endMediaY: number;
 }
+const [detailSource, setDetailSource] = useState();
+const [] = useState();
+const [] = useState();
+const [] = useState();
+const [] = useState();
+this.state = {
+    detailSource: [],
+    interSource: {},
+    filterSource: [],
+    eachIntermediateNum: 1,
+    isLoadconfirmBtn: false,
+    isFilter: false,
+    length: 100000,
+    startMediaY: 0,
+    endMediaY: 100
+};
+const Intermediate = (props: IntermediateProps): any => {
+    let pointInput!: HTMLInputElement | null;
+    let minValInput!: HTMLInputElement | null;
+    let maxValInput!: HTMLInputElement | null;
 
-interface IntermediateProps {
-    source: AllTrialsIntermediateChart[];
-}
+};
 
 class Intermediate extends React.Component<IntermediateProps, IntermediateState> {
-    static intervalMediate = 1;
-    public pointInput!: HTMLInputElement | null;
-    public minValInput!: HTMLInputElement | null;
-    public maxValInput!: HTMLInputElement | null;
-
+    
     constructor(props: IntermediateProps) {
         super(props);
-        this.state = {
-            detailSource: [],
-            interSource: {},
-            filterSource: [],
-            eachIntermediateNum: 1,
-            isLoadconfirmBtn: false,
-            isFilter: false,
-            length: 100000,
-            startMediaY: 0,
-            endMediaY: 100
-        };
+        
     }
 
     drawIntermediate = (source: AllTrialsIntermediateChart[]): void => {
