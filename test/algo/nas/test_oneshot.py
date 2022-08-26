@@ -393,7 +393,7 @@ def test_optimizer_lr_scheduler():
 
 def test_one_shot_sub_state_dict():
     from nni.nas.strategy import RandomOneShot
-    from nni.retiarii import fixed_arch
+    from nni.nas import fixed_arch
 
     init_kwargs = {}
     x = torch.rand(1, 1, 28, 28)
@@ -408,4 +408,3 @@ def test_one_shot_sub_state_dict():
         model.eval()
         model_space.eval()
         assert torch.allclose(model(x), strategy.model(x))
-        model(x)

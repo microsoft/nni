@@ -113,13 +113,21 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
         ----------
         arch : dict[str, Any]
             subnet architecture dict.
+        destination: dict
+            If provided, the state of module will be updated into the dict and the same object is returned.
+            Otherwise, an ``OrderedDict`` will be created and returned.
+        prefix: str
+            A prefix added to parameter and buffer names to compose the keys in state_dict.
+        keep_vars: bool
+            by default the :class:`~torch.Tensor` s returned in the state dict are detached from autograd.
+            If it's set to ``True``, detaching will not be performed.
 
         Returns
         -------
         dict
             Subnet state dict.
         """
-        self.resample(arch)
+        self.resample(memo=arch)
         base_model = self._get_base_model()
         state_dict = sub_state_dict(base_model, destination, prefix, keep_vars)
         return state_dict
