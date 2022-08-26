@@ -53,8 +53,6 @@ from ..utils import (
     OptimizerConstructHelper,
     Scaling,
     Evaluator,
-    LightningEvaluator,
-    TorchEvaluator,
     ForwardHook,
     TensorHook,
     config_list_canonical
@@ -151,7 +149,7 @@ _LEGACY_CRITERION = Callable[[Tensor, Tensor], Tensor]
 
 # TODO: remove in nni v3.0.
 class EvaluatorBasedPruner(BasicPruner):
-    evaluator: LightningEvaluator | TorchEvaluator
+    evaluator: Evaluator
     using_evaluator: bool
     trainer: _LEGACY_TRAINER
     traced_optimizer: Optimizer
@@ -163,7 +161,7 @@ class EvaluatorBasedPruner(BasicPruner):
         # return the remaining arguments.
         if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
             init_kwargs = self._parse_args(new_api, args, kwargs, init_kwargs)
-            self.evaluator: LightningEvaluator | TorchEvaluator = init_kwargs.pop('evaluator')
+            self.evaluator: Evaluator = init_kwargs.pop('evaluator')
             if not self.evaluator._initialization_complete:
                 self.evaluator._init_optimizer_helpers(model)  # type: ignore
             self.using_evaluator = True
@@ -579,7 +577,7 @@ class SlimPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator,
                  training_epochs: int, scale: float = 0.0001, mode='global'):
         ...
 
@@ -699,7 +697,7 @@ class ActivationPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_steps: int,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int,
                  activation: str = 'relu', mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         ...
 
@@ -970,7 +968,7 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_steps: int,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         ...
 
@@ -1114,7 +1112,7 @@ class ADMMPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, iterations: int,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator, iterations: int,
                  training_epochs: int, granularity: str = 'fine-grained'):
         ...
 

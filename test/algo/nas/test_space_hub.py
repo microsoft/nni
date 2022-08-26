@@ -25,7 +25,7 @@ pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='I
 def _reset():
     # this is to not affect other tests in sdk
     nni.trial._intermediate_seq = 0
-    nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
+    nni.trial._params = {'foo': 'bar', 'parameter_id': 0, 'parameters': {}}
     nni.runtime.platform.test._last_metric = None
 
 
