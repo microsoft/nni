@@ -4,7 +4,7 @@
 from typing import Optional, Tuple, cast, Any, Dict
 
 import torch
-import torch.nn.functional as F   
+import torch.nn.functional as F
 
 import nni.nas.nn.pytorch as nn
 from nni.nas import model_wrapper, basic_unit
