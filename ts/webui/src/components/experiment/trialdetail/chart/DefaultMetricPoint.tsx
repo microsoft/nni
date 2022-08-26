@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import { Stack, Dropdown, Toggle, IDropdownOption } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import { Trial } from '@model/trial';
@@ -34,51 +34,37 @@ interface DefaultPointProps {
     changeExpandRowIDs: Function;
 }
 
-interface DefaultPointState {
-    bestCurveEnabled?: boolean | undefined;
-    startY: number; // dataZoomY
-    endY: number;
-    userSelectOptimizeMode: string;
-    userSelectAccuracyNumberKey: string;
+const formatAccuracy = (accuracy: number | undefined): number => {
+    if (accuracy === undefined || isNaN(accuracy) || !isFinite(accuracy)) {
+        return 0;
+    }
+    return accuracy;
 }
 
-class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState> {
-    constructor(props: DefaultPointProps) {
-        super(props);
-        this.state = {
-            bestCurveEnabled: false,
-            startY: 0, // dataZoomY
-            endY: 100,
-            userSelectOptimizeMode: optimizeModeValue(EXPERIMENT.optimizeMode),
-            userSelectAccuracyNumberKey: 'default'
-        };
-    }
-
-    loadDefault = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
-        this.setState({ bestCurveEnabled: checked });
+const DefaultPoint = (props: DefaultPointProps) => {
+    const { hasBestCurve, trialIds, changeExpandRowIDs, chartHeight } = props;
+    const [bestCurveEnabled, setBestCurveEnabled] = useState(false);
+    const [startY, setStartY] = useState(0); // dataZoomY
+    const [endY, setEndY] = useState(0); // dataZoomY
+    const [userSelectOptimizeMode, setuserSelectOptimizeMode] = useState(optimizeModeValue(EXPERIMENT.optimizeMode) as string);
+    const [userSelectAccuracyNumberKey, setuserSelectAccuracyNumberKey] = useState('default');
+    const loadDefault = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
+        setBestCurveEnabled(checked ?? true); // ?? true是新加的
     };
-
-    metricDataZoom = (e: EventMap): void => {
+    const metricDataZoom = (e: EventMap): void => {
         if (e.batch !== undefined) {
-            this.setState(() => ({
-                startY: e.batch[0].start !== null ? e.batch[0].start : 0,
-                endY: e.batch[0].end !== null ? e.batch[0].end : 100
-            }));
+            setStartY(e.batch[0].start !== null ? e.batch[0].start : 0);
+            setEndY(e.batch[0].end !== null ? e.batch[0].end : 100);
         }
     };
-
-    pointClick = (params: any): void => {
+    const pointClick = (params: any): void => {
         // [hasBestCurve: true]: is detail page, otherwise, is overview page
-        const { hasBestCurve } = this.props;
         if (!hasBestCurve) {
-            this.props.changeExpandRowIDs(params.data[2], 'chart');
+            changeExpandRowIDs(params.data[2], 'chart');
         }
     };
-
-    generateGraphConfig(_maxSequenceId: number): any {
-        const { startY, endY, userSelectAccuracyNumberKey } = this.state;
-        const { hasBestCurve } = this.props;
-        return {
+    const generateGraphConfig = (_maxSequenceId: number): any => {
+        return{
             grid: {
                 left: '8%'
             },
@@ -119,31 +105,22 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 scale: true
             },
             series: undefined
-        };
-    }
+    }};
 
-    private formatAccuracy(accuracy: number | undefined): number {
-        if (accuracy === undefined || isNaN(accuracy) || !isFinite(accuracy)) {
-            return 0;
-        }
-        return accuracy;
-    }
-
-    generateScatterSeries(trials: Trial[]): any {
-        const { userSelectAccuracyNumberKey } = this.state;
+    const generateScatterSeries = (trials: Trial[]): any => {
         let data;
         if (trials[0].accuracyNumberTypeDictKeys.length > 1) {
             // dict type final results
             data = trials.map(trial => [
                 trial.sequenceId,
-                trial.acc === undefined ? 0 : this.formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
+                trial.acc === undefined ? 0 : formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
                 trial.id,
                 trial.parameter
             ]);
         } else {
             data = trials.map(trial => [
                 trial.sequenceId,
-                this.formatAccuracy(trial.accuracy),
+                formatAccuracy(trial.accuracy),
                 trial.id,
                 trial.parameter
             ]);
@@ -156,13 +133,12 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         };
     }
 
-    generateBestCurveSeries(trials: Trial[]): any {
-        const { userSelectOptimizeMode, userSelectAccuracyNumberKey } = this.state;
+    const generateBestCurveSeries = (trials: Trial[]): any => {
         let best = trials[0];
         const data = [
             [
                 best.sequenceId,
-                best.acc === undefined ? 0 : this.formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
+                best.acc === undefined ? 0 : formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
                 best.id,
                 best.parameter
             ]
@@ -175,7 +151,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             if (better) {
                 data.push([
                     trial.sequenceId,
-                    trial.acc === undefined ? 0 : this.formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
+                    trial.acc === undefined ? 0 : formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
                     best.id,
                     trial.parameter
                 ]);
@@ -183,7 +159,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             } else {
                 data.push([
                     trial.sequenceId,
-                    best.acc === undefined ? 0 : this.formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
+                    best.acc === undefined ? 0 : formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
                     best.id,
                     trial.parameter
                 ]);
@@ -197,94 +173,92 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         };
     }
 
-    updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+    const updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            this.setState({ userSelectOptimizeMode: item.key.toString() });
+            setuserSelectOptimizeMode(item.key.toString());
         }
     };
 
     // final result keys dropdown click event
-    updateTrialfinalResultKeys = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+    const updateTrialfinalResultKeys = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            this.setState(
-                {
-                    userSelectAccuracyNumberKey: item.key.toString()
-                },
-                () => {
-                    this.generateGraph();
-                }
-            );
+            setuserSelectAccuracyNumberKey(item.key.toString());
+            generateGraph();
+            // this.setState(
+            //     {
+            //         userSelectAccuracyNumberKey: item.key.toString()
+            //     },
+            //     () => {
+            //         this.generateGraph();
+            //     }
+            // );
         }
     };
 
-    render(): React.ReactNode {
-        const { hasBestCurve, chartHeight } = this.props;
-        const { userSelectOptimizeMode, userSelectAccuracyNumberKey } = this.state;
-        const trials = TRIALS.getTrials(this.props.trialIds).filter(trial => trial.sortable);
-        const graph = this.generateGraph();
-        const accNodata = graph === EmptyGraph ? 'No data' : '';
-        const onEvents = { dataZoom: this.metricDataZoom, click: this.pointClick };
-        let dictDropdown: string[] = [];
-        if (trials.length > 0) {
-            dictDropdown = trials[0].accuracyNumberTypeDictKeys;
-        }
-        return (
-            <div>
-                {hasBestCurve && (
-                    <Stack horizontal reversed tokens={gap15} className='default-metric'>
-                        <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
-                        <Dropdown
-                            selectedKey={userSelectOptimizeMode}
-                            onChange={this.updateUserOptimizeMode}
-                            options={[
-                                { key: 'maximize', text: 'Maximize' },
-                                { key: 'minimize', text: 'Minimize' }
-                            ]}
-                            styles={{ dropdown: { width: 100 } }}
-                            className='para-filter-percent'
-                        />
-                        {dictDropdown.length > 1 && (
-                            <Dropdown
-                                selectedKey={userSelectAccuracyNumberKey}
-                                onChange={this.updateTrialfinalResultKeys}
-                                options={dictDropdown.map(item => ({ key: item, text: item }))}
-                                styles={{ dropdown: { width: 100 } }}
-                                className='para-filter-percent'
-                            />
-                        )}
-                    </Stack>
-                )}
-                <div className='default-metric-graph graph'>
-                    <ReactEcharts
-                        option={graph}
-                        style={{
-                            width: '100%',
-                            height: chartHeight,
-                            margin: '0 auto'
-                        }}
-                        theme='nni_theme'
-                        notMerge={true} // update now
-                        onEvents={onEvents}
-                    />
-                    <div className='default-metric-noData fontColor333'>{accNodata}</div>
-                </div>
-            </div>
-        );
-    }
-
-    private generateGraph(): any {
-        const trials = TRIALS.getTrials(this.props.trialIds).filter(trial => trial.sortable);
+    const generateGraph = (): any => {
+        const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
         if (trials.length === 0) {
             return EmptyGraph;
         }
-        const graph = this.generateGraphConfig(trials[trials.length - 1].sequenceId);
-        if (this.state.bestCurveEnabled) {
-            (graph as any).series = [this.generateBestCurveSeries(trials), this.generateScatterSeries(trials)];
+        const graph = generateGraphConfig(trials[trials.length - 1].sequenceId);
+        if (bestCurveEnabled) {
+            (graph as any).series = [generateBestCurveSeries(trials), generateScatterSeries(trials)];
         } else {
-            (graph as any).series = [this.generateScatterSeries(trials)];
+            (graph as any).series = [generateScatterSeries(trials)];
         }
         return graph;
     }
-}
+
+    const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
+    const graph = generateGraph();
+    const accNodata = graph === EmptyGraph ? 'No data' : '';
+    const onEvents = { dataZoom: metricDataZoom, click: pointClick };
+    let dictDropdown: string[] = [];
+    if (trials.length > 0) {
+        dictDropdown = trials[0].accuracyNumberTypeDictKeys;
+    }
+    return (
+        <div>
+            {hasBestCurve && (
+                <Stack horizontal reversed tokens={gap15} className='default-metric'>
+                    <Toggle label='Optimization curve' inlineLabel onChange={loadDefault} />
+                    <Dropdown
+                        selectedKey={userSelectOptimizeMode}
+                        onChange={updateUserOptimizeMode}
+                        options={[
+                            { key: 'maximize', text: 'Maximize' },
+                            { key: 'minimize', text: 'Minimize' }
+                        ]}
+                        styles={{ dropdown: { width: 100 } }}
+                        className='para-filter-percent'
+                    />
+                    {dictDropdown.length > 1 && (
+                        <Dropdown
+                            selectedKey={userSelectAccuracyNumberKey}
+                            onChange={updateTrialfinalResultKeys}
+                            options={dictDropdown.map(item => ({ key: item, text: item }))}
+                            styles={{ dropdown: { width: 100 } }}
+                            className='para-filter-percent'
+                        />
+                    )}
+                </Stack>
+            )}
+            <div className='default-metric-graph graph'>
+                <ReactEcharts
+                    option={graph}
+                    style={{
+                        width: '100%',
+                        height: chartHeight,
+                        margin: '0 auto'
+                    }}
+                    theme='nni_theme'
+                    notMerge={true} // update now
+                    onEvents={onEvents}
+                />
+                <div className='default-metric-noData fontColor333'>{accNodata}</div>
+            </div>
+        </div>
+    );
+};
 
 export default DefaultPoint;
