@@ -751,7 +751,7 @@ class ActivationPruner(EvaluatorBasedPruner):
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(activation))
             if buffer[0] < self.training_steps:
-                buffer[1] += activation
+                buffer[1] += activation.to(buffer[1].device)
                 buffer[0] += 1
         return collect_activation
 
