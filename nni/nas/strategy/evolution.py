@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import collections
 import dataclasses
+import json
 import logging
 import random
 import time
@@ -74,7 +75,7 @@ class RegularizedEvolution(BaseStrategy):
         self._worst = float('-inf') if self.optimize_mode == 'maximize' else float('inf')
 
         self._success_count = 0
-        self._history_configs: set[dict] = set()  # for dedup
+        self._history_configs: set[str] = set()  # for dedup
         self._population: list[Individual] = collections.deque()
         self._running_models: list[tuple[dict, Model]] = []
         self._polling_interval = 2.
@@ -130,7 +131,7 @@ class RegularizedEvolution(BaseStrategy):
                     config = None
                     for _ in range(self.dedup_retries):
                         new_config = self.mutate(self.best_parent(), search_space)
-                        if new_config not in self._history_configs:
+                        if json.dumps(new_config, sort_keys=True) not in self._history_configs:
                             config = new_config
                             break
                     if config is None:
@@ -149,7 +150,7 @@ class RegularizedEvolution(BaseStrategy):
 
     def _submit_config(self, config, base_model, mutators):
         _logger.debug('Model submitted to running queue: %s', config)
-        self._history_configs.add(config)
+        self._history_configs.add(json.dumps(config, sort_keys=True))
         model = get_targeted_model(base_model, mutators, config)
         if not filter_model(self.filter, model):
             if self.on_failure == "worst":
