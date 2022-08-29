@@ -139,7 +139,7 @@ class M_2_stem(nn.Module):
 def _reset():
     # this is to not affect other tests in sdk
     nni.trial._intermediate_seq = 0
-    nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
+    nni.trial._params = {'foo': 'bar', 'parameter_id': 0, 'parameters': {}}
     nni.runtime.platform.test._last_metric = None
     nni.retiarii.integration_api._advisor = None
     nni.retiarii.execution.api._execution_engine = None

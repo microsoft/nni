@@ -27,8 +27,7 @@ from .tools import (
 )
 
 from ..utils import (
-    LightningEvaluator,
-    TorchEvaluator,
+    Evaluator,
     Scaling
 )
 
@@ -188,7 +187,7 @@ class MovementPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, warm_up_step: int,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator, warm_up_step: int,
                  cool_down_beginning_step: int, training_epochs: int | None = None, training_steps: int | None = None,
                  regular_scale: float | None = None, movement_mode: Literal['hard', 'soft'] = 'hard',
                  sparse_granularity: Literal['auto', 'finegrained'] = 'finegrained'):
