@@ -15,6 +15,8 @@ import torch.nn.functional as F
 from torch.nn import Module
 from torch.optim import Optimizer
 
+from nni.algorithms.compression.v2.pytorch.base.pruner import PrunerModuleWrapper
+
 from ..base import Pruner
 
 from .tools import (
@@ -748,7 +750,10 @@ class ActivationPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
-            batch_dims, batch_num = get_output_batch_dims(output, _module.module)  # type: ignore
+            # TODO: remove `if` after deprecate the old API
+            if isinstance(_module, PrunerModuleWrapper):
+                _module = _module.module
+            batch_dims, batch_num = get_output_batch_dims(output, _module)  # type: ignore
             activation = self._activation_trans(output, batch_dims)
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(activation))
