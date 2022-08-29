@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import functools
+import math
 import logging
 from typing import List, Dict, Tuple, Callable, Optional, overload
 
@@ -747,15 +748,29 @@ class ActivationPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
-            activation = self._activation_trans(output)
+            if isinstance(_module, (torch.nn.Linear, torch.nn.Bilinear)):
+                batch_nums = math.prod(output.shape[:-1])
+                batch_dims = [_ for _ in range(len(output.shape[:-1]))]
+            elif isinstance(_module, (torch.nn.Conv1d, torch.nn.ConvTranspose1d)):
+                batch_nums = math.prod(output.shape[:-2])
+                batch_dims = [_ for _ in range(len(output.shape[:-2]))]
+            elif isinstance(_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d)):
+                batch_nums = math.prod(output.shape[:-3])
+                batch_dims = [_ for _ in range(len(output.shape[:-3]))]
+            elif isinstance(_module, (torch.nn.Conv3d, torch.nn.ConvTranspose3d)):
+                batch_nums = math.prod(output.shape[:-4])
+                batch_dims = [_ for _ in range(len(output.shape[:-4]))]
+            else:
+                raise TypeError(f'Found unsupported module type in activation based pruner: {_module.__class__.__name__}')
+            activation = self._activation_trans(output, batch_dims)
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(activation))
             if buffer[0] < self.training_steps:
                 buffer[1] += activation.to(buffer[1].device)
-                buffer[0] += 1
+                buffer[0] += batch_nums
         return collect_activation
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
         raise NotImplementedError()
 
     def reset_tools(self):
@@ -846,9 +861,10 @@ class ActivationAPoZRankPruner(ActivationPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
+        dim = [dim] if not isinstance(dim, (list, tuple)) else dim
         # return a matrix that the position of zero in `output` is one, others is zero.
-        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).mean(0)
+        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).sum(dim=dim)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         return APoZRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
@@ -901,9 +917,10 @@ class ActivationMeanRankPruner(ActivationPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
+        dim = [dim] if not isinstance(dim, (list, tuple)) else dim
         # return the activation of `output` directly.
-        return self._activation(output.detach()).mean(0)
+        return self._activation(output.detach()).sum(dim)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
