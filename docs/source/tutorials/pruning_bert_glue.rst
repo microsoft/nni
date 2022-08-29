@@ -149,7 +149,7 @@ Create dataloaders.
         'wnli': ('sentence1', 'sentence2'),
     }
 
-    def prepare_dataloads(cache_dir=data_dir, train_batch_size=32, eval_batch_size=32):
+    def prepare_dataloaders(cache_dir=data_dir, train_batch_size=32, eval_batch_size=32):
         tokenizer = BertTokenizerFast.from_pretrained(pretrained_model_name_or_path)
         sentence1_key, sentence2_key = task_to_keys[task_name]
         data_collator = DataCollatorWithPadding(tokenizer)
@@ -195,7 +195,7 @@ Create dataloaders.
         return train_dataloader, validation_dataloaders
 
 
-    train_dataloader, validation_dataloaders = prepare_dataloads()
+    train_dataloader, validation_dataloaders = prepare_dataloaders()
 
 
 
@@ -551,7 +551,7 @@ Retrain the attention pruned model with distillation.
 .. GENERATED FROM PYTHON SOURCE LINES 452-456
 
 Iterative pruning FFN with TaylorFOWeightPruner in 12 iterations.
-Finetuning 2000 steps after each pruning iteration, then finetuning 2 epochs after pruning finished.
+Finetuning 3000 steps after each pruning iteration, then finetuning 2 epochs after pruning finished.
 
 NNI will support per-step-pruning-schedule in the future, then can use an pruner to replace the following code.
 
@@ -704,7 +704,7 @@ Setting 2: pytorch 1.10.0
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  28.205 seconds)
+   **Total running time of the script:** ( 0 minutes  41.637 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_bert_glue.py:
