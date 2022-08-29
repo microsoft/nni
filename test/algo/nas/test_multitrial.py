@@ -100,7 +100,7 @@ def test_multitrial_experiment_resume_view(pytestconfig):
     ensure_success(exp)
     # sleep here because there would be several seconds for the experiment status to change
     # to ERROR from INITIALIZED/RUNNING if the resume gets error.
-    time.sleep(5)
+    time.sleep(6)
     assert exp.get_status() == 'DONE', f'The experiment status should not be {exp.get_status()}'
     # TODO: currently `export_top_models` does not work as strategy's states are not resumed
     # assert isinstance(exp.export_top_models()[0], dict)
