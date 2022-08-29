@@ -101,7 +101,7 @@ task_to_keys = {
     'wnli': ('sentence1', 'sentence2'),
 }
 
-def prepare_dataloads(cache_dir=data_dir, train_batch_size=32, eval_batch_size=32):
+def prepare_dataloaders(cache_dir=data_dir, train_batch_size=32, eval_batch_size=32):
     tokenizer = BertTokenizerFast.from_pretrained(pretrained_model_name_or_path)
     sentence1_key, sentence2_key = task_to_keys[task_name]
     data_collator = DataCollatorWithPadding(tokenizer)
@@ -147,7 +147,7 @@ def prepare_dataloads(cache_dir=data_dir, train_batch_size=32, eval_batch_size=3
     return train_dataloader, validation_dataloaders
 
 
-train_dataloader, validation_dataloaders = prepare_dataloads()
+train_dataloader, validation_dataloaders = prepare_dataloaders()
 
 # %%
 # Training function & evaluation function.
@@ -450,7 +450,7 @@ if not dev_mode:
 
 # %%
 # Iterative pruning FFN with TaylorFOWeightPruner in 12 iterations.
-# Finetuning 2000 steps after each pruning iteration, then finetuning 2 epochs after pruning finished.
+# Finetuning 3000 steps after each pruning iteration, then finetuning 2 epochs after pruning finished.
 #
 # NNI will support per-step-pruning-schedule in the future, then can use an pruner to replace the following code.
 
