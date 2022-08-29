@@ -751,6 +751,8 @@ class Quantizer(Compressor):
             _setattr(self.bound_model, wrapper.module_name, wrapper.module)
         super()._unwrap_model()
 
+    # TODO: For most complex models, the information provided by input_shape is not enough to randomly initialize the complete input.
+    # And nni should not be responsible for exporting the onnx model, this feature should be deprecated in quantization refactor.
     def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None,
                           input_shape=None, device=None):
         """
