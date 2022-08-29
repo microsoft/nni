@@ -98,7 +98,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
 
         with Path(config_list_path).open('w') as f:
             json_tricks.dump(new_config_list, f, indent=4)
-        task = Task(task_id, model_path, masks_path, config_list_path)
+        task = Task(task_id, model_path, masks_path, config_list_path, speedup=True, finetune=True, evaluate=False)
 
         self._tasks[task_id] = task
 
