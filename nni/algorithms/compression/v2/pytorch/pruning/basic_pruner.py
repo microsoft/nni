@@ -748,16 +748,16 @@ class ActivationPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
-            if isinstance(_module, (torch.nn.Linear, torch.nn.Bilinear)):
+            if isinstance(_module.module, (torch.nn.Linear, torch.nn.Bilinear)):
                 batch_nums = math.prod(output.shape[:-1])
                 batch_dims = [_ for _ in range(len(output.shape[:-1]))]
-            elif isinstance(_module, (torch.nn.Conv1d, torch.nn.ConvTranspose1d)):
+            elif isinstance(_module.module, (torch.nn.Conv1d, torch.nn.ConvTranspose1d)):
                 batch_nums = math.prod(output.shape[:-2])
                 batch_dims = [_ for _ in range(len(output.shape[:-2]))]
-            elif isinstance(_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d)):
+            elif isinstance(_module.module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d)):
                 batch_nums = math.prod(output.shape[:-3])
                 batch_dims = [_ for _ in range(len(output.shape[:-3]))]
-            elif isinstance(_module, (torch.nn.Conv3d, torch.nn.ConvTranspose3d)):
+            elif isinstance(_module.module, (torch.nn.Conv3d, torch.nn.ConvTranspose3d)):
                 batch_nums = math.prod(output.shape[:-4])
                 batch_dims = [_ for _ in range(len(output.shape[:-4]))]
             else:
