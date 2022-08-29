@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 import functools
-import math
 import logging
 from typing import List, Dict, Tuple, Callable, Optional, overload
 
@@ -56,7 +55,8 @@ from ..utils import (
     Evaluator,
     ForwardHook,
     TensorHook,
-    config_list_canonical
+    config_list_canonical,
+    get_output_batch_dims
 )
 
 from ..utils.docstring import _EVALUATOR_DOCSTRING
@@ -748,26 +748,13 @@ class ActivationPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
-            if isinstance(_module.module, (torch.nn.Linear, torch.nn.Bilinear)):
-                batch_nums = math.prod(output.shape[:-1])
-                batch_dims = [_ for _ in range(len(output.shape[:-1]))]
-            elif isinstance(_module.module, (torch.nn.Conv1d, torch.nn.ConvTranspose1d)):
-                batch_nums = math.prod(output.shape[:-2])
-                batch_dims = [_ for _ in range(len(output.shape[:-2]))]
-            elif isinstance(_module.module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d)):
-                batch_nums = math.prod(output.shape[:-3])
-                batch_dims = [_ for _ in range(len(output.shape[:-3]))]
-            elif isinstance(_module.module, (torch.nn.Conv3d, torch.nn.ConvTranspose3d)):
-                batch_nums = math.prod(output.shape[:-4])
-                batch_dims = [_ for _ in range(len(output.shape[:-4]))]
-            else:
-                raise TypeError(f'Found unsupported module type in activation based pruner: {_module.__class__.__name__}')
+            batch_dims, batch_num = get_output_batch_dims(output, _module.module)  # type: ignore
             activation = self._activation_trans(output, batch_dims)
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(activation))
             if buffer[0] < self.training_steps:
-                buffer[1] += activation.to(buffer[1].device)
-                buffer[0] += batch_nums
+                buffer[1] += activation.to(buffer[1].device)  # type: ignore
+                buffer[0] += batch_num
         return collect_activation
 
     def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
