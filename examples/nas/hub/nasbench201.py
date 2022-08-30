@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -10,11 +12,12 @@ import numpy as np
 import torch
 
 from nni.retiarii import strategy, fixed_arch
-from nni.retiarii.evaluator.pytorch import Lightning, ClassificationModule, Trainer
+from nni.retiarii.fixed import no_fixed_arch
+from nni.retiarii.evaluator.pytorch import Lightning, ClassificationModule, Trainer, DataLoader
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.hub.pytorch import NasBench201
 from pytorch_lightning.loggers import TensorBoardLogger
-from torch.utils.data import DataLoader, SubsetRandomSampler
+from torch.utils.data import SubsetRandomSampler
 from typing_extensions import Literal
 
 from darts import get_cifar10_dataset
@@ -28,9 +31,26 @@ class NasBench201TrainingModule(ClassificationModule):
     def __init__(self,
                  learning_rate: float = 0.1,
                  weight_decay: float = 5e-4,
-                 max_epochs: int = 200):
+                 max_epochs: int = 200,
+                 supernet_state_dict_path: str | None = None):
         self.max_epochs = max_epochs
+        self.supernet_state_dict_path = supernet_state_dict_path
         super().__init__(learning_rate=learning_rate, weight_decay=weight_decay, export_onnx=False)
+
+    def on_validation_start(self) -> None:
+        if self.supernet_state_dict_path is not None:
+            strategy_ = strategy.RandomOneShot()
+            with no_fixed_arch():
+                model_space = NasBench201()
+            strategy_.attach_model(model_space)
+            supernet_state_dict = torch.load(self.supernet_state_dict_path)['state_dict']
+            strategy_.model.load_state_dict(supernet_state_dict)
+
+            print('Mutation summary:', nni.get_current_parameter()['mutation_summary'])
+            state_dict = strategy_.sub_state_dict(nni.get_current_parameter()['mutation_summary'])
+            self.model.load_state_dict(state_dict)
+
+        return super().on_validation_start()
 
     def configure_optimizers(self):
         """Customized optimizer with momentum, as well as a scheduler."""
@@ -57,22 +77,19 @@ def search(log_dir: str, batch_size: int = 256, algo: Literal['enas', 'darts', '
 
     train_loader = DataLoader(
         train_data, batch_size=batch_size,
-        sampler=SubsetRandomSampler(indices[:split]),
+        sampler=nni.trace(SubsetRandomSampler)(indices[:split]),
         pin_memory=True, num_workers=6
     )
 
     valid_loader = DataLoader(
         train_data, batch_size=batch_size,
-        sampler=SubsetRandomSampler(indices[split:]),
+        sampler=nni.trace(SubsetRandomSampler)(indices[split:]),
         pin_memory=True, num_workers=6
     )
 
-    evaluator = Lightning(
-        NasBench201TrainingModule(),
-        Trainer(gpus=1, max_epochs=200, logger=TensorBoardLogger(log_dir, name='search')),
-        train_dataloaders=train_loader,
-        val_dataloaders=valid_loader
-    )
+    training_module_kwargs = {}
+    trainer_kwargs = dict(gpus=1, max_epochs=200, logger=nni.trace(TensorBoardLogger)(log_dir, name='search'))
+    execution_engine = 'oneshot'
 
     if algo == 'enas':
         strategy_ = strategy.ENAS(reward_metric_name='val_acc')
@@ -83,8 +100,25 @@ def search(log_dir: str, batch_size: int = 256, algo: Literal['enas', 'darts', '
     elif algo == 'proxyless':
         # FIXME: Known issue with proxyless: No grad accumulator for a saved leaf!
         strategy_ = strategy.Proxyless(gradient_clip_val=5.)
+    elif algo == 'random':
+        strategy_ = strategy.RandomOneShot()
+        trainer_kwargs['gradient_clip_val'] = 5.
+    elif algo == 'evolution':
+        strategy_ = strategy.RegularizedEvolution()
+        trainer_kwargs['max_epochs'] = 0
+        training_module_kwargs['supernet_state_dict_path'] = 'lightning_logs/search/version_8/checkpoints/epoch=199-step=19600.ckpt'
+        execution_engine = 'py'
+        train_loader = None
 
-    config = RetiariiExeConfig(execution_engine='oneshot')
+    evaluator = Lightning(
+        NasBench201TrainingModule(**training_module_kwargs),
+        Trainer(**trainer_kwargs),
+        train_dataloaders=train_loader,
+        val_dataloaders=valid_loader
+    )
+
+    config = RetiariiExeConfig('local', execution_engine=execution_engine)
+    config.trial_concurrency = 1
     experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy_)
     experiment.run(config)
 
@@ -142,4 +176,16 @@ def main():
 
 
 if __name__ == '__main__':
+
+    # arch_dict = {"cell/0_1": "conv_1x1", "cell/0_2": "none", "cell/1_2": "none", "cell/0_3": "conv_3x3", "cell/1_3": "conv_3x3", "cell/2_3": "none"}
+
+    # strategy_ = strategy.RandomOneShot()
+    # model_space = NasBench201()
+    # strategy_.attach_model(model_space)
+    # supernet_state_dict = torch.load('lightning_logs/search/version_8/checkpoints/epoch=199-step=19600.ckpt')['state_dict']
+    # strategy_.model.load_state_dict(supernet_state_dict)
+
+    # state_dict = strategy_.sub_state_dict(arch_dict)
+    # import pdb; pdb.set_trace()
+    # self.model.load_state_dict(state_dict)
     main()
