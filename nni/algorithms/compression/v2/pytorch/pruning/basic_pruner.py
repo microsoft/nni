@@ -15,6 +15,8 @@ import torch.nn.functional as F
 from torch.nn import Module
 from torch.optim import Optimizer
 
+from nni.algorithms.compression.v2.pytorch.base.pruner import PrunerModuleWrapper
+
 from ..base import Pruner
 
 from .tools import (
@@ -55,7 +57,8 @@ from ..utils import (
     Evaluator,
     ForwardHook,
     TensorHook,
-    config_list_canonical
+    config_list_canonical,
+    get_output_batch_dims
 )
 
 from ..utils.docstring import _EVALUATOR_DOCSTRING
@@ -189,12 +192,12 @@ class EvaluatorBasedPruner(BasicPruner):
         for key, value in def_kwargs.items():
             if key not in merged_kwargs and key in arg_names:
                 merged_kwargs[key] = value
-        diff = set(arg_names).difference(merged_kwargs.keys())
-        if diff:
-            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
         diff = set(merged_kwargs.keys()).difference(arg_names)
         if diff:
             raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
+        diff = set(arg_names).difference(merged_kwargs.keys())
+        if diff:
+            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
         return merged_kwargs
 
     def compress(self) -> Tuple[Module, Dict]:
@@ -747,15 +750,19 @@ class ActivationPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
-            activation = self._activation_trans(output)
+            # TODO: remove `if` after deprecate the old API
+            if isinstance(_module, PrunerModuleWrapper):
+                _module = _module.module
+            batch_dims, batch_num = get_output_batch_dims(output, _module)  # type: ignore
+            activation = self._activation_trans(output, batch_dims)
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(activation))
             if buffer[0] < self.training_steps:
-                buffer[1] += activation
-                buffer[0] += 1
+                buffer[1] += activation.to(buffer[1].device)  # type: ignore
+                buffer[0] += batch_num
         return collect_activation
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
         raise NotImplementedError()
 
     def reset_tools(self):
@@ -846,9 +853,10 @@ class ActivationAPoZRankPruner(ActivationPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
+        dim = [dim] if not isinstance(dim, (list, tuple)) else dim
         # return a matrix that the position of zero in `output` is one, others is zero.
-        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).mean(0)
+        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).sum(dim=dim)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         return APoZRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
@@ -901,9 +909,10 @@ class ActivationMeanRankPruner(ActivationPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
+        dim = [dim] if not isinstance(dim, (list, tuple)) else dim
         # return the activation of `output` directly.
-        return self._activation(output.detach()).mean(0)
+        return self._activation(output.detach()).sum(dim)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
