@@ -154,6 +154,15 @@ class NasBench201(nn.Module):
     """The full search space proposed by `NAS-Bench-201 <https://arxiv.org/abs/2001.00326>`__.
 
     It's a stack of :class:`~nni.retiarii.nn.pytorch.NasBench201Cell`.
+
+    Parameters
+    ----------
+    stem_out_channels
+        The output channels of the stem.
+    num_modules_per_stack
+        The number of modules (cells) in each stack. Each cell is a :class:`~nni.retiarii.nn.pytorch.NasBench201Cell`.
+    num_labels
+        Number of categories for classification.
     """
     def __init__(self,
                  stem_out_channels: int = 16,

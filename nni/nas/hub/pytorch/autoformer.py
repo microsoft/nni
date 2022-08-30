@@ -5,7 +5,6 @@ from typing import Optional, Tuple, cast, Any, Dict, Union
 
 import torch
 import torch.nn.functional as F
-from timm.models.layers import trunc_normal_, DropPath
 
 import nni.nas.nn.pytorch as nn
 from nni.nas import model_wrapper, basic_unit
@@ -16,6 +15,12 @@ from nni.nas.oneshot.pytorch.supermodule._operation_utils import Slicable as _S,
 
 from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
+
+try:
+    TIMM_INSTALLED = True
+    from timm.models.layers import trunc_normal_, DropPath
+except ImportError:
+    TIMM_INSTALLED = False
 
 
 class RelativePosition2D(nn.Module):
@@ -355,6 +360,10 @@ class AutoformerSpace(nn.Module):
         rpe: bool = True,
     ):
         super().__init__()
+
+        if not TIMM_INSTALLED:
+            raise ImportError('timm must be installed to use AutoFormer.')
+
         # define search space parameters
         embed_dim = nn.ValueChoice(list(search_embed_dim), label="embed_dim")
         depth = nn.ValueChoice(list(search_depth), label="depth")

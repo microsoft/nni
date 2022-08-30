@@ -298,6 +298,13 @@ class Classification(Lightning):
     """
     Evaluator that is used for classification.
 
+    Available callback metrics in :class:`Classification` are:
+
+    - train_loss
+    - train_acc
+    - val_loss
+    - val_acc
+
     Parameters
     ----------
     criterion : nn.Module
@@ -366,6 +373,13 @@ class RegressionModule(SupervisedLearningModule):
 class Regression(Lightning):
     """
     Evaluator that is used for regression.
+
+    Available callback metrics in :class:`Regression` are:
+
+    - train_loss
+    - train_mse
+    - val_loss
+    - val_mse
 
     Parameters
     ----------

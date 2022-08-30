@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 import warnings
+import logging
 from typing import Any, cast, Dict
 
 import pytorch_lightning as pl
@@ -13,13 +14,17 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .base_lightning import MANUAL_OPTIMIZATION_NOTE, BaseOneShotLightningModule, MutationHook, no_default_hook
+from .supermodule.base import sub_state_dict
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
 from .supermodule.sampling import (
     PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy,
     PathSamplingCell, PathSamplingRepeat
 )
 from .enas import ReinforceController, ReinforceField
-from .supermodule.base import sub_state_dict
+
+
+_logger = logging.getLogger(__name__)
+
 
 class RandomSamplingLightningModule(BaseOneShotLightningModule):
     _random_note = """
@@ -141,7 +146,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
     - Firstly, training model parameters.
     - Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
 
-    .. note::
+    .. attention::
 
        ENAS requires the evaluator to report metrics via ``self.log`` in its ``validation_step``.
        See explanation of ``reward_metric_name`` for details.
@@ -213,6 +218,13 @@ class EnasLightningModule(RandomSamplingLightningModule):
                  reward_metric_name: str | None = None,
                  mutation_hooks: list[MutationHook] | None = None):
         super().__init__(inner_module, mutation_hooks)
+
+        if reward_metric_name is None:
+            _logger.warning(
+                'It is strongly recommended to have `reward_metric_name` specified. '
+                'It should be one of the metrics logged in `self.log` in evaluator. '
+                'Otherwise it will infer the reward based on certain rules.'
+            )
 
         # convert parameter spec to legacy ReinforceField
         # this part will be refactored

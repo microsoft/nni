@@ -58,7 +58,11 @@ One way to use the model space is to directly leverage the searched results. Not
 
 .. code-block:: python
 
+   import torch
    from nni.retiarii.hub.pytorch import MobileNetV3Space
+   from torch.utils.data import DataLoader
+   from torchvision import transforms
+   from torchvision.datasets import ImageNet
 
    # Load one of the searched results from MobileNetV3 search space.
    mobilenetv3 = MobileNetV3Space.load_searched_model(
@@ -67,11 +71,18 @@ One way to use the model space is to directly leverage the searched results. Not
    )
 
    # MobileNetV3 model can be directly evaluated on ImageNet
-   dataset = ImageNet(directory, 'val', transform=test_transform)
+   transform = transforms.Compose([
+       transforms.Resize(256, interpolation=transforms.InterpolationMode.BICUBIC),
+       transforms.CenterCrop(224),
+       transforms.ToTensor(),
+       transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+   ])
+   dataset = ImageNet('/path/to/your/imagenet', 'val', transform=transform)
+   dataloader = DataLoader(dataset, batch_size=64)
    mobilenetv3.eval()
    with torch.no_grad():
        correct = total = 0
-       for inputs, targets in pbar:
+       for inputs, targets in dataloader:
            logits = mobilenetv3(inputs)
            _, predict = torch.max(logits, 1)
            correct += (predict == targets).sum().item()

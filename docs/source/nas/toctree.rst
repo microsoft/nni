@@ -7,6 +7,7 @@ Neural Architecture Search
    overview
    Tutorials <tutorials>
    construct_space
+   space_hub
    exploration_strategy
    evaluator
    advanced_usage
