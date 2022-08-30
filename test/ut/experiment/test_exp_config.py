@@ -28,6 +28,7 @@ minimal_class.trial_concurrency = 2
 minimal_class.tuner.name = 'random'
 
 minimal_canon = {
+    'experimentType': 'hpo',
     'searchSpace': {'a': 1},
     'trialCommand': 'python main.py',
     'trialCodeDirectory': os.path.realpath('.'),
@@ -54,6 +55,7 @@ minimal_canon_2['tuner']['classArgs'] = {}
 
 detailed_canon = {
     'experimentName': 'test case',
+    'experimentType': 'hpo',
     'searchSpaceFile': expand_path('assets/search_space.json'),
     'searchSpace': {'a': 1},
     'trialCommand': 'python main.py',

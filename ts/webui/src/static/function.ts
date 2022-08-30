@@ -3,7 +3,7 @@ import axios from 'axios';
 import { IContextualMenuProps } from '@fluentui/react';
 import { RETIARIIPARAMETERS } from './const';
 import { EXPERIMENT } from './datamodel';
-import { MetricDataRecord, FinalType, Tensorboard } from './interface';
+import { MetricDataRecord, FinalType, TensorboardTaskInfo } from './interface';
 
 function getPrefix(): string | undefined {
     const pathName = window.location.pathname;
@@ -286,7 +286,7 @@ function copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: bool
     });
 }
 
-function disableTensorboard(selectedRowIds: string[], queryTensorboardList: Tensorboard[]): boolean {
+function disableTensorboard(selectedRowIds: string[], queryTensorboardList: TensorboardTaskInfo[]): boolean {
     let flag = true;
 
     if (selectedRowIds.length !== 0) {
@@ -300,7 +300,11 @@ function disableTensorboard(selectedRowIds: string[], queryTensorboardList: Tens
     return flag;
 }
 
-function getTensorboardMenu(queryTensorboardList: Tensorboard[], stopFunc, seeDetailFunc): IContextualMenuProps {
+function getTensorboardMenu(
+    queryTensorboardList: TensorboardTaskInfo[],
+    stopFunc,
+    seeDetailFunc
+): IContextualMenuProps {
     const result: Array<object> = [];
     if (queryTensorboardList.length !== 0) {
         result.push({

@@ -5,8 +5,9 @@ Neural Architecture Search
    :hidden:
 
    overview
-   Quickstart </tutorials/hello_nas>
+   Tutorials <tutorials>
    construct_space
+   space_hub
    exploration_strategy
    evaluator
    advanced_usage

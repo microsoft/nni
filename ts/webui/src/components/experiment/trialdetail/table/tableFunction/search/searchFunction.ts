@@ -159,7 +159,7 @@ function searchChoiceFilter(arr: TableRecord[], element: SearchItems, field: str
 }
 
 // click Apply btn: set searchBox value now
-function getSearchInputValueBySearchList(searchFilter): string {
+function getSearchInputValueBySearchList(searchFilter: SearchItems[]): string {
     let str = ''; // store search input value
 
     searchFilter.forEach(item => {

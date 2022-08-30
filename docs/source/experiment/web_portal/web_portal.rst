@@ -31,7 +31,7 @@ What should you do when your experiment has error
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Click the icon in the right of ``experiment status`` and screenshot the error message. 
-* And then click the ``learn about`` to download ``nni-manager`` and ``dispatcher`` logfile.
+* And then click the ``learn more`` to download ``nni-manager`` and ``dispatcher`` logfile.
 * Please file an issue from the `Feedback` in the `About` and upload above message.
 
 

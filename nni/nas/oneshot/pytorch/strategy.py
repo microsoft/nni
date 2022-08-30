@@ -13,7 +13,7 @@ When adding/modifying a new strategy in this file, don't forget to link it in st
 from __future__ import annotations
 
 import warnings
-from typing import Any, Type
+from typing import Any, Type, Union
 
 import torch.nn as nn
 
@@ -48,15 +48,30 @@ class OneShotStrategy(BaseStrategy):
         """
         return train_dataloaders, val_dataloaders
 
+    def attach_model(self, base_model: Union[Model, nn.Module]):
+        _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
+
+        if isinstance(base_model, Model):
+            if not isinstance(base_model.python_object, nn.Module):
+                raise TypeError('Model is not a nn.Module. ' + _reason)
+            py_model: nn.Module = base_model.python_object
+            if not isinstance(base_model.evaluator, Lightning):
+                raise TypeError('Evaluator needs to be a lightning evaluator to make one-shot strategy work.')
+            evaluator_module: LightningModule = base_model.evaluator.module
+            evaluator_module.running_mode = 'oneshot'
+            evaluator_module.set_model(py_model)
+        else:
+            from nni.retiarii.evaluator.pytorch.lightning import ClassificationModule
+            evaluator_module = ClassificationModule()
+            evaluator_module.running_mode = 'oneshot'
+            evaluator_module.set_model(base_model)
+        self.model = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
+
     def run(self, base_model: Model, applied_mutators):
         # one-shot strategy doesn't use ``applied_mutators``
         # but get the "mutators" on their own
 
         _reason = 'The reason might be that you have used the wrong execution engine. Try to set engine to `oneshot` and try again.'
-
-        if not isinstance(base_model.python_object, nn.Module):
-            raise TypeError('Model is not a nn.Module. ' + _reason)
-        py_model: nn.Module = base_model.python_object
 
         if applied_mutators:
             raise ValueError('Mutator is not empty. ' + _reason)
@@ -64,15 +79,12 @@ class OneShotStrategy(BaseStrategy):
         if not isinstance(base_model.evaluator, Lightning):
             raise TypeError('Evaluator needs to be a lightning evaluator to make one-shot strategy work.')
 
-        evaluator_module: LightningModule = base_model.evaluator.module
-        evaluator_module.running_mode = 'oneshot'
-        evaluator_module.set_model(py_model)
-
-        self.model = self.oneshot_module(evaluator_module, **self.oneshot_kwargs)
+        self.attach_model(base_model)
         evaluator: Lightning = base_model.evaluator
         if evaluator.train_dataloaders is None or evaluator.val_dataloaders is None:
             raise TypeError('Training and validation dataloader are both required to set in evaluator for one-shot strategy.')
         train_loader, val_loader = self.preprocess_dataloader(evaluator.train_dataloaders, evaluator.val_dataloaders)
+        assert isinstance(self.model, BaseOneShotLightningModule)
         evaluator.trainer.fit(self.model, train_loader, val_loader)
 
     def export_top_models(self, top_k: int = 1) -> list[Any]:
@@ -144,3 +156,7 @@ class RandomOneShot(OneShotStrategy):
 
     def __init__(self, **kwargs):
         super().__init__(RandomSamplingLightningModule, **kwargs)
+
+    def sub_state_dict(self, arch: dict[str, Any]):
+        assert isinstance(self.model, RandomSamplingLightningModule)
+        return self.model.sub_state_dict(arch)

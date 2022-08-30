@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Stack, PrimaryButton, Toggle, IStackTokens } from '@fluentui/react';
-import { TooltipForIntermediate, EventMap, allTrialsIntermediateChart } from '@static/interface';
+import { TooltipForIntermediate, EventMap, AllTrialsIntermediateChart } from '@static/interface';
 import { reformatRetiariiParameter } from '@static/function';
 import ReactEcharts from 'echarts-for-react';
 import 'echarts/lib/component/tooltip';
@@ -11,9 +11,9 @@ const stackTokens: IStackTokens = {
 };
 
 interface IntermediateState {
-    detailSource: allTrialsIntermediateChart[];
+    detailSource: AllTrialsIntermediateChart[];
     interSource: object;
-    filterSource: allTrialsIntermediateChart[];
+    filterSource: AllTrialsIntermediateChart[];
     eachIntermediateNum: number; // trial's intermediate number count
     isLoadconfirmBtn: boolean;
     isFilter?: boolean | undefined;
@@ -23,7 +23,7 @@ interface IntermediateState {
 }
 
 interface IntermediateProps {
-    source: allTrialsIntermediateChart[];
+    source: AllTrialsIntermediateChart[];
 }
 
 class Intermediate extends React.Component<IntermediateProps, IntermediateState> {
@@ -47,7 +47,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         };
     }
 
-    drawIntermediate = (source: allTrialsIntermediateChart[]): void => {
+    drawIntermediate = (source: AllTrialsIntermediateChart[]): void => {
         if (source.length > 0) {
             this.setState({
                 length: source.length,
@@ -145,7 +145,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
 
     // confirm btn function [filter data]
     filterLines = (): void => {
-        const filterSource: allTrialsIntermediateChart[] = [];
+        const filterSource: AllTrialsIntermediateChart[] = [];
         this.setState({ isLoadconfirmBtn: true }, () => {
             const { source } = this.props;
             // get input value

@@ -1,5 +1,4 @@
 import React, { useState, useContext } from 'react';
-import PropTypes from 'prop-types';
 import {
     Stack,
     DefaultButton,
@@ -18,11 +17,15 @@ import { classNames, isChoiceType } from './searchFunction';
 import { AppContext } from '@/App';
 
 // TableList search layout
+interface SearchProps {
+    searchFilter: SearchItems[];
+    changeSearchFilterList: (a: SearchItems[]) => void;
+}
 
-function Search(props): any {
+function Search(props: SearchProps): any {
     const { searchFilter, changeSearchFilterList } = props;
     const { updateDetailPage } = useContext(AppContext);
-    const [searchInputVal, setSearchInputVal] = useState('');
+    const [searchInputVal, setSearchInputVal] = useState('' as string);
 
     function getSearchMenu(parameterList): IContextualMenuProps {
         const menu: Array<object> = [];
@@ -96,7 +99,7 @@ function Search(props): any {
     function renderParametersSearchComponent(item: IContextualMenuItem, dismissMenu: () => void): JSX.Element {
         return (
             <SearchParameterConditions
-                parameter={item.text}
+                parameter={item.text ?? ''}
                 searchFilter={searchFilter} // search filter list
                 changeSearchFilterList={changeSearchFilterList}
                 updatePage={updateDetailPage}
@@ -109,7 +112,7 @@ function Search(props): any {
     function renderDefaultMetricSearchComponent(item: IContextualMenuItem, dismissMenu: () => void): JSX.Element {
         return (
             <SearchDefaultMetric
-                parameter={item.text}
+                parameter={item.text ?? ''}
                 searchFilter={searchFilter} // search filter list
                 changeSearchFilterList={changeSearchFilterList}
                 updatePage={updateDetailPage}
@@ -122,7 +125,7 @@ function Search(props): any {
     function renderIdAndNoComponent(item: IContextualMenuItem, dismissMenu: () => void): JSX.Element {
         return (
             <GeneralSearch
-                searchName={item.text}
+                searchName={item.text ?? ''}
                 searchFilter={searchFilter} // search fliter list
                 changeSearchFilterList={changeSearchFilterList}
                 setSearchInputVal={setSearchInputVal}
@@ -136,7 +139,7 @@ function Search(props): any {
     }
 
     // update TableList page
-    function changeTableListPage(searchFilterList: Array<SearchItems>): void {
+    function changeTableListPage(searchFilterList: SearchItems[]): void {
         changeSearchFilterList(searchFilterList);
         updateDetailPage();
     }
@@ -309,10 +312,5 @@ function Search(props): any {
         </div>
     );
 }
-
-Search.propTypes = {
-    searchFilter: PropTypes.array,
-    changeSearchFilterList: PropTypes.func
-};
 
 export default Search;

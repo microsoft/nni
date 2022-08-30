@@ -30,8 +30,7 @@ from .tools import (
 )
 from ..utils import (
     OptimizerConstructHelper,
-    LightningEvaluator,
-    TorchEvaluator
+    Evaluator
 )
 from ..utils.docstring import _EVALUATOR_DOCSTRING
 
@@ -115,7 +114,7 @@ class LinearPruner(IterativePruner):
     @overload
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False,
+                 evaluator: Evaluator | None = None, speedup: bool = False,
                  pruning_params: Dict = {}):
         ...
 
@@ -197,7 +196,7 @@ class AGPPruner(IterativePruner):
     @overload
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False,
+                 evaluator: Evaluator | None = None, speedup: bool = False,
                  pruning_params: Dict = {}):
         ...
 
@@ -292,7 +291,7 @@ class LotteryTicketPruner(IterativePruner):
     @overload
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 evaluator: LightningEvaluator | TorchEvaluator | None = None, speedup: bool = False,
+                 evaluator: Evaluator | None = None, speedup: bool = False,
                  reset_weight: bool = True, pruning_params: Dict = {}):
         ...
 
@@ -386,7 +385,7 @@ class SimulatedAnnealingPruner(IterativePruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator,
                  start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
                  perturbation_magnitude: float = 0.35, pruning_algorithm: str = 'level', pruning_params: Dict = {},
                  log_dir: Union[str, Path] = '.', keep_intermediate_result: bool = False, speedup: bool = False):

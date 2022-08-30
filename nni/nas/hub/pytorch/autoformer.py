@@ -1,11 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Optional, Tuple, cast, Any, Dict
+from typing import Optional, Tuple, cast, Any, Dict, Union
 
 import torch
 import torch.nn.functional as F
-from timm.models.layers import trunc_normal_, DropPath
 
 import nni.nas.nn.pytorch as nn
 from nni.nas import model_wrapper, basic_unit
@@ -16,6 +15,12 @@ from nni.nas.oneshot.pytorch.supermodule._operation_utils import Slicable as _S,
 
 from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
+
+try:
+    TIMM_INSTALLED = True
+    from timm.models.layers import trunc_normal_, DropPath
+except ImportError:
+    TIMM_INSTALLED = False
 
 
 class RelativePosition2D(nn.Module):
@@ -135,7 +140,7 @@ class TransformerEncoderLayer(nn.Module):
     The pytorch build-in nn.TransformerEncoderLayer() does not support customed attention.
     """
     def __init__(
-        self, embed_dim, num_heads, mlp_ratio=4.,
+        self, embed_dim, num_heads, mlp_ratio: Union[int, float, nn.ValueChoice]=4.,
         qkv_bias=False, qk_scale=None, rpe=False,
         drop_rate=0., attn_drop=0., proj_drop=0., drop_path=0.,
         pre_norm=True, rpe_length=14, head_dim=64
@@ -235,13 +240,18 @@ class MixedClsToken(MixedOperation, ClsToken):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def forward_with_args(self, embed_dim,
-                        inputs: torch.Tensor) -> torch.Tensor:
+    def slice_param(self, embed_dim, **kwargs) -> Any:
         embed_dim_ = _W(embed_dim)
         cls_token = _S(self.cls_token)[..., :embed_dim_]
 
-        return torch.cat((cls_token.expand(inputs.shape[0], -1, -1), inputs), dim=1)
+        return {'cls_token': cls_token}
 
+    def forward_with_args(self, embed_dim,
+                        inputs: torch.Tensor) -> torch.Tensor:
+        cls_token = self.slice_param(embed_dim)['cls_token']
+        assert isinstance(cls_token, torch.Tensor)
+
+        return torch.cat((cls_token.expand(inputs.shape[0], -1, -1), inputs), dim=1)
 
 @basic_unit
 class AbsPosEmbed(nn.Module):
@@ -271,10 +281,16 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
     def super_init_argument(self, name: str, value_choice: ValueChoiceX):
         return max(traverse_all_options(value_choice))
 
-    def forward_with_args(self,  embed_dim,
-                        inputs: torch.Tensor) -> torch.Tensor:
+    def slice_param(self, embed_dim, **kwargs) -> Any:
         embed_dim_ = _W(embed_dim)
         pos_embed = _S(self.pos_embed)[..., :embed_dim_]
+
+        return {'pos_embed': pos_embed}
+
+    def forward_with_args(self,  embed_dim,
+                        inputs: torch.Tensor) -> torch.Tensor:
+        pos_embed = self.slice_param(embed_dim)['pos_embed']
+        assert isinstance(pos_embed, torch.Tensor)
 
         return inputs + pos_embed
 
@@ -344,6 +360,10 @@ class AutoformerSpace(nn.Module):
         rpe: bool = True,
     ):
         super().__init__()
+
+        if not TIMM_INSTALLED:
+            raise ImportError('timm must be installed to use AutoFormer.')
+
         # define search space parameters
         embed_dim = nn.ValueChoice(list(search_embed_dim), label="embed_dim")
         depth = nn.ValueChoice(list(search_depth), label="depth")

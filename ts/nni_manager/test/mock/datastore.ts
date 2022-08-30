@@ -229,6 +229,8 @@ class MockedDataStore implements DataStore {
                 return 'USER_CANCELED';
             case 'ADD_CUSTOMIZED':
                 return 'WAITING';
+            case 'ADD_RESUMED':
+                return 'WAITING';
         }
         return <TrialJobStatus>event;
     }

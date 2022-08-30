@@ -64,7 +64,7 @@ export const BasicInfo = (): any => {
                                             </p>
                                             <div className={styles.actions}>
                                                 <Link className={styles.link} onClick={ShowLogPanel}>
-                                                    Learn about
+                                                    Learn more
                                                 </Link>
                                             </div>
                                         </div>

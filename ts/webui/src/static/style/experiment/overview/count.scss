@@ -5,14 +5,6 @@ $margin: 24px;
     margin-top: $margin;
 }
 
-.ExpDuration {
-    margin-top: $margin;
-
-    .maxTrialNum {
-        margin-bottom: 10px;
-    }
-}
-
 .exp-progress {
     margin-top: 9px;
 
@@ -39,6 +31,7 @@ $margin: 24px;
 }
 
 .maxTrialNum {
+    margin-bottom: 10px;
     .editparam {
         position: relative;
         top: -7px;
@@ -53,6 +46,14 @@ $margin: 24px;
 .editDuration {
     position: relative;
     top: -4px;
+}
+
+.editExpDuration{
+    box-sizing: border-box;
+    width: 31%;
+    position: relative;
+    left: 69%;
+    bottom: 33%;
 }
 
 .concurrency {

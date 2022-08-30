@@ -27,7 +27,7 @@ interface MultipleAxes {
 }
 
 interface TableRecord {
-    key: string;
+    _key: string;
     sequenceId: number;
     startTime: number;
     endTime?: number;
@@ -37,7 +37,7 @@ interface TableRecord {
     message: string;
     intermediateCount: number;
     latestAccuracy: number | undefined;
-    formattedLatestAccuracy: string; // format (LATEST/FINAL),
+    _formattedLatestAccuracy: string; // format (LATEST/FINAL),
 }
 
 interface SearchSpace {
@@ -167,13 +167,20 @@ interface AllExperimentList {
     prefixUrl: string;
 }
 
-interface Tensorboard {
+interface KillJobIsError {
+    isError: boolean;
+    message: string;
+}
+
+type TensorboardTaskStatus = 'RUNNING' | 'DOWNLOADING_DATA' | 'STOPPING' | 'STOPPED' | 'ERROR' | 'FAIL_DOWNLOAD_DATA';
+
+interface TensorboardTaskInfo {
     id: string;
-    status: string;
+    status: TensorboardTaskStatus;
     trialJobIdList: string[];
     trialLogDirectoryList: string[];
-    pid: number;
-    port: string;
+    pid?: number;
+    port?: string;
 }
 
 // for TableList search
@@ -186,7 +193,7 @@ interface SearchItems {
     isChoice: boolean; // for parameters: type = choice and status also as choice type
 }
 
-interface allTrialsIntermediateChart {
+interface AllTrialsIntermediateChart {
     name: string;
     // id: string;
     sequenceId: number;
@@ -215,7 +222,8 @@ export {
     MultipleAxes,
     SortInfo,
     AllExperimentList,
-    Tensorboard,
+    TensorboardTaskInfo,
     SearchItems,
-    allTrialsIntermediateChart
+    KillJobIsError,
+    AllTrialsIntermediateChart
 };
