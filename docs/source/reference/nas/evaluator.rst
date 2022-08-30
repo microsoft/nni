@@ -13,10 +13,16 @@ Classification
 ..  autoclass:: nni.retiarii.evaluator.pytorch.Classification
     :members:
 
+..  autoclass:: nni.retiarii.evaluator.pytorch.ClassificationModule
+    :members:
+
 Regression
 ----------
 
 ..  autoclass:: nni.retiarii.evaluator.pytorch.Regression
+    :members:
+
+..  autoclass:: nni.retiarii.evaluator.pytorch.RegressionModule
     :members:
 
 Utilities

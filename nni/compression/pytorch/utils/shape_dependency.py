@@ -49,7 +49,7 @@ class Dependency:
             # user should provide model & dummy_input to trace
             # the model or a already traced model
             assert model is not None and dummy_input is not None
-        self.graph = TorchModuleGraph(model, dummy_input, traced_model)
+        self.graph: TorchModuleGraph = TorchModuleGraph(model, dummy_input, traced_model)
         self.model = model
         self.dependency = dict()
         self.build_dependency()
@@ -122,6 +122,9 @@ class ChannelDependency(Dependency):
             self.target_types.extend(['Conv2d', 'Linear', 'ConvTranspose2d'])
         elif self.prune_type == 'Batchnorm':
             self.target_types.append('BatchNorm2d')
+
+        from typing import Dict, Set
+        self.dependency: Dict[str, Set[str]]
 
         super(ChannelDependency, self).__init__(
             model, dummy_input, traced_model)
@@ -351,7 +354,7 @@ class GroupDependency(Dependency):
     ----------
     model : torch.nn.Module
         The model to be analyzed.
-    data : torch.Tensor
+    dummy_input : torch.Tensor
         The example input data to trace the network architecture.
     traced_model : torch._C.Graph
         if we alreay has the traced graph of the target model, we donnot
@@ -418,6 +421,29 @@ class GroupDependency(Dependency):
             return 1
         return group
 
+    def _get_group_norm_condition(self, node_group) -> int:
+        """
+        Get the number of groups for a group norm layer.
+
+        Parameters
+        ----------
+        node_group : NodePyGroup
+            target node.
+        Returns
+        -------
+        condition: int
+            the number that layer's num channel
+            require to be divisible to
+        """
+        node_name = node_group.name
+        _, leaf_module = get_module_by_name(self.model, node_name)
+        if isinstance(leaf_module, (PrunerModuleWrapper, PrunerModuleWrapper_v2)):
+            leaf_module = leaf_module.module
+        assert isinstance(leaf_module, (torch.nn.GroupNorm))
+
+        return leaf_module.num_groups
+
+
     def build_dependency(self):
         """
         Build the channel dependency for the conv layers
@@ -441,8 +467,11 @@ class GroupDependency(Dependency):
         """
         self.groups = {}
         for node in self.graph.nodes_py.nodes_op:
-            if node.op_type == 'Conv2d' or node.op_type == 'ConvTranspose2d':
-                group = self._get_conv_groups(node)
+            if node.op_type in ['Conv2d', 'ConvTranspose2d', "GroupNorm"]:
+                if node.op_type in ['Conv2d', 'ConvTranspose2d']:
+                    group = self._get_conv_groups(node)
+                elif node.op_type == "GroupNorm":
+                    group = self._get_group_norm_condition(node)
                 if node.name in self.groups:
                     # the conv layer whose group is larger than 1 will require that
                     # it's number of output channel to be divisible by the number of group.

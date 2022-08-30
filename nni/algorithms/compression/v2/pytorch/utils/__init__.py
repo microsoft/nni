@@ -14,6 +14,7 @@ from .evaluator import (
     Evaluator,
     LightningEvaluator,
     TorchEvaluator,
+    TransformersEvaluator,
     Hook,
     BackwardHook,
     ForwardHook,
@@ -27,6 +28,7 @@ from .pruning import (
     compute_sparsity_mask2compact,
     compute_sparsity,
     get_model_weights_numel,
-    get_module_by_name
+    get_module_by_name,
+    get_output_batch_dims
 )
 from .scaling import Scaling

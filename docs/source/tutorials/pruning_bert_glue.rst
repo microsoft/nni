@@ -18,8 +18,8 @@
 .. _sphx_glr_tutorials_pruning_bert_glue.py:
 
 
-Pruning Transformer with NNI
-============================
+Pruning Bert on Task MNLI
+=========================
 
 Workable Pruning Process
 ------------------------
@@ -51,13 +51,19 @@ During the process of pruning transformer, we gained some of the following exper
 Experiment
 ----------
 
+The complete pruning process will take about 8 hours on one A100.
+
 Preparation
 ^^^^^^^^^^^
-Please set ``dev_mode`` to ``False`` to run this tutorial. Here ``dev_mode`` is ``True`` by default is for generating documents.
 
-The complete pruning process takes about 8 hours on one A100.
+This section is mainly to get a finetuned model on the downstream task.
+If you are familiar with how to finetune Bert on GLUE dataset, you can skip this section.
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-44
+.. note::
+
+    Please set ``dev_mode`` to ``False`` to run this tutorial. Here ``dev_mode`` is ``True`` by default is for generating documents.
+
+.. GENERATED FROM PYTHON SOURCE LINES 48-51
 
 .. code-block:: default
 
@@ -71,21 +77,21 @@ The complete pruning process takes about 8 hours on one A100.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 45-46
+.. GENERATED FROM PYTHON SOURCE LINES 52-53
 
 Some basic setting.
 
-.. GENERATED FROM PYTHON SOURCE LINES 46-72
+.. GENERATED FROM PYTHON SOURCE LINES 53-84
 
 .. code-block:: default
 
 
     from pathlib import Path
-    from typing import Callable
+    from typing import Callable, Dict
 
     pretrained_model_name_or_path = 'bert-base-uncased'
     task_name = 'mnli'
-    experiment_id = 'pruning_bert'
+    experiment_id = 'pruning_bert_mnli'
 
     # heads_num and layers_num should align with pretrained_model_name_or_path
     heads_num = 12
@@ -99,6 +105,11 @@ Some basic setting.
     model_dir = Path(f'./models/{pretrained_model_name_or_path}/{task_name}')
     model_dir.mkdir(parents=True, exist_ok=True)
 
+    # used to save GLUE data
+    data_dir = Path(f'./data')
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    # set seed
     from transformers import set_seed
     set_seed(1024)
 
@@ -112,12 +123,11 @@ Some basic setting.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 73-75
+.. GENERATED FROM PYTHON SOURCE LINES 85-86
 
-The function used to create dataloaders, note that 'mnli' has two evaluation dataset.
-If teacher_model is set, will run all dataset on teacher model to get the 'teacher_logits' for distillation.
+Create dataloaders.
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-157
+.. GENERATED FROM PYTHON SOURCE LINES 86-152
 
 .. code-block:: default
 
@@ -139,8 +149,7 @@ If teacher_model is set, will run all dataset on teacher model to get the 'teach
         'wnli': ('sentence1', 'sentence2'),
     }
 
-    def prepare_data(cache_dir='./data', train_batch_size=32, eval_batch_size=32,
-                        teacher_model: torch.nn.Module = None):
+    def prepare_dataloaders(cache_dir=data_dir, train_batch_size=32, eval_batch_size=32):
         tokenizer = BertTokenizerFast.from_pretrained(pretrained_model_name_or_path)
         sentence1_key, sentence2_key = task_to_keys[task_name]
         data_collator = DataCollatorWithPadding(tokenizer)
@@ -164,139 +173,143 @@ If teacher_model is set, will run all dataset on teacher model to get the 'teach
                 raw_datasets.pop(key)
 
         processed_datasets = raw_datasets.map(preprocess_function, batched=True,
-                                                remove_columns=raw_datasets['train'].column_names)
-
-        # if has teacher model, add 'teacher_logits' to datasets who has 'labels'.
-        # 'teacher_logits' is used for distillation and avoid the double counting.
-        if teacher_model:
-            teacher_model_training = teacher_model.training
-            teacher_model.eval()
-            model_device = next(teacher_model.parameters()).device
-
-            def add_teacher_logits(examples):
-                result = {k: v for k, v in examples.items()}
-                samples = data_collator(result).to(model_device)
-                if 'labels' in samples:
-                    with torch.no_grad():
-                        logits = teacher_model(**samples).logits.tolist()
-                    result['teacher_logits'] = logits
-                return result
-
-            processed_datasets = processed_datasets.map(add_teacher_logits, batched=True,
-                                                        batch_size=train_batch_size)
-            teacher_model.train(teacher_model_training)
+                                              remove_columns=raw_datasets['train'].column_names)
 
         train_dataset = processed_datasets['train']
-        validation_dataset = processed_datasets['validation_matched' if task_name == 'mnli' else 'validation']
-        validation_dataset2 = processed_datasets['validation_mismatched'] if task_name == 'mnli' else None
+        if task_name == 'mnli':
+            validation_datasets = {
+                'validation_matched': processed_datasets['validation_matched'],
+                'validation_mismatched': processed_datasets['validation_mismatched']
+            }
+        else:
+            validation_datasets = {
+                'validation': processed_datasets['validation']
+            }
 
-        train_dataloader = DataLoader(train_dataset,
-                                        shuffle=True,
-                                        collate_fn=data_collator,
-                                        batch_size=train_batch_size)
-        validation_dataloader = DataLoader(validation_dataset,
-                                            collate_fn=data_collator,
-                                            batch_size=eval_batch_size)
-        validation_dataloader2 = DataLoader(validation_dataset2,
-                                            collate_fn=data_collator,
-                                            batch_size=eval_batch_size) if task_name == 'mnli' else None
+        train_dataloader = DataLoader(train_dataset, shuffle=True, collate_fn=data_collator, batch_size=train_batch_size)
+        validation_dataloaders = {
+            val_name: DataLoader(val_dataset, collate_fn=data_collator, batch_size=eval_batch_size) \
+                for val_name, val_dataset in validation_datasets.items()
+        }
 
-        return train_dataloader, validation_dataloader, validation_dataloader2
-
-
-
-
+        return train_dataloader, validation_dataloaders
 
 
+    train_dataloader, validation_dataloaders = prepare_dataloaders()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 158-159
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 153-154
 
 Training function & evaluation function.
 
-.. GENERATED FROM PYTHON SOURCE LINES 159-258
+.. GENERATED FROM PYTHON SOURCE LINES 154-277
 
 .. code-block:: default
 
 
+    import functools
     import time
+
     import torch.nn.functional as F
     from datasets import load_metric
+    from transformers.modeling_outputs import SequenceClassifierOutput
 
-    def training(train_dataloader: DataLoader,
-                    model: torch.nn.Module,
-                    optimizer: torch.optim.Optimizer,
-                    criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-                    lr_scheduler: torch.optim.lr_scheduler._LRScheduler = None,
-                    max_steps: int = None, max_epochs: int = None,
-                    save_best_model: bool = False, save_path: str = None,
-                    log_path: str = Path(log_dir) / 'training.log',
-                    distillation: bool = False,
-                    evaluation_func=None):
+
+    def training(model: torch.nn.Module,
+                 optimizer: torch.optim.Optimizer,
+                 criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+                 lr_scheduler: torch.optim.lr_scheduler._LRScheduler = None,
+                 max_steps: int = None,
+                 max_epochs: int = None,
+                 train_dataloader: DataLoader = None,
+                 distillation: bool = False,
+                 teacher_model: torch.nn.Module = None,
+                 distil_func: Callable = None,
+                 log_path: str = Path(log_dir) / 'training.log',
+                 save_best_model: bool = False,
+                 save_path: str = None,
+                 evaluation_func: Callable = None,
+                 eval_per_steps: int = 1000,
+                 device=None):
+
+        assert train_dataloader is not None
+
         model.train()
+        if teacher_model is not None:
+            teacher_model.eval()
         current_step = 0
         best_result = 0
 
-        for current_epoch in range(max_epochs if max_epochs else 1):
+        total_epochs = max_steps // len(train_dataloader) + 1 if max_steps else max_epochs if max_epochs else 3
+        total_steps = max_steps if max_steps else total_epochs * len(train_dataloader)
+
+        print(f'Training {total_epochs} epochs, {total_steps} steps...')
+
+        for current_epoch in range(total_epochs):
             for batch in train_dataloader:
+                if current_step >= total_steps:
+                    return
                 batch.to(device)
-                teacher_logits = batch.pop('teacher_logits', None)
-                optimizer.zero_grad()
                 outputs = model(**batch)
                 loss = outputs.loss
 
                 if distillation:
-                    assert teacher_logits is not None
-                    distil_loss = F.kl_div(F.log_softmax(outputs.logits / 2, dim=-1),
-                                            F.softmax(teacher_logits / 2, dim=-1), reduction='batchmean') * (2 ** 2)
+                    assert teacher_model is not None
+                    with torch.no_grad():
+                        teacher_outputs = teacher_model(**batch)
+                    distil_loss = distil_func(outputs, teacher_outputs)
                     loss = 0.1 * loss + 0.9 * distil_loss
 
                 loss = criterion(loss, None)
+                optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
 
+                # per step schedule
                 if lr_scheduler:
                     lr_scheduler.step()
 
                 current_step += 1
 
-                # evaluation for every 1000 steps
-                if current_step % 1000 == 0 or current_step % len(train_dataloader) == 0:
+                if current_step % eval_per_steps == 0 or current_step % len(train_dataloader) == 0:
                     result = evaluation_func(model) if evaluation_func else None
                     with (log_path).open('a+') as f:
                         msg = '[{}] Epoch {}, Step {}: {}\n'.format(time.asctime(time.localtime(time.time())), current_epoch, current_step, result)
                         f.write(msg)
                     # if it's the best model, save it.
-                    if save_best_model and best_result < result['default']:
+                    if save_best_model and (result is None or best_result < result['default']):
                         assert save_path is not None
                         torch.save(model.state_dict(), save_path)
-                        best_result = result['default']
+                        best_result = None if result is None else result['default']
 
-                if max_steps and current_step >= max_steps:
-                    return
 
-    def evaluation(validation_dataloader: DataLoader,
-                    validation_dataloader2: DataLoader,
-                    model: torch.nn.Module):
+    def distil_loss_func(stu_outputs: SequenceClassifierOutput, tea_outputs: SequenceClassifierOutput, encoder_layer_idxs=[]):
+        encoder_hidden_state_loss = []
+        for i, idx in enumerate(encoder_layer_idxs[:-1]):
+            encoder_hidden_state_loss.append(F.mse_loss(stu_outputs.hidden_states[i], tea_outputs.hidden_states[idx]))
+        logits_loss = F.kl_div(F.log_softmax(stu_outputs.logits / 2, dim=-1), F.softmax(tea_outputs.logits / 2, dim=-1), reduction='batchmean') * (2 ** 2)
+
+        distil_loss = 0
+        for loss in encoder_hidden_state_loss:
+            distil_loss += loss
+        distil_loss += logits_loss
+        return distil_loss
+
+
+    def evaluation(model: torch.nn.Module, validation_dataloaders: Dict[str, DataLoader] = None, device=None):
+        assert validation_dataloaders is not None
         training = model.training
         model.eval()
+
         is_regression = task_name == 'stsb'
         metric = load_metric('glue', task_name)
 
-        for batch in validation_dataloader:
-            batch.pop('teacher_logits', None)
-            batch.to(device)
-            outputs = model(**batch)
-            predictions = outputs.logits.argmax(dim=-1) if not is_regression else outputs.logits.squeeze()
-            metric.add_batch(
-                predictions=predictions,
-                references=batch['labels'],
-            )
-        result = metric.compute()
-
-        if validation_dataloader2:
-            for batch in validation_dataloader2:
-                batch.pop('teacher_logits', None)
+        result = {}
+        default_result = 0
+        for val_name, validation_dataloader in validation_dataloaders.items():
+            for batch in validation_dataloader:
                 batch.to(device)
                 outputs = model(**batch)
                 predictions = outputs.logits.argmax(dim=-1) if not is_regression else outputs.logits.squeeze()
@@ -304,17 +317,19 @@ Training function & evaluation function.
                     predictions=predictions,
                     references=batch['labels'],
                 )
-            result = {'matched': result, 'mismatched': metric.compute()}
-            result['default'] = (result['matched']['accuracy'] + result['mismatched']['accuracy']) / 2
-        else:
-            result['default'] = result.get('f1', result.get('accuracy', None))
+            result[val_name] = metric.compute()
+            default_result += result[val_name].get('f1', result[val_name].get('accuracy', 0))
+        result['default'] = default_result / len(result)
 
         model.train(training)
         return result
 
-    # using huggingface native loss
-    def fake_criterion(outputs, targets):
-        return outputs
+
+    evaluation_func = functools.partial(evaluation, validation_dataloaders=validation_dataloaders, device=device)
+
+
+    def fake_criterion(loss, _):
+        return loss
 
 
 
@@ -323,51 +338,51 @@ Training function & evaluation function.
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 259-260
+.. GENERATED FROM PYTHON SOURCE LINES 278-279
 
 Prepare pre-trained model and finetuning on downstream task.
 
-.. GENERATED FROM PYTHON SOURCE LINES 260-299
+.. GENERATED FROM PYTHON SOURCE LINES 279-320
 
 .. code-block:: default
 
-
-    import functools
 
     from torch.optim import Adam
     from torch.optim.lr_scheduler import LambdaLR
     from transformers import BertForSequenceClassification
 
+
     def create_pretrained_model():
         is_regression = task_name == 'stsb'
         num_labels = 1 if is_regression else (3 if task_name == 'mnli' else 2)
-        return BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path, num_labels=num_labels)
+        model = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path, num_labels=num_labels)
+        model.bert.config.output_hidden_states = True
+        return model
+
 
     def create_finetuned_model():
-        pretrained_model = create_pretrained_model().to(device)
-
-        train_dataloader, validation_dataloader, validation_dataloader2 = prepare_data()
-        evaluation_func = functools.partial(evaluation, validation_dataloader, validation_dataloader2)
-        steps_per_epoch = len(train_dataloader)
-        training_epochs = 3
-
+        finetuned_model = create_pretrained_model()
         finetuned_model_state_path = Path(model_dir) / 'finetuned_model_state.pth'
 
         if finetuned_model_state_path.exists():
-            pretrained_model.load_state_dict(torch.load(finetuned_model_state_path))
+            finetuned_model.load_state_dict(torch.load(finetuned_model_state_path, map_location='cpu'))
+            finetuned_model.to(device)
         elif dev_mode:
             pass
         else:
-            optimizer = Adam(pretrained_model.parameters(), lr=3e-5, eps=1e-8)
+            steps_per_epoch = len(train_dataloader)
+            training_epochs = 3
+            optimizer = Adam(finetuned_model.parameters(), lr=3e-5, eps=1e-8)
 
             def lr_lambda(current_step: int):
                 return max(0.0, float(training_epochs * steps_per_epoch - current_step) / float(training_epochs * steps_per_epoch))
 
             lr_scheduler = LambdaLR(optimizer, lr_lambda)
-            training(train_dataloader, pretrained_model, optimizer, fake_criterion, lr_scheduler=lr_scheduler, max_epochs=training_epochs,
-                        save_best_model=True, save_path=finetuned_model_state_path, evaluation_func=evaluation_func)
-        return pretrained_model
+            training(finetuned_model, optimizer, fake_criterion, lr_scheduler=lr_scheduler,
+                     max_epochs=training_epochs, train_dataloader=train_dataloader, log_path=log_dir / 'finetuning_on_downstream.log',
+                     save_best_model=True, save_path=finetuned_model_state_path, evaluation_func=evaluation_func, device=device)
+        return finetuned_model
+
 
     finetuned_model = create_finetuned_model()
 
@@ -375,65 +390,17 @@ Prepare pre-trained model and finetuning on downstream task.
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.bias', 'cls.predictions.transform.dense.weight']
-    - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
-    - This IS NOT expected if you are initializing BertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.weight', 'classifier.bias']
-    You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
-    Reusing dataset glue (./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
-      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1213.84it/s]
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-9c32a3d5eca55607.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-6f0849c5f6325016.arrow
-      0%|          | 0/10 [00:00<?, ?ba/s]     40%|####      | 4/10 [00:00<00:00, 34.52ba/s]     90%|######### | 9/10 [00:00<00:00, 38.77ba/s]    100%|##########| 10/10 [00:00<00:00, 38.78ba/s]
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 300-302
-
-Using finetuned model as teacher model to create dataloader.
-Add 'teacher_logits' to dataset, it is used to do the distillation, it can be seen as a kind of data label.
-
-.. GENERATED FROM PYTHON SOURCE LINES 302-310
-
-.. code-block:: default
-
-
-    if not dev_mode:
-        train_dataloader, validation_dataloader, validation_dataloader2 = prepare_data(teacher_model=finetuned_model)
-    else:
-        train_dataloader, validation_dataloader, validation_dataloader2 = prepare_data()
-
-    evaluation_func = functools.partial(evaluation, validation_dataloader, validation_dataloader2)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Reusing dataset glue (./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
-      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1249.79it/s]
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-9c32a3d5eca55607.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-6f0849c5f6325016.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-5db72911f5dfb448.arrow
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 311-314
+.. GENERATED FROM PYTHON SOURCE LINES 321-328
 
 Pruning
 ^^^^^^^
-First, using MovementPruner to prune attention head.
+According to experience, it is easier to achieve good results by pruning the attention part and the FFN part in stages.
+Of course, pruning together can also achieve the similar effect, but more parameter adjustment attempts are required.
+So in this section, we do pruning in stages.
 
-.. GENERATED FROM PYTHON SOURCE LINES 314-367
+First, we prune the attention layer with MovementPruner.
+
+.. GENERATED FROM PYTHON SOURCE LINES 328-388
 
 .. code-block:: default
 
@@ -458,8 +425,9 @@ First, using MovementPruner to prune attention head.
     import nni
     from nni.algorithms.compression.v2.pytorch import TorchEvaluator
 
-    movement_training = functools.partial(training, train_dataloader, log_path=log_dir / 'movement_pruning.log',
-                                        evaluation_func=evaluation_func)
+    movement_training = functools.partial(training, train_dataloader=train_dataloader,
+                                          log_path=log_dir / 'movement_pruning.log',
+                                          evaluation_func=evaluation_func, device=device)
     traced_optimizer = nni.trace(Adam)(finetuned_model.parameters(), lr=3e-5, eps=1e-8)
 
     def lr_lambda(current_step: int):
@@ -471,10 +439,16 @@ First, using MovementPruner to prune attention head.
     evaluator = TorchEvaluator(movement_training, traced_optimizer, fake_criterion, traced_scheduler)
 
     # Apply block-soft-movement pruning on attention layers.
+    # Note that block sparse is introduced by `sparse_granularity='auto'`, and only support `bert`, `bart`, `t5` right now.
 
     from nni.compression.pytorch.pruning import MovementPruner
 
-    config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder.layer.{}.'.format(i) for i in range(layers_num)], 'sparsity': 0.1}]
+    config_list = [{
+        'op_types': ['Linear'],
+        'op_partial_names': ['bert.encoder.layer.{}.attention'.format(i) for i in range(layers_num)],
+        'sparsity': 0.1
+    }]
+
     pruner = MovementPruner(model=finetuned_model,
                             config_list=config_list,
                             evaluator=evaluator,
@@ -493,25 +467,14 @@ First, using MovementPruner to prune attention head.
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 389-393
 
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Did not bind any model, no need to unbind model.
-    Did not bind any model, no need to unbind model.
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 368-372
-
-Load a new finetuned model to do the speedup.
-Note that nni speedup don't support replace attention module, so here we manully replace the attention module.
+Load a new finetuned model to do speedup, you can think of this as using the finetuned state to initialize the pruned model weights.
+Note that nni speedup don't support replacing attention module, so here we manully replace the attention module.
 
 If the head is entire masked, physically prune it and create config_list for FFN pruning.
 
-.. GENERATED FROM PYTHON SOURCE LINES 372-398
+.. GENERATED FROM PYTHON SOURCE LINES 393-423
 
 .. code-block:: default
 
@@ -520,66 +483,39 @@ If the head is entire masked, physically prune it and create config_list for FFN
     attention_masks = torch.load(Path(log_dir) / 'attention_masks.pth')
 
     ffn_config_list = []
-    layer_count = 0
+    layer_remained_idxs = []
     module_list = []
     for i in range(0, layers_num):
         prefix = f'bert.encoder.layer.{i}.'
         value_mask: torch.Tensor = attention_masks[prefix + 'attention.self.value']['weight']
         head_mask = (value_mask.reshape(heads_num, -1).sum(-1) == 0.)
-        head_idx = torch.arange(len(head_mask))[head_mask].long().tolist()
-        print(f'layer {i} pruner {len(head_idx)} head: {head_idx}')
-        if len(head_idx) != heads_num:
-            attention_pruned_model.bert.encoder.layer[i].attention.prune_heads(head_idx)
+        head_idxs = torch.arange(len(head_mask))[head_mask].long().tolist()
+        print(f'layer {i} prune {len(head_idxs)} head: {head_idxs}')
+        if len(head_idxs) != heads_num:
+            attention_pruned_model.bert.encoder.layer[i].attention.prune_heads(head_idxs)
             module_list.append(attention_pruned_model.bert.encoder.layer[i])
             # The final ffn weight remaining ratio is the half of the attention weight remaining ratio.
             # This is just an empirical configuration, you can use any other method to determine this sparsity.
-            sparsity = 1 - (1 - len(head_idx) / heads_num) * 0.5
+            sparsity = 1 - (1 - len(head_idxs) / heads_num) * 0.5
             # here we use a simple sparsity schedule, we will prune ffn in 12 iterations, each iteration prune `sparsity_per_iter`.
-            sparsity_per_iter = 1 - (1 - sparsity) ** (1 / heads_num)
-            ffn_config_list.append({'op_names': [f'bert.encoder.layer.{layer_count}.intermediate.dense'], 'sparsity': sparsity_per_iter})
-            layer_count += 1
+            sparsity_per_iter = 1 - (1 - sparsity) ** (1 / 12)
+            ffn_config_list.append({
+                'op_names': [f'bert.encoder.layer.{len(layer_remained_idxs)}.intermediate.dense'],
+                'sparsity': sparsity_per_iter
+            })
+            layer_remained_idxs.append(i)
 
     attention_pruned_model.bert.encoder.layer = torch.nn.ModuleList(module_list)
+    distil_func = functools.partial(distil_loss_func, encoder_layer_idxs=layer_remained_idxs)
 
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.bias', 'cls.predictions.transform.dense.weight']
-    - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
-    - This IS NOT expected if you are initializing BertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.weight', 'classifier.bias']
-    You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
-    Reusing dataset glue (./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
-      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 1141.12it/s]
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-9c32a3d5eca55607.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-6f0849c5f6325016.arrow
-    Loading cached processed dataset at ./data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-5db72911f5dfb448.arrow
-    layer 0 pruner 0 head: []
-    layer 1 pruner 0 head: []
-    layer 2 pruner 0 head: []
-    layer 3 pruner 0 head: []
-    layer 4 pruner 0 head: []
-    layer 5 pruner 0 head: []
-    layer 6 pruner 0 head: []
-    layer 7 pruner 0 head: []
-    layer 8 pruner 0 head: []
-    layer 9 pruner 0 head: []
-    layer 10 pruner 0 head: []
-    layer 11 pruner 0 head: []
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 399-400
+.. GENERATED FROM PYTHON SOURCE LINES 424-425
 
 Retrain the attention pruned model with distillation.
 
-.. GENERATED FROM PYTHON SOURCE LINES 400-424
+.. GENERATED FROM PYTHON SOURCE LINES 425-451
 
 .. code-block:: default
 
@@ -593,6 +529,7 @@ Retrain the attention pruned model with distillation.
         total_steps = 1
         distillation = False
 
+    teacher_model = create_finetuned_model()
     optimizer = Adam(attention_pruned_model.parameters(), lr=3e-5, eps=1e-8)
 
     def lr_lambda(current_step: int):
@@ -600,9 +537,10 @@ Retrain the attention pruned model with distillation.
 
     lr_scheduler = LambdaLR(optimizer, lr_lambda)
     at_model_save_path = log_dir / 'attention_pruned_model_state.pth'
-    training(train_dataloader, attention_pruned_model, optimizer, fake_criterion, lr_scheduler=lr_scheduler,
-             max_epochs=total_epochs, max_steps=total_steps, save_best_model=True, save_path=at_model_save_path,
-             distillation=distillation, evaluation_func=evaluation_func)
+    training(attention_pruned_model, optimizer, fake_criterion, lr_scheduler=lr_scheduler, max_epochs=total_epochs,
+             max_steps=total_steps, train_dataloader=train_dataloader, distillation=distillation, teacher_model=teacher_model,
+             distil_func=distil_func, log_path=log_dir / 'retraining.log', save_best_model=True, save_path=at_model_save_path,
+             evaluation_func=evaluation_func, device=device)
 
     if not dev_mode:
         attention_pruned_model.load_state_dict(torch.load(at_model_save_path))
@@ -610,28 +548,24 @@ Retrain the attention pruned model with distillation.
 
 
 
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 425-429
+.. GENERATED FROM PYTHON SOURCE LINES 452-456
 
 Iterative pruning FFN with TaylorFOWeightPruner in 12 iterations.
-Finetuning 2000 steps after each iteration, then finetuning 2 epochs after pruning finished.
+Finetuning 3000 steps after each pruning iteration, then finetuning 2 epochs after pruning finished.
 
 NNI will support per-step-pruning-schedule in the future, then can use an pruner to replace the following code.
 
-.. GENERATED FROM PYTHON SOURCE LINES 429-508
+.. GENERATED FROM PYTHON SOURCE LINES 456-537
 
 .. code-block:: default
 
 
     if not dev_mode:
-        total_epochs = 4
+        total_epochs = 7
         total_steps = None
         taylor_pruner_steps = 1000
-        steps_per_iteration = 2000
-        total_pruning_steps = 24000
+        steps_per_iteration = 3000
+        total_pruning_steps = 36000
         distillation = True
     else:
         total_epochs = 1
@@ -644,8 +578,8 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
     from nni.compression.pytorch.pruning import TaylorFOWeightPruner
     from nni.compression.pytorch.speedup import ModelSpeedup
 
-    distil_training = functools.partial(training, train_dataloader, log_path=log_dir / 'taylor_pruning.log',
-                                        distillation=distillation, evaluation_func=evaluation_func)
+    distil_training = functools.partial(training, train_dataloader=train_dataloader, distillation=distillation,
+                                        teacher_model=teacher_model, distil_func=distil_func, device=device)
     traced_optimizer = nni.trace(Adam)(attention_pruned_model.parameters(), lr=3e-5, eps=1e-8)
     evaluator = TorchEvaluator(distil_training, traced_optimizer, fake_criterion)
 
@@ -660,7 +594,7 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
         for batch in train_dataloader:
             if total_steps and current_step >= total_steps:
                 break
-            # pruning 12 times
+            # pruning with TaylorFOWeightPruner & reinitialize optimizer
             if current_step % steps_per_iteration == 0 and current_step < total_pruning_steps:
                 check_point = attention_pruned_model.state_dict()
                 pruner = TaylorFOWeightPruner(attention_pruned_model, ffn_config_list, evaluator, taylor_pruner_steps)
@@ -675,9 +609,6 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
                 optimizer = Adam(attention_pruned_model.parameters(), lr=init_lr)
 
             batch.to(device)
-            teacher_logits = batch.pop('teacher_logits', None)
-            optimizer.zero_grad()
-
             # manually schedule lr
             for params_group in optimizer.param_groups:
                 params_group['lr'] = (1 - current_step / (total_epochs * steps_per_epoch)) * init_lr
@@ -686,14 +617,19 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
             loss = outputs.loss
 
             # distillation
-            if teacher_logits is not None:
-                distil_loss = F.kl_div(F.log_softmax(outputs.logits / 2, dim=-1),
-                                        F.softmax(teacher_logits / 2, dim=-1), reduction='batchmean') * (2 ** 2)
+            if distillation:
+                assert teacher_model is not None
+                with torch.no_grad():
+                    teacher_outputs = teacher_model(**batch)
+                distil_loss = distil_func(outputs, teacher_outputs)
                 loss = 0.1 * loss + 0.9 * distil_loss
+
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             current_step += 1
+
             if current_step % 1000 == 0 or current_step % len(train_dataloader) == 0:
                 result = evaluation_func(attention_pruned_model)
                 with (log_dir / 'ffn_pruning.log').open('a+') as f:
@@ -707,22 +643,7 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- .. code-block:: none
-
-    Did not bind any model, no need to unbind model.
-    no multi-dimension masks found.
-    /home/nishang/anaconda3/envs/nni-dev/lib/python3.7/site-packages/torch/_tensor.py:1083: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:477.)
-      return self._grad
-    Did not bind any model, no need to unbind model.
-    no multi-dimension masks found.
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 509-564
+.. GENERATED FROM PYTHON SOURCE LINES 538-593
 
 Result
 ------
@@ -751,28 +672,28 @@ Setting 2: pytorch 1.10.0
       - +0.0 / +0.0
       - 12.56s (x1.00)
       - 4.05s (x1.00)
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=5)
+    * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=5)
       - :ref:`taylor-fo-weight-pruner`
       - 51.39%
       - 84.25 / 84.96
       - -0.48 / +0.33
       - 6.85s (x1.83)
       - 2.7s (x1.50)
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=10)
+    * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=10)
       - :ref:`taylor-fo-weight-pruner`
       - 66.67%
       - 83.98 / 83.75
       - -0.75 / -0.88
       - 4.73s (x2.66)
       - 2.16s (x1.86)
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=20)
+    * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=20)
       - :ref:`taylor-fo-weight-pruner`
       - 77.78%
       - 83.02 / 83.06
       - -1.71 / -1.57
       - 3.35s (x3.75)
       - 1.72s (x2.35)
-    * - :ref:`movement-pruner` (soft, th=0.1, lambda=30)
+    * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=30)
       - :ref:`taylor-fo-weight-pruner`
       - 87.04%
       - 81.24 / 80.99
@@ -783,7 +704,7 @@ Setting 2: pytorch 1.10.0
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  27.206 seconds)
+   **Total running time of the script:** ( 0 minutes  41.637 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_bert_glue.py:

@@ -260,12 +260,12 @@ class SupervisedLearningModule(LightningModule):
         return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)  # type: ignore
 
     def on_validation_epoch_end(self):
-        if not self.trainer.sanity_checking and self.running_mode == 'multi':
+        if not self.trainer.sanity_checking and self.running_mode == 'multi' and nni.get_current_parameter() is not None:
             # Don't report metric when sanity checking
             nni.report_intermediate_result(self._get_validation_metrics())
 
     def on_fit_end(self):
-        if self.running_mode == 'multi':
+        if self.running_mode == 'multi' and nni.get_current_parameter() is not None:
             nni.report_final_result(self._get_validation_metrics())
 
     def _get_validation_metrics(self):
@@ -297,6 +297,13 @@ class ClassificationModule(SupervisedLearningModule):
 class Classification(Lightning):
     """
     Evaluator that is used for classification.
+
+    Available callback metrics in :class:`Classification` are:
+
+    - train_loss
+    - train_acc
+    - val_loss
+    - val_acc
 
     Parameters
     ----------
@@ -366,6 +373,13 @@ class RegressionModule(SupervisedLearningModule):
 class Regression(Lightning):
     """
     Evaluator that is used for regression.
+
+    Available callback metrics in :class:`Regression` are:
+
+    - train_loss
+    - train_mse
+    - val_loss
+    - val_mse
 
     Parameters
     ----------
