@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import collections
 import dataclasses
-import json
 import logging
 import random
 import time
@@ -75,7 +74,7 @@ class RegularizedEvolution(BaseStrategy):
         self._worst = float('-inf') if self.optimize_mode == 'maximize' else float('inf')
 
         self._success_count = 0
-        self._history_configs: set[str] = set()  # for dedup
+        self._history_configs: list[str] = []  # for dedup. has to be a list because keys are non-hashable.
         self._population: list[Individual] = collections.deque()
         self._running_models: list[tuple[dict, Model]] = []
         self._polling_interval = 2.
@@ -105,6 +104,18 @@ class RegularizedEvolution(BaseStrategy):
             parent = min(samples, key=lambda sample: sample.y)
         return parent.x
 
+    def repeat_until_new_config(self, generator):
+        if not self.dedup:
+            # Do nothing if not deduplicating
+            return generator()
+
+        for _ in range(self.dedup_retries):
+            config = generator()
+            if config not in self._history_configs:
+                return config
+        _logger.warning('Deduplication failed. Generating an arbitrary config.')
+        return generator()
+
     def run(self, base_model, applied_mutators):
         search_space = dry_run_for_search_space(base_model, applied_mutators)
         # Run the first population regardless concurrency
@@ -112,7 +123,7 @@ class RegularizedEvolution(BaseStrategy):
         while len(self._population) + len(self._running_models) <= self.population_size:
             # try to submit new models
             while len(self._population) + len(self._running_models) < self.population_size:
-                config = self.random(search_space)
+                config = self.repeat_until_new_config(lambda: self.random(search_space))
                 self._submit_config(config, base_model, applied_mutators)
             # collect results
             self._move_succeeded_models_to_population()
@@ -127,18 +138,7 @@ class RegularizedEvolution(BaseStrategy):
         while self._success_count + len(self._running_models) <= self.cycles:
             # try to submit new models
             while query_available_resources() > 0 and self._success_count + len(self._running_models) < self.cycles:
-                if self.dedup:
-                    config = None
-                    for _ in range(self.dedup_retries):
-                        new_config = self.mutate(self.best_parent(), search_space)
-                        if json.dumps(new_config, sort_keys=True) not in self._history_configs:
-                            config = new_config
-                            break
-                    if config is None:
-                        _logger.warning('Deduplication failed. Generating an arbitrary config.')
-                        config = self.mutate(self.best_parent(), search_space)
-                else:
-                    config = self.mutate(self.best_parent(), search_space)
+                config = self.repeat_until_new_config(lambda: self.mutate(self.best_parent(), search_space))
                 self._submit_config(config, base_model, applied_mutators)
             # collect results
             self._move_succeeded_models_to_population()
@@ -150,7 +150,7 @@ class RegularizedEvolution(BaseStrategy):
 
     def _submit_config(self, config, base_model, mutators):
         _logger.debug('Model submitted to running queue: %s', config)
-        self._history_configs.add(json.dumps(config, sort_keys=True))
+        self._history_configs.append(config)
         model = get_targeted_model(base_model, mutators, config)
         if not filter_model(self.filter, model):
             if self.on_failure == "worst":
