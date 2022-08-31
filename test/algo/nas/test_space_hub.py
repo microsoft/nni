@@ -196,3 +196,17 @@ def test_shufflenet():
 def test_autoformer():
     ss = searchspace.AutoformerSpace()
     _test_searchspace_on_dataset(ss, dataset='imagenet')
+
+    from nni.nas.strategy import RandomOneShot
+
+    Autoformer = searchspace.AutoformerSpace
+    for name in ['tiny', 'small', 'base']:
+        # check subnet weights load
+        Autoformer.load_searched_model(name, pretrained = True, download = True)
+        init_kwargs = Autoformer.official_config(name)
+        model_sapce = Autoformer(**init_kwargs)
+        # check model space weights load
+        strategy = RandomOneShot(mutation_hooks=Autoformer.get_extra_mutation_hooks())
+        strategy.attach_model(model_sapce)
+        pretrained_weights = Autoformer.official_weights(name, 'supernet')
+        strategy.model.load_state_dict(pretrained_weights)
