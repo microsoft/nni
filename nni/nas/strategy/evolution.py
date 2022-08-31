@@ -8,6 +8,7 @@ import dataclasses
 import logging
 import random
 import time
+from typing import Deque
 
 from nni.nas.execution import query_available_resources, submit_models
 from nni.nas.execution.common import Model, ModelStatus
@@ -75,7 +76,7 @@ class RegularizedEvolution(BaseStrategy):
 
         self._success_count = 0
         self._history_configs: list[str] = []  # for dedup. has to be a list because keys are non-hashable.
-        self._population: list[Individual] = collections.deque()
+        self._population: Deque[Individual] = collections.deque()
         self._running_models: list[tuple[dict, Model]] = []
         self._polling_interval = 2.
         self.filter = model_filter
