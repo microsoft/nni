@@ -12,6 +12,7 @@ from nni.nas.nn.pytorch.choice import ValueChoiceX
 from nni.nas.oneshot.pytorch.supermodule.operation import MixedOperation
 from nni.nas.oneshot.pytorch.supermodule._valuechoice_utils import traverse_all_options
 from nni.nas.oneshot.pytorch.supermodule._operation_utils import Slicable as _S, MaybeWeighted as _W
+from nni.nas.strategy import RandomOneShot
 
 from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
@@ -399,7 +400,8 @@ class AutoformerSpace(nn.Module):
         return [MixedAbsPosEmbed.mutate, MixedClsToken.mutate]
 
     @classmethod
-    def official_config(cls, name: str):
+    def preset(cls, name: str):
+        """Get the model space config proposed in paper."""
         name = name.lower()
         assert name in ['tiny', 'small', 'base']
         init_kwargs = {'qkv_bias': True, 'drop_rate': 0.0, 'drop_path_rate': 0.1, 'global_pool': True, 'num_classes': 1000}
@@ -429,17 +431,22 @@ class AutoformerSpace(nn.Module):
         return init_kwargs
 
     @classmethod
-    def official_weights(cls, name: str, type_: str, download: bool = True, progress: bool = True):
-        weight_file = load_pretrained_weight(f"autoformer-{name}-{type_}", download=download, progress=progress)
+    def load_strategy_checkpoint(cls, name: str, download: bool = True, progress: bool = True):
+        strategy = RandomOneShot(mutation_hooks=cls.get_extra_mutation_hooks())
+        init_kwargs = cls.preset(name)
+        model_sapce = cls(**init_kwargs)
+        strategy.attach_model(model_sapce)
+        weight_file = load_pretrained_weight(f"autoformer-{name}-supernet", download=download, progress=progress)
         pretrained_weights = torch.load(weight_file)
-        return pretrained_weights
+        strategy.model.load_state_dict(pretrained_weights)
+        return strategy
 
     @classmethod
     def load_searched_model(
         cls, name: str,
         pretrained: bool = False, download: bool = False, progress: bool = True
     ) -> nn.Module:
-        init_kwargs = cls.official_config(name)
+        init_kwargs = cls.preset(name)
         if name == 'tiny':
             mlp_ratio = [3.5, 3.5, 3.0, 3.5, 3.0, 3.0, 4.0, 4.0, 3.5, 4.0, 3.5, 4.0, 3.5] + [3.0]
             num_head = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3] + [3]
@@ -477,7 +484,8 @@ class AutoformerSpace(nn.Module):
         model = model_factory(**init_kwargs)
 
         if pretrained:
-            pretrained_weights = cls.official_weights(name, 'subnet', download=download, progress=progress)
+            weight_file = load_pretrained_weight(f"autoformer-{name}-subnet", download=download, progress=progress)
+            pretrained_weights = torch.load(weight_file)
             model.load_state_dict(pretrained_weights)
 
         return model
