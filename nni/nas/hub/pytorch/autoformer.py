@@ -442,6 +442,7 @@ class AutoformerSpace(nn.Module):
         strategy.attach_model(model_sapce)
         weight_file = load_pretrained_weight(f"autoformer-{name}-supernet", download=download, progress=progress)
         pretrained_weights = torch.load(weight_file)
+        assert strategy.model is not None
         strategy.model.load_state_dict(pretrained_weights)
         return strategy
 
