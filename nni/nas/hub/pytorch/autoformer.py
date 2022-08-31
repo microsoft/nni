@@ -12,7 +12,6 @@ from nni.nas.nn.pytorch.choice import ValueChoiceX
 from nni.nas.oneshot.pytorch.supermodule.operation import MixedOperation
 from nni.nas.oneshot.pytorch.supermodule._valuechoice_utils import traverse_all_options
 from nni.nas.oneshot.pytorch.supermodule._operation_utils import Slicable as _S, MaybeWeighted as _W
-from nni.nas.strategy import RandomOneShot
 
 from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
@@ -432,9 +431,14 @@ class AutoformerSpace(nn.Module):
 
     @classmethod
     def load_strategy_checkpoint(cls, name: str, download: bool = True, progress: bool = True):
-        strategy = RandomOneShot(mutation_hooks=cls.get_extra_mutation_hooks())
+        legal = ['random-one-shot-tiny', 'random-one-shot-small', 'random-one-shot-base']
+        if name not in legal:
+            raise ValueError(f'Unsupported name: {name}. It should be one of {legal}.')
+        name = name[16:]
+        from nni.nas.strategy import RandomOneShot
         init_kwargs = cls.preset(name)
         model_sapce = cls(**init_kwargs)
+        strategy = RandomOneShot(mutation_hooks=cls.get_extra_mutation_hooks())
         strategy.attach_model(model_sapce)
         weight_file = load_pretrained_weight(f"autoformer-{name}-supernet", download=download, progress=progress)
         pretrained_weights = torch.load(weight_file)
@@ -446,6 +450,10 @@ class AutoformerSpace(nn.Module):
         cls, name: str,
         pretrained: bool = False, download: bool = False, progress: bool = True
     ) -> nn.Module:
+        legal = ['autoformer-tiny', 'autoformer-small', 'autoformer-base']
+        if name not in legal:
+            raise ValueError(f'Unsupported name: {name}. It should be one of {legal}.')
+        name = name[11:]
         init_kwargs = cls.preset(name)
         if name == 'tiny':
             mlp_ratio = [3.5, 3.5, 3.0, 3.5, 3.0, 3.0, 4.0, 4.0, 3.5, 4.0, 3.5, 4.0, 3.5] + [3.0]

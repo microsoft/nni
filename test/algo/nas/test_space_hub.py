@@ -197,7 +197,11 @@ def test_autoformer():
     ss = searchspace.AutoformerSpace()
     _test_searchspace_on_dataset(ss, dataset='imagenet')
 
+    import torch
     for name in ['tiny', 'small', 'base']:
         # check subnet & supernet weights load
-        searchspace.AutoformerSpace.load_searched_model(name, pretrained = True, download = True)
-        searchspace.AutoformerSpace.load_strategy_checkpoint(name)
+        model = searchspace.AutoformerSpace.load_searched_model(f'autoformer-{name}', pretrained = True, download = True)
+        model(torch.rand(1, 3, 224, 224))
+        strategy = searchspace.AutoformerSpace.load_strategy_checkpoint(f'random-one-shot-{name}')
+        strategy.model.resample()
+        strategy.model(torch.rand(1, 3, 224, 224))
