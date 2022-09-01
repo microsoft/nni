@@ -52,6 +52,14 @@ class NasBench201TrainingModule(ClassificationModule):
 
         return super().on_validation_start()
 
+    def validation_step(self, batch, batch_idx):
+        if self.supernet_state_dict_path:
+            self.model.train()
+            rv = super().validation_step(batch, batch_idx)
+            self.model.eval()
+            return rv
+        return super().validation_step(batch, batch_idx)
+
     def configure_optimizers(self):
         """Customized optimizer with momentum, as well as a scheduler."""
         optimizer = torch.optim.SGD(
@@ -109,6 +117,7 @@ def search(log_dir: str, batch_size: int = 256, algo: Literal['enas', 'darts', '
         training_module_kwargs['supernet_state_dict_path'] = 'lightning_logs/search/version_8/checkpoints/epoch=199-step=19600.ckpt'
         execution_engine = 'py'
         train_loader = None
+        trainer_kwargs['logger'] = nni.trace(TensorBoardLogger)(log_dir, name='search_multi_trial')
 
     evaluator = Lightning(
         NasBench201TrainingModule(**training_module_kwargs),
@@ -176,16 +185,48 @@ def main():
 
 
 if __name__ == '__main__':
+    main()
 
-    # arch_dict = {"cell/0_1": "conv_1x1", "cell/0_2": "none", "cell/1_2": "none", "cell/0_3": "conv_3x3", "cell/1_3": "conv_3x3", "cell/2_3": "none"}
+    # arch_dict = {"cell/0_1": "conv_1x1", "cell/0_2": "conv_3x3", "cell/1_2": "conv_3x3", "cell/0_3": "conv_3x3", "cell/1_3": "conv_3x3", "cell/2_3": "conv_3x3"}
 
     # strategy_ = strategy.RandomOneShot()
     # model_space = NasBench201()
     # strategy_.attach_model(model_space)
     # supernet_state_dict = torch.load('lightning_logs/search/version_8/checkpoints/epoch=199-step=19600.ckpt')['state_dict']
     # strategy_.model.load_state_dict(supernet_state_dict)
+    # strategy_.model.resample(arch_dict)
+    # strategy_.model.cuda()
+
+    # # dataset = get_cifar10_dataset(train=False)
+    # # dataloader = DataLoader(dataset, batch_size=256)
+    # # strategy_.model.train()
+    # # with torch.no_grad():
+    # #     correct = total = 0
+    # #     for inputs, targets in dataloader:
+    # #         inputs, targets = inputs.cuda(), targets.cuda()
+    # #         logits = strategy_.model(inputs)
+    # #         print(logits)
+    # #         _, predict = torch.max(logits, 1)
+    # #         correct += (predict == targets).sum().item()
+    # #         total += targets.size(0)
+    # # print('Accuracy:', correct / total)
 
     # state_dict = strategy_.sub_state_dict(arch_dict)
-    # import pdb; pdb.set_trace()
-    # self.model.load_state_dict(state_dict)
-    main()
+
+    # with fixed_arch(arch_dict):
+    #     model = NasBench201()
+    # model.load_state_dict(state_dict)
+
+    # dataset = get_cifar10_dataset(train=False)
+    # dataloader = DataLoader(dataset, batch_size=256)
+    # model.cuda()
+    # model.train()
+    # with torch.no_grad():
+    #     correct = total = 0
+    #     for inputs, targets in dataloader:
+    #         inputs, targets = inputs.cuda(), targets.cuda()
+    #         logits = model(inputs)
+    #         _, predict = torch.max(logits, 1)
+    #         correct += (predict == targets).sum().item()
+    #         total += targets.size(0)
+    # print('Accuracy:', correct / total)
