@@ -431,6 +431,23 @@ class AutoformerSpace(nn.Module):
 
     @classmethod
     def load_strategy_checkpoint(cls, name: str, download: bool = True, progress: bool = True):
+        """
+        Load the RandomOneShot strategy initialized with supernet weights.
+
+        Parameters
+        ----------
+        name : str
+            Search space size, must be one of {'random-one-shot-tiny', 'random-one-shot-small', 'random-one-shot-base'}.
+        download : bool
+            Whether to download supernet weights. Default is ``True``.
+        progress : bool
+            Whether to display the download progress. Default is ``True``.
+
+        Returns
+        -------
+        BaseStrategy
+            The RandomOneShot strategy initialized with supernet weights provided in the official repo.
+        """
         legal = ['random-one-shot-tiny', 'random-one-shot-small', 'random-one-shot-base']
         if name not in legal:
             raise ValueError(f'Unsupported name: {name}. It should be one of {legal}.')
@@ -449,8 +466,27 @@ class AutoformerSpace(nn.Module):
     @classmethod
     def load_searched_model(
         cls, name: str,
-        pretrained: bool = False, download: bool = False, progress: bool = True
+        pretrained: bool = False, download: bool = True, progress: bool = True
     ) -> nn.Module:
+        """
+        Load the searched subnet model.
+
+        Parameters
+        ----------
+        name : str
+            Search space size, must be one of {'autoformer-tiny', 'autoformer-small', 'autoformer-base'}.
+        pretrained : bool
+            Whether initialized with pre-trained weights. Default is ``False``.
+        download : bool
+            Whether to download supernet weights. Default is ``True``.
+        progress : bool
+            Whether to display the download progress. Default is ``True``.
+
+        Returns
+        -------
+        nn.Module
+            The subnet model.
+        """
         legal = ['autoformer-tiny', 'autoformer-small', 'autoformer-base']
         if name not in legal:
             raise ValueError(f'Unsupported name: {name}. It should be one of {legal}.')
