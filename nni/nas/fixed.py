@@ -50,8 +50,8 @@ def no_fixed_arch():
     Ignore the ``fixed_arch()`` context.
 
     This is useful in creating a search space within a ``fixed_arch()`` context.
-    It only removes one layer of architecture.
-    If it's currently in a nested with-fixed-arch context, multiple ``no_fixed_arch()`` contexts is required.
+    Under the hood, it only disables the most recent one fixed context, which means,
+    if it's currently in a nested with-fixed-arch context, multiple ``no_fixed_arch()`` contexts is required.
 
     Examples
     --------
