@@ -38,10 +38,14 @@ PRETRAINED_WEIGHT_URLS = {
     # spos
     'spos': f'{NNI_BLOB}/nashub/spos-0b17f6fc.pth',
 
-    # autoformer
-    'autoformer-tiny': f'{NNI_BLOB}/nashub/autoformer-searched-tiny-1e90ebc1.pth',
-    'autoformer-small': f'{NNI_BLOB}/nashub/autoformer-searched-small-4bc5d4e5.pth',
-    'autoformer-base': f'{NNI_BLOB}/nashub/autoformer-searched-base-c417590a.pth'
+    # autoformer subnet
+    'autoformer-tiny-subnet': f'{NNI_BLOB}/nashub/autoformer-tiny-subnet-12ed42ff.pth',
+    'autoformer-small-subnet': f'{NNI_BLOB}/nashub/autoformer-small-subnet-b4e25a1b.pth',
+    'autoformer-base-subnet': f'{NNI_BLOB}/nashub/autoformer-base-subnet-85105f76.pth',
+    # autoformer supernet
+    'autoformer-tiny-supernet': f'{NNI_BLOB}/nashub/autoformer-tiny-supernet-6f107004.pth',
+    'autoformer-small-supernet': f'{NNI_BLOB}/nashub/autoformer-small-supernet-8ed79e18.pth',
+    'autoformer-base-supernet': f'{NNI_BLOB}/nashub/autoformer-base-supernet-0c6d6612.pth',
 }
 
 
