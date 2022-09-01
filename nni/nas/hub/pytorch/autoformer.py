@@ -8,6 +8,7 @@ import torch.nn.functional as F
 
 import nni.nas.nn.pytorch as nn
 from nni.nas import model_wrapper, basic_unit
+from nni.nas.fixed import no_fixed_arch
 from nni.nas.nn.pytorch.choice import ValueChoiceX
 from nni.nas.oneshot.pytorch.supermodule.operation import MixedOperation
 from nni.nas.oneshot.pytorch.supermodule._valuechoice_utils import traverse_all_options
@@ -456,7 +457,8 @@ class AutoformerSpace(nn.Module):
         # RandomOneShot is the only supported strategy for now.
         from nni.nas.strategy import RandomOneShot
         init_kwargs = cls.preset(name)
-        model_sapce = cls(**init_kwargs)
+        with no_fixed_arch():
+            model_sapce = cls(**init_kwargs)
         strategy = RandomOneShot(mutation_hooks=cls.get_extra_mutation_hooks())
         strategy.attach_model(model_sapce)
         weight_file = load_pretrained_weight(f"autoformer-{name}-supernet", download=download, progress=progress)
