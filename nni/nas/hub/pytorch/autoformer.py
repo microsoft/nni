@@ -432,7 +432,7 @@ class AutoformerSpace(nn.Module):
     @classmethod
     def load_strategy_checkpoint(cls, name: str, download: bool = True, progress: bool = True):
         """
-        Load the RandomOneShot strategy initialized with supernet weights.
+        Load the related strategy checkpoints.
 
         Parameters
         ----------
@@ -446,12 +446,14 @@ class AutoformerSpace(nn.Module):
         Returns
         -------
         BaseStrategy
-            The RandomOneShot strategy initialized with supernet weights provided in the official repo.
+            The loaded strategy.
         """
         legal = ['random-one-shot-tiny', 'random-one-shot-small', 'random-one-shot-base']
         if name not in legal:
             raise ValueError(f'Unsupported name: {name}. It should be one of {legal}.')
         name = name[16:]
+
+        # RandomOneShot is the only supported strategy for now.
         from nni.nas.strategy import RandomOneShot
         init_kwargs = cls.preset(name)
         model_sapce = cls(**init_kwargs)
