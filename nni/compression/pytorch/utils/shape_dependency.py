@@ -17,10 +17,9 @@ __all__ = ['ChannelDependency', 'GroupDependency', 'ReshapeDependency',
 CONV_TYPE = 'aten::_convolution'
 ADD_MUL_LOGICAL_TYPES = [
     'aten::add', 'aten::add_', 'aten::sub', 'aten::sub_', 'aten::subtract', 'aten::subtract_',
-    'aten::mul', 'aten::mul_', 'aten::div', 'aten::div_',
+    'aten::mul', 'aten::mul_', 'aten::div', 'aten::div_', 'aten::multiply', 'aten::multiply_', 'aten::divide', 'aten::divide_',
     'aten::addcmul', 'aten::addcmul_',
     'aten::addcdiv', 'aten::addcdiv_',
-    'aten::logical_not', 'aten::logical_not_',
     'aten::logical_xor', 'aten::logical_xor_',
     'aten::logical_and', 'aten::logical_and_',
     'aten::logical_or', 'aten::logical_or_',
