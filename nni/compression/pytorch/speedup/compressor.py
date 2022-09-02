@@ -91,6 +91,7 @@ class ModelSpeedup:
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
+        self.executed_prim_nodes = set()
         self.customized_replace_func = customized_replace_func if customized_replace_func is not None else {}
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
@@ -175,12 +176,15 @@ class ModelSpeedup:
         # prepare the inputs and outputs mask for this node,
         # if there is already a mask in self.masks, then use
         # the original mask tensor, else create a new one.
-        inputs_name = node.inputs
+        if node.type == 'module':
+            inputs_name = node.inputs
+        else:
+            inputs_name = [val_node.debugName() for val_node in node.key_node.inputs()]
         # build the dummy_input, in_masks the target node
         dummy_input = []
         debugnames = []
         for _input in inputs_name:
-            if _input not in self.internal_result:
+            if _input not in self.internal_result or _input not in self.masks:
                 # if the input debug name is not in self.internal_result,
                 # then this node isn't a output tensor of any predecessor
                 # nodes. This node is a attribute of the submodule, such as
@@ -197,10 +201,25 @@ class ModelSpeedup:
                 continue
             # The detach operation here is for the in-place operation. We cannot
             # directly can the backward on the output tensor of an in-place operator.
-            dummy_input.append(self.internal_result[_input].detach())
+            dummy_input.append(self.internal_result[_input])
 
             debugnames.append(_input)
+            
+        def recr_detacher(obj):
+            if isinstance(obj, torch.Tensor):
+                return obj.detach()
+            elif isinstance(obj, tuple):
+                return tuple([recr_detacher(i) for i in obj])
+            elif isinstance(obj, list):
+                return [recr_detacher(i) for i in obj]
+            elif isinstance(obj, set):
+                return set([recr_detacher(i) for i in obj])
+            elif isinstance(obj, dict):
+                return {k: recr_detacher(v) for k, v in obj.items()}
+            else:
+                return obj
 
+        dummy_input = recr_detacher(dummy_input)
         return dummy_input, debugnames
 
     def update_direct_sparsity(self, node):
@@ -213,6 +232,12 @@ class ModelSpeedup:
         module_name = node.name
         _logger.info('Update mask for %s', module_name)
         unique_name = node.unique_name
+        if node.type == 'func':
+            func = jit_to_python_function(node, self)
+            if func is None:
+                # no need to infer the sparsity for this node
+                self.auto_inferences[unique_name] = None
+                return
         dummy_input, input_debugname = self._prepare_dummy_input(node)
         # get the input mask from self.masks
         # Note: the input mask of the successor nodes are
@@ -225,11 +250,7 @@ class ModelSpeedup:
             # graph, so we translate it back to python function, Note: the function
             # is appliable to both cpu/gpu devices, the output tensors will be on the
             # same device of the input tensors
-            func = jit_to_python_function(node, self)
-            if func is None:
-                # no need to infer the sparsity for this node
-                self.auto_inferences[unique_name] = None
-                return
+            
             # function doesn't have weights
             _auto_infer = AutoMaskInference(
                 func, dummy_input, self, in_masks, in_constants=in_constants)
@@ -297,16 +318,15 @@ class ModelSpeedup:
                 debug_name = auto_infer.input_debugname[in_id]
 
                 last_output = self.internal_result[debug_name]
-                # if isinstance(last_output, torch.Tensor):
-                # TODO what if last output is tuple/list of tensor
-                if last_output.grad is not None and tin.grad is not None:
-                    last_output.grad.data += tin.grad.data
-                elif last_output.grad is None:
-                    last_output.grad = tin.grad
-                elif last_output.grad is not None and tin.grad is None:
-                    # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
-                    # the size operation of tin will have no gradient
-                    continue
+                if isinstance(last_output, torch.Tensor):
+                    if last_output.grad is not None and tin.grad is not None:
+                        last_output.grad.data += tin.grad.data
+                    elif last_output.grad is None:
+                        last_output.grad = tin.grad
+                    elif last_output.grad is not None and tin.grad is None:
+                        # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
+                        # the size operation of tin will have no gradient
+                        continue
         else:
             _logger.warning(
                 'Note: %s does not have corresponding mask inference object', node.name)

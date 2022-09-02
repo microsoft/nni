@@ -300,15 +300,16 @@ class AutoMaskInference:
             x, torch.Tensor) else x for x in self.dummy_input]
         output = self.module(*tmp_dummy_input)
 
-        if output.grad_fn is None:
-            # the output does not have the gradient function
-            return
         # Note: output maybe tensor or list/tuple of tensors
         if isinstance(output, torch.Tensor):
+            if output.grad_fn is None:
+                # the output does not have the gradient function
+                return
             output.backward(self.output_mask)
         elif isinstance(output, list) or isinstance(output, tuple):
             for tid, t_out in enumerate(output):
-                t_out.backward(self.output_mask[tid])
+                if t_out.grad_fn is not None:
+                    t_out.backward(self.output_mask[tid])
 
         # update the sparsity of the paramters
         for para_name in self.weights:

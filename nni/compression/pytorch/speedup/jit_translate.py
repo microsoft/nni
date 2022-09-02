@@ -16,10 +16,8 @@ from functools import partial, lru_cache
 import copy
 import torch
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-jitid_2_dtype = {4: torch.long, 6:torch.float32}
 
 # to exclude partial
 
@@ -28,6 +26,119 @@ __all__ = [
     'translate_list', 'tupleunpack_python', 'dtype_trans', 'memory_format_trans'
 ]
 
+torch_integer_types_nobool = (
+    torch.uint8,
+    torch.int8,
+    torch.int16,
+    torch.short,
+    torch.int32,
+    torch.int,
+    torch.int64,
+    torch.long,
+)
+
+def check_implicit_tensor_to_num(t: torch.Tensor, to_int: bool):
+    """
+    Imitate the detection logic of in checkImplicitTensorToNum register_ops_utils.cpp
+    """
+    if t.requires_grad:
+        raise RuntimeError('Cannot input a tensor that requires grad as a scalar argument')
+    if t.dim() != 0:
+        raise RuntimeError('Cannot input a tensor of dimension other than 0 as a scalar argument')
+    if (to_int and t.dtype not in torch_integer_types_nobool):
+        raise RuntimeError('Cannot input a tensor of type %s as an integral argument' % t.dtype)
+
+def prim_op_eval_tensor_to_num(node: torch.Node, speedup: ModelSpeedup):
+    assert (node.inputsSize() == 1) & (node.outputsSize() == 1)
+    
+    # recursive eval
+    prim_op_eval(node.input().node(), speedup)
+        
+    # execute
+    output = speedup.internal_result[node.input().debugName()].item()
+    speedup.internal_result[node.output().debugName()] = output
+    
+def prim_op_eval_num_to_tensor(node: torch.Node, speedup: ModelSpeedup):
+    assert (node.inputsSize() == 1) & (node.outputsSize() == 1)
+    
+    # recursive eval
+    prim_op_eval(node.input().node(), speedup)
+    
+    # execute
+    output = torch.tensor(speedup.internal_result[node.input().debugName()])
+    speedup.internal_result[node.output().debugName()] = output
+    
+def prim_op_eval_unpack(node: torch.Node, speedup: ModelSpeedup):
+    assert node.inputsSize() == 1
+    
+    # recursive eval
+    if 'prim::' in node.input().node().kind():
+        prim_op_eval(node.input().node(), speedup)
+        
+    # execute
+    output_list = list(node.outputs())
+    assert len(speedup.internal_result[node.input().debugName()]) == len(output_list)
+    for value, out_node in zip(speedup.internal_result[node.input().debugName()], output_list):
+        speedup.internal_result[out_node.debugName()] = value
+    
+def prim_op_eval_pack(node: torch.Node, speedup: ModelSpeedup):
+    assert node.outputsSize() == 1
+    
+    # recursive eval
+    for _i in list(node.inputs()):
+        if 'prim::' in _i.node().kind():
+            prim_op_eval(_i.node(), speedup)
+            
+    # execute
+    output = list()
+    for _i in list(node.inputs())[::]:
+        output.append(speedup.internal_result[_i.debugName()])
+    if node.kind() == 'prim::TupleConstruct':
+        output = tuple(output)
+    speedup.internal_result[node.output().debugName()] = output
+        
+def prim_op_eval_constant(node: torch.Node, speedup: ModelSpeedup):
+    # assert node.outputsSize() == 1
+    assert (node.inputsSize() == 0) & (node.outputsSize() == 1)
+    
+    speedup.internal_result[node.output().debugName()] = node.output().toIValue()
+        
+def prim_op_eval_getattr(node: torch.Node, speedup: ModelSpeedup):
+    assert (node.inputsSize() == 1) & (node.outputsSize() == 1)
+    
+    # recursive eval
+    if 'prim::' in node.input().node().kind():
+        prim_op_eval(node.input().node(), speedup)
+        
+    # execute
+    attr_name = node['name']
+    output = getattr(speedup.internal_result[_i.debugName()], attr_name)
+    speedup.internal_result[node.output().debugName()] = output
+
+eval_table = {
+    'prim::ImplicitTensorToNum': prim_op_eval_tensor_to_num,
+    'prim::TensorToNum': prim_op_eval_tensor_to_num,
+    'prim::NumToTensor': prim_op_eval_num_to_tensor,
+    'prim::TupleUnpack': prim_op_eval_unpack,
+    'prim::ListUnpack': prim_op_eval_unpack,
+    'prim::TupleConstruct': prim_op_eval_pack,
+    'prim::ListConstruct': prim_op_eval_pack,
+    'prim::Constant': prim_op_eval_constant,
+    'prim::GetAttr': prim_op_eval_getattr,
+}
+    
+def prim_op_eval(node: torch.Node, speedup: ModelSpeedup):
+    """
+    Recursively execute the prim op
+    """
+            
+    kind = node.kind()
+    if kind in eval_table:
+        # avoid replicated execution
+        if node not in speedup.executed_prim_nodes:
+            speedup.executed_prim_nodes.add(node)
+            eval_table[kind](node, speedup)
+    
 def translate_list(list_node: torch._C.Value, speedup: ModelSpeedup=None) -> List:
     """
     Get the list of values from the list construct node.
@@ -151,6 +262,43 @@ def cat_python(node: NodePyGroup, speedup: ModelSpeedup):
     dim = inputs[1].toIValue()
     return CatModule(dim)
 
+def complex_python(node: NodePyGroup, speedup: ModelSpeedup):
+    c_node = node.key_node
+    schema: str= c_node.schema()
+    if schema.startswith('aten::Complex.Scalar'):
+        return generate_aten_to_python(torch.view_as_complex, node, speedup)
+    elif schema.startswith('aten::Complex.Tensor_Tensor'):
+        return generate_aten_to_python(torch.complex, node, speedup)
+    else:
+        logger.error('%s is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~', schema)
+        # return None to skip the mask inference for this node
+        return None
+
+class ItemImplicit(torch.nn.Module):
+    def __init__(self, to_int: bool):
+        super().__init__()
+        self.to_int = to_int
+
+    def forward(self, t: torch.Tensor):
+        check_implicit_tensor_to_num(t, self.to_int)
+        return t.item()
+    
+def item_implicit_python(to_int: bool, node: NodePyGroup, speedup: ModelSpeedup):
+    for sub_node in node.node_cpps[1:]:
+        prim_op_eval(sub_node, speedup)
+        
+    c_node = node.key_node
+    positional_num = 1
+    keyword_list = []
+    special_treat = {}
+
+    input_nodes = list(c_node.inputs())
+    positional, keyword, undetermined = parse_input_value(speedup, input_nodes, positional_num, keyword_list)
+
+    undetermined_special_treat = special_treat_to_constant_value(positional, keyword, undetermined, special_treat)
+
+    return FuncAdapter(ItemImplicit(to_int), positional, keyword, undetermined, undetermined_special_treat)
+
 def tupleunpack_python(_node: NodePyGroup, _speedup: ModelSpeedup) -> Optional[Callable]:
     # Note: tuple unpack should only exists at the
     # the end of the model, and is no need to replace/propagate mask
@@ -242,8 +390,8 @@ class FuncAdapter:
                 for f in fs:
                     self.keyword[p] = f(self.keyword[p])
         result = self.func(*self.positional, **self.keyword)
-        if isinstance(result, int): # turn result of 'size' into tensor
-            result = torch.as_tensor([result], dtype=torch.long)
+        # if isinstance(result, int): # turn result of 'size' into tensor
+        #     result = torch.as_tensor(result, dtype=torch.long)
         return result
 
 # There are some types that will be convert into enums after jit.
@@ -358,6 +506,7 @@ schema_fix_dict = {
     # """aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? devi
     # ce=None, bool? pin_memory=None) -> (Tensor"""'
 }
+
 @lru_cache(maxsize=256)
 def parse_aten_schema(schema: str):
     """
@@ -395,18 +544,15 @@ def parse_input_value(speedup: ModelSpeedup, input_nodes: List[torch._C.Node], p
     undetermined = list()
 
     for ainput in input_nodes:
-        if ainput.node().kind() == 'prim::ListConstruct':
-            arg = translate_list(ainput, speedup)
-        elif ainput.node().kind() == 'prim::Constant':
-            arg = ainput.toIValue()
-        else:
-            assert 'aten::' in ainput.node().kind() or 'prim::' in ainput.node().kind()
+        if ainput.debugName() in speedup.masks:
             if len(positional) < positional_num:
                 undetermined.append(len(positional))
             else:
                 undetermined.append(keyword_list[positional_num - len(positional)])
             arg = None
-
+        else:
+            arg = speedup.internal_result[ainput.debugName()]
+            
         if len(positional) < positional_num:
             positional.append(arg)
         else:
@@ -447,6 +593,9 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
         Return the translated function that used to inference the mask
         , if current op_type is not supported, then we return None.
     """
+    for sub_node in node.node_cpps[1:]:
+        prim_op_eval(sub_node, speedup)
+        
     c_node = node.key_node
 
     schema = c_node.schema()
@@ -463,7 +612,15 @@ trans_func_dict = {
     'aten::slice': slice_python,
     'aten::cat': cat_python,
     'aten::Int': partial(generate_aten_to_python, torch._C._TensorBase.int),
-
+    'aten::Bool': partial(generate_aten_to_python, torch._C._TensorBase.bool),
+    'aten::Float': partial(generate_aten_to_python, torch._C._TensorBase.float),
+    'aten::Complex': complex_python,
+    
+    'aten::IntImplicit': partial(item_implicit_python, True),
+    'aten::ComplexImplicit': partial(item_implicit_python, False),
+    'aten::FloatImplicit': partial(item_implicit_python, False),
+    'aten::ScalarImplicit': partial(item_implicit_python, False),
+    
     'prim::TupleUnpack': tupleunpack_python,
     'prim::ListUnpack': tupleunpack_python,
     'prim::NumToTensor': num2tensor_python,
