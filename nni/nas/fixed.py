@@ -62,9 +62,12 @@ def no_fixed_arch():
 
     NO_ARCH = '_no_arch_'
 
-    popped_arch = NO_ARCH
     try:
-        popped_arch = ContextStack.pop('fixed')
+        try:
+            popped_arch = ContextStack.pop('fixed')
+        except IndexError:
+            # context unavailable
+            popped_arch = NO_ARCH
         yield
     finally:
         if popped_arch is not NO_ARCH:
