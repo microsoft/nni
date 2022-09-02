@@ -62,6 +62,7 @@ def no_fixed_arch():
 
     NO_ARCH = '_no_arch_'
 
+    popped_arch = NO_ARCH  # make linter happy
     try:
         try:
             popped_arch = ContextStack.pop('fixed')
