@@ -106,8 +106,8 @@ class ContextStack:
         cls._stack[key].append(value)
 
     @classmethod
-    def pop(cls, key: str) -> None:
-        cls._stack[key].pop()
+    def pop(cls, key: str) -> Any:
+        return cls._stack[key].pop()
 
     @classmethod
     def top(cls, key: str) -> Any:
