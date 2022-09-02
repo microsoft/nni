@@ -597,3 +597,10 @@ for current_epoch in range(total_epochs):
 #       - -2.63 / -3.09
 #       - 4.36s (x5.88)
 #       - 3.12s (x2.60)
+#     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=40)
+#       - :ref:`taylor-fo-weight-pruner`
+#       - 8.8M (-89.66%)
+#       - 81.64 / 82.39
+#       - -3.21 / -2.89
+#       - 3.88s (x6.60)
+#       - 2.81s (x2.88)

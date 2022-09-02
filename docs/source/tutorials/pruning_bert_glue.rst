@@ -643,7 +643,7 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 538-600
+.. GENERATED FROM PYTHON SOURCE LINES 538-607
 
 Result
 ------
@@ -707,11 +707,18 @@ Setting 2: pytorch 1.10.0
       - -2.63 / -3.09
       - 4.36s (x5.88)
       - 3.12s (x2.60)
+    * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=40)
+      - :ref:`taylor-fo-weight-pruner`
+      - 8.8M (-89.66%)
+      - 81.64 / 82.39
+      - -3.21 / -2.89
+      - 3.88s (x6.60)
+      - 2.81s (x2.88)
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  25.803 seconds)
+   **Total running time of the script:** ( 0 minutes  20.822 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_bert_glue.py:

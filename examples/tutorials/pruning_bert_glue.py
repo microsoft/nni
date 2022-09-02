@@ -566,7 +566,7 @@ for current_epoch in range(total_epochs):
 #       - :ref:`taylor-fo-weight-pruner`
 #       - 54.1M (-36.43%)
 #       - 85.38 / 85.41
-#       - -0.48 / +0.33
+#       - +0.53 / +0.13
 #       - 17.93s (x1.43)
 #       - 7.22s (x1.12)
 #     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=5)
@@ -597,3 +597,10 @@ for current_epoch in range(total_epochs):
 #       - -2.63 / -3.09
 #       - 4.36s (x5.88)
 #       - 3.12s (x2.60)
+#     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=40)
+#       - :ref:`taylor-fo-weight-pruner`
+#       - 8.8M (-89.66%)
+#       - 81.64 / 82.39
+#       - -3.21 / -2.89
+#       - 3.88s (x6.60)
+#       - 2.81s (x2.88)
