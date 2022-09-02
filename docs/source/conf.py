@@ -111,7 +111,8 @@ linkcheck_ignore = [
     r'https://1drv\.ms/',                                   # OneDrive (shortcut)
     r'https://onedrive\.live\.com/',                        # OneDrive
     r'https://www\.openml\.org/',                           # OpenML
-    r'https://ml\.informatik\.uni-freiburg\.de/'
+    r'https://ml\.informatik\.uni-freiburg\.de/',
+    r'https://docs\.nvidia\.com/deeplearning/',
 ]
 
 # Ignore all links located in release.rst
