@@ -2,7 +2,8 @@ import { MANAGER_IP, METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE } f
 import { MetricDataRecord, TableRecord, TrialJobInfo, MultipleAxes } from '../interface';
 import { Trial } from './trial';
 import { SearchSpace, MetricSpace } from './searchspace';
-import { requestAxios } from '../function';
+import { requestAxios, parseMetrics } from '../function';
+import { AllTrialsIntermediateChart } from '../interface';
 
 function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
     const ret = new Map<string, MetricDataRecord[]>();
@@ -86,10 +87,37 @@ class TrialManager {
         return this.filter(trial => trial.status === 'SUCCEEDED');
     }
 
+    public notWaittingTrials(): Trial[] {
+        return this.filter(trial => trial.status !== 'WAITING');
+    }
+
+    public allTrialsIntermediateChart(): AllTrialsIntermediateChart[] {
+        const ret: AllTrialsIntermediateChart[] = [];
+        for (const trial of this.trials.values()) {
+            const mediate: number[] = [];
+            for (const items of trial.intermediates) {
+                if (typeof parseMetrics(items!.data) === 'object') {
+                    mediate.push(parseMetrics(items!.data).default);
+                } else {
+                    mediate.push(parseMetrics(items!.data));
+                }
+            }
+            ret.push({
+                name: trial.id,
+                sequenceId: trial.sequenceId,
+                data: mediate,
+                parameter: trial.parameter,
+                type: 'line'
+            });
+        }
+
+        return ret;
+    }
+
     public finalKeys(): string[] {
         const succeedTrialsList = this.filter(trial => trial.status === 'SUCCEEDED');
         if (succeedTrialsList !== undefined && succeedTrialsList[0] !== undefined) {
-            return succeedTrialsList[0].finalKeys();
+            return succeedTrialsList[0].acc !== undefined ? Object.keys(succeedTrialsList[0].acc) : [];
         } else {
             return ['default'];
         }

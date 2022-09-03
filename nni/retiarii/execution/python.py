@@ -1,60 +1,6 @@
-from typing import Dict, Any
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
-from ..graph import Evaluator, Model
-from ..integration_api import receive_trial_parameters
-from ..utils import ContextStack, import_, get_importable_name
-from .base import BaseExecutionEngine
-from .utils import get_mutation_dict, mutation_dict_to_summary
+# pylint: disable=wildcard-import,unused-wildcard-import
 
-
-class PythonGraphData:
-    def __init__(self, class_name: str, init_parameters: Dict[str, Any],
-                 mutation: Dict[str, Any], evaluator: Evaluator) -> None:
-        self.class_name = class_name
-        self.init_parameters = init_parameters
-        self.mutation = mutation
-        self.evaluator = evaluator
-        self.mutation_summary = mutation_dict_to_summary(mutation)
-
-    def dump(self) -> dict:
-        return {
-            'class_name': self.class_name,
-            'init_parameters': self.init_parameters,
-            'mutation': self.mutation,
-            'evaluator': self.evaluator,
-            'mutation_summary': self.mutation_summary
-        }
-
-    @staticmethod
-    def load(data) -> 'PythonGraphData':
-        return PythonGraphData(data['class_name'], data['init_parameters'], data['mutation'], data['evaluator'])
-
-
-class PurePythonExecutionEngine(BaseExecutionEngine):
-    """
-    This is the execution engine that doesn't rely on Python-IR converter.
-
-    We didn't explicitly state this independency for now. Front-end needs to decide which converter / no converter
-    to use depending on the execution type. In the future, that logic may be moved into this execution engine.
-
-    The execution engine needs to store the class path of base model, and init parameters to re-initialize the model
-    with the mutation dict in the context, so that the mutable modules are created to be the fixed instance on the fly.
-    """
-
-    @classmethod
-    def pack_model_data(cls, model: Model) -> Any:
-        mutation = get_mutation_dict(model)
-        graph_data = PythonGraphData(get_importable_name(model.python_class, relocate_module=True),
-                                     model.python_init_params, mutation, model.evaluator)
-        return graph_data
-
-    @classmethod
-    def trial_execute_graph(cls) -> None:
-        graph_data = PythonGraphData.load(receive_trial_parameters())
-
-        class _model(import_(graph_data.class_name)):
-            def __init__(self):
-                super().__init__(**graph_data.init_parameters)
-
-        with ContextStack('fixed', graph_data.mutation):
-            graph_data.evaluator._execute(_model)
+from nni.nas.execution.pytorch.simplified import *

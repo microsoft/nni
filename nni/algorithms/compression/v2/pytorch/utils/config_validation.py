@@ -57,6 +57,5 @@ def validate_op_types(model, op_types, logger):
 
 def validate_op_types_op_names(data):
     if not ('op_types' in data or 'op_names' in data or 'op_partial_names' in data):
-        raise SchemaError('At least one of the followings must be specified: op_types, op_names or op_partial_names.')      
-                  
+        raise SchemaError('At least one of the followings must be specified: op_types, op_names or op_partial_names.')
     return True

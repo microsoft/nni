@@ -2,6 +2,7 @@
   "include": [
       "common/**/*",
       "core/**/*",
+      "extensions/**/*",
       "rest_server/**/*",
       "training_service/**/*",
       "main.ts"

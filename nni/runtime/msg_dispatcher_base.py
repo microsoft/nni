@@ -3,14 +3,12 @@
 
 import threading
 import logging
-from multiprocessing.dummy import Pool as ThreadPool
 from queue import Queue, Empty
 
-from .common import multi_thread_enabled
 from .env_vars import dispatcher_env_vars
 from ..common import load
 from ..recoverable import Recoverable
-from .protocol import CommandType, receive
+from .tuner_command_channel import CommandType, TunerCommandChannel
 
 
 _logger = logging.getLogger(__name__)
@@ -20,62 +18,73 @@ _worker_fast_exit_on_terminate = True
 
 
 class MsgDispatcherBase(Recoverable):
-    """This is where tuners and assessors are not defined yet.
+    """
+    This is where tuners and assessors are not defined yet.
     Inherits this class to make your own advisor.
+
+    .. note::
+
+        The class inheriting MsgDispatcherBase should be instantiated
+        after nnimanager (rest server) is started, so that the object
+        is ready to use right after its instantiation.
     """
 
-    def __init__(self):
+    def __init__(self, command_channel_url=None):
         self.stopping = False
-        if multi_thread_enabled():
-            self.pool = ThreadPool()
-            self.thread_results = []
-        else:
-            self.default_command_queue = Queue()
-            self.assessor_command_queue = Queue()
-            self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))
-            self.assessor_worker = threading.Thread(target=self.command_queue_worker,
-                                                    args=(self.assessor_command_queue,))
-            self.default_worker.start()
-            self.assessor_worker.start()
-            self.worker_exceptions = []
+        if command_channel_url is None:
+            command_channel_url = dispatcher_env_vars.NNI_TUNER_COMMAND_CHANNEL
+        self._channel = TunerCommandChannel(command_channel_url)
+        # NOTE: `connect()` should be put in __init__. First, this `connect()` affects nnimanager's
+        # starting process, without `connect()` nnimanager is blocked in `dispatcher.init()`.
+        # Second, nas experiment uses a thread to execute `run()` of this class, thus, there is
+        # no way to know when the websocket between nnimanager and dispatcher is built. The following
+        # logic may crash is websocket is not built. One example is updating search space. If updating
+        # search space too soon, as the websocket has not been built, the rest api of updating search
+        # space will timeout.
+        # FIXME: this is making unittest happy
+        if not command_channel_url.startswith('ws://_unittest_'):
+            self._channel.connect()
+        self.default_command_queue = Queue()
+        self.assessor_command_queue = Queue()
+        # here daemon should be True, because their parent thread is configured as daemon to enable smooth exit of NAS experiment.
+        # if daemon is not set, these threads will block the daemon effect of their parent thread.
+        self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,), daemon=True)
+        self.assessor_worker = threading.Thread(target=self.command_queue_worker, args=(self.assessor_command_queue,), daemon=True)
+        self.worker_exceptions = []
 
     def run(self):
         """Run the tuner.
         This function will never return unless raise.
         """
         _logger.info('Dispatcher started')
+
+        self.default_worker.start()
+        self.assessor_worker.start()
+
         if dispatcher_env_vars.NNI_MODE == 'resume':
             self.load_checkpoint()
 
         while not self.stopping:
-            command, data = receive()
+            command, data = self._channel._receive()
             if data:
                 data = load(data)
 
             if command is None or command is CommandType.Terminate:
                 break
-            if multi_thread_enabled():
-                result = self.pool.map_async(self.process_command_thread, [(command, data)])
-                self.thread_results.append(result)
-                if any([thread_result.ready() and not thread_result.successful() for thread_result in
-                        self.thread_results]):
-                    _logger.debug('Caught thread exception')
-                    break
-            else:
-                self.enqueue_command(command, data)
-                if self.worker_exceptions:
-                    break
+            self.enqueue_command(command, data)
+            if self.worker_exceptions:
+                break
 
         _logger.info('Dispatcher exiting...')
         self.stopping = True
-        if multi_thread_enabled():
-            self.pool.close()
-            self.pool.join()
-        else:
-            self.default_worker.join()
-            self.assessor_worker.join()
+        self.default_worker.join()
+        self.assessor_worker.join()
+        self._channel.disconnect()
 
         _logger.info('Dispatcher terminiated')
+
+    def send(self, command, data):
+        self._channel._send(command, data)
 
     def command_queue_worker(self, command_queue):
         """Process commands in command queues.
@@ -111,19 +120,6 @@ class MsgDispatcherBase(Recoverable):
         qsize = self.assessor_command_queue.qsize()
         if qsize >= QUEUE_LEN_WARNING_MARK:
             _logger.warning('assessor queue length: %d', qsize)
-
-    def process_command_thread(self, request):
-        """Worker thread to process a command.
-        """
-        command, data = request
-        if multi_thread_enabled():
-            try:
-                self.process_command(command, data)
-            except Exception as e:
-                _logger.exception(str(e))
-                raise
-        else:
-            pass
 
     def process_command(self, command, data):
         _logger.debug('process_command: command: [%s], data: [%s]', command, data)

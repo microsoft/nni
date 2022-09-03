@@ -1,173 +1,271 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import math
-from typing import Any, Dict, List, Tuple, Union
+from __future__ import annotations
+
+from functools import reduce
+from typing import Any, Dict
 
 import numpy as np
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner
+from nni.common.graph_utils import TorchModuleGraph
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
 from .base import SparsityAllocator
+from ...base import Pruner
+from ...utils import Scaling
 
 
 class NormalSparsityAllocator(SparsityAllocator):
     """
-    This allocator simply pruned the weight with smaller metrics in layer level.
+    This allocator directly masks the locations of each pruning target with lower metric values.
     """
-    def generate_sparsity(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
+
+    def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
         masks = {}
-        for name, wrapper in self.pruner.get_modules_wrapper().items():
-            sparsity_rate = wrapper.config['total_sparsity']
+        # TODO: Support more target type in wrapper & config list refactor
+        for module_name, targets_metric in metrics.items():
+            masks[module_name] = {}
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                sparsity_rate = wrapper.config['total_sparsity']
+                flatten_metric = target_metric.reshape(-1)
+                kept_num = flatten_metric.numel() - int(sparsity_rate * flatten_metric.numel())
+                kept_indices = torch.topk(flatten_metric, kept_num).indices
+                shrinked_mask = torch.zeros_like(flatten_metric).scatter(0, kept_indices, 1.0).reshape_as(target_metric)
+                masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
+        return masks
 
-            assert name in metrics, 'Metric of {} is not calculated.'.format(name)
 
-            # We assume the metric value are all positive right now.
-            metric = metrics[name]
-            if self.continuous_mask:
-                metric *= self._compress_mask(wrapper.weight_mask)
-            prune_num = int(sparsity_rate * metric.numel())
-            if prune_num == 0:
-                threshold = metric.min() - 1
-            else:
-                threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
-            mask = torch.gt(metric, threshold).type_as(metric)
-            masks[name] = self._expand_mask(name, mask)
+class ThresholdSparsityAllocator(SparsityAllocator):
+    """
+    Note: This allocator is an experimental allocator.
+    It takes 'total_sparsity' as threshold to mask the pruning target where metric is lower then threshold.
+    """
+    def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+        masks = {}
+        # TODO: Support more target type in wrapper & config list refactor
+        for module_name, targets_metric in metrics.items():
+            masks[module_name] = {}
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                threshold = wrapper.config['total_sparsity']
+                shrinked_mask = torch.gt(torch.sigmoid(target_metric), threshold).type_as(target_metric)
+                masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
+        return masks
+
+
+class BankSparsityAllocator(SparsityAllocator):
+    """
+    In bank pruner, all values in weight are divided into different sub blocks each shape
+    aligned with balance_gran. Each sub block has the same sparsity which equal to the overall sparsity.
+    This allocator pruned the weight in the granularity of block.
+    """
+
+    def __init__(self, pruner: Pruner, balance_gran: list):
+        super().__init__(pruner)
+        self.balance_gran = balance_gran
+        for gran in self.balance_gran:
+            assert isinstance(gran, int) and gran > 0, 'All values in list balance_gran \
+                should be type int and bigger than zero'
+
+    def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+        masks = {}
+        # TODO: Support more target type in wrapper & config list refactor
+        for module_name, targets_metric in metrics.items():
+            masks[module_name] = {}
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                sparsity_rate = wrapper.config['total_sparsity']
+
+                n_dim = len(target_metric.shape)
+                assert n_dim >= len(self.balance_gran), 'Dimension of balance_gran should be smaller than metric'
+                # make up for balance_gran
+                balance_gran = [1] * (n_dim - len(self.balance_gran)) + self.balance_gran
+                balance_numel = reduce(lambda x, y: x * y, balance_gran)
+
+                reshape_size_split = []
+                reshape_size_balance = []
+                for i, j in zip(target_metric.shape, balance_gran):
+                    assert i % j == 0, 'Length of {} {} is not aligned with balance granularity'.format(module_name, target_name)
+                    reshape_size_split.extend([i // j, j])
+                    reshape_size_balance.append(i // j)
+                reshape_size_balance.append(balance_numel)
+
+                permute_dims_balance = [_ * 2 for _ in range(n_dim)] + [_ * 2 + 1 for _ in range(n_dim)]
+                _target_metric = target_metric.reshape(reshape_size_split).permute(permute_dims_balance)
+                reshape_size_split_p = _target_metric.shape
+                balance_metric = _target_metric.reshape(reshape_size_balance)
+
+                kept_num = balance_numel - int(sparsity_rate * balance_numel)
+                kept_indices = torch.topk(balance_metric, kept_num).indices
+                shrinked_mask = torch.zeros_like(balance_metric).scatter(-1, kept_indices, 1.0).reshape(reshape_size_split_p)
+
+                permute_dims_split = []
+                for i in range(n_dim):
+                    permute_dims_split.extend([i, i + n_dim])
+                shrinked_mask = shrinked_mask.permute(permute_dims_split).reshape_as(target_metric)
+                masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
         return masks
 
 
 class GlobalSparsityAllocator(SparsityAllocator):
     """
-    This allocator pruned the weight with smaller metrics in group level.
-    This means all layers in a group will sort metrics uniformly.
-    The layers with the same config in config_list is a group.
+    This allocator sorts all metrics as a whole, mask the locations of pruning target with lower metric value.
+    By default, this allocator will prevent each module from being over-pruned with upper sparsity 0.99.
     """
-    def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
-        masks = {}
-        # {group_index: {layer_name: metric}}
-        grouped_metrics = {idx: {name: metrics[name] for name in names}
-                           for idx, names in self.pruner.generate_module_groups().items()}
-        for _, group_metric_dict in grouped_metrics.items():
-            threshold, sub_thresholds = self._calculate_threshold(group_metric_dict)
-            for name, metric in group_metric_dict.items():
-                mask = torch.gt(metric, min(threshold, sub_thresholds[name])).type_as(metric)
-                masks[name] = self._expand_mask(name, mask)
-        return masks
 
-    def _calculate_threshold(self, group_metric_dict: Dict[str, Tensor]) -> Tuple[float, Dict[str, float]]:
+    def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+        masks = {}
+        if not metrics:
+            return masks
+        # TODO: support more target type in wrapper & config list refactor
+        # validate all wrapper setting have the same sparsity
+        # TODO: move validation logic to pruner
+        global_sparsity_rate = self.pruner.get_modules_wrapper()[list(metrics.keys())[0]].config['total_sparsity']
+        for module_name in metrics.keys():
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            assert global_sparsity_rate == wrapper.config['total_sparsity']
+
+        # find the largest metric value among all metrics
+        max_metric_value = list(list(metrics.values())[0].values())[0].max().item()
+        for targets_metric in metrics.values():
+            for target_metric in targets_metric.values():
+                max_metric_value = max_metric_value if max_metric_value >= target_metric.max().item() else target_metric.max().item()
+
+        # prevent each module from being over-pruned, prevent ratio is 'max_sparsity_per_layer'
+        for module_name, targets_metric in metrics.items():
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                max_sparsity = wrapper.config.get('max_sparsity_per_layer', {}).get(module_name, 0.99)
+                assert 0 <= max_sparsity <= 1
+                old_target_mask: Tensor = getattr(wrapper, f'{target_name}_mask')
+                flatten_metric = target_metric.reshape(-1)
+                protected_pruning_numel = target_metric.numel() - int(max_sparsity * target_metric.numel())
+                protected_indices = torch.topk(flatten_metric, protected_pruning_numel).indices
+                metrics[module_name][target_name] = flatten_metric.scatter(0, protected_indices, max_metric_value).reshape_as(target_metric)
+
+        # build the global_matric & calculate global threshold
         metric_list = []
-        sub_thresholds = {}
-        total_weight_num = 0
+        for module_name, targets_metric in metrics.items():
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                old_target_mask: Tensor = getattr(wrapper, f'{target_name}_mask')
+                expand_times = old_target_mask.numel() // target_metric.numel()
+                metric_list.append(target_metric.reshape(-1).repeat_interleave(expand_times))
+        global_metric = torch.cat(metric_list)
+        max_pruning_num = int((global_metric != max_metric_value).sum().item())
+        total_pruning_num = min(int(global_sparsity_rate * global_metric.numel()), max_pruning_num)
+        global_threshold = torch.topk(global_metric.reshape(-1), total_pruning_num, largest=False)[0].max()
 
-        temp_wrapper_config = self.pruner.get_modules_wrapper()[list(group_metric_dict.keys())[0]].config
-        total_sparsity = temp_wrapper_config['total_sparsity']
-        max_sparsity_per_layer = temp_wrapper_config.get('max_sparsity_per_layer', {})
-
-        for name, metric in group_metric_dict.items():
-            wrapper = self.pruner.get_modules_wrapper()[name]
-
-            # We assume the metric value are all positive right now.
-            if self.continuous_mask:
-                metric = metric * self._compress_mask(wrapper.weight_mask)
-
-            layer_weight_num = wrapper.module.weight.data.numel()
-            total_weight_num += layer_weight_num
-            expend_times = int(layer_weight_num / metric.numel())
-
-            retention_ratio = 1 - max_sparsity_per_layer.get(name, 1)
-            retention_numel = math.ceil(retention_ratio * layer_weight_num)
-            removed_metric_num = math.ceil(retention_numel / (wrapper.weight_mask.numel() / metric.numel()))
-            stay_metric_num = metric.numel() - removed_metric_num
-            if stay_metric_num <= 0:
-                sub_thresholds[name] = metric.min().item() - 1
-                continue
-            # Remove the weight parts that must be left
-            stay_metric = torch.topk(metric.view(-1), stay_metric_num, largest=False)[0]
-            sub_thresholds[name] = stay_metric.max()
-            if expend_times > 1:
-                stay_metric = stay_metric.expand(int(layer_weight_num / metric.numel()), stay_metric_num).contiguous().view(-1)
-            metric_list.append(stay_metric)
-
-        total_prune_num = int(total_sparsity * total_weight_num)
-        if total_prune_num == 0:
-            threshold = torch.cat(metric_list).min().item() - 1
-        else:
-            threshold = torch.topk(torch.cat(metric_list).view(-1), total_prune_num, largest=False)[0].max().item()
-        return threshold, sub_thresholds
-
-
-class Conv2dDependencyAwareAllocator(SparsityAllocator):
-    """
-    A specify allocator for Conv2d with dependency aware.
-    """
-
-    def __init__(self, pruner: Pruner, dim: int, dummy_input: Any):
-        assert isinstance(dim, int), 'Only support single dim in Conv2dDependencyAwareAllocator.'
-        super().__init__(pruner, dim=dim)
-        self.dummy_input = dummy_input
-
-    def _get_dependency(self):
-        graph = self.pruner.generate_graph(dummy_input=self.dummy_input)
-        self.pruner._unwrap_model()
-        self.channel_depen = ChannelDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
-        self.group_depen = GroupDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
-        self.pruner._wrap_model()
-
-    def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
-        self._get_dependency()
-        masks = {}
-        grouped_metrics = {}
-        for idx, names in enumerate(self.channel_depen):
-            grouped_metric = {name: metrics[name] for name in names if name in metrics}
-            if self.continuous_mask:
-                for name, metric in grouped_metric.items():
-                    metric *= self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
-            if len(grouped_metric) > 0:
-                grouped_metrics[idx] = grouped_metric
-        for _, group_metric_dict in grouped_metrics.items():
-            group_metric = self._group_metric_calculate(group_metric_dict)
-
-            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['total_sparsity'] for name in group_metric_dict.keys()}
-            min_sparsity = min(sparsities.values())
-
-            conv2d_groups = [self.group_depen[name] for name in group_metric_dict.keys()]
-            max_conv2d_group = np.lcm.reduce(conv2d_groups)
-
-            pruned_per_conv2d_group = int(group_metric.numel() / max_conv2d_group * min_sparsity)
-            conv2d_group_step = int(group_metric.numel() / max_conv2d_group)
-
-            group_mask = []
-            for gid in range(max_conv2d_group):
-                _start = gid * conv2d_group_step
-                _end = (gid + 1) * conv2d_group_step
-                if pruned_per_conv2d_group > 0:
-                    threshold = torch.topk(group_metric[_start: _end], pruned_per_conv2d_group, largest=False)[0].max()
-                    conv2d_group_mask = torch.gt(group_metric[_start:_end], threshold).type_as(group_metric)
-                else:
-                    conv2d_group_mask = torch.ones(conv2d_group_step, device=group_metric.device)
-                group_mask.append(conv2d_group_mask)
-            group_mask = torch.cat(group_mask, dim=0)
-
-            for name, metric in group_metric_dict.items():
-                # We assume the metric value are all positive right now.
-                metric = metric * group_mask
-                pruned_num = int(sparsities[name] * len(metric))
-                threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
-                mask = torch.gt(metric, threshold).type_as(metric)
-                masks[name] = self._expand_mask(name, mask)
-
+        # generate masks for each target
+        for module_name, targets_metric in metrics.items():
+            masks[module_name] = {}
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                wrapper = self.pruner.get_modules_wrapper()[module_name]
+                shrinked_mask = torch.gt(target_metric, global_threshold).type_as(target_metric)
+                masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
         return masks
 
-    def _group_metric_calculate(self, group_metrics: Union[Dict[str, Tensor], List[Tensor]]) -> Tensor:
-        """
-        Add all metric value in the same position in one group.
-        """
-        group_metrics = list(group_metrics.values()) if isinstance(group_metrics, dict) else group_metrics
-        assert all(group_metrics[0].size() == group_metric.size() for group_metric in group_metrics), 'Metrics size do not match.'
-        group_sum_metric = torch.zeros(group_metrics[0].size(), device=group_metrics[0].device)
-        for group_metric in group_metrics:
-            group_sum_metric += group_metric
-        return group_sum_metric
+
+# TODO: This allocator will trace the model, means the model will be inference during initialization,
+# sometime we may not aware of this inference and it may lead to some error.
+class DependencyAwareAllocator(SparsityAllocator):
+    """
+    An specific allocator for Conv2d & Linear module with dependency-aware.
+    It will generate a public mask for the modules that have dependencies,
+    then generate the part of the non-public mask for each module.
+    For other module types, the way to generate the mask is the same as `NormalSparsityAllocator`.
+    """
+
+    def __init__(self, pruner: Pruner, dummy_input: Any, scalers: Dict[str, Dict[str, Scaling]] | Scaling | None = None):
+        # Scaling(kernel_size=[1], kernel_padding_mode='back') means output channel pruning.
+        scalers = scalers if scalers else Scaling(kernel_size=[1], kernel_padding_mode='back')
+        super().__init__(pruner, scalers=scalers)
+        self.channel_dependency, self.group_dependency = self._get_dependency(dummy_input)
+
+    def _get_dependency(self, dummy_input: Any):
+        # get the channel dependency and group dependency
+        # channel dependency format: [[module_name1, module_name2], [module_name3], ...]
+        # group dependency format: {module_name: group_num}
+        self.pruner._unwrap_model()
+        graph = TorchModuleGraph(model=self.pruner.bound_model, dummy_input=dummy_input)
+        channel_dependency = ChannelDependency(model=self.pruner.bound_model, dummy_input=dummy_input,
+                                               traced_model=graph.trace).dependency_sets
+        group_dependency = GroupDependency(model=self.pruner.bound_model, dummy_input=dummy_input,
+                                           traced_model=graph.trace).dependency_sets
+        self.pruner._wrap_model()
+        return channel_dependency, group_dependency
+
+    def _metric_fuse(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Tensor]:
+        # Sum all metric value in the same position.
+        fused_metrics = {}
+        for targets_metric in metrics.values():
+            for target_name, target_metric in targets_metric.items():
+                if target_name in fused_metrics:
+                    fused_metrics[target_name] += target_metric
+                else:
+                    fused_metrics[target_name] = target_metric
+        return fused_metrics
+
+    def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
+        # placeholder, here we need more discussion about dependence sparsity, Plan A or Plan B.
+        masks = {}
+        # generate public part for modules that have dependencies
+        for module_names in self.channel_dependency:
+            sub_metrics = {module_name: metrics[module_name] for module_name in module_names if module_name in metrics}
+            if not sub_metrics:
+                continue
+            fused_metrics = self._metric_fuse(sub_metrics)
+
+            for target_name, fused_metric in fused_metrics.items():
+                sparsity_rates = {module_name: self.pruner.get_modules_wrapper()[module_name].config['total_sparsity']
+                                  for module_name in sub_metrics.keys()}
+                min_sparsity_rate = min(sparsity_rates.values())
+
+                group_nums = [self.group_dependency.get(module_name, 1) for module_name in sub_metrics.keys()]
+                max_group_nums = int(np.lcm.reduce(group_nums))
+                pruned_numel_per_group = int(fused_metric.numel() // max_group_nums * min_sparsity_rate)
+                group_step = fused_metric.shape[0] // max_group_nums
+
+                # get the public part of the mask of the module with dependencies
+                dependency_mask = torch.ones_like(fused_metric)
+                for gid in range(max_group_nums):
+                    _start = gid * group_step
+                    _end = (gid + 1) * group_step
+                    if pruned_numel_per_group > 0:
+                        threshold = torch.topk(fused_metric[_start: _end].reshape(-1), pruned_numel_per_group, largest=False)[0].max()
+                        dependency_mask[_start: _end] = torch.gt(fused_metric[_start:_end], threshold).type_as(fused_metric)
+
+                # change the metric value corresponding to the public mask part to the minimum value
+                for module_name, targets_metric in sub_metrics.items():
+                    if target_name in targets_metric:
+                        # Following is Plan A, generate the dependency mask first, and then fill in the sparsity,
+                        # the final mask is group unbalanced. - 1 ensure the denpendency metric is the minimum, and will be masked first.
+                        # min_value = targets_metric[target_name].min() - 1
+                        # metrics[module_name][target_name] = torch.where(dependency_mask!=0, targets_metric[target_name], min_value)
+
+                        # Following is Plan B, just generate the dependency mask, the final mask is group balanced.
+                        masks.setdefault(module_name, {})
+                        masks[module_name][target_name] = self._expand_mask(module_name, target_name, dependency_mask)
+
+        # generate masks for layers without dependencies
+        for module_name, targets_metric in metrics.items():
+            masks.setdefault(module_name, {})
+            wrapper = self.pruner.get_modules_wrapper()[module_name]
+            for target_name, target_metric in targets_metric.items():
+                if target_name in masks[module_name]:
+                    continue
+                sparsity_rate = wrapper.config['total_sparsity']
+                prune_num = int(sparsity_rate * target_metric.numel())
+                if prune_num != 0:
+                    threshold = torch.topk(target_metric.reshape(-1), prune_num, largest=False)[0].max()
+                    shrinked_mask = torch.gt(target_metric, threshold).type_as(target_metric)
+                else:
+                    # target_metric should have the same size as shrinked_mask
+                    shrinked_mask = torch.ones_like(target_metric)
+                masks[module_name][target_name] = self._expand_mask(module_name, target_name, shrinked_mask)
+        return masks

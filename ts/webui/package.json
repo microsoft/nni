@@ -15,7 +15,7 @@
     "d3": "^6.7.0",
     "dotenv": "^10.0.0",
     "dotenv-expand": "^5.1.0",
-    "echarts": "^5.0",
+    "echarts": "^5.2.2",
     "echarts-for-react": "^3.0.0",
     "file-loader": "^6.2.0",
     "fs-extra": "^10.0.0",
@@ -28,7 +28,7 @@
     "mini-css-extract-plugin": "^1.6.0",
     "monaco-editor": "^0.25.0",
     "monaco-editor-webpack-plugin": "^4.0.0",
-    "node-sass": "^6.0.0",
+    "node-sass": "^7.0.1",
     "parcoord-es": "^2.2.10",
     "pnp-webpack-plugin": "^1.6.4",
     "postcss-flexbugs-fixes": "^5.0.2",
@@ -43,8 +43,7 @@
     "react-monaco-editor": "^0.32.1",
     "react-paginate": "^6.3.2",
     "react-responsive": "^8.1.1",
-    "react-router": "^5.2.0",
-    "react-router-dom": "^5.2.0",
+    "react-router-dom": "^6.3.0",
     "react-table": "^7.0.0-rc.15",
     "resolve": "^1.10.0",
     "sass-loader": "^12.1.0",
@@ -52,9 +51,8 @@
     "style-loader": "^2.0.0",
     "url-loader": "^4.1.1",
     "webpack": "^5.39.0",
-    "webpack-dev-server": "^3.11.2",
     "webpack-manifest-plugin": "^3.1.1",
-    "workbox-webpack-plugin": "^6.1.5"
+    "workbox-webpack-plugin": "^6.5.3"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",
@@ -63,13 +61,13 @@
     "@babel/preset-typescript": "^7.14.5",
     "@babel/runtime": "^7.14.6",
     "@fluentui/react": "^7.135.0",
-    "@svgr/webpack": "^5.5.0",
+    "@svgr/webpack": "^6.1.2",
     "@types/d3": "^6.7.0",
     "@types/node": "^15.12.2",
     "@types/react": "^16.8.15",
     "@types/react-dom": "^16.8.4",
-    "@typescript-eslint/eslint-plugin": "^4.27.0",
-    "@typescript-eslint/parser": "^4.27.0",
+    "@typescript-eslint/eslint-plugin": "^5.8.0",
+    "@typescript-eslint/parser": "^5.8.0",
     "concurrently": "^6.2.0",
     "eslint": "^7.28.0",
     "eslint-config-prettier": "^8.3.0",
@@ -82,18 +80,23 @@
     "eslint-plugin-react": "^7.24.0",
     "eslint-plugin-react-hooks": "^4.2.0",
     "express": "^4.17.1",
-    "npx": "^10.2.0",
+    "npm": ">=8.11.0",
     "prettier": "^2.3.1",
     "stylelint": "^13.7.0",
     "stylelint-config-standard": "^22.0.0",
-    "typescript": "^4.3.2"
+    "trim-newlines": "^3.0.0",
+    "typescript": "^4.3.2",
+    "webpack-dev-server": ">=4.9.0"
   },
   "proxy": "http://localhost:12138",
   "scripts": {
     "start": "node --max-old-space-size=3072 scripts/start.js",
-    "build": "node --max-old-space-size=3072 scripts/build.js",
+    "build": "node --max-old-space-size=3072 scripts/developmentBuild.js",
+    "release": "node --max-old-space-size=3072 scripts/productionBuild.js",
+    "sanity-check": "yarn sanity-check:tsc && yarn sanity-check:eslint",
+    "sanity-check:tsc": "tsc",
+    "sanity-check:eslint": "eslint ./ --ext .tsx,.ts",
     "test": "node --max-old-space-size=3072 scripts/test.js",
-    "eslint": "npx eslint ./ --ext .tsx,.ts",
     "stylelint": "npx stylelint **/*{.css,.scss}",
     "mock": "node scripts/server.js",
     "dev": "concurrently \"yarn mock\" \"yarn start\""
@@ -111,7 +114,6 @@
     ]
   },
   "resolutions": {
-    "npm": ">=7.17.0",
     "yargs": ">=17.0.1",
     "acorn": ">=8.4.0",
     "y18n": ">=5.0.8",
@@ -119,7 +121,9 @@
     "css-what": ">=5.0.1",
     "browserslist": ">=4.16.6",
     "trim-newlines": ">=4.0.2",
-    "glob-parent": ">=6.0.0"
+    "glob-parent": ">=6.0.0",
+    "strip-ansi": "=6.0.1",
+    "immer": ">=9.0.7"
   },
   "jest": {
     "verbose": true

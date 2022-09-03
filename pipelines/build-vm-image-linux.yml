@@ -1,0 +1,19 @@
+# FIXME: This pipeline is broken due to resource group location limitation.
+
+trigger: none
+pr: none
+
+variables:
+  resource_group: nni-image-builder
+  gallery_name: nniImageGalleryV2
+  network_security_group: nni-image-builder-nsg
+  managed_image_name: nni-linux-image
+  image_definition_name: nniLinuxImage
+  packer_config: config_linux
+
+jobs:
+- job: linux
+  pool:
+    vmImage: ubuntu-latest
+  steps:
+  - template: templates/build-vm-image-template.yml

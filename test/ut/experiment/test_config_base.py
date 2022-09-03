@@ -145,7 +145,7 @@ def test_bad():
             config.validate()
         except Exception as e:
             exc = e
-        assert isinstance(exc, ValueError), tag
+        assert exc is not None
 
 if __name__ == '__main__':
     test_good()

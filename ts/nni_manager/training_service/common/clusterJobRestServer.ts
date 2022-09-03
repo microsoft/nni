@@ -10,15 +10,16 @@ import { Writable } from 'stream';
 import { String } from 'typescript-string-operations';
 import * as component from 'common/component';
 import { getBasePort, getExperimentId } from 'common/experimentStartupInfo';
-import { RestServer } from 'common/restServer';
+import { LegacyRestServer } from 'common/restServer';
 import { getExperimentRootDir, mkDirPSync } from 'common/utils';
 
 /**
  * Cluster Job Training service Rest server, provides rest API to support Cluster job metrics update
  *
+ * FIXME: This should be a router, not a separate REST server.
  */
 @component.Singleton
-export abstract class ClusterJobRestServer extends RestServer {
+export abstract class ClusterJobRestServer extends LegacyRestServer {
     private readonly API_ROOT_URL: string = '/api/v1/nni-pai';
     private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
 

@@ -10,7 +10,7 @@ from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper as Pr
 from .utils import get_module_by_name
 
 
-__all__ = ['ChannelDependency', 'GroupDependency',
+__all__ = ['ChannelDependency', 'GroupDependency', 'ReshapeDependency',
            'InputChannelDependency', 'AttentionWeightDependency']
 
 
@@ -20,7 +20,7 @@ MUL_TYPES = ['aten::mul', 'atem::mul_']
 CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
 RESHAPE_OPS = [CAT_TYPE, 'aten::view',
-               'aten::reshape', 'aten::flatten', 'aten::mean']
+               'aten::reshape', 'aten::flatten', 'aten::mean', 'aten::expand_as', 'aten::pixel_shuffle']
 
 
 def lcm_list(L):
@@ -49,7 +49,7 @@ class Dependency:
             # user should provide model & dummy_input to trace
             # the model or a already traced model
             assert model is not None and dummy_input is not None
-        self.graph = TorchModuleGraph(model, dummy_input, traced_model)
+        self.graph: TorchModuleGraph = TorchModuleGraph(model, dummy_input, traced_model)
         self.model = model
         self.dependency = dict()
         self.build_dependency()
@@ -85,36 +85,46 @@ def reshape_break_channel_dependency(op_node):
     """
     in_shape = op_node.auxiliary['in_shape']
     out_shape = op_node.auxiliary['out_shape']
+    # FIXME: e.g., in_shape will be None if the input comes from a buffer, should be fixed in next release
+    if not in_shape or not out_shape:
+        return True
+    if len(in_shape) <= 1 or len(out_shape) <= 1:
+        return True
     in_channel = in_shape[1]
     out_channel = out_shape[1]
     return in_channel != out_channel
 
 
 class ChannelDependency(Dependency):
+    """
+    This model analyze the channel dependencies between the conv
+    layers in a model.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        The model to be analyzed.
+    data : torch.Tensor
+        The example input data to trace the network architecture.
+    traced_model : torch._C.Graph
+        if we alreay has the traced graph of the target model, we donnot
+        need to trace the model again.
+    prune_type: str
+        This parameter indicates the channel pruning type: 1) `Filter`
+        prune the filter of the convolution layer to prune the corresponding
+        channels 2) `Batchnorm`: prune the channel in the batchnorm layer
+    """
+
     def __init__(self, model, dummy_input, traced_model=None, prune_type='Filter'):
-        """
-        This model analyze the channel dependencies between the conv
-        layers in a model.
-        Parameters
-        ----------
-        model : torch.nn.Module
-            The model to be analyzed.
-        data : torch.Tensor
-            The example input data to trace the network architecture.
-        traced_model : torch._C.Graph
-            if we alreay has the traced graph of the target model, we donnot
-            need to trace the model again.
-        prune_type: str
-            This parameter indicates the channel pruning type: 1) `Filter`
-            prune the filter of the convolution layer to prune the corresponding
-            channels 2) `Batchnorm`: prune the channel in the batchnorm layer
-        """
         self.prune_type = prune_type
         self.target_types = []
         if self.prune_type == 'Filter':
             self.target_types.extend(['Conv2d', 'Linear', 'ConvTranspose2d'])
         elif self.prune_type == 'Batchnorm':
             self.target_types.append('BatchNorm2d')
+
+        from typing import Dict, Set
+        self.dependency: Dict[str, Set[str]]
 
         super(ChannelDependency, self).__init__(
             model, dummy_input, traced_model)
@@ -163,7 +173,13 @@ class ChannelDependency(Dependency):
             parent_layers = []
             # find the node that contains aten::add
             # or aten::cat operations
-            if node.op_type in ADD_TYPES:
+            if node.op_type in ADD_TYPES or node.op_type in MUL_TYPES:
+                # refer issue 4540 for more details. Multiplication actually
+                # will not introduce the channel dependency, cause the misaligned
+                # channels can propagate to each other. However, when one of the input
+                # tensor is from skip connection(residual), the channel propagation
+                # may be failed(the input is also used by another layer and cannot be
+                # pruned), in this case, we need to fix the conflict maunally.
                 parent_layers = self._get_parent_layers(node)
             elif node.op_type == CAT_TYPE:
                 # To determine if this cat operation will introduce channel
@@ -271,6 +287,7 @@ class InputChannelDependency(ChannelDependency):
         """
         This model analyze the input channel dependencies between the conv
         layers in a model.
+
         Parameters
         ----------
         model : torch.nn.Module
@@ -329,20 +346,22 @@ class InputChannelDependency(ChannelDependency):
 
 
 class GroupDependency(Dependency):
+    """
+    This model analyze the group dependencis between the conv
+    layers in a model.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        The model to be analyzed.
+    dummy_input : torch.Tensor
+        The example input data to trace the network architecture.
+    traced_model : torch._C.Graph
+        if we alreay has the traced graph of the target model, we donnot
+        need to trace the model again.
+    """
+
     def __init__(self, model, dummy_input, traced_model=None):
-        """
-        This model analyze the group dependencis between the conv
-        layers in a model.
-        Parameters
-        ----------
-        model : torch.nn.Module
-            The model to be analyzed.
-        data : torch.Tensor
-            The example input data to trace the network architecture.
-        traced_model : torch._C.Graph
-            if we alreay has the traced graph of the target model, we donnot
-            need to trace the model again.
-        """
         self.min_groups = {}
         super(GroupDependency, self).__init__(model, dummy_input, traced_model)
 
@@ -402,6 +421,29 @@ class GroupDependency(Dependency):
             return 1
         return group
 
+    def _get_group_norm_condition(self, node_group) -> int:
+        """
+        Get the number of groups for a group norm layer.
+
+        Parameters
+        ----------
+        node_group : NodePyGroup
+            target node.
+        Returns
+        -------
+        condition: int
+            the number that layer's num channel
+            require to be divisible to
+        """
+        node_name = node_group.name
+        _, leaf_module = get_module_by_name(self.model, node_name)
+        if isinstance(leaf_module, (PrunerModuleWrapper, PrunerModuleWrapper_v2)):
+            leaf_module = leaf_module.module
+        assert isinstance(leaf_module, (torch.nn.GroupNorm))
+
+        return leaf_module.num_groups
+
+
     def build_dependency(self):
         """
         Build the channel dependency for the conv layers
@@ -425,8 +467,11 @@ class GroupDependency(Dependency):
         """
         self.groups = {}
         for node in self.graph.nodes_py.nodes_op:
-            if node.op_type == 'Conv2d' or node.op_type == 'ConvTranspose2d':
-                group = self._get_conv_groups(node)
+            if node.op_type in ['Conv2d', 'ConvTranspose2d', "GroupNorm"]:
+                if node.op_type in ['Conv2d', 'ConvTranspose2d']:
+                    group = self._get_conv_groups(node)
+                elif node.op_type == "GroupNorm":
+                    group = self._get_group_norm_condition(node)
                 if node.name in self.groups:
                     # the conv layer whose group is larger than 1 will require that
                     # it's number of output channel to be divisible by the number of group.

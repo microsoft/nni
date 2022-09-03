@@ -1,0 +1,98 @@
+$themeBlue: #0071bc;
+
+.ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.link {
+    color: $themeBlue;
+    outline: none;
+    text-decoration: none;
+
+    &:hover {
+        color: $themeBlue;
+        text-decoration: underline;
+    }
+
+    &:active,
+    &:visited {
+        color: $themeBlue;
+    }
+}
+
+.cursor {
+    &:hover,
+    & i:hover {
+        cursor: pointer;
+    }
+}
+
+.idCopy {
+    .ms-Button--icon {
+        width: 18px;
+        height: 18px;
+        margin-left: 4px;
+    }
+
+    i {
+        color: #33333c;
+    }
+}
+
+.ms-DetailsRow {
+    height: 32px;
+}
+
+/* for graph tooltip style */
+.graph > div > div {
+    padding: 0 !important;
+    border: none !important;
+}
+
+.elementMarginLeft {
+    margin-left: 10px;
+}
+
+.operationBtn {
+    i {
+        color: $themeBlue;
+    }
+}
+
+/* for table row border */
+.ms-List-cell {
+    border-bottom: 1px solid #eeecea;
+}
+
+.line-height {
+    line-height: 30px;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.positionTop {
+    position: relative;
+    top: 2px;
+}
+
+.input-padding {
+    padding-left: 10px;
+}
+
+.fontColor333 {
+    color: #333;
+}
+
+.font {
+    .color333 {
+        color: #333;
+    }
+}
+
+.ms-DetailsRow-cell {
+    padding-top: 8px;
+}

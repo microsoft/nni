@@ -1,4 +1,5 @@
-tensorflow==1.15.2
+# nasbench claims it supports tensorflow>=1.12.0 and we have tested on 1.15.2
+tensorflow
 tqdm
 peewee
 git+https://github.com/google-research/nasbench

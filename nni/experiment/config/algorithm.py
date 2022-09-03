@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 """
-Config classes for tuner/assessor/advisor algorithms.
+Config classes for tuner and assessor algorithms.
 
 Use ``AlgorithmConfig`` to specify a built-in algorithm;
 use ``CustomAlgorithmConfig`` to specify a custom algorithm.
@@ -47,6 +47,7 @@ class _AlgorithmConfig(ConfigBase):
         else:  # custom algorithm
             assert self.name is None
             assert self.class_name
+            assert self.code_directory is not None
             if not Path(self.code_directory).is_dir():
                 raise ValueError(f'CustomAlgorithmConfig: code_directory "{self.code_directory}" is not a directory')
 

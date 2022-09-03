@@ -51,7 +51,6 @@ class Experiment {
     private profileField?: ExperimentProfile;
     private metadataField?: ExperimentMetadata = undefined;
     private statusField?: NNIManagerStatus = undefined;
-    private isNestedExperiment: boolean = false;
     private isexperimentError: boolean = false;
     private experimentErrorMessage: string = '';
     private isStatusError: boolean = false;
@@ -128,11 +127,11 @@ class Experiment {
     }
 
     get profile(): ExperimentProfile {
-        return this.profileField === undefined ? emptyProfile : this.profileField;
+        return this.profileField ?? emptyProfile;
     }
 
     get metadata(): ExperimentMetadata {
-        return this.metadataField === undefined ? emptyMetadata : this.metadataField;
+        return this.metadataField ?? emptyMetadata;
     }
 
     get config(): ExperimentConfig {
@@ -146,7 +145,7 @@ class Experiment {
 
     get maxTrialNumber(): number {
         const value = this.config.maxTrialNumber || (this.config as any).maxTrialNum;
-        return value === undefined ? Infinity : value;
+        return value ?? Infinity;
     }
 
     get trialConcurrency(): number {
@@ -180,10 +179,6 @@ class Experiment {
         // The search space derived directly from profile
         // eventually this will replace searchSpace
         return new SearchSpace('', '', this.searchSpace);
-    }
-
-    get logCollectionEnabled(): boolean {
-        return false;
     }
 
     get status(): string {

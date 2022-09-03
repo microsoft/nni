@@ -1,1 +1,0 @@
-../../en_US/TrainingService/HowToImplementTrainingService.rst

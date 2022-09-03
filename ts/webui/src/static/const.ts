@@ -4,12 +4,19 @@ import { getPrefix } from './function';
 const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
+/**
+ *  RESTAPI and DOWNLOAD_IP must be synchronized with:
+ *    - nni/experiment/rest.py
+ *    - ts/nni_manager/rest_server/index.ts
+ *  Remember to update them if the values are changed or if this file is moved.
+ **/
+
 const prefix = getPrefix();
 const RESTAPI = '/api/v1/nni';
 const MANAGER_IP = prefix === undefined ? RESTAPI : `${prefix}${RESTAPI}`;
-const DOWNLOAD_IP = `/logs`;
+const DOWNLOAD_IP = prefix === undefined ? '/logs' : `${prefix}/logs`;
 
-const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
+const WEBUIDOC = 'https://nni.readthedocs.io/en/stable/experiment/web_portal/web_portal.html';
 
 const trialJobStatus = [
     'UNKNOWN',
@@ -63,6 +70,15 @@ const SUPPORTED_SEARCH_SPACE_TYPE = [
 ];
 
 const TOOLTIP_BACKGROUND_COLOR = '#484848';
+const TOOLTIPSTYLE = {
+    calloutProps: {
+        styles: {
+            beak: { background: TOOLTIP_BACKGROUND_COLOR },
+            beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+            calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+        }
+    }
+};
 const MAX_TRIAL_NUMBERS = 'Max trial No.';
 const RETIARIIPARAMETERS = 'mutation_summary';
 
@@ -81,7 +97,7 @@ export {
     METRIC_GROUP_UPDATE_SIZE,
     CONCURRENCYTOOLTIP,
     SUPPORTED_SEARCH_SPACE_TYPE,
-    TOOLTIP_BACKGROUND_COLOR,
+    TOOLTIPSTYLE,
     MAX_TRIAL_NUMBERS,
     RETIARIIPARAMETERS
 };

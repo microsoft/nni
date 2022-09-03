@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from copy import deepcopy
 from typing import Callable, Dict, List, Type
 
@@ -9,22 +11,16 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
-from nni.common.serializer import _trace_cls
-from nni.common.serializer import Traceable
+from nni.common.serializer import is_traceable
 
-__all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper', 'trace_parameters']
+__all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper']
 
-
-def trace_parameters(base, kw_only=True):
-    if not isinstance(base, type):
-        raise Exception('Only class can be traced by this function.')
-    return _trace_cls(base, kw_only, call_super=False)
 
 class ConstructHelper:
     def __init__(self, callable_obj: Callable, *args, **kwargs):
         assert callable(callable_obj), '`callable_obj` must be a callable object.'
         self.callable_obj = callable_obj
-        self.args = deepcopy(args)
+        self.args = deepcopy(list(args))
         self.kwargs = deepcopy(kwargs)
 
     def call(self):
@@ -65,14 +61,15 @@ class OptimizerConstructHelper(ConstructHelper):
 
         return param_groups
 
-    def names2params(self, wrapped_model: Module, origin2wrapped_name_map: Dict, params: List[Dict]) -> List[Dict]:
+    def names2params(self, wrapped_model: Module, origin2wrapped_name_map: Dict | None, params: List[Dict]) -> List[Dict]:
         param_groups = deepcopy(params)
+        origin2wrapped_name_map = origin2wrapped_name_map if origin2wrapped_name_map else {}
         for param_group in param_groups:
             wrapped_names = [origin2wrapped_name_map.get(name, name) for name in param_group['params']]
             param_group['params'] = [p for name, p in wrapped_model.named_parameters() if name in wrapped_names]
         return param_groups
 
-    def call(self, wrapped_model: Module, origin2wrapped_name_map: Dict) -> Optimizer:
+    def call(self, wrapped_model: Module, origin2wrapped_name_map: Dict | None) -> Optimizer:
         args = deepcopy(self.args)
         kwargs = deepcopy(self.kwargs)
 
@@ -84,15 +81,13 @@ class OptimizerConstructHelper(ConstructHelper):
         return self.callable_obj(*args, **kwargs)
 
     @staticmethod
-    def from_trace(model: Module, optimizer_trace: Traceable):
-        assert isinstance(optimizer_trace, Traceable), \
-            'Please use nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize the optimizer.'
+    def from_trace(model: Module, optimizer_trace: Optimizer):
+        assert is_traceable(optimizer_trace), \
+            'Please use nni.trace to wrap the optimizer class before initialize the optimizer.'
         assert isinstance(optimizer_trace, Optimizer), \
             'It is not an instance of torch.nn.Optimizer.'
-        return OptimizerConstructHelper(model,
-                                        optimizer_trace._get_nni_attr('symbol'),
-                                        *optimizer_trace._get_nni_attr('args'),
-                                        **optimizer_trace._get_nni_attr('kwargs'))
+        return OptimizerConstructHelper(model, optimizer_trace.trace_symbol, *optimizer_trace.trace_args,  # type: ignore
+                                        **optimizer_trace.trace_kwargs)  # type: ignore
 
 
 class LRSchedulerConstructHelper(ConstructHelper):
@@ -116,11 +111,10 @@ class LRSchedulerConstructHelper(ConstructHelper):
         return self.callable_obj(*args, **kwargs)
 
     @staticmethod
-    def from_trace(lr_scheduler_trace: Traceable):
-        assert isinstance(lr_scheduler_trace, Traceable), \
-            'Please use nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the lr scheduler class before initialize the scheduler.'
+    def from_trace(lr_scheduler_trace: _LRScheduler):
+        assert is_traceable(lr_scheduler_trace), \
+            'Please use nni.trace to wrap the lr scheduler class before initialize the scheduler.'
         assert isinstance(lr_scheduler_trace, _LRScheduler), \
             'It is not an instance of torch.nn.lr_scheduler._LRScheduler.'
-        return LRSchedulerConstructHelper(lr_scheduler_trace.trace_symbol,
-                                          *lr_scheduler_trace.trace_args,
-                                          **lr_scheduler_trace.trace_kwargs)
+        return LRSchedulerConstructHelper(lr_scheduler_trace.trace_symbol, *lr_scheduler_trace.trace_args,  # type: ignore
+                                          **lr_scheduler_trace.trace_kwargs)  # type: ignore

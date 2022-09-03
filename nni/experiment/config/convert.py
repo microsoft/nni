@@ -37,6 +37,8 @@ def to_v2(v1):
         _move_field(v1_trial, v2, 'command', 'trialCommand')
         _move_field(v1_trial, v2, 'codeDir', 'trialCodeDirectory')
         _move_field(v1_trial, v2, 'gpuNum', 'trialGpuNumber')
+    else:
+        v1_trial = {}
 
     for algo_type in ['tuner', 'assessor', 'advisor']:
         v1_algo = v1.pop(algo_type, None)
@@ -176,12 +178,16 @@ def to_v2(v1):
             _move_field(v1_role, v2_role, 'memoryMB', 'memorySize')
             _move_field(v1_role, v2_role, 'image', 'dockerImage')
             _deprecate(v1_role, v2, 'privateRegistryAuthPath')
+
+            v2_role['codeDirectory'] = v2['trialCodeDirectory']
+
             if v1_role:
                 _logger.error('kubeflow role not fully converted: %s', v1_role)
 
     if platform == 'frameworkcontroller':
-        fc_config = v1.pop('frameworkcontroller')
-        _deprecate(fc_config, v2, 'serviceAccountName')
+        fc_config = v1.pop('frameworkcontrollerConfig')
+        _move_field(fc_config, ts, 'serviceAccountName')
+        _move_field(fc_config, ts, 'reuse', 'reuseMode')
 
         storage_name = fc_config.pop('storage', None)
         if storage_name is None:
@@ -219,8 +225,21 @@ def to_v2(v1):
             _move_field(v1_role, v2_role, 'memoryMB', 'memorySize')
             _move_field(v1_role, v2_role, 'image', 'dockerImage')
             _deprecate(v1_role, v2, 'privateRegistryAuthPath')
+
+            policy = 'frameworkAttemptCompletionPolicy'
+            if v1_role[policy]:
+                v2_role[policy] = {}
+                _move_field(v1_role[policy], v2_role[policy], 'minFailedTaskCount')
+                _move_field(v1_role[policy], v2_role[policy], 'minSucceededTaskCount', 'minSucceedTaskCount')
+            if not v1_role[policy]:
+                v1_role.pop(policy)
+
             if v1_role:
                 _logger.error('frameworkcontroller role not fully converted: %s', v1_role)
+
+            # this is required, seems a bug in nni manager
+            if not v2.get('trialCommand'):
+                v2['trialCommand'] = v2_role['command']
 
     # hybrid mode should always use v2 schema, so no need to handle here
 
@@ -245,7 +264,7 @@ def to_v2(v1):
     if v1_trial:
         _logger.error('trial config not fully converted: %s', v1_trial)
     if v1:
-        _logger.error('config not fully converted: %s', v1)
+        _logger.error('Config not fully converted: %s', v1)
     return v2
 
 def _move_field(v1, v2, v1_key, v2_key=None):
@@ -258,7 +277,7 @@ def _move_field(v1, v2, v1_key, v2_key=None):
 
 def _drop_field(v1, key):
     if key in v1:
-        _logger.warning(f'Configuration field {key} is no longer supported and has been ignored')
+        _logger.warning(f'Config field "{key}" is no longer supported and has been ignored')
         v1.pop(key)
 
 def _deprecate(v1, v2, key):

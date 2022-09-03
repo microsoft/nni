@@ -19,6 +19,8 @@ __all__ = ['KubeflowConfig', 'KubeflowRoleConfig']
 from dataclasses import dataclass
 from typing import Optional, Union
 
+from typing_extensions import Literal
+
 from ..base import ConfigBase
 from ..training_service import TrainingServiceConfig
 from .k8s_storage import K8sStorageConfig
@@ -35,7 +37,7 @@ class KubeflowRoleConfig(ConfigBase):
 
 @dataclass(init=False)
 class KubeflowConfig(TrainingServiceConfig):
-    platform: str = 'kubeflow'
+    platform: Literal['kubeflow'] = 'kubeflow'
     operator: str
     api_version: str
     storage: K8sStorageConfig
@@ -43,6 +45,15 @@ class KubeflowConfig(TrainingServiceConfig):
     ps: Optional[KubeflowRoleConfig] = None
     master: Optional[KubeflowRoleConfig] = None
     reuse_mode: Optional[bool] = True #set reuse mode as true for v2 config
+    namespace: str = 'default'
+
+    def _canonicalize(self, parents):
+        super()._canonicalize(parents)
+        # kubeflow does not need these fields, set empty string for type check
+        if self.trial_command is None:
+            self.trial_command = ''
+        if self.trial_code_directory is None:
+            self.trial_code_directory = ''
 
     def _validate_canonical(self):
         super()._validate_canonical()

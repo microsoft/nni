@@ -58,6 +58,8 @@ class BuiltinTunersTestCase(TestCase):
         return receive
 
     def send_trial_result(self, tuner, parameter_id, parameters, metrics):
+        if parameter_id % 2 == 1:
+            metrics = {'default': metrics, 'extra': 'hello'}
         tuner.receive_trial_result(parameter_id, parameters, metrics)
         tuner.trial_end(parameter_id, True)
 
@@ -270,7 +272,7 @@ class BuiltinTunersTestCase(TestCase):
             search_space = {
                 "choice_str": {
                     "_type": "choice",
-                    "_value": ["cat", "dog", "elephant", "cow", "sheep", "panda"]
+                    "_value": ["cat", "dog", "elephant", "cow", "sheep", "panda", "tiger"]
                 }
             }
         elif stype == "choice_num":
@@ -322,11 +324,13 @@ class BuiltinTunersTestCase(TestCase):
         self.import_data_test(tuner_fn, support_middle=False)
 
     def test_tpe(self):
+        self.exhaustive = True
         tuner_fn = TpeTuner
         self.search_space_test_all(TpeTuner)
         self.import_data_test(tuner_fn)
 
     def test_random_search(self):
+        self.exhaustive = True
         tuner_fn = RandomTuner
         self.search_space_test_all(tuner_fn)
         self.import_data_test(tuner_fn)

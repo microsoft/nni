@@ -52,7 +52,6 @@ class TrainingServiceConfig(ConfigBase):
     def _validate_canonical(self):
         super()._validate_canonical()
         cls = type(self)
-        assert self.platform == cls.platform
         if not Path(self.trial_code_directory).is_dir():
             raise ValueError(f'{cls.__name__}: trial_code_directory "{self.trial_code_directory}" is not a directory')
         assert self.trial_gpu_number is None or self.trial_gpu_number >= 0

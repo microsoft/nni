@@ -1,4 +1,5 @@
-import { SingleAxis, MultipleAxes, TableObj } from '../interface';
+import { SingleAxis, MultipleAxes } from '../interface';
+import { Trial } from './trial';
 import { SUPPORTED_SEARCH_SPACE_TYPE } from '../const';
 import { formatComplexTypeValue } from '../function';
 
@@ -46,6 +47,7 @@ class SimpleOrdinalAxis implements SingleAxis {
     type: string;
     baseName: string;
     fullName: string;
+    // eslint-disable-next-line @typescript-eslint/prefer-as-const
     scale: 'ordinal' = 'ordinal';
     domain: any[];
     nested = false;
@@ -61,6 +63,7 @@ class NestedOrdinalAxis implements SingleAxis {
     type: string;
     baseName: string;
     fullName: string;
+    // eslint-disable-next-line @typescript-eslint/prefer-as-const
     scale: 'ordinal' = 'ordinal';
     domain = new Map<string, MultipleAxes>();
     nested = true;
@@ -111,7 +114,7 @@ export class SearchSpace implements MultipleAxes {
         });
     }
 
-    static inferFromTrials(searchSpace: SearchSpace, trials: TableObj[]): SearchSpace {
+    static inferFromTrials(searchSpace: SearchSpace, trials: Trial[]): SearchSpace {
         const newSearchSpace = new SearchSpace(searchSpace.baseName, searchSpace.fullName, undefined);
         for (const [k, v] of searchSpace.axes) {
             newSearchSpace.axes.set(k, v);
@@ -153,7 +156,7 @@ export class MetricSpace implements MultipleAxes {
     baseName = '';
     fullName = '';
 
-    constructor(trials: TableObj[]) {
+    constructor(trials: Trial[]) {
         const columns = new Map<string, any[]>();
         for (const trial of trials) {
             if (trial.acc === undefined) {

@@ -10,6 +10,8 @@ __all__ = ['K8sStorageConfig', 'K8sAzureStorageConfig', 'K8sNfsConfig']
 from dataclasses import dataclass
 from typing import Optional
 
+from typing_extensions import Literal
+
 from ..base import ConfigBase
 
 @dataclass(init=False)
@@ -34,13 +36,13 @@ class K8sStorageConfig(ConfigBase):
 
 @dataclass(init=False)
 class K8sNfsConfig(K8sStorageConfig):
-    storage: str = 'nfs'
+    storage: Literal['nfs'] = 'nfs'
     server: str
     path: str
 
 @dataclass(init=False)
 class K8sAzureStorageConfig(K8sStorageConfig):
-    storage: str = 'azureStorage'
+    storage: Literal['azureStorage'] = 'azureStorage'
     azure_account: str
     azure_share: str
     key_vault_name: str

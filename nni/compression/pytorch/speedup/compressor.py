@@ -1,9 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-import os
-import queue
-import logging
+
 import copy
+
+import logging
+from pathlib import Path
+import queue
+
 import torch
 import torch.nn as nn
 
@@ -27,7 +30,7 @@ class ModelSpeedup:
     Parameters
     ----------
     model : pytorch model
-        The model user wants to speed up
+        The model user wants to speedup
     dummy_input : pytorch tensor, tuple of tensor, list of tensor
         Note: The first dimension of the dummy_input should be the batchsize.
         The dummy input for ```jit.trace```, users should put it on the right
@@ -40,10 +43,23 @@ class ModelSpeedup:
         the index of batch dimension in the dummy_input
     confidence: the confidence coefficient of the sparsity inference. This value is
         actually used as the batchsize of the dummy_input.
+    customized_replace_func: None/Dict
+        If `customized_replace_func` is not None, then we will use the given function to replace the
+        corresponding modules. The `key` of the dict is the opertor types and the `value`
+        is the replace function of corresponding opertor. The replace function should take
+        two input parameters, one is the original module, the second input parameter is tuple
+        of the input mask, output mask and weight mask. This replace function should prune the module
+        accordingly. Here is an example of the replace function(more examples can refer to compress_modules.py)::
+
+            def example_replace(ori_module, masks):
+                in_mask, out_mask, weight_mask = masks
+                # prune the ori_module to a new smaller module according to the mask
+                return new_small_module
+
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
-                 batch_dim=0, confidence=8):
+                 batch_dim=0, confidence=8, customized_replace_func=None):
         assert confidence > 1
         # The auto inference will change the values of the parameters in the model
         # so we need make a copy before the mask inference
@@ -51,7 +67,9 @@ class ModelSpeedup:
         self.bound_model = model
         self.inferred_masks = dict()  # key: module_name, value: ModuleMasks
         self.batch_dim = batch_dim
-        self.dummy_input, self.device = self._random_model_input(dummy_input, confidence, batch_dim)
+        self.confidence = confidence
+        self.dummy_input, self.device = self._random_model_input(
+            dummy_input, confidence, batch_dim)
         self.torch_graph = build_module_graph(model, self.dummy_input)
         # dict object to save the auto inferences objects of the submodules
         self.auto_inferences = {}
@@ -63,7 +81,7 @@ class ModelSpeedup:
         # load the mask tensor to the same device with the dummy_input
         # self.masks save the mask tensors pruned by the user and the infered
         # masks of the others modules
-        if isinstance(masks_file, str) and os.path.exists(masks_file):
+        if isinstance(masks_file, (str, Path)) and Path(masks_file).exists():
             self.masks = torch.load(
                 masks_file, map_location if map_location is not None else str(self.device))
         elif isinstance(masks_file, dict):
@@ -73,6 +91,7 @@ class ModelSpeedup:
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
+        self.customized_replace_func = customized_replace_func if customized_replace_func is not None else {}
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         """
@@ -179,6 +198,7 @@ class ModelSpeedup:
             # The detach operation here is for the in-place operation. We cannot
             # directly can the backward on the output tensor of an in-place operator.
             dummy_input.append(self.internal_result[_input].detach())
+
             debugnames.append(_input)
 
         return dummy_input, debugnames
@@ -212,15 +232,15 @@ class ModelSpeedup:
                 return
             # function doesn't have weights
             _auto_infer = AutoMaskInference(
-                func, dummy_input, in_masks, in_constants=in_constants, batch_dim=self.batch_dim)
+                func, dummy_input, self, in_masks, in_constants=in_constants)
         else:
             weight_mask = None
             if module_name in self.masks:
                 weight_mask = self.masks[module_name]
             _, module = get_module_by_name(self.bound_model, module_name)
             _auto_infer = AutoMaskInference(
-                module, dummy_input, in_masks, weight_mask, in_constants=in_constants,
-                state_dict=copy.deepcopy(module.state_dict()), batch_dim=self.batch_dim)
+                module, dummy_input, self, in_masks, weight_mask, in_constants=in_constants,
+                state_dict=copy.deepcopy(module.state_dict()))
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
 
@@ -263,6 +283,7 @@ class ModelSpeedup:
             The target node to update the indirect sparsity
         """
         unique_name = node.unique_name
+
         if unique_name in self.auto_inferences and self.auto_inferences[unique_name] is not None:
             # if the auto inference object already in self.auto_inference, then
             # directly update the previous one
@@ -274,15 +295,21 @@ class ModelSpeedup:
             # pass the gradient to the predecessor nodes
             for in_id, tin in enumerate(auto_infer.dummy_input):
                 debug_name = auto_infer.input_debugname[in_id]
+
                 last_output = self.internal_result[debug_name]
                 # if isinstance(last_output, torch.Tensor):
                 # TODO what if last output is tuple/list of tensor
                 if last_output.grad is not None and tin.grad is not None:
                     last_output.grad.data += tin.grad.data
-                else:
+                elif last_output.grad is None:
                     last_output.grad = tin.grad
+                elif last_output.grad is not None and tin.grad is None:
+                    # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
+                    # the size operation of tin will have no gradient
+                    continue
         else:
-            _logger.warning('Note: %s does not have corresponding mask inference object', node.name)
+            _logger.warning(
+                'Note: %s does not have corresponding mask inference object', node.name)
 
     def _vnode_to_value(self, c_node):
         """
@@ -370,6 +397,7 @@ class ModelSpeedup:
                 if out_degree[predecessor] == 0:
                     visit_queue.put(self.torch_graph.name_to_node[predecessor])
 
+
     def replace_compressed_modules(self):
         """
         Replace all the modules that have changed (weights/inputs/output) shape.
@@ -383,9 +411,13 @@ class ModelSpeedup:
             for unique_name in self.auto_inferences:
                 self.replace_submodule(unique_name)
 
+
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """
         Replace the submodule according to the inferred sparsity.
+
+        Parameters
+        ----------
         unique_name: str
             The unique_name of the submodule to replace.
         reindex_dim: int
@@ -403,6 +435,7 @@ class ModelSpeedup:
             method is shutdown, in the future, we will merge these two methods into a graph
             pass which is used to resolve the mask conflict.
             """
+
             def __init__(self, ori_module, reindex_dim, reindex):
                 super(ReindexModule, self).__init__()
                 self.ori_module = ori_module
@@ -421,7 +454,6 @@ class ModelSpeedup:
                                   requires_grad=tmpout.requires_grad)
                 out[self.t_index] = tmpout
                 return out
-
         assert unique_name in self.auto_inferences
         g_node = self.torch_graph.name_to_node[unique_name]
         _logger.debug("replace %s, in %s type, with op_type %s",
@@ -436,12 +468,19 @@ class ModelSpeedup:
             super_module, leaf_module = get_module_by_name(
                 self.bound_model, g_node.name)
             m_type = g_node.op_type
-            if not m_type in replace_module:
-                raise RuntimeError(
-                    "Has not supported replacing the module: `{}`".format(m_type))
+            if (not m_type in replace_module) and (m_type not in self.customized_replace_func):
+                err_msg = f"Has not supported replacing module with type: {m_type}, "
+                err_msg += f"you could report an issue at https://github.com/microsoft/nni. "
+                err_msg += f"If you know how to replace {m_type}, "
+                err_msg += f"you could implement module replacement by passing in"
+                err_msg += f"`customized_replace_func` to `{self.__class__.__name__}`. "
+                err_msg += f"You are welcome to contribute back to nni as native support if you have implemented the replacement function, "
+                err_msg += f"so that more users can benefit from your contributions."
+                raise RuntimeError(err_msg)
             _logger.info("replace module (name: %s, op_type: %s)",
                          g_node.name, m_type)
-            compressed_module = replace_module[m_type](
+            replace_function = self.customized_replace_func.get(m_type, replace_module.get(m_type, None))
+            compressed_module = replace_function(
                 leaf_module, auto_infer.get_masks())
             new_submodule = compressed_module
             if reindex_dim is None:
@@ -454,12 +493,9 @@ class ModelSpeedup:
                 setattr(super_module, g_node.name.split(
                     '.')[-1], new_submodule)
             return new_submodule
-        elif g_node.type == 'func':
-            _logger.info("Warning: cannot replace (name: %s, op_type: %s) which is func type",
-                         unique_name, g_node.op_type)
-            return None
         else:
-            raise RuntimeError("Unsupported node type: {}".format(g_node.type))
+            return None
+
 
     def initialize_speedup(self):
         """
@@ -494,7 +530,7 @@ class ModelSpeedup:
         second, replace modules.
         """
 
-        _logger.info("start to speed up the model")
+        _logger.info("start to speedup the model")
         self.initialize_speedup()
         training = self.bound_model.training
         # set to the evaluation mode

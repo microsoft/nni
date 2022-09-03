@@ -1,0 +1,9 @@
+pool_type:
+  _type: choice
+  _value:
+  - max
+  - min
+  - avg
+学习率:  # test unicode
+  _type: loguniform
+  _value: [ 1e-7, 0.1 ]  # test scientific notation

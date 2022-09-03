@@ -3,6 +3,7 @@
 
 'use strict';
 
+import cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../../common/component';
@@ -29,6 +30,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         this.config = config;
         // Create kubernetesCRDClient
         this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient(this.config.namespace);
+        this.genericK8sClient.setNamespace = this.config.namespace ?? "default"
         // Create storage
         if (this.config.storage.storageType === 'azureStorage') {
             if (this.config.storage.azureShare === undefined ||
@@ -80,7 +82,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
 
         const frameworkcontrollerJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
         const command = this.generateCommandScript(this.config.taskRoles, environment.command);
-        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), command, { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, `${environment.id}_run.sh`), command, { encoding: 'utf8' });
 
         //upload script files to sotrage
         const trialJobOutputUrl: string = await this.uploadFolder(this.environmentLocalTempFolder, `nni/${this.experimentId}`);
@@ -105,7 +107,13 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             }
             return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, 2);
         } else {
-            // do not need to upload files to nfs server, temp folder already mounted to nfs
+            try {
+                // copy envs and run.sh from environments-temp to nfs-root(mounted)
+                await cpp.exec(`mkdir -p ${this.nfsRootDir}/${destDirectory}`);
+                await cpp.exec(`cp -r ${srcDirectory}/* ${this.nfsRootDir}/${destDirectory}`);
+            } catch (uploadError) {
+                return Promise.reject(uploadError);
+            }
             return `nfs://${this.config.storage.server}:${destDirectory}`;
         }
     }
@@ -125,7 +133,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
     }
     
-    private async prepareFrameworkControllerConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string):
+    private async prepareFrameworkControllerConfig(envId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string):
             Promise<any> {
         const podResources: any = [];
         for (const taskRole of this.config.taskRoles) {
@@ -136,7 +144,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         }
         // Generate frameworkcontroller job resource config object
         const frameworkcontrollerJobConfig: any =
-            await this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
+            await this.generateFrameworkControllerJobConfig(envId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
 
         return Promise.resolve(frameworkcontrollerJobConfig);
     }
@@ -160,7 +168,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
      * @param frameworkcontrollerJobName job name
      * @param podResources  pod template
      */
-    private async generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string,
+    private async generateFrameworkControllerJobConfig(envId: string, trialWorkingFolder: string,
         frameworkcontrollerJobName: string, podResources: any): Promise<any> {
 
         const taskRoles: any = [];
@@ -173,7 +181,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             const taskRole: any = this.generateTaskRoleConfig(
                 trialWorkingFolder,
                 this.config.taskRoles[index].dockerImage,
-                `run.sh`,
+                `${envId}_run.sh`,
                 podResources[index],
                 containerPort,
                 await this.createRegistrySecret(this.config.taskRoles[index].privateRegistryAuthPath)
@@ -194,11 +202,11 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             kind: 'Framework',
             metadata: {
                 name: frameworkcontrollerJobName,
-                namespace: this.config.namespace ? this.config.namespace : "default",
+                namespace: this.config.namespace ?? "default",
                 labels: {
                     app: this.NNI_KUBERNETES_TRIAL_LABEL,
                     expId: this.experimentId,
-                    trialId: trialJobId
+                    envId: envId
                 }
             },
             spec: {

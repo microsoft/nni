@@ -226,7 +226,7 @@ class RemoteMachineTrainingService implements TrainingService {
      */
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         // Generate trial job id(random)
-        const trialJobId: string = uniqueString(5);
+        const trialJobId: string = form.id === undefined ? uniqueString(5) : form.id;
 
         const trialJobDetail: RemoteMachineTrialJobDetail = new RemoteMachineTrialJobDetail(
             trialJobId,
@@ -467,7 +467,7 @@ class RemoteMachineTrainingService implements TrainingService {
             throw new Error(`Can not get trial job detail for job: ${trialJobId}`);
         }
 
-        const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
+        const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
 
         await executor.createFolder(executor.joinPath(trialJobDetail.workingDirectory, '.nni'));
 
@@ -582,7 +582,7 @@ class RemoteMachineTrainingService implements TrainingService {
         const executor = await this.getExecutor(trialJobId);
 
         const trialWorkingFolder: string = executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 'trials', trialJobId);
-        const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
+        const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
 
         const fileName: string = generateParamFileName(hyperParameters);
         const localFilepath: string = path.join(trialLocalTempFolder, fileName);

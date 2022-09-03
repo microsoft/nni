@@ -13,15 +13,20 @@ export class DlcClient {
     public podCount: number;
     public ecsSpec: string;
     public region: string;
+    public workspaceId: string;
     // e.g., data1e6vg1tu0zi7, to generate it, go to 'Dataset Config' page of DLC
     //       create a NAS data and copy the 'DataSet ConfigurationID'
     public nasDataSourceId: string;
+    public ossDataSourceId: string;
     public accessKeyId: string;
     public accessKeySecret: string;
     public experimentId: string;
     public environmentId: string;
     public userCommand: string;
+    // dlcUtil exception log dir
+    public logDir: string;
     public pythonShellClient: undefined | PythonShell;
+    public status: string;
 
     constructor(
         type: string,
@@ -32,10 +37,13 @@ export class DlcClient {
         environmentId: string,
         ecsSpec: string,
         region: string,
+        workspaceId: string,
         nasDataSourceId: string,
         accessKeyId: string,
         accessKeySecret: string,
         userCommand: string,
+        logDir: string,
+        ossDataSourceId?: string,
         ) {
         this.log = getLogger('DlcClient');
         this.type = type;
@@ -45,12 +53,20 @@ export class DlcClient {
         this.ecsSpec = ecsSpec;
         this.image = image;
         this.region = region;
+        this.workspaceId = workspaceId;
         this.nasDataSourceId = nasDataSourceId;
+        if (ossDataSourceId !== undefined) {
+            this.ossDataSourceId = ossDataSourceId;
+        } else {
+            this.ossDataSourceId = '';
+        }
         this.accessKeyId = accessKeyId;
         this.accessKeySecret = accessKeySecret
         this.experimentId = experimentId;
         this.environmentId = environmentId;
         this.userCommand = userCommand;
+        this.logDir = logDir;
+        this.status = '';
     }
 
     public submit(): Promise<string> {
@@ -66,26 +82,51 @@ export class DlcClient {
                 '--pod_count', String(this.podCount),
                 '--ecs_spec', this.ecsSpec,
                 '--region', this.region,
+                '--workspace_id', this.workspaceId,
                 '--nas_data_source_id', this.nasDataSourceId,
+                '--oss_data_source_id', this.ossDataSourceId,
                 '--access_key_id', this.accessKeyId,
                 '--access_key_secret', this.accessKeySecret,
                 '--experiment_name', `nni_exp_${this.experimentId}_env_${this.environmentId}`,
                 '--user_command', this.userCommand,
+                '--log_dir', this.logDir,
               ]
         });
         this.log.debug(this.pythonShellClient.command);
-        this.pythonShellClient.on('message', function (envId: any) {
-            // received a message sent from the Python script (a simple "print" statement)
-            deferred.resolve(envId);
-        });
+        this.onMessage();
+        this.log.debug(`on message`);
         this.monitorError(this.pythonShellClient, deferred);
+        this.log.debug(`monitor submit`);
+        const log = this.log;
+        this.pythonShellClient.on('message', (message: any) => {
+            const jobid = this.parseContent('job_id', message);
+            if (jobid !== '') {
+                log.debug(`reslove job_id ${jobid}`);
+                deferred.resolve(jobid);
+            }
+        });
         return deferred.promise;
     }
-
-    public stop(): void {
+    private onMessage(): void {
         if (this.pythonShellClient === undefined) {
             throw Error('python shell client not initialized!');
         }
+        const log = this.log;
+        this.pythonShellClient.on('message', (message: any) => {
+            const status: string= this.parseContent('status', message);
+            if (status.length > 0) {
+                log.debug(`on message status: ${status}`)
+                this.status = status;
+                return;
+            }
+        });
+    }
+    public stop(): void {
+        if (this.pythonShellClient === undefined) {
+            this.log.debug(`python shell client not initialized!`);
+            throw Error('python shell client not initialized!');
+        }
+        this.log.debug(`send stop`);
         this.pythonShellClient.send('stop');
     }
 
@@ -94,14 +135,17 @@ export class DlcClient {
         if (this.pythonShellClient === undefined) {
             throw Error('python shell client not initialized!');
         }
+        this.log.debug(`send tracking_url`);
         this.pythonShellClient.send('tracking_url');
+
+        const log = this.log;
         this.pythonShellClient.on('message', (status: any) => {
             const trackingUrl = this.parseContent('tracking_url', status);
             if (trackingUrl !== '') {
+                log.debug(`trackingUrl:${trackingUrl}`);
                 deferred.resolve(trackingUrl);
             }
         });
-        this.monitorError(this.pythonShellClient, deferred);
         return deferred.promise;
     }
 
@@ -111,47 +155,19 @@ export class DlcClient {
             throw Error('python shell client not initialized!');
         }
         this.pythonShellClient.send('update_status');
-        this.pythonShellClient.on('message', (status: any) => {
-            let newStatus = this.parseContent('status', status);
-            if (newStatus === '') {
-                newStatus = oldStatus;
-            }
-            deferred.resolve(newStatus);
-        });
-        this.monitorError(this.pythonShellClient, deferred);
+        if (this.status === '') {
+            this.status = oldStatus;
+        }
+        this.log.debug(`update_status:${this.status}`);
+        deferred.resolve(this.status);
         return deferred.promise;
     }
 
-    public sendCommand(message: string): void {
-        if (this.pythonShellClient === undefined) {
-            throw Error('python shell client not initialized!');
-        }
-        this.log.debug(`command:${message}`);
-        this.pythonShellClient.send(`command:${message}`);
-    }
-
-    public receiveCommand(): Promise<string> {
-        const deferred: Deferred<string> = new Deferred<string>();
-        if (this.pythonShellClient === undefined) {
-            throw Error('python shell client not initialized!');
-        }
-        this.pythonShellClient.send('receive');
-        this.pythonShellClient.on('message', (command: any) => {
-            const message = this.parseContent('receive', command);
-            if (message !== '') {
-                deferred.resolve(JSON.parse(message))
-            }
-        });
-        this.monitorError(this.pythonShellClient, deferred);
-        return deferred.promise;
-    }
-    
     // Monitor error information in dlc python shell client
     private monitorError(pythonShellClient: PythonShell, deferred: Deferred<any>): void {
+        const log = this.log;
         pythonShellClient.on('error', function (error: any) {
-            deferred.reject(error);
-        });
-        pythonShellClient.on('close', function (error: any) {
+            log.info(`error:${error}`);
             deferred.reject(error);
         });
     }

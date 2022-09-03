@@ -43,6 +43,7 @@ minimal_class = ExperimentConfig(
 )
 
 minimal_canon = {
+    'experimentType': 'hpo',
     'searchSpace': {'a': 1},
     'trialCommand': 'python main.py',
     'trialCodeDirectory': os.path.realpath('.'),
@@ -106,6 +107,7 @@ detailed_json = {
 }
 
 detailed_canon = {
+    'experimentType': 'hpo',
     'searchSpace': {'a': 1},
     'trialCommand': 'python main.py',
     'trialCodeDirectory': os.path.realpath('.'),

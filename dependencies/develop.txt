@@ -1,13 +1,22 @@
-pylint
+aioconsole
+coverage
+cython
 flake8
-sphinx
-sphinx-argparse
-sphinx-rtd-theme
-sphinxcontrib-websupport
+ipython
+jupyter
+jupyterlab == 3.0.9
 nbsphinx
+pylint < 2.15
+pyright == 1.1.250
 pytest
 pytest-cov
-pytest-azurepipelines
-coverage
-ipython
-jupyterlab
+rstcheck >= 6.0
+sphinx >= 4.5
+sphinx-argparse-nni >= 0.4.0
+sphinx-copybutton
+sphinx-gallery
+sphinx-intl
+sphinx-tabs
+sphinxcontrib-bibtex
+sphinxcontrib-youtube
+git+https://github.com/bashtage/sphinx-material@6e0ef82#egg=sphinx_material

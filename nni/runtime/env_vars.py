@@ -22,12 +22,13 @@ _dispatcher_env_var_names = [
     'NNI_CHECKPOINT_DIRECTORY',
     'NNI_LOG_DIRECTORY',
     'NNI_LOG_LEVEL',
-    'NNI_INCLUDE_INTERMEDIATE_RESULTS'
+    'NNI_INCLUDE_INTERMEDIATE_RESULTS',
+    'NNI_TUNER_COMMAND_CHANNEL',
 ]
 
 def _load_env_vars(env_var_names):
     env_var_dict = {k: os.environ.get(k) for k in env_var_names}
-    return namedtuple('EnvVars', env_var_names)(**env_var_dict)
+    return namedtuple('EnvVars', env_var_names)(**env_var_dict)  # pylint: disable=unused-variable
 
 trial_env_vars = _load_env_vars(_trial_env_var_names)
 

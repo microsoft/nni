@@ -191,23 +191,31 @@ class HyperoptClassArgsValidator(ClassArgsValidator):
 
 class HyperoptTuner(Tuner):
     """
-    HyperoptTuner is a tuner which using hyperopt algorithm.
+    NNI wraps `hyperopt <https://github.com/hyperopt/hyperopt>`__ to provide anneal tuner.
+
+    This simple annealing algorithm begins by sampling from the prior
+    but tends over time to sample from points closer and closer to the best ones observed.
+    This algorithm is a simple variation of random search that leverages smoothness in the response surface.
+    The annealing rate is not adaptive.
+
+    Examples
+    --------
+
+    .. code-block::
+
+        config.tuner.name = 'Anneal'
+        config.tuner.class_args = {
+            'optimize_mode': 'minimize'
+        }
+
+    Parameters
+    ----------
+    optimze_mode: 'minimize' or 'maximize'
+        Whether optimize to minimize or maximize trial result.
     """
 
     def __init__(self, algorithm_name, optimize_mode='minimize',
                  parallel_optimize=False, constant_liar_type='min'):
-        """
-        Parameters
-        ----------
-        algorithm_name : str
-            algorithm_name includes "tpe", "random_search" and anneal".
-        optimize_mode : str
-        parallel_optimize : bool
-            More detail could reference: docs/en_US/Tuner/HyperoptTuner.md
-        constant_liar_type : str
-            constant_liar_type including "min", "max" and "mean"
-            More detail could reference: docs/en_US/Tuner/HyperoptTuner.md
-        """
         self.algorithm_name = algorithm_name
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.json = None
@@ -238,15 +246,6 @@ class HyperoptTuner(Tuner):
         raise RuntimeError('Not support tuner algorithm in hyperopt.')
 
     def update_search_space(self, search_space):
-        """
-        Update search space definition in tuner by search_space in parameters.
-
-        Will called when first setup experiemnt or update search space in WebUI.
-
-        Parameters
-        ----------
-        search_space : dict
-        """
         validate_search_space(search_space)
         self.json = search_space
 
@@ -266,22 +265,11 @@ class HyperoptTuner(Tuner):
         self.rval.catch_eval_exceptions = False
 
     def generate_parameters(self, parameter_id, **kwargs):
-        """
-        Returns a set of trial (hyper-)parameters, as a serializable object.
-
-        Parameters
-        ----------
-        parameter_id : int
-
-        Returns
-        -------
-        params : dict
-        """
-        total_params = self.get_suggestion(random_search=False)
+        total_params = self._get_suggestion(random_search=False)
         # avoid generating same parameter with concurrent trials because hyperopt doesn't support parallel mode
         if total_params in self.total_data.values():
             # but it can cause duplicate parameter rarely
-            total_params = self.get_suggestion(random_search=True)
+            total_params = self._get_suggestion(random_search=True)
         self.total_data[parameter_id] = total_params
 
         if self.parallel:
@@ -291,17 +279,6 @@ class HyperoptTuner(Tuner):
         return params
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
-        """
-        Record an observation of the objective function
-
-        Parameters
-        ----------
-        parameter_id : int
-        parameters : dict
-        value : dict/float
-            if value is dict, it should have "default" key.
-            value is final metrics of the trial.
-        """
         reward = extract_scalar_reward(value)
         # restore the paramsters contains '_index'
         if parameter_id not in self.total_data:
@@ -369,7 +346,7 @@ class HyperoptTuner(Tuner):
                 idxs[key] = [new_id]
                 vals[key] = [vals[key]]
 
-        self.miscs_update_idxs_vals(rval_miscs,
+        self._miscs_update_idxs_vals(rval_miscs,
                                     idxs,
                                     vals,
                                     idxs_map={new_id: new_id},
@@ -382,7 +359,7 @@ class HyperoptTuner(Tuner):
         trials.insert_trial_docs([trial])
         trials.refresh()
 
-    def miscs_update_idxs_vals(self,
+    def _miscs_update_idxs_vals(self,
                                miscs,
                                idxs,
                                vals,
@@ -416,7 +393,7 @@ class HyperoptTuner(Tuner):
                     misc_by_id[tid]['idxs'][key] = [tid]
                     misc_by_id[tid]['vals'][key] = [val]
 
-    def get_suggestion(self, random_search=False):
+    def _get_suggestion(self, random_search=False):
         """
         get suggestion from hyperopt
 
@@ -469,14 +446,6 @@ class HyperoptTuner(Tuner):
         return total_params
 
     def import_data(self, data):
-        """
-        Import additional data for tuning
-
-        Parameters
-        ----------
-        data:
-            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
-        """
         _completed_num = 0
         for trial_info in data:
             logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))

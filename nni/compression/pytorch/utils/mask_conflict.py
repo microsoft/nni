@@ -45,7 +45,19 @@ def fix_mask_conflict(masks, model, dummy_input, traced=None):
         if torch.__version__ >= '1.6.0':
             # only pytorch with version greater than 1.6.0 has the strict option
             kw_args['strict'] = False
-        traced = torch.jit.trace(model, dummy_input, **kw_args)
+        try:
+            import pytorch_lightning as pl
+        except ImportError:
+            is_lightning_module = False
+        else:
+            if isinstance(model, pl.LightningModule):
+                is_lightning_module = True
+            else:
+                is_lightning_module = False
+        if is_lightning_module:
+            traced = model.to_torchscript(method="trace", example_inputs=dummy_input, **kw_args)
+        else:
+            traced = torch.jit.trace(model, dummy_input, **kw_args)
         model.train(training)
 
     fix_group_mask = GroupMaskConflict(masks, model, dummy_input, traced)
@@ -81,23 +93,23 @@ class MaskFix:
 
 
 class GroupMaskConflict(MaskFix):
-    def __init__(self, masks, model, dummy_input, traced=None):
-        """
-        GroupMaskConflict fix the mask conflict between the layers that
-        has group dependecy with each other.
+    """
+    GroupMaskConflict fix the mask conflict between the layers that
+    has group dependecy with each other.
 
-        Parameters
-        ----------
-        masks : dict
-            a dict object that stores the masks
-        model : torch.nn.Module
-            model to fix the mask conflict
-        dummy_input : torch.Tensor
-            input example to trace the model
-        traced : torch._C.torch.jit.TopLevelTracedModule
-            the traced model of the target model, is this parameter is not None,
-            we donnot use the model and dummpy_input to get the trace graph.
-        """
+    Parameters
+    ----------
+    masks : dict
+        a dict object that stores the masks
+    model : torch.nn.Module
+        model to fix the mask conflict
+    dummy_input : torch.Tensor
+        input example to trace the model
+    traced : torch._C.torch.jit.TopLevelTracedModule
+        the traced model of the target model, is this parameter is not None,
+        we donnot use the model and dummpy_input to get the trace graph.
+    """
+    def __init__(self, masks, model, dummy_input, traced=None):
         super(GroupMaskConflict, self).__init__(
             masks, model, dummy_input, traced)
 
@@ -168,23 +180,24 @@ class GroupMaskConflict(MaskFix):
 
 
 class ChannelMaskConflict(MaskFix):
-    def __init__(self, masks, model, dummy_input, traced=None):
-        """
-        ChannelMaskConflict fix the mask conflict between the layers that
-        has channel dependecy with each other.
+    """
+    ChannelMaskConflict fix the mask conflict between the layers that
+    has channel dependecy with each other.
 
-        Parameters
-        ----------
-        masks : dict
-            a dict object that stores the masks
-        model : torch.nn.Module
-            model to fix the mask conflict
-        dummy_input : torch.Tensor
-            input example to trace the model
-        graph : torch._C.torch.jit.TopLevelTracedModule
-            the traced graph of the target model, is this parameter is not None,
-            we donnot use the model and dummpy_input to get the trace graph.
-        """
+    Parameters
+    ----------
+    masks : dict
+        a dict object that stores the masks
+    model : torch.nn.Module
+        model to fix the mask conflict
+    dummy_input : torch.Tensor
+        input example to trace the model
+    graph : torch._C.torch.jit.TopLevelTracedModule
+        the traced graph of the target model, is this parameter is not None,
+        we donnot use the model and dummpy_input to get the trace graph.
+    """
+
+    def __init__(self, masks, model, dummy_input, traced=None):
         super(ChannelMaskConflict, self).__init__(
             masks, model, dummy_input, traced)
         self.conv_prune_dim = detect_mask_prune_dim(masks, model)

@@ -33,7 +33,7 @@ about: Report an issue or question while using nni instance (deployment).
 <!--
 Where can you find the log files:
 LOG: https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-director
-STDOUT/STDERR: https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout
+STDOUT/STDERR: https://nni.readthedocs.io/en/stable/reference/nnictl.html#nnictl-log-stdout
 -->
 
 

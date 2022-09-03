@@ -306,40 +306,37 @@ class PPOClassArgsValidator(ClassArgsValidator):
 class PPOTuner(Tuner):
     """
     PPOTuner, the implementation inherits the main logic of the implementation
-    [ppo2 from openai](https://github.com/openai/baselines/tree/master/baselines/ppo2), and is adapted for NAS scenario.
+    `ppo2 from openai <https://github.com/openai/baselines/tree/master/baselines/ppo2>`__ and is adapted for NAS scenario.
     It uses ``lstm`` for its policy network and value network, policy and value share the same network.
+
+    Parameters
+    ----------
+    optimize_mode : str
+        maximize or minimize
+    trials_per_update : int
+        Number of trials to have for each model update
+    epochs_per_update : int
+        Number of epochs to run for each model update
+    minibatch_size : int
+        Minibatch size (number of trials) for the update
+    ent_coef : float
+        Policy entropy coefficient in the optimization objective
+    lr : float
+        Learning rate of the model (lstm network), constant
+    vf_coef : float
+        Value function loss coefficient in the optimization objective
+    max_grad_norm : float
+        Gradient norm clipping coefficient
+    gamma : float
+        Discounting factor
+    lam : float
+        Advantage estimation discounting factor (lambda in the paper)
+    cliprange : float
+        Cliprange in the PPO algorithm, constant
     """
 
     def __init__(self, optimize_mode, trials_per_update=20, epochs_per_update=4, minibatch_size=4,
                  ent_coef=0.0, lr=3e-4, vf_coef=0.5, max_grad_norm=0.5, gamma=0.99, lam=0.95, cliprange=0.2):
-        """
-        Initialization, PPO model is not initialized here as search space is not received yet.
-
-        Parameters
-        ----------
-        optimize_mode : str
-            maximize or minimize
-        trials_per_update : int
-            Number of trials to have for each model update
-        epochs_per_update : int
-            Number of epochs to run for each model update
-        minibatch_size : int
-            Minibatch size (number of trials) for the update
-        ent_coef : float
-            Policy entropy coefficient in the optimization objective
-        lr : float
-            Learning rate of the model (lstm network), constant
-        vf_coef : float
-            Value function loss coefficient in the optimization objective
-        max_grad_norm : float
-            Gradient norm clipping coefficient
-        gamma : float
-            Discounting factor
-        lam : float
-            Advantage estimation discounting factor (lambda in the paper)
-        cliprange : float
-            Cliprange in the PPO algorithm, constant
-        """
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.model_config = ModelConfig()
         self.model = None
@@ -636,7 +633,7 @@ class PPOTuner(Tuner):
             # use mean of finished trials as the result of this failed trial
             values = [val for val in self.trials_result if val is not None]
             logger.warning('In trial_end, values: %s', values)
-            self.trials_result[trial_info_idx] = (sum(values) / len(values)) if values else 0
+            self.trials_result[trial_info_idx] = (np.mean(values)) if values else 0
             self.finished_trials += 1
             if self.finished_trials == self.inf_batch_size:
                 logger.debug('Start next round inference in trial_end')

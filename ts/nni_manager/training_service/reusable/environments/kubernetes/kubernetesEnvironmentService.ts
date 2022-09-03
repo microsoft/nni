@@ -32,6 +32,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
     protected CONTAINER_MOUNT_PATH: string;
     protected log: Logger = getLogger('KubernetesEnvironmentService');
     protected environmentWorkingFolder: string;
+    protected nfsRootDir: string;
 
     constructor(_config: any, info: ExperimentStartupInfo) {
         super();
@@ -39,6 +40,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
         this.genericK8sClient = new GeneralK8sClient();
         this.experimentRootDir = info.logDir;
         this.environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
+        this.nfsRootDir = path.join(this.experimentRootDir, "nfs-root");
         this.experimentId = info.experimentId;
         this.environmentWorkingFolder = path.join(this.CONTAINER_MOUNT_PATH, 'nni', this.experimentId);
     }
@@ -77,7 +79,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
             if (this.genericK8sClient === undefined) {
                 throw new Error("genericK8sClient undefined!");
             }
-            const namespace = this.genericK8sClient.getNamespace ? this.genericK8sClient.getNamespace : "default"
+            const namespace = this.genericK8sClient.getNamespace ?? "default";
             await this.genericK8sClient.createSecret(
                 {
                     apiVersion: 'v1',
@@ -147,11 +149,11 @@ export class KubernetesEnvironmentService extends EnvironmentService {
     }
 
     protected async createNFSStorage(nfsServer: string, nfsPath: string): Promise<void> {
-        await cpp.exec(`mkdir -p ${this.environmentLocalTempFolder}`);
+        await cpp.exec(`mkdir -p ${this.nfsRootDir}`);
         try {
-            await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.environmentLocalTempFolder}`);
+            await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.nfsRootDir}`);
         } catch (error) {
-            const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.environmentLocalTempFolder} failed, error is ${error}`;
+            const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.nfsRootDir} failed, error is ${error}`;
             this.log.error(mountError);
 
             return Promise.reject(mountError);
@@ -180,7 +182,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
         const body = fs.readFileSync(filePath).toString('base64');
         const registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
             .toLowerCase());
-        const namespace = this.genericK8sClient.getNamespace ? this.genericK8sClient.getNamespace : "default"
+        const namespace = this.genericK8sClient.getNamespace ?? "default";
         await this.genericK8sClient.createSecret(
             {
                 apiVersion: 'v1',

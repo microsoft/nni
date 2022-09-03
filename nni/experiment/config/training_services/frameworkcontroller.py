@@ -19,6 +19,8 @@ __all__ = ['FrameworkControllerConfig', 'FrameworkControllerRoleConfig', 'Framew
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
+from typing_extensions import Literal
+
 from ..base import ConfigBase
 from ..training_service import TrainingServiceConfig
 from .k8s_storage import K8sStorageConfig
@@ -41,8 +43,15 @@ class FrameworkControllerRoleConfig(ConfigBase):
 
 @dataclass(init=False)
 class FrameworkControllerConfig(TrainingServiceConfig):
-    platform: str = 'frameworkcontroller'
+    platform: Literal['frameworkcontroller'] = 'frameworkcontroller'
     storage: K8sStorageConfig
     service_account_name: Optional[str]
     task_roles: List[FrameworkControllerRoleConfig]
     reuse_mode: Optional[bool] = True
+    namespace: str = 'default'
+
+    def _canonicalize(self, parents):
+        super()._canonicalize(parents)
+        # framework controller does not need these fields, set empty string for type check
+        if self.trial_command is None:
+            self.trial_command = ''
