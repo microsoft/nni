@@ -18,10 +18,18 @@ try:
     import pytorch_lightning as pl
     from pytorch_lightning.callbacks import Callback
 except ImportError:
-    LightingInstalled = False
+    LIGHTNING_INSTALLED = False
 else:
-    LightingInstalled = True
+    LIGHTNING_INSTALLED = True
 
+try:
+    from transformers.trainer import Trainer as HFTrainer
+except ImportError:
+    TRANSFORMERS_INSTALLED = False
+else:
+    TRANSFORMERS_INSTALLED = True
+
+import nni
 from nni.common import is_traceable
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
 
@@ -297,7 +305,7 @@ class LightningEvaluator(Evaluator):
 
     def __init__(self, trainer: pl.Trainer, data_module: pl.LightningDataModule,
                  dummy_input: Any | None = None):
-        assert LightingInstalled, 'pytorch_lightning is not installed.'
+        assert LIGHTNING_INSTALLED, 'pytorch_lightning is not installed.'
         err_msg_p = 'Only support traced {}, please use nni.trace({}) to initialize the trainer.'
         err_msg = err_msg_p.format('pytorch_lightning.Trainer', 'pytorch_lightning.Trainer')
         assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), err_msg
@@ -752,7 +760,10 @@ class TorchEvaluator(Evaluator):
 
     def evaluate(self) -> float | None | Tuple[float, Dict[str, Any]] | Tuple[None, Dict[str, Any]]:
         assert self.model is not None
-        assert self.evaluating_func is not None
+        if self.evaluating_func is None:
+            warn_msg = f'Did not pass evaluation_func to {self.__class__.__name__}, will return None for calling evaluate()'
+            _logger.warning(warn_msg)
+            return None
         metric = self.evaluating_func(self.model)
         if isinstance(metric, dict):
             nni_used_metric = metric.get('default', None)
@@ -763,6 +774,178 @@ class TorchEvaluator(Evaluator):
             return nni_used_metric, metric
         else:
             return metric
+
+    def get_dummy_input(self) -> Any:
+        return self.dummy_input
+
+
+class TransformersEvaluator(Evaluator):
+    """
+    TransformersEvaluator is for the users who using Huggingface ``transformers.trainer.Trainer``.
+
+    Here is an example for using ``transformers.trainer.Trainer`` to initialize an evaluator:
+
+    .. code-block:: python
+
+        from transformers.trainer import Trainer
+
+        # wrap Trainer class with nni.trace
+        trainer = nni.trace(Trainer)(model=model)
+        evaluator = TransformersEvaluator(trainer)
+
+        # if you want to using customized optimizer & lr_scheduler, please also wrap Optimzier & _LRScheduler class
+        optimizer = nni.trace(Adam)(...)
+        lr_scheduler = nni.trace(LambdaLR)(...)
+        trainer = nni.trace(Trainer)(model=model, ..., optimizers=(optimizer, lr_scheduler))
+        evaluator = TransformersEvaluator(trainer)
+
+    Parameters
+    ----------
+    trainer
+        ``nni.trace(transformers.trainer.Trainer)`` instance. The trainer will be re-initialized inside evaluator,
+        so wrap with ``nni.trace`` is required for getting the initialization arguments.
+    dummy_input
+        Optional. The dummy_input is used to trace the graph, it's same with ``example_inputs`` in
+        `torch.jit.trace <https://pytorch.org/docs/stable/generated/torch.jit.trace.html?highlight=torch%20jit%20trace#torch.jit.trace>`_.
+    """
+
+    def __init__(self, trainer: HFTrainer, dummy_input: Any | None = None) -> None:
+        assert TRANSFORMERS_INSTALLED, 'transformers is not installed.'
+        assert is_traceable(trainer), f'Only support traced Trainer, please use nni.trace(Trainer) to initialize the trainer.'
+        self.traced_trainer = trainer
+        self.dummy_input = dummy_input
+
+        self.model: Module | None = None
+        self._ori_trainer_attr = {
+            'get_optimizer_cls_and_kwargs': HFTrainer.get_optimizer_cls_and_kwargs
+        }
+
+        self._initialization_complete = False
+
+    def _init_optimizer_helpers(self, pure_model: Module | pl.LightningModule):
+        assert self._initialization_complete is False, 'Evaluator initialization is already complete.'
+
+        if self.traced_trainer.optimizer is not None and is_traceable(self.traced_trainer.optimizer):
+            self._optimizer_helper = OptimizerConstructHelper.from_trace(pure_model, self.traced_trainer.optimizer)
+        else:
+            warn_msg = 'trainer.optimzer is not wrapped by nni.trace, or trainer.optimzer is None, ' + \
+                       'will using huggingface default optimizer.'
+            _logger.warning(warn_msg)
+            self.traced_trainer.optimizer = None
+
+            def patched_get_optimizer_cls_and_kwargs(args) -> Tuple[Any, Any]:
+                optimizer_cls, optimizer_kwargs = self._ori_trainer_attr['get_optimizer_cls_and_kwargs'](args)
+                return nni.trace(optimizer_cls), optimizer_kwargs
+
+            HFTrainer.get_optimizer_cls_and_kwargs = patched_get_optimizer_cls_and_kwargs
+            self._optimizer_helper = OptimizerConstructHelper.from_trace(pure_model, self.traced_trainer.create_optimizer())
+            HFTrainer.get_optimizer_cls_and_kwargs = self._ori_trainer_attr['get_optimizer_cls_and_kwargs']
+            self.traced_trainer.optimizer = None
+
+        if self.traced_trainer.lr_scheduler is not None and is_traceable(self.traced_trainer.lr_scheduler):
+            self._lr_scheduler_helper = LRSchedulerConstructHelper.from_trace(self.traced_trainer.lr_scheduler)
+        else:
+            warn_msg = 'trainer.lr_scheduler is not wrapped by nni.trace, or trainer.lr_scheduler is None, ' + \
+                       'will using huggingface default lr_scheduler.'
+            _logger.warning(warn_msg)
+            self.traced_trainer.lr_scheduler = None
+            self._lr_scheduler_helper = None
+
+        self._initialization_complete = True
+
+    def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None):
+        err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
+        assert self._initialization_complete is True, err_msg
+        assert isinstance(model, Module)
+        if self.model is not None:
+            _logger.warning('Already bound a model, will unbind it before bind a new model.')
+            self.unbind_model()
+
+        self.model = model
+
+        # re-initialized Trainer
+        args = list(self.traced_trainer.trace_args)
+        kwargs = dict()
+        kwargs.update(self.traced_trainer.trace_kwargs)
+        if len(args) != 0:
+            assert isinstance(args[0], Module) or args[0] is None
+            args[0] = self.model
+        else:
+            kwargs['model'] = self.model
+        self.trainer: HFTrainer = self.traced_trainer.trace_symbol(*args, **kwargs)
+        self._ori_trainer_attr['compute_loss'] = self.trainer.compute_loss
+
+        self._param_names_map = param_names_map
+        self.trainer.optimizer = self._optimizer_helper.call(self.model, self._param_names_map)
+        self._ori_trainer_attr['optimizer.step'] = self.trainer.optimizer.step
+
+    def unbind_model(self):
+        if self.model:
+            self.revert_loss()
+            self.revert_optimizer_step()
+            self.remove_all_hooks()
+            self._ori_trainer_attr.pop('optimizer.step', None)
+            self.trainer.optimizer = None
+            self._param_names_map = None
+            self._ori_trainer_attr.pop('compute_loss', None)
+            self.trainer = None
+            self.model = None
+        else:
+            _logger.warning('Did not bind any model, no need to unbind model.')
+
+    def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+        old_compute_loss = self.trainer.compute_loss
+
+        def patched_compute_loss(_, model: Any, inputs: Any, return_outputs: bool = False):
+            result = old_compute_loss(model, inputs, return_outputs)
+            if return_outputs:
+                return patch(result[0]), result[1]
+            else:
+                return patch(result)
+
+        self.trainer.compute_loss = types.MethodType(patched_compute_loss, self.trainer)
+
+    def revert_loss(self):
+        self.trainer.compute_loss = self._ori_trainer_attr['compute_loss']
+
+    def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
+        assert self.trainer.optimizer is not None
+        old_step = self.trainer.optimizer.step
+
+        def patched_step(_, *args, **kwargs):
+            for task in before_step_tasks:
+                task()
+            # call origin optimizer step method
+            output = old_step(*args, **kwargs)
+            for task in after_step_tasks:
+                task()
+            return output
+
+        self.trainer.optimizer.step = types.MethodType(patched_step, self.trainer.optimizer)
+
+    def revert_optimizer_step(self):
+        assert self.trainer.optimizer is not None
+        self.trainer.optimizer.step = self._ori_trainer_attr['optimizer.step']
+
+    def train(self, max_steps: int | None = None, max_epochs: int | None = None):
+        assert self.model is not None
+        ori_steps, ori_epochs = self.trainer.args.max_steps, self.trainer.args.num_train_epochs
+        if max_epochs is not None:
+            self.trainer.args.num_train_epochs = max_epochs
+        if max_steps is not None:
+            self.trainer.args.max_steps = max_steps
+        self.trainer.lr_scheduler = self._lr_scheduler_helper.call(self.trainer.optimizer) if self._lr_scheduler_helper else None
+
+        self.trainer.train()
+
+        self.trainer.lr_scheduler = None
+        self.trainer.args.max_steps, self.trainer.args.num_train_epochs = ori_steps, ori_epochs
+
+    def finetune(self):
+        self.train()
+
+    def evaluate(self) -> float | None | Tuple[float, Dict[str, Any]] | Tuple[None, Dict[str, Any]]:
+        return self.trainer.evaluate()
 
     def get_dummy_input(self) -> Any:
         return self.dummy_input

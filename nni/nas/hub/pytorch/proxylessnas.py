@@ -157,6 +157,25 @@ class InvertedResidual(nn.Sequential):
 
     - https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L453
     - https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/efficientnet_blocks.py#L134
+
+    Parameters
+    ----------
+    in_channels
+        The number of input channels. Can be a value choice.
+    out_channels
+        The number of output channels. Can be a value choice.
+    expand_ratio
+        The ratio of intermediate channels with respect to input channels. Can be a value choice.
+    kernel_size
+        The kernel size of the depthwise convolution. Can be a value choice.
+    stride
+        The stride of the depthwise convolution.
+    squeeze_excite
+        Callable to create squeeze and excitation layer. Take hidden channels and input channels as arguments.
+    norm_layer
+        Callable to create normalization layer. Take input channels as argument.
+    activation_layer
+        Callable to create activation layer. No input arguments.
     """
 
     def __init__(
@@ -252,6 +271,21 @@ class ProxylessNAS(nn.Module):
     We note that :class:`MobileNetV3Space` is different in this perspective.
 
     This space can be implemented as part of :class:`MobileNetV3Space`, but we separate those following conventions.
+
+    Parameters
+    ----------
+    num_labels
+        The number of labels for classification.
+    base_widths
+        Widths of each stage, from stem, to body, to head. Length should be 9.
+    dropout_rate
+        Dropout rate for the final classification layer.
+    width_mult
+        Width multiplier for the model.
+    bn_eps
+        Epsilon for batch normalization.
+    bn_momentum
+        Momentum for batch normalization.
     """
 
     def __init__(self, num_labels: int = 1000,

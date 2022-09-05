@@ -439,6 +439,19 @@ class NDSStageDifferentiable(DifferentiableMixedRepeat):
 
 _INIT_PARAMETER_DOCS = """
 
+    Notes
+    -----
+
+    To use NDS spaces with one-shot strategies,
+    especially when depth is mutating (i.e., ``num_cells`` is set to a tuple / list),
+    please use :class:`~nni.retiarii.hub.pytorch.nasnet.NDSStagePathSampling` (with ENAS and RandomOneShot)
+    and :class:`~nni.retiarii.hub.pytorch.nasnet.NDSStageDifferentiable` (with DARTS and Proxyless) into ``mutation_hooks``.
+    This is because the output shape of each stacked block in :class:`~nni.retiarii.hub.pytorch.nasnet.NDSStage` can be different.
+    For example::
+
+        from nni.retiarii.hub.pytorch.nasnet import NDSStageDifferentiable
+        darts_strategy = strategy.DARTS(mutation_hooks=[NDSStageDifferentiable.mutate])
+
     Parameters
     ----------
     width
@@ -451,6 +464,8 @@ _INIT_PARAMETER_DOCS = """
     auxiliary_loss
         If true, another auxiliary classification head will produce the another prediction.
         This makes the output of network two logits in the training phase.
+    drop_path_prob
+        Apply drop path. Enabled when it's set to be greater than 0.
 
 """
 
@@ -475,8 +490,6 @@ class NDS(nn.Module):
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
     num_nodes_per_cell
         See :class:`~nni.retiarii.nn.pytorch.Cell`.
-    drop_path_prob : float
-        Apply drop path. Enabled when it's set to be greater than 0.
     """
 
     def __init__(self,

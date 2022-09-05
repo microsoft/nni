@@ -82,6 +82,8 @@ class AutoMaskInference:
         if output_mask is not None:
             # assume the given output mask is right
             self.output_mask = output_mask
+        elif isinstance(module, nn.GroupNorm):
+            self.output_mask = self.in_masks[0]
         else:
             if isinstance(self.output, torch.Tensor):
                 self.output_mask = torch.ones_like(self.output)

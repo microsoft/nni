@@ -222,7 +222,7 @@ class FuncAdapter:
         self.undetermined = undetermined
         self.special_treat = special_treat
 
-    def __call__(self, /, *args):
+    def __call__(self, *args):
         assert len(args) >= len(self.undetermined)
         if len(args) > len(self.undetermined):
             logger.warning('throw some args away when calling the function "%s"', self.func.__name__)

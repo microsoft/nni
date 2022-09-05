@@ -15,6 +15,8 @@ import torch.nn.functional as F
 from torch.nn import Module
 from torch.optim import Optimizer
 
+from nni.algorithms.compression.v2.pytorch.base.pruner import PrunerModuleWrapper
+
 from ..base import Pruner
 
 from .tools import (
@@ -53,11 +55,10 @@ from ..utils import (
     OptimizerConstructHelper,
     Scaling,
     Evaluator,
-    LightningEvaluator,
-    TorchEvaluator,
     ForwardHook,
     TensorHook,
-    config_list_canonical
+    config_list_canonical,
+    get_output_batch_dims
 )
 
 from ..utils.docstring import _EVALUATOR_DOCSTRING
@@ -151,7 +152,7 @@ _LEGACY_CRITERION = Callable[[Tensor, Tensor], Tensor]
 
 # TODO: remove in nni v3.0.
 class EvaluatorBasedPruner(BasicPruner):
-    evaluator: LightningEvaluator | TorchEvaluator
+    evaluator: Evaluator
     using_evaluator: bool
     trainer: _LEGACY_TRAINER
     traced_optimizer: Optimizer
@@ -163,7 +164,7 @@ class EvaluatorBasedPruner(BasicPruner):
         # return the remaining arguments.
         if (len(args) > 0 and isinstance(args[0], Evaluator)) or (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
             init_kwargs = self._parse_args(new_api, args, kwargs, init_kwargs)
-            self.evaluator: LightningEvaluator | TorchEvaluator = init_kwargs.pop('evaluator')
+            self.evaluator: Evaluator = init_kwargs.pop('evaluator')
             if not self.evaluator._initialization_complete:
                 self.evaluator._init_optimizer_helpers(model)  # type: ignore
             self.using_evaluator = True
@@ -177,8 +178,8 @@ class EvaluatorBasedPruner(BasicPruner):
             else:
                 self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
             self.using_evaluator = False
-            warn_msg = f"The old API ...{','.join(old_api)} will be deprecated after NNI v3.0, " + \
-                       "please using the new one ...{','.join(new_api)}"
+            warn_msg = f"The old API {','.join(old_api)} will be deprecated after NNI v3.0, " + \
+                       f"please using the new one {','.join(new_api)}"
             _logger.warning(warn_msg)
         return init_kwargs
 
@@ -191,12 +192,12 @@ class EvaluatorBasedPruner(BasicPruner):
         for key, value in def_kwargs.items():
             if key not in merged_kwargs and key in arg_names:
                 merged_kwargs[key] = value
-        diff = set(arg_names).difference(merged_kwargs.keys())
-        if diff:
-            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
         diff = set(merged_kwargs.keys()).difference(arg_names)
         if diff:
             raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
+        diff = set(arg_names).difference(merged_kwargs.keys())
+        if diff:
+            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
         return merged_kwargs
 
     def compress(self) -> Tuple[Module, Dict]:
@@ -579,7 +580,7 @@ class SlimPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator,
                  training_epochs: int, scale: float = 0.0001, mode='global'):
         ...
 
@@ -699,7 +700,7 @@ class ActivationPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_steps: int,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int,
                  activation: str = 'relu', mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         ...
 
@@ -749,15 +750,19 @@ class ActivationPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
-            activation = self._activation_trans(output)
+            # TODO: remove `if` after deprecate the old API
+            if isinstance(_module, PrunerModuleWrapper):
+                _module = _module.module
+            batch_dims, batch_num = get_output_batch_dims(output, _module)  # type: ignore
+            activation = self._activation_trans(output, batch_dims)
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(activation))
             if buffer[0] < self.training_steps:
-                buffer[1] += activation
-                buffer[0] += 1
+                buffer[1] += activation.to(buffer[1].device)  # type: ignore
+                buffer[0] += batch_num
         return collect_activation
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
         raise NotImplementedError()
 
     def reset_tools(self):
@@ -848,9 +853,10 @@ class ActivationAPoZRankPruner(ActivationPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
+        dim = [dim] if not isinstance(dim, (list, tuple)) else dim
         # return a matrix that the position of zero in `output` is one, others is zero.
-        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).mean(0)
+        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output).sum(dim=dim)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         return APoZRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
@@ -903,9 +909,10 @@ class ActivationMeanRankPruner(ActivationPruner):
     For detailed example please refer to :githublink:`examples/model_compress/pruning/activation_pruning_torch.py <examples/model_compress/pruning/activation_pruning_torch.py>`
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
-    def _activation_trans(self, output: Tensor) -> Tensor:
+    def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
+        dim = [dim] if not isinstance(dim, (list, tuple)) else dim
         # return the activation of `output` directly.
-        return self._activation(output.detach()).mean(0)
+        return self._activation(output.detach()).sum(dim)
 
     def _create_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(Scaling(kernel_size=[1], kernel_padding_mode='back'))
@@ -970,7 +977,7 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, training_steps: int,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         ...
 
@@ -1114,7 +1121,7 @@ class ADMMPruner(EvaluatorBasedPruner):
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
-    def __init__(self, model: Module, config_list: List[Dict], evaluator: LightningEvaluator | TorchEvaluator, iterations: int,
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Evaluator, iterations: int,
                  training_epochs: int, granularity: str = 'fine-grained'):
         ...
 

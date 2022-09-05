@@ -5,7 +5,8 @@
 
 from __future__ import annotations
 import warnings
-from typing import Any, cast
+import logging
+from typing import Any, cast, Dict
 
 import pytorch_lightning as pl
 import torch
@@ -13,12 +14,16 @@ import torch.nn as nn
 import torch.optim as optim
 
 from .base_lightning import MANUAL_OPTIMIZATION_NOTE, BaseOneShotLightningModule, MutationHook, no_default_hook
+from .supermodule.base import sub_state_dict
 from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
 from .supermodule.sampling import (
     PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy,
     PathSamplingCell, PathSamplingRepeat
 )
 from .enas import ReinforceController, ReinforceField
+
+
+_logger = logging.getLogger(__name__)
 
 
 class RandomSamplingLightningModule(BaseOneShotLightningModule):
@@ -92,6 +97,45 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
         )
         return super().export()
 
+    def _get_base_model(self):
+        assert isinstance(self.model.model, nn.Module)
+        base_model: nn.Module = self.model.model
+        return base_model
+
+    def state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
+        base_model = self._get_base_model()
+        state_dict = base_model.state_dict(destination=destination, prefix=prefix, keep_vars=keep_vars)
+        return state_dict
+
+    def load_state_dict(self, state_dict, strict: bool=True) -> None:
+        base_model = self._get_base_model()
+        base_model.load_state_dict(state_dict=state_dict, strict=strict)
+
+    def sub_state_dict(self, arch: dict[str, Any], destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
+        """Given the architecture dict, return the state_dict which can be directly loaded by the fixed subnet.
+
+        Parameters
+        ----------
+        arch : dict[str, Any]
+            subnet architecture dict.
+        destination: dict
+            If provided, the state of module will be updated into the dict and the same object is returned.
+            Otherwise, an ``OrderedDict`` will be created and returned.
+        prefix: str
+            A prefix added to parameter and buffer names to compose the keys in state_dict.
+        keep_vars: bool
+            by default the :class:`~torch.Tensor` s returned in the state dict are detached from autograd.
+            If it's set to ``True``, detaching will not be performed.
+
+        Returns
+        -------
+        dict
+            Subnet state dict.
+        """
+        self.resample(memo=arch)
+        base_model = self._get_base_model()
+        state_dict = sub_state_dict(base_model, destination, prefix, keep_vars)
+        return state_dict
 
 class EnasLightningModule(RandomSamplingLightningModule):
     _enas_note = """
@@ -102,7 +146,7 @@ class EnasLightningModule(RandomSamplingLightningModule):
     - Firstly, training model parameters.
     - Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
 
-    .. note::
+    .. attention::
 
        ENAS requires the evaluator to report metrics via ``self.log`` in its ``validation_step``.
        See explanation of ``reward_metric_name`` for details.
@@ -174,6 +218,13 @@ class EnasLightningModule(RandomSamplingLightningModule):
                  reward_metric_name: str | None = None,
                  mutation_hooks: list[MutationHook] | None = None):
         super().__init__(inner_module, mutation_hooks)
+
+        if reward_metric_name is None:
+            _logger.warning(
+                'It is strongly recommended to have `reward_metric_name` specified. '
+                'It should be one of the metrics logged in `self.log` in evaluator. '
+                'Otherwise it will infer the reward based on certain rules.'
+            )
 
         # convert parameter spec to legacy ReinforceField
         # this part will be refactored

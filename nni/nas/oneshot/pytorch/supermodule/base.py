@@ -3,13 +3,62 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections import OrderedDict
+import itertools
+from typing import Any, Dict
 
 import torch.nn as nn
 
 from nni.common.hpo_utils import ParameterSpec
 
-__all__ = ['BaseSuperNetModule']
+__all__ = ['BaseSuperNetModule', 'sub_state_dict']
+
+
+def sub_state_dict(module: Any, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
+    """Returns a dictionary containing a whole state of the BaseSuperNetModule.
+
+    Both parameters and persistent buffers (e.g. running averages) are
+    included. Keys are corresponding parameter and buffer names.
+    Parameters and buffers set to ``None`` are not included.
+
+    Parameters
+    ----------
+    arch : dict[str, Any]
+        subnet architecture dict.
+    destination (dict, optional):
+        If provided, the state of module will be updated into the dict
+        and the same object is returned. Otherwise, an ``OrderedDict``
+        will be created and returned. Default: ``None``.
+    prefix (str, optional):
+        a prefix added to parameter and buffer names to compose the keys in state_dict.
+        Default: ``''``.
+    keep_vars (bool, optional):
+        by default the :class:`~torch.Tensor` s returned in the state dict are
+        detached from autograd. If it's set to ``True``, detaching will not be performed.
+        Default: ``False``.
+
+    Returns
+    -------
+    dict
+        Subnet state dictionary.
+    """
+    if destination is None:
+        destination = OrderedDict()
+        destination._metadata = OrderedDict()
+
+    local_metadata = dict(version=module._version)
+    if hasattr(destination, "_metadata"):
+        destination._metadata[prefix[:-1]] = local_metadata
+
+    if isinstance(module, BaseSuperNetModule):
+        module._save_to_sub_state_dict(destination, prefix, keep_vars)
+    else:
+        module._save_to_state_dict(destination, prefix, keep_vars)
+        for name, m in module._modules.items():
+            if m is not None:
+                sub_state_dict(m, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+
+    return destination
 
 
 class BaseSuperNetModule(nn.Module):
@@ -104,3 +153,22 @@ class BaseSuperNetModule(nn.Module):
             See :class:`BaseOneShotLightningModule <nni.retiarii.oneshot.pytorch.base_lightning.BaseOneShotLightningModule>` for details.
         """
         raise NotImplementedError()
+
+    def _save_param_buff_to_state_dict(self, destination, prefix, keep_vars):
+        """Save the params and buffers of the current module to state dict."""
+        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
+            if value is None or name in self._non_persistent_buffers_set:
+                # it won't appear in state dict
+                continue
+            destination[prefix + name] = value if keep_vars else value.detach()
+
+    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
+        """Save the sub-module to state dict."""
+        for name, module in self._modules.items():
+            if module is not None:
+                sub_state_dict(module, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+
+    def _save_to_sub_state_dict(self, destination, prefix, keep_vars):
+        """Save to state dict."""
+        self._save_param_buff_to_state_dict(destination, prefix, keep_vars)
+        self._save_module_to_state_dict(destination, prefix, keep_vars)
