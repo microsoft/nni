@@ -21,7 +21,7 @@ In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves
 .. _DARTS: https://arxiv.org/abs/1806.09055
 
 Use a pre-searched DARTS model
-------------------------
+------------------------------
 
 Similar to `the beginner tutorial of PyTorch <https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html>`__,
 we begin with CIFAR-10 dataset, which is a image classification dataset of 10 categories.
@@ -56,9 +56,8 @@ valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
 #
 # NNI presents many built-in model spaces, along with many *pre-searched models* in :doc:`model space hub </nas/space_hub>`,
 # which are produced by most popular NAS literatures.
-# Using or finetuning from a pretrained model sometimes might be beneficial in 
 # A pre-trained model is a saved network that was previously trained on a large dataset like CIFAR-10 or ImageNet.
-# You can easily load these models as a benchmark, validate their performances, and finetune them if you need.
+# You can easily load these models as a starting point, validate their performances, and finetune them if you need.
 #
 # In this tutorial, we choose one from `DARTS`_ search space, which is natively trained on our target dataset, CIFAR-10,
 # so as to save the tedious steps of finetuning.
@@ -97,7 +96,7 @@ evaluate_model(darts_v2_model, cuda=True)  # Set this to false if there's no GPU
 # we can go a step further to search a model within :class:`~nni.retiarii.hub.pytorch.DARTS` space on our own.
 #
 # Use the DARTS model space
-# -------------------
+# -------------------------
 #
 # The model space provided in `DARTS`_ originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
 # where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
@@ -240,6 +239,7 @@ evaluator = Classification(
 # and thus saves the excessive cost of model training.
 #
 # .. note::
+#
 #    It's worth mentioning that one-shot NAS also suffers from multiple drawbacks despite its computational efficiency.
 #    We recommend
 #    `Weight-Sharing Neural Architecture Search: A Battle to Shrink the Optimization Gap <https://arxiv.org/abs/2008.01475>`__

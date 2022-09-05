@@ -40,7 +40,7 @@ In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves
 .. _DARTS: https://arxiv.org/abs/1806.09055
 
 Use a pre-searched DARTS model
-------------------------
+------------------------------
 
 Similar to `the beginner tutorial of PyTorch <https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html>`__,
 we begin with CIFAR-10 dataset, which is a image classification dataset of 10 categories.
@@ -82,7 +82,7 @@ We first load the CIFAR-10 dataset with torchvision.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-71
+.. GENERATED FROM PYTHON SOURCE LINES 50-70
 
 .. note::
 
@@ -92,9 +92,8 @@ We first load the CIFAR-10 dataset with torchvision.
 
 NNI presents many built-in model spaces, along with many *pre-searched models* in :doc:`model space hub </nas/space_hub>`,
 which are produced by most popular NAS literatures.
-Using or finetuning from a pretrained model sometimes might be beneficial in 
 A pre-trained model is a saved network that was previously trained on a large dataset like CIFAR-10 or ImageNet.
-You can easily load these models as a benchmark, validate their performances, and finetune them if you need.
+You can easily load these models as a starting point, validate their performances, and finetune them if you need.
 
 In this tutorial, we choose one from `DARTS`_ search space, which is natively trained on our target dataset, CIFAR-10,
 so as to save the tedious steps of finetuning.
@@ -106,7 +105,7 @@ so as to save the tedious steps of finetuning.
    `this tutorial of object detection finetuning <https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html>`__
    if you want to know how finetuning is generally done in PyTorch.
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-94
+.. GENERATED FROM PYTHON SOURCE LINES 71-93
 
 .. code-block:: default
 
@@ -146,13 +145,13 @@ so as to save the tedious steps of finetuning.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 95-159
+.. GENERATED FROM PYTHON SOURCE LINES 94-158
 
 The journey of using a pre-searched model could end here. Or you are interested,
 we can go a step further to search a model within :class:`~nni.retiarii.hub.pytorch.DARTS` space on our own.
 
 Use the DARTS model space
--------------------
+-------------------------
 
 The model space provided in `DARTS`_ originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
 where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
@@ -213,7 +212,7 @@ where we have supported multiple popular model spaces for plug-and-play.
    The model space here can be replaced with any space provided in the hub,
    or even customized spaces built from scratch.
 
-.. GENERATED FROM PYTHON SOURCE LINES 160-167
+.. GENERATED FROM PYTHON SOURCE LINES 159-166
 
 .. code-block:: default
 
@@ -231,7 +230,7 @@ where we have supported multiple popular model spaces for plug-and-play.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 168-175
+.. GENERATED FROM PYTHON SOURCE LINES 167-174
 
 Search on the model space
 -------------------------
@@ -241,7 +240,7 @@ Search on the model space
    Please set ``fast_dev_run`` to False to reproduce the our claimed results.
    Otherwise, only a few mini-batches will be run.
 
-.. GENERATED FROM PYTHON SOURCE LINES 176-179
+.. GENERATED FROM PYTHON SOURCE LINES 175-178
 
 .. code-block:: default
 
@@ -255,7 +254,7 @@ Search on the model space
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 180-191
+.. GENERATED FROM PYTHON SOURCE LINES 179-190
 
 Evaluator
 ^^^^^^^^^
@@ -269,7 +268,7 @@ should be on test set. However, as CIFAR-10 dataset doesn't have a test dataset 
 we have to split the original training set into a training set and a validation set.
 The recommended train/val split by `DARTS`_ strategy is 1:1.
 
-.. GENERATED FROM PYTHON SOURCE LINES 192-230
+.. GENERATED FROM PYTHON SOURCE LINES 191-229
 
 .. code-block:: default
 
@@ -331,7 +330,7 @@ The recommended train/val split by `DARTS`_ strategy is 1:1.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 231-250
+.. GENERATED FROM PYTHON SOURCE LINES 230-250
 
 Strategy
 ^^^^^^^^
@@ -344,6 +343,7 @@ Compared to multi-trial strategies, one-shot NAS doesn't need to iteratively spa
 and thus saves the excessive cost of model training.
 
 .. note::
+
    It's worth mentioning that one-shot NAS also suffers from multiple drawbacks despite its computational efficiency.
    We recommend
    `Weight-Sharing Neural Architecture Search: A Battle to Shrink the Optimization Gap <https://arxiv.org/abs/2008.01475>`__
@@ -422,8 +422,8 @@ except that the ``execution_engine`` argument should be set to ``oneshot``.
     12.164    Total estimated model params size (MB)
     /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1892: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.89s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.89s/it, v_num=, train_loss=2.360, train_acc=0.0625]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.90s/it, v_num=, train_loss=2.360, train_acc=0.0625]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.91s/it, v_num=, train_loss=2.360, train_acc=0.0625]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.75s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.75s/it, v_num=, train_loss=2.310, train_acc=0.0781]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.76s/it, v_num=, train_loss=2.310, train_acc=0.0781]`Trainer.fit` stopped: `max_epochs=1` reached.
+    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.77s/it, v_num=, train_loss=2.310, train_acc=0.0781]
 
 
 
@@ -461,7 +461,7 @@ Here, the retrieved model is a dict (called *architecture dict*) describing the 
  .. code-block:: none
 
 
-    {'normal/op_2_0': 'skip_connect', 'normal/input_2_0': 0, 'normal/op_2_1': 'dil_conv_3x3', 'normal/input_2_1': 1, 'normal/op_3_0': 'sep_conv_5x5', 'normal/input_3_0': 2, 'normal/op_3_1': 'sep_conv_5x5', 'normal/input_3_1': 1, 'normal/op_4_0': 'sep_conv_5x5', 'normal/input_4_0': 1, 'normal/op_4_1': 'skip_connect', 'normal/input_4_1': 0, 'normal/op_5_0': 'dil_conv_5x5', 'normal/input_5_0': 3, 'normal/op_5_1': 'sep_conv_3x3', 'normal/input_5_1': 4, 'reduce/op_2_0': 'max_pool_3x3', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'sep_conv_5x5', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'avg_pool_3x3', 'reduce/input_3_0': 0, 'reduce/op_3_1': 'skip_connect', 'reduce/input_3_1': 2, 'reduce/op_4_0': 'dil_conv_3x3', 'reduce/input_4_0': 3, 'reduce/op_4_1': 'avg_pool_3x3', 'reduce/input_4_1': 2, 'reduce/op_5_0': 'sep_conv_3x3', 'reduce/input_5_0': 3, 'reduce/op_5_1': 'sep_conv_5x5', 'reduce/input_5_1': 0}
+    {'normal/op_2_0': 'sep_conv_5x5', 'normal/input_2_0': 1, 'normal/op_2_1': 'max_pool_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'dil_conv_5x5', 'normal/input_3_0': 0, 'normal/op_3_1': 'sep_conv_3x3', 'normal/input_3_1': 2, 'normal/op_4_0': 'dil_conv_5x5', 'normal/input_4_0': 3, 'normal/op_4_1': 'sep_conv_3x3', 'normal/input_4_1': 1, 'normal/op_5_0': 'sep_conv_5x5', 'normal/input_5_0': 1, 'normal/op_5_1': 'dil_conv_5x5', 'normal/input_5_1': 3, 'reduce/op_2_0': 'dil_conv_5x5', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'sep_conv_5x5', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'sep_conv_5x5', 'reduce/input_3_0': 1, 'reduce/op_3_1': 'max_pool_3x3', 'reduce/input_3_1': 2, 'reduce/op_4_0': 'avg_pool_3x3', 'reduce/input_4_0': 1, 'reduce/op_4_1': 'dil_conv_5x5', 'reduce/input_4_1': 3, 'reduce/op_5_0': 'sep_conv_3x3', 'reduce/input_5_0': 1, 'reduce/op_5_1': 'sep_conv_5x5', 'reduce/input_5_1': 3}
 
 
 
@@ -668,7 +668,7 @@ The validation data loader can be reused.
  .. code-block:: none
 
 
-    <torch.utils.data.dataloader.DataLoader object at 0x7fa97a66a280>
+    <torch.utils.data.dataloader.DataLoader object at 0x7f5e187c0430>
 
 
 
@@ -719,21 +719,21 @@ evaluator from loading the wrong checkpoint.
     -----------------------------------------------
     0 | criterion | CrossEntropyLoss | 0     
     1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 307 K 
+    2 | model     | DARTS            | 345 K 
     -----------------------------------------------
-    307 K     Trainable params
+    345 K     Trainable params
     0         Non-trainable params
-    307 K     Total params
-    1.229     Total estimated model params size (MB)
+    345 K     Total params
+    1.381     Total estimated model params size (MB)
     /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1892: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.36it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.36it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.156]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.02it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.02it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729]
     Validation: 0it [00:00, ?it/s]
     Validation:   0%|          | 0/1 [00:00<?, ?it/s]
     Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00, 12.05it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.43it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.156]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.43it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.156, val_loss=2.300, val_acc=0.113]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.43it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.156, val_loss=2.300, val_acc=0.113]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.43it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.156, val_loss=2.300, val_acc=0.113]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00, 11.12it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.15it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.15it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729, val_loss=2.300, val_acc=0.117]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.15it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729, val_loss=2.300, val_acc=0.117]`Trainer.fit` stopped: `max_steps=1` reached.
+    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.15it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729, val_loss=2.300, val_acc=0.117]
 
 
 
@@ -953,10 +953,10 @@ Then we use the newly created evaluator and strategy to launch the experiment ag
     12.164    Total estimated model params size (MB)
     /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1892: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.14s/it]    Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.15s/it, v_num=, train_loss=2.280, train_acc=0.141]    Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.16s/it, v_num=, train_loss=2.280, train_acc=0.141]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.17s/it, v_num=, train_loss=2.280, train_acc=0.141]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.95s/it]    Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.95s/it, v_num=, train_loss=2.450, train_acc=0.0625]    Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.96s/it, v_num=, train_loss=2.450, train_acc=0.0625]`Trainer.fit` stopped: `max_epochs=1` reached.
+    Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.97s/it, v_num=, train_loss=2.450, train_acc=0.0625]
 
-    {'normal/op_2_0': 'dil_conv_3x3', 'normal/input_2_0': 1, 'normal/op_2_1': 'avg_pool_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'sep_conv_5x5', 'normal/input_3_0': 0, 'normal/op_3_1': 'skip_connect', 'normal/input_3_1': 1, 'normal/op_4_0': 'avg_pool_3x3', 'normal/input_4_0': 2, 'normal/op_4_1': 'sep_conv_5x5', 'normal/input_4_1': 3, 'normal/op_5_0': 'sep_conv_3x3', 'normal/input_5_0': 0, 'normal/op_5_1': 'avg_pool_3x3', 'normal/input_5_1': 2, 'reduce/op_2_0': 'dil_conv_3x3', 'reduce/input_2_0': 1, 'reduce/op_2_1': 'skip_connect', 'reduce/input_2_1': 0, 'reduce/op_3_0': 'dil_conv_5x5', 'reduce/input_3_0': 0, 'reduce/op_3_1': 'avg_pool_3x3', 'reduce/input_3_1': 1, 'reduce/op_4_0': 'sep_conv_5x5', 'reduce/input_4_0': 0, 'reduce/op_4_1': 'dil_conv_5x5', 'reduce/input_4_1': 3, 'reduce/op_5_0': 'avg_pool_3x3', 'reduce/input_5_0': 4, 'reduce/op_5_1': 'dil_conv_3x3', 'reduce/input_5_1': 3}
+    {'normal/op_2_0': 'avg_pool_3x3', 'normal/input_2_0': 0, 'normal/op_2_1': 'avg_pool_3x3', 'normal/input_2_1': 1, 'normal/op_3_0': 'sep_conv_5x5', 'normal/input_3_0': 2, 'normal/op_3_1': 'avg_pool_3x3', 'normal/input_3_1': 0, 'normal/op_4_0': 'dil_conv_3x3', 'normal/input_4_0': 2, 'normal/op_4_1': 'sep_conv_3x3', 'normal/input_4_1': 0, 'normal/op_5_0': 'avg_pool_3x3', 'normal/input_5_0': 2, 'normal/op_5_1': 'dil_conv_5x5', 'normal/input_5_1': 4, 'reduce/op_2_0': 'sep_conv_3x3', 'reduce/input_2_0': 1, 'reduce/op_2_1': 'sep_conv_5x5', 'reduce/input_2_1': 0, 'reduce/op_3_0': 'avg_pool_3x3', 'reduce/input_3_0': 2, 'reduce/op_3_1': 'sep_conv_3x3', 'reduce/input_3_1': 0, 'reduce/op_4_0': 'max_pool_3x3', 'reduce/input_4_0': 1, 'reduce/op_4_1': 'dil_conv_5x5', 'reduce/input_4_1': 2, 'reduce/op_5_0': 'dil_conv_3x3', 'reduce/input_5_0': 3, 'reduce/op_5_1': 'max_pool_3x3', 'reduce/input_5_1': 4}
 
 
 
@@ -1158,25 +1158,25 @@ We create a new evaluator for the retraining process, where the gradient clippin
     -----------------------------------------------
     0 | criterion | CrossEntropyLoss | 0     
     1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 3.4 M 
+    2 | model     | DARTS            | 3.2 M 
     -----------------------------------------------
-    3.4 M     Trainable params
+    3.2 M     Trainable params
     0         Non-trainable params
-    3.4 M     Total params
-    13.651    Total estimated model params size (MB)
+    3.2 M     Total params
+    12.942    Total estimated model params size (MB)
     /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:225: PossibleUserWarning: The dataloader, train_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 56 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
       rank_zero_warn(
     /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1892: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
     Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s] /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/torchvision/transforms/functional_pil.py:41: DeprecationWarning: FLIP_LEFT_RIGHT is deprecated and will be removed in Pillow 10 (2023-07-01). Use Transpose.FLIP_LEFT_RIGHT instead.
       return img.transpose(Image.FLIP_LEFT_RIGHT)
-    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.28it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.27it/s, loss=3.43, v_num=, train_loss=3.430, train_acc=0.0729]
+    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.33it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.33it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625]
     Validation: 0it [00:00, ?it/s]
     Validation:   0%|          | 0/1 [00:00<?, ?it/s]
     Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  3.07it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.22it/s, loss=3.43, v_num=, train_loss=3.430, train_acc=0.0729]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.22it/s, loss=3.43, v_num=, train_loss=3.430, train_acc=0.0729, val_loss=2.300, val_acc=0.102]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.22it/s, loss=3.43, v_num=, train_loss=3.430, train_acc=0.0729, val_loss=2.300, val_acc=0.102]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.21it/s, loss=3.43, v_num=, train_loss=3.430, train_acc=0.0729, val_loss=2.300, val_acc=0.102]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  3.13it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.20it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.20it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625, val_loss=2.300, val_acc=0.0938]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.19it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625, val_loss=2.300, val_acc=0.0938]`Trainer.fit` stopped: `max_steps=1` reached.
+    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.19it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625, val_loss=2.300, val_acc=0.0938]
 
 
 
@@ -1201,7 +1201,7 @@ The implementation of second order DARTS is in our future plan, and we also welc
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  52.703 seconds)
+   **Total running time of the script:** ( 1 minutes  53.716 seconds)
 
 
 .. _sphx_glr_download_tutorials_darts.py:
