@@ -168,7 +168,7 @@ class MsgDispatcher(MsgDispatcherBase):
              - event: the job's state
              - hyper_params: the hyperparameters generated and returned by tuner
         """
-        if self.is_created_in_previous_exp(data['parameter_id']):
+        if self.is_created_in_previous_exp(load(data['hyper_params'])['parameter_id']):
             # The end of the recovered trial is ignored
             return
         trial_job_id = data['trial_job_id']

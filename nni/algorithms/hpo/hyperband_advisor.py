@@ -521,7 +521,7 @@ class Hyperband(MsgDispatcherBase):
             event: the job's state
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
-        if self.is_created_in_previous_exp(data['parameter_id']):
+        if self.is_created_in_previous_exp(nni.load(data['hyper_params'])['parameter_id']):
             # The end of the recovered trial is ignored
             return
         hyper_params = nni.load(data['hyper_params'])
