@@ -273,9 +273,9 @@ enum_to_dtype_names = {
 
 enum_to_dtype_dict = {}
 
-for enum_value, dtype_name in enum_to_dtype_names.items():
-    if hasattr(torch, dtype_name):
-        enum_to_dtype_dict[enum_value] = getattr(torch, dtype_name)
+for enum_value, name in enum_to_dtype_names.items():
+    if hasattr(torch, name):
+        enum_to_dtype_dict[enum_value] = getattr(torch, name)
 
 def arg_trans_dtype(ivalue: Union[int, torch.dtype]):
     """
@@ -294,7 +294,7 @@ def arg_trans_dtype(ivalue: Union[int, torch.dtype]):
     elif isinstance(ivalue, int):
         if ivalue in enum_to_dtype_dict:
             return enum_to_dtype_dict[ivalue]
-    raise TypeError('No torch.dtype corresponding to the value "%s"', ivalue)
+    raise TypeError('No torch.dtype corresponding to the value "%s"' % ivalue)
 
 enum_to_memory_format_dict = {
     0: torch.contiguous_format,
@@ -318,20 +318,25 @@ def arg_trans_memory_format(ivalue: Union[int, torch.memory_format]):
     if ivalue is None or isinstance(ivalue, torch.memory_format):
         return ivalue
     elif isinstance(ivalue, int):
-        global enum_to_memory_format_dict
         if ivalue in enum_to_memory_format_dict:
             return enum_to_memory_format_dict[ivalue]
-    raise TypeError('No torch.memory_format corresponding to the value "%s"', ivalue)
+    raise TypeError('No torch.memory_format corresponding to the value "%s"' % ivalue)
 
-enum_to_layout = {
-    0: torch.strided,
-    1: torch.sparse_coo,
-    2: torch.sparse_csr,
-    3: torch._mkldnn,
-    4: torch.sparse_csc,
-    5: torch.sparse_bsr,
-    6: torch.sparse_bsc,
+enum_to_layout_names = {
+    0: 'strided',
+    1: 'sparse_coo',
+    2: 'sparse_csr',
+    3: '_mkldnn',
+    4: 'sparse_csc',
+    5: 'sparse_bsr',
+    6: 'sparse_bsc',
 }
+
+enum_to_layout_dict = {}
+
+for enum_value, name in enum_to_layout_names.items():
+    if hasattr(torch, name):
+        enum_to_layout_dict[enum_value] = getattr(torch, name)
 
 def arg_trans_layout(ivalue: Union[int, torch.layout]):
     """
@@ -348,10 +353,9 @@ def arg_trans_layout(ivalue: Union[int, torch.layout]):
     if ivalue is None or isinstance(ivalue, torch.layout):
         return ivalue
     elif isinstance(ivalue, int):
-        global enum_to_layout
-        if ivalue in enum_to_layout:
-            return enum_to_layout[ivalue]
-    raise TypeError('No torch.layout corresponding to the value "%s"', ivalue)
+        if ivalue in enum_to_layout_dict:
+            return enum_to_layout_dict[ivalue]
+    raise TypeError('No torch.layout corresponding to the value "%s"' % ivalue)
 
 special_treat_dict = {
     'dtype': arg_trans_dtype,
