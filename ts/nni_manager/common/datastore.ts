@@ -4,7 +4,7 @@
 import { ExperimentProfile, TrialJobStatistics } from './manager';
 import { TrialJobDetail, TrialJobStatus } from './trainingService';
 
-type TrialJobEvent = TrialJobStatus | 'USER_TO_CANCEL' | 'ADD_CUSTOMIZED' | 'ADD_HYPERPARAMETER' | 'IMPORT_DATA' |'ADD_RESUMED';
+type TrialJobEvent = TrialJobStatus | 'USER_TO_CANCEL' | 'ADD_CUSTOMIZED' | 'ADD_HYPERPARAMETER' | 'IMPORT_DATA';
 type MetricType = 'PERIODICAL' | 'FINAL' | 'CUSTOM' | 'REQUEST_PARAMETER';
 
 interface ExperimentProfileRecord {

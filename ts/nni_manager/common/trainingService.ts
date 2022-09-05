@@ -34,7 +34,6 @@ interface TrialJobApplicationForm {
     readonly sequenceId: number;
     readonly hyperParameters: HyperParameters;
     readonly placementConstraint?: PlacementConstraint;
-    id?: string;
 }
 
 interface TrialCommandContent {
