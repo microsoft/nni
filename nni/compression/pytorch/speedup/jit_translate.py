@@ -277,7 +277,7 @@ for enum_value, dtype_name in enum_to_dtype_names.items():
     if hasattr(torch, dtype_name):
         enum_to_dtype_dict[enum_value] = getattr(torch, dtype_name)
 
-def dtype_trans(ivalue: Union[int, torch.dtype]):
+def arg_trans_dtype(ivalue: Union[int, torch.dtype]):
     """
     Special process for dtype.
     Torch will transform dtype to an enum in cpp, so the value of dtype we get in jit is an int.
@@ -303,7 +303,7 @@ enum_to_memory_format_dict = {
     3: torch.channels_last_3d,
 }
 
-def memory_format_trans(ivalue: Union[int, torch.memory_format]):
+def arg_trans_memory_format(ivalue: Union[int, torch.memory_format]):
     """
     Special process for memory_format.
     Torch will transform memory_format to an enum in cpp, so the value of memory_format we get in jit is an int.
@@ -323,9 +323,40 @@ def memory_format_trans(ivalue: Union[int, torch.memory_format]):
             return enum_to_memory_format_dict[ivalue]
     raise TypeError('No torch.memory_format corresponding to the value "%s"', ivalue)
 
+enum_to_layout = {
+    0: torch.strided,
+    1: torch.sparse_coo,
+    2: torch.sparse_csr,
+    3: torch._mkldnn,
+    4: torch.sparse_csc,
+    5: torch.sparse_bsr,
+    6: torch.sparse_bsc,
+}
+
+def arg_trans_layout(ivalue: Union[int, torch.layout]):
+    """
+    Special process for layout.
+    Torch will transform layout to an enum in cpp, so the value of layout we get in jit is an int.
+    This function is used to recover the int to torch.layout in python.
+
+    Parameters
+    ----------
+    ivalue
+        The value of layout or method to be recovered.
+
+    """
+    if ivalue is None or isinstance(ivalue, torch.layout):
+        return ivalue
+    elif isinstance(ivalue, int):
+        global enum_to_layout
+        if ivalue in enum_to_layout:
+            return enum_to_layout[ivalue]
+    raise TypeError('No torch.layout corresponding to the value "%s"', ivalue)
+
 special_treat_dict = {
-    'dtype': dtype_trans,
-    'memory_format': memory_format_trans,
+    'dtype': arg_trans_dtype,
+    'memory_format': arg_trans_memory_format,
+    'layout': arg_trans_layout,
 }
 
 schema_fix_dict = {
@@ -358,6 +389,7 @@ schema_fix_dict = {
     # """aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? devi
     # ce=None, bool? pin_memory=None) -> (Tensor"""'
 }
+
 @lru_cache(maxsize=256)
 def parse_aten_schema(schema: str):
     """
@@ -390,9 +422,9 @@ def parse_input_value(speedup: ModelSpeedup, input_nodes: List[torch._C.Node], p
     """
     translate inputs, to constant positional arguments, constant keyword arguments, and undetermined positions
     """
-    positional = list()
-    keyword = dict()
-    undetermined = list()
+    positional: List[str] = list()
+    keyword: Dict[str, str] = dict()
+    undetermined: List[Union[int, str]] = list()
 
     for ainput in input_nodes:
         if ainput.node().kind() == 'prim::ListConstruct':
@@ -404,17 +436,17 @@ def parse_input_value(speedup: ModelSpeedup, input_nodes: List[torch._C.Node], p
             if len(positional) < positional_num:
                 undetermined.append(len(positional))
             else:
-                undetermined.append(keyword_list[positional_num - len(positional)])
+                undetermined.append(keyword_list[len(keyword)])
             arg = None
 
         if len(positional) < positional_num:
             positional.append(arg)
         else:
-            keyword[keyword_list[positional_num - len(positional)]] = arg
+            keyword[keyword_list[len(keyword)]] = arg
     return positional, keyword, undetermined
 
 def special_treat_to_constant_value(positional: List, keyword: Dict[str], undetermined: List[Union[int, str]],
-                                    special_treat: Dict[Union[int, str], Callable]):
+                                    special_treat: Dict[Union[int, str], Callable]) -> Dict[Union[int, str], Callable]:
     """
     if any argument with special_treat is not in undetermined, do the treat
     """
