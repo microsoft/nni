@@ -25,7 +25,7 @@ jitid_2_dtype = {4: torch.long, 6:torch.float32}
 
 __all__ = [
     'getattr_python', 'jit_to_python_function', 'num2tensor_python', 'parse_constant', 'slice_python',
-    'translate_list', 'tupleunpack_python', 'dtype_trans', 'memory_format_trans'
+    'translate_list', 'tupleunpack_python', 'arg_trans_dtype', 'arg_trans_memory_format', 'arg_trans_layout'
 ]
 
 def translate_list(list_node: torch._C.Value, speedup: ModelSpeedup=None) -> List:
