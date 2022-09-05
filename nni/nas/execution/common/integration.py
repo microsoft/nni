@@ -60,12 +60,16 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.final_metric_callback: Optional[Callable[[int, MetricData], None]] = None
 
         self.parameters_count = 0
-        # for dealing with the resumed running trials of the before-resumed experiment
-        self.previous_max_param_id = 0
         # Sometimes messages arrive first before the callbacks get registered.
         # Or in case that we allow engine to be absent during the experiment.
         # Here we need to store the messages and invoke them later.
         self.call_queue: List[Tuple[str, list]] = []
+        # this is for waiting the to-be-recovered trials from nnimanager
+        self._advisor_initialized = False
+
+    @property
+    def initialized(self):
+        return self._advisor_initialized
 
     def register_callbacks(self, callbacks: Dict[str, Callable[..., None]]):
         """
@@ -215,7 +219,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
     def handle_trial_end(self, data):
         # TODO: we should properly handle the trials in self._customized_parameter_ids instead of ignoring
         id_ = nni.load(data['hyper_params'])['parameter_id']
-        if id_ <= self.previous_max_param_id:
+        if self.is_created_in_previous_exp(id_):
             _logger.info('The end of the recovered trial %d is ignored', id_)
             return
         _logger.debug('Trial end: %s', data)
@@ -223,7 +227,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     def handle_report_metric_data(self, data):
         # TODO: we should properly handle the trials in self._customized_parameter_ids instead of ignoring
-        if data['parameter_id'] <= self.previous_max_param_id:
+        if self.is_created_in_previous_exp(data['parameter_id']):
             _logger.info('The metrics of the recovered trial %d are ignored', data['parameter_id'])
             return
         # NOTE: this part is not aligned with hpo tuners.
@@ -252,16 +256,6 @@ class RetiariiAdvisor(MsgDispatcherBase):
         pass
 
     def handle_add_customized_trial(self, data):
-        # this is for handling the resuming of the interrupted data: parameters
-        if not isinstance(data, list):
-            data = [data]
-
-        for trial in data:
-            # {'parameter_id': 0, 'parameter_source': 'resumed', 'parameters': {'batch_size': 128, ...}
-            if isinstance(trial, str):
-                trial = nni.load(trial)
-            if self.previous_max_param_id < trial['parameter_id']:
-                self.previous_max_param_id = trial['parameter_id']
-        self.parameters_count = self.previous_max_param_id
-
-        # TODO: handle customized trials
+        previous_max_param_id = self.recover_parameter_id(data)
+        self.parameters_count = previous_max_param_id
+        self._advisor_initialized = True
