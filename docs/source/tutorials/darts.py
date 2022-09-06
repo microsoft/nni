@@ -20,8 +20,8 @@ In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves
 
 .. _DARTS: https://arxiv.org/abs/1806.09055
 
-Use a pre-searched model
-------------------------
+Use a pre-searched DARTS model
+------------------------------
 
 Similar to `the beginner tutorial of PyTorch <https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html>`__,
 we begin with CIFAR-10 dataset, which is a image classification dataset of 10 categories.
@@ -54,16 +54,12 @@ valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
 #    use DataLoader from ``nni.retiarii.evaluator.pytorch`` (instead of ``torch.utils.data``) are mandatory.
 #    Otherwise, it's optional.
 #
-# When working with famous datasets like CIFAR-10 or ImageNet,
-# it's tempting to use or finetune from a pretrained model, like ResNet.
-# There's nothing wrong with doing so, and sometimes it might be beneficial.
-# Thanks to the development of NAS, we now have quite a large number of *pre-searched models*,
+# NNI presents many built-in model spaces, along with many *pre-searched models* in :doc:`model space hub </nas/space_hub>`,
 # which are produced by most popular NAS literatures.
-# You can easily load these models, validate their performances, and finetune them if you need.
+# A pre-trained model is a saved network that was previously trained on a large dataset like CIFAR-10 or ImageNet.
+# You can easily load these models as a starting point, validate their performances, and finetune them if you need.
 #
-# We present :doc:`model space hub </nas/space_hub>`, where you can find many built-in model spaces,
-# along with many pre-searched models.
-# We choose one from `DARTS`_ search space, which is natively trained on our target dataset, CIFAR-10,
+# In this tutorial, we choose one from `DARTS`_ search space, which is natively trained on our target dataset, CIFAR-10,
 # so as to save the tedious steps of finetuning.
 #
 # .. tip::
@@ -92,15 +88,15 @@ def evaluate_model(model, cuda=False):
     print('Accuracy:', correct / total)
     return correct / total
 
-evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
+evaluate_model(darts_v2_model, cuda=True)  # Set this to false if there's no GPU.
 
 # %%
 #
-# The journey could end here. Or you are interested,
+# The journey of using a pre-searched model could end here. Or you are interested,
 # we can go a step further to search a model within :class:`~nni.retiarii.hub.pytorch.DARTS` space on our own.
 #
-# Use the model space
-# -------------------
+# Use the DARTS model space
+# -------------------------
 #
 # The model space provided in `DARTS`_ originated from `NASNet <https://arxiv.org/abs/1707.07012>`__,
 # where the full model is constructed by repeatedly stacking a single computational unit (called a **cell**).
@@ -115,7 +111,7 @@ evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
 # and applies an *operator* (e.g., convolution, or max-pooling) to each input,
 # and sums the outputs of operators as the output of the node.
 # The output of cell is the concatenation of all the nodes that are never used as inputs of another node.
-# We recommend reading `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for details.
+# Users could read `NDS <https://arxiv.org/pdf/1905.13214.pdf>`__ or `ENAS <https://arxiv.org/abs/1802.03268>`__ for more details.
 #
 # We illustrate an example of cells in the following figure.
 #
@@ -161,7 +157,11 @@ evaluate_model(darts_v2_model, True)  # Set this to false if there's no GPU.
 #    The model space here can be replaced with any space provided in the hub,
 #    or even customized spaces built from scratch.
 
-model_space = DartsSpace(16, 8, 'cifar')
+model_space = DartsSpace(
+    width=16,           # the initial filters (channel number) for the model
+    num_cells=8,        # the number of stacked cells in total
+    dataset='cifar'     # to give a hint about input resolution, here is 32x32
+)
 
 # %%
 #
@@ -237,11 +237,14 @@ evaluator = Classification(
 # one-shot strategy combines search with model training into a single run.
 # Compared to multi-trial strategies, one-shot NAS doesn't need to iteratively spawn new trials (i.e., models),
 # and thus saves the excessive cost of model training.
-# It's worth mentioning that one-shot NAS also suffers from multiple drawbacks despite its computational efficiency.
-# We recommend
-# `Weight-Sharing Neural Architecture Search: A Battle to Shrink the Optimization Gap <https://arxiv.org/abs/2008.01475>`__
-# and
-# `How Does Supernet Help in Neural Architecture Search? <https://arxiv.org/abs/2010.08219>`__ for interested readers.
+#
+# .. note::
+#
+#    It's worth mentioning that one-shot NAS also suffers from multiple drawbacks despite its computational efficiency.
+#    We recommend
+#    `Weight-Sharing Neural Architecture Search: A Battle to Shrink the Optimization Gap <https://arxiv.org/abs/2008.01475>`__
+#    and
+#    `How Does Supernet Help in Neural Architecture Search? <https://arxiv.org/abs/2010.08219>`__ for interested readers.
 #
 # :class:`~nni.retiarii.strategy.DARTS` strategy is provided as one of NNI's :doc:`built-in search strategies </nas/exploration_strategy>`.
 # Using it can be as simple as one line of code.
@@ -263,7 +266,7 @@ strategy = DartsStrategy()
 #
 # .. image:: ../../img/darts_illustration.png
 #
-# It's NOT reflected in the figure that, for DARTS model space, exactly two inputs are kept for every node.
+# .. tip:: It's NOT reflected in the figure that, for DARTS model space, exactly two inputs are kept for every node.
 #
 # Launch experiment
 # ^^^^^^^^^^^^^^^^^
@@ -408,13 +411,13 @@ plot_double_cells({
 # and then fully train it.
 #
 # To construct a fixed model based on the architecture dict exported from the experiment,
-# we can use :func:`nni.retiarii.fixed_arch`. Seemingly, we are still creating a space.
-# But under the with-context, we are actually creating a fixed model.
+# we can use :func:`nni.retiarii.fixed_arch`. Under the with-context, we will creating a fixed model based on ``exported_arch``,
+# instead of creating a space.
 
 from nni.retiarii import fixed_arch
 
 with fixed_arch(exported_arch):
-    final_model = DartsSpace(16, 8, 'cifar')
+    final_model = DartsSpace(width=16, num_cells=8, dataset='cifar')
 
 # %%
 #
@@ -443,8 +446,8 @@ evaluator = Classification(
     val_dataloaders=valid_loader,
     max_epochs=max_epochs,
     gpus=1,
-    export_onnx=False,  # Disable ONNX export for this experiment
-    fast_dev_run=fast_dev_run,  # Should be false for fully training
+    export_onnx=False,          # Disable ONNX export for this experiment
+    fast_dev_run=fast_dev_run   # Should be false for fully training
 )
 
 evaluator.fit(final_model)
@@ -460,7 +463,8 @@ evaluator.fit(final_model)
 # we then fill the gap between our results (89.69%) and the results in the `DARTS` paper.
 # This is because we didn't introduce some extra training tricks, including `DropPath <https://arxiv.org/pdf/1605.07648v4.pdf>`__,
 # Auxiliary loss, gradient clipping and augmentations like `Cutout <https://arxiv.org/pdf/1708.04552v2.pdf>`__.
-# They also train the deeper (20 cells) and wider (36 channels) networks for longer time (600 epochs).
+# They also train the deeper (20 cells) and wider (36 filters) networks for longer time (600 epochs).
+# Here we reproduce these tricks to get comparable results with DARTS paper.
 #
 #
 # Evaluator
@@ -562,7 +566,7 @@ evaluator = Lightning(
 #
 # :class:`~nni.retiarii.strategy.DARTS` strategy is created with gradient clip turned on.
 # If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
-# However, enabling gradient cip in the trainer above won't work, because the underlying
+# However, enabling gradient clip in the trainer above won't work, because the underlying
 # implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
 # `manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__.
 
@@ -578,9 +582,9 @@ strategy = DartsStrategy(gradient_clip_val=5.)
 # .. warning::
 #
 #    ``model_space`` has to be re-instantiated because a known limitation,
-#    i.e., one model space can't be reused across multiple experiments.
+#    i.e., one model space instance can't be reused across multiple experiments.
 
-model_space = DartsSpace(16, 8, 'cifar')
+model_space = DartsSpace(width=16, num_cells=8, dataset='cifar')
 
 config = RetiariiExeConfig(execution_engine='oneshot')
 experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
@@ -681,7 +685,7 @@ train_loader_cutout = DataLoader(train_data_cutout, batch_size=96)
 # so as to reasonably increase the model size and boost the performance.
 
 with fixed_arch(exported_arch):
-    final_model = DartsSpace(36, 20, 'cifar', auxiliary_loss=True, drop_path_prob=0.2)
+    final_model = DartsSpace(width=36, num_cells=20, dataset='cifar', auxiliary_loss=True, drop_path_prob=0.2)
 
 # %%
 #
@@ -691,7 +695,7 @@ max_epochs = 600
 
 evaluator = Lightning(
     DartsClassificationModule(0.025, 3e-4, 0.4, max_epochs),
-    Trainer(
+    trainer=Trainer(
         gpus=1,
         gradient_clip_val=5.,
         max_epochs=max_epochs,
