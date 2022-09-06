@@ -306,7 +306,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         <Icon
                             aria-hidden={true}
                             iconName='ChevronRight'
-                            className='cursor'
+                            className='cursor bold positionTop'
                             styles={{
                                 root: {
                                     transition: 'all 0.2s',

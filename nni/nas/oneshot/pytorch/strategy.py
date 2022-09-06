@@ -61,6 +61,7 @@ class OneShotStrategy(BaseStrategy):
             evaluator_module.running_mode = 'oneshot'
             evaluator_module.set_model(py_model)
         else:
+            # FIXME: this should be an evaluator + model
             from nni.retiarii.evaluator.pytorch.lightning import ClassificationModule
             evaluator_module = ClassificationModule()
             evaluator_module.running_mode = 'oneshot'

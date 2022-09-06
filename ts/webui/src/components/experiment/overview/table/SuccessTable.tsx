@@ -122,7 +122,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                             transform: `rotate(${this.props.expandRowIDs.has(item.id) ? 90 : 0}deg)`
                         }
                     }}
-                    className='cursor'
+                    className='cursor bold positionTop'
                     onClick={this.expandTrialId.bind(this, Event, item.id)}
                 />
             ),
