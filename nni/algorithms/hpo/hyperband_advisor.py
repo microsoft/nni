@@ -542,7 +542,7 @@ class Hyperband(MsgDispatcherBase):
             Data type not supported
         """
         if self.is_created_in_previous_exp(data['parameter_id']):
-            # do not support recovering the algorithm state 
+            # do not support recovering the algorithm state
             return
         if 'value' in data:
             data['value'] = nni.load(data['value'])
