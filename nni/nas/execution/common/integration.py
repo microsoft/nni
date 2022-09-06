@@ -209,6 +209,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.send(CommandType.NoMoreTrialJobs, '')
 
     def handle_request_trial_jobs(self, num_trials):
+        self._advisor_initialized = True
         _logger.debug('Request trial jobs: %s', num_trials)
         self.invoke_callback('request_trial_jobs', num_trials)
 
@@ -258,4 +259,3 @@ class RetiariiAdvisor(MsgDispatcherBase):
     def handle_add_customized_trial(self, data):
         previous_max_param_id = self.recover_parameter_id(data)
         self.parameters_count = previous_max_param_id
-        self._advisor_initialized = True
