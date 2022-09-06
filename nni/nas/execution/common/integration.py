@@ -4,6 +4,7 @@
 __all__ = ['RetiariiAdvisor']
 
 import logging
+import time
 import os
 from typing import Any, Callable, Optional, Dict, List, Tuple
 
@@ -66,10 +67,6 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.call_queue: List[Tuple[str, list]] = []
         # this is for waiting the to-be-recovered trials from nnimanager
         self._advisor_initialized = False
-
-    @property
-    def initialized(self):
-        return self._advisor_initialized
 
     def register_callbacks(self, callbacks: Dict[str, Callable[..., None]]):
         """
@@ -172,6 +169,10 @@ class RetiariiAdvisor(MsgDispatcherBase):
             Parameter ID that is assigned to this parameter,
             which will be used for identification in future.
         """
+        while not self._advisor_initialized:
+            _logger.info('Wait for RetiariiAdvisor to be initialized...')
+            time.sleep(0.5)
+
         self.parameters_count += 1
         if placement_constraint is None:
             placement_constraint = {

@@ -6,15 +6,12 @@ __all__ = [
     '_advisor'  # FIXME: hack to make it importable for tests
 ]
 
-import logging
-import time
 import warnings
 from typing import NewType, Any
 
 import nni
 from nni.common.version import version_check
 
-_logger = logging.getLogger(__name__)
 
 # NOTE: this is only for passing flake8, we cannot import RetiariiAdvisor
 # because it would induce cycled import
@@ -45,11 +42,7 @@ def send_trial(parameters: dict, placement_constraint=None) -> int:
     Send a new trial. Executed on tuner end.
     Return a ID that is the unique identifier for this trial.
     """
-    advisor = get_advisor()
-    while not advisor.initialized:
-        _logger.info('Wait for RetiariiAdvisor to be initialized...')
-        time.sleep(0.5)
-    return advisor.send_trial(parameters, placement_constraint)
+    return get_advisor().send_trial(parameters, placement_constraint)
 
 def receive_trial_parameters() -> dict:
     """
