@@ -537,7 +537,7 @@ for current_epoch in range(total_epochs):
 # %%
 # Result
 # ------
-# The speedup is test on the entire validation dataset with batch size 32 on A100.
+# The speedup is test on the entire validation dataset with batch size 128 on A100.
 # We test under two pytorch version and found the latency varying widely.
 # 
 # Setting 1: pytorch 1.12.1
@@ -557,36 +557,50 @@ for current_epoch in range(total_epochs):
 #       - Speedup (S2)
 #     * -
 #       -
-#       - 0%
-#       - 84.73 / 84.63
+#       - 85.1M (-0.0%)
+#       - 84.85 / 85.28
 #       - +0.0 / +0.0
-#       - 12.56s (x1.00)
-#       - 4.05s (x1.00)
+#       - 25.60s (x1.00)
+#       - 8.10s (x1.00)
+#     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=1)
+#       - :ref:`taylor-fo-weight-pruner`
+#       - 54.1M (-36.43%)
+#       - 85.38 / 85.41
+#       - +0.53 / +0.13
+#       - 17.93s (x1.43)
+#       - 7.22s (x1.12)
 #     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=5)
 #       - :ref:`taylor-fo-weight-pruner`
-#       - 51.39%
-#       - 84.25 / 84.96
-#       - -0.48 / +0.33
-#       - 6.85s (x1.83)
-#       - 2.7s (x1.50)
+#       - 37.1M (-56.40%)
+#       - 84.73 / 85.12
+#       - -0.12 / -0.16
+#       - 12.83s (x2.00)
+#       - 5.61s (x1.44)
 #     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=10)
 #       - :ref:`taylor-fo-weight-pruner`
-#       - 66.67%
-#       - 83.98 / 83.75
-#       - -0.75 / -0.88
-#       - 4.73s (x2.66)
-#       - 2.16s (x1.86)
+#       - 24.1M (-71.68%)
+#       - 84.14 / 84.78
+#       - -0.71 / -0.50
+#       - 8.93s (x2.87)
+#       - 4.55s (x1.78)
 #     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=20)
 #       - :ref:`taylor-fo-weight-pruner`
-#       - 77.78%
-#       - 83.02 / 83.06
-#       - -1.71 / -1.57
-#       - 3.35s (x3.75)
-#       - 1.72s (x2.35)
+#       - 14.3M (-83.20%)
+#       - 83.26 / 82.96
+#       - -1.59 / -2.32
+#       - 5.98s (x4.28)
+#       - 3.56s (x2.28)
 #     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=30)
 #       - :ref:`taylor-fo-weight-pruner`
-#       - 87.04%
-#       - 81.24 / 80.99
-#       - -3.49 / -3.64
-#       - 2.19s (x5.74)
-#       - 1.31s (x3.09)
+#       - 9.9M (-88.37%)
+#       - 82.22 / 82.19
+#       - -2.63 / -3.09
+#       - 4.36s (x5.88)
+#       - 3.12s (x2.60)
+#     * - :ref:`movement-pruner` (soft, sparsity=0.1, regular_scale=40)
+#       - :ref:`taylor-fo-weight-pruner`
+#       - 8.8M (-89.66%)
+#       - 81.64 / 82.39
+#       - -3.21 / -2.89
+#       - 3.88s (x6.60)
+#       - 2.81s (x2.88)
