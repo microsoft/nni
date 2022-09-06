@@ -15,8 +15,15 @@ __all__ = ['ChannelDependency', 'GroupDependency', 'ReshapeDependency',
 
 
 CONV_TYPE = 'aten::_convolution'
-ADD_TYPES = ['aten::add', 'aten::add_']
-MUL_TYPES = ['aten::mul', 'atem::mul_']
+ADD_MUL_LOGICAL_TYPES = [
+    'aten::add', 'aten::add_', 'aten::sub', 'aten::sub_', 'aten::subtract', 'aten::subtract_',
+    'aten::mul', 'aten::mul_', 'aten::div', 'aten::div_', 'aten::multiply', 'aten::multiply_', 'aten::divide', 'aten::divide_',
+    'aten::addcmul', 'aten::addcmul_',
+    'aten::addcdiv', 'aten::addcdiv_',
+    'aten::logical_xor', 'aten::logical_xor_',
+    'aten::logical_and', 'aten::logical_and_',
+    'aten::logical_or', 'aten::logical_or_',
+]
 CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
 RESHAPE_OPS = [CAT_TYPE, 'aten::view',
@@ -173,7 +180,7 @@ class ChannelDependency(Dependency):
             parent_layers = []
             # find the node that contains aten::add
             # or aten::cat operations
-            if node.op_type in ADD_TYPES or node.op_type in MUL_TYPES:
+            if node.op_type in ADD_MUL_LOGICAL_TYPES:
                 # refer issue 4540 for more details. Multiplication actually
                 # will not introduce the channel dependency, cause the misaligned
                 # channels can propagate to each other. However, when one of the input
