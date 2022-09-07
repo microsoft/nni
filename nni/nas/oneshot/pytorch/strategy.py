@@ -178,11 +178,14 @@ class RandomOneShot(OneShotStrategy):
             experiment.run(...)
             best_arch = experiment.export_top_models()[0]
 
+            # If users are to manipulate checkpoint in an evaluator,
+            # they should use this `no_fixed_arch()` statement to make sure
+            # instantiating model space works properly, as evaluator is running in a fixed context.
             from nni.nas.fixed import no_fixed_arch
-            with no_fixed_arch():               # use this in evaluator, as evaluator is running in a fixed context.
-                model_space = MyModelSpace()    # must create model space again
+            with no_fixed_arch():
+                model_space = MyModelSpace()    # must create a model space again here
 
-            # If the strategy is obtained just now
+            # If the strategy has been created previously, directly use it.
             strategy = experiment.strategy
 
             # Or load a strategy from a checkpoint
