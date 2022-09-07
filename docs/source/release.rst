@@ -61,7 +61,7 @@ Enhancements
 
 *  Promote all pruner API using ``Evaluator``, the old API is deprecated and will be removed in v3.0.
    (`doc <https://nni.readthedocs.io/en/v2.9/reference/compression/pruner.html>`__)
-*  Support most of operators in pruning speedup via automatic operator conversion.
+*  Greatly enlarge the set of supported operators in pruning speedup via automatic operator conversion.
 *  Support ``lr_scheduler`` in pruning by using ``Evaluator``.
 *  Support pruning NLP task in ``ActivationAPoZRankPruner`` and ``ActivationMeanRankPruner``.
 *  Add ``training_steps``, ``regular_scale``, ``movement_mode``, ``sparse_granularity`` for ``MovementPruner``.
