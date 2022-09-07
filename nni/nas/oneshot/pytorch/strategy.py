@@ -169,7 +169,7 @@ class RandomOneShot(OneShotStrategy):
         ----------
         arch
             The architecture to be exported.
-        
+
         Examples
         --------
         To obtain a state dict of a chosen architecture, you can use the following code::
