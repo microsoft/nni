@@ -195,20 +195,40 @@ class RandomOneShot(OneShotStrategy):
 
             state_dict = strategy.sub_state_dict(best_arch)
 
-        The state dict can be directly loaded into a fixed architecture::
+        The state dict can be directly loaded into a fixed architecture using ``fixed_arch``::
 
             with fixed_arch(best_arch):
                 model = MyModelSpace()
             model.load_state_dict(state_dict)
 
-        Or it can be used in an evaluator::
+        Another common use case is to search for a subnet on supernet with a multi-trial strategy (e.g., evolution).
+        The key step here is to write a customized evaluator that loads the checkpoint from the supernet and run evaluations::
 
             def evaluate_model(model_fn):
                 model = model_fn()
-                # put this into `on_validation_start` or `on_train_start` if using Lightning evaluator.
-                model.load_state_dict(state_dict)
+
+                # Put this into `on_validation_start` or `on_train_start` if using Lightning evaluator.
+                model.load_state_dict(get_subnet_state_dict())
+                # Batch-norm calibration is often needed for better performance,
+                # which is often running several hundreds of mini-batches to
+                # re-compute running statistics of batch normalization for subnets.
+                # See https://arxiv.org/abs/1904.00420 for details.
                 finetune_bn(model)
+                # Alternatively, you can also set batch norm to train mode to disable running statistics.
+                # model.train()
+
+                # Evaluate the model and validation dataloader.
                 evaluate_acc(model)
+
+        ``get_subnet_state_dict()`` here is a bit tricky. It's mostly the same as the pervious use case,
+        but the architecture dict should be obtained from ``mutation_summary`` in ``get_current_parameter()``,
+        which corresponds to the architecture of the current trial::
+
+            def get_subnet_state_dict():
+                random_oneshot_strategy = load_random_oneshot_strategy()     # Load a strategy from checkpoint, same as above
+                arch_dict = nni.get_current_parameter()['mutation_summary']
+                print('Architecture dict:', arch_dict)                       # Print here to see what it looks like
+                return random_oneshot_strategy.sub_state_dict(arch_dict)
         """
         assert isinstance(self.model, RandomSamplingLightningModule)
         return self.model.sub_state_dict(arch)
