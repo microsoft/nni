@@ -458,9 +458,9 @@ class AutoformerSpace(nn.Module):
         from nni.nas.strategy import RandomOneShot
         init_kwargs = cls.preset(name)
         with no_fixed_arch():
-            model_sapce = cls(**init_kwargs)
+            model_space = cls(**init_kwargs)
         strategy = RandomOneShot(mutation_hooks=cls.get_extra_mutation_hooks())
-        strategy.attach_model(model_sapce)
+        strategy.attach_model(model_space)
         weight_file = load_pretrained_weight(f"autoformer-{name}-supernet", download=download, progress=progress)
         pretrained_weights = torch.load(weight_file)
         assert strategy.model is not None

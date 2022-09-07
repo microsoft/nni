@@ -159,5 +159,53 @@ class RandomOneShot(OneShotStrategy):
         super().__init__(RandomSamplingLightningModule, **kwargs)
 
     def sub_state_dict(self, arch: dict[str, Any]):
+        """Export the state dict of a chosen architecture.
+        This is useful in weight inheritance of subnet as was done in
+        `SPOS <https://arxiv.org/abs/1904.00420>`__,
+        `OFA <https://arxiv.org/abs/1908.09791>`__ and
+        `AutoFormer <https://arxiv.org/abs/2106.13008>`__.
+
+        Parameters
+        ----------
+        arch
+            The architecture to be exported.
+        
+        Examples
+        --------
+        To obtain a state dict of a chosen architecture, you can use the following code::
+
+            # Train or load a random one-shot strategy
+            experiment.run(...)
+            best_arch = experiment.export_top_models()[0]
+
+            from nni.nas.fixed import no_fixed_arch
+            with no_fixed_arch():               # use this in evaluator, as evaluator is running in a fixed context.
+                model_space = MyModelSpace()    # must create model space again
+
+            # If the strategy is obtained just now
+            strategy = experiment.strategy
+
+            # Or load a strategy from a checkpoint
+            strategy = RandomOneShot()
+            strategy.attach_model(model_space)
+            strategy.model.load_state_dict(torch.load(...))
+
+            state_dict = strategy.sub_state_dict(best_arch)
+
+        The state dict can be directly loaded into a fixed architecture::
+
+            with fixed_arch(best_arch):
+                model = MyModelSpace()
+            model.load_state_dict(state_dict)
+
+        Or it can be used in an evaluator::
+
+            def evaluate_model(model_fn):
+                model = model_fn()
+                # put this into `on_validation_start` or `on_train_start` if using Lightning evaluator.
+                model.load_state_dict(state_dict)
+                finetune_bn(model)
+                evaluate_acc(model)
+        """
         assert isinstance(self.model, RandomSamplingLightningModule)
         return self.model.sub_state_dict(arch)
