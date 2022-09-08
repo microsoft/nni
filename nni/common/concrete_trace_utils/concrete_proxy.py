@@ -15,7 +15,7 @@ from . import concrete_tracer as et
 
 
 @compatibility(is_backward_compatible=True)
-class ConcreteProxy(Proxy, Dict):
+class ConcreteProxy(Proxy):
     """
     ``ConcreteProxy`` is a wrapped proxy carried the real intermediate value, so we can use it to trace a more compatibal model, and pass the branches.
     """
@@ -48,13 +48,39 @@ class ConcreteProxy(Proxy, Dict):
         return self.tracer.create_proxy('call_method', '__call__', (self,) + args, kwargs)
 
     def __iter__(self) -> Iterable['ConcreteProxy']:
-        return self.tracer.create_proxy('call_method', '__iter__', (self,), {})
+        # detect if in executing *proxy
+        frame = inspect.currentframe()
+        assert frame is not None
+        calling_frame = frame.f_back
+        assert calling_frame is not None
+        insts = list(dis.get_instructions(calling_frame.f_code))
+        cur = calling_frame.f_lasti // 2
+        while insts[cur].opcode == dis.opmap['EXTENDED_ARG']:
+            cur += 1
+
+        if insts[cur].opcode == dis.opmap['CALL_FUNCTION_EX']:
+            return self.value.__iter__()
+        else:
+            return self.tracer.create_proxy('call_method', '__iter__', (self,), {})
 
     def __next__(self) -> Iterable['ConcreteProxy']:
         return self.tracer.create_proxy('call_method', '__next__', (self,), {})
 
     def __len__(self):
-        return self.tracer.create_proxy('call_method', '__len__', (self,), {})
+        # detect if in executing *proxy
+        frame = inspect.currentframe()
+        assert frame is not None
+        calling_frame = frame.f_back
+        assert calling_frame is not None
+        insts = list(dis.get_instructions(calling_frame.f_code))
+        cur = calling_frame.f_lasti // 2
+        while insts[cur].opcode == dis.opmap['EXTENDED_ARG']:
+            cur += 1
+
+        if insts[cur].opcode == dis.opmap['CALL_FUNCTION_EX']:
+            return self.value.__len__()
+        else:
+            return self.tracer.create_proxy('call_method', '__len__', (self,), {})
 
     def __getitem__(self) -> 'ConcreteProxy':
         return self.tracer.create_proxy('call_method', '__getitem__', (self,), {})
@@ -81,10 +107,20 @@ class ConcreteProxy(Proxy, Dict):
 
     @compatibility(is_backward_compatible=True)
     def keys(self):
-        """
-        for calling '**proxy'
-        """
-        return self.tracer.create_proxy('call_method', 'keys', (self,), {})
+        # detect if in executing **proxy
+        frame = inspect.currentframe()
+        assert frame is not None
+        calling_frame = frame.f_back
+        assert calling_frame is not None
+        insts = list(dis.get_instructions(calling_frame.f_code))
+        cur = calling_frame.f_lasti // 2
+        while insts[cur].opcode == dis.opmap['EXTENDED_ARG']:
+            cur += 1
+
+        if insts[cur].opcode == dis.opmap['CALL_FUNCTION_EX']:
+            return self.value.keys()
+        else:
+            return self.tracer.create_proxy('call_method', 'keys', (self,), {})
 
     @compatibility(is_backward_compatible=True)
     def values(self):

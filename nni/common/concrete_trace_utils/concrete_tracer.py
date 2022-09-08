@@ -285,7 +285,8 @@ class ConcreteTracer(TracerBase):
         orig_args = list(co.co_varnames)
         names_iter = iter(co.co_varnames)
         args: List[Any] = []
-        kwargs: Dict[str, Any] = {}
+        more_args = []
+        kwargs = {}
         skip_arg_idx = 0
         if is_module:
             if total_args == 0:
@@ -322,19 +323,13 @@ class ConcreteTracer(TracerBase):
             if co.co_flags & inspect.CO_VARARGS:
                 name = '*' + next(names_iter)
                 default_args[name] = ()
-                args.append(proxy_placeholder(name))
+                more_args = proxy_placeholder(name)
             if co.co_flags & inspect.CO_VARKEYWORDS:
                 name = '**' + next(names_iter)
-                # default_args[name] = {}
-                # args.append(proxy_placeholder(name))
-                args.append({})
-                # kwargs = proxy_placeholder(name)
-            # root_fn = _patch_function(root_fn, len(args))
-            fn_for_analysis.__code__ = _patch_function(fn_for_analysis, len(args)).__code__
-            # co.co_flags = co.co_flags & ~HAS_VARSTUFF
-            # co.co_argcount = len(args)
+                default_args[name] = {}
+                kwargs = proxy_placeholder(name)
 
-        return root_fn, args, kwargs
+        return root_fn, args, more_args, kwargs
 
 
     def _module_getattr(self, attr_val, parameter_proxy_cache):
@@ -421,7 +416,7 @@ class ConcreteTracer(TracerBase):
         assert isinstance(fn, FunctionType)
 
         fn_globals = fn.__globals__  # run before it gets patched
-        fn, args, kwargs = self.create_args_for_root(fn, isinstance(root, torch.nn.Module), concrete_args)
+        fn, args, more_args, kwargs = self.create_args_for_root(fn, isinstance(root, torch.nn.Module), concrete_args)
         # print('args:', args)
         fn = self.op_patcher.patch(fn)
 
@@ -545,7 +540,7 @@ class ConcreteTracer(TracerBase):
             _autowrap_check(self.patcher, fn_globals, self._autowrap_function_ids)
             for module in self._autowrap_search:
                 _autowrap_check(self.patcher, module.__dict__, self._autowrap_function_ids)
-            self.create_node('output', 'output', (self.create_arg(fn(*args, **kwargs)),), {},
+            self.create_node('output', 'output', (self.create_arg(fn(*args, *more_args, **kwargs)),), {},
                              type_expr=fn.__annotations__.get('return', None))
 
         self.submodule_paths = None
