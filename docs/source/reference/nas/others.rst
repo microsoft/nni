@@ -57,4 +57,5 @@ Utilities
     :members:
 
 ..  automodule:: nni.retiarii.utils
+    :imported-members:
     :members:
