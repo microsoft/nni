@@ -148,15 +148,11 @@ const Duration = (props: DurationProps) => {
         });
         setDurationSource(getOption(trialRun[0]));
     };
-    // componentDidUpdate(prevProps: DurationProps): void {
-    //     // add this if to prevent endless loop
-    //     if (this.props.source !== prevProps.source) {
-    //         this.drawDurationGraph(this.props.source);
-    //     }
-    // }
+
     useEffect(() => {
         drawDurationGraph(source);
-    }, [source]); // source 有变化时，更新页面，要测！
+    }, [source]); // TODO: source 有变化时，更新页面，要测！
+
     const durationDataZoom = (e: EventMap): void => {
         if (e.batch !== undefined) {
             setStartDuration(e.batch[0].start !== null ? e.batch[0].start : 0);

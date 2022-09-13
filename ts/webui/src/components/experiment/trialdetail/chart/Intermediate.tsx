@@ -30,6 +30,7 @@ const Intermediate = (props: IntermediateProps): any => {
     const [endMediaY, setEndMediaY] = useState(100 as number);
 
     const { source } = props;
+
     useEffect(() => {
         if (isFilter === true) {
             const pointVal = pointInput !== null ? pointInput.value : '';
@@ -42,7 +43,8 @@ const Intermediate = (props: IntermediateProps): any => {
         } else {
             drawIntermediate(source);
         }
-    }, [isFilter, source]); // 当他 === true 时带入循环
+    }, [isFilter, source]); // TODO: filter变化，source变化，测试
+
     const drawIntermediate = (source: AllTrialsIntermediateChart[]): void => {
         if (source.length > 0) {
             setLength(source.length);
@@ -181,6 +183,7 @@ const Intermediate = (props: IntermediateProps): any => {
         }
     };
     const IntermediateEvents = { dataZoom: intermediateDataZoom };
+
     return (
         <div>
             {/* style in para.scss */}
