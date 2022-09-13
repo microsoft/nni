@@ -22,7 +22,7 @@ class NaiveQuantizer(Quantizer):
     config_list : List[Dict]
         List of configurations for quantization. Supported keys:
             - quant_types : List[str]
-                Type of quantization you want to apply, currently support 'weight', 'input', 'output'.
+                Type of quantization you want to apply, currently support 'weight'.
             - quant_bits : Union[int, Dict[str, int]]
                 Bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
                 when the type is int, all quantization types share same bits length.

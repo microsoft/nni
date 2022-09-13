@@ -122,8 +122,9 @@ class Scaling:
         permute_dims = [2 * _ for _ in range(len(kernel_size))] + [2 * _ + 1 for _ in range(len(kernel_size))]
         converted_target = target.reshape(reshape_size).permute(permute_dims).reshape(final_size + [-1])
 
-        # step 2: reduce the converted_target last dim with a certain way, by default is converted_target.sum(-1).
-        result = reduce_func(converted_target) if reduce_func else converted_target.sum(-1)
+        # step 2: reduce the converted_target last dim with a certain way, by default is converted_target.mean(-1).
+        # `sum` does not take into account the metric scale problem, it is better to use `mean` here.
+        result = reduce_func(converted_target) if reduce_func else converted_target.mean(-1)
 
         # step 3: reduce the dims where kernel_size is -1.
         # e.g., target size is [10, 40], kernel_size is [-1, 4], result size is [1, 10], then reduce result to size [10].

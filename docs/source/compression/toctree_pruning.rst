@@ -9,3 +9,4 @@ Pruning
     Quickstart </tutorials/pruning_quick_start_mnist>
     Pruner <pruner>
     Speedup </tutorials/pruning_speedup>
+    Best Practices <best_practices>

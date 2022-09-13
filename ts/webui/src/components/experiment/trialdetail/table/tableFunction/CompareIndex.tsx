@@ -264,7 +264,7 @@ function CompareIndex(props: CompareProps): any {
                     />
                 </div>
                 {intermediateAllKeysList.length > 1 ||
-                (intermediateAllKeysList.length === 1 && intermediateAllKeysList !== ['default']) ? (
+                (intermediateAllKeysList.length === 1 && intermediateAllKeysList[0] !== 'default') ? (
                     <Stack horizontalAlign='end' className='selectKeys'>
                         <Dropdown
                             className='select'

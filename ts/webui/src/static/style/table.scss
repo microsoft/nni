@@ -55,12 +55,13 @@
     overflow-y: auto;
 }
 
-$checkboxwidth: 17px;
+$checkboxwidth: 18px;
 
 .detail-check {
     .ms-Checkbox-checkbox {
         width: $checkboxwidth;
         height: $checkboxwidth;
+        margin-top: 3px;
         border-radius: 50%;
         border: none;
 
@@ -69,7 +70,8 @@ $checkboxwidth: 17px;
         }
 
         i {
-            width: 12px;
+            font-size: 8px;
+            font-weight: 600;
         }
     }
 }
@@ -88,4 +90,3 @@ $checkboxwidth: 17px;
         color: #cb4b16;
     }
 }
-

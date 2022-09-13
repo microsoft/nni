@@ -26,6 +26,7 @@ export const TrialCount = (): any => {
     const bar2Percent = bar2 / maxTrialNum;
     const { updateOverviewPage } = useContext(AppContext);
     return (
+<<<<<<< HEAD
         <React.Fragment>
             <ProgressBar
                 tooltip={`${bar2.toString()} trials`}

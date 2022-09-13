@@ -24,7 +24,7 @@ class StraightMetricsCalculator(MetricsCalculator):
         for module_name, targets_data in data.items():
             metrics[module_name] = {}
             for target_name, target_data in targets_data.items():
-                metrics[module_name][target_name] = target_data.clone().detach()
+                metrics[module_name][target_name] = self._get_scaler(module_name, target_name).shrink(target_data)
         return metrics
 
 

@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
+import math
 from typing import Dict, List, Tuple
 
 import torch
@@ -279,3 +280,21 @@ def get_module_by_name(model, module_name):
         return model, leaf_module
     else:
         return None, None
+
+
+def get_output_batch_dims(t: Tensor, module: Module):
+    if isinstance(module, (torch.nn.Linear, torch.nn.Bilinear)):
+        batch_nums = math.prod(t.shape[:-1])
+        batch_dims = [_ for _ in range(len(t.shape[:-1]))]
+    elif isinstance(module, (torch.nn.Conv1d, torch.nn.ConvTranspose1d)):
+        batch_nums = math.prod(t.shape[:-2])
+        batch_dims = [_ for _ in range(len(t.shape[:-2]))]
+    elif isinstance(module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d)):
+        batch_nums = math.prod(t.shape[:-3])
+        batch_dims = [_ for _ in range(len(t.shape[:-3]))]
+    elif isinstance(module, (torch.nn.Conv3d, torch.nn.ConvTranspose3d)):
+        batch_nums = math.prod(t.shape[:-4])
+        batch_dims = [_ for _ in range(len(t.shape[:-4]))]
+    else:
+        raise TypeError(f'Found unsupported module type in activation based pruner: {module.__class__.__name__}')
+    return batch_dims, batch_nums

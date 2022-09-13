@@ -74,6 +74,11 @@ $themeBlue: #0071bc;
     font-weight: bold;
 }
 
+.positionTop {
+    position: relative;
+    top: 2px;
+}
+
 .input-padding {
     padding-left: 10px;
 }
@@ -86,4 +91,8 @@ $themeBlue: #0071bc;
     .color333 {
         color: #333;
     }
+}
+
+.ms-DetailsRow-cell {
+    padding-top: 8px;
 }

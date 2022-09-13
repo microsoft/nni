@@ -176,6 +176,48 @@ Tutorials
    :hidden:
 
    /tutorials/hello_nas
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="In this tutorial, we demonstrate how to search in the famous model space proposed in `DARTS`_.">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_darts_thumb.png
+     :alt: Searching in DARTS search space
+
+     :ref:`sphx_glr_tutorials_darts.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/darts
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Workable Pruning Process ------------------------">
+
+.. only:: html
+
+ .. figure:: /tutorials/images/thumb/sphx_glr_pruning_bert_glue_thumb.png
+     :alt: Pruning Bert on Task MNLI
+
+     :ref:`sphx_glr_tutorials_pruning_bert_glue.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /tutorials/pruning_bert_glue
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
