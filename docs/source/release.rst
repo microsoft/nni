@@ -5,6 +5,111 @@
 Change Log
 ==========
 
+Release 2.9 - 9/8/2022
+----------------------
+
+Neural Architecture Search
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*  New tutorial of model space hub and one-shot strategy.
+   (`tutorial <https://nni.readthedocs.io/en/v2.9/tutorials/darts.html>`__)
+*  Add pretrained checkpoints to AutoFormer.
+   (`doc <https://nni.readthedocs.io/en/v2.9/reference/nas/search_space.htm.retiarii.hub.pytorch.AutoformerSpace>`__)
+*  Support loading checkpoint of a trained supernet in a subnet.
+   (`doc <https://nni.readthedocs.io/en/v2.9/reference/nas/strategy.htm.retiarii.strategy.RandomOneShot>`__)
+*  Support view and resume of NAS experiment.
+   (`doc <https://nni.readthedocs.io/en/v2.9/reference/nas/others.htm.retiarii.experiment.pytorch.RetiariiExperiment.resume>`__)
+
+Enhancements
+""""""""""""
+
+*  Support ``fit_kwargs`` in lightning evaluator.
+   (`doc <https://nni.readthedocs.io/en/v2.9/reference/nas/evaluator.html#nni.retiarii.evaluator.pytorch.Lightning>`__)
+*  Support ``drop_path`` and ``auxiliary_loss`` in NASNet.
+   (`doc <https://nni.readthedocs.io/en/v2.9/reference/nas/search_space.html#nasnet>`__)
+*  Support gradient clipping in DARTS.
+   (`doc <https://nni.readthedocs.io/en/v2.9/reference/nas/strategy.html#nni.retiarii.strategy.DARTS>`__)
+*  Add ``export_probs`` to monitor the architecture weights.
+*  Rewrite configure_optimizers, functions to step optimizers /
+   schedulers, along with other hooks for simplicity, and to be
+   compatible with latest lightning (v1.7).
+*  Align implementation of DifferentiableCell with DARTS official repo.
+*  Re-implementation of ProxylessNAS.
+*  Move ``nni.retiarii`` code-base to ``nni.nas``.
+
+Bug fixes
+"""""""""
+
+*  Fix a performance issue caused by tensor formatting in ``weighted_sum``.
+*  Fix a misuse of lambda expression in NAS-Bench-201 search space.
+*  Fix the gumbel temperature schedule in Gumbel DARTS.
+*  Fix the architecture weight sharing when sharing labels in differentiable strategies.
+*  Fix the memo reusing in exporting differentiable cell.
+
+Compression
+^^^^^^^^^^^
+
+*  New tutorial of pruning transformer model.
+   (`tutorial <https://nni.readthedocs.io/en/v2.9/tutorials/pruning_bert_glue.html>`__)
+*  Add ``TorchEvaluator``, ``LightningEvaluator``, ``TransformersEvaluator``
+   to ease the expression of training logic in pruner.
+   (`doc <https://nni.readthedocs.io/en/v2.9/compression/compression_evaluator.html>`__,
+   `API <https://nni.readthedocs.io/en/v2.9/reference/compression/evaluator.html>`__)
+
+Enhancements
+""""""""""""
+
+*  Promote all pruner API using ``Evaluator``, the old API is deprecated and will be removed in v3.0.
+   (`doc <https://nni.readthedocs.io/en/v2.9/reference/compression/pruner.html>`__)
+*  Greatly enlarge the set of supported operators in pruning speedup via automatic operator conversion.
+*  Support ``lr_scheduler`` in pruning by using ``Evaluator``.
+*  Support pruning NLP task in ``ActivationAPoZRankPruner`` and ``ActivationMeanRankPruner``.
+*  Add ``training_steps``, ``regular_scale``, ``movement_mode``, ``sparse_granularity`` for ``MovementPruner``.
+   (`doc <https://nni.readthedocs.io/en/v2.9/reference/compression/pruner.html#movement-pruner>`__)
+*  Add ``GroupNorm`` replacement in pruning speedup. Thanks external contributor
+   `@cin-xing <https://github.com/cin-xing>`__.
+*  Optimize ``balance`` mode performance in ``LevelPruner``.
+
+Bug fixes
+"""""""""
+
+*  Fix the invalid ``dependency_aware`` mode in scheduled pruners.
+*  Fix the bug where ``bias`` mask cannot be generated.
+*  Fix the bug where ``max_sparsity_per_layer`` has no effect.
+*  Fix ``Linear`` and ``LayerNorm`` speedup replacement in NLP task.
+*  Fix tracing ``LightningModule`` failed in ``pytorch_lightning >= 1.7.0``.
+
+Hyper-parameter optimization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*  Fix the bug that weights are not defined correctly in ``adaptive_parzen_normal`` of TPE.
+
+Training service
+^^^^^^^^^^^^^^^^
+
+*  Fix trialConcurrency bug in K8S training service: use``${envId}_run.sh`` to replace ``run.sh``.
+*  Fix upload dir bug in K8S training service: use a separate working
+   directory for each experiment. Thanks external contributor
+   `@amznero <https://github.com/amznero>`__.
+
+Web portal
+^^^^^^^^^^
+
+*  Support dict keys in Default metric chart in the detail page.
+*  Show experiment error message with small popup windows in the bottom right of the page.
+*  Upgrade React router to v6 to fix index router issue.
+*  Fix the issue of details page crashing due to choices containing ``None``.
+*  Fix the issue of missing dict intermediate dropdown in comparing trials dialog.
+
+Known issues
+^^^^^^^^^^^^
+
+*  Activation based pruner can not support ``[batch, seq, hidden]``.
+*  Failed trials are NOT auto-submitted when experiment is resumed
+   (`[FEAT]: resume waiting/running, dedup on tuner side
+   (TPE-only) #4931 <https://github.com/microsoft/nni/pull/4931>`__ is
+   reverted due to its pitfalls).
+
 Release 2.8 - 6/22/2022
 -----------------------
 

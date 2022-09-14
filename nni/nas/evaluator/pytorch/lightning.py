@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import logging
 import os
 import warnings
 from pathlib import Path
@@ -30,6 +31,8 @@ __all__ = [
     'SupervisedLearningModule', 'ClassificationModule', 'RegressionModule', 'AccuracyWithLogits',
     # FIXME: hack to make it importable for tests
 ]
+
+_logger = logging.getLogger(__name__)
 
 
 class LightningModule(pl.LightningModule):
@@ -175,6 +178,7 @@ class Lightning(Evaluator):
     def fit(self, model):
         """
         Fit the model with provided dataloader, with Lightning trainer.
+        If ``train_dataloaders`` is not provided, ``trainer.validate()`` will be called.
 
         Parameters
         ----------
@@ -182,7 +186,13 @@ class Lightning(Evaluator):
             The model to fit.
         """
         self.module.set_model(model)
-        return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders, **self.fit_kwargs)
+        if self.train_dataloaders is None:
+            _logger.info('Train dataloaders are missing. Skip to validation.')
+            return self.trainer.validate(self.module, self.val_dataloaders, **self.fit_kwargs)
+        else:
+            if self.val_dataloaders is None:
+                _logger.warning('Validation dataloaders are missing.')
+            return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders, **self.fit_kwargs)
 
 
 def _check_dataloader(dataloader):
@@ -265,6 +275,12 @@ class SupervisedLearningModule(LightningModule):
             nni.report_intermediate_result(self._get_validation_metrics())
 
     def on_fit_end(self):
+        self._final_report()
+
+    def on_validation_end(self):
+        self._final_report()
+
+    def _final_report(self):
         if self.running_mode == 'multi' and nni.get_current_parameter() is not None:
             nni.report_final_result(self._get_validation_metrics())
 

@@ -70,6 +70,12 @@ class TorchModel1(torch.nn.Module):
         self.asub = ASubModel()
 
     def forward(self, x: torch.Tensor):
+        y1 = torch.ones_like(x)
+        y2 = torch.rand_like(x)
+        y3 = torch.randn_like(x)
+        y4 = torch.zeros_like(x)
+        x = x - y1 + y2 + y3 + y4
+
         x = x.contiguous(memory_format=torch.channels_last)
         x = torch._C._nn.upsample_bilinear2d(x, (28, 28), False)
         x = torch._C._nn.upsample_nearest2d(x, (28, 28))

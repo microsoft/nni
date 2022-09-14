@@ -519,6 +519,12 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_train_end(self):
         return self.model.on_train_end()
 
+    def on_validation_start(self):
+        return self.model.on_validation_start()
+
+    def on_validation_end(self):
+        return self.model.on_validation_end()
+
     def on_fit_start(self):
         return self.model.on_fit_start()
 

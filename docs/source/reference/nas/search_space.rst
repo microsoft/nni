@@ -3,7 +3,7 @@ Search Space
 
 .. _mutation-primitives:
 
-Mutation Pritimives
+Mutation Primitives
 -------------------
 
 LayerChoice

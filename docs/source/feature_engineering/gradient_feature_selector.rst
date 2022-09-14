@@ -43,7 +43,7 @@ And you could reference the examples in ``/examples/feature_engineering/gradient
   **order** (int, optional, default = 4) - What order of interactions to include. Higher orders may be more accurate but increase the run time. 12 is the maximum allowed order.
 
 * 
-  **penatly** (int, optional, default = 1) - Constant that multiplies the regularization term.
+  **penalty** (int, optional, default = 1) - Constant that multiplies the regularization term.
 
 * 
   **n_features** (int, optional, default = None) - If None, will automatically choose number of features based on search. Otherwise, the number of top features to select.
