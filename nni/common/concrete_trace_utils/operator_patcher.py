@@ -128,6 +128,12 @@ class TransformerOp(ast.NodeTransformer):
 class OperatorPatcher:
     """
     An function patcher, to patch the un-wrappable operator 'not/is/is not/in/not in' to wrappable functions.
+    Todo: patch this operators:
+        LIST_TO_TUPLE
+        LIST_EXTEND(i)
+        SET_UPDATE(i)
+        DICT_UPDATE(i)
+        DICT_MERGE
     """
 
     transformer_op = TransformerOp()

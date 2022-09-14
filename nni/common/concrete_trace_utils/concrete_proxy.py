@@ -5,7 +5,7 @@ import torch
 import inspect
 import operator
 
-from typing import Dict, Optional, Iterable, Any, Union, Mapping
+from typing import Dict, List, Optional, Iterable, Any, Union
 from torch.fx._compatibility import compatibility
 from torch.fx.graph import magic_methods, reflectable_magic_methods
 from torch.fx.node import Node
@@ -25,10 +25,19 @@ class ConcreteProxy(Proxy):
         'JUMP_IF_TRUE_OR_POP',
         'POP_JUMP_IF_FALSE',
         'POP_JUMP_IF_TRUE',
-        'JUMP_IF_NOT_EXC_MATCH',
+        'JUMP_IF_NOT_EXC_MATCH', # in new python vertion, not tested
     )
     jump_opcodes = tuple(dis.opmap[name] for name in jump_opnames if name in dis.opmap)
+    op_compare = dis.opmap['COMPARE_OP']
+    op_extended_arg = dis.opmap['EXTENDED_ARG']
+    op_call_ex = dis.opmap['CALL_FUNCTION_EX']
+    op_not = dis.opmap['UNARY_NOT']
+    op_unpack_sequence = dis.opmap['UNPACK_SEQUENCE']
+    jump_before_opcodes = (op_compare, op_not)
 
+    # occured in different versions
+    op_list_extend = dis.opmap['LIST_EXTEND'] if 'LIST_EXTEND' in dis.opmap else None
+    op_tuple_unpack_call = dis.opmap['BUILD_TUPLE_UNPACK_WITH_CALL'] if 'BUILD_TUPLE_UNPACK_WITH_CALL' in dis.opmap else None
 
     def __init__(self, node: Node, value: Any, tracer: Optional[et.ConcreteTracer] = None):
         if tracer is None:
@@ -48,18 +57,30 @@ class ConcreteProxy(Proxy):
         return self.tracer.create_proxy('call_method', '__call__', (self,) + args, kwargs)
 
     def __iter__(self) -> Iterable['ConcreteProxy']:
-        # detect if in executing *proxy
+        # detect if in executing `*proxy`, or `a, b, c = atuple`
         frame = inspect.currentframe()
         assert frame is not None
         calling_frame = frame.f_back
         assert calling_frame is not None
         insts = list(dis.get_instructions(calling_frame.f_code))
         cur = calling_frame.f_lasti // 2
-        while insts[cur].opcode == dis.opmap['EXTENDED_ARG']:
+        while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
-        if insts[cur].opcode == dis.opmap['CALL_FUNCTION_EX']:
+        if insts[cur].opcode == self.op_call_ex:
+            # in executing func(..., *proxy)
             return self.value.__iter__()
+        elif insts[cur].opcode == self.op_tuple_unpack_call:
+            # in executing func(*..., *proxy)
+            # <= python 3.8
+            return self.value.__iter__()
+        elif insts[cur].opcode == self.op_list_extend:
+            # in executing x.extend(proxy) or [x, *proxy]
+            # >= python 3.9
+            return ConcreteUnpackIterProxy(self)
+        elif insts[cur].opcode == self.op_unpack_sequence:
+            # in executing `a, b, c = atuple`
+            return ConcreteUnpackIterProxy(self)
         else:
             return self.tracer.create_proxy('call_method', '__iter__', (self,), {})
 
@@ -67,23 +88,32 @@ class ConcreteProxy(Proxy):
         return self.tracer.create_proxy('call_method', '__next__', (self,), {})
 
     def __len__(self):
-        # detect if in executing *proxy
+        # detect if in executing `*proxy`
         frame = inspect.currentframe()
         assert frame is not None
         calling_frame = frame.f_back
         assert calling_frame is not None
         insts = list(dis.get_instructions(calling_frame.f_code))
         cur = calling_frame.f_lasti // 2
-        while insts[cur].opcode == dis.opmap['EXTENDED_ARG']:
+        while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
-        if insts[cur].opcode == dis.opmap['CALL_FUNCTION_EX']:
+        if insts[cur].opcode == self.op_call_ex:
+            # in executing func(..., *proxy)
+            return self.value.__len__()
+        elif insts[cur].opcode == self.op_tuple_unpack_call:
+            # in executing func(*..., *proxy)
+            # <= python 3.8
+            return self.value.__len__()
+        elif insts[cur].opcode == self.op_list_extend:
+            # in executing x.extend(*proxy) or [x, *proxy]
+            # >= python 3.9
             return self.value.__len__()
         else:
             return self.tracer.create_proxy('call_method', '__len__', (self,), {})
 
-    def __getitem__(self) -> 'ConcreteProxy':
-        return self.tracer.create_proxy('call_method', '__getitem__', (self,), {})
+    def __getitem__(self, *args, **kwargs) -> 'ConcreteProxy':
+        return self.tracer.create_proxy('call_method', '__getitem__', (self,) + args, kwargs)
 
     def __bool__(self) -> Union[bool, ConcreteProxy]:
         # detect if in executing branch condition
@@ -93,12 +123,14 @@ class ConcreteProxy(Proxy):
         assert calling_frame is not None
         insts = list(dis.get_instructions(calling_frame.f_code))
         cur = calling_frame.f_lasti // 2
-        while insts[cur].opcode == dis.opmap['EXTENDED_ARG']:
+        while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
-        if insts[cur].opcode in self.jump_opcodes:
+        if insts[cur].opcode in self.jump_opcodes or (
+            insts[cur].opcode in self.jump_before_opcodes and insts[cur + 1].opcode in self.jump_opcodes):
+            # in executing branch condition
             return self.value.__bool__()
-        elif insts[cur].opcode == dis.opmap['UNARY_NOT']:
+        elif insts[cur].opcode == self.op_not:
             # log warning
             print('please use the function patcher, or use "from operator import not_; x = not_(y)" instead of "x = not y", or the traced graph may be wrong')
             return self.value.__bool__()
@@ -107,17 +139,18 @@ class ConcreteProxy(Proxy):
 
     @compatibility(is_backward_compatible=True)
     def keys(self):
-        # detect if in executing **proxy
+        # detect if in executing `**proxy`
         frame = inspect.currentframe()
         assert frame is not None
         calling_frame = frame.f_back
         assert calling_frame is not None
         insts = list(dis.get_instructions(calling_frame.f_code))
         cur = calling_frame.f_lasti // 2
-        while insts[cur].opcode == dis.opmap['EXTENDED_ARG']:
+        while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
-        if insts[cur].opcode == dis.opmap['CALL_FUNCTION_EX']:
+        if insts[cur].opcode == self.op_call_ex:
+            # in executing `**proxy`
             return self.value.keys()
         else:
             return self.tracer.create_proxy('call_method', 'keys', (self,), {})
@@ -168,6 +201,9 @@ class ConcreteAttrProxy(ConcreteProxy):
         self._node: Optional[Node] = None
         self.value = getattr(root.value, attr)
 
+    def __repr__(self) -> str:
+        return f'ConcreteAttrProxy({self.node.name})'
+
     @property
     def node(self):
         # the node for attributes is added lazily, since most will just be method calls
@@ -179,6 +215,44 @@ class ConcreteAttrProxy(ConcreteProxy):
 
     def __call__(self, *args, **kwargs):
         return self.tracer.create_proxy('call_method', self.attr, (self.root,) + args, kwargs)
+
+
+@compatibility(is_backward_compatible=True)
+class ConcreteUnpackIterProxy(ConcreteProxy):
+    @compatibility(is_backward_compatible=True)
+    def __init__(self, root: ConcreteProxy):
+        self.root = root
+        self.tracer = root.tracer
+        self._node: Optional[Node] = None
+        self._value: List[Any] = []
+        self.index = -1
+        self.len = len(root.value)
+
+    def __repr__(self) -> str:
+        return f'ConcreteUnpackIterProxy({self.node.name})'
+
+    @property
+    def node(self):
+        # the node for attributes is added lazily, since most will just be method calls
+        # which do not rely on the getitem call
+        if self._node is None:
+            self._node = self.tracer.create_proxy(
+                'call_method', '__iter__', (self.root,), {}).node
+        return self._node
+
+    @property
+    def value(self):
+        # the node for attributes is added lazily, since most will just be method calls
+        # which do not rely on the getitem call
+        if len(self._value) == 0:
+            self._value.append(iter(self.root.value))
+        return self._value[0]
+
+    def __next__(self):
+        self.index += 1
+        if self.index == self.len:
+            raise StopIteration()
+        return self.tracer.create_proxy('call_function', operator.getitem, (self.root, self.index), {})
 
 @compatibility(is_backward_compatible=True)
 def map_aggregate_not_proxy(a, fn):

@@ -23,6 +23,7 @@ from torch.fx.node import Target, Node
 from torch.fx.proxy import TracerBase
 
 from . import concrete_proxy as ep
+# import .concrete_proxy as ep
 from .operator_patcher import OperatorPatcher
 
 HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
@@ -31,7 +32,12 @@ HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
 _orig_module_call: Callable = torch.nn.Module.__call__
 _orig_module_getattr: Callable = torch.nn.Module.__getattr__
 _orig_isinstance: Callable = builtins.isinstance
-_orig_bool: Callable = builtins.bool
+_orig_bool: Type[Any] = builtins.bool
+_orig_tuple: Type[Any] = builtins.tuple
+_orig_list: Type[Any] = builtins.list
+_orig_set: Type[Any] = builtins.set
+_orig_frozenset: Type[Any] = builtins.frozenset
+_orig_dict: Type[Any] = builtins.dict
 _orig_len: Callable = builtins.len
 _orig_not: Callable = operator.not_
 _orig_is: Callable = operator.is_
@@ -45,7 +51,6 @@ class ConcreteTracer(TracerBase):
     A model tracer similar to _symbolic_trace.Tracer, but with concrete execution and real value so we can pass complecate conditions
     and go into correct brunches.
     """
-
     @compatibility(is_backward_compatible=True)
     def __init__(self, autowrap_modules: Tuple[ModuleType] = (math,),
                  autowrap_functions: Tuple[Callable, ...] = ()) -> None:
@@ -76,12 +81,15 @@ class ConcreteTracer(TracerBase):
         """
         to get the attr in self.root. only for execution of 'call_module' nodes.
         """
+        temp_disable_attr = self.temp_disable_attr
+        self.temp_disable_attr = True
         target_atoms = target.split('.')
         attr_itr = self.root
         for i, atom in enumerate(target_atoms):
             if not hasattr(attr_itr, atom):
                 raise RuntimeError(f"Node referenced nonexistent target {'.'.join(target_atoms[:i])}")
             attr_itr = getattr(attr_itr, atom)
+        self.temp_disable_attr = temp_disable_attr
         return attr_itr
 
     def run_target(self, kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any]):
@@ -131,14 +139,6 @@ class ConcreteTracer(TracerBase):
         similar to _symbolic_trace.Tracer.create_proxy.
         use the 'run_target' to actually execute the code, and store the value in 'value' field.
         """
-        args_noded = self.create_arg(args)
-        kwargs_noded = self.create_arg(kwargs)
-
-        assert isinstance(args_noded, tuple)
-        assert isinstance(kwargs_noded, dict)
-
-        node = self.create_node(kind, target, args_noded, kwargs_noded, name, type_expr)
-
         def upwrapper(obj: Any):
             if isinstance(obj, ep.ConcreteProxy):
                 return obj.value
@@ -148,6 +148,14 @@ class ConcreteTracer(TracerBase):
 
         # real value by execution
         value_unwrapped = self.run_target(kind, target, args_unwrapped, kwargs_unwrapped)
+
+        args_noded = self.create_arg(args)
+        kwargs_noded = self.create_arg(kwargs)
+
+        assert isinstance(args_noded, tuple)
+        assert isinstance(kwargs_noded, dict)
+
+        node = self.create_node(kind, target, args_noded, kwargs_noded, name, type_expr)
         return self.proxy(value_unwrapped, node)
 
     @compatibility(is_backward_compatible=True)
@@ -257,13 +265,37 @@ class ConcreteTracer(TracerBase):
             return forward(*args, **kwargs)
         else:
             # disable patches
-            self.temp_disable = True
+            temp_disable_call = self.temp_disable_call
+            self.temp_disable_call = True
             # execute leaf module
             proxy = self.create_proxy('call_module', module_qualified_name, args, kwargs)
             # enable patches
-            self.temp_disable = False
+            self.temp_disable_call = temp_disable_call
 
             return proxy
+
+    def _module_getattr(self, attr_val, parameter_proxy_cache):
+        def maybe_get_proxy_for_attr(attr_val, collection_to_search, parameter_proxy_cache):
+            for n, p in collection_to_search:
+                if attr_val is p:
+                    if n not in parameter_proxy_cache:
+                        val_proxy = self.create_proxy('get_attr', n, (), {})
+                        parameter_proxy_cache[n] = val_proxy
+                    return parameter_proxy_cache[n]
+            return None
+
+        if isinstance(attr_val, torch.nn.Parameter):
+            maybe_parameter_proxy = maybe_get_proxy_for_attr(attr_val, self.root.named_parameters(), parameter_proxy_cache)
+            if maybe_parameter_proxy is not None:
+                return maybe_parameter_proxy
+
+        if self.proxy_buffer_attributes and isinstance(attr_val, torch.Tensor):
+            maybe_buffer_proxy = maybe_get_proxy_for_attr(attr_val, self.root.named_buffers(), parameter_proxy_cache)
+            if maybe_buffer_proxy is not None:
+                return maybe_buffer_proxy
+
+        return attr_val
+
 
     # This method will be refactored
     @compatibility(is_backward_compatible=False)
@@ -330,29 +362,6 @@ class ConcreteTracer(TracerBase):
                 kwargs = proxy_placeholder(name)
 
         return root_fn, args, more_args, kwargs
-
-
-    def _module_getattr(self, attr_val, parameter_proxy_cache):
-        def maybe_get_proxy_for_attr(attr_val, collection_to_search, parameter_proxy_cache):
-            for n, p in collection_to_search:
-                if attr_val is p:
-                    if n not in parameter_proxy_cache:
-                        val_proxy = self.create_proxy('get_attr', n, (), {})
-                        parameter_proxy_cache[n] = val_proxy
-                    return parameter_proxy_cache[n]
-            return None
-
-        if isinstance(attr_val, torch.nn.Parameter):
-            maybe_parameter_proxy = maybe_get_proxy_for_attr(attr_val, self.root.named_parameters(), parameter_proxy_cache)
-            if maybe_parameter_proxy is not None:
-                return maybe_parameter_proxy
-
-        if self.proxy_buffer_attributes and isinstance(attr_val, torch.Tensor):
-            maybe_buffer_proxy = maybe_get_proxy_for_attr(attr_val, self.root.named_buffers(), parameter_proxy_cache)
-            if maybe_buffer_proxy is not None:
-                return maybe_buffer_proxy
-
-        return attr_val
 
     @compatibility(is_backward_compatible=True)
     def trace(self, root: Union[torch.nn.Module, Callable[..., Any]],
@@ -427,7 +436,7 @@ class ConcreteTracer(TracerBase):
         @functools.wraps(_orig_module_getattr)
         def module_getattr_wrapper(mod, attr):
             attr_val = _orig_module_getattr(mod, attr)
-            if self.temp_disable:
+            if self.temp_disable_call | self.temp_disable_attr:
                 return attr_val
             else:
                 return self._module_getattr(attr_val, parameter_proxy_cache)
@@ -437,8 +446,8 @@ class ConcreteTracer(TracerBase):
             def forward(*args, **kwargs):
                 return _orig_module_call(mod, *args, **kwargs)
 
-            if self.temp_disable:
-                return forward(*args, **kwargs)
+            if self.temp_disable_call:
+                return _orig_module_call(mod, *args, **kwargs)
             else:
                 _autowrap_check(self.patcher, getattr(getattr(mod, "forward", mod), "__globals__", {}),
                                 self._autowrap_function_ids)
@@ -452,6 +461,46 @@ class ConcreteTracer(TracerBase):
                     {})
             else:
                 return _orig_bool(obj)
+        
+        @functools.wraps(_orig_tuple)
+        def tuple_wrapper(*args, **kwargs):
+            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
+                return args[0].tracer.create_proxy('call_function',
+                    _orig_tuple, args, kwargs)
+            else:
+                return _orig_tuple(*args, **kwargs)
+
+        @functools.wraps(_orig_list)
+        def list_wrapper(*args, **kwargs):
+            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
+                return args[0].tracer.create_proxy('call_function',
+                    _orig_list, args, kwargs)
+            else:
+                return _orig_list(*args, **kwargs)
+                
+        @functools.wraps(_orig_set)
+        def set_wrapper(*args, **kwargs):
+            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
+                return args[0].tracer.create_proxy('call_function',
+                    _orig_set, args, kwargs)
+            else:
+                return _orig_set(*args, **kwargs)
+                
+        @functools.wraps(_orig_frozenset)
+        def frozenset_wrapper(*args, **kwargs):
+            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
+                return args[0].tracer.create_proxy('call_function',
+                    _orig_frozenset, args, kwargs)
+            else:
+                return _orig_frozenset(*args, **kwargs)
+                
+        @functools.wraps(_orig_dict)
+        def dict_wrapper(*args, **kwargs):
+            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
+                return args[0].tracer.create_proxy('call_function',
+                    _orig_dict, args, kwargs)
+            else:
+                return _orig_dict(*args, **kwargs)
 
         @functools.wraps(_orig_len)
         def len_wrapper(obj) -> int:
@@ -501,10 +550,20 @@ class ConcreteTracer(TracerBase):
 
         @functools.wraps(_orig_isinstance)
         def isinstance_wrapper(instance, clz):
-            if type(clz) in (tuple, list, slice):
-                if bool_wrapper in clz:
-                    clz = list(aclz for aclz in clz if aclz is not bool_wrapper)
-                    clz.append(_orig_bool)
+            type_wrappers = {
+                bool_wrapper:       _orig_bool,
+                list_wrapper:       _orig_list,
+                tuple_wrapper:      _orig_tuple,
+                set_wrapper:        _orig_set,
+                frozenset_wrapper:  _orig_frozenset,
+                dict_wrapper:       _orig_dict,
+            }
+            if type(clz) in (tuple, list, slice, _orig_tuple, _orig_list):
+                clz_wappers = []
+                for type_wrapper, orig_type in type_wrappers.items():
+                    if type_wrapper in clz:
+                        clz_wappers.append(orig_type)
+                clz = (*clz_wappers, *(aclz for aclz in clz if aclz not in type_wrappers))
                 # use _orig_isinstance(clz, Iterable) will cause an endless recursive loop
                 for cls in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy):
                     if cls in clz and _orig_isinstance(instance, cls):
@@ -514,9 +573,9 @@ class ConcreteTracer(TracerBase):
                 else:
                     return _orig_isinstance(instance, clz)
             else:
-                if bool_wrapper is clz:
-                    clz = _orig_bool
-                if clz in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy):
+                if clz in type_wrappers:
+                    return _orig_isinstance(instance, type_wrappers[clz])
+                elif clz in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy):
                     return _orig_isinstance(instance, clz)
                 elif _orig_isinstance(instance, ep.ConcreteProxy):
                     return _orig_isinstance(instance.value, clz)
@@ -524,13 +583,20 @@ class ConcreteTracer(TracerBase):
                     return _orig_isinstance(instance, clz)
 
         # for passing the tracing of leaf modules
-        self.temp_disable = False
+        self.temp_disable_call = False
+        self.temp_disable_attr = False
         with _Patcher() as self.patcher:
             # allow duplicate patches to support the case of nested calls
             self.patcher.patch_method(torch.nn.Module, "__getattr__", module_getattr_wrapper, deduplicate=False)
             self.patcher.patch_method(torch.nn.Module, "__call__", module_call_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "isinstance", isinstance_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "bool", bool_wrapper, deduplicate=False)
+            # self.patcher.patch_method(builtins, "slice", slice_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "tuple", tuple_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "list", list_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "set", set_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "frozenset", frozenset_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "dict", dict_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "len", len_wrapper, deduplicate=False)
             self.patcher.patch_method(operator, "not_", not_wrapper, deduplicate=False)
             self.patcher.patch_method(operator, "is_", is_wrapper, deduplicate=False)
