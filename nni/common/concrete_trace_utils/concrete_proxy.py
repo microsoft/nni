@@ -115,6 +115,9 @@ class ConcreteProxy(Proxy):
     def __getitem__(self, *args, **kwargs) -> 'ConcreteProxy':
         return self.tracer.create_proxy('call_method', '__getitem__', (self,) + args, kwargs)
 
+    def __setitem__(self, *args, **kwargs) -> 'ConcreteProxy':
+        return self.tracer.create_proxy('call_method', '__setitem__', (self,) + args, kwargs)
+
     def __bool__(self) -> Union[bool, ConcreteProxy]:
         # detect if in executing branch condition
         frame = inspect.currentframe()

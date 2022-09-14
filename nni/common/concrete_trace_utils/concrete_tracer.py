@@ -16,7 +16,7 @@ from typing import Any, Dict, Optional, Set, Tuple, Type, List, Callable, Union
 from torch._C import ScriptObject
 from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
-from torch.fx._symbolic_trace import _autowrap_check, _patch_wrapped_functions, _patch_function, _Patcher, _proxyable_classes
+from torch.fx._symbolic_trace import _Patcher, _proxyable_classes
 from torch.fx import graph as fx_graph
 from torch.fx.graph import Graph
 from torch.fx.node import Target, Node
@@ -51,9 +51,16 @@ class ConcreteTracer(TracerBase):
     A model tracer similar to _symbolic_trace.Tracer, but with concrete execution and real value so we can pass complecate conditions
     and go into correct brunches.
     """
+    
+    default_autowap_funcs = (
+        # no necessary input for tensor, so __torch_function__ will not be called. need to be wrapped manually.
+        # todo: more needed to be tested.
+        torch.arange,
+        torch.meshgrid,
+    )
     @compatibility(is_backward_compatible=True)
     def __init__(self, autowrap_modules: Tuple[ModuleType] = (math,),
-                 autowrap_functions: Tuple[Callable, ...] = ()) -> None:
+                 autowrap_functions: Tuple[Callable, ...] = default_autowap_funcs) -> None:
         """
         similar to _symbolic_trace.Tracer.__init__.
         remove the 'param_shapes_constant' because we can get real shape when executing.
@@ -612,6 +619,93 @@ class ConcreteTracer(TracerBase):
         self.submodule_paths = None
 
         return self.graph
+
+# List of pairs of (global dict, function name) functions
+# to patch for the purposes of the wrap() API.
+_wrapped_fns_to_patch : List[Tuple[dict, str]] = []
+
+# List of methods on classes to wrap (class type, function name)
+# this currently only works for Tensor.* methods that aren't traced properly
+_wrapped_methods_to_patch : List[Tuple[type, str]] = []
+
+
+def _find_proxy(*objects_to_search):
+    """
+    Recursively search a data structure for a Proxy() and return it,
+    return None if not found.
+    """
+    proxy = None
+
+    def find_proxy(x):
+        nonlocal proxy
+        if isinstance(x, ep.ConcreteProxy):
+            proxy = x
+
+    ep.map_aggregate_not_proxy(objects_to_search, find_proxy)
+    return proxy
+
+def _create_wrapped_func(orig_fn):
+    @functools.wraps(orig_fn)
+    def wrapped(*args, **kwargs):
+        """
+        Given an closed-over ``orig_function`` to invoke, search the args and kwargs for
+        a Proxy object. If there is one, emit a ``call_function`` node to preserve the
+        call to this leaf function directly. Otherwise, just return the results of
+        this function call, as this function is not being traced.
+        """
+        proxy = _find_proxy(args, kwargs)
+        if proxy is not None:
+            return_proxy = proxy.tracer.create_proxy('call_function', orig_fn, args, kwargs)
+            return_proxy.node.meta['is_wrapped'] = True
+            return return_proxy
+        return orig_fn(*args, **kwargs)
+
+    return wrapped
+
+def _patch_wrapped_functions(patcher : _Patcher):
+    """
+    Go through ``_wrapped_fn_patch_table`` and, for each frame object, wrap
+    the listed global functions in the `_create_wrapped_func` wrapper.
+    """
+    for frame_dict, name in _wrapped_fns_to_patch:
+        if name not in frame_dict and hasattr(builtins, name):
+            orig_fn = getattr(builtins, name)
+        else:
+            orig_fn = frame_dict[name]
+        patcher.patch(frame_dict, name, _create_wrapped_func(orig_fn))
+
+    for cls, name in _wrapped_methods_to_patch:
+        patcher.patch_method(cls, name, _create_wrapped_method(cls, name))
+
+
+def _autowrap_check(patcher : _Patcher, frame_dict : Dict[str, Any], function_ids : Set[int]):
+    """
+    Some methods, like `math.sqrt` are common enough we want to automatically wrap them as we see them.
+    This method searches a scope for them and patches them if found.
+    """
+    if patcher.visit_once(frame_dict):
+        for name, value in frame_dict.items():
+            if not name.startswith("_") and callable(value) and id(value) in function_ids:
+                patcher.patch(frame_dict, name, _create_wrapped_func(value))
+
+
+def _create_wrapped_method(cls, name):
+    orig_fn = getattr(cls, name)
+
+    @functools.wraps(orig_fn)
+    def wrapped(*args, **kwargs):
+        """
+        Search the args and kwargs for a Proxy object. If there is one,
+        emit a ``call_method`` node to preserve the call to this method
+        directly. Otherwise, just return the results of this function
+        call, as this function is not being traced.
+        """
+        proxy = _find_proxy(args, kwargs)
+        if proxy is not None:
+            return proxy.tracer.create_proxy('call_method', name, args, kwargs)
+        return orig_fn(*args, **kwargs)
+
+    return wrapped
 
 
 @compatibility(is_backward_compatible=True)
