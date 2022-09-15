@@ -1,12 +1,19 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import ast
 import inspect
-import torch
+import logging
 
 from functools import lru_cache
 from textwrap import dedent
 from types import MethodType, FunctionType
 from typing import List
 
+import torch
+
+
+_logger = logging.getLogger(__name__)
 
 class TransformerOp(ast.NodeTransformer):
     """
@@ -75,14 +82,14 @@ class TransformerOp(ast.NodeTransformer):
             return self.generic_visit(node)
 
     def visit_BoolOp(self, node: ast.BoolOp):
-        warning = 'warning: "and/or" will generate branch expr. The 2nd arg can\'t be traced if the 1st arg returns a True. Don\'t mix up "and/or" and "&/|"!'
         if self.is_incond_status != 0:
             # in branch cond test expr, need no replacement
             self.is_incond_status = 2
             return self.generic_visit(node)
         else:
             if not isinstance(node.values[1], (ast.Call, ast.BoolOp)):
-                print(warning)
+                _logger.warning('warning: "and/or" will generate branch expr. The 2nd arg can\'t be traced if the 1st arg returns a True.'
+                                ' Don\'t mix up "and/or" and "&/|"!')
             return self.generic_visit(node)
 
     def visit_Compare(self, node: ast.Compare):

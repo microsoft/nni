@@ -1,9 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from __future__ import annotations
-from email.policy import default
 
 import sys
-sys.setrecursionlimit(100)
-import torch
 import inspect
 import operator
 import math
@@ -13,6 +13,8 @@ import builtins
 from itertools import chain
 from types import FunctionType, MethodType, ModuleType
 from typing import Any, Dict, Optional, Set, Tuple, Type, List, Callable, Union
+
+import torch
 from torch._C import ScriptObject
 from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
@@ -51,15 +53,20 @@ class ConcreteTracer(TracerBase):
     A model tracer similar to _symbolic_trace.Tracer, but with concrete execution and real value so we can pass complecate conditions
     and go into correct brunches.
     """
-    
+
+    default_autowrap_modules = (
+        math,
+    )
     default_autowap_funcs = (
         # no necessary input for tensor, so __torch_function__ will not be called. need to be wrapped manually.
-        # todo: more needed to be tested.
+        # todo:
+        #   1. more needed to be tested.
+        #   2. some with no proxy input functions such as 'torch.rand' should also be traced.
         torch.arange,
         torch.meshgrid,
     )
     @compatibility(is_backward_compatible=True)
-    def __init__(self, autowrap_modules: Tuple[ModuleType] = (math,),
+    def __init__(self, autowrap_modules: Tuple[ModuleType] = default_autowrap_modules,
                  autowrap_functions: Tuple[Callable, ...] = default_autowap_funcs) -> None:
         """
         similar to _symbolic_trace.Tracer.__init__.
@@ -133,9 +140,9 @@ class ConcreteTracer(TracerBase):
             raise RuntimeError()
 
     @compatibility(is_backward_compatible=True)
-    def proxy(self, value: Any, node: Node) -> 'ep.ConcreteProxy':
+    def proxy(self, value: Any, node: Node) -> ep.ConcreteProxy:
         """
-        use custom 'proxy'.
+        overloaded to use custom 'proxy'.
         """
         return ep.ConcreteProxy(node, value, self)
 
@@ -166,7 +173,7 @@ class ConcreteTracer(TracerBase):
         return self.proxy(value_unwrapped, node)
 
     @compatibility(is_backward_compatible=True)
-    def create_arg(self, a: Any) -> 'Node':
+    def create_arg(self, a: Any) -> Node:
         """
         similar to _symbolic_trace.Tracer.create_arg
         move the base case to the top in case the wrapping of the function 'isinstance'
@@ -310,6 +317,8 @@ class ConcreteTracer(TracerBase):
         """
         for wrapping all the parameters of the function with dummy_input.
         in concrete tracer, we need all the parameters input by users.
+
+        todo: this function should be refactored after the same function in torch.fx be refactored.
         """
         # In some cases, a function or method has been decorated with a wrapper
         # defined via ``functools.wraps``. In this case, the outer code object
@@ -321,7 +330,7 @@ class ConcreteTracer(TracerBase):
             default_value_list = tuple()
         co = fn_for_analysis.__code__
         total_args = co.co_argcount + co.co_kwonlyargcount
-        orig_args = list(co.co_varnames)
+        # orig_args = list(co.co_varnames)
         names_iter = iter(co.co_varnames)
         args: List[Any] = []
         more_args = []
@@ -468,7 +477,7 @@ class ConcreteTracer(TracerBase):
                     {})
             else:
                 return _orig_bool(obj)
-        
+
         @functools.wraps(_orig_tuple)
         def tuple_wrapper(*args, **kwargs):
             if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
@@ -484,7 +493,7 @@ class ConcreteTracer(TracerBase):
                     _orig_list, args, kwargs)
             else:
                 return _orig_list(*args, **kwargs)
-                
+
         @functools.wraps(_orig_set)
         def set_wrapper(*args, **kwargs):
             if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
@@ -492,7 +501,7 @@ class ConcreteTracer(TracerBase):
                     _orig_set, args, kwargs)
             else:
                 return _orig_set(*args, **kwargs)
-                
+
         @functools.wraps(_orig_frozenset)
         def frozenset_wrapper(*args, **kwargs):
             if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
@@ -500,7 +509,7 @@ class ConcreteTracer(TracerBase):
                     _orig_frozenset, args, kwargs)
             else:
                 return _orig_frozenset(*args, **kwargs)
-                
+
         @functools.wraps(_orig_dict)
         def dict_wrapper(*args, **kwargs):
             if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
@@ -572,7 +581,7 @@ class ConcreteTracer(TracerBase):
                         clz_wappers.append(orig_type)
                 clz = (*clz_wappers, *(aclz for aclz in clz if aclz not in type_wrappers))
                 # use _orig_isinstance(clz, Iterable) will cause an endless recursive loop
-                for cls in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy):
+                for cls in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy, ep.ConcreteUnpackIterProxy):
                     if cls in clz and _orig_isinstance(instance, cls):
                         return True
                 if _orig_isinstance(instance, ep.ConcreteProxy):
@@ -582,7 +591,7 @@ class ConcreteTracer(TracerBase):
             else:
                 if clz in type_wrappers:
                     return _orig_isinstance(instance, type_wrappers[clz])
-                elif clz in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy):
+                elif clz in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy, ep.ConcreteUnpackIterProxy):
                     return _orig_isinstance(instance, clz)
                 elif _orig_isinstance(instance, ep.ConcreteProxy):
                     return _orig_isinstance(instance.value, clz)
@@ -724,7 +733,7 @@ class MagicMethodPatcher:
         'is_not': '{} is not {}',
         'contains': '{1} in {0}',
     }
-    
+
     def __enter__(self):
         fx_graph.magic_methods = self.magic_methods_new
 
