@@ -442,7 +442,6 @@ class ConcreteTracer(TracerBase):
 
         fn_globals = fn.__globals__  # run before it gets patched
         fn, args, more_args, kwargs = self.create_args_for_root(fn, isinstance(root, torch.nn.Module), concrete_args)
-        # print('args:', args)
         fn = self.op_patcher.patch(fn)
 
         parameter_proxy_cache: Dict[str, ep.ConcreteProxy] = {}  # Reduce number of get_attr calls
