@@ -228,6 +228,12 @@ class ModuleWrapper(torch.nn.Module):
         self.quantization_target_spaces: Dict[str, QuantizationTargetSpace] = self._create_target_spaces(quantization_target_settings, QuantizationTargetSpace)
         self.distillation_target_spaces: Dict[str, DistillationTargetSpace] = self._create_target_spaces(distillation_target_settings, DistillationTargetSpace)
 
+    def __getattr__(self, name: str) -> Union[Tensor, torch.Module]:
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return self.module.__getattr__(name)
+
     def _canonicalize_target_settings(self, sub_config: Dict[str, Any]) -> Dict[str, Dict]:
         target_names: List[str] = deepcopy(sub_config.get('target_names', []))
         settings: Dict[str, Dict] = deepcopy(sub_config.get('settings', {}))
@@ -374,5 +380,7 @@ class ModuleWrapper(torch.nn.Module):
         return outputs
 
 
-class ModelWrapper(ModuleWrapper):
-    
+class WrapperHandler:
+    def __init__(self, model: torch.nn.Module) -> None:
+        self.model = model
+        self.model.named_modules()
