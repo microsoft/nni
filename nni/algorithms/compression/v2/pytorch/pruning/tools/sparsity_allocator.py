@@ -242,7 +242,8 @@ class DependencyAwareAllocator(SparsityAllocator):
                         flatten_partial_mask = torch.zeros_like(flatten_partial_fused_metric).scatter(0, kept_indices, 1.0)
                         dependency_mask[_start: _end] = flatten_partial_mask.reshape_as(dependency_mask[_start: _end])
                     else:
-                        dependency_mask[_start: _end] = torch.ones_like(dependency_mask[_start: _end])
+                        # all zeros means this target will be whole masked, will break the model in most cases, maybe replace to identity layer here
+                        dependency_mask[_start: _end] = torch.zeros_like(dependency_mask[_start: _end])
 
                 # change the metric value corresponding to the public mask part to the minimum value
                 for module_name, targets_metric in sub_metrics.items():
