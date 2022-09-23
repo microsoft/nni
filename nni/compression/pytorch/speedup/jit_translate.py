@@ -492,7 +492,7 @@ def parse_aten_schema(schema: str):
                 index += 1
                 return tk
         return default_value
- 
+
     def next_expect_pass_value(tk: str) -> str:
         nonlocal index
         if tk in spec_tokens:
@@ -551,7 +551,7 @@ def parse_aten_schema(schema: str):
                     return '*'
                 else:
                     return next_expect_pass_value('string')
- 
+
             value = '('.join(parse_list('|', None, parse_inner))
             value += next_if_pass_value('!', '')
             if next_if('-') and next_if('>', 1):
