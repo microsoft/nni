@@ -405,11 +405,11 @@ def parse_aten_schema(schema: str):
     """
     if schema in schema_fix_dict:
         schema = schema_fix_dict[schema]
-        
+
     single_solid_tokens = [
         '(', ')', '[', ']',
         '+', '-', '!', '>',
-        '|', '=', ':', '.', ',', 
+        '|', '=', ':', '.', ',',
         '?', '*',
     ]
     # no '>=', '<=', '&', '/'
@@ -426,7 +426,7 @@ def parse_aten_schema(schema: str):
     # 1: in ('\'', '"'); 2: in num; 3: in str;
     status = 0
     status_esc_char = False
-    
+
     for char in schema:
         if status == 1:
             if status_esc_char:
@@ -466,33 +466,12 @@ def parse_aten_schema(schema: str):
             elif char not in ('\n', ' ', '\t'):
                 tokens.append(['unknown', char])
     assert status == 0
-    
+
     index = 0
-    def next_get() -> str:
-        nonlocal index
-        index += 1
-        return tokens[index - 1]
-
-    def next_get_value() -> str:
-        nonlocal index
-        index += 1
-        if isinstance(tokens[index - 1], list):
-            return tokens[index - 1][1]
-        else:
-            return tokens[index - 1]
-
     def next_pass(index_diff = 1) -> str:
         nonlocal index
         index += index_diff
         if index_diff == 1:
-            return tokens[index - 1]
-
-    def next_pass_value() -> str:
-        nonlocal index
-        index += 1
-        if isinstance(tokens[index - 1], list):
-            return tokens[index - 1][1]
-        else:
             return tokens[index - 1]
 
     def next_if(tk: str, index_diff=0) -> bool:
@@ -513,7 +492,7 @@ def parse_aten_schema(schema: str):
                 index += 1
                 return tk
         return default_value
-            
+ 
     def next_expect_pass_value(tk: str) -> str:
         nonlocal index
         if tk in spec_tokens:
@@ -530,14 +509,14 @@ def parse_aten_schema(schema: str):
     def parse_number():
         if next_if('+') or next_if('-'):
             value = next_pass() + next_expect_pass_value('numdigits')
-        elif (next := next_if_pass_value('numdigits')) is not None:
-            value = next
+        elif (get := next_if_pass_value('numdigits')) is not None:
+            value = get
         else:
             return None
         if next_if_pass_value('.') is not None:
             value += '.'
-            if (next := next_if_pass_value('numdigits')):
-                value += next
+            if (get := next_if_pass_value('numdigits')):
+                value += get
         if value[-1] == 'e' and next_if_pass_value('-') is not None:
             # only occur in versions < 1.9.0
             # 1e-10
@@ -553,13 +532,13 @@ def parse_aten_schema(schema: str):
         if next_if_pass_value('.') is not None:
             overload_name = next_expect_pass_value('string')
         return name, overload_name
-    
+
     def parse_list(sep, end, callback):
         ret = []
         if end is None or not next_if(end):
             ret.append(callback())
-            while (next := next_if_pass_value(sep)) is not None:
-                ret.append(next)
+            while (get := next_if_pass_value(sep)) is not None:
+                ret.append(get)
                 ret.append(callback())
         if end is not None:
             ret.append(next_expect_pass_value(end))
@@ -572,7 +551,7 @@ def parse_aten_schema(schema: str):
                     return '*'
                 else:
                     return next_expect_pass_value('string')
-            
+ 
             value = '('.join(parse_list('|', None, parse_inner))
             value += next_if_pass_value('!', '')
             if next_if('-') and next_if('>', 1):
@@ -582,7 +561,7 @@ def parse_aten_schema(schema: str):
             return value + next_expect_pass_value(')')
         else:
             return next_if_pass_value('!', '')
-    
+
     def parse_type():
         if next_if_pass_value('(') is not None:
             value = ''.join(parse_list(',', ')', parse_type))
@@ -590,8 +569,8 @@ def parse_aten_schema(schema: str):
             value = next_expect_pass_value('string')
             if value == '__torch__':
                 # only occur in versions < 1.9.0
-                while (next := next_if_pass_value('.')) is not None:
-                    value += next + next_expect_pass_value('string')
+                while (get := next_if_pass_value('.')) is not None:
+                    value += get + next_expect_pass_value('string')
             if next_if_pass_value('('):
                 the_types = ''.join(parse_list(',', ')', parse_type))
                 value += '(%s)' % the_types
@@ -615,13 +594,13 @@ def parse_aten_schema(schema: str):
     def parse_default_value():
         if next_if_pass_value('[') is not None:
             return parse_list(',', ']', parse_default_value)
-        elif (next := parse_number()) is not None:
-            return next
-        elif (next := next_if_pass_value('quoted')) is not None:
-            return next
+        elif (get := parse_number()) is not None:
+            return get
+        elif (get := next_if_pass_value('quoted')) is not None:
+            return get
         else:
             return next_expect_pass_value('string')
-        
+
     def parse_argument():
         the_type = parse_type()
         if next_if_pass_value('[') is not None:
@@ -633,7 +612,7 @@ def parse_aten_schema(schema: str):
         if next_if_pass_value('=') is not None:
             default_value = parse_default_value()
         return the_type, name, default_value
-    
+
     def parse_declaration():
         name, overload_name = parse_name()
         arguments = list()
@@ -655,7 +634,7 @@ def parse_aten_schema(schema: str):
                 arguments.append((parse_argument()[1], kwarg_only))
         parse_list(',', ')', parse_inner)
         return name, overload_name, arguments, is_vararg
-    
+
     positional_num = 0
     keyword_list = list()
     special_treat = dict() # for dtype and memory_format trans now
