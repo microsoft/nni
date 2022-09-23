@@ -14,7 +14,8 @@ try:
         PreTrainedModel,
         BartConfig,
         BertConfig,
-        T5Config
+        T5Config,
+        ViTConfig
     )
 except ImportError:
     TRANSFORMERS_INSTALLED = False
@@ -32,12 +33,15 @@ def parser_factory(model: Module) -> HuggingfaceModelParser | None:
         cls2parser = {
             BartConfig: HuggingfaceBartParser,
             BertConfig: HuggingfaceBertParser,
-            T5Config: HuggingfaceT5Parser
+            T5Config: HuggingfaceT5Parser,
+            ViTConfig: HuggingfaceViTParser
+
         }
         type2parser = {
             'bart': HuggingfaceBartParser,
             'bert': HuggingfaceBertParser,
-            't5': HuggingfaceT5Parser
+            't5': HuggingfaceT5Parser,
+            'vit': HuggingfaceViTParser
         }
 
         if hasattr(model, 'config_class'):
@@ -139,3 +143,12 @@ class HuggingfaceT5Parser(HuggingfaceModelParser):
     FFN1 = ('DenseReluDense.wi',)
     FFN2 = ('DenseReluDense.wo',)
     ATTENTION = ('SelfAttention', 'EncDecAttention')
+
+
+class HuggingfaceViTParser(HuggingfaceModelParser):
+    TRANSFORMER_PREFIX = r'vit\.encoder\.layer\.[0-9]+\.'
+    QKV = ('attention.attention.query', 'attention.attention.key', 'attention.attention.value')
+    QKVO = QKV + ('attention.output.dense',)
+    FFN1 = ('intermediate.dense',)
+    FFN2 = ('output.dense',)
+    ATTENTION = ('attention.attention',)
