@@ -135,6 +135,8 @@ class AutoMaskInference:
                     # this tensor, because our tensor scrambling is on the batch
                     # dimention. For example, if the tensor is a scalar(returned
                     # by the size operator), then we will skip this tensor
+                    if not tensor.is_contiguous():
+                        tensor = tensor.contiguous()
                     randomize_tensor(tensor, start, end)
             for para in self.weights:
                 randomize_tensor(self.weights[para].data, start, end)
