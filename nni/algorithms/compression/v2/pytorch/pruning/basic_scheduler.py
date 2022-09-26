@@ -15,7 +15,7 @@ from nni.algorithms.compression.v2.pytorch.base import Pruner, BasePruningSchedu
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 from .tools import TaskGenerator
-from ..utils import Evaluator, LightningEvaluator, TorchEvaluator
+from ..utils import Evaluator
 
 _logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ _LEGACY_EVALUATOR = Callable[[Module], float]
 
 # TODO: remove in nni v3.0.
 class EvaluatorBasedPruningScheduler(BasePruningScheduler):
-    evaluator: LightningEvaluator | TorchEvaluator
+    evaluator: Evaluator
     using_evaluator: bool
     finetuner: _LEGACY_FINETUNER
     _evaluator: _LEGACY_EVALUATOR
@@ -38,7 +38,7 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
         if (len(args) > 0 and isinstance(args[0], Evaluator)) or \
                 (len(args) == 0 and isinstance(kwargs.get('evaluator', None), Evaluator)):
             init_kwargs = self._parse_args(new_api, args, kwargs, new_init_kwargs)
-            self.evaluator: LightningEvaluator | TorchEvaluator = init_kwargs.pop('evaluator')
+            self.evaluator: Evaluator = init_kwargs.pop('evaluator')
             if not self.evaluator._initialization_complete:
                 self.evaluator._init_optimizer_helpers(model)  # type: ignore
             self.using_evaluator = True
@@ -62,12 +62,12 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
         for key, value in def_kwargs.items():
             if key not in merged_kwargs and key in arg_names:
                 merged_kwargs[key] = value
-        diff = set(arg_names).difference(merged_kwargs.keys())
-        if diff:
-            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
         diff = set(merged_kwargs.keys()).difference(arg_names)
         if diff:
             raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
+        diff = set(arg_names).difference(merged_kwargs.keys())
+        if diff:
+            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
         return merged_kwargs
 
 
@@ -96,7 +96,7 @@ class PruningScheduler(EvaluatorBasedPruningScheduler):
     """
 
     @overload
-    def __init__(self, pruner: Pruner, task_generator: TaskGenerator, evaluator: LightningEvaluator | TorchEvaluator,
+    def __init__(self, pruner: Pruner, task_generator: TaskGenerator, evaluator: Evaluator,
                  speedup: bool = False, reset_weight: bool = False):
         ...
 

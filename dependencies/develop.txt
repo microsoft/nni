@@ -6,7 +6,7 @@ ipython
 jupyter
 jupyterlab == 3.0.9
 nbsphinx
-pylint
+pylint < 2.15
 pyright == 1.1.250
 pytest
 pytest-cov

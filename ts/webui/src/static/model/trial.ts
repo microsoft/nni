@@ -184,7 +184,7 @@ class Trial {
         const duration = (endTime - this.info.startTime!) / 1000;
 
         return {
-            key: this.info.trialJobId,
+            _key: this.info.trialJobId,
             sequenceId: this.info.sequenceId,
             id: this.info.trialJobId,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -195,7 +195,7 @@ class Trial {
             message: this.info.message ?? '--',
             intermediateCount: this.intermediates.length,
             latestAccuracy: this.latestAccuracy,
-            formattedLatestAccuracy: this.formatLatestAccuracy()
+            _formattedLatestAccuracy: this.formatLatestAccuracy()
         };
     }
 

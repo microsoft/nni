@@ -7,6 +7,19 @@ System Research
 ---------------
 
 
+* `SparTA: Deep-Learning Model Sparsity via Tensor-with-Sparsity-Attribute <https://www.usenix.org/system/files/osdi22-zheng-ningxin.pdf>`__
+
+.. code-block:: bibtex
+
+   @inproceedings{zheng2022sparta,
+     title={$\{$SparTA$\}$:$\{$Deep-Learning$\}$ Model Sparsity via $\{$Tensor-with-Sparsity-Attribute$\}$},
+     author={Zheng, Ningxin and Lin, Bin and Zhang, Quanlu and Ma, Lingxiao and Yang, Yuqing and Yang, Fan and Wang, Yang and Yang, Mao and Zhou, Lidong},
+     booktitle={16th USENIX Symposium on Operating Systems Design and Implementation (OSDI 22)},
+     pages={213--232},
+     year={2022}
+   }
+
+
 * `Retiarii: A Deep Learning Exploratory-Training Framework <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__
 
 .. code-block:: bibtex
@@ -50,6 +63,19 @@ Algorithm Research
 
 New Algorithms
 ^^^^^^^^^^^^^^
+
+
+* `Privacy-preserving Online AutoML for Domain-Specific Face Detection <https://openaccess.thecvf.com/content/CVPR2022/papers/Yan_Privacy-Preserving_Online_AutoML_for_Domain-Specific_Face_Detection_CVPR_2022_paper.pdf>`__
+
+.. code-block:: bibtex
+
+   @inproceedings{yan2022privacy,
+     title={Privacy-preserving Online AutoML for Domain-Specific Face Detection},
+     author={Yan, Chenqian and Zhang, Yuge and Zhang, Quanlu and Yang, Yaming and Jiang, Xinyang and Yang, Yuqing and Wang, Baoyuan},
+     booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+     pages={4134--4144},
+     year={2022}
+   }
 
 
 * `TextNAS: A Neural Architecture Search Space Tailored for Text Representation <https://arxiv.org/pdf/1912.10729.pdf>`__

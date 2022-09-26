@@ -15,12 +15,12 @@ log_dir = Path(__file__).parent.parent / 'logs'
 
 
 def create_model(model_type: str):
-    torch_config_list = [{'op_types': ['Linear'], 'sparsity': 0.5},
-                         {'op_names': ['conv1', 'conv2', 'conv3'], 'sparsity': 0.5},
+    torch_config_list = [{'op_types': ['Linear'], 'sparsity': 0.75},
+                         {'op_names': ['conv1', 'conv2', 'conv3'], 'sparsity': 0.75},
                          {'op_names': ['fc2'], 'exclude': True}]
 
-    lightning_config_list = [{'op_types': ['Linear'], 'sparsity': 0.5},
-                             {'op_names': ['model.conv1', 'model.conv2', 'model.conv3'], 'sparsity': 0.5},
+    lightning_config_list = [{'op_types': ['Linear'], 'sparsity': 0.75},
+                             {'op_names': ['model.conv1', 'model.conv2', 'model.conv3'], 'sparsity': 0.75},
                              {'op_names': ['model.fc2'], 'exclude': True}]
 
     if model_type == 'lightning':

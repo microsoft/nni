@@ -10,8 +10,7 @@ import { BasicInfo } from './params/BasicInfo';
 import { ExpDuration } from './count/ExpDuration';
 import { ExpDurationContext } from './count/ExpDurationContext';
 import { TrialCount } from './count/TrialCount';
-import { Command1 } from './command/Command1';
-import { Command2 } from './command/Command2';
+import Config from './Config';
 import { TitleContext } from './TitleContext';
 import { itemStyleSucceed, entriesOption } from './overviewConst';
 import '@style/experiment/overview/overview.scss';
@@ -185,9 +184,8 @@ class Overview extends React.Component<{}, OverviewState> {
                                         />
                                     </div>
                                 </div>
-                                <Stack className='overviewCommand' horizontal>
-                                    <Command2 />
-                                    <Command1 />
+                                <Stack className='overviewCommand'>
+                                    <Config />
                                 </Stack>
                             </div>
                         </div>

@@ -4,6 +4,7 @@ schedules:
 - cron: 0 16 * * *
   branches:
     include: [ master ]
+  always: true
 
 resources:
   repositories:
@@ -39,7 +40,7 @@ stages:
     - script: |
         cd docs
         rstcheck -r source \
-          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs,youtube \
+          --ignore-directives automodule,autoclass,autofunction,cardlinkitem,codesnippetcard,argparse,tabs,youtube,image-sg \
           --ignore-roles githublink --ignore-substitutions release \
           --report-level warning
       displayName: rstcheck

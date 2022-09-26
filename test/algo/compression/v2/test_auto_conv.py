@@ -47,8 +47,8 @@ class TorchModel1(torch.nn.Module):
     """
     test for:
         add, sub, mul, div, exp, matmul,
-        relu, gelu, tanh, silu, sigmod, softmax,
-        size, unsqueeze, flatten, cat, slice, reshape, transpose, t, select, permute, constant_pad_nd,
+        relu, gelu, tanh, silu, sigmod, softmax, leaky_relu,
+        size, unsqueeze, flatten, cat, slice, reshape, transpose, t, select, permute, constant_pad_nd, split
         mean, avg_pool2d, max_pool2d, sum, adaptive_avg_pool2d,
         to, Int, view,
         type_as, expand_as, contiguous,
@@ -70,6 +70,12 @@ class TorchModel1(torch.nn.Module):
         self.asub = ASubModel()
 
     def forward(self, x: torch.Tensor):
+        y1 = torch.ones_like(x)
+        y2 = torch.rand_like(x)
+        y3 = torch.randn_like(x)
+        y4 = torch.zeros_like(x)
+        x = x - y1 + y2 + y3 + y4
+
         x = x.contiguous(memory_format=torch.channels_last)
         x = torch._C._nn.upsample_bilinear2d(x, (28, 28), False)
         x = torch._C._nn.upsample_nearest2d(x, (28, 28))
@@ -89,8 +95,9 @@ class TorchModel1(torch.nn.Module):
         x = self.conv1(x)
         y1 = self.pool1(F.relu(x))
         y2 = self.pool1(F.gelu(x))
+        y3 = self.pool1(F.leaky_relu(x))
 
-        x = y1 + y2
+        x = y1 + y2 + y3
 
         x = x + 0.00001
 
@@ -133,8 +140,9 @@ class TorchModel1(torch.nn.Module):
         x = x.type_as(x)
         x = x.expand_as(x)
         x = torch.matmul(x, x.t())
-        x = torch.cat([x, x], dim=1)
-        # x = self.cond(x)
+        x = torch.split(x, 1, dim=1)
+        x = torch.cat(x, dim=1)
+        # x = self.cond(x) # condition is not support now
         x = self.asub(x)
         x = torch.constant_pad_nd(x, (1,1,1,1), 3.14159)
 
@@ -159,7 +167,7 @@ class AutoConvTestCase(unittest.TestCase):
         assert 0.45 < real_sparsity_list[0]['total_sparsity'] < 0.75
 
         print('the shape of output of the infer:', model(dummy_input).shape)
-        assert model(dummy_input).shape == torch.Size((5, 8))
+        assert model(dummy_input).shape == torch.Size((5, 5))
 
 if __name__ == '__main__':
     unittest.main()

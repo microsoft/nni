@@ -83,7 +83,7 @@ def _foo(model_cls):
 def _reset():
     # this is to not affect other tests in sdk
     nni.trial._intermediate_seq = 0
-    nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
+    nni.trial._params = {'foo': 'bar', 'parameter_id': 0, 'parameters': {}}
     nni.runtime.platform.test._last_metric = None
 
 
@@ -105,7 +105,6 @@ def test_mnist():
 @pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 def test_diabetes():
     _reset()
-    nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
     nni.runtime.platform.test._last_metric = None
     train_dataset = DiabetesDataset(train=True)
     test_dataset = DiabetesDataset(train=False)

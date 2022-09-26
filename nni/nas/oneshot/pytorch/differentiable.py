@@ -33,6 +33,12 @@ class DartsLightningModule(BaseOneShotLightningModule):
     The current implementation corresponds to DARTS (1st order) in paper.
     Second order (unrolled 2nd-order derivatives) is not supported yet.
 
+    .. note::
+
+       DARTS is running a weighted sum of possible architectures under the hood.
+       Please bear in mind that it will be slower and consume more memory that training a single architecture.
+       The common practice is to down-scale the network (e.g., smaller depth / width) for speedup.
+
     .. versionadded:: 2.8
 
        Supports searching for ValueChoices on operations, with the technique described in
@@ -214,6 +220,12 @@ class GumbelDartsLightningModule(DartsLightningModule):
     * :class:`nni.retiarii.nn.pytorch.Repeat`.
     * :class:`nni.retiarii.nn.pytorch.Cell`.
     * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
+
+    .. note::
+
+       GumbelDARTS is running a weighted sum of possible architectures under the hood.
+       Please bear in mind that it will be slower and consume more memory that training a single architecture.
+       The common practice is to down-scale the network (e.g., smaller depth / width) for speedup.
 
     {{module_notes}}
 
