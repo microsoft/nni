@@ -53,7 +53,7 @@ Coarse-grained pruning or structured pruning is pruning a regular group of weigh
 
 Only :ref:`level-pruner` and :ref:`admm-pruner` support fine-grained pruning, all other pruners do some kind of structured pruning on weights.
 
-.. _dependency-awareode-for-output-channel-pruning:
+.. _dependency-aware-mode-for-output-channel-pruning:
 
 Dependency-aware Mode for Output Channel Pruning
 ------------------------------------------------
