@@ -101,6 +101,14 @@ class PruningTargetSpace(TargetSpace):
         assert _method in ['mul', 'add']
         return _method
 
+    @property
+    def sparsity_ratio(self) -> float | None:
+        return self.setting.get('sparsity_ratio', None)
+
+    @property
+    def sparsity_threshold(self) -> float | None:
+        return self.setting.get('sparsity_threshold', None)
+
 
 class QuantizationTargetSpace(TargetSpace):
     def __init__(self, wrapper: ModuleWrapper, target_name: str, target_type: TargetType, setting: Dict[str, Any] | None = None):
@@ -208,31 +216,44 @@ class DistillationTargetSpace(TargetSpace):
 
 
 class ModuleWrapper(torch.nn.Module):
-    def __init__(self, module: torch.nn.Module, module_name: str, config: Dict[str, Any]):
+    def __init__(self, module: torch.nn.Module, module_name: str, config: Dict[str, Any] | None = None):
         super().__init__()
+
         # origin layer information
-        self.module = module
+        assert isinstance(module, torch.nn.Module)
+        self.module: torch.nn.Module
+        object.__setattr__(self, 'module', module)
+        self.module_forward = self.module.forward
         self.name = module_name
-        # config information
-        self.config = config
 
         # the arguments' name of self.module.forward
         self._input_args_names = inspect.getfullargspec(self.module.forward).args[1:]
 
         # create target spaces
-        pruning_target_settings = self._canonicalize_target_settings(self.config.get('pruning', {}))
-        quantization_target_settings = self._canonicalize_target_settings(self.config.get('quantization', {}))
-        distillation_target_settings = self._canonicalize_target_settings(self.config.get('distillation', {}))
+        pruning_target_settings = self._canonicalize_target_settings(config.get('pruning', {}))
+        quantization_target_settings = self._canonicalize_target_settings(config.get('quantization', {}))
+        distillation_target_settings = self._canonicalize_target_settings(config.get('distillation', {}))
 
         self.pruning_target_spaces: Dict[str, PruningTargetSpace] = self._create_target_spaces(pruning_target_settings, PruningTargetSpace)
         self.quantization_target_spaces: Dict[str, QuantizationTargetSpace] = self._create_target_spaces(quantization_target_settings, QuantizationTargetSpace)
         self.distillation_target_spaces: Dict[str, DistillationTargetSpace] = self._create_target_spaces(distillation_target_settings, DistillationTargetSpace)
 
-    def __getattr__(self, name: str) -> Union[Tensor, torch.Module]:
-        try:
-            return super().__getattr__(name)
-        except AttributeError:
-            return self.module.__getattr__(name)
+    def wrap(self):
+        setattr(self.module, '_nni_wrapper', self)
+        self.module.forward = self.forward
+
+    def unwrap(self):
+        self.module.forward = self.module_forward
+        delattr(self.module, '_nni_wrapper')
+
+    def extend_pruning_spaces(self, subconfig: Dict[str, Any]):
+        self._extend_target_spaces(subconfig, self.pruning_target_spaces, PruningTargetSpace)
+
+    def extend_quantization_spaces(self, subconfig: Dict[str, Any]):
+        self._extend_target_spaces(subconfig, self.quantization_target_spaces, QuantizationTargetSpace)
+
+    def extend_distillation_spaces(self, subconfig: Dict[str, Any]):
+        self._extend_target_spaces(subconfig, self.distillation_target_spaces, DistillationTargetSpace)
 
     def _canonicalize_target_settings(self, sub_config: Dict[str, Any]) -> Dict[str, Dict]:
         target_names: List[str] = deepcopy(sub_config.get('target_names', []))
@@ -267,6 +288,15 @@ class ModuleWrapper(torch.nn.Module):
             target_spaces[target_name] = target_space
         return target_spaces
 
+    def _extend_target_spaces(self, subconfig: Dict[str, Any], target_spaces: Dict[str, TargetSpace], target_space_cls: Type[TargetSpace]):
+        # This is an in-place function.
+        settings = self._canonicalize_target_settings(subconfig)
+        inter_sec = set(target_spaces.keys()).intersection(settings.keys())
+        for name in inter_sec:
+            print(f'{name} have already configured, the new config will be ignored.')
+            settings.pop(name)
+        target_spaces.update(self._create_target_spaces(settings, target_space_cls))
+
     def _transfer_input_name(self, input_name_or_idx: str | int, contx2idx: bool = True) -> str | int:
         if contx2idx:
             if isinstance(input_name_or_idx, int) or input_name_or_idx.isdigit():
@@ -288,9 +318,9 @@ class ModuleWrapper(torch.nn.Module):
 
     def _apply_mask_helper(self, target: Tensor, target_space: PruningTargetSpace) -> Tensor:
         if target_space.mask is not None:
-            if target_space.apply_method is 'mul':
+            if target_space.apply_method == 'mul':
                 return torch.mul(target, target_space.mask)
-            elif target_space.apply_method is 'add':
+            elif target_space.apply_method == 'add':
                 trans_mask = torch.where(target_space.mask == 1, torch.zeros_like(target_space.mask), SMALL_MASK_VALUE)
                 return torch.add(target, trans_mask)
             else:
@@ -300,7 +330,7 @@ class ModuleWrapper(torch.nn.Module):
 
     def _apply_quant_helper(self, target: Tensor, target_space: QuantizationTargetSpace) -> Tensor:
         if target_space.scale is not None and target_space.zero_point is not None:
-            if target_space.apply_method is 'clamp_round':
+            if target_space.apply_method == 'clamp_round':
                 transformed_target = target_space.zero_point + target / target_space.scale
                 quantized_target = torch.round(torch.clamp(transformed_target, target_space.qmin, target_space.qmax))
                 dequantized_target = (quantized_target - target_space.zero_point) * target_space.scale
@@ -348,13 +378,12 @@ class ModuleWrapper(torch.nn.Module):
     def patch_outputs(self, outputs: OUTPUT_FORMAT) -> OUTPUT_FORMAT:
         if isinstance(outputs, Tensor):
             target_name = f'{OUTPUT_PREFIX}_0'
-            outputs = self.patch_helper(target_name, outputs)
+            new_outputs = self.patch_helper(target_name, outputs)
         elif isinstance(outputs, (list, tuple)):
             new_outputs = []
             for idx, target in enumerate(outputs):
                 target_name = f'{OUTPUT_PREFIX}_{idx}'
                 new_outputs.append(self.patch_helper(target_name, target))
-            return new_outputs
         elif isinstance(outputs, dict):
             new_outputs = {}
             for output_name, target in outputs.items():
@@ -362,6 +391,7 @@ class ModuleWrapper(torch.nn.Module):
                 new_outputs[output_name] = self.patch_helper(target_name, target)
         else:
             raise TypeError(f'Only support return Tensor/list/dict, but got {type(outputs)}')
+        return new_outputs
 
     def forward(self, *args, **kwargs):
         inputs = self.patch_inputs(*args, **kwargs)
@@ -375,12 +405,6 @@ class ModuleWrapper(torch.nn.Module):
             module_param: Tensor = getattr(self.module, target_name)
             module_param.copy_(wrapper_param)
 
-        outputs = self.module(**inputs)
+        outputs = self.module_forward(**inputs)
         outputs = self.patch_outputs(outputs)
         return outputs
-
-
-class WrapperHandler:
-    def __init__(self, model: torch.nn.Module) -> None:
-        self.model = model
-        self.model.named_modules()
