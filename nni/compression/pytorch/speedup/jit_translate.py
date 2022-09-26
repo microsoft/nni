@@ -50,45 +50,45 @@ def check_implicit_tensor_to_num(t: torch.Tensor, to_int: bool):
 
 def prim_op_eval_tensor_to_num(node: torch.Node, speedup: ModelSpeedup):
     assert (node.inputsSize() == 1) & (node.outputsSize() == 1)
-    
+
     # recursive eval
     prim_op_eval(node.input().node(), speedup)
-        
+
     # execute
     output = speedup.internal_result[node.input().debugName()].item()
     speedup.internal_result[node.output().debugName()] = output
-    
+
 def prim_op_eval_num_to_tensor(node: torch.Node, speedup: ModelSpeedup):
     assert (node.inputsSize() == 1) & (node.outputsSize() == 1)
-    
+
     # recursive eval
     prim_op_eval(node.input().node(), speedup)
-    
+
     # execute
     output = torch.tensor(speedup.internal_result[node.input().debugName()])
     speedup.internal_result[node.output().debugName()] = output
-    
+
 def prim_op_eval_unpack(node: torch.Node, speedup: ModelSpeedup):
     assert node.inputsSize() == 1
-    
+
     # recursive eval
     if 'prim::' in node.input().node().kind():
         prim_op_eval(node.input().node(), speedup)
-        
+
     # execute
     output_list = list(node.outputs())
     assert len(speedup.internal_result[node.input().debugName()]) == len(output_list)
     for value, out_node in zip(speedup.internal_result[node.input().debugName()], output_list):
         speedup.internal_result[out_node.debugName()] = value
-    
+
 def prim_op_eval_pack(node: torch.Node, speedup: ModelSpeedup):
     assert node.outputsSize() == 1
-    
+
     # recursive eval
     for _i in list(node.inputs()):
         if 'prim::' in _i.node().kind():
             prim_op_eval(_i.node(), speedup)
-            
+
     # execute
     output = list()
     for _i in list(node.inputs())[::]:
@@ -96,23 +96,23 @@ def prim_op_eval_pack(node: torch.Node, speedup: ModelSpeedup):
     if node.kind() == 'prim::TupleConstruct':
         output = tuple(output)
     speedup.internal_result[node.output().debugName()] = output
-        
+
 def prim_op_eval_constant(node: torch.Node, speedup: ModelSpeedup):
     # assert node.outputsSize() == 1
     assert (node.inputsSize() == 0) & (node.outputsSize() == 1)
-    
+
     speedup.internal_result[node.output().debugName()] = node.output().toIValue()
-        
+
 def prim_op_eval_getattr(node: torch.Node, speedup: ModelSpeedup):
     assert (node.inputsSize() == 1) & (node.outputsSize() == 1)
-    
+
     # recursive eval
     if 'prim::' in node.input().node().kind():
         prim_op_eval(node.input().node(), speedup)
-        
+
     # execute
     attr_name = node['name']
-    output = getattr(speedup.internal_result[_i.debugName()], attr_name)
+    output = getattr(speedup.internal_result[node.input().debugName()], attr_name)
     speedup.internal_result[node.output().debugName()] = output
 
 eval_table = {
@@ -126,19 +126,19 @@ eval_table = {
     'prim::Constant': prim_op_eval_constant,
     'prim::GetAttr': prim_op_eval_getattr,
 }
-    
+
 def prim_op_eval(node: torch.Node, speedup: ModelSpeedup):
     """
     Recursively execute the prim op
     """
-            
+
     kind = node.kind()
     if kind in eval_table:
         # avoid replicated execution
         if node not in speedup.executed_prim_nodes:
             speedup.executed_prim_nodes.add(node)
             eval_table[kind](node, speedup)
-    
+
 def translate_list(list_node: torch._C.Value, speedup: ModelSpeedup=None) -> List:
     """
     Get the list of values from the list construct node.
@@ -282,11 +282,11 @@ class ItemImplicit(torch.nn.Module):
     def forward(self, t: torch.Tensor):
         check_implicit_tensor_to_num(t, self.to_int)
         return t.item()
-    
+
 def item_implicit_python(to_int: bool, node: NodePyGroup, speedup: ModelSpeedup):
     for sub_node in node.node_cpps[1:]:
         prim_op_eval(sub_node, speedup)
-        
+
     c_node = node.key_node
     positional_num = 1
     keyword_list = []
@@ -552,7 +552,7 @@ def parse_input_value(speedup: ModelSpeedup, input_nodes: List[torch._C.Node], p
             arg = None
         else:
             arg = speedup.internal_result[ainput.debugName()]
-            
+
         if len(positional) < positional_num:
             positional.append(arg)
         else:
@@ -595,7 +595,7 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
     """
     for sub_node in node.node_cpps[1:]:
         prim_op_eval(sub_node, speedup)
-        
+
     c_node = node.key_node
 
     schema = c_node.schema()
@@ -615,12 +615,12 @@ trans_func_dict = {
     'aten::Bool': partial(generate_aten_to_python, torch._C._TensorBase.bool),
     'aten::Float': partial(generate_aten_to_python, torch._C._TensorBase.float),
     'aten::Complex': complex_python,
-    
+
     'aten::IntImplicit': partial(item_implicit_python, True),
     'aten::ComplexImplicit': partial(item_implicit_python, False),
     'aten::FloatImplicit': partial(item_implicit_python, False),
     'aten::ScalarImplicit': partial(item_implicit_python, False),
-    
+
     'prim::TupleUnpack': tupleunpack_python,
     'prim::ListUnpack': tupleunpack_python,
     'prim::NumToTensor': num2tensor_python,
