@@ -56,7 +56,7 @@ def rand_like_with_shape(shape, ori_t):
     higher_bound = torch.max(ori_t)
 
     if dtype in [torch.uint8, torch.int16, torch.short, torch.int16, torch.long, torch.bool]:
-        return torch.randint(lower_bound, higher_bound+1, shape, dtype=dtype, device=device)
+        return torch.randint(lower_bound.long(), higher_bound.long() + 1, shape, dtype=dtype, device=device)
     else:
         return torch.rand(shape, dtype=dtype, device=device, requires_grad=require_grad)
 
