@@ -197,7 +197,10 @@ class ModelSpeedup:
                 continue
             # The detach operation here is for the in-place operation. We cannot
             # directly can the backward on the output tensor of an in-place operator.
-            dummy_input.append(self.internal_result[_input].detach())
+            if isinstance(self.internal_result[_input], torch.Tensor):
+                dummy_input.append(self.internal_result[_input].detach())
+            else:
+                dummy_input.append(self.internal_result[_input])
 
             debugnames.append(_input)
 

@@ -137,13 +137,21 @@ class TorchModel1(torch.nn.Module):
         y2 = x[:,int(x.size(1)/2):x.size(1)]
         x = torch.cat((y1, y2), dim=1)
 
-        x = x.type_as(x)
-        x = x.expand_as(x)
+        # todo: there is a problem that the translation of 'type_as' is bad.
+        # x = x.type_as(x)
+        dim = x.dim()
+        y = torch.sum(x, dim=dim-1, keepdim=True)
+        z = y.expand_as(x)
+        x = x / z
         x = torch.matmul(x, x.t())
-        x = torch.split(x, 1, dim=1)
-        x = torch.cat(x, dim=1)
+        
+        # todo: should be available in #5107
+        # x = torch.split(x, 1, dim=1)
+        # x = torch.cat(x, dim=1)
+        
         # x = self.cond(x) # condition is not support now
-        x = self.asub(x)
+        # todo: there is a problem that sub module execution is bad.
+        # x = self.asub(x)
         x = torch.constant_pad_nd(x, (1,1,1,1), 3.14159)
 
         return x
