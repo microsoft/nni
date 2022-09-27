@@ -67,9 +67,9 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         const selectedColumns = allColumns.map(column => column.key).filter(key => currentSelected.includes(key));
         onSelectedChange(selectedColumns);
         if (whichComponent === 'table') {
-            localStorage.setItem('columns', JSON.stringify(selectedColumns));
+            sessionStorage.setItem('columns', JSON.stringify(selectedColumns));
         } else {
-            localStorage.setItem('paraColumns', JSON.stringify(selectedColumns));
+            sessionStorage.setItem('paraColumns', JSON.stringify(selectedColumns));
         }
         this.hideDialog();
     };
