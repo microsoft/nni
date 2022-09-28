@@ -12,7 +12,7 @@ import builtins
 
 from itertools import chain
 from types import FunctionType, MethodType, ModuleType
-from typing import Any, Dict, Optional, Set, Tuple, Type, List, Callable, Union
+from typing import Any, Dict, Iterable, Iterator, Optional, Set, Tuple, Type, List, Callable, Union
 
 import torch
 from torch._C import ScriptObject
@@ -349,12 +349,16 @@ class ConcreteTracer(TracerBase):
             nonlocal cnt
             cnt += 1
 
+            default_arg = ()
+            if name in default_args:
+                default_arg = (default_args[name],)
+                
             if name in concrete_args:
                 self.placeholder_dict[f'{name}_{str(cnt)}'] = concrete_args[name]
             else:
                 assert name in default_args
                 self.placeholder_dict[f'{name}_{str(cnt)}'] = default_args[name]
-            return self.create_proxy('placeholder', f'{name}_{str(cnt)}', (), {})
+            return self.create_proxy('placeholder', f'{name}_{str(cnt)}', default_arg, {})
         arg_names = [next(names_iter) for idx in range(skip_arg_idx, total_args)]
         diff_len = len(arg_names) - len(default_value_list)
         default_args = {arg_names[idx + diff_len]: default_value_list[idx] for idx in range(len(default_value_list))}
@@ -479,40 +483,98 @@ class ConcreteTracer(TracerBase):
 
         @functools.wraps(_orig_tuple)
         def tuple_wrapper(*args, **kwargs):
-            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
-                return args[0].tracer.create_proxy('call_function',
+            tracers = set()
+            if _orig_len(args) != 0:
+                if isinstance(args[0], ep.ConcreteProxy):
+                    tracers.add(args[0].tracer)
+                if isinstance(args[0], Iterator):
+                    args = (_orig_tuple(args[0]), *args[1:])
+                if isinstance(args[0], Iterable):
+                    for item in args[0]:
+                        if isinstance(item, ep.ConcreteProxy):
+                            tracers.add(item.tracer)
+            if len(tracers) > 1:
+                raise Exception('more than 1 tracer detected. please report the issue')
+            elif len(tracers) == 1:
+                return next(iter(tracers)).create_proxy('call_function',
                     _orig_tuple, args, kwargs)
             else:
                 return _orig_tuple(*args, **kwargs)
 
         @functools.wraps(_orig_list)
         def list_wrapper(*args, **kwargs):
-            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
-                return args[0].tracer.create_proxy('call_function',
+            tracers = _orig_set()
+            if _orig_len(args) != 0:
+                if isinstance(args[0], ep.ConcreteProxy):
+                    tracers.add(args[0].tracer)
+                if isinstance(args[0], Iterator):
+                    args = (_orig_tuple(args[0]), *args[1:])
+                if isinstance(args[0], Iterable):
+                    for item in args[0]:
+                        if isinstance(item, ep.ConcreteProxy):
+                            tracers.add(item.tracer)
+            if len(tracers) > 1:
+                raise Exception('more than 1 tracer detected. please report the issue')
+            elif len(tracers) == 1:
+                return next(iter(tracers)).create_proxy('call_function',
                     _orig_list, args, kwargs)
             else:
                 return _orig_list(*args, **kwargs)
 
         @functools.wraps(_orig_set)
         def set_wrapper(*args, **kwargs):
-            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
-                return args[0].tracer.create_proxy('call_function',
+            tracers = _orig_set()
+            if _orig_len(args) != 0:
+                if isinstance(args[0], ep.ConcreteProxy):
+                    tracers.add(args[0].tracer)
+                if isinstance(args[0], Iterator):
+                    args = (_orig_tuple(args[0]), *args[1:])
+                if isinstance(args[0], Iterable):
+                    for item in args[0]:
+                        if isinstance(item, ep.ConcreteProxy):
+                            tracers.add(item.tracer)
+            if len(tracers) > 1:
+                raise Exception('more than 1 tracer detected. please report the issue')
+            elif len(tracers) == 1:
+                return next(iter(tracers)).create_proxy('call_function',
                     _orig_set, args, kwargs)
             else:
                 return _orig_set(*args, **kwargs)
 
         @functools.wraps(_orig_frozenset)
         def frozenset_wrapper(*args, **kwargs):
-            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
-                return args[0].tracer.create_proxy('call_function',
+            tracers = _orig_set()
+            if _orig_len(args) != 0:
+                if isinstance(args[0], ep.ConcreteProxy):
+                    tracers.add(args[0].tracer)
+                if isinstance(args[0], Iterator):
+                    args = (_orig_tuple(args[0]), *args[1:])
+                if isinstance(args[0], Iterable):
+                    for item in args[0]:
+                        if isinstance(item, ep.ConcreteProxy):
+                            tracers.add(item.tracer)
+            if len(tracers) > 1:
+                raise Exception('more than 1 tracer detected. please report the issue')
+            elif len(tracers) == 1:
+                return next(iter(tracers)).create_proxy('call_function',
                     _orig_frozenset, args, kwargs)
             else:
                 return _orig_frozenset(*args, **kwargs)
 
         @functools.wraps(_orig_dict)
         def dict_wrapper(*args, **kwargs):
-            if _orig_len(args) != 0 and isinstance(args[0], ep.ConcreteProxy):
-                return args[0].tracer.create_proxy('call_function',
+            tracers = _orig_set()
+            if _orig_len(args) != 0:
+                if isinstance(args[0], ep.ConcreteProxy):
+                    tracers.add(args[0].tracer)
+                elif isinstance(args[0], dict):
+                    for item in _orig_tuple(args[0].values()):
+                        if isinstance(item, ep.ConcreteProxy):
+                            tracers.add(item.tracer)
+            if len(tracers) > 1:
+                raise Exception('more than 1 tracer detected. please report the issue')
+            elif len(tracers) == 1:
+                return next(iter(tracers)).create_proxy('call_function',
                     _orig_dict, args, kwargs)
             else:
                 return _orig_dict(*args, **kwargs)
