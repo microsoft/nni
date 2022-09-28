@@ -47,7 +47,7 @@ class RegularizedEvolution(BaseStrategy):
     mutation_prob : float
         Probability that mutation happens in each dim. Default: 0.05
     dedup : bool
-        Do not try the same configuration twice. When variational is true, deduplication is not supported. Default: true.
+        Do not try the same configuration twice. Default: true.
     dedup_retries : int
         If dedup is true, retry the same configuration up to dedup_retries times. Default: 500.
     on_failure : str
