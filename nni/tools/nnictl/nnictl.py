@@ -115,6 +115,11 @@ that is, either a number or a dict with a key named ``default``.
 For your customized tuner/advisor, the file could have any json content depending on
 how you implement the corresponding methods (e.g., ``import_data``).
 
+.. note::
+
+    You can't see import data on the web portal when you import data to the experiment. Because currently the import data
+    only has the metric and hyper-parameters. But the data in the web portal is a integral trial.
+    
 You also can use `nnictl experiment export <#nnictl-experiment-export>`__ to export a valid json file
 including previous experiment trial hyperparameters and results.
 
