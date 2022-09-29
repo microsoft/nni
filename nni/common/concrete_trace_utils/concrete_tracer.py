@@ -34,6 +34,7 @@ HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
 _orig_module_call: Callable = torch.nn.Module.__call__
 _orig_module_getattr: Callable = torch.nn.Module.__getattr__
 _orig_isinstance: Callable = builtins.isinstance
+_orig_range: Type[Any] = builtins.range
 _orig_bool: Type[Any] = builtins.bool
 _orig_tuple: Type[Any] = builtins.tuple
 _orig_list: Type[Any] = builtins.list
@@ -472,6 +473,20 @@ class ConcreteTracer(TracerBase):
                                 self._autowrap_function_ids)
                 return self._module_call(mod, forward, args, kwargs)
 
+        @functools.wraps(_orig_range)
+        def range_wrapper(*args, **kwargs):
+            tracers = set()
+            for item in (*args, *kwargs.values()):
+                if isinstance(item, ep.ConcreteProxy):
+                    tracers.add(item.tracer)
+            if len(tracers) > 1:
+                raise Exception('more than 1 tracer detected. please report the issue')
+            elif len(tracers) == 1:
+                return next(iter(tracers)).create_proxy('call_function',
+                    _orig_range, args, kwargs)
+            else:
+                return _orig_range(*args, **kwargs)
+
         @functools.wraps(_orig_bool)
         def bool_wrapper(obj):
             if isinstance(obj, ep.ConcreteProxy):
@@ -650,14 +665,13 @@ class ConcreteTracer(TracerBase):
                 else:
                     return _orig_isinstance(instance, clz)
             else:
+                if clz in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy, ep.ConcreteUnpackIterProxy):
+                    return _orig_isinstance(instance, clz)
                 if clz in type_wrappers:
-                    return _orig_isinstance(instance, type_wrappers[clz])
-                elif clz in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy, ep.ConcreteUnpackIterProxy):
-                    return _orig_isinstance(instance, clz)
-                elif _orig_isinstance(instance, ep.ConcreteProxy):
-                    return _orig_isinstance(instance.value, clz)
-                else:
-                    return _orig_isinstance(instance, clz)
+                    clz = type_wrappers[clz]
+                if _orig_isinstance(instance, ep.ConcreteProxy):
+                    instance = instance.value
+                return _orig_isinstance(instance, clz)
 
         # for passing the tracing of leaf modules
         self.temp_disable_call = False
@@ -667,6 +681,7 @@ class ConcreteTracer(TracerBase):
             self.patcher.patch_method(torch.nn.Module, "__getattr__", module_getattr_wrapper, deduplicate=False)
             self.patcher.patch_method(torch.nn.Module, "__call__", module_call_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "isinstance", isinstance_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "range", range_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "bool", bool_wrapper, deduplicate=False)
             # self.patcher.patch_method(builtins, "slice", slice_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "tuple", tuple_wrapper, deduplicate=False)
