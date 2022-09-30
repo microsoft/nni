@@ -33,6 +33,7 @@ HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
 # These need to run in global scope to handle nested calls correctly
 _orig_module_call: Callable = torch.nn.Module.__call__
 _orig_module_getattr: Callable = torch.nn.Module.__getattr__
+_orig_agfunc_apply: Callable = torch.autograd.Function.apply
 _orig_isinstance: Callable = builtins.isinstance
 _orig_range: Type[Any] = builtins.range
 _orig_bool: Type[Any] = builtins.bool
@@ -41,11 +42,13 @@ _orig_list: Type[Any] = builtins.list
 _orig_set: Type[Any] = builtins.set
 _orig_frozenset: Type[Any] = builtins.frozenset
 _orig_dict: Type[Any] = builtins.dict
+
 _orig_len: Callable = builtins.len
 _orig_not: Callable = operator.not_
 _orig_is: Callable = operator.is_
 _orig_is_not: Callable = operator.is_not
 _orig_contains: Callable = operator.contains
+_orig_index: Callable = operator.index
 
 
 @compatibility(is_backward_compatible=True)
@@ -65,6 +68,7 @@ class ConcreteTracer(TracerBase):
         #   2. some with no proxy input functions such as 'torch.rand' should also be traced.
         torch.arange,
         torch.meshgrid,
+        operator.index,
     )
     @compatibility(is_backward_compatible=True)
     def __init__(self, autowrap_modules: Tuple[ModuleType] = default_autowrap_modules,
@@ -241,6 +245,9 @@ class ConcreteTracer(TracerBase):
 
             return self.create_node('get_attr', qualname, (), {})
 
+        if isinstance(a, (torch.autograd.function.Function, torch.autograd.function.FunctionMeta)):
+            return a
+            
         return super().create_arg(a)
 
     @compatibility(is_backward_compatible=True)
@@ -271,14 +278,15 @@ class ConcreteTracer(TracerBase):
             raise NameError('module is not installed as a submodule')
 
     @compatibility(is_backward_compatible=True)
-    def _module_call(self, m: torch.nn.Module, forward: Callable[..., Any], args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> Any:
+    def _module_call(self, m: torch.nn.Module, args: Tuple[Any, ...], kwargs: Dict[str, Any]) -> Any:
         """
         similar to _symbolic_trace.Tracer.call_module
         """
         module_qualified_name = self.path_of_module(m)
         if not self.is_leaf_module(m, module_qualified_name):
-            return forward(*args, **kwargs)
+            return _orig_module_call(m, *args, **kwargs)
         else:
+            # see as a leaf module, so temporarily disable the trace
             # disable patches
             temp_disable_call = self.temp_disable_call
             self.temp_disable_call = True
@@ -463,15 +471,44 @@ class ConcreteTracer(TracerBase):
 
         @functools.wraps(_orig_module_call)
         def module_call_wrapper(mod, *args, **kwargs):
-            def forward(*args, **kwargs):
-                return _orig_module_call(mod, *args, **kwargs)
-
             if self.temp_disable_call:
                 return _orig_module_call(mod, *args, **kwargs)
             else:
                 _autowrap_check(self.patcher, getattr(getattr(mod, "forward", mod), "__globals__", {}),
                                 self._autowrap_function_ids)
-                return self._module_call(mod, forward, args, kwargs)
+                return self._module_call(mod, args, kwargs)
+
+        class AGFuncWrapper(torch.autograd.Function):
+            @staticmethod
+            def forward(ctx, clz, *args, **kwargs):
+                return clz.forward(ctx, *args, **kwargs)
+            @staticmethod
+            def backward(ctx, clz, *args, **kwargs):
+                return clz.backward(ctx, *args, **kwargs)
+            @staticmethod
+            def jvp(ctx, clz, *args, **kwargs):
+                return clz.jvp(ctx, *args, **kwargs)
+            @staticmethod
+            def vjp(ctx, clz, *args, **kwargs):
+                return clz.vjp(ctx, *args, **kwargs)
+        _orig_agfunc_wapper_apply = AGFuncWrapper.apply
+        
+        @classmethod
+        @functools.wraps(_orig_agfunc_apply)
+        def agfunc_apply_wrapper(clz, *args, **kwargs):
+            if self.temp_disable_agfunc_apply:
+                # return _orig_agfunc_apply(clz, *args, **kwargs)
+                # clzmethod = torch.autograd.Function.__dict__['apply'].__get__(None, clz)
+                # return clzmethod(*args, **kwargs)
+                # func = torch.autograd.Function.__dict__['apply'].__func__
+                # return func(clz, *args, **kwargs)
+                return _orig_agfunc_wapper_apply(clz, *args, **kwargs)
+            else:
+                temp_disable_agfunc_apply = self.temp_disable_agfunc_apply
+                self.temp_disable_agfunc_apply = True
+                ret = self.create_proxy('call_method', 'apply', (clz, *args), kwargs)
+                self.temp_disable_agfunc_apply = temp_disable_agfunc_apply
+                return ret
 
         @functools.wraps(_orig_range)
         def range_wrapper(*args, **kwargs):
@@ -640,6 +677,15 @@ class ConcreteTracer(TracerBase):
             else:
                 return _orig_contains(obj_a, obj_b)
 
+        @functools.wraps(_orig_index)
+        def index_wrapper(obj):
+            if isinstance(obj, ep.ConcreteProxy):
+                return obj.tracer.create_proxy('call_function',
+                    _orig_index, (obj,),
+                    {})
+            else:
+                return _orig_index(obj)
+
         @functools.wraps(_orig_isinstance)
         def isinstance_wrapper(instance, clz):
             type_wrappers = {
@@ -676,10 +722,13 @@ class ConcreteTracer(TracerBase):
         # for passing the tracing of leaf modules
         self.temp_disable_call = False
         self.temp_disable_attr = False
+        self.temp_disable_agfunc_apply = False
         with _Patcher() as self.patcher:
             # allow duplicate patches to support the case of nested calls
             self.patcher.patch_method(torch.nn.Module, "__getattr__", module_getattr_wrapper, deduplicate=False)
             self.patcher.patch_method(torch.nn.Module, "__call__", module_call_wrapper, deduplicate=False)
+            self.patcher.patch_method(torch.autograd.Function, "apply", agfunc_apply_wrapper, deduplicate=False)
+            
             self.patcher.patch_method(builtins, "isinstance", isinstance_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "range", range_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "bool", bool_wrapper, deduplicate=False)
@@ -694,6 +743,7 @@ class ConcreteTracer(TracerBase):
             self.patcher.patch_method(operator, "is_", is_wrapper, deduplicate=False)
             self.patcher.patch_method(operator, "is_not", is_not_wrapper, deduplicate=False)
             self.patcher.patch_method(operator, "contains", contains_wrapper, deduplicate=False)
+            self.patcher.patch_method(operator, "index", index_wrapper, deduplicate=False)
             _patch_wrapped_functions(self.patcher)
             _autowrap_check(self.patcher, fn_globals, self._autowrap_function_ids)
             for module in self._autowrap_search:
