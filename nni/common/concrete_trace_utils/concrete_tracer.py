@@ -25,7 +25,6 @@ from torch.fx.node import Target, Node
 from torch.fx.proxy import TracerBase
 
 from . import concrete_proxy as ep
-# import .concrete_proxy as ep
 from .operator_patcher import OperatorPatcher
 
 HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
@@ -33,8 +32,10 @@ HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
 # These need to run in global scope to handle nested calls correctly
 _orig_module_call: Callable = torch.nn.Module.__call__
 _orig_module_getattr: Callable = torch.nn.Module.__getattr__
+
 _orig_agfunc_apply: Callable = torch.autograd.Function.apply
 _orig_isinstance: Callable = builtins.isinstance
+
 _orig_range: Type[Any] = builtins.range
 _orig_bool: Type[Any] = builtins.bool
 _orig_tuple: Type[Any] = builtins.tuple
@@ -50,7 +51,6 @@ _orig_is_not: Callable = operator.is_not
 _orig_contains: Callable = operator.contains
 _orig_index: Callable = operator.index
 
-
 @compatibility(is_backward_compatible=True)
 class ConcreteTracer(TracerBase):
     """
@@ -61,7 +61,49 @@ class ConcreteTracer(TracerBase):
     default_autowrap_modules = (
         math,
     )
-    default_autowap_funcs = (
+    default_autowrap_leaf_funcs = (
+        _orig_len,
+        _orig_not,
+        _orig_is,
+        _orig_is_not,
+        _orig_contains,
+        _orig_index,
+    )
+    default_autowrap_leaf_methods = (
+        (torch.nn.modules.container.Sequential, '__getitem__'),
+        (torch.nn.modules.container.Sequential, '__len__'),
+        (torch.nn.modules.container.Sequential, '__iter__'),
+
+        (torch.nn.modules.container.ModuleList, '__getitem__'),
+        (torch.nn.modules.container.ModuleList, '__len__'),
+        (torch.nn.modules.container.ModuleList, '__iter__'),
+
+        (torch.nn.modules.container.ModuleDict, '__getitem__'),
+        (torch.nn.modules.container.ModuleDict, '__len__'),
+        (torch.nn.modules.container.ModuleDict, '__iter__'),
+        (torch.nn.modules.container.ModuleDict, '__contains__'),
+
+        (torch.nn.modules.container.ParameterList, '__getitem__'),
+        (torch.nn.modules.container.ParameterList, '__len__'),
+        (torch.nn.modules.container.ParameterList, '__iter__'),
+
+        (torch.nn.modules.container.ParameterDict, '__getitem__'),
+        (torch.nn.modules.container.ParameterDict, '__len__'),
+        (torch.nn.modules.container.ParameterDict, '__iter__'),
+        (torch.nn.modules.container.ParameterDict, '__contains__'),
+    )
+    default_autowrap_leaf_classes = (
+        _orig_range,
+        _orig_bool,
+    )
+    default_autowrap_leaf_iterable_classes = (
+        _orig_tuple,
+        _orig_list,
+        _orig_set,
+        _orig_frozenset,
+        _orig_dict,
+    )
+    default_autowrap_funcs = (
         # no necessary input for tensor, so __torch_function__ will not be called. need to be wrapped manually.
         # todo:
         #   1. more needed to be tested.
@@ -72,7 +114,7 @@ class ConcreteTracer(TracerBase):
     )
     @compatibility(is_backward_compatible=True)
     def __init__(self, autowrap_modules: Tuple[ModuleType] = default_autowrap_modules,
-                 autowrap_functions: Tuple[Callable, ...] = default_autowap_funcs) -> None:
+                 autowrap_functions: Tuple[Callable, ...] = default_autowrap_funcs) -> None:
         """
         similar to _symbolic_trace.Tracer.__init__.
         remove the 'param_shapes_constant' because we can get real shape when executing.
@@ -94,6 +136,11 @@ class ConcreteTracer(TracerBase):
                 self._autowrap_search.append(sys.modules[func.__module__])
 
         self.submodule_paths: Optional[Dict[torch.nn.Module, str]] = None
+        
+        self.autowrap_leaf_funcs = ConcreteTracer.default_autowrap_leaf_funcs
+        self.autowrap_leaf_methods = ConcreteTracer.default_autowrap_leaf_methods
+        self.autowrap_leaf_classes = ConcreteTracer.default_autowrap_leaf_classes
+        self.autowrap_leaf_iterable_classes = ConcreteTracer.default_autowrap_leaf_iterable_classes
 
     @compatibility(is_backward_compatible=True)
     def fetch_attr(self, target: str):
@@ -497,11 +544,6 @@ class ConcreteTracer(TracerBase):
         @functools.wraps(_orig_agfunc_apply)
         def agfunc_apply_wrapper(clz, *args, **kwargs):
             if self.temp_disable_agfunc_apply:
-                # return _orig_agfunc_apply(clz, *args, **kwargs)
-                # clzmethod = torch.autograd.Function.__dict__['apply'].__get__(None, clz)
-                # return clzmethod(*args, **kwargs)
-                # func = torch.autograd.Function.__dict__['apply'].__func__
-                # return func(clz, *args, **kwargs)
                 return _orig_agfunc_wapper_apply(clz, *args, **kwargs)
             else:
                 temp_disable_agfunc_apply = self.temp_disable_agfunc_apply
@@ -509,199 +551,50 @@ class ConcreteTracer(TracerBase):
                 ret = self.create_proxy('call_method', 'apply', (clz, *args), kwargs)
                 self.temp_disable_agfunc_apply = temp_disable_agfunc_apply
                 return ret
-
-        @functools.wraps(_orig_range)
-        def range_wrapper(*args, **kwargs):
-            tracers = set()
-            for item in (*args, *kwargs.values()):
-                if isinstance(item, ep.ConcreteProxy):
-                    tracers.add(item.tracer)
-            if len(tracers) > 1:
-                raise Exception('more than 1 tracer detected. please report the issue')
-            elif len(tracers) == 1:
-                return next(iter(tracers)).create_proxy('call_function',
-                    _orig_range, args, kwargs)
+        
+        self.leaf_func_wrapped = dict()
+        for func in self.autowrap_leaf_funcs:
+            if func.__module__.startswith('_'):
+                module = sys.modules[func.__module__[1:]]
             else:
-                return _orig_range(*args, **kwargs)
-
-        @functools.wraps(_orig_bool)
-        def bool_wrapper(obj):
-            if isinstance(obj, ep.ConcreteProxy):
-                return obj.tracer.create_proxy('call_function',
-                    _orig_bool, (obj,),
-                    {})
+                module = sys.modules[func.__module__]
+            self.leaf_func_wrapped[func] = (module, func.__name__, _create_wrapped_leaf_func(func))
+        
+        self.leaf_method_wrapped = dict()
+        for clz, name in self.autowrap_leaf_methods:
+            method = getattr(clz, name)
+            self.leaf_method_wrapped[method] = (clz, name, _create_wrapped_leaf_func(method))
+        
+        self.leaf_class_wrapped = dict()
+        for clz in self.autowrap_leaf_classes:
+            if clz.__module__.startswith('_'):
+                module = sys.modules[clz.__module__[1:]]
             else:
-                return _orig_bool(obj)
-
-        @functools.wraps(_orig_tuple)
-        def tuple_wrapper(*args, **kwargs):
-            tracers = set()
-            if _orig_len(args) != 0:
-                if isinstance(args[0], ep.ConcreteProxy):
-                    tracers.add(args[0].tracer)
-                if isinstance(args[0], Iterator):
-                    args = (_orig_tuple(args[0]), *args[1:])
-                if isinstance(args[0], Iterable):
-                    for item in args[0]:
-                        if isinstance(item, ep.ConcreteProxy):
-                            tracers.add(item.tracer)
-            if len(tracers) > 1:
-                raise Exception('more than 1 tracer detected. please report the issue')
-            elif len(tracers) == 1:
-                return next(iter(tracers)).create_proxy('call_function',
-                    _orig_tuple, args, kwargs)
+                module = sys.modules[clz.__module__]
+            self.leaf_class_wrapped[clz] = (module, clz.__name__, _create_wrapped_leaf_class(clz))
+            
+        self.leaf_iterable_class_wrapped = dict()
+        for clz in self.autowrap_leaf_iterable_classes:
+            if clz.__module__.startswith('_'):
+                module = sys.modules[clz.__module__[1:]]
             else:
-                return _orig_tuple(*args, **kwargs)
-
-        @functools.wraps(_orig_list)
-        def list_wrapper(*args, **kwargs):
-            tracers = _orig_set()
-            if _orig_len(args) != 0:
-                if isinstance(args[0], ep.ConcreteProxy):
-                    tracers.add(args[0].tracer)
-                if isinstance(args[0], Iterator):
-                    args = (_orig_tuple(args[0]), *args[1:])
-                if isinstance(args[0], Iterable):
-                    for item in args[0]:
-                        if isinstance(item, ep.ConcreteProxy):
-                            tracers.add(item.tracer)
-            if len(tracers) > 1:
-                raise Exception('more than 1 tracer detected. please report the issue')
-            elif len(tracers) == 1:
-                return next(iter(tracers)).create_proxy('call_function',
-                    _orig_list, args, kwargs)
-            else:
-                return _orig_list(*args, **kwargs)
-
-        @functools.wraps(_orig_set)
-        def set_wrapper(*args, **kwargs):
-            tracers = _orig_set()
-            if _orig_len(args) != 0:
-                if isinstance(args[0], ep.ConcreteProxy):
-                    tracers.add(args[0].tracer)
-                if isinstance(args[0], Iterator):
-                    args = (_orig_tuple(args[0]), *args[1:])
-                if isinstance(args[0], Iterable):
-                    for item in args[0]:
-                        if isinstance(item, ep.ConcreteProxy):
-                            tracers.add(item.tracer)
-            if len(tracers) > 1:
-                raise Exception('more than 1 tracer detected. please report the issue')
-            elif len(tracers) == 1:
-                return next(iter(tracers)).create_proxy('call_function',
-                    _orig_set, args, kwargs)
-            else:
-                return _orig_set(*args, **kwargs)
-
-        @functools.wraps(_orig_frozenset)
-        def frozenset_wrapper(*args, **kwargs):
-            tracers = _orig_set()
-            if _orig_len(args) != 0:
-                if isinstance(args[0], ep.ConcreteProxy):
-                    tracers.add(args[0].tracer)
-                if isinstance(args[0], Iterator):
-                    args = (_orig_tuple(args[0]), *args[1:])
-                if isinstance(args[0], Iterable):
-                    for item in args[0]:
-                        if isinstance(item, ep.ConcreteProxy):
-                            tracers.add(item.tracer)
-            if len(tracers) > 1:
-                raise Exception('more than 1 tracer detected. please report the issue')
-            elif len(tracers) == 1:
-                return next(iter(tracers)).create_proxy('call_function',
-                    _orig_frozenset, args, kwargs)
-            else:
-                return _orig_frozenset(*args, **kwargs)
-
-        @functools.wraps(_orig_dict)
-        def dict_wrapper(*args, **kwargs):
-            tracers = _orig_set()
-            if _orig_len(args) != 0:
-                if isinstance(args[0], ep.ConcreteProxy):
-                    tracers.add(args[0].tracer)
-                elif isinstance(args[0], dict):
-                    for item in _orig_tuple(args[0].values()):
-                        if isinstance(item, ep.ConcreteProxy):
-                            tracers.add(item.tracer)
-            if len(tracers) > 1:
-                raise Exception('more than 1 tracer detected. please report the issue')
-            elif len(tracers) == 1:
-                return next(iter(tracers)).create_proxy('call_function',
-                    _orig_dict, args, kwargs)
-            else:
-                return _orig_dict(*args, **kwargs)
-
-        @functools.wraps(_orig_len)
-        def len_wrapper(obj) -> int:
-            if isinstance(obj, ep.ConcreteProxy):
-                return obj.tracer.create_proxy('call_function',
-                    _orig_len, (obj,),
-                    {})
-            else:
-                return _orig_len(obj)
-
-        @functools.wraps(_orig_not)
-        def not_wrapper(obj):
-            if isinstance(obj, ep.ConcreteProxy):
-                return obj.tracer.create_proxy('call_function',
-                    _orig_not, (obj,),
-                    {})
-            else:
-                return _orig_not(obj)
-
-        @functools.wraps(_orig_is)
-        def is_wrapper(obj_a, obj_b):
-            if isinstance(obj_a, ep.ConcreteProxy):
-                return obj_a.tracer.create_proxy('call_function',
-                    _orig_is, (obj_a, obj_b),
-                    {})
-            else:
-                return _orig_is(obj_a, obj_b)
-
-        @functools.wraps(_orig_is_not)
-        def is_not_wrapper(obj_a, obj_b):
-            if isinstance(obj_a, ep.ConcreteProxy):
-                return obj_a.tracer.create_proxy('call_function',
-                    _orig_is_not, (obj_a, obj_b),
-                    {})
-            else:
-                return _orig_is_not(obj_a, obj_b)
-
-        @functools.wraps(_orig_contains)
-        def contains_wrapper(obj_a, obj_b):
-            # 'obj_a in obj_b' ==> 'contains(obj_b obj_a)'
-            if isinstance(obj_b, ep.ConcreteProxy):
-                return obj_b.tracer.create_proxy('call_function',
-                    _orig_contains, (obj_a, obj_b),
-                    {})
-            else:
-                return _orig_contains(obj_a, obj_b)
-
-        @functools.wraps(_orig_index)
-        def index_wrapper(obj):
-            if isinstance(obj, ep.ConcreteProxy):
-                return obj.tracer.create_proxy('call_function',
-                    _orig_index, (obj,),
-                    {})
-            else:
-                return _orig_index(obj)
-
+                module = sys.modules[clz.__module__]
+            self.leaf_iterable_class_wrapped[clz] = (module, clz.__name__, _create_wrapped_leaf_iterable_class(clz))
+        
+        self.clz_wrapper_map = dict()
+        for clz in self.autowrap_leaf_classes:
+            self.clz_wrapper_map[self.leaf_class_wrapped[clz][2]] = clz
+        for clz in self.autowrap_leaf_iterable_classes:
+            self.clz_wrapper_map[self.leaf_iterable_class_wrapped[clz][2]] = clz
+            
         @functools.wraps(_orig_isinstance)
         def isinstance_wrapper(instance, clz):
-            type_wrappers = {
-                bool_wrapper:       _orig_bool,
-                list_wrapper:       _orig_list,
-                tuple_wrapper:      _orig_tuple,
-                set_wrapper:        _orig_set,
-                frozenset_wrapper:  _orig_frozenset,
-                dict_wrapper:       _orig_dict,
-            }
             if type(clz) in (tuple, list, slice, _orig_tuple, _orig_list):
-                clz_wappers = []
-                for type_wrapper, orig_type in type_wrappers.items():
+                clz_wrapped = []
+                for type_wrapper, orig_type in self.clz_wrapper_map.items():
                     if type_wrapper in clz:
-                        clz_wappers.append(orig_type)
-                clz = (*clz_wappers, *(aclz for aclz in clz if aclz not in type_wrappers))
+                        clz_wrapped.append(orig_type)
+                clz = (*clz_wrapped, *(aclz for aclz in clz if aclz not in self.clz_wrapper_map))
                 # use _orig_isinstance(clz, Iterable) will cause an endless recursive loop
                 for cls in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy, ep.ConcreteUnpackIterProxy):
                     if cls in clz and _orig_isinstance(instance, cls):
@@ -713,8 +606,8 @@ class ConcreteTracer(TracerBase):
             else:
                 if clz in (object, ep.ConcreteProxy, ep.ConcreteAttrProxy, ep.ConcreteUnpackIterProxy):
                     return _orig_isinstance(instance, clz)
-                if clz in type_wrappers:
-                    clz = type_wrappers[clz]
+                if clz in self.clz_wrapper_map:
+                    clz = self.clz_wrapper_map[clz]
                 if _orig_isinstance(instance, ep.ConcreteProxy):
                     instance = instance.value
                 return _orig_isinstance(instance, clz)
@@ -730,20 +623,30 @@ class ConcreteTracer(TracerBase):
             self.patcher.patch_method(torch.autograd.Function, "apply", agfunc_apply_wrapper, deduplicate=False)
             
             self.patcher.patch_method(builtins, "isinstance", isinstance_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "range", range_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "bool", bool_wrapper, deduplicate=False)
-            # self.patcher.patch_method(builtins, "slice", slice_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "tuple", tuple_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "list", list_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "set", set_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "frozenset", frozenset_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "dict", dict_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "len", len_wrapper, deduplicate=False)
-            self.patcher.patch_method(operator, "not_", not_wrapper, deduplicate=False)
-            self.patcher.patch_method(operator, "is_", is_wrapper, deduplicate=False)
-            self.patcher.patch_method(operator, "is_not", is_not_wrapper, deduplicate=False)
-            self.patcher.patch_method(operator, "contains", contains_wrapper, deduplicate=False)
-            self.patcher.patch_method(operator, "index", index_wrapper, deduplicate=False)
+            # self.patcher.patch_method(builtins, "range", range_wrapper, deduplicate=False)
+            # self.patcher.patch_method(builtins, "bool", bool_wrapper, deduplicate=False)
+            # # self.patcher.patch_method(builtins, "slice", slice_wrapper, deduplicate=False)
+            # self.patcher.patch_method(builtins, "tuple", tuple_wrapper, deduplicate=False)
+            # self.patcher.patch_method(builtins, "list", list_wrapper, deduplicate=False)
+            # self.patcher.patch_method(builtins, "set", set_wrapper, deduplicate=False)
+            # self.patcher.patch_method(builtins, "frozenset", frozenset_wrapper, deduplicate=False)
+            # self.patcher.patch_method(builtins, "dict", dict_wrapper, deduplicate=False)
+            
+            # self.patcher.patch_method(builtins, "len", len_wrapper, deduplicate=False)
+            # self.patcher.patch_method(operator, "not_", not_wrapper, deduplicate=False)
+            # self.patcher.patch_method(operator, "is_", is_wrapper, deduplicate=False)
+            # self.patcher.patch_method(operator, "is_not", is_not_wrapper, deduplicate=False)
+            # self.patcher.patch_method(operator, "contains", contains_wrapper, deduplicate=False)
+            # self.patcher.patch_method(operator, "index", index_wrapper, deduplicate=False)
+            for func, (module, name, wapper) in self.leaf_func_wrapped.items():
+                self.patcher.patch_method(module, name, wapper, deduplicate=False)
+            for method, (module, name, wapper) in self.leaf_method_wrapped.items():
+                self.patcher.patch_method(module, name, wapper, deduplicate=False)
+            for clz, (module, name, wapper) in self.leaf_class_wrapped.items():
+                self.patcher.patch_method(module, name, wapper, deduplicate=False)
+            for clz, (module, name, wapper) in self.leaf_iterable_class_wrapped.items():
+                self.patcher.patch_method(module, name, wapper, deduplicate=False)
+                
             _patch_wrapped_functions(self.patcher)
             _autowrap_check(self.patcher, fn_globals, self._autowrap_function_ids)
             for module in self._autowrap_search:
@@ -867,7 +770,76 @@ class MagicMethodPatcher:
         fx_graph.magic_methods = self.magic_methods_ori
         return exc_type is None
 
+def _create_wrapped_leaf_func(func):
+    @functools.wraps(func)
+    def func_wrapper(*args, **kwargs):
+        tracers = set()
+        for item in (*args, *kwargs.values()):
+            if isinstance(item, ep.ConcreteProxy):
+                tracers.add(item.tracer)
+        if _orig_len(tracers) > 1:
+            raise Exception('more than 1 tracer detected. please report the issue')
+        elif _orig_len(tracers) == 1:
+            return next(iter(tracers)).create_proxy('call_function',
+                func, args, kwargs)
+        else:
+            return func(*args, **kwargs)
+    return func_wrapper
 
+def _create_wrapped_leaf_method(method):
+    @functools.wraps(method)
+    def method_wrapper(*args, **kwargs):
+        tracers = set()
+        for item in (*args, *kwargs.values()):
+            if isinstance(item, ep.ConcreteProxy):
+                tracers.add(item.tracer)
+        if _orig_len(tracers) > 1:
+            raise Exception('more than 1 tracer detected. please report the issue')
+        elif _orig_len(tracers) == 1:
+            return next(iter(tracers)).create_proxy('call_function',
+                method, args, kwargs)
+        else:
+            return method(*args, **kwargs)
+    return method_wrapper
+
+def _create_wrapped_leaf_class(clz):
+    @functools.wraps(clz)
+    def clz_wrapper(*args, **kwargs):
+        tracers = set()
+        for item in (*args, *kwargs.values()):
+            if isinstance(item, ep.ConcreteProxy):
+                tracers.add(item.tracer)
+        if _orig_len(tracers) > 1:
+            raise Exception('more than 1 tracer detected. please report the issue')
+        elif _orig_len(tracers) == 1:
+            return next(iter(tracers)).create_proxy('call_function',
+                clz, args, kwargs)
+        else:
+            return clz(*args, **kwargs)
+    return clz_wrapper
+
+def _create_wrapped_leaf_iterable_class(clz):
+    @functools.wraps(clz)
+    def clz_wrapper(*args, **kwargs):
+        tracers = _orig_set()
+        if _orig_len(args) != 0:
+            if _orig_isinstance(args[0], ep.Proxy):
+                tracers.add(args[0].tracer)
+            if _orig_isinstance(args[0], Iterator):
+                args = (clz(args[0]), *args[1:])
+            if _orig_isinstance(args[0], Iterable):
+                for item in args[0]:
+                    if _orig_isinstance(item, ep.Proxy):
+                        tracers.add(item.tracer)
+        if _orig_len(tracers) > 1:
+            raise Exception('more than 1 tracer detected. please report the issue')
+        elif _orig_len(tracers) == 1:
+            return next(iter(tracers)).create_proxy('call_function',
+                clz, args, kwargs)
+        else:
+            return clz(*args, **kwargs)
+    return clz_wrapper
+                
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Optional[Dict[str, Any]],
                    use_function_patch: bool = True,
