@@ -60,6 +60,35 @@ def handle_gemm(network, layer_idx, config):
     layer = network.get_layer(layer_idx)
     pre_layer = network.get_layer(layer_idx-1)
     next_layer = network.get_layer(layer_idx+1)
+    # lin1 = layer.get_input(0)
+    # lin2 = layer.get_input(1)
+    # lin3 = layer.get_input(2)
+    # lout = layer.get_output(0)
+    # preout = pre_layer.get_output(0)
+    # nextout = next_layer.get_output(0)
+    # nextin = next_layer.get_input(0)
+    # nextin2 = next_layer.get_input(1)
+    # print('zql: ', lin1, lin1 is preout, lin1 is nextout)
+    # print('zql: ', lin2, lin2 is preout, lin2 is nextout)
+    # print('zql: ', lin3, lin3 is preout, lin3 is nextout)
+    # print('zql: ', lout, lout is nextin)
+    # print('zql: ', nextin, nextin2)
+    # nnext_layer = network.get_layer(layer_idx+2)
+    # last_layer = network.get_layer(layer_idx+3)
+    # lastin1 = last_layer.get_input(0)
+    # lastin2 = last_layer.get_input(1)
+    # lastin3 = last_layer.get_input(2)
+    # nnextin1 = nnext_layer.get_input(0)
+    # nnextin2 = nnext_layer.get_input(1)
+    # nnextout = nnext_layer.get_output(0)
+    # print('zql: ', nnextin1, nnextin2, nnextin1 is lout, nnextin1 is nextout)
+    # print('zql: ', nnextin1, nnextin2, nnextin2 is lout, nnextin2 is nextout)
+    # print('zql: ', nnext_layer.name)
+    # print('zql: ', lastin1, lastin1 is lout, lastin1 is nextout, lastin1 is nnextout)
+    # print('zql: ', lastin2, lastin2 is lout, lastin2 is nextout, lastin2 is nnextout)
+    # print('zql: ', lastin3, lastin3 is lout, lastin3 is nextout, lastin3 is nnextout)
+    # print('zql: ', last_layer.name)
+    # exit(1)
     # if weight bits exists, set three layers' precision,
     # input tensor range and the first two layers' output type
     if 'weight_bits' in config[layer.name]:
@@ -79,9 +108,11 @@ def handle_gemm(network, layer_idx, config):
         in_tensor = layer.get_input(0)
         next_in_tensor = next_layer.get_input(0)
         # set three layers' input tensor range
-        pre_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+        assert pre_in_tensor is None
+        assert next_in_tensor is None
+        #pre_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
         in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
-        next_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+        #next_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
 
     # if output bits exists, set the last layer's output type output tensor range
     if 'output_bits' in config[layer.name]:
@@ -90,11 +121,144 @@ def handle_gemm(network, layer_idx, config):
         a_bits = config[layer.name]['output_bits']
         tracked_min_output = config[layer.name]['tracked_min_output']
         tracked_max_output = config[layer.name]['tracked_max_output']
+        pre_layer.set_output_type(0, Precision_Dict[a_bits])
+        pre_out_tensor = pre_layer.get_output(0)
+        pre_out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
+        layer.set_output_type(0, Precision_Dict[a_bits])
+        out_tensor = layer.get_output(0)
+        out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
+        last_layer = network.get_layer(layer_idx+3)
+        last_layer.set_output_type(0, Precision_Dict[a_bits])
+        last_out_tensor = last_layer.get_output(0)
+        last_out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
+        nnext_layer = network.get_layer(layer_idx+2)
+        nnext_layer.set_output_type(0, Precision_Dict[a_bits])
+        nnext_out_tensor = nnext_layer.get_output(0)
+        nnext_out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
         # set the last layer's output type
         next_layer.set_output_type(0, Precision_Dict[a_bits])
         next_out_tensor = next_layer.get_output(0)
         # set the last layer's output tensor range
         next_out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
+
+def _handle_gemm(layer, config, out2layer, in2layer):
+    # assume quantize input, output, and weight
+    w_bits = config[layer.name]['weight_bits']
+    tracked_min_input = config[layer.name]['tracked_min_input']
+    tracked_max_input = config[layer.name]['tracked_max_input']
+    layer.precision = Precision_Dict[w_bits]
+    in_tensor = layer.get_input(0)
+    in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+    # handle weight
+    w_in_tensor = layer.get_input(1)
+    weight_layer = out2layer[w_in_tensor.name]
+    assert weight_layer.type == trt.LayerType.CONSTANT
+    weight_layer.set_output_type(0, Precision_Dict[w_bits])
+    w_out_tensor = weight_layer.get_output(0)
+    w_out_tensor.dynamic_range = (-10, 10) # TODO!
+    # handle sum
+    out_tensor = layer.get_output(0)
+    sum_layer = in2layer[out_tensor.name][0] # TODO!
+    assert sum_layer.type == trt.LayerType.ELEMENTWISE
+    sum_layer.precision = Precision_Dict[16] # TODO!
+    # handle bias
+    return weight_layer.name
+
+def config_network_precision(network, config):
+    out2layer = {}
+    in2layer = {}
+    for layer_idx in range(network.num_layers):
+        layer = network.get_layer(layer_idx)
+        for i in range(layer.num_outputs):
+            output = layer.get_output(i)
+            out2layer[output.name] = layer
+        for i in range(layer.num_inputs):
+            input = layer.get_input(i)
+            if input.name in in2layer:
+                in2layer[input.name].append(layer)
+            else:
+                in2layer[input.name] = [layer]
+    tensor2range = {}
+    handled_layers = {}
+    for layer_idx in range(network.num_layers):
+        layer = network.get_layer(layer_idx)
+        if layer.name in handled_layers:
+            continue
+        handled_layers[layer.name] = True
+        print('zql: ', layer.name, layer.type)
+        if layer.name in config:
+            if layer.name[0:4] == 'Gemm':
+                # Gemm is special case. the following is the graph structure of Gemm in trt's graph
+                # input                       ->| Gemm  ->| ElementWise
+                # LayerType.Constant (weight) ->|
+                # LayerType.Constant (bias) -> Shuffle  ->|
+                extra_handled_layer = _handle_gemm(layer, config, out2layer, in2layer)
+                handled_layers[extra_handled_layer] = True
+            else:
+                if 'weight_bits' in config[layer.name]:
+                    assert 'tracked_min_input' in config[layer.name]
+                    assert 'tracked_max_input' in config[layer.name]
+                    w_bits = config[layer.name]['weight_bits']
+                    tracked_min_input = config[layer.name]['tracked_min_input']
+                    tracked_max_input = config[layer.name]['tracked_max_input']
+                    layer.precision = Precision_Dict[w_bits]
+                    in_tensor = layer.get_input(0)
+                    in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+                    if in_tensor.name in tensor2range:
+                        assert tensor2range[in_tensor.name] == (tracked_min_input, tracked_max_input)
+                    else:
+                        tensor2range[in_tensor.name] = (tracked_min_input, tracked_max_input)
+                if 'output_bits' in config[layer.name]:
+                    assert 'tracked_min_output' in config[layer.name]
+                    assert 'tracked_max_output' in config[layer.name]
+                    act_bits = config[layer.name]['output_bits']
+                    tracked_min_output = config[layer.name]['tracked_min_output']
+                    tracked_max_output = config[layer.name]['tracked_max_output']
+                    layer.set_output_type(0, Precision_Dict[act_bits])
+                    out_tensor = layer.get_output(0)
+                    out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
+                    if out_tensor.name in tensor2range:
+                        assert tensor2range[out_tensor.name] == (tracked_min_output, tracked_max_output)
+                    else:
+                        tensor2range[out_tensor.name] = (tracked_min_output, tracked_max_output)
+        else:
+            if layer.name[0:4] == 'Relu':
+                layer.precision = Precision_Dict[8]
+                in_tensor = layer.get_input(0)
+                assert in_tensor.name in tensor2range
+                in_tensor.dynamic_range = tensor2range[in_tensor.name]
+                layer.set_output_type(0, Precision_Dict[8])
+                out_tensor = layer.get_output(0)
+                out_tensor.dynamic_range = tensor2range[in_tensor.name]
+            elif layer.name[0:3] == 'Add':
+                out_tensor = layer.get_output(0)
+                assigned = False
+                for next_layer in in2layer[out_tensor.name]:
+                    if next_layer.name in config:
+                        w_bits = config[next_layer.name]['weight_bits']
+                        tracked_min_input = config[next_layer.name]['tracked_min_input']
+                        tracked_max_input = config[next_layer.name]['tracked_max_input']
+                        layer.precision = Precision_Dict[8]
+                        layer.set_output_type(0, Precision_Dict[8])
+                        out_tensor = layer.get_output(0)
+                        #assert layer.get_output(1) is None, f'{layer.get_output(1).name}'
+                        print('output num: ', layer.num_outputs)
+                        out_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+                        assigned = True
+                        break
+                assert assigned
+            else:
+                print('non quantized layer: ', layer.name)
+                layer.precision = Precision_Dict[16]
+            #if layer.name[0:4] == 'Gemm':
+            #    handle_gemm(network, layer_idx, config)
+        # for i in range(layer.num_inputs):
+        #     input = layer.get_input(i)
+        #     if input.name in out2layer:
+        #         print(f'{out2layer[input.name].name} -> {layer.name}')
+        #     else:
+        #         print(f'network input {layer.name}')
+    #exit(1)
 
 def build_engine(model_file, config=None, extra_layer_bits=32, strict_datatype=False, calib=None):
     """
@@ -154,6 +318,7 @@ def build_engine(model_file, config=None, extra_layer_bits=32, strict_datatype=F
                 trt_config.set_flag(trt.BuilderFlag.FP16)
                 if strict_datatype:
                     trt_config.set_flag(trt.BuilderFlag.STRICT_TYPES)
+                    #trt_config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
             else:
                 builder.int8_mode = True
                 builder.fp16_mode = True
@@ -185,40 +350,54 @@ def build_engine(model_file, config=None, extra_layer_bits=32, strict_datatype=F
                     layer.precision = Precision_Dict[w_bits]
                     layer.set_output_type(0, Precision_Dict[a_bits])
         else:
-            # This implementation may be incorrect when output number > 1
-            for i in range(network.num_layers):
-                if config is None:
-                    # no low bits layer need to be set, keep original model
-                    break
-                layer = network.get_layer(i)
-                if layer.name not in config:
-                    continue
-                # layer numbers of gemm changed during pytorch->onnx model convertion, need special handle
-                if layer.name[0:4] == "Gemm":
-                    handle_gemm(network, i, config)
-                    continue
+            config_network_precision(network, config)
+            # # This implementation may be incorrect when output number > 1
+            # for i in range(network.num_layers):
+            #     if config is None:
+            #         # no low bits layer need to be set, keep original model
+            #         break
+            #     layer = network.get_layer(i)
+            #     #print('zql dir: ', layer.__dir__())
+            #     #exit(1)
+            #     print('zql layer name: ', layer.name, layer.type, layer.precision, layer.num_outputs, layer.num_inputs, layer.get_output_type(0))
+            #     print('zql layer in out: ', layer.get_input(0).name, layer.get_output(0).name)
+            #     if layer.name not in config:
+            #         # if layer.name[0:4] == 'Redu':
+            #         #     print('reduce layer: ', layer.name)
+            #         #     layer.precision = Precision_Dict[8]
+            #         #     in_tensor = layer.get_input(0)
+            #         #     in_tensor.dynamic_range = (0, 64)
+            #         #     layer.set_output_type(0, Precision_Dict[8])
+            #         #     out_tensor = layer.get_output(0)
+            #         #     out_tensor.dynamic_range = (0, 64)
+            #         continue
+            #     # layer numbers of gemm changed during pytorch->onnx model convertion, need special handle
+            #     if layer.name[0:4] == "Gemm":
+            #         handle_gemm(network, i, config)
+            #         continue
 
-                # If weight_bits exists in config, set layer precision and layer's input tensor dynamic range.
-                if 'weight_bits' in config[layer.name]:
-                    assert 'tracked_min_input' in config[layer.name]
-                    assert 'tracked_max_input' in config[layer.name]
-                    w_bits = config[layer.name]['weight_bits']
-                    tracked_min_input = config[layer.name]['tracked_min_input']
-                    tracked_max_input = config[layer.name]['tracked_max_input']
-                    layer.precision = Precision_Dict[w_bits]
-                    in_tensor = layer.get_input(0)
-                    in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+            #     # If weight_bits exists in config, set layer precision and layer's input tensor dynamic range.
+            #     if 'weight_bits' in config[layer.name]:
+            #         assert 'tracked_min_input' in config[layer.name]
+            #         assert 'tracked_max_input' in config[layer.name]
+            #         w_bits = config[layer.name]['weight_bits']
+            #         tracked_min_input = config[layer.name]['tracked_min_input']
+            #         tracked_max_input = config[layer.name]['tracked_max_input']
+            #         layer.precision = Precision_Dict[w_bits]
+            #         in_tensor = layer.get_input(0)
+            #         in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
 
-                # If output exists in config, set layer output type and layer's output tensor dynamic range.
-                if 'output_bits' in config[layer.name]:
-                    assert 'tracked_min_output' in config[layer.name]
-                    assert 'tracked_max_output' in config[layer.name]
-                    a_bits = config[layer.name]['output_bits']
-                    tracked_min_output = config[layer.name]['tracked_min_output']
-                    tracked_max_output = config[layer.name]['tracked_max_output']
-                    layer.set_output_type(0, Precision_Dict[a_bits])
-                    out_tensor = layer.get_output(0)
-                    out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
+            #     # If output exists in config, set layer output type and layer's output tensor dynamic range.
+            #     if 'output_bits' in config[layer.name]:
+            #         assert 'tracked_min_output' in config[layer.name]
+            #         assert 'tracked_max_output' in config[layer.name]
+            #         a_bits = config[layer.name]['output_bits']
+            #         tracked_min_output = config[layer.name]['tracked_min_output']
+            #         tracked_max_output = config[layer.name]['tracked_max_output']
+            #         layer.set_output_type(0, Precision_Dict[a_bits])
+            #         out_tensor = layer.get_output(0)
+            #         out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
+            # exit(1)
 
         # Build engine and do int8 calibration.
         if trt_version == TRT8:
@@ -283,7 +462,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         """
         Get onnx config and build tensorrt engine.
         """
-        assert self.model is not None
+        #assert self.model is not None
         assert self.onnx_path is not None
         assert self.input_shape is not None
 

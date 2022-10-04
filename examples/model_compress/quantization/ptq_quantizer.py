@@ -27,7 +27,7 @@ torch.manual_seed(191009)
 
 #====================
 
-from torch.quantization import QuantStub, DeQuantStub
+#from torch.quantization import QuantStub, DeQuantStub
 
 def _make_divisible(v, divisor, min_value=None):
     """
@@ -82,11 +82,12 @@ class InvertedResidual(nn.Module):
         ])
         self.conv = nn.Sequential(*layers)
         # Replace torch.add with floatfunctional
-        self.skip_add = nn.quantized.FloatFunctional()
+        #self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, x):
         if self.use_res_connect:
-            return self.skip_add.add(x, self.conv(x))
+            #return self.skip_add.add(x, self.conv(x))
+            return torch.add(x, self.conv(x))
         else:
             return self.conv(x)
 
@@ -139,8 +140,8 @@ class MobileNetV2(nn.Module):
         features.append(ConvBNReLU(input_channel, self.last_channel, kernel_size=1))
         # make it nn.Sequential
         self.features = nn.Sequential(*features)
-        self.quant = QuantStub()
-        self.dequant = DeQuantStub()
+        #self.quant = QuantStub()
+        #self.dequant = DeQuantStub()
         # building classifier
         self.classifier = nn.Sequential(
             nn.Dropout(0.2),
@@ -295,7 +296,8 @@ def prepare_data_loaders(data_path):
 
 #=====================
 
-data_path = '/data/data0/v-zhiqxi/imagenet-raw-data'
+#data_path = '/data/data0/v-zhiqxi/imagenet-raw-data'
+data_path = '/data'
 saved_model_dir = 'data/'
 float_model_file = 'mobilenet_pretrained_float.pth'
 scripted_float_model_file = 'mobilenet_quantization_scripted.pth'
@@ -372,16 +374,48 @@ print('Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_s
 '''
 #==========================nni
 
+def test_trt(engine, data_loader, neval_batches):
+    top1 = AverageMeter('Acc@1', ':6.2f')
+    top5 = AverageMeter('Acc@5', ':6.2f')
+    cnt = 0
+    for image, target in data_loader:
+        image = image.to(device)
+        target = target.to(device)
+        output, time = engine.inference(image)
+        output = output.to(device)
+        print('zql device: ', output.device, target.device)
+        loss = criterion(output, target)
+        cnt += 1
+        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        print('zql: ', acc1, acc5)
+        print('.', end = '')
+        top1.update(acc1[0], image.size(0))
+        top5.update(acc5[0], image.size(0))
+        if cnt >= neval_batches:
+                return top1, top5
+
+    return top1, top5
+
 num_calibration_batches = 32
 num_eval_batches = 100
 device = torch.device('cuda')
 #device = torch.device('cpu')
 
-myModel = load_model(saved_model_dir + float_model_file).to('cpu')
+myModel = load_model(saved_model_dir + float_model_file)
 myModel.eval()
 myModel.to(device)
-#top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches)
-#print('Before quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
+# top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
+# print('Before quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
+
+
+# # test trt
+# myModel.to(device)
+# dummy_input = torch.Tensor(30, 3, 224, 224)
+# dummy_input = dummy_input.to(device)
+# torch.onnx.export(myModel, dummy_input, 'mymodel.onnx', verbose=False, input_names=["actual_input_1"], output_names=["output1"], export_params=True)
+# # from nni.compression.pytorch.quantization_speedup.integrated_tensorrt import build_engine
+# # build_engine('mymodel.onnx', config={'mylatyer': 10}, strict_datatype=True)
+# exit(1)
 
 def my_eval(model):
     evaluate(model, criterion, data_loader, neval_batches=num_calibration_batches, device=device)
@@ -402,7 +436,7 @@ config_list = [{
 dummy_input = torch.Tensor(30, 3, 224, 224)
 dummy_input = dummy_input.to(device)
 predict_func = TorchEvaluator(predicting_func=my_eval, dummy_input=dummy_input)
-quantizer = PtqQuantizer(myModel, config_list, predict_func, False)
+quantizer = PtqQuantizer(myModel, config_list, predict_func, True)
 
 #top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
 #print('After quantization bn folding: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
@@ -411,5 +445,19 @@ quantizer = PtqQuantizer(myModel, config_list, predict_func, False)
 
 sim_quant_model, quant_result_conf = quantizer.compress()
 
-top1, top5 = evaluate(sim_quant_model, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
-print('After quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
+#top1, top5 = evaluate(sim_quant_model, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
+#print('After quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
+
+calibration_config = quantizer.export_model()
+print('quant result config: ', calibration_config)
+
+from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+input_shape = (30, 3, 224, 224)
+newModel = load_model(saved_model_dir + float_model_file)
+newModel.eval()
+newModel.to(device)
+engine = ModelSpeedupTensorRT(newModel, input_shape, config=calibration_config, batchsize=train_batch_size)
+#engine = ModelSpeedupTensorRT(None, input_shape, config=None, batchsize=32)
+engine.compress()
+top1, top5 = test_trt(engine, data_loader, neval_batches=num_calibration_batches)
+print('zql done: ', top1, top5)

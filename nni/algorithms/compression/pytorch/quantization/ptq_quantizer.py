@@ -9,7 +9,7 @@ import torch.nn as nn
 from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.quantization.settings import LayerQuantSetting
 from nni.compression.pytorch.utils.config_validation import QuantizerSchema
-from nni.compression.pytorch.compressor import Quantizer, QuantForward
+from nni.compression.pytorch.compressor import Quantizer, QuantForward, _setattr
 from nni.compression.pytorch.quantization.literal import (
     QuantScheme,
     QuantDtype
@@ -251,6 +251,8 @@ class PtqQuantizer(Quantizer):
                 new_weight, new_bias = self._fold_bn(module, bn_module, weight, bias)
                 module.weight.copy_(new_weight)
                 module.bias.copy_(new_bias)
+                module.register_buffer('old_bn_weight', module.weight.data)
+                module.register_buffer('old_bn_bias', module.bias.data)
 
     def fold_bn(self, *inputs, wrapper):
         """
@@ -304,7 +306,18 @@ class PtqQuantizer(Quantizer):
                                     module.output_qmax)
         return output
 
-    def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
+    # TODO: move the logic in _unwrap_model to the base class
+    def _unwrap_model(self):
+        """
+        unwrap all modules that needed to be compressed.
+        when op_folding is enabled, the folded operators will be replaced with nn.Identity
+
+        """
+        for wrapper in self.identity_wrappers:
+            _setattr(self.bound_model, wrapper.module_name, nn.Identity())
+        super()._unwrap_model()
+
+    def export_model(self, model_path=None, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
         Export quantized model weights and calibration parameters(optional)
 
@@ -326,49 +339,34 @@ class PtqQuantizer(Quantizer):
         -------
         Dict
         """
-        assert model_path is not None, 'model_path must be specified'
         self._unwrap_model()
         calibration_config = {}
 
         for name, module in self.bound_model.named_modules():
+            if hasattr(module, 'old_bn_weight'):
+                module.weight.copy_(module.old_bn_weight.data)
+                module.bias.copy_(module.old_bn_bias.data)
             if hasattr(module, 'weight_scale') or hasattr(module, 'input_scale') or hasattr(module, 'output_scale'):
                 calibration_config[name] = {}
+            else:
+                continue
             if hasattr(module, 'weight_scale'):
-                calibration_config[name]['weight_bits'] = 8
-                val = float(module.weight_scale * module.weight_qmax)
-                calibration_config[name]['tracked_max_weight'] = val
-                calibration_config[name]['tracked_min_weight'] = -val
-                calibration_config[name]['tracked_qmin_weight'] = -127
-                calibration_config[name]['tracked_qmax_weight'] = 127
-                weight = module.weight
-                quantized_weight = self._quantize(weight,
-                                            module.weight_scale,
-                                            module.weight_zero_point,
-                                            module.weight_qmin,
-                                            module.weight_qmax)
-                delattr(module, 'weight')
-                module.register_parameter('weight', torch.nn.Parameter(quantized_weight))
-            # refactor these magic numbers when customizations of dtype and qscheme are ready.
+                calibration_config[name]['weight_bits'] = module.layer_quant_setting.weight.bits
+                calibration_config[name]['weight_scale'] = module.weight_scale
+                calibration_config[name]['weight_zero_point'] = module.weight_zero_point
             if hasattr(module, 'input_scale'):
-                calibration_config[name]['input_bits'] = 8
-                max_input = float(module.input_scale * (module.input_qmax - module.input_zero_point))
-                min_input = float(module.input_scale * (module.input_qmin - module.input_zero_point))
-                calibration_config[name]['tracked_min_input'] = min_input
-                calibration_config[name]['tracked_max_input'] = max_input
-                calibration_config[name]['tracked_qmin_input'] = 0
-                calibration_config[name]['tracked_qmax_input'] = 127
+                # FIXME: consider different quant schemes
+                calibration_config[name]['input_bits'] = module.layer_quant_setting.input.bits
+                calibration_config[name]['tracked_min_input'] = float(module.input_scale * (module.input_qmin - module.input_zero_point))
+                calibration_config[name]['tracked_max_input'] = float(module.input_scale * (module.input_qmax - module.input_zero_point))
             if hasattr(module, 'output_scale'):
-                calibration_config[name]['output_bits'] = 8
-                max_input = float(module.output_scale * (module.output_qmax - module.output_zero_point))
-                min_input = float(module.output_scale * (module.output_qmin - module.output_zero_point))
-                calibration_config[name]['tracked_min_output'] = min_input
-                calibration_config[name]['tracked_max_output'] = max_input
-                calibration_config[name]['tracked_qmin_output'] = 0
-                calibration_config[name]['tracked_qmax_output'] = 127
+                calibration_config[name]['output_bits'] = module.layer_quant_setting.output.bits
+                calibration_config[name]['tracked_min_output'] = float(module.output_scale * (module.output_qmin - module.output_zero_point))
+                calibration_config[name]['tracked_max_output'] = float(module.output_scale * (module.output_qmax - module.output_zero_point))
             self._del_simulated_attr(module)
 
-        self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path,
-                               input_shape, device)
+        # self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path,
+        #                        input_shape, device)
 
         return calibration_config
 
@@ -378,7 +376,7 @@ class PtqQuantizer(Quantizer):
         """
         del_attr_list = ['old_weight', 'steps', 'weight_qmax', 'weight_qmin', 'input_qmax', 'input_qmin',
                          'output_qmax', 'output_qmin', 'weight_scale', 'weight_zero_point', 'input_scale',
-                         'input_zero_point', 'output_scale', 'output_zero_point']
+                         'input_zero_point', 'output_scale', 'output_zero_point', 'old_bn_weight', 'old_bn_bias']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
