@@ -11,6 +11,7 @@ import functools
 import builtins
 
 from itertools import chain
+from turtle import st
 from types import FunctionType, MethodType, ModuleType
 from typing import Any, Dict, Iterable, Iterator, Optional, Set, Tuple, Type, List, Callable, Union
 
@@ -21,7 +22,6 @@ from torch.nn.modules.container import Sequential, ModuleList, ModuleDict, Param
 from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
 from torch.fx._symbolic_trace import _Patcher, _proxyable_classes
-from torch.fx import graph as fx_graph
 from torch.fx.graph import Graph
 from torch.fx.node import Target, Node
 from torch.fx.proxy import TracerBase
@@ -816,6 +816,8 @@ class GraphAppendingConcreteTracer(ConcreteTracer):
 
 
 class MagicMethodPatcher:
+    from torch.fx import graph as fx_graph
+    from torch.fx import graph_module as fx_graph_module
     magic_methods_ori = fx_graph.magic_methods
     magic_methods_new = {
         **fx_graph.magic_methods,
@@ -825,6 +827,36 @@ class MagicMethodPatcher:
         'contains': '{1} in {0}',
     }
     format_target_ori = fx_graph._format_target
+    copy_attr_ori = fx_graph_module._copy_attr
+    
+    @staticmethod
+    def copy_attr_new(from_module: torch.nn.Module, to_module: torch.nn.Module, target: str):
+        *prefix, field = target.split('.')
+        for item in prefix:
+            f = getattr(from_module, item)
+            t = getattr(to_module, item, None)
+            if f is t:
+                return
+
+            if t is None:
+                if isinstance(f, Sequential):
+                    t = Sequential()
+                elif isinstance(f, ModuleList):
+                    t = ModuleList()
+                elif isinstance(f, ModuleDict):
+                    t = ModuleDict()
+                else:
+                    t = torch.nn.Module()
+                setattr(to_module, item, t)
+            from_module, to_module = f, t
+
+        orig = getattr(from_module, field)
+        # If it is a tensor and not a parameter attribute of a module, it should be a named buffer.
+        # So, we register it as a named buffer in the target module.
+        if isinstance(orig, torch.Tensor) and not isinstance(orig, torch.nn.Parameter):
+            to_module.register_buffer(field, orig)
+        else:
+            setattr(to_module, field, orig)
 
     def format_target_new(self, base: str, target: str) -> str:
         elems = target.split('.')
@@ -850,12 +882,14 @@ class MagicMethodPatcher:
         self.root = root
         
     def __enter__(self):
-        fx_graph.magic_methods = self.magic_methods_new
-        fx_graph._format_target = self.format_target_new
+        self.fx_graph.magic_methods = self.magic_methods_new
+        self.fx_graph._format_target = self.format_target_new
+        self.fx_graph_module._copy_attr = self.copy_attr_new
 
     def __exit__(self, exc_type, exc_value, tb):
-        fx_graph.magic_methods = self.magic_methods_ori
-        fx_graph._format_target = self.format_target_ori
+        self.fx_graph.magic_methods = self.magic_methods_ori
+        self.fx_graph._format_target = self.format_target_ori
+        self.fx_graph_module._copy_attr = self.copy_attr_ori
         return exc_type is None
 
 def _create_wrapped_leaf_func(func, init_tracers = ()):
