@@ -16,6 +16,8 @@ from typing import Any, Dict, Iterable, Iterator, Optional, Set, Tuple, Type, Li
 
 import torch
 from torch._C import ScriptObject
+from torch.nn.modules.container import Sequential, ModuleList, ModuleDict, ParameterList, ParameterDict
+
 from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
 from torch.fx._symbolic_trace import _Patcher, _proxyable_classes
@@ -43,6 +45,8 @@ _orig_list: Type[Any] = builtins.list
 _orig_set: Type[Any] = builtins.set
 _orig_frozenset: Type[Any] = builtins.frozenset
 _orig_dict: Type[Any] = builtins.dict
+_orig_map: Type[Any] = builtins.map
+_orig_zip: Type[Any] = builtins.zip
 
 _orig_len: Callable = builtins.len
 _orig_not: Callable = operator.not_
@@ -61,47 +65,61 @@ class ConcreteTracer(TracerBase):
     default_autowrap_modules = (
         math,
     )
-    default_autowrap_leaf_funcs = (
+    default_autowrap_leaf_funcs = [
         _orig_len,
         _orig_not,
         _orig_is,
         _orig_is_not,
         _orig_contains,
         _orig_index,
+    ]
+    for name in dir(torch.nn.functional):
+        attr = getattr(torch.nn.functional, name)
+        if _orig_isinstance(attr, FunctionType) and not name.startswith('__'):
+            default_autowrap_leaf_funcs.append(attr)
+    default_autowrap_force_leaf_funcs = (
+        torch.rand,
+        torch.randn,
+        torch.randint,
+        torch.rand_like,
+        torch.randn_like,
+        torch.randint_like,
+        torch.randperm,
     )
     default_autowrap_leaf_methods = (
-        (torch.nn.modules.container.Sequential, '__getitem__'),
-        (torch.nn.modules.container.Sequential, '__len__'),
-        (torch.nn.modules.container.Sequential, '__iter__'),
+        (Sequential, '__getitem__', operator.getitem),
+        (Sequential, '__len__', _orig_len),
+        (Sequential, '__iter__', iter),
 
-        (torch.nn.modules.container.ModuleList, '__getitem__'),
-        (torch.nn.modules.container.ModuleList, '__len__'),
-        (torch.nn.modules.container.ModuleList, '__iter__'),
+        (ModuleList, '__getitem__', operator.getitem),
+        (ModuleList, '__len__', _orig_len),
+        (ModuleList, '__iter__', iter),
 
-        (torch.nn.modules.container.ModuleDict, '__getitem__'),
-        (torch.nn.modules.container.ModuleDict, '__len__'),
-        (torch.nn.modules.container.ModuleDict, '__iter__'),
-        (torch.nn.modules.container.ModuleDict, '__contains__'),
+        (ModuleDict, '__getitem__', operator.getitem),
+        (ModuleDict, '__len__', _orig_len),
+        (ModuleDict, '__iter__', iter),
+        (ModuleDict, '__contains__', _orig_contains),
 
-        (torch.nn.modules.container.ParameterList, '__getitem__'),
-        (torch.nn.modules.container.ParameterList, '__len__'),
-        (torch.nn.modules.container.ParameterList, '__iter__'),
+        (ParameterList, '__getitem__', operator.getitem),
+        (ParameterList, '__len__', _orig_len),
+        (ParameterList, '__iter__', iter),
 
-        (torch.nn.modules.container.ParameterDict, '__getitem__'),
-        (torch.nn.modules.container.ParameterDict, '__len__'),
-        (torch.nn.modules.container.ParameterDict, '__iter__'),
-        (torch.nn.modules.container.ParameterDict, '__contains__'),
+        (ParameterDict, '__getitem__', operator.getitem),
+        (ParameterDict, '__len__', _orig_len),
+        (ParameterDict, '__iter__', iter),
+        (ParameterDict, '__contains__', _orig_contains),
     )
     default_autowrap_leaf_classes = (
-        _orig_range,
-        _orig_bool,
+        (builtins, 'range'),
+        (builtins, 'bool'),
+        (builtins, 'zip'),
     )
     default_autowrap_leaf_iterable_classes = (
-        _orig_tuple,
-        _orig_list,
-        _orig_set,
-        _orig_frozenset,
-        _orig_dict,
+        (builtins, 'tuple'),
+        (builtins, 'list'),
+        (builtins, 'set'),
+        (builtins, 'frozenset'),
+        (builtins, 'dict'),
     )
     default_autowrap_funcs = (
         # no necessary input for tensor, so __torch_function__ will not be called. need to be wrapped manually.
@@ -110,7 +128,7 @@ class ConcreteTracer(TracerBase):
         #   2. some with no proxy input functions such as 'torch.rand' should also be traced.
         torch.arange,
         torch.meshgrid,
-        operator.index,
+        # operator.index,
     )
     @compatibility(is_backward_compatible=True)
     def __init__(self, autowrap_modules: Tuple[ModuleType] = default_autowrap_modules,
@@ -138,6 +156,7 @@ class ConcreteTracer(TracerBase):
         self.submodule_paths: Optional[Dict[torch.nn.Module, str]] = None
         
         self.autowrap_leaf_funcs = ConcreteTracer.default_autowrap_leaf_funcs
+        self.autowrap_force_leaf_funcs = ConcreteTracer.default_autowrap_force_leaf_funcs
         self.autowrap_leaf_methods = ConcreteTracer.default_autowrap_leaf_methods
         self.autowrap_leaf_classes = ConcreteTracer.default_autowrap_leaf_classes
         self.autowrap_leaf_iterable_classes = ConcreteTracer.default_autowrap_leaf_iterable_classes
@@ -264,7 +283,7 @@ class ConcreteTracer(TracerBase):
             qualname: Optional[str] = self.tensor_attrs.get(a)
 
             # Tensor was not found in the Module hierarchy, stow it away in a
-            # special attribute and set the qualname to refer to that
+            # TODO: warning for the not found tensor
             if not qualname:
                 i = 0
                 while True:
@@ -293,6 +312,9 @@ class ConcreteTracer(TracerBase):
             return self.create_node('get_attr', qualname, (), {})
 
         if isinstance(a, (torch.autograd.function.Function, torch.autograd.function.FunctionMeta)):
+            return a
+        
+        if f"{type(a)}" == '<class \'numpy.ndarray\'>':
             return a
             
         return super().create_arg(a)
@@ -406,7 +428,7 @@ class ConcreteTracer(TracerBase):
             cnt += 1
 
             default_arg = ()
-            if name in default_args:
+            if name in default_args and not name.startswith('*'):
                 default_arg = (default_args[name],)
                 
             if name in concrete_args:
@@ -441,9 +463,10 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def trace(self, root: Union[torch.nn.Module, Callable[..., Any]],
-                   concrete_args: Optional[Dict[str, Any]],
-                   use_operator_patch: bool = True,
-                   operator_patch_backlist: List[str] = []) -> Graph:
+                concrete_args: Optional[Dict[str, Any]],
+                use_operator_patch: bool = True,
+                operator_patch_backlist: List[str] = [],
+                forwrad_function_name: str = 'forward') -> Graph:
         """
         similar to _symbolic_trace.Tracer.trace
         different args:
@@ -469,10 +492,10 @@ class ConcreteTracer(TracerBase):
             self.root = root
 
             assert hasattr(
-                root, self.traced_func_name
-            ), f"traced_func_name={self.traced_func_name} doesn't exist in {type(root).__name__}"
+                root, forwrad_function_name
+            ), f"traced_func_name={forwrad_function_name} doesn't exist in {type(root).__name__}"
 
-            fn = getattr(root, self.traced_func_name)
+            fn = getattr(root, forwrad_function_name)
             self.submodule_paths = {mod: name for name, mod in root.named_modules()}
         else:
             self.root = torch.nn.Module()
@@ -525,6 +548,38 @@ class ConcreteTracer(TracerBase):
                                 self._autowrap_function_ids)
                 return self._module_call(mod, args, kwargs)
 
+        @functools.wraps(_orig_map)
+        def map_wrapper(callable, *iterables: Iterable[Any]):
+            # _autowrap_check(self.patcher, getattr(callable, "__globals__", {}), self._autowrap_function_ids)
+            tracers = _orig_set()
+            for aiter in iterables:
+                if _orig_isinstance(aiter, ep.Proxy):
+                    tracers.add(aiter.tracer)
+            if _orig_len(tracers) > 1:
+                raise Exception('more than 1 tracer detected. please report the issue')
+            elif _orig_len(tracers) == 1:
+                results = _orig_list()
+                for args in _orig_zip(*iterables):
+                    results.append(callable(*args))
+                return next(iter(tracers)).create_proxy('call_function', _orig_tuple, (results,), {})
+            
+            ## for the multi-level list/tuple
+            iterables = _orig_list(_orig_list(it) for it in iterables)
+            for it in iterables:
+                for arg in it:
+                    if _orig_isinstance(arg, ep.Proxy):
+                        tracers.add(arg.tracer)
+            if _orig_len(tracers) > 1:
+                raise Exception('more than 1 tracer detected. please report the issue')
+            elif _orig_len(tracers) == 1:
+                results = _orig_list()
+                for args in _orig_zip(*iterables):
+                    results.append(callable(*args))
+                return next(iter(tracers)).create_proxy('call_function', _orig_tuple, (results,), {})
+            ## for the multi-level list/tuple end
+                
+            return _orig_map(callable, *iterables)
+
         class AGFuncWrapper(torch.autograd.Function):
             @staticmethod
             def forward(ctx, clz, *args, **kwargs):
@@ -559,33 +614,37 @@ class ConcreteTracer(TracerBase):
             else:
                 module = sys.modules[func.__module__]
             self.leaf_func_wrapped[func] = (module, func.__name__, _create_wrapped_leaf_func(func))
+            
+        self.force_leaf_func_wrapped = dict()
+        for func in self.autowrap_force_leaf_funcs:
+            if func.__module__.startswith('_'):
+                module = sys.modules[func.__module__[1:]]
+            else:
+                module = sys.modules[func.__module__]
+            self.force_leaf_func_wrapped[func] = (module, func.__name__, _create_wrapped_leaf_func(func, (self,)))
         
         self.leaf_method_wrapped = dict()
-        for clz, name in self.autowrap_leaf_methods:
+        for clz, name, to_func in self.autowrap_leaf_methods:
             method = getattr(clz, name)
-            self.leaf_method_wrapped[method] = (clz, name, _create_wrapped_leaf_func(method))
-        
-        self.leaf_class_wrapped = dict()
-        for clz in self.autowrap_leaf_classes:
-            if clz.__module__.startswith('_'):
-                module = sys.modules[clz.__module__[1:]]
-            else:
-                module = sys.modules[clz.__module__]
-            self.leaf_class_wrapped[clz] = (module, clz.__name__, _create_wrapped_leaf_class(clz))
+            self.leaf_method_wrapped[method] = (clz, name, _create_wrapped_leaf_method(method, name, to_func))
             
-        self.leaf_iterable_class_wrapped = dict()
-        for clz in self.autowrap_leaf_iterable_classes:
-            if clz.__module__.startswith('_'):
-                module = sys.modules[clz.__module__[1:]]
-            else:
-                module = sys.modules[clz.__module__]
-            self.leaf_iterable_class_wrapped[clz] = (module, clz.__name__, _create_wrapped_leaf_iterable_class(clz))
+        self.leaf_class_wrapped = list()
+        for path, name in self.autowrap_leaf_classes:
+            clz = getattr(path, name)
+            self.leaf_class_wrapped.append((path, name, clz, _create_wrapped_leaf_class(clz)))
+            
+        self.leaf_iterable_class_wrapped = list()
+        for path, name in self.autowrap_leaf_iterable_classes:
+            clz = getattr(path, name)
+            self.leaf_iterable_class_wrapped.append((path, name, clz, _create_wrapped_leaf_iterable_class(clz)))
         
-        self.clz_wrapper_map = dict()
-        for clz in self.autowrap_leaf_classes:
-            self.clz_wrapper_map[self.leaf_class_wrapped[clz][2]] = clz
-        for clz in self.autowrap_leaf_iterable_classes:
-            self.clz_wrapper_map[self.leaf_iterable_class_wrapped[clz][2]] = clz
+        self.clz_wrapper_map = {
+            map_wrapper: _orig_map,
+        }
+        for _path, _name, clz, wrapped in self.leaf_class_wrapped:
+            self.clz_wrapper_map[wrapped] = clz
+        for _path, _name, clz, wrapped in self.leaf_iterable_class_wrapped:
+            self.clz_wrapper_map[wrapped] = clz
             
         @functools.wraps(_orig_isinstance)
         def isinstance_wrapper(instance, clz):
@@ -623,6 +682,7 @@ class ConcreteTracer(TracerBase):
             self.patcher.patch_method(torch.autograd.Function, "apply", agfunc_apply_wrapper, deduplicate=False)
             
             self.patcher.patch_method(builtins, "isinstance", isinstance_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "map", map_wrapper, deduplicate=False)
             # self.patcher.patch_method(builtins, "range", range_wrapper, deduplicate=False)
             # self.patcher.patch_method(builtins, "bool", bool_wrapper, deduplicate=False)
             # # self.patcher.patch_method(builtins, "slice", slice_wrapper, deduplicate=False)
@@ -640,12 +700,14 @@ class ConcreteTracer(TracerBase):
             # self.patcher.patch_method(operator, "index", index_wrapper, deduplicate=False)
             for func, (module, name, wapper) in self.leaf_func_wrapped.items():
                 self.patcher.patch_method(module, name, wapper, deduplicate=False)
+            for func, (module, name, wapper) in self.force_leaf_func_wrapped.items():
+                self.patcher.patch_method(module, name, wapper, deduplicate=False)
             for method, (module, name, wapper) in self.leaf_method_wrapped.items():
                 self.patcher.patch_method(module, name, wapper, deduplicate=False)
-            for clz, (module, name, wapper) in self.leaf_class_wrapped.items():
-                self.patcher.patch_method(module, name, wapper, deduplicate=False)
-            for clz, (module, name, wapper) in self.leaf_iterable_class_wrapped.items():
-                self.patcher.patch_method(module, name, wapper, deduplicate=False)
+            for path, name, clz, wapper in self.leaf_class_wrapped:
+                self.patcher.patch_method(path, name, wapper, deduplicate=False)
+            for path, name, clz, wapper in self.leaf_iterable_class_wrapped:
+                self.patcher.patch_method(path, name, wapper, deduplicate=False)
                 
             _patch_wrapped_functions(self.patcher)
             _autowrap_check(self.patcher, fn_globals, self._autowrap_function_ids)
@@ -762,18 +824,44 @@ class MagicMethodPatcher:
         'is_not': '{} is not {}',
         'contains': '{1} in {0}',
     }
+    format_target_ori = fx_graph._format_target
 
+    def format_target_new(self, base: str, target: str) -> str:
+        elems = target.split('.')
+        r = base
+        field = None
+        if r == 'self':
+            field = self.root
+        for e in elems:
+            if isinstance(field, (Sequential, ModuleList, ParameterList)):
+                # r = f'operator.getitem({r}, {e})'
+                r = f'{r}[{e}]'
+            elif isinstance(field, (ModuleDict, ParameterDict)):
+                r = f'{r}["{e}"]'
+            elif not e.isidentifier():
+                r = f'getattr({r}, "{e}")'
+            else:
+                r = f'{r}.{e}'
+            if field is not None:
+                field = getattr(field, e)
+        return r
+    
+    def __init__(self, root):
+        self.root = root
+        
     def __enter__(self):
         fx_graph.magic_methods = self.magic_methods_new
+        fx_graph._format_target = self.format_target_new
 
     def __exit__(self, exc_type, exc_value, tb):
         fx_graph.magic_methods = self.magic_methods_ori
+        fx_graph._format_target = self.format_target_ori
         return exc_type is None
 
-def _create_wrapped_leaf_func(func):
+def _create_wrapped_leaf_func(func, init_tracers = ()):
     @functools.wraps(func)
     def func_wrapper(*args, **kwargs):
-        tracers = set()
+        tracers = _orig_set(init_tracers)
         for item in (*args, *kwargs.values()):
             if isinstance(item, ep.ConcreteProxy):
                 tracers.add(item.tracer)
@@ -786,18 +874,22 @@ def _create_wrapped_leaf_func(func):
             return func(*args, **kwargs)
     return func_wrapper
 
-def _create_wrapped_leaf_method(method):
+def _create_wrapped_leaf_method(method, name: str, to_func: Optional[Callable]):
     @functools.wraps(method)
     def method_wrapper(*args, **kwargs):
-        tracers = set()
+        tracers = _orig_set()
         for item in (*args, *kwargs.values()):
             if isinstance(item, ep.ConcreteProxy):
                 tracers.add(item.tracer)
         if _orig_len(tracers) > 1:
             raise Exception('more than 1 tracer detected. please report the issue')
         elif _orig_len(tracers) == 1:
-            return next(iter(tracers)).create_proxy('call_function',
-                method, args, kwargs)
+            if to_func is None:
+                return next(iter(tracers)).create_proxy('call_method',
+                    name, args, kwargs)
+            else:
+                return next(iter(tracers)).create_proxy('call_function',
+                    to_func, args, kwargs)
         else:
             return method(*args, **kwargs)
     return method_wrapper
@@ -805,7 +897,7 @@ def _create_wrapped_leaf_method(method):
 def _create_wrapped_leaf_class(clz):
     @functools.wraps(clz)
     def clz_wrapper(*args, **kwargs):
-        tracers = set()
+        tracers = _orig_set()
         for item in (*args, *kwargs.values()):
             if isinstance(item, ep.ConcreteProxy):
                 tracers.add(item.tracer)
@@ -843,10 +935,11 @@ def _create_wrapped_leaf_iterable_class(clz):
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Optional[Dict[str, Any]],
                    use_function_patch: bool = True,
-                   function_patch_backlist: List[str] = []) -> GraphModule:
+                   function_patch_backlist: List[str] = [],
+                   forwrad_function_name: str = 'forward') -> GraphModule:
     tracer = ConcreteTracer()
-    graph = tracer.trace(root, concrete_args, use_function_patch, function_patch_backlist)
+    graph = tracer.trace(root, concrete_args, use_function_patch, function_patch_backlist, forwrad_function_name)
     name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
-    with MagicMethodPatcher():
+    with MagicMethodPatcher(tracer.root):
         traced = GraphModule(tracer.root, graph, name)
     return traced
