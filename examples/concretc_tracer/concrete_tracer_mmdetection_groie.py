@@ -11,7 +11,7 @@ from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
 
 folder_prefix = 'C:\\Works\\mmdetection' # replace this path with yours
 # Specify the path to model config and checkpoint file
-config_file = '%s/configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py' % folder_prefix
+config_file = '%s/configs/groie/faster_rcnn_r50_fpn_groie_1x_coco.py' % folder_prefix
 config = mmcv.Config.fromfile(config_file)
 
 # RoIAlign will cause different errors when use cpu. there are 4 ways to avoid it

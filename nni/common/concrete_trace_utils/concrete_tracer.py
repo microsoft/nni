@@ -85,10 +85,6 @@ class ConcreteTracer(TracerBase):
         _orig_contains:             ((), False, None),
         _orig_index:                ((), False, None),
         
-        # maybe no input tensor args, so '__torch_function__' will not be called
-        torch.arange:               ((), False, None),
-        torch.meshgrid:             ((), False, None),
-        
         # force-traced function
         torch.rand:                 ((), True, None),
         torch.randn:                ((), True, None),
@@ -124,6 +120,18 @@ class ConcreteTracer(TracerBase):
     for name in dir(torch.nn.functional):
         attr = getattr(torch.nn.functional, name)
         if _orig_isinstance(attr, FunctionType) and not name.startswith('__') and attr.__module__ != 'torch.nn.modules.utils':
+            default_autowrap_leaf_function[attr] = ((), False, None)
+    for name in dir(torch._C._VariableFunctions):
+        attr = getattr(torch._C._VariableFunctions, name)
+        if attr not in default_autowrap_leaf_function and callable(attr) and not name.startswith('__'):
+            default_autowrap_leaf_function[attr] = ((), False, None)
+    for name in dir(torch._C._nn):
+        attr = getattr(torch._C._nn, name)
+        if attr not in default_autowrap_leaf_function and callable(attr) and not name.startswith('__'):
+            default_autowrap_leaf_function[attr] = ((), False, None)
+    for name in dir(torch._C._TensorBase):
+        attr = getattr(torch._C._TensorBase, name)
+        if attr not in default_autowrap_leaf_function and callable(attr) and not name.startswith('__'):
             default_autowrap_leaf_function[attr] = ((), False, None)
 
     default_autowrap_leaf_class: Dict[Any, Tuple[Iterable[Union[ModuleType, Type], str], bool]] = {
@@ -166,23 +174,6 @@ class ConcreteTracer(TracerBase):
                 self._autowrap_search.append(sys.modules[func.__module__])
 
         self.submodule_paths: Optional[Dict[torch.nn.Module, str]] = None
-        
-        # self.autowrap_leaf_funcs = autowrap_leaf_funcs
-        # self.autowrap_force_leaf_funcs = autowrap_force_leaf_funcs
-        # self.autowrap_leaf_methods = autowrap_leaf_methods
-        # self.autowrap_leaf_classes = autowrap_leaf_classes
-        # self.autowrap_leaf_iterable_classes = autowrap_leaf_iterable_classes
-        # self.autowrap_leaf_agfuncs = autowrap_leaf_agfuncs
-        # self._autowrap_function_ids.update(set([id(f) for f in self.autowrap_leaf_funcs]))
-        # self._autowrap_function_ids.update(set([id(f) for f in self.autowrap_force_leaf_funcs]))
-        # self._autowrap_function_ids.update(set([id(getattr(path, name)) for path, name in self.autowrap_leaf_classes]))
-        # self._autowrap_function_ids.update(set([id(getattr(path, name)) for path, name in self.autowrap_leaf_iterable_classes]))
-        # self._autowrap_function_ids.update(set([id(f) for f in self.autowrap_leaf_agfuncs]))
-        # for obj in self.autowrap_leaf_agfuncs:
-        #     if isinstance(obj, Type):
-        #         assert issubclass(obj, torch.autograd.Function)
-                
-        # self._autowrap_function_ids.update(set([id(getattr(path, 'apply')) ))
         
         self.autowrap_leaf_function = autowrap_leaf_function
         self.autowrap_leaf_class = autowrap_leaf_class
@@ -645,10 +636,12 @@ class ConcreteTracer(TracerBase):
                 wrapped = _create_wrapped_leaf_func(func)
             else:
                 if func.__qualname__.startswith('_TensorBase'):
-                    positions = (*positions, (torch._C._TensorBase, func.__name__), (torch.Tensor, func.__name__))
+                    positions = (*positions, (torch.Tensor, func.__name__))
                     wrapped = _create_wrapped_leaf_method(func, func.__name__, to_func)
                 elif func.__qualname__.startswith('_VariableFunctionsClass'):
-                    positions = (*positions, (torch, func.__name__))
+                    if hasattr(torch, func.__name__):
+                        # avoid bad attr like 'unique_dim'
+                        positions = (*positions, (torch, func.__name__))
                     if is_force_trace:
                         wrapped = _create_wrapped_leaf_func(func, (self,))
                     else:
