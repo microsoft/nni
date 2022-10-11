@@ -33,11 +33,11 @@ def recompile_from_code(code: str, globals: dict):
 
 traced_model = concrete_trace(model, {'x': dummy_input}, False)
 recompiled = recompile_from_code(traced_model.code, model.forward.__globals__)
+print('traced code:\n', traced_model.code)
 
 out_a0 = model(dummy_input)
 out_a1 = traced_model(dummy_input)
 out_a2 = recompiled(model, dummy_input)
-print('traced code:\n', traced_model.code)
 print('out_a0 == out_a1:', torch.equal(out_a0, out_a1))
 print('out_a0 == out_a2:', torch.equal(out_a0, out_a2))
 

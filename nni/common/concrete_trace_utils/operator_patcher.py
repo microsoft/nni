@@ -154,8 +154,7 @@ class OperatorPatcher:
     def patch(self, func):
         if not hasattr(func, '__module__') or func.__module__ is None or func.__module__.startswith('torch'):
             return func
-        func_path = '%s.%s' % (func.__module__, func.__name__)
-        if self.use_operator_patch == (func_path in self.operator_patch_backlist):
+        if self.use_operator_patch == (func in self.operator_patch_backlist):
             return func
         if isinstance(func, torch.nn.Module):
             func = func.forward
