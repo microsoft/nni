@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import inspect
 from typing import Any, Dict, List, Tuple, Type, Union, Literal
 
@@ -16,6 +17,7 @@ from .target_space import (
 )
 from .utils import select_modules, canonicalize_settings
 
+_logger = logging.getLogger(__name__)
 SMALL_MASK_VALUE = -1000
 OUTPUT_FORMAT = Union[Tensor, Tuple[Tensor, Any], Dict[str, Union[Tensor, Any]]]
 
@@ -46,7 +48,7 @@ class ModuleWrapper(torch.nn.Module):
         object.__setattr__(self, 'module', module)
         self.module_forward = self.module.forward
         self.name = module_name
-        self.config = config
+        self.config = config if config is not None else {}
 
         # the arguments' name of self.module.forward
         self._input_args_names = inspect.getfullargspec(self.module.forward).args[1:]
@@ -63,13 +65,15 @@ class ModuleWrapper(torch.nn.Module):
         if 'distillation' in config:
             self.extend_target_spaces(config.get('distillation'), 'distillation')
 
-        # if the wrapper is initialized, the module will be wrap immediately
-        self.wrap()
-
     def extra_repr(self) -> str:
         return f'module={self.module.__class__.__name__}({self.module.extra_repr()}), module_name={self.name}'
 
     def wrap(self):
+        if hasattr(self.module, '_nni_wrapper') and getattr(self.module, '_nni_wrapper') == self:
+            warn_msg = f'Wrapper of {self.name} is wrapped, no need to wrap again.'
+            _logger.warning(warn_msg)
+            return
+        assert not hasattr(self.module, '_nni_wrapper'), f'{self.name} is already wrapped by another wrapper, can not wrap it again.'
         setattr(self.module, '_nni_wrapper', self)
         self.module.forward = self.forward
 
@@ -84,6 +88,10 @@ class ModuleWrapper(torch.nn.Module):
                 self.module.register_buffer(target_name, target_space.target.data.clone())
 
     def unwrap(self):
+        if not hasattr(self.module, '_nni_wrapper'):
+            warn_msg = f'{self.name} is not wrapped, no need to unwrap.'
+            _logger.warning(warn_msg)
+
         for target_name, target_space in self.pruning_target_spaces.items():
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
@@ -99,8 +107,8 @@ class ModuleWrapper(torch.nn.Module):
 
     def extend_target_spaces(self, sub_config: Dict[str, Any], mode: Literal['pruning', 'quantization', 'distillation']):
         assert mode in ['pruning', 'quantization', 'distillation']
-        assert not hasattr(self.module, '_nni_wrapper'), \
-            f'Module {self.name} is wrapped, please unwrap the module before extend target spaces.'
+        # assert not hasattr(self.module, '_nni_wrapper'), \
+        #     f'Module {self.name} is wrapped, please unwrap the module before extend target spaces.'
 
         if mode == 'pruning':
             target_spaces = self.pruning_target_spaces
@@ -112,7 +120,9 @@ class ModuleWrapper(torch.nn.Module):
         settings = canonicalize_settings(self.module, sub_config, mode)
         inter_sec = set(target_spaces.keys()).intersection(settings.keys())
         for name in inter_sec:
-            print(f'{name} have already configured, the new config will be ignored.')
+            # if need to update target space setting, should directly update it, not extend a repeat target.
+            warn_msg = f'{name} have already configured, the new config will be ignored.'
+            _logger.warning(warn_msg)
             settings.pop(name)
         target_spaces.update(self._create_target_spaces(settings, PruningTargetSpace))
 
@@ -251,16 +261,17 @@ class ModuleWrapper(torch.nn.Module):
 
 
 def register_wrapper(model: torch.nn.Module, config_list: List[Dict[str, Any]],
-                     mode: Literal['pruning', 'quantization', 'distillation']) -> Dict[str, ModuleWrapper]:
+                     mode: Literal['pruning', 'quantization', 'distillation'],
+                     existed_wrappers: Dict[str, ModuleWrapper] | None = None) -> Dict[str, ModuleWrapper]:
     assert mode in ['pruning', 'quantization', 'distillation']
-    module_wrappers = {}
+    existed_wrappers = existed_wrappers if existed_wrappers else {}
+    module_wrappers = {k: v for k, v in existed_wrappers.items()}
     for config in config_list:
         modules, public_config = select_modules(model, config)
         for module_name, module in modules.items():
-            if hasattr(module, '_nni_wrapper'):
-                wrapper: ModuleWrapper = getattr(module, '_nni_wrapper')
-                wrapper.extend_target_spaces(public_config, mode)
+            if module_name in module_wrappers:
+                module_wrappers[module_name].extend_target_spaces(public_config, mode)
             else:
                 wrapper = ModuleWrapper(module, module_name, {mode: public_config})
-            module_wrappers[module_name] = wrapper
+                module_wrappers[module_name] = wrapper
     return module_wrappers
