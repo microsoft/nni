@@ -90,6 +90,9 @@ class ConcreteProxy(Proxy):
         elif insts[cur].opcode == self.op_unpack_sequence:
             # in executing `a, b, c = atuple`
             return ConcreteUnpackIterProxy(self)
+        elif insts[cur].opname == 'GET_ITER' and insts[cur + 1].opname == 'FOR_ITER' and et._orig_isinstance(self.value, et._orig_range):
+            # in executing `for i in range(...)`
+            return iter(self.value)
         else:
             return self.tracer.create_proxy('call_function', iter, (self,), {})
 
@@ -319,7 +322,7 @@ def map_aggregate_not_proxy(a, fn):
     if et._orig_isinstance(a, ConcreteProxy):
         return fn(a)
     elif et._orig_isinstance(a, et._orig_tuple):
-        t = tuple(map_aggregate_not_proxy(elem, fn) for elem in a)
+        t = et._orig_tuple(map_aggregate_not_proxy(elem, fn) for elem in a)
         # Support NamedTuple (if it has `_fields`) by repacking into original type.
         return t if not hasattr(a, '_fields') else type(a)(*t)
     elif et._orig_isinstance(a, et._orig_list):
