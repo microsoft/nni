@@ -152,11 +152,11 @@ const Customize = ((props: CustomizeProps): any => {
         closeCustomizeModal();
     };
 
-    useEffect(() => {
-        // 感觉这个组件是多余的，为什么要考虑更新的问题呢，实测明白下
-        const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
-        setCopyTrialParameter(originCopyTrialPara);
-    }, [copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined, copyTrialId]);// 怀疑第二个条件 copyTrialId无效，可以去掉，是class组件更新的避坑写法
+    // useEffect(() => {
+    //     // 感觉这个组件是多余的，为什么要考虑更新的问题呢，实测明白下
+    //     const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
+    //     setCopyTrialParameter(originCopyTrialPara);
+    // }, [copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined, copyTrialId]);// 怀疑第二个条件 copyTrialId无效，可以去掉，是class组件更新的避坑写法
     
     return (
         <Stack>
@@ -261,7 +261,7 @@ const Customize = ((props: CustomizeProps): any => {
             </Dialog>
         </Stack>
     );
-};
+});
 
 // class  extends React.Component<CustomizeProps, CustomizeState> {
 
