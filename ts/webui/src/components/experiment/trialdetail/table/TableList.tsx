@@ -54,9 +54,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
         this.state = {
             displayedItems: [],
             displayedColumns:
-                sessionStorage.getItem('columns') !== null
+                localStorage.getItem(`${EXPERIMENT.profile.id}_columns`) !== null
                     ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                      JSON.parse(sessionStorage.getItem('columns')!)
+                      JSON.parse(localStorage.getItem(`${EXPERIMENT.profile.id}_columns`)!)
                     : defaultDisplayedColumns,
             columns: [],
             searchType: 'id',

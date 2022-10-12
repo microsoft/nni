@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Dialog, DialogType, DialogFooter, Checkbox, PrimaryButton, DefaultButton } from '@fluentui/react';
-
+import { EXPERIMENT } from '@static/datamodel';
 /**
  * changeColumnComponent file is for [customized table column, customized hyper-parameter graph yAxis]
  * and currently it uses localstorage to store the customized results
@@ -67,9 +67,9 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         const selectedColumns = allColumns.map(column => column.key).filter(key => currentSelected.includes(key));
         onSelectedChange(selectedColumns);
         if (whichComponent === 'table') {
-            sessionStorage.setItem('columns', JSON.stringify(selectedColumns));
+            localStorage.setItem(`${EXPERIMENT.profile.id}_columns`, JSON.stringify(selectedColumns));
         } else {
-            sessionStorage.setItem('paraColumns', JSON.stringify(selectedColumns));
+            localStorage.setItem(`${EXPERIMENT.profile.id}_paraColumns`, JSON.stringify(selectedColumns));
         }
         this.hideDialog();
     };

@@ -56,9 +56,9 @@ class Para extends React.Component<ParaProps, ParaState> {
             customizeColumnsDialogVisible: false,
             availableDimensions: [],
             chosenDimensions:
-                sessionStorage.getItem('paraColumns') !== null
+                localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`) !== null
                     ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                      JSON.parse(sessionStorage.getItem('paraColumns')!)
+                      JSON.parse(localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`)!)
                     : []
         };
     }
