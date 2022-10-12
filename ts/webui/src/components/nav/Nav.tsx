@@ -63,7 +63,12 @@ class NavCon extends React.Component<NavProps, NavState> {
             method: 'GET'
         }).then(res => {
             if (res.status === 200) {
-                this.setState({ version: res.data });
+                let formatVersion = res.data;
+                // 2.0 will get 2.0.0 by node, so delete .0 to get real version
+                if (formatVersion.endsWith('.0')) {
+                    formatVersion = formatVersion.slice(0, -2);
+                }
+                this.setState({ version: formatVersion });
             }
         });
     };
@@ -80,7 +85,12 @@ class NavCon extends React.Component<NavProps, NavState> {
 
     openGithubNNI = (): void => {
         const { version } = this.state;
-        const nniLink = `https://github.com/Microsoft/nni/tree/${version}`;
+        // 999.0.0-developing
+        let formatVersion = `v${version}`;
+        if (version === '999.0.0-developing') {
+            formatVersion = 'master';
+        }
+        const nniLink = `https://github.com/Microsoft/nni/tree/${formatVersion}`;
         window.open(nniLink);
     };
 
