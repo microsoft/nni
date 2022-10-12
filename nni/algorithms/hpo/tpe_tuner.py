@@ -218,19 +218,6 @@ class TpeTuner(Tuner):
                 self.dedup.add_history(param)
         _logger.info(f'Replayed {len(data)} FINISHED trials')
 
-    def import_customized_data(self, data): # for dedup customized / resumed
-        if isinstance(data, str):
-            data = nni.load(data)
-
-        for trial in data:
-            # {'parameter_id': 0, 'parameter_source': 'resumed', 'parameters': {'batch_size': 128, ...}
-            if isinstance(trial, str):
-                trial = nni.load(trial)
-            param = format_parameters(trial['parameters'], self.space)
-            self._running_params[trial['parameter_id']] = param
-            self.dedup.add_history(param)
-        _logger.info(f'Replayed {len(data)} RUNING/WAITING trials')
-
 def suggest(args, rng, space, history):
     params = {}
     for key, spec in space.items():

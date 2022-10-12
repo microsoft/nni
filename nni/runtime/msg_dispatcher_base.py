@@ -30,6 +30,7 @@ class MsgDispatcherBase(Recoverable):
     """
 
     def __init__(self, command_channel_url=None):
+        super().__init__()
         self.stopping = False
         if command_channel_url is None:
             command_channel_url = dispatcher_env_vars.NNI_TUNER_COMMAND_CHANNEL
