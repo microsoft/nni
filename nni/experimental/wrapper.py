@@ -65,8 +65,20 @@ class ModuleWrapper(torch.nn.Module):
         if 'distillation' in config:
             self.extend_target_spaces(config.get('distillation'), 'distillation')
 
+        self._frozen = False
+
     def extra_repr(self) -> str:
         return f'module={self.module.__class__.__name__}({self.module.extra_repr()}), module_name={self.name}'
+
+    @property
+    def is_frozen(self) -> bool:
+        return self._frozen
+
+    def freeze(self):
+        self._frozen = True
+
+    def unfreeze(self):
+        self._frozen = False
 
     def wrap(self):
         if hasattr(self.module, '_nni_wrapper') and getattr(self.module, '_nni_wrapper') == self:
@@ -134,6 +146,9 @@ class ModuleWrapper(torch.nn.Module):
             A masks dict, the key should be the target name in the ``self.pruning_target_spaces``,
             and the value is a Tensor contains 0 or 1.
         """
+        if self.is_frozen:
+            warn_msg = f'Can not update masks for frozen wrapper {self.name}, skip this update.'
+            _logger.warning(warn_msg)
         for target_name, mask in masks.items():
             assert target_name in self.pruning_target_spaces, f'{target_name} is not set to a pruning target in {self.name}.'
             self.pruning_target_spaces[target_name].mask = mask
@@ -266,11 +281,15 @@ def register_wrapper(model: torch.nn.Module, config_list: List[Dict[str, Any]],
     assert mode in ['pruning', 'quantization', 'distillation']
     existed_wrappers = existed_wrappers if existed_wrappers else {}
     module_wrappers = {k: v for k, v in existed_wrappers.items()}
+    for _, wrapper in module_wrappers.items():
+        wrapper.freeze()
     for config in config_list:
         modules, public_config = select_modules(model, config)
         for module_name, module in modules.items():
             if module_name in module_wrappers:
-                module_wrappers[module_name].extend_target_spaces(public_config, mode)
+                wrapper = module_wrappers[module_name]
+                wrapper.unfreeze()
+                wrapper.extend_target_spaces(public_config, mode)
             else:
                 wrapper = ModuleWrapper(module, module_name, {mode: public_config})
                 module_wrappers[module_name] = wrapper
