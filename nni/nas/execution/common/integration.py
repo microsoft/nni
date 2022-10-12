@@ -4,6 +4,7 @@
 __all__ = ['RetiariiAdvisor']
 
 import logging
+import time
 import os
 from typing import Any, Callable, Optional, Dict, List, Tuple
 
@@ -60,11 +61,12 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.final_metric_callback: Optional[Callable[[int, MetricData], None]] = None
 
         self.parameters_count = 0
-
         # Sometimes messages arrive first before the callbacks get registered.
         # Or in case that we allow engine to be absent during the experiment.
         # Here we need to store the messages and invoke them later.
         self.call_queue: List[Tuple[str, list]] = []
+        # this is for waiting the to-be-recovered trials from nnimanager
+        self._advisor_initialized = False
 
     def register_callbacks(self, callbacks: Dict[str, Callable[..., None]]):
         """
@@ -167,6 +169,10 @@ class RetiariiAdvisor(MsgDispatcherBase):
             Parameter ID that is assigned to this parameter,
             which will be used for identification in future.
         """
+        while not self._advisor_initialized:
+            _logger.info('Wait for RetiariiAdvisor to be initialized...')
+            time.sleep(0.5)
+
         self.parameters_count += 1
         if placement_constraint is None:
             placement_constraint = {
@@ -204,6 +210,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.send(CommandType.NoMoreTrialJobs, '')
 
     def handle_request_trial_jobs(self, num_trials):
+        self._advisor_initialized = True
         _logger.debug('Request trial jobs: %s', num_trials)
         self.invoke_callback('request_trial_jobs', num_trials)
 
@@ -212,10 +219,22 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.search_space = data
 
     def handle_trial_end(self, data):
+        # TODO: we should properly handle the trials in self._customized_parameter_ids instead of ignoring
+        id_ = nni.load(data['hyper_params'])['parameter_id']
+        if self.is_created_in_previous_exp(id_):
+            _logger.info('The end of the recovered trial %d is ignored', id_)
+            return
         _logger.debug('Trial end: %s', data)
-        self.invoke_callback('trial_end', nni.load(data['hyper_params'])['parameter_id'], data['event'] == 'SUCCEEDED')
+        self.invoke_callback('trial_end', id_, data['event'] == 'SUCCEEDED')
 
     def handle_report_metric_data(self, data):
+        # TODO: we should properly handle the trials in self._customized_parameter_ids instead of ignoring
+        if self.is_created_in_previous_exp(data['parameter_id']):
+            _logger.info('The metrics of the recovered trial %d are ignored', data['parameter_id'])
+            return
+        # NOTE: this part is not aligned with hpo tuners.
+        # in hpo tuners, trial_job_id is used for intermediate results handling
+        # parameter_id is for final result handling.
         _logger.debug('Metric reported: %s', data)
         if data['type'] == MetricType.REQUEST_PARAMETER:
             raise ValueError('Request parameter not supported')
@@ -239,4 +258,5 @@ class RetiariiAdvisor(MsgDispatcherBase):
         pass
 
     def handle_add_customized_trial(self, data):
-        pass
+        previous_max_param_id = self.recover_parameter_id(data)
+        self.parameters_count = previous_max_param_id

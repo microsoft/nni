@@ -120,15 +120,10 @@ class MsgDispatcher(MsgDispatcherBase):
         self.tuner.import_data(data)
 
     def handle_add_customized_trial(self, data):
+        global _next_parameter_id
         # data: parameters
-        if not isinstance(data, list):
-            data = [data]
-
-        for _ in data:
-            id_ = _create_parameter_id()
-            _customized_parameter_ids.add(id_)
-
-        self.tuner.import_customized_data(data)
+        previous_max_param_id = self.recover_parameter_id(data)
+        _next_parameter_id = previous_max_param_id + 1
 
     def handle_report_metric_data(self, data):
         """
@@ -137,6 +132,13 @@ class MsgDispatcher(MsgDispatcherBase):
               - 'value': metric value reported by nni.report_final_result()
               - 'type': report type, support {'FINAL', 'PERIODICAL'}
         """
+        if self.is_created_in_previous_exp(data['parameter_id']):
+            if data['type'] == MetricType.FINAL:
+                # only deal with final metric using import data
+                param = self.get_previous_param(data['parameter_id'])
+                trial_data = [{'parameter': param, 'value': load(data['value'])}]
+                self.handle_import_data(trial_data)
+            return
         # metrics value is dumped as json string in trial, so we need to decode it here
         if 'value' in data:
             data['value'] = load(data['value'])
@@ -166,6 +168,10 @@ class MsgDispatcher(MsgDispatcherBase):
              - event: the job's state
              - hyper_params: the hyperparameters generated and returned by tuner
         """
+        id_ = load(data['hyper_params'])['parameter_id']
+        if self.is_created_in_previous_exp(id_):
+            # The end of the recovered trial is ignored
+            return
         trial_job_id = data['trial_job_id']
         _ended_trials.add(trial_job_id)
         if trial_job_id in _trial_history:
@@ -173,7 +179,7 @@ class MsgDispatcher(MsgDispatcherBase):
             if self.assessor is not None:
                 self.assessor.trial_end(trial_job_id, data['event'] == 'SUCCEEDED')
         if self.tuner is not None:
-            self.tuner.trial_end(load(data['hyper_params'])['parameter_id'], data['event'] == 'SUCCEEDED')
+            self.tuner.trial_end(id_, data['event'] == 'SUCCEEDED')
 
     def _handle_final_metric_data(self, data):
         """Call tuner to process final results
