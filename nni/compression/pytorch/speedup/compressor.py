@@ -372,7 +372,7 @@ class ModelSpeedup:
         for node in self.torch_graph.nodes_py.nodes_op:
             successors = self.torch_graph.find_successors(node.unique_name)
             out_degree[node.unique_name] = len(successors)
-            predecessors = self.torch_graph.find_predecessors(node.unique_name)
+            predecessors = set(self.torch_graph.find_predecessors(node.unique_name))
             in_degree[node.unique_name] = len(predecessors)
             if in_degree[node.unique_name] == 0:
                 visit_queue.put(node)
@@ -393,8 +393,8 @@ class ModelSpeedup:
         while not visit_queue.empty():
             curnode = visit_queue.get()
             self.update_indirect_sparsity(curnode)
-            predecessors = self.torch_graph.find_predecessors(
-                curnode.unique_name)
+            predecessors = set(self.torch_graph.find_predecessors(
+                curnode.unique_name))
             for predecessor in predecessors:
                 out_degree[predecessor] -= 1
                 if out_degree[predecessor] == 0:
