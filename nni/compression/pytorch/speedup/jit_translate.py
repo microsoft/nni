@@ -277,7 +277,7 @@ for enum_value, name in enum_to_dtype_names.items():
     if hasattr(torch, name):
         enum_to_dtype_dict[enum_value] = getattr(torch, name)
 
-def arg_trans_dtype(ivalue: Union[int, torch.dtype]):
+def arg_trans_dtype(ivalue: Union[None, int, torch.dtype]) -> Optional[torch.dtype]:
     """
     Special process for dtype.
     Torch will transform dtype to an enum in cpp, so the value of dtype we get in jit is an int.
@@ -303,7 +303,7 @@ enum_to_memory_format_dict = {
     3: torch.channels_last_3d,
 }
 
-def arg_trans_memory_format(ivalue: Union[int, torch.memory_format]):
+def arg_trans_memory_format(ivalue: Union[None, int, torch.memory_format]) -> Optional[torch.memory_format]:
     """
     Special process for memory_format.
     Torch will transform memory_format to an enum in cpp, so the value of memory_format we get in jit is an int.
@@ -338,7 +338,7 @@ for enum_value, name in enum_to_layout_names.items():
     if hasattr(torch, name):
         enum_to_layout_dict[enum_value] = getattr(torch, name)
 
-def arg_trans_layout(ivalue: Union[int, torch.layout]):
+def arg_trans_layout(ivalue: Union[None, int, torch.layout]) -> Optional[torch.layout]:
     """
     Special process for layout.
     Torch will transform layout to an enum in cpp, so the value of layout we get in jit is an int.
@@ -363,44 +363,11 @@ special_treat_dict = {
     'layout': arg_trans_layout,
 }
 
-schema_fix_dict = {
-    # functinon 'to', 'randint', and 'sparse_coo_tensor' has different schema between python and c++.
-    # https://pytorch.org/docs/stable/jit_unsupported.html#ops-with-divergent-schemas-between-torch-python
-    """aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Ten
-    sor(a))""":
-        """aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None)
-         -> (Tensor(a))""",
-    'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
-        'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
-    'aten::to.other(Tensor(a) self, Tensor other, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
-        'aten::to.other(Tensor(a) self, Tensor other, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
-
-    # todo: are the arguments 'pin_memory' and 'requires_grad' related?
-    # functions in the python have only 'requires_grad' and functions in the aten have only 'pin_memory'
-
-    # 'aten::randint(int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
-    # """aten::randint.generator(int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? device=None, boo
-    # l? pin_memory=None) -> (Tensor)""",
-    # """aten::randint.low(int low, int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None)
-    # -> (Tensor)""",
-    # """aten::randint.low_generator(int low, int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? dev
-    # ice=None, bool? pin_memory=None) -> (Tensor)""",
-
-    # """aten::sparse_coo_tensor.size(int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=False) -> (Te
-    # nsor)""",
-    # """aten::sparse_coo_tensor.indices(Tensor indices, Tensor values, *, int? dtype=None, int? layout=None, Device? device=None, bool? pi
-    # n_memory=None) -> (Tensor)""",
-    # """aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? devi
-    # ce=None, bool? pin_memory=None) -> (Tensor"""'
-}
-
 @lru_cache(maxsize=256)
 def parse_aten_schema(schema: str):
     """
     Parse the schema, to positional_num and keyword_list, and detect if the argument should be specially treated.
     """
-    if schema in schema_fix_dict:
-        schema = schema_fix_dict[schema]
 
     positional_num = 0
     keyword_list = list()
@@ -464,6 +431,100 @@ def special_treat_to_constant_value(positional: List, keyword: Dict[str], undete
             for f in fs: keyword[p] = f(keyword[p])
     return undetermined_special_treat
 
+table_fix_schema = {
+    'to.device': (
+        5, ['memory_format'], {
+            2: arg_trans_dtype,
+            'memory_format': arg_trans_memory_format,
+        },
+    ),
+    'to.dtype': (
+        4, ['memory_format'], {
+            1: arg_trans_dtype,
+            'memory_format': arg_trans_memory_format,
+        },
+    ),
+    'to.other': (
+        4, ['memory_format'], {
+            'memory_format': arg_trans_memory_format,
+        },
+    ),
+    # functinon 'to', 'randint', and 'sparse_coo_tensor' has different schema between python and c++.
+    # https://pytorch.org/docs/stable/jit_unsupported.html#ops-with-divergent-schemas-between-torch-python
+
+    # TODO: are the arguments 'pin_memory' and 'requires_grad' related?
+    # functions in the python have only 'requires_grad' and functions in the aten have only 'pin_memory'
+
+    # 'aten::randint(int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
+    # """aten::randint.generator(int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? device=None, boo
+    # l? pin_memory=None) -> (Tensor)""",
+    # """aten::randint.low(int low, int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None)
+    # -> (Tensor)""",
+    # """aten::randint.low_generator(int low, int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? dev
+    # ice=None, bool? pin_memory=None) -> (Tensor)""",
+
+    # """aten::sparse_coo_tensor.size(int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=False) -> (Te
+    # nsor)""",
+    # """aten::sparse_coo_tensor.indices(Tensor indices, Tensor values, *, int? dtype=None, int? layout=None, Device? device=None, bool? pi
+    # n_memory=None) -> (Tensor)""",
+    # """aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? devi
+    # ce=None, bool? pin_memory=None) -> (Tensor"""'
+}
+
+layout_names_to_trans = {
+    'strided':      'to_dense',
+    'sparse_coo':   'to_sparse_coo',
+    'sparse_csr':   'to_sparse_csr',
+    'sparse_csc':   'to_sparse_csc',
+    'sparse_bsr':   'to_sparse_bsr',
+    'sparse_bsc':   'to_sparse_bsc',
+    '_mkldnn':      'to_mkldnn',
+}
+
+layout_names_to_trans_dict = {}
+
+for layout_name, trans_name in layout_names_to_trans.items():
+    if hasattr(torch, layout_name) and hasattr(torch.Tensor, trans_name):
+        layout_names_to_trans_dict[getattr(torch, layout_name)] = getattr(torch.Tensor, trans_name)
+
+def hook_to__dtype_layout(positional, keyword, undetermined, undetermined_special_treat):
+    """
+    there is no function corresponding to 'aten::to.dtype_layout'. so we gen it in another way.
+    
+    positional_num = 1 (self)
+    keyword_list = ['dtype', 'layout', 'device', 'pin_memory', 'non_blocking', 'copy', 'memory_format']
+    special_treat = {
+        'dtype': arg_trans_dtype,
+        'layout': arg_trans_layout,
+        'memory_format': arg_trans_memory_format,
+    },
+    """
+    assert 'layout' not in undetermined
+    assert 'pin_memory' not in undetermined
+    assert 'non_blocking' not in undetermined
+    
+    to_layout = arg_trans_layout(keyword['layout'])
+    del keyword['layout']
+    del keyword['pin_memory']
+    del keyword['non_blocking']
+    real_to = FuncAdapter(torch.Tensor.to, positional, keyword, undetermined, undetermined_special_treat)
+
+    if len(undetermined) > 0 and undetermined[0] == 0:
+        if to_layout is not None:
+            positional[0] = layout_names_to_trans_dict[to_layout](positional[0])
+        return real_to
+
+    def ret_func(*args):
+        if to_layout is not None:
+            args[0] = layout_names_to_trans_dict[to_layout](args[0])
+        return real_to(*args)
+
+    return ret_func
+    
+table_gen_hook = {
+    'to.dtype_layout': hook_to__dtype_layout
+}
+
 def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpeedup) -> FuncAdapter:
     """
     parse a Return a callable object to inference the mask according to the node.op_type.
@@ -486,14 +547,21 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
     c_node = node.key_node
 
     schema = c_node.schema()
-    positional_num, keyword_list, special_treat = parse_aten_schema(schema)
+    op_with_overload = schema[6:schema.find('(')]
+    if op_with_overload in table_fix_schema:
+        positional_num, keyword_list, special_treat = table_fix_schema[op_with_overload]
+    else:
+        positional_num, keyword_list, special_treat = parse_aten_schema(schema)
 
     input_nodes = list(c_node.inputs())
     positional, keyword, undetermined = parse_input_value(speedup, input_nodes, positional_num, keyword_list)
 
     undetermined_special_treat = special_treat_to_constant_value(positional, keyword, undetermined, special_treat)
 
-    return FuncAdapter(func, positional, keyword, undetermined, undetermined_special_treat)
+    if op_with_overload in table_gen_hook:
+        return table_gen_hook[op_with_overload](positional, keyword, undetermined, undetermined_special_treat)
+    else:
+        return FuncAdapter(func, positional, keyword, undetermined, undetermined_special_treat)
 
 trans_func_dict = {
     'aten::slice': slice_python,
