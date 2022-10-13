@@ -71,10 +71,22 @@ class TorchModel1(torch.nn.Module):
 
     def forward(self, x: torch.Tensor):
         y1 = torch.ones_like(x)
+        y2 = torch.zeros_like(x)
+        x = x - y1 + y2
+
+        y1 = torch.rand(8, 1, 28, 28)
         y2 = torch.rand_like(x)
-        y3 = torch.randn_like(x)
-        y4 = torch.zeros_like(x)
-        x = x - y1 + y2 + y3 + y4
+        x = x + y1 + y2
+
+        y1 = torch.randn(8, 1, 28, 28)
+        y2 = torch.randn_like(x)
+        x = x + y1 + y2
+
+        y1 = torch.randint(0, 100, [8, 1, 28, 28])
+        y2 = torch.randint_like(x, 0, 100)
+        y = y1 + y2
+        y = y.to(torch.float32) / 100
+        x = x + y
 
         x = x.contiguous(memory_format=torch.channels_last)
         x = torch._C._nn.upsample_bilinear2d(x, (28, 28), False)
@@ -151,12 +163,13 @@ class TorchModel1(torch.nn.Module):
 class AutoConvTestCase(unittest.TestCase):
     def test_l1norm_pruner(self):
         model = TorchModel1()
-        dummy_input = torch.rand(3, 1, 28, 28)
+        dummy_input = torch.rand(8, 1, 28, 28)
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.5}]
         pruner = L1NormPruner(model=model, config_list=config_list)
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        print('dummy_input.shape:', dummy_input.shape)
         ModelSpeedup(model, dummy_input, masks).speedup_model()
         real_sparsity_list = compute_sparsity_compact2origin(TorchModel1(), model, config_list)
 
@@ -167,7 +180,7 @@ class AutoConvTestCase(unittest.TestCase):
         assert 0.45 < real_sparsity_list[0]['total_sparsity'] < 0.75
 
         print('the shape of output of the infer:', model(dummy_input).shape)
-        assert model(dummy_input).shape == torch.Size((5, 5))
+        assert model(dummy_input).shape == torch.Size((10, 10))
 
 if __name__ == '__main__':
     unittest.main()

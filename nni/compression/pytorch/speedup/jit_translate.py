@@ -338,7 +338,7 @@ for enum_value, name in enum_to_layout_names.items():
     if hasattr(torch, name):
         enum_to_layout_dict[enum_value] = getattr(torch, name)
 
-def arg_trans_layout(ivalue: Union[None, int, torch.layout]) -> Optional[torch.layout]:
+def arg_trans_layout(ivalue: Union[None, int, torch.layout]) -> torch.layout:
     """
     Special process for layout.
     Torch will transform layout to an enum in cpp, so the value of layout we get in jit is an int.
@@ -350,7 +350,10 @@ def arg_trans_layout(ivalue: Union[None, int, torch.layout]) -> Optional[torch.l
         The value of layout or method to be recovered.
 
     """
-    if ivalue is None or isinstance(ivalue, torch.layout):
+    if ivalue is None:
+        # layout cannot be None with argument 'pin_memory' exist in in pytorch.
+        return torch.strided
+    elif isinstance(ivalue, torch.layout):
         return ivalue
     elif isinstance(ivalue, int):
         if ivalue in enum_to_layout_dict:
@@ -434,34 +437,23 @@ def special_treat_to_constant_value(positional: List, keyword: Dict[str], undete
 table_fix_schema = {
     'to.device': (
         5, ['memory_format'], {
-            2: arg_trans_dtype,
-            'memory_format': arg_trans_memory_format,
+            2:                  [arg_trans_dtype],
+            'memory_format':    [arg_trans_memory_format],
         },
     ),
     'to.dtype': (
         4, ['memory_format'], {
-            1: arg_trans_dtype,
-            'memory_format': arg_trans_memory_format,
+            1:                  [arg_trans_dtype],
+            'memory_format':    [arg_trans_memory_format],
         },
     ),
     'to.other': (
         4, ['memory_format'], {
-            'memory_format': arg_trans_memory_format,
+            'memory_format':    [arg_trans_memory_format],
         },
     ),
     # functinon 'to', 'randint', and 'sparse_coo_tensor' has different schema between python and c++.
     # https://pytorch.org/docs/stable/jit_unsupported.html#ops-with-divergent-schemas-between-torch-python
-
-    # TODO: are the arguments 'pin_memory' and 'requires_grad' related?
-    # functions in the python have only 'requires_grad' and functions in the aten have only 'pin_memory'
-
-    # 'aten::randint(int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
-    # """aten::randint.generator(int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? device=None, boo
-    # l? pin_memory=None) -> (Tensor)""",
-    # """aten::randint.low(int low, int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None)
-    # -> (Tensor)""",
-    # """aten::randint.low_generator(int low, int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? dev
-    # ice=None, bool? pin_memory=None) -> (Tensor)""",
 
     # """aten::sparse_coo_tensor.size(int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=False) -> (Te
     # nsor)""",
@@ -502,27 +494,31 @@ def hook_to__dtype_layout(positional, keyword, undetermined, undetermined_specia
     assert 'layout' not in undetermined
     assert 'pin_memory' not in undetermined
     assert 'non_blocking' not in undetermined
-    
+
     to_layout = arg_trans_layout(keyword['layout'])
     del keyword['layout']
     del keyword['pin_memory']
     del keyword['non_blocking']
     real_to = FuncAdapter(torch.Tensor.to, positional, keyword, undetermined, undetermined_special_treat)
 
-    if len(undetermined) > 0 and undetermined[0] == 0:
-        if to_layout is not None:
-            positional[0] = layout_names_to_trans_dict[to_layout](positional[0])
-        return real_to
-
     def ret_func(*args):
-        if to_layout is not None:
+        if to_layout != torch.strided:
             args[0] = layout_names_to_trans_dict[to_layout](args[0])
         return real_to(*args)
 
     return ret_func
-    
+
+def hook_randint(positional, keyword, undetermined, undetermined_special_treat):
+    assert 'pin_memory' not in undetermined
+    del keyword['pin_memory']
+    return FuncAdapter(torch.randint, positional, keyword, undetermined, undetermined_special_treat)
+
 table_gen_hook = {
-    'to.dtype_layout': hook_to__dtype_layout
+    'to.dtype_layout': hook_to__dtype_layout, #TODO: this uncommon 'aten::to' is not tested
+    'randint': hook_randint,
+    'randint.generator': hook_randint,
+    'randint.low': hook_randint,
+    'randint.low_generator': hook_randint,
 }
 
 def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpeedup) -> FuncAdapter:
@@ -573,6 +569,7 @@ trans_func_dict = {
     'prim::NumToTensor': num2tensor_python,
     'prim::GetAttr': getattr_python,
 }
+
 def init_add_functions(func_from: Union[ModuleType, Type[Any]]):
     """
     Add function/method attributes from a module/class, to the trans_func_dict
