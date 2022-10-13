@@ -5,7 +5,7 @@ import unittest
 
 import torch
 
-from nni.compression.pytorch.speedup.jit_translate import parse_aten_schema, schema_fix_dict, special_treat_dict
+from nni.compression.pytorch.speedup.jit_translate import parse_aten_schema_version_1_8_x, schema_fix_dict, special_treat_dict
 
 def parse_aten_schema_origin(schema: str):
     if schema in schema_fix_dict:
@@ -40,7 +40,7 @@ class SchemaParserTestCase(unittest.TestCase):
             if torch.__version__ < '1.9.0' and '*,' in schema:
                 continue
             positional_num_origin, keyword_list_origin, special_treat_origin = parse_aten_schema_origin(schema)
-            positional_num_manual, keyword_list_manual, special_treat_manual = parse_aten_schema(schema)
+            positional_num_manual, keyword_list_manual, special_treat_manual = parse_aten_schema_version_1_8_x(schema)
             
             assert positional_num_origin == positional_num_manual
             assert keyword_list_origin == keyword_list_manual
