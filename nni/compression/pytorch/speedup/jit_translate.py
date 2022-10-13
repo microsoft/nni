@@ -399,7 +399,36 @@ schema_fix_dict = {
 def parse_aten_schema(schema: str):
     """
     Parse the schema, to positional_num and keyword_list, and detect if the argument should be specially treated.
-    Cannot use 'torch._C.parse_schema' because 'torch._C.Argument' has no 'kwarg_only' before pytorch v1.9.0
+    only available on pytorch >= v1.9.0
+    """
+    if schema in schema_fix_dict:
+        schema = schema_fix_dict[schema]
+
+    positional_num = 0
+    keyword_list = list()
+    special_treat = dict() # for dtype and memory_format trans now
+
+    for arg in torch._C.parse_schema(schema).arguments:
+        if not arg.kwarg_only:
+            key = positional_num
+            positional_num += 1
+        else:
+            key = arg.name
+            keyword_list.append(key)
+
+        if arg.name in special_treat_dict:
+            if key not in special_treat:
+                special_treat[key] = [special_treat_dict[arg.name]]
+            else:
+                special_treat[key].append(special_treat_dict[arg.name])
+
+    return positional_num, keyword_list, special_treat
+
+@lru_cache
+def parse_aten_schema_version_1_8_x(schema: str):
+    """
+    Parse the schema, to positional_num and keyword_list, and detect if the argument should be specially treated.
+    Cannot use 'torch._C.parse_schema' because 'torch._C.Argument' has no 'kwarg_only' on pytorch v1.8.x
     Using a lexer-parser like method to parse it.
     Re-write from torch/csrc/jit/frontend/function_schema_parser.cpp
     """
@@ -719,7 +748,10 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
     c_node = node.key_node
 
     schema = c_node.schema()
-    positional_num, keyword_list, special_treat = parse_aten_schema(schema)
+    if torch.__version__ < '1.9.0':
+        positional_num, keyword_list, special_treat = parse_aten_schema_version_1_8_x(schema)
+    else:
+        positional_num, keyword_list, special_treat = parse_aten_schema(schema)
 
     input_nodes = list(c_node.inputs())
     positional, keyword, undetermined = parse_input_value(speedup, input_nodes, positional_num, keyword_list)
