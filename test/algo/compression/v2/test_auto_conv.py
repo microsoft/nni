@@ -138,12 +138,21 @@ class TorchModel1(torch.nn.Module):
         x = torch.cat((y1, y2), dim=1)
 
         x = x.type_as(x)
-        x = x.expand_as(x)
+        dim = x.dim()
+        y = torch.sum(x, dim=dim-1, keepdim=True)
+        z = y.expand_as(x)
+        x = x / z
         x = torch.matmul(x, x.t())
-        x = torch.split(x, 1, dim=1)
-        x = torch.cat(x, dim=1)
+        
+        # TODO: should be available in #5107
+        # x = torch.split(x, 1, dim=1)
+        # x = torch.cat(x, dim=1)
+        
         # x = self.cond(x) # condition is not support now
-        x = self.asub(x)
+        # TODO: the asub execution is bad.
+        # reason: the graph_utils assumes modules with no sub_module are leaf_modules.
+        #         so the asub will be treated as a leaf_module.
+        # x = self.asub(x)
         x = torch.constant_pad_nd(x, (1,1,1,1), 3.14159)
 
         return x
