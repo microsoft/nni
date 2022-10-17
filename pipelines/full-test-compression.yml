@@ -6,11 +6,11 @@ schedules:
     include: [ master ]
   always: true
 
-# resources:
-#   repositories:
-#     - repository: azpfilter
-#       type: github
-#       name: microsoft/azure-pipeline-filter
+resources:
+  repositories:
+    - repository: azpfilter
+      type: github
+      name: microsoft/azure-pipeline-filter
 #       endpoint: github-filter-connection
 
 variables:
