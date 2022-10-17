@@ -4,9 +4,7 @@ steps:
   inputs:
     versionSpec: '16.x'
 - script: |
-    git clone -b main https://github.com/microsoft/azure-pipeline-filter.git
-    cd azure-pipeline-filter
-    npm ci
+    npx github:microsoft/azure-pipeline-filter#cmd-test
   displayName: NPM Install
 - script: node azure-pipeline-filter/src/main.mjs
   name: execution
