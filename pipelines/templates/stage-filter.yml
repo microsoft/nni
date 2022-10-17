@@ -8,6 +8,6 @@ steps:
     cd azure-pipeline-filter
     npm ci
   displayName: NPM Install
-- script: node src/main.mjs
+- script: node azure-pipeline-filter/src/main.mjs
   name: execution
   displayName: Execution
