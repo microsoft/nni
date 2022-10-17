@@ -4,8 +4,6 @@ steps:
   inputs:
     versionSpec: '16.x'
 - script: |
+    npm version
     npx github:microsoft/azure-pipeline-filter#cmd-test
   displayName: NPM Install
-- script: node azure-pipeline-filter/src/main.mjs
-  name: execution
-  displayName: Execution
