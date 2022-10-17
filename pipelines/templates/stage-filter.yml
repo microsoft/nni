@@ -4,6 +4,5 @@ steps:
   inputs:
     versionSpec: '16.x'
 - script: |
-    npm version
-    npx github:microsoft/azure-pipeline-filter#cmd-test
+    npx https://github.com/microsoft/azure-pipeline-filter.git#cmd-test
   displayName: NPM Install
