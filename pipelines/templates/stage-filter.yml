@@ -1,6 +1,6 @@
 steps:
 
-- checkout: azpfilter
+- checkout: microsoft/azure-pipeline-filter
   persistCredentials: true
 - task: NodeTool@0
   inputs:
