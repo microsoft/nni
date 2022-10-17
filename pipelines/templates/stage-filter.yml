@@ -3,7 +3,10 @@ steps:
 - task: NodeTool@0
   inputs:
     versionSpec: '16.x'
-- script: npm ci
+- script: |
+    git clone -b main https://github.com/microsoft/azure-pipeline-filter.git
+    cd azure-pipeline-filter
+    npm ci
   displayName: NPM Install
 - script: node src/main.mjs
   name: execution
