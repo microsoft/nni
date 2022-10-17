@@ -14,7 +14,7 @@ __all__ = ['WebSocket']
 import asyncio
 import logging
 from threading import Lock, Thread
-from typing import Any
+from typing import Any, Type
 
 import websockets
 
@@ -39,6 +39,9 @@ class WebSocket:
         The WebSocket URL.
         For tuner command channel it should be something like ``ws://localhost:8080/tuner``.
     """
+
+    ConnectionClosed: Type[Exception] = websockets.ConnectionClosed  # type: ignore
+
     def __init__(self, url: str):
         self._url: str = url
         self._ws: Any = None  # the library does not provide type hints
@@ -85,10 +88,10 @@ class WebSocket:
             msg = _wait(self._ws.recv())
             _logger.debug(f'Received {msg}')
         except websockets.ConnectionClosed:  # type: ignore
-            _logger.debug('Connection closed by server.')
+            _logger.warning('Connection closed by server.')
             self._ws = None
             _decrease_refcnt()
-            return None
+            raise
 
         # seems the library will inference whether it's text or binary, so we don't have guarantee
         if isinstance(msg, bytes):

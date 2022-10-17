@@ -35,6 +35,7 @@ class TunerCommandChannel:
     """
 
     def __init__(self, url: str):
+        self._url = url
         self._channel = WebSocket(url)
 
     def connect(self) -> None:
@@ -51,10 +52,19 @@ class TunerCommandChannel:
 
     def _send(self, command_type: CommandType, data: str) -> None:
         command = command_type.value.decode() + data
-        self._channel.send(command)
+        try:
+            self._channel.send(command)
+        except WebSocket.ConnectionClosed:
+            self._channel = WebSocket(self._url)
+            self._channel.send(command)
 
     def _receive(self) -> tuple[CommandType, str] | tuple[None, None]:
-        command = self._channel.receive()
+        try:
+            command = self._channel.receive()
+        except WebSocket.ConnectionClosed:
+            self._channel = WebSocket(self._url)
+            command = self._channel.receive()
+
         if command is None:
             raise RuntimeError('NNI manager closed connection')
         command_type = CommandType(command[:2].encode())
