@@ -77,7 +77,13 @@ class WebSocket:
 
     def send(self, message: str) -> None:
         _logger.debug(f'Sending {message}')
-        _wait(self._ws.send(message))
+        try:
+            _wait(self._ws.send(message))
+        except websockets.ConnectionClosed:  # type: ignore
+            _logger.debug('Connection closed by server.')
+            self._ws = None
+            _decrease_refcnt()
+            raise
 
     def receive(self) -> str | None:
         """
@@ -88,7 +94,7 @@ class WebSocket:
             msg = _wait(self._ws.recv())
             _logger.debug(f'Received {msg}')
         except websockets.ConnectionClosed:  # type: ignore
-            _logger.warning('Connection closed by server.')
+            _logger.debug('Connection closed by server.')
             self._ws = None
             _decrease_refcnt()
             raise
