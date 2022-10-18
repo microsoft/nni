@@ -1,12 +1,9 @@
 steps:
 
-- checkout: azpfilter
-  persistCredentials: true
 - task: NodeTool@0
   inputs:
     versionSpec: '16.x'
-- script: npm ci
-  displayName: NPM Install
-- script: node src/main.mjs
-  name: execution
-  displayName: Execution
+- script: |
+    npm install npm@latest -g
+    npx https://github.com/microsoft/azure-pipeline-filter.git
+  displayName: NPM Install & Filter
