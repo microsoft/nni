@@ -24,7 +24,7 @@ import torch
 import torch.nn.functional as F
 from torch.optim import SGD
 
-from scripts.compression_mnist_model import TorchModel, trainer, evaluator, device, test_trt
+from nni_assets.compression.mnist_model import TorchModel, trainer, evaluator, device, test_trt
 
 # define the model
 model = TorchModel().to(device)

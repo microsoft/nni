@@ -48,7 +48,7 @@ If you are familiar with defining a model and training in pytorch, you can skip 
     import torch.nn.functional as F
     from torch.optim import SGD
 
-    from scripts.compression_mnist_model import TorchModel, trainer, evaluator, device, test_trt
+    from nni_assets.compression.mnist_model import TorchModel, trainer, evaluator, device, test_trt
 
     # define the model
     model = TorchModel().to(device)
@@ -69,13 +69,11 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    Average test loss: 0.5901, Accuracy: 8293/10000 (83%)
-    Average test loss: 0.2469, Accuracy: 9245/10000 (92%)
-    Average test loss: 0.1586, Accuracy: 9531/10000 (95%)
+    Average test loss: 0.4664, Accuracy: 8586/10000 (86%)
+    Average test loss: 0.2438, Accuracy: 9270/10000 (93%)
+    Average test loss: 0.1758, Accuracy: 9456/10000 (95%)
 
 
 
@@ -133,8 +131,6 @@ finetuning the model by using QAT
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
 
@@ -191,13 +187,11 @@ QAT is a training-aware quantizer, it will update scale and zero point during tr
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    Average test loss: 0.1333, Accuracy: 9587/10000 (96%)
-    Average test loss: 0.1076, Accuracy: 9660/10000 (97%)
-    Average test loss: 0.0957, Accuracy: 9702/10000 (97%)
+    Average test loss: 0.1756, Accuracy: 9450/10000 (94%)
+    Average test loss: 0.1193, Accuracy: 9631/10000 (96%)
+    Average test loss: 0.1030, Accuracy: 9682/10000 (97%)
 
 
 
@@ -222,13 +216,9 @@ export model and get calibration_config
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    INFO:nni.compression.pytorch.compressor:Model state_dict saved to ./log/mnist_model.pth
-    INFO:nni.compression.pytorch.compressor:Mask dict saved to ./log/mnist_calibration.pth
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0029], device='cuda:0'), 'weight_zero_point': tensor([96.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([101.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.014460563659668}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([118.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 25.994585037231445}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([120.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 21.589195251464844}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 10.066218376159668}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.317869186401367}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 21.97711944580078}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 17.56885528564453}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0033], device='cuda:0'), 'weight_zero_point': tensor([98.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0018], device='cuda:0'), 'weight_zero_point': tensor([104.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 12.528154373168945}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0009], device='cuda:0'), 'weight_zero_point': tensor([124.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 25.84835433959961}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([126.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 22.42352867126465}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 12.621201515197754}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.001020431518555}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 22.855825424194336}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 17.92807388305664}}
 
 
 
@@ -249,16 +239,20 @@ build tensorRT engine to make a real speedup, for more information about speedup
     test_trt(engine)
 
 
-
-
 .. rst-class:: sphx-glr-script-out
 
- Out:
+.. code-block:: pytb
 
- .. code-block:: none
-
-    Loss: 0.09545102081298829  Accuracy: 96.98%
-    Inference elapsed_time (whole dataset): 0.03549933433532715s
+    Traceback (most recent call last):
+      File "/home/ningshang/nni/examples/tutorials/quantization_quick_start_mnist.py", line 90, in <module>
+        from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+      File "/home/ningshang/nni/nni/compression/pytorch/quantization_speedup/__init__.py", line 4, in <module>
+        from .integrated_tensorrt import CalibrateType, ModelSpeedupTensorRT
+      File "/home/ningshang/nni/nni/compression/pytorch/quantization_speedup/integrated_tensorrt.py", line 11, in <module>
+        from . import calibrator as calibrator
+      File "/home/ningshang/nni/nni/compression/pytorch/quantization_speedup/calibrator.py", line 7, in <module>
+        import pycuda.driver as cuda
+    ModuleNotFoundError: No module named 'pycuda'
 
 
 
@@ -266,28 +260,23 @@ build tensorRT engine to make a real speedup, for more information about speedup
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  45.743 seconds)
+   **Total running time of the script:** ( 1 minutes  16.557 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start_mnist.py:
 
+.. only:: html
 
-.. only :: html
-
- .. container:: sphx-glr-footer
-    :class: sphx-glr-footer-example
+  .. container:: sphx-glr-footer sphx-glr-footer-example
 
 
+    .. container:: sphx-glr-download sphx-glr-download-python
 
-  .. container:: sphx-glr-download sphx-glr-download-python
+      :download:`Download Python source code: quantization_quick_start_mnist.py <quantization_quick_start_mnist.py>`
 
-     :download:`Download Python source code: quantization_quick_start_mnist.py <quantization_quick_start_mnist.py>`
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
-
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-     :download:`Download Jupyter notebook: quantization_quick_start_mnist.ipynb <quantization_quick_start_mnist.ipynb>`
+      :download:`Download Jupyter notebook: quantization_quick_start_mnist.ipynb <quantization_quick_start_mnist.ipynb>`
 
 
 .. only:: html
