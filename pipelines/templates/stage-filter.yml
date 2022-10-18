@@ -6,4 +6,4 @@ steps:
 - script: |
     npm install npm@latest -g
     npx https://github.com/microsoft/azure-pipeline-filter.git
-  displayName: NPM Install
+  displayName: NPM Install & Filter
