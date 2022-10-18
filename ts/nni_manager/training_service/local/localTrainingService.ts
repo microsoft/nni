@@ -459,7 +459,7 @@ class LocalTrainingService implements TrainingService {
         await execNewFile(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
         const scriptName: string = getScriptName('run');
         await createScriptFile(path.join(trialJobDetail.workingDirectory, scriptName),
-                                    runScriptContent.join(getNewLine()));
+                runScriptContent.join(getNewLine()));
         await this.writeParameterFile(trialJobDetail.workingDirectory, trialJobDetail.form.hyperParameters);
         const trialJobProcess: cp.ChildProcess = runScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
