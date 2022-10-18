@@ -64,7 +64,7 @@ export function powershellString(str: string): string {
 
 export function createScriptFile(path: string, content: string): Promise<void> {
     // eslint-disable-next-line no-control-regex
-    if (path.endsWith('.ps1') && /^[\x00-\x7F]*$/.test(content)) {
+    if (path.endsWith('.ps1') && !/^[\x00-\x7F]*$/.test(content)) {
         // PowerShell does not use UTF-8 by default.
         // Add BOM to inform it if the script contains non-ASCII characters.
         content = '\uFEFF' + content;
