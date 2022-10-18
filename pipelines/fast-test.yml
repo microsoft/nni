@@ -6,13 +6,6 @@ schedules:
     include: [ master ]
   always: true
 
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
-
 variables:
   filter.modified.globs: 'pipelines/fast-test.yml,!.github/**,!docs/**,!examples/**'
   filter.prbody.heading: '#### Test Options'
