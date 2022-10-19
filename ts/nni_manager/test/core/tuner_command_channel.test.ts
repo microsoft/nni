@@ -81,7 +81,11 @@ async function testShutdown(): Promise<void> {
     const channel = getWebSocketChannel();
     await channel.shutdown();
 
-    client.close();
+    try {
+        client.close();
+    } catch (error) {
+        console.log('Error on clean up:', error);
+    }
     server.close();
 }
 
