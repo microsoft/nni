@@ -8,7 +8,7 @@ import * as component from 'common/component';
 import { getLogger, Logger } from 'common/log';
 import { ExperimentConfig } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
-import { powershellString } from 'common/shellUtils';
+import { powershellString, createScriptFile } from 'common/shellUtils';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { isAlive, getNewLine } from 'common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from 'training_service/common/util';
@@ -121,8 +121,7 @@ export class LocalEnvironmentService extends EnvironmentService {
         await execMkdir(environment.runnerWorkingFolder);
         environment.command = this.getScript(environment).join(getNewLine());
         const scriptName: string = getScriptName('run');
-        await fs.promises.writeFile(path.join(localEnvCodeFolder, scriptName),
-                                    environment.command, { encoding: 'utf8', mode: 0o777 });
+        await createScriptFile(path.join(localEnvCodeFolder, scriptName), environment.command);
 
         // Execute command in local machine
         runScript(path.join(localEnvCodeFolder, scriptName));

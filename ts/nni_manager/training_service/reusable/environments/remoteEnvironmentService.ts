@@ -13,7 +13,8 @@ import { execMkdir } from 'training_service/common/util';
 import { ExecutorManager } from 'training_service/remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
-import { SharedStorageService } from '../sharedStorage'
+import { SharedStorageService } from '../sharedStorage';
+import { createScriptFile } from 'common/shellUtils';
 
 @component.Singleton
 export class RemoteEnvironmentService extends EnvironmentService {
@@ -255,8 +256,8 @@ export class RemoteEnvironmentService extends EnvironmentService {
             path.join(this.experimentRootDir, "environment-temp")
         await executor.createFolder(environment.runnerWorkingFolder);
         await execMkdir(environmentLocalTempFolder);
-        await fs.promises.writeFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),
-        environment.command, { encoding: 'utf8' });
+        await createScriptFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),
+                environment.command);
         // Copy files in codeDir to remote working directory
         await executor.copyDirectoryToRemote(environmentLocalTempFolder, this.remoteExperimentRootDir);
         // Execute command in remote machine, set isInteractive=true to run script in conda environment
