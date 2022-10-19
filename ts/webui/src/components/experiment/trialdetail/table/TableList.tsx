@@ -16,6 +16,7 @@ import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction'
 import PaginationTable from '@components/common/PaginationTable';
 import CopyButton from '@components/common/CopyButton';
 import TooltipHostIndex from '@components/common/TooltipHostIndex';
+import { getValue } from '@model/localStorage';
 
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -54,9 +55,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
         this.state = {
             displayedItems: [],
             displayedColumns:
-                localStorage.getItem('columns') !== null
+                localStorage.getItem(`${EXPERIMENT.profile.id}_columns`) !== null &&
+                getValue(`${EXPERIMENT.profile.id}_columns`) !== null
                     ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                      JSON.parse(localStorage.getItem('columns')!)
+                      JSON.parse(getValue(`${EXPERIMENT.profile.id}_columns`)!)
                     : defaultDisplayedColumns,
             columns: [],
             searchType: 'id',
