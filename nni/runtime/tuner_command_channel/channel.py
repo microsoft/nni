@@ -65,7 +65,8 @@ class TunerCommandChannel:
 
     def _retry_send(self, command: str) -> None:
         _logger.warning('Connection lost. Trying to reconnect...')
-        for interval in self._retry_intervals:
+        for i, interval in enumerate(self._retry_intervals):
+            _logger.info(f'Attempt #{i}, wait {interval} seconds...')
             time.sleep(interval)
             self._channel = WebSocket(self._url)
             try:
@@ -91,7 +92,8 @@ class TunerCommandChannel:
 
     def _retry_receive(self) -> str:
         _logger.warning('Connection lost. Trying to reconnect...')
-        for interval in self._retry_intervals:
+        for i, interval in enumerate(self._retry_intervals):
+            _logger.info(f'Attempt #{i}, wait {interval} seconds...')
             time.sleep(interval)
             self._channel = WebSocket(self._url)
             try:
