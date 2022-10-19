@@ -1,6 +1,9 @@
 # the following content will be read by setup.py.
 # please follow the logic in setup.py.
 
+# Anneal
+hyperopt == 0.1.2
+
 # SMAC
 ConfigSpaceNNI>=0.4.7.3
 smac4nni
