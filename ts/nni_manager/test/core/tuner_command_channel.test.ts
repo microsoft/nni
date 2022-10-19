@@ -68,12 +68,24 @@ async function testError(): Promise<void> {
     client.resume();
 }
 
+// WebSocket might get broken in long experiments. Simulate reconnect.
+async function testReconnect(): Promise<void> {
+    client.close();
+    startClient();
+    testInit();
+    testSend();
+}
+
 // Clean up.
 async function testShutdown(): Promise<void> {
     const channel = getWebSocketChannel();
     await channel.shutdown();
 
-    client.close();
+    try {
+        client.close();
+    } catch (error) {
+        console.log('Error on clean up:', error);
+    }
     server.close();
 }
 
@@ -83,6 +95,7 @@ describe('## tuner_command_channel ##', () => {
     it('send', testSend);
     it('receive', testReceive);
     it('catch error', testError);
+    it('reconnect', testReconnect);
     it('shutdown', testShutdown);
 });
 

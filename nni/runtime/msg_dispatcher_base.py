@@ -84,6 +84,16 @@ class MsgDispatcherBase(Recoverable):
 
         _logger.info('Dispatcher terminiated')
 
+    def report_error(self, error: str) -> None:
+        '''
+        Report dispatcher error to NNI manager.
+        '''
+        _logger.info(f'Report error to NNI manager: {error}')
+        try:
+            self.send(CommandType.Error, error)
+        except Exception:
+            _logger.error('Connection to NNI manager is broken. Failed to report error.')
+
     def send(self, command, data):
         self._channel._send(command, data)
 

@@ -13,9 +13,9 @@
 import assert from 'assert/strict';
 import { EventEmitter } from 'events';
 
-import { Deferred } from 'ts-deferred';
 import type WebSocket from 'ws';
 
+import { Deferred } from 'common/deferred';
 import { Logger, getLogger } from 'common/log';
 
 const logger: Logger = getLogger('tuner_command_channel.WebSocketChannel');
@@ -38,46 +38,38 @@ export function getWebSocketChannel(): WebSocketChannel {
 
 /**
  *  The callback to serve WebSocket connection request. Used by REST server module.
- *  It should only be invoked once, or an error will be raised.
- *
- *  Type hint of express-ws is somewhat problematic. Don't want to waste time on it so use `any`.
+ *  If it is invoked more than once, the previous connection will be dropped.
  **/
 export function serveWebSocket(ws: WebSocket): void {
-    channelSingleton.setWebSocket(ws);
+    channelSingleton.serveWebSocket(ws);
 }
 
 class WebSocketChannelImpl implements WebSocketChannel {
-    private deferredInit: Deferred<void> | null = new Deferred<void>();
+    private deferredInit: Deferred<void> = new Deferred<void>();
     private emitter: EventEmitter = new EventEmitter();
     private heartbeatTimer!: NodeJS.Timer;
     private serving: boolean = false;
     private waitingPong: boolean = false;
     private ws!: WebSocket;
 
-    public setWebSocket(ws: WebSocket): void {
-        if (this.ws !== undefined) {
-            logger.error('A second client is trying to connect.');
-            ws.close(4030, 'Already serving a tuner');
-            return;
-        }
-        if (this.deferredInit === null) {
-            logger.error('Connection timed out.');
-            ws.close(4080, 'Timeout');
-            return;
+    public serveWebSocket(ws: WebSocket): void {
+        if (this.ws === undefined) {
+            logger.debug('Connected.');
+        } else {
+            logger.warning('Reconnecting. Drop previous connection.');
+            this.dropConnection('Reconnected');
         }
 
-        logger.debug('Connected.');
         this.serving = true;
 
         this.ws = ws;
-        ws.on('close', () => { this.handleError(new Error('tuner_command_channel: Tuner closed connection')); });
-        ws.on('error', this.handleError.bind(this));
-        ws.on('message', this.receive.bind(this));
-        ws.on('pong', () => { this.waitingPong = false; });
+        this.ws.on('close', this.handleWsClose);
+        this.ws.on('error', this.handleWsError);
+        this.ws.on('message', this.handleWsMessage);
+        this.ws.on('pong', this.handleWsPong);
 
         this.heartbeatTimer = setInterval(this.heartbeat.bind(this), heartbeatInterval);
         this.deferredInit.resolve();
-        this.deferredInit = null;
     }
 
     public init(): Promise<void> {
@@ -85,13 +77,12 @@ class WebSocketChannelImpl implements WebSocketChannel {
             logger.debug('Waiting connection...');
             // TODO: This is a quick fix. It should check tuner's process status instead.
             setTimeout(() => {
-                if (this.deferredInit !== null) {
+                if (!this.deferredInit.settled) {
                     const msg = 'Tuner did not connect in 10 seconds. Please check tuner (dispatcher) log.';
                     this.deferredInit.reject(new Error('tuner_command_channel: ' + msg));
-                    this.deferredInit = null;
                 }
             }, 10000);
-            return this.deferredInit!.promise;
+            return this.deferredInit.promise;
 
         } else {
             logger.debug('Initialized.');
@@ -127,6 +118,49 @@ class WebSocketChannelImpl implements WebSocketChannel {
         this.emitter.on('error', callback);
     }
 
+    /* Following callbacks must be auto-binded arrow functions to be turned off */
+
+    private handleWsClose = (): void => {
+        this.handleError(new Error('tuner_command_channel: Tuner closed connection'));
+    }
+
+    private handleWsError = (error: Error): void => {
+        this.handleError(error);
+    }
+
+    private handleWsMessage = (data: Buffer, _isBinary: boolean): void => {
+        this.receive(data);
+    }
+
+    private handleWsPong = (): void => {
+        this.waitingPong = false;
+    }
+
+    private dropConnection(reason: string): void {
+        if (this.ws === undefined) {
+            return;
+        }
+
+        this.serving = false;
+        clearInterval(this.heartbeatTimer);
+
+        this.ws.off('close', this.handleWsClose);
+        this.ws.off('error', this.handleWsError);
+        this.ws.off('message', this.handleWsMessage);
+        this.ws.off('pong', this.handleWsPong);
+
+        this.ws.on('close', () => {
+            logger.info('Connection dropped');
+        });
+        this.ws.on('message', (data, _isBinary) => {
+            logger.error('Received message after reconnect:', data);
+        });
+        this.ws.on('pong', () => {
+            logger.error('Received pong after reconnect.');
+        });
+        this.ws.close(1001, reason);
+    }
+
     private heartbeat(): void {
         if (this.waitingPong) {
             this.ws.terminate();  // this will trigger "close" event
@@ -137,7 +171,7 @@ class WebSocketChannelImpl implements WebSocketChannel {
         this.ws.ping();
     }
 
-    private receive(data: Buffer, _isBinary: boolean): void {
+    private receive(data: Buffer): void {
         logger.debug('Received', data);
         this.emitter.emit('command', data.toString());
     }
