@@ -1,7 +1,5 @@
 from pathlib import Path
 
-root_path = Path(__file__).parent.parent
-
 # define the model
 import torch
 from torch import nn
@@ -38,13 +36,13 @@ device = torch.device("cuda" if use_cuda else "cpu")
 from torchvision import datasets, transforms
 
 train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST(root_path / 'data', train=True, download=True, transform=transforms.Compose([
+    datasets.MNIST('data', train=True, download=True, transform=transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])), batch_size=128, shuffle=True)
 
 test_loader = torch.utils.data.DataLoader(
-    datasets.MNIST(root_path / 'data', train=False, transform=transforms.Compose([
+    datasets.MNIST('data', train=False, transform=transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])), batch_size=1000, shuffle=True)
