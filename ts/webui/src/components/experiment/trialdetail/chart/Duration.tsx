@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { EventMap } from '@static/interface';
 import { Trial } from '@model/trial';
@@ -81,6 +81,9 @@ const Duration = (props: DurationProps) => {
     const [startDuration, setStartDuration] = useState(0 as number); // for record data zoom
     const [endDuration, setEndDuration] = useState(100 as number);
     const [durationSource, setDurationSource] = useState(initDuration(source) as {}); // 数据类型泛泛
+    const updateDurationSource = useCallback((value: any) => {
+        setDurationSource(value)
+    }, []);
     const getOption = (dataObj: Runtrial): any => {
         return {
             tooltip: {
@@ -146,7 +149,8 @@ const Duration = (props: DurationProps) => {
             trialId: trialId,
             trialTime: trialTime
         });
-        setDurationSource(getOption(trialRun[0]));
+        // setDurationSource(getOption(trialRun[0]));
+        updateDurationSource(getOption(trialRun[0]));
     };
 
     useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Stack, Dropdown, Toggle, IDropdownOption } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import { Trial } from '@model/trial';
@@ -44,19 +44,29 @@ const formatAccuracy = (accuracy: number | undefined): number => {
 const DefaultPoint = (props: DefaultPointProps) => {
     const { hasBestCurve, trialIds, changeExpandRowIDs, chartHeight } = props;
     const [bestCurveEnabled, setBestCurveEnabled] = useState(false);
-    const [startY, setStartY] = useState(0); // dataZoomY
-    const [endY, setEndY] = useState(0); // dataZoomY
+    // const [startY, setStartY] = useState(0); // dataZoomY
+    // const [endY, setEndY] = useState(0); // dataZoomY
+    const [graph, setGraph] = useState(EmptyGraph);
+    const [onEvents, setonEvents] = useState({});
     const [userSelectOptimizeMode, setuserSelectOptimizeMode] = useState(optimizeModeValue(EXPERIMENT.optimizeMode) as string);
     const [userSelectAccuracyNumberKey, setuserSelectAccuracyNumberKey] = useState('default');
     const loadDefault = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
         setBestCurveEnabled(checked ?? true); // ?? true是新加的
     };
-    const metricDataZoom = (e: EventMap): void => {
-        if (e.batch !== undefined) {
-            setStartY(e.batch[0].start !== null ? e.batch[0].start : 0);
-            setEndY(e.batch[0].end !== null ? e.batch[0].end : 100);
-        }
-    };
+    // const metricDataZoom = (e: EventMap): void => {
+    //     if (e.batch !== undefined) {
+    //         setStartY(e.batch[0].start !== null ? e.batch[0].start : 0);
+    //         setEndY(e.batch[0].end !== null ? e.batch[0].end : 100);
+    //     }
+    // };
+    useEffect(() => {
+        generateGraph();
+        console.info('ccc');
+        // setonEvents({ dataZoom: metricDataZoom, click: pointClick });
+        setonEvents({ click: pointClick });
+        // const accNodata = graph === EmptyGraph ? 'No data' : '';
+    }, [trialIds, bestCurveEnabled, userSelectAccuracyNumberKey, userSelectOptimizeMode]);
+
     const pointClick = (params: any): void => {
         // [hasBestCurve: true]: is detail page, otherwise, is overview page
         if (!hasBestCurve) {
@@ -87,12 +97,14 @@ const DefaultPoint = (props: DefaultPointProps) => {
             },
             dataZoom: [
                 {
-                    id: 'dataZoomY',
+                    // id: 'dataZoomY',
                     type: 'inside',
+                    // moveOnMouseMove: false,
+                    // rangeMode: ['percent', 'percent'],
                     yAxisIndex: [0],
-                    filterMode: 'empty',
-                    start: startY,
-                    end: endY
+                    filterMode: 'none',
+                    start: 0, // percent
+                    end: 100 // percent
                 }
             ],
             xAxis: {
@@ -126,6 +138,7 @@ const DefaultPoint = (props: DefaultPointProps) => {
             ]);
         }
 
+        console.info(data);
         return {
             symbolSize: 6,
             type: 'scatter',
@@ -183,15 +196,6 @@ const DefaultPoint = (props: DefaultPointProps) => {
     const updateTrialfinalResultKeys = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
             setuserSelectAccuracyNumberKey(item.key.toString());
-            generateGraph();
-            // this.setState(
-            //     {
-            //         userSelectAccuracyNumberKey: item.key.toString()
-            //     },
-            //     () => {
-            //         this.generateGraph();
-            //     }
-            // );
         }
     };
 
@@ -206,13 +210,11 @@ const DefaultPoint = (props: DefaultPointProps) => {
         } else {
             (graph as any).series = [generateScatterSeries(trials)];
         }
-        return graph;
+        console.info(graph);
+        setGraph(graph);
     }
 
     const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
-    const graph = generateGraph();
-    const accNodata = graph === EmptyGraph ? 'No data' : '';
-    const onEvents = { dataZoom: metricDataZoom, click: pointClick };
     let dictDropdown: string[] = [];
     if (trials.length > 0) {
         dictDropdown = trials[0].accuracyNumberTypeDictKeys;
@@ -252,10 +254,10 @@ const DefaultPoint = (props: DefaultPointProps) => {
                         margin: '0 auto'
                     }}
                     theme='nni_theme'
-                    notMerge={true} // update now
+                    // notMerge={true} // update now
                     onEvents={onEvents}
                 />
-                <div className='default-metric-noData fontColor333'>{accNodata}</div>
+                <div className='default-metric-noData fontColor333'>{graph === EmptyGraph ? 'No data' : ''}</div>
             </div>
         </div>
     );
