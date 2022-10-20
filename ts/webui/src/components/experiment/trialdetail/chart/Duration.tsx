@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import ReactEcharts from 'echarts-for-react';
-import { EventMap } from '@static/interface';
 import { Trial } from '@model/trial';
 import { convertDuration } from '@static/function';
 import 'echarts/lib/chart/bar';
@@ -16,28 +15,20 @@ interface DurationProps {
     source: Trial[];
 }
 
-const initDuration = (source: Trial[]): any => {
-    const trialId: number[] = [];
-    const trialTime: number[] = [];
-    source.forEach(item => {
-        trialId.push(item.sequenceId);
-        trialTime.push(item.duration);
-    });
+const drawDurationOptions = (dataObj: Runtrial): any => {
     return {
         tooltip: {
             trigger: 'axis',
             axisPointer: {
                 type: 'shadow'
             },
+            enterable: true,
             formatter: (data: any): React.ReactNode =>
-                '<div>' +
-                '<div>Trial No.: ' +
-                data[0].dataIndex +
-                '</div>' +
-                '<div>Duration: ' +
-                convertDuration(data[0].data) +
-                '</div>' +
-                '</div>'
+                `<div class="tooldetailAccuracy">
+                    <div>Trial No.: ${data[0].dataIndex}</div>
+                    <div>Duration: ${convertDuration(data[0].data)}</div>
+                </div>
+                `
         },
         grid: {
             bottom: '3%',
@@ -52,17 +43,17 @@ const initDuration = (source: Trial[]): any => {
                 yAxisIndex: [0],
                 filterMode: 'empty',
                 start: 0,
-                end: 100
+                end: 100 // percent
             }
         ],
         xAxis: {
-            name: 'Time/s',
+            name: 'Time',
             type: 'value'
         },
         yAxis: {
-            name: 'Trial No.',
+            name: 'Trial',
             type: 'category',
-            data: trialId,
+            data: dataObj.trialId,
             nameTextStyle: {
                 padding: [0, 0, 0, 30]
             }
@@ -70,112 +61,38 @@ const initDuration = (source: Trial[]): any => {
         series: [
             {
                 type: 'bar',
-                data: trialTime
+                data: dataObj.trialTime
             }
         ]
     };
 };
 
-const Duration = (props: DurationProps) => {
+const Duration = React.memo((props: DurationProps) => {
     const { source } = props;
-    const [startDuration, setStartDuration] = useState(0 as number); // for record data zoom
-    const [endDuration, setEndDuration] = useState(100 as number);
-    const [durationSource, setDurationSource] = useState(initDuration(source) as {}); // 数据类型泛泛
-    const updateDurationSource = useCallback((value: any) => {
-        setDurationSource(value)
-    }, []);
-    const getOption = (dataObj: Runtrial): any => {
-        return {
-            tooltip: {
-                trigger: 'axis',
-                axisPointer: {
-                    type: 'shadow'
-                },
-                enterable: true,
-                formatter: (data: any): React.ReactNode =>
-                    `<div class="tooldetailAccuracy">
-                        <div>Trial No.: ${data[0].dataIndex}</div>
-                        <div>Duration: ${convertDuration(data[0].data)}</div>
-                    </div>
-                    `
-            },
-            grid: {
-                bottom: '3%',
-                containLabel: true,
-                left: '1%',
-                right: '5%'
-            },
-            dataZoom: [
-                {
-                    id: 'dataZoomY',
-                    type: 'inside',
-                    yAxisIndex: [0],
-                    filterMode: 'empty',
-                    start: startDuration,
-                    end: endDuration
-                }
-            ],
-            xAxis: {
-                name: 'Time',
-                type: 'value'
-            },
-            yAxis: {
-                name: 'Trial',
-                type: 'category',
-                data: dataObj.trialId,
-                nameTextStyle: {
-                    padding: [0, 0, 0, 30]
-                }
-            },
-            series: [
-                {
-                    type: 'bar',
-                    data: dataObj.trialTime
-                }
-            ]
-        };
-    };
-    const drawDurationGraph = (source: Trial[]): void => {
-        // why this function run two times when props changed?
-        const trialId: number[] = [];
-        const trialTime: number[] = [];
-        const trialRun: Runtrial[] = [];
-        source.forEach(item => {
-            trialId.push(item.sequenceId);
-            trialTime.push(item.duration);
-        });
-
-        trialRun.push({
-            trialId: trialId,
-            trialTime: trialTime
-        });
-        // setDurationSource(getOption(trialRun[0]));
-        updateDurationSource(getOption(trialRun[0]));
-    };
-
-    useEffect(() => {
-        drawDurationGraph(source);
-    }, [source]); // TODO: source 有变化时，更新页面，要测！
-
-    const durationDataZoom = (e: EventMap): void => {
-        if (e.batch !== undefined) {
-            setStartDuration(e.batch[0].start !== null ? e.batch[0].start : 0);
-            setEndDuration(e.batch[0].end !== null ? e.batch[0].end : 100)
-        }
-    };
-    const onEvents = { dataZoom: durationDataZoom };
+    const trialId: number[] = [];
+    const trialTime: number[] = [];
+    const trialRun: Runtrial[] = [];
+    source.forEach(item => {
+        trialId.push(item.sequenceId);
+        trialTime.push(item.duration);
+    });
+    trialRun.push({
+        trialId: trialId,
+        trialTime: trialTime
+    });
+    const options = drawDurationOptions(trialRun[0]);
 
     return (
         <div className='graph'>
             <ReactEcharts
-                option={durationSource}
+                option={options}
                 style={{ width: '94%', height: 412, margin: '0 auto', marginTop: 15 }}
                 theme='nni_theme'
-                notMerge={true} // update now
-                onEvents={onEvents}
+                // notMerge={true} // update now
+                lazyUpdate={true}
             />
         </div>
     );
-};
+});
 
 export default Duration;
