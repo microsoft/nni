@@ -78,6 +78,7 @@ config_files_correct = (
   'tood/tood_r50_fpn_1x_coco',
   'tridentnet/tridentnet_r50_caffe_1x_coco',
   'vfnet/vfnet_r2_101_fpn_mdconv_c3-c5_mstrain_2x_coco',
+  'wider_face/ssd300_wider_face',
   'yolact/yolact_r50_1x8_coco',
   'yolo/yolov3_d53_320_273e_coco',
   'yolof/yolof_r50_c5_8x8_1x_coco',
@@ -132,16 +133,16 @@ config_files_other = (
   'ld/ld_r18_gflv1_r101_fpn_coco_1x',
   # cannot run forward_dummy
   'scnet/scnet_r50_fpn_1x_coco',
+  # bad result: output is tensor(nan, nan...), so cannot compare.
+  'detectors/cascade_rcnn_r50_rfp_1x_coco',
 )
 
 # check equal
 config_files_check_equal = (
-  'wider_face/ssd300_wider_face',
-  'detectors/cascade_rcnn_r50_rfp_1x_coco',
 )
 
 for config_file in (*config_files_correct,):
-  # try:
+  try:
     # Specify the path to model config and checkpoint file
     config = mmcv.Config.fromfile(folder_prefix + '/configs/' + config_file + '.py')
 
@@ -233,6 +234,7 @@ for config_file in (*config_files_correct,):
         max:                                  ((), False, None),
         # torch.meshgrid:                       ((), False, torch.functional.meshgrid),
         # torch._C._VariableFunctions.meshgrid: ((), False, torch.functional.meshgrid),
+        # type(model.roi_head).forward_dummy:   ((), False, None),
       }, autowrap_leaf_class = {
         **ConcreteTracer.default_autowrap_leaf_class,
         int:        ((), False),
@@ -249,6 +251,20 @@ for config_file in (*config_files_correct,):
         mmcv_cnn.bricks.wrappers.Linear,
         mmcv_cnn.bricks.wrappers.MaxPool2d,
         mmcv_cnn.bricks.wrappers.MaxPool3d,
+        
+        
+        # # mmdet_models.backbones.ssd_vgg.SSDVGG,
+        # # mmdet_models.necks.ssd_neck.SSDNeck,
+        # # mmdet_models.dense_heads.ssd_head.SSDHead,
+        # # type(model.bbox_head),
+        # # type(model.bbox_head.cls_convs),
+        # # type(model.bbox_head.reg_convs),
+        
+        
+        # type(model.backbone),
+        # type(model.neck),
+        # type(model.rpn_head),
+        # type(model.roi_head),
       ), fake_middle_class = (
         mmdet_core.anchor.anchor_generator.AnchorGenerator,
       ))
@@ -256,18 +272,18 @@ for config_file in (*config_files_correct,):
 
       torch.manual_seed(100)
       out_orig_traced = traced_model(img_tensor)
-      assert check_equal(out_orig, out_orig_traced), 'check_equal failure'
+      assert check_equal(out_orig, out_orig_traced), 'check_equal failure 1'
       
       torch.manual_seed(100)
       out_like = model.forward_dummy(input_like)
       torch.manual_seed(100)
       out_like_traced = traced_model(input_like)
-      assert check_equal(out_like, out_like_traced), 'check_equal failure'
-  # except Exception as e:
-  #   print('\n\nmodel file:', config_file)
-  #   print('status: exception')
-  #   import sys
-  #   print('exception:', e.with_traceback(sys.exc_info()[2]))
-  # else:
-  #   print('\n\nmodel file:', config_file)
-  #   print('status: done')
+      assert check_equal(out_like, out_like_traced), 'check_equal failure 2'
+  except Exception as e:
+    print('\n\nmodel file:', config_file)
+    print('status: exception')
+    import sys
+    print('exception:', e.with_traceback(sys.exc_info()[2]))
+  else:
+    print('\n\nmodel file:', config_file)
+    print('status: done')
