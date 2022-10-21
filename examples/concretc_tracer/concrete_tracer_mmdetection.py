@@ -85,8 +85,15 @@ config_files_correct = (
 )
 
 ## has exceptions: 
-  
-# need gpu
+
+# cannot get model: 
+# 'MaskRCNN: StandardRoIHead: Shared4Conv1FCBBoxHead: Default process group has not been initialized, please make sure to call init_process_group.'
+config_files_maskrcnn = (
+  'simple_copy_paste/mask_rcnn_r50_fpn_syncbn-all_rpn-2conv_ssj_32x2_90k_coco',
+  'strong_baselines/mask_rcnn_r50_caffe_fpn_syncbn-all_rpn-2conv_lsj_100e_coco',
+)
+
+# cannot run model: need gpu
 config_files_need_gpu = (
   'carafe/faster_rcnn_r50_fpn_carafe_1x_coco', 
   'convnext/cascade_mask_rcnn_convnext-s_p4_w7_fpn_giou_4conv1f_fp16_ms-crop_3x_coco',
@@ -96,20 +103,20 @@ config_files_need_gpu = (
   'selfsup_pretrain/mask_rcnn_r50_fpn_mocov2-pretrain_1x_coco',
 )
 
-# need argument img_metas
+# cannot run model: need argument img_metas
 config_files_img_metas = (
   'mask2former/mask2former_r50_lsj_8x2_50e_coco',
   'maskformer/maskformer_r50_mstrain_16x1_75e_coco',
 )
 
-# no forward_dummy
+# cannot run model: no forward_dummy
 config_files_no_forward_dummy = (
   'panoptic_fpn/panoptic_fpn_r50_fpn_1x_coco',
   'solo/decoupled_solo_light_r50_fpn_3x_coco',
   'solov2/solov2_light_r18_fpn_3x_coco',
 )
 
-# 'proposals'
+# cannot build input: 'proposals'
 config_files_proposals = (
   'cascade_rpn/crpn_fast_rcnn_r50_caffe_fpn_1x_coco',
   'fast_rcnn/fast_rcnn_r50_caffe_fpn_1x_coco',
@@ -119,9 +126,12 @@ config_files_proposals = (
 
 # unknown/other
 config_files_other = (
+  # cannot compare result
   'lad/lad_r50_paa_r101_fpn_coco_1x',
+  # cannot get model: other files do not exist
   'ld/ld_r18_gflv1_r101_fpn_coco_1x',
-  'scnet/scnet_r50_fpn_1x_coco', # cannot run forward_dummy
+  # cannot run forward_dummy
+  'scnet/scnet_r50_fpn_1x_coco',
 )
 
 # check equal
@@ -130,22 +140,8 @@ config_files_check_equal = (
   'detectors/cascade_rcnn_r50_rfp_1x_coco',
 )
 
-# 'MaskRCNN: StandardRoIHead: Shared4Conv1FCBBoxHead: Default process group has not been initialized, please make sure to call init_process_group.'
-config_files_maskrcnn = (
-  'simple_copy_paste/mask_rcnn_r50_fpn_syncbn-all_rpn-2conv_ssj_32x2_90k_coco',
-  'strong_baselines/mask_rcnn_r50_caffe_fpn_syncbn-all_rpn-2conv_lsj_100e_coco',
-)
-  
-# maximum recursion
-config_files_recursion = (
-)
-
-# proxy out
-config_files_proxy_out = (
-)
-
 for config_file in (*config_files_correct,):
-  try:
+  # try:
     # Specify the path to model config and checkpoint file
     config = mmcv.Config.fromfile(folder_prefix + '/configs/' + config_file + '.py')
 
@@ -267,11 +263,11 @@ for config_file in (*config_files_correct,):
       torch.manual_seed(100)
       out_like_traced = traced_model(input_like)
       assert check_equal(out_like, out_like_traced), 'check_equal failure'
-  except Exception as e:
-    print('\n\nmodel file:', config_file)
-    print('status: exception')
-    import sys
-    print('exception:', e.with_traceback(sys.exc_info()[2]))
-  else:
-    print('\n\nmodel file:', config_file)
-    print('status: done')
+  # except Exception as e:
+  #   print('\n\nmodel file:', config_file)
+  #   print('status: exception')
+  #   import sys
+  #   print('exception:', e.with_traceback(sys.exc_info()[2]))
+  # else:
+  #   print('\n\nmodel file:', config_file)
+  #   print('status: done')
