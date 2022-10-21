@@ -3,6 +3,7 @@
     
 import torch
 import mmcv
+import mmcv.cnn as mmcv_cnn
 import mmdet.core as mmdet_core
 import mmdet.models as mmdet_models
 from mmdet.apis import init_detector
@@ -19,7 +20,9 @@ config_files_correct = (
   'autoassign/autoassign_r50_fpn_8x2_1x_coco',
   'cascade_rcnn/cascade_mask_rcnn_r50_caffe_fpn_1x_coco',
   'centernet/centernet_resnet18_140e_coco',
+  'centripetalnet/centripetalnet_hourglass104_mstest_16x6_210e_coco',
   'cityscapes/faster_rcnn_r50_fpn_1x_cityscapes',
+  'cornernet/cornernet_hourglass104_mstest_8x6_210e_coco',
   'dcn/cascade_mask_rcnn_r50_fpn_dconv_c3-c5_1x_coco',
   'dcnv2/faster_rcnn_r50_fpn_mdconv_c3-c5_1x_coco',
   'ddod/ddod_r50_fpn_1x_coco',
@@ -32,6 +35,7 @@ config_files_correct = (
   'empirical_attention/faster_rcnn_r50_fpn_attention_0010_1x_coco',
   'faster_rcnn/faster_rcnn_r50_fpn_1x_coco',
   'fcos/fcos_center_r50_caffe_fpn_gn-head_1x_coco',
+  'foveabox/fovea_align_r50_fpn_gn-head_4x4_2x_coco',
   'fpg/faster_rcnn_r50_fpg-chn128_crop640_50e_coco',
   'free_anchor/retinanet_free_anchor_r50_fpn_1x_coco',
   'fsaf/fsaf_r50_fpn_1x_coco',
@@ -56,6 +60,7 @@ config_files_correct = (
   'pascal_voc/faster_rcnn_r50_caffe_c4_mstrain_18k_voc0712',
   'pisa/pisa_faster_rcnn_r50_fpn_1x_coco',
   'point_rend/point_rend_r50_caffe_fpn_mstrain_1x_coco',
+  'pvt/retinanet_pvt-l_fpn_1x_coco',
   'queryinst/queryinst_r50_fpn_1x_coco',
   'regnet/cascade_mask_rcnn_regnetx-400MF_fpn_mstrain_3x_coco',
   'reppoints/bbox_r50_grid_center_fpn_gn-neck+head_1x_coco',
@@ -70,9 +75,9 @@ config_files_correct = (
   'ssd/ssdlite_mobilenetv2_scratch_600e_coco',
   'swin/mask_rcnn_swin-s-p4-w7_fpn_fp16_ms-crop-3x_coco',
   'timm_example/retinanet_timm_efficientnet_b1_fpn_1x_coco',
+  'tood/tood_r50_fpn_1x_coco',
   'tridentnet/tridentnet_r50_caffe_1x_coco',
   'vfnet/vfnet_r2_101_fpn_mdconv_c3-c5_mstrain_2x_coco',
-  'wider_face/ssd300_wider_face',
   'yolact/yolact_r50_1x8_coco',
   'yolo/yolov3_d53_320_273e_coco',
   'yolof/yolof_r50_c5_8x8_1x_coco',
@@ -114,19 +119,15 @@ config_files_proposals = (
 
 # unknown/other
 config_files_other = (
-  # 'lad/lad_r50_paa_r101_fpn_coco_1x',
-  # 'ld/ld_r18_gflv1_r101_fpn_coco_1x',
-  # 'scnet/scnet_r50_fpn_1x_coco', # cannot run forward_dummy
-  'tood/tood_r50_fpn_1x_coco',
+  'lad/lad_r50_paa_r101_fpn_coco_1x',
+  'ld/ld_r18_gflv1_r101_fpn_coco_1x',
+  'scnet/scnet_r50_fpn_1x_coco', # cannot run forward_dummy
 )
 
 # check equal
 config_files_check_equal = (
-  'centripetalnet/centripetalnet_hourglass104_mstest_16x6_210e_coco',
-  'cornernet/cornernet_hourglass104_mstest_8x6_210e_coco',
+  'wider_face/ssd300_wider_face',
   'detectors/cascade_rcnn_r50_rfp_1x_coco',
-  'foveabox/fovea_align_r50_fpn_gn-head_4x4_2x_coco',
-  'pvt/retinanet_pvt-l_fpn_1x_coco',
 )
 
 # 'MaskRCNN: StandardRoIHead: Shared4Conv1FCBBoxHead: Default process group has not been initialized, please make sure to call init_process_group.'
@@ -139,8 +140,12 @@ config_files_maskrcnn = (
 config_files_recursion = (
 )
 
-for config_file in config_files_other:
-  # try:
+# proxy out
+config_files_proxy_out = (
+)
+
+for config_file in (*config_files_correct,):
+  try:
     # Specify the path to model config and checkpoint file
     config = mmcv.Config.fromfile(folder_prefix + '/configs/' + config_file + '.py')
 
@@ -230,37 +235,43 @@ for config_file in config_files_other:
         all:                                  ((), False, None),
         min:                                  ((), False, None),
         max:                                  ((), False, None),
-        torch.meshgrid:                       ((), False, torch.functional.meshgrid),
-        torch._C._VariableFunctions.meshgrid: ((), False, torch.functional.meshgrid),
+        # torch.meshgrid:                       ((), False, torch.functional.meshgrid),
+        # torch._C._VariableFunctions.meshgrid: ((), False, torch.functional.meshgrid),
       }, autowrap_leaf_class = {
         **ConcreteTracer.default_autowrap_leaf_class,
         int:        ((), False),
         reversed:   ((), False),
-        enumerate:  ((), False),
-        
+        torch.Size: ((), False),
+
         # for i, x in enumerate(reversed(feats[:-1])):
       }, leaf_module = (
         *leaf_module_append,
+        mmcv_cnn.bricks.wrappers.Conv2d,
+        mmcv_cnn.bricks.wrappers.Conv3d,
+        mmcv_cnn.bricks.wrappers.ConvTranspose2d,
+        mmcv_cnn.bricks.wrappers.ConvTranspose3d,
+        mmcv_cnn.bricks.wrappers.Linear,
+        mmcv_cnn.bricks.wrappers.MaxPool2d,
+        mmcv_cnn.bricks.wrappers.MaxPool3d,
       ), fake_middle_class = (
-        # mmdet_models.dense_heads.tood_head.TOODHead,
         mmdet_core.anchor.anchor_generator.AnchorGenerator,
       ))
       # print('traced code:\n', traced_model.code)
 
       torch.manual_seed(100)
       out_orig_traced = traced_model(img_tensor)
-      assert check_equal(out_orig, out_orig_traced)
+      assert check_equal(out_orig, out_orig_traced), 'check_equal failure'
       
       torch.manual_seed(100)
       out_like = model.forward_dummy(input_like)
       torch.manual_seed(100)
       out_like_traced = traced_model(input_like)
-      assert check_equal(out_like, out_like_traced)
-  # except Exception as e:
-  #   print('\n\nmodel file:', config_file)
-  #   print('status: exception')
-  #   import sys
-  #   print('exception:', e.with_traceback(sys.exc_info()[2]))
-  # else:
-  #   print('\n\nmodel file:', config_file)
-  #   print('status: done')
+      assert check_equal(out_like, out_like_traced), 'check_equal failure'
+  except Exception as e:
+    print('\n\nmodel file:', config_file)
+    print('status: exception')
+    import sys
+    print('exception:', e.with_traceback(sys.exc_info()[2]))
+  else:
+    print('\n\nmodel file:', config_file)
+    print('status: done')

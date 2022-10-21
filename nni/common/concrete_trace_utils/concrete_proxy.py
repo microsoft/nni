@@ -37,6 +37,7 @@ class ConcreteProxy(Proxy):
     jump_opcodes = tuple(dis.opmap[name] for name in jump_opnames if name in dis.opmap)
     op_compare = dis.opmap['COMPARE_OP']
     op_extended_arg = dis.opmap['EXTENDED_ARG']
+    op_call = dis.opmap['CALL_FUNCTION']
     op_call_ex = dis.opmap['CALL_FUNCTION_EX']
     op_not = dis.opmap['UNARY_NOT']
     op_unpack_sequence = dis.opmap['UNPACK_SEQUENCE']
@@ -97,6 +98,9 @@ class ConcreteProxy(Proxy):
         elif insts[cur].opname == 'GET_ITER' and insts[cur + 1].opname == 'FOR_ITER' and et._orig_isinstance(self.value, et._orig_range):
             # in executing `for i in range(...)`
             return iter(self.value)
+        # elif insts[cur].opname == 'CONTAINS_OP':
+        #     # in executing `for i in range(...)`
+        #     return iter(self.value)
         else:
             return self.tracer.create_proxy('call_function', iter, (self,), {})
 
@@ -149,6 +153,9 @@ class ConcreteProxy(Proxy):
             insts[cur].opcode in self.jump_before_opcodes and insts[cur + 1].opcode in self.jump_opcodes):
             # in executing branch condition
             return et._orig_bool(self.value)
+        elif insts[cur].opname == 'CONTAINS_OP':
+            # in executing 'in'
+            return et._orig_bool(self.value)
         elif insts[cur].opcode == self.op_not:
             # We cannot return a proxy because 'UNARY_NOT' op will check the type.
             _logger.warning('please use the function patcher, or use "x = operator.not_(y)" instead of "x = not y",'
@@ -156,6 +163,14 @@ class ConcreteProxy(Proxy):
             return et._orig_bool(self.value)
         else:
             return self.tracer.create_proxy('call_function', bool, (self,), {})
+
+    def __index__(self) -> Union[int, ConcreteProxy]:
+        # should only be in list/tuple getitem
+        return et._orig_index(self.value)
+
+    def __hash__(self) -> Union[int, ConcreteProxy]:
+        # should only be in dict getitem
+        return hash(self.value)
 
     @compatibility(is_backward_compatible=True)
     def keys(self):
@@ -227,10 +242,13 @@ class ConcreteAttrProxy(ConcreteProxy):
         self.attr = attr
         self.tracer = root.tracer
         self._node: Optional[Node] = None
-        self.value = getattr(root.value, attr)
+        self.value = et._orig_getattr(root.value, attr)
 
     def __repr__(self) -> str:
-        return f'ConcreteAttrProxy({self.node.name})'
+        calling_frame_name = inspect.stack()[1][1]
+        if calling_frame_name.endswith('pydevd_exe2.py') or calling_frame_name.endswith('pydevd_safe_repr.py'):
+            return f'ConcreteAttrProxy({self.node.name})'
+        return repr(self.value)
 
     @property
     def node(self):
@@ -238,7 +256,7 @@ class ConcreteAttrProxy(ConcreteProxy):
         # which do not rely on the getitem call
         if self._node is None:
             self._node = self.tracer.create_proxy(
-                'call_function', getattr, (self.root, self.attr), {}).node
+                'call_function', et._orig_getattr, (self.root, self.attr), {}).node
         return self._node
 
     def __call__(self, *args, **kwargs):
@@ -343,7 +361,7 @@ for method in magic_methods:
     def _scope(method):
         def impl(*args, **kwargs):
             tracer = args[0].tracer
-            target = getattr(operator, method)
+            target = et._orig_getattr(operator, method)
             return tracer.create_proxy('call_function', target, args, kwargs)
         impl.__name__ = method
         as_magic = f'__{method.strip("_")}__'
@@ -355,7 +373,7 @@ def _define_reflectable(orig_method_name):
     method_name = f'__r{orig_method_name.strip("_")}__'
 
     def impl(self, rhs):
-        target = getattr(operator, orig_method_name)
+        target = et._orig_getattr(operator, orig_method_name)
         return self.tracer.create_proxy('call_function', target, (rhs, self), {})
     impl.__name__ = method_name
     impl.__qualname__ = method_name
