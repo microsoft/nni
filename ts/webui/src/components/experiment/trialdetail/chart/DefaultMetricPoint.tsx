@@ -12,6 +12,7 @@ import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
 
 // this file is for overview page and detail page's Default metric graph
+// TODO: test dict keys with updated chart
 
 const EmptyGraph = {
     grid: {
@@ -41,31 +42,142 @@ const formatAccuracy = (accuracy: number | undefined): number => {
     return accuracy;
 }
 
+const generateGraphConfig = (hasBestCurve: boolean, finalKey: string): any => {
+    return{
+        grid: {
+            left: '8%'
+        },
+        tooltip: {
+            trigger: 'item',
+            enterable: hasBestCurve,
+            confine: true, // confirm always show tooltip box rather than hidden by background
+            formatter: (data: TooltipForAccuracy): React.ReactNode => `
+                <div class="tooldetailAccuracy">
+                    <div>Trial No.: ${data.data[0]}</div>
+                    <div>Trial ID: ${data.data[2]}</div>
+                    <div>${finalKey}: ${data.data[1]}</div>
+                    <div>Parameters: <pre>${JSON.stringify(
+                        reformatRetiariiParameter(data.data[3]),
+                        null,
+                        4
+                    )}</pre></div>
+                </div>
+            `
+        },
+        dataZoom: [
+            {
+                type: 'inside',
+                yAxisIndex: [0],
+                filterMode: 'none',
+                start: 0, // percent
+                end: 100 // percent
+            }
+        ],
+        xAxis: {
+            name: 'Trial',
+            type: 'category'
+        },
+        yAxis: {
+            name: 'Default metric',
+            type: 'value',
+            scale: true
+        },
+        series: undefined
+}};
+
+const generateGraph = (trialIds: string[], hasBestCurve: boolean, finalKey: string, bestCurveEnabled: boolean, optimizeMode: string): any => {
+    const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
+    if (trials.length === 0) {
+        return EmptyGraph;
+    }
+    const graph = generateGraphConfig(hasBestCurve, finalKey);
+    if (bestCurveEnabled) {
+        (graph as any).series = [generateBestCurveSeries(trials, finalKey, optimizeMode), generateScatterSeries(trials, finalKey)];
+    } else {
+        (graph as any).series = [generateScatterSeries(trials, finalKey)];
+    }
+    return graph;
+};
+
+const generateScatterSeries = (trials: Trial[], finalKey: string): any => {
+    let data;
+    if (trials[0].accuracyNumberTypeDictKeys.length > 1) {
+        // dict type final results
+        data = trials.map(trial => [
+            trial.sequenceId,
+            trial.acc === undefined ? 0 : formatAccuracy(trial.acc[finalKey]),
+            trial.id,
+            trial.parameter
+        ]);
+    } else {
+        data = trials.map(trial => [
+            trial.sequenceId,
+            formatAccuracy(trial.accuracy),
+            trial.id,
+            trial.parameter
+        ]);
+    }
+
+    return {
+        symbolSize: 6,
+        type: 'scatter',
+        data
+    };
+};
+
+const generateBestCurveSeries = (trials: Trial[], finalKey: string, optimizeMode: string): any => {
+    let best = trials[0];
+    const data = [
+        [
+            best.sequenceId,
+            best.acc === undefined ? 0 : formatAccuracy(best.acc[finalKey]),
+            best.id,
+            best.parameter
+        ]
+    ];
+    for (let i = 1; i < trials.length; i++) {
+        const trial = trials[i];
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const delta = trial.acc![finalKey] - best.acc![finalKey];
+        const better = optimizeMode === 'minimize' ? delta < 0 : delta > 0;
+        if (better) {
+            data.push([
+                trial.sequenceId,
+                trial.acc === undefined ? 0 : formatAccuracy(trial.acc[finalKey]),
+                best.id,
+                trial.parameter
+            ]);
+            best = trial;
+        } else {
+            data.push([
+                trial.sequenceId,
+                best.acc === undefined ? 0 : formatAccuracy(best.acc[finalKey]),
+                best.id,
+                trial.parameter
+            ]);
+        }
+    }
+
+    return {
+        type: 'line',
+        lineStyle: { color: '#FF6600' },
+        data
+    };
+};
 const DefaultPoint = (props: DefaultPointProps) => {
     const { hasBestCurve, trialIds, changeExpandRowIDs, chartHeight } = props;
     const [bestCurveEnabled, setBestCurveEnabled] = useState(false);
-    // const [startY, setStartY] = useState(0); // dataZoomY
-    // const [endY, setEndY] = useState(0); // dataZoomY
-    const [graph, setGraph] = useState(EmptyGraph);
-    const [onEvents, setonEvents] = useState({});
+    const [defaultMetricOption, setGraph] = useState(EmptyGraph);
     const [userSelectOptimizeMode, setuserSelectOptimizeMode] = useState(optimizeModeValue(EXPERIMENT.optimizeMode) as string);
     const [userSelectAccuracyNumberKey, setuserSelectAccuracyNumberKey] = useState('default');
-    const loadDefault = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
-        setBestCurveEnabled(checked ?? true); // ?? true是新加的
+    const loadingBestCurveLine = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
+        setBestCurveEnabled(checked ?? true);
     };
-    // const metricDataZoom = (e: EventMap): void => {
-    //     if (e.batch !== undefined) {
-    //         setStartY(e.batch[0].start !== null ? e.batch[0].start : 0);
-    //         setEndY(e.batch[0].end !== null ? e.batch[0].end : 100);
-    //     }
-    // };
+
     useEffect(() => {
-        generateGraph();
-        console.info('ccc');
-        // setonEvents({ dataZoom: metricDataZoom, click: pointClick });
-        setonEvents({ click: pointClick });
-        // const accNodata = graph === EmptyGraph ? 'No data' : '';
-    }, [trialIds, bestCurveEnabled, userSelectAccuracyNumberKey, userSelectOptimizeMode]);
+        // (trialIds: string[], hasBestCurve: boolean, finalKey: string, bestCurveEnabled: boolean, optimizeMode: string
+        setGraph(generateGraph(trialIds, hasBestCurve, userSelectAccuracyNumberKey, bestCurveEnabled, userSelectOptimizeMode));
+    }, [trialIds.length, bestCurveEnabled, userSelectAccuracyNumberKey, userSelectOptimizeMode]);
 
     const pointClick = (params: any): void => {
         // [hasBestCurve: true]: is detail page, otherwise, is overview page
@@ -73,118 +185,72 @@ const DefaultPoint = (props: DefaultPointProps) => {
             changeExpandRowIDs(params.data[2], 'chart');
         }
     };
-    const generateGraphConfig = (_maxSequenceId: number): any => {
-        return{
-            grid: {
-                left: '8%'
-            },
-            tooltip: {
-                trigger: 'item',
-                enterable: hasBestCurve,
-                confine: true, // confirm always show tooltip box rather than hidden by background
-                formatter: (data: TooltipForAccuracy): React.ReactNode => `
-                    <div class="tooldetailAccuracy">
-                        <div>Trial No.: ${data.data[0]}</div>
-                        <div>Trial ID: ${data.data[2]}</div>
-                        <div>${userSelectAccuracyNumberKey}: ${data.data[1]}</div>
-                        <div>Parameters: <pre>${JSON.stringify(
-                            reformatRetiariiParameter(data.data[3]),
-                            null,
-                            4
-                        )}</pre></div>
-                    </div>
-                `
-            },
-            dataZoom: [
-                {
-                    // id: 'dataZoomY',
-                    type: 'inside',
-                    // moveOnMouseMove: false,
-                    // rangeMode: ['percent', 'percent'],
-                    yAxisIndex: [0],
-                    filterMode: 'none',
-                    start: 0, // percent
-                    end: 100 // percent
-                }
-            ],
-            xAxis: {
-                name: 'Trial',
-                type: 'category'
-            },
-            yAxis: {
-                name: 'Default metric',
-                type: 'value',
-                scale: true
-            },
-            series: undefined
-    }};
 
-    const generateScatterSeries = (trials: Trial[]): any => {
-        let data;
-        if (trials[0].accuracyNumberTypeDictKeys.length > 1) {
-            // dict type final results
-            data = trials.map(trial => [
-                trial.sequenceId,
-                trial.acc === undefined ? 0 : formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
-                trial.id,
-                trial.parameter
-            ]);
-        } else {
-            data = trials.map(trial => [
-                trial.sequenceId,
-                formatAccuracy(trial.accuracy),
-                trial.id,
-                trial.parameter
-            ]);
-        }
+    // const generateScatterSeries = (trials: Trial[]): any => {
+    //     let data;
+    //     if (trials[0].accuracyNumberTypeDictKeys.length > 1) {
+    //         // dict type final results
+    //         data = trials.map(trial => [
+    //             trial.sequenceId,
+    //             trial.acc === undefined ? 0 : formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
+    //             trial.id,
+    //             trial.parameter
+    //         ]);
+    //     } else {
+    //         data = trials.map(trial => [
+    //             trial.sequenceId,
+    //             formatAccuracy(trial.accuracy),
+    //             trial.id,
+    //             trial.parameter
+    //         ]);
+    //     }
 
-        console.info(data);
-        return {
-            symbolSize: 6,
-            type: 'scatter',
-            data
-        };
-    }
+    //     return {
+    //         symbolSize: 6,
+    //         type: 'scatter',
+    //         data
+    //     };
+    // }
 
-    const generateBestCurveSeries = (trials: Trial[]): any => {
-        let best = trials[0];
-        const data = [
-            [
-                best.sequenceId,
-                best.acc === undefined ? 0 : formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
-                best.id,
-                best.parameter
-            ]
-        ];
-        for (let i = 1; i < trials.length; i++) {
-            const trial = trials[i];
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const delta = trial.acc![userSelectAccuracyNumberKey] - best.acc![userSelectAccuracyNumberKey];
-            const better = userSelectOptimizeMode === 'minimize' ? delta < 0 : delta > 0;
-            if (better) {
-                data.push([
-                    trial.sequenceId,
-                    trial.acc === undefined ? 0 : formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
-                    best.id,
-                    trial.parameter
-                ]);
-                best = trial;
-            } else {
-                data.push([
-                    trial.sequenceId,
-                    best.acc === undefined ? 0 : formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
-                    best.id,
-                    trial.parameter
-                ]);
-            }
-        }
+    // const generateBestCurveSeries = (trials: Trial[]): any => {
+    //     let best = trials[0];
+    //     const data = [
+    //         [
+    //             best.sequenceId,
+    //             best.acc === undefined ? 0 : formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
+    //             best.id,
+    //             best.parameter
+    //         ]
+    //     ];
+    //     for (let i = 1; i < trials.length; i++) {
+    //         const trial = trials[i];
+    //         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    //         const delta = trial.acc![userSelectAccuracyNumberKey] - best.acc![userSelectAccuracyNumberKey];
+    //         const better = userSelectOptimizeMode === 'minimize' ? delta < 0 : delta > 0;
+    //         if (better) {
+    //             data.push([
+    //                 trial.sequenceId,
+    //                 trial.acc === undefined ? 0 : formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
+    //                 best.id,
+    //                 trial.parameter
+    //             ]);
+    //             best = trial;
+    //         } else {
+    //             data.push([
+    //                 trial.sequenceId,
+    //                 best.acc === undefined ? 0 : formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
+    //                 best.id,
+    //                 trial.parameter
+    //             ]);
+    //         }
+    //     }
 
-        return {
-            type: 'line',
-            lineStyle: { color: '#FF6600' },
-            data
-        };
-    }
+    //     return {
+    //         type: 'line',
+    //         lineStyle: { color: '#FF6600' },
+    //         data
+    //     };
+    // }
 
     const updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
@@ -199,20 +265,19 @@ const DefaultPoint = (props: DefaultPointProps) => {
         }
     };
 
-    const generateGraph = (): any => {
-        const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
-        if (trials.length === 0) {
-            return EmptyGraph;
-        }
-        const graph = generateGraphConfig(trials[trials.length - 1].sequenceId);
-        if (bestCurveEnabled) {
-            (graph as any).series = [generateBestCurveSeries(trials), generateScatterSeries(trials)];
-        } else {
-            (graph as any).series = [generateScatterSeries(trials)];
-        }
-        console.info(graph);
-        setGraph(graph);
-    }
+    // const generateGraph = (): any => {
+    //     const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
+    //     if (trials.length === 0) {
+    //         return EmptyGraph;
+    //     }
+    //     const graph = generateGraphConfig(hasBestCurve, userSelectAccuracyNumberKey);
+    //     if (bestCurveEnabled) {
+    //         (graph as any).series = [generateBestCurveSeries(trials), generateScatterSeries(trials)];
+    //     } else {
+    //         (graph as any).series = [generateScatterSeries(trials)];
+    //     }
+    //     setGraph(graph);
+    // }
 
     const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
     let dictDropdown: string[] = [];
@@ -223,7 +288,7 @@ const DefaultPoint = (props: DefaultPointProps) => {
         <div>
             {hasBestCurve && (
                 <Stack horizontal reversed tokens={gap15} className='default-metric'>
-                    <Toggle label='Optimization curve' inlineLabel onChange={loadDefault} />
+                    <Toggle label='Optimization curve' inlineLabel onChange={loadingBestCurveLine} />
                     <Dropdown
                         selectedKey={userSelectOptimizeMode}
                         onChange={updateUserOptimizeMode}
@@ -247,7 +312,7 @@ const DefaultPoint = (props: DefaultPointProps) => {
             )}
             <div className='default-metric-graph graph'>
                 <ReactEcharts
-                    option={graph}
+                    option={defaultMetricOption}
                     style={{
                         width: '100%',
                         height: chartHeight,
@@ -255,9 +320,10 @@ const DefaultPoint = (props: DefaultPointProps) => {
                     }}
                     theme='nni_theme'
                     // notMerge={true} // update now
-                    onEvents={onEvents}
+                    lazyUpdate={true}
+                    onEvents={{click: pointClick}}
                 />
-                <div className='default-metric-noData fontColor333'>{graph === EmptyGraph ? 'No data' : ''}</div>
+                <div className='default-metric-noData fontColor333'>{defaultMetricOption === EmptyGraph ? 'No data' : ''}</div>
             </div>
         </div>
     );
