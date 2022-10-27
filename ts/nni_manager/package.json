@@ -5,7 +5,6 @@
   "scripts": {
     "build": "tsc",
     "test": "nyc --reporter=cobertura --reporter=text mocha test/**/*.test.ts",
-    "test2": "mocha test/debug/*.test.ts",
     "start": "node dist/main.js",
     "watch": "tsc --watch",
     "eslint": "npx eslint ./ --ext .ts"
