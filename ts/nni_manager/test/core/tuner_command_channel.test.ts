@@ -33,7 +33,7 @@ async function testSend(client: Client): Promise<void> {
 
     channel.sendCommand(command1);
     channel.sendCommand(command2);
-    await setTimeout(heartbeatInterval);
+    await setTimeout(heartbeatInterval * 2);
 
     assert.deepEqual(client.received, [command1, command2]);
 }
@@ -44,24 +44,24 @@ async function testReceive(client: Client): Promise<void> {
 
     client.ws.send(command2);
     client.ws.send(command1);
-    await setTimeout(heartbeatInterval);
+    await setTimeout(heartbeatInterval * 2);
 
     assert.deepEqual(serverReceived, [command2, command1]);
 }
 
 // Simulate client side crash.
 async function testError(): Promise<void> {
-    if (process.platform !== 'darwin') {
-        // we have set heartbeat interval to 10ms, so pause for 30ms should make it timeout
-        client1.ws.pause();
-        await setTimeout(heartbeatInterval * 3);
-        client1.ws.resume();
-
-    } else {
+    if (process.platform === 'darwin') {
         // macOS does not raise the error in 30ms
         // not a big problem and don't want to debug. ignore it.
         client1.ws.terminate();
+        return;
     }
+
+    // we have set heartbeat interval to 10ms, so pause for 30ms should make it timeout
+    client1.ws.pause();
+    await setTimeout(heartbeatInterval * 3);
+    client1.ws.resume();
 
     assert.notEqual(catchedError, undefined);
 }
