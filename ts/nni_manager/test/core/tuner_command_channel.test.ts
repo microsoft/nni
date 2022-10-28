@@ -6,6 +6,7 @@ import { setTimeout } from 'timers/promises';
 
 import WebSocket from 'ws';
 
+import { Deferred } from 'common/deferred';
 import { getWebSocketChannel, serveWebSocket } from 'core/tuner_command_channel';
 import { UnitTestHelpers } from 'core/tuner_command_channel/websocket_channel';
 
@@ -33,7 +34,7 @@ async function testSend(client: Client): Promise<void> {
 
     channel.sendCommand(command1);
     channel.sendCommand(command2);
-    await setTimeout(heartbeatInterval * 2);
+    await setTimeout(heartbeatInterval);
 
     assert.deepEqual(client.received, [command1, command2]);
 }
@@ -44,7 +45,7 @@ async function testReceive(client: Client): Promise<void> {
 
     client.ws.send(command2);
     client.ws.send(command1);
-    await setTimeout(heartbeatInterval * 2);
+    await setTimeout(heartbeatInterval);
 
     assert.deepEqual(serverReceived, [command2, command1]);
 }
@@ -69,6 +70,7 @@ async function testError(): Promise<void> {
 // If the client losses connection by accident but not crashed, it will reconnect.
 async function testReconnect(): Promise<void> {
     client2 = new Client('client2');
+    await client2.ws.deferred.promise;
 }
 
 // Clean up.
@@ -113,6 +115,7 @@ class Client {
     name: string;
     received: string[] = [];
     ws!: WebSocket;
+    deferred: Deferred<void> = new Deferred();
 
     constructor(name: string) {
         this.name = name;
@@ -120,6 +123,9 @@ class Client {
         this.ws = new WebSocket(`ws://localhost:${port}`);
         this.ws.on('message', (data, _isBinary) => {
             this.received.push(data.toString());
+        });
+        this.ws.on('open', () => {
+            this.deferred.resolve();
         });
     }
 }
