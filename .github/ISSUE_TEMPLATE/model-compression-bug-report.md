@@ -14,7 +14,7 @@ about: Report an issue or question while using nni instance (deployment).
 - Training service (local|remote|pai|aml|etc):
 - Python version:
 - PyTorch version:
-- Cuda version:
+- Cpu or cuda version:
 
 
 **Reproduce the problem**
