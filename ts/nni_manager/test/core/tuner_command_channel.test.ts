@@ -70,7 +70,7 @@ async function testError(): Promise<void> {
 // If the client losses connection by accident but not crashed, it will reconnect.
 async function testReconnect(): Promise<void> {
     client2 = new Client('client2');
-    await client2.ws.deferred.promise;
+    await client2.deferred.promise;
 }
 
 // Clean up.
