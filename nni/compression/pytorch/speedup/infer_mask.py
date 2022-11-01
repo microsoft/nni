@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from types import MappingProxyType
 import logging
+from typing import Dict
 import torch
 import torch.nn as nn
 from ..utils import randomize_tensor, torch_float_dtype, torch_integer_dtype
@@ -13,7 +15,7 @@ STD_DELTA = 1e-6
 
 class AutoMaskInference:
     def __init__(self, module, dummy_input, speedup, in_masks=None, weight_mask=None,
-                 output_mask=None, name=None, in_constants=None, state_dict=None):
+                 output_mask=None, name=None, state_dict=None):
         """
         This class will infer the mask of the target module automatically.
         This update_direct_sparsity will infer the output mask according
@@ -26,7 +28,7 @@ class AutoMaskInference:
         ----------
         module: torch.nn.Module/function
             The target module to infer the mask. Need to be callable.
-        dummy_input: torch.Tensor/list of Tensor
+        dummy_input: list of Tensor
             The dummy_input of the target module.
         speedup: ModelSpeedup
             The reference of the ModelSpeedup object.
@@ -45,8 +47,6 @@ class AutoMaskInference:
             the mask. For example: {'weight':torch.ones(1000, 1000), bias:torch.ones(1000)}
         name: str
             Name of the target module.
-        in_constants: list of torch.Tensor
-            The correponding constant values of the in_masks.
         state_dict: dict of torch.Tensor
             The original values of the weights.
 
@@ -57,18 +57,13 @@ class AutoMaskInference:
         self.module = module
 
         # Initialize the dummy_input
-        if isinstance(dummy_input, list):
-            # if there are multiple input variables
-            self.dummy_input = dummy_input
-        else:
-            # if there is only one input variable
-            self.dummy_input = [dummy_input]
+        assert isinstance(dummy_input, list)
+        # if there are multiple input variables
+        self.dummy_input = tuple(dummy_input)
 
         # Initialize the masks for input tensors
         self.in_masks = in_masks if in_masks is not None else [
             None] * len(self.dummy_input)
-        self.in_constants = in_constants if in_constants is not None else [
-            torch.zeros_like(x) for x in dummy_input]
         for in_id, _ in enumerate(self.in_masks):
             if self.in_masks[in_id] is None and \
                     isinstance(self.dummy_input[in_id], torch.Tensor):
@@ -100,7 +95,7 @@ class AutoMaskInference:
                 self.output_mask = None
 
         # Initialize the mask for the parameters
-        self.weights = {}
+        weights = {}
         self.weight_mask = {}
         if weight_mask:
             self.weight_mask.update(weight_mask)
@@ -109,15 +104,30 @@ class AutoMaskInference:
             # the function should not has parameters
             # get all the parameter tensors of the target module
             for name, para in module.named_parameters():
-                self.weights[name] = para
+                weights[name] = para
                 if name not in self.weight_mask:
                     self.weight_mask[name] = torch.ones_like(para.data)
+        
+        if isinstance(self.module, nn.Module):
+            self.saved_weights = MappingProxyType({
+                k: v.clone() for k, v in module.named_parameters()
+            })
+
         self.state_dict = state_dict
         # TODO support the other batch dimension in the future
         self.batch_dim = speedup.batch_dim
         self.batch_size = speedup.confidence
 
-    def random_init(self, start=0.1, end=8.0):
+    def init_and_apply(self, start=0.1, end=8.0):
+        input = self.randomize_input(self.dummy_input, start, end)
+        input = self.apply_input_mask(input)
+
+        if isinstance(self.module, nn.Module):
+            self.randomize_weight(start, end)
+            self.apply_weight_mask()
+        return input
+
+    def randomize_input(self, input, start, end):
         """
         Random initialize the weights of the module. The value of
         the tensor will not affect the mask auto inference.
@@ -127,7 +137,7 @@ class AutoMaskInference:
         # when the confidence is low. In the future, we will add the mask inference
         # rules for ReLU6 to break this range constraint.
         with torch.no_grad():
-            for tensor in self.dummy_input:
+            for tensor in input:
                 if isinstance(tensor, torch.Tensor) and len(tensor.size()) > self.batch_dim\
                     and tensor.size(self.batch_dim) == self.batch_size:
                     # if the input tensor only has one dimension, which means
@@ -136,8 +146,13 @@ class AutoMaskInference:
                     # dimention. For example, if the tensor is a scalar(returned
                     # by the size operator), then we will skip this tensor
                     randomize_tensor(tensor, start, end)
-            for para in self.weights:
-                randomize_tensor(self.weights[para].data, start, end)
+
+        return input
+
+    def randomize_weight(self, start, end):
+        with torch.no_grad():
+            for weight_key in self.saved_weights.keys():
+                randomize_tensor(self.module.get_parameter(weight_key).data, start, end)
 
     def zero_grad(self):
         """
@@ -162,42 +177,68 @@ class AutoMaskInference:
                 # only float type can require the gradient
                 # enable the auto gradient
                 t_in.requires_grad_(flag)
-        for para_name in self.weights:
-            if self.weights[para_name].dtype in torch_float_dtype:
-                self.weights[para_name].requires_grad_(flag)
 
-    def apply_mask(self):
-        self.__apply_input_mask()
-        self.__apply_weight_mask()
+        if isinstance(self.module, nn.Module):
+            for weight_key in self.saved_weights:
+                if self.module.get_parameter(weight_key).dtype in torch_float_dtype:
+                    self.module.get_parameter(weight_key).requires_grad_(flag)
 
-    def __apply_input_mask(self):
+    def apply_input_mask(self, input):
         """
         Apply the mask of the input tensor.
         """
         with torch.no_grad():
             # apply the input mask
-            for tid, in_tensor in enumerate(self.dummy_input):
+            for tid, in_tensor in enumerate(input):
                 if isinstance(in_tensor, torch.Tensor) and self.in_masks[tid] is not None:
-                    # in_tensor.data = in_tensor.data * \
-                    #     self.in_masks[tid] + \
-                    #     (1-self.in_masks[tid]) * self.in_constants[tid]
                     # issue-4540 when two tensors are multiplied, the constants part make
                     # the propagation weaker, and lead to shape misaligment. Currently, we
                     # donnot support the constant folding, so, we just remove the constant here
                     in_tensor.data = in_tensor.data * \
                         self.in_masks[tid]
+        return input
 
-    def __apply_weight_mask(self):
+    def apply_weight_mask(self):
         """
         Apply the weight mask of this module.
         """
         with torch.no_grad():
             # apply the weight mask
-            for para in self.weights:
-                if para in self.weight_mask:
-                    self.weights[para].data *= self.weight_mask[para].data
+            for weight_key in self.saved_weights.keys():
+                if weight_key in self.weight_mask:
+                    self.module.register_parameter(
+                        weight_key,
+                        torch.nn.Parameter(self.module.get_parameter(weight_key) * self.weight_mask[weight_key])
+                    )
 
-    def isconstants(self, tout):
+    def calc_out_masks(self, out):
+        if isinstance(out, torch.Tensor):
+            return self.calc_one_out_mask(out.clone().detach())
+        elif isinstance(out, tuple) or isinstance(out, list):
+            return [self.calc_one_out_mask(tout.clone().detach()) for tout in out]
+        else:
+            _logger.warning(
+                'Only support the OP whose output is tensor/tuple of tensor/list of tensor')
+
+    def apply_out_masks(self, out_mask):
+        # We also need random the parameters of the module, because if the weight of the model has
+        # a unmasked 0, then our out sparsity inference may be wrong
+        # However, after radomizing the weight/parameters, the constant in the output tensors may
+        # be different from the constants that calculated from its original stata_dict. However,
+        # so to get the right constant to eliminate the bias between model before and after sparsity
+        # inference, we need to reload its state_dict and recalculate the constant
+        # Currently we also get the constant values at the same time when infering the mask, in
+        # the future, we will separate the constant inference into a single graph pass.
+        if isinstance(out_mask, torch.Tensor):
+            assert isinstance(self.output_mask, torch.Tensor)
+            self.output_mask *= out_mask
+        elif isinstance(out_mask, list):
+            for i, _ in enumerate(out_mask):
+                self.output_mask[i] *= out_mask[i]
+        else:
+            _logger.warning('There is no output sparsity')
+
+    def calc_one_out_mask(self, tout):
         """
         Find the constants in the tensor tout. This function return a mask tensor that
         indicates if a value in tout is a constant, and return one more tensor to indicate
@@ -212,20 +253,15 @@ class AutoMaskInference:
         mask: torch.Tensor
             The mask tensor(same shape with tout) that indicates that whether
             the correponding value is a constant.
-        constant: torch.Tensor
-            The mask tensot(same shape with tout) that indicates the values of
-            the constants in the tout.
         """
         assert isinstance(tout, torch.Tensor)
         out_mask = torch.ones_like(tout)
-        constant = torch.zeros_like(tout)
         # judge if tout is a scalar(tensor that only have one value)
         if len(tout.size()) == 0:
             # tout is a scalar tensor, for the scalar tensor, we take
             # this scalar as a constant, usually, the scalar tensor is returned
             # by the size() function
-            constant = tout
-            return out_mask, constant
+            return out_mask
         if tout.dtype in torch_integer_dtype:
             # Pytorch cannot use torch.mean and torch.std to process
             # intergers :( , so if dtype of the input tensor is integer, we need
@@ -235,7 +271,6 @@ class AutoMaskInference:
             reduced = torch.sum(same, dim=0)
             is_constant = reduced == tout.size(0)
             out_mask[:, is_constant] = 0
-            constant[:, is_constant] = tout[0][is_constant]
 
         else:
             # calculate the std of the output among batch dimension
@@ -244,8 +279,7 @@ class AutoMaskInference:
             mean = torch.mean(tout, dim=0)
             mask_pos = std < STD_DELTA
             out_mask[:, mask_pos] = 0
-            constant[:, mask_pos] = mean[mask_pos]
-        return out_mask, constant
+        return out_mask
 
     def update_indirect_sparsity(self):
         """
@@ -294,13 +328,11 @@ class AutoMaskInference:
         self.requires_grad_(True)
         # Forward inference with auto gradient enabled
         # Note: tensors that need gradient cannot be used in the in-place operator
-        self.random_init()
-        self.apply_mask()
+        the_dummy_input = self.init_and_apply()
         # Some operator may have the in_place operations, so we need to clone the input
         # before passing to the self.module
-        tmp_dummy_input = [x.clone() if isinstance(
-            x, torch.Tensor) else x for x in self.dummy_input]
-        output = self.module(*tmp_dummy_input)
+        the_dummy_input = [x.clone() for x in the_dummy_input]
+        output = self.module(*the_dummy_input)
 
         if output.grad_fn is None:
             # the output does not have the gradient function
@@ -313,75 +345,19 @@ class AutoMaskInference:
                 t_out.backward(self.output_mask[tid])
 
         # update the sparsity of the paramters
-        for para_name in self.weights:
-            grad_zero = self.weights[para_name].grad.data == 0
-            self.weight_mask[para_name][grad_zero] = 0
+        if isinstance(self.module, nn.Module):
+            for weight_key in self.saved_weights.keys():
+                grad_zero = self.module.get_parameter(weight_key).grad.data == 0
+                self.weight_mask[weight_key][grad_zero] = 0
 
     def update_direct_sparsity(self):
         # we don't need the gradient in the forward inference
         out_mask = None
-        constant = None
         with torch.no_grad():
-            # Note: we need randomly init the input one more time here!
-            # Because some operation have the in-place operation, such as relu_,
-            # the in-place operation may modify or write 0s into the dummy_input
-            self.random_init()
-            # apply the mask for the input tensor and the weight tensor
-            self.apply_mask()
-            # Note: due to the in-place operator, such as relu_,
-            # ori_out may be the same tensor with dummy_input,
-            # so we use clone and detach to create a new tensor with
-            # the same values.
-            out = self.module(*self.dummy_input)
-            if isinstance(out, torch.Tensor):
-                out_mask, constant = self.isconstants(out.clone().detach())
-            elif isinstance(out, tuple) or isinstance(out, list):
-                out_mask = []
-                constant = []
-                for tout in out:
-                    _mask, _constant = self.isconstants(tout.clone().detach())
-                    out_mask.append(_mask)
-                    constant.append(_constant)
-            else:
-                _logger.warning(
-                    'Only support the OP whose output is tensor/tuple of tensor/list of tensor')
-
-            # We also need random the parameters of the module, because if the weight of the model has
-            # a unmasked 0, then our out sparsity inference may be wrong
-            # However, after radomizing the weight/parameters, the constant in the output tensors may
-            # be different from the constants that calculated from its original stata_dict. However,
-            # so to get the right constant to eliminate the bias between model before and after sparsity
-            # inference, we need to reload its state_dict and recalculate the constant
-            # Currently we also get the constant values at the same time when infering the mask, in
-            # the future, we will separate the constant inference into a single graph pass.
-            if len(self.weights) > 0 and self.state_dict is not None:
-
-                self.module.load_state_dict(self.state_dict)
-                # apply weight mask
-                self.__apply_weight_mask()
-                out = self.module(*self.dummy_input).clone().detach()
-                if isinstance(out, torch.Tensor):
-                    constant = torch.zeros_like(out)
-                    constant_pos = out_mask == 0
-                    constant[constant_pos] = out[constant_pos]
-                elif isinstance(out, (list, tuple)):
-                    constant = []
-                    for i, tout in enumerate(out):
-                        _tmp = torch.zeros_like(tout)
-                        sparsity_pos = out_mask[i] == 0
-                        _tmp[sparsity_pos] = tout[sparsity_pos]
-                        constant.append(_tmp)
-
-            if isinstance(out_mask, torch.Tensor):
-                assert isinstance(self.output_mask, torch.Tensor)
-                self.output_mask *= out_mask
-            elif isinstance(out_mask, list):
-                for i, _ in enumerate(out_mask):
-                    self.output_mask[i] *= out_mask[i]
-            else:
-                _logger.warning('There is no output sparsity')
-            # also save the out_constant
-            self.out_constant = constant
+            the_dummy_input = self.init_and_apply()
+            out = self.module(*the_dummy_input)
+            out_mask = self.calc_out_masks(out)
+            self.apply_out_masks(out_mask)
 
     def get_masks(self):
         return (self.in_masks, self.output_mask, self.weight_mask)

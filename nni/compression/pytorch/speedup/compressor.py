@@ -88,7 +88,7 @@ class ModelSpeedup:
             self.masks = masks_file
         else:
             raise Exception('Please provide the mask or the path of the mask file')
-        self.constant = {}
+        # self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
         self.customized_replace_func = customized_replace_func if customized_replace_func is not None else {}
@@ -175,11 +175,11 @@ class ModelSpeedup:
         # prepare the inputs and outputs mask for this node,
         # if there is already a mask in self.masks, then use
         # the original mask tensor, else create a new one.
-        inputs_name = node.inputs
+
         # build the dummy_input, in_masks the target node
         dummy_input = []
         debugnames = []
-        for _input in inputs_name:
+        for _input in node.inputs:
             if _input not in self.internal_result:
                 # if the input debug name is not in self.internal_result,
                 # then this node isn't a output tensor of any predecessor
@@ -198,7 +198,6 @@ class ModelSpeedup:
             # The detach operation here is for the in-place operation. We cannot
             # directly can the backward on the output tensor of an in-place operator.
             dummy_input.append(self.internal_result[_input].detach())
-
             debugnames.append(_input)
 
         return dummy_input, debugnames
@@ -218,8 +217,6 @@ class ModelSpeedup:
         # Note: the input mask of the successor nodes are
         # already created by the predecessor node
         in_masks = [self.masks[debugname] for debugname in input_debugname]
-        in_constants = [self.constant[debugname]
-                        for debugname in input_debugname]
         if node.type == 'func':
             # we cannot get the runable function directly from the jit traced
             # graph, so we translate it back to python function, Note: the function
@@ -232,14 +229,14 @@ class ModelSpeedup:
                 return
             # function doesn't have weights
             _auto_infer = AutoMaskInference(
-                func, dummy_input, self, in_masks, in_constants=in_constants)
+                func, dummy_input, self, in_masks)
         else:
             weight_mask = None
             if module_name in self.masks:
                 weight_mask = self.masks[module_name]
             _, module = get_module_by_name(self.bound_model, module_name)
             _auto_infer = AutoMaskInference(
-                module, dummy_input, self, in_masks, weight_mask, in_constants=in_constants,
+                module, dummy_input, self, in_masks, weight_mask,
                 state_dict=copy.deepcopy(module.state_dict()))
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
@@ -257,7 +254,6 @@ class ModelSpeedup:
         out_debugname = node.outputs[0]
         # update the output mask into self.masks
         self.masks[out_debugname] = _auto_infer.output_mask
-        self.constant[out_debugname] = _auto_infer.out_constant
         # update the output result into self.internal_result, so that
         # the successor nodes can take these output tensors as inputs.
         self.internal_result[out_debugname] = _auto_infer.output
@@ -359,7 +355,7 @@ class ModelSpeedup:
                 # create the mask tensor for the input value
                 if isinstance(self.internal_result[name], torch.Tensor):
                     self.masks[name] = torch.ones_like(value)
-                    self.constant[name] = torch.zeros_like(value)
+                    # self.constant[nasme] = torch.zeros_like(value)
             elif nodeio.input_or_output == 'output':
                 graph_output.append((name, nodeio))
         # count the degree for the node in the graph
