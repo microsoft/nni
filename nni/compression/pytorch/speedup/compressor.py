@@ -212,7 +212,12 @@ class ModelSpeedup:
         module_name = node.name
         _logger.info('Update mask for %s', module_name)
         unique_name = node.unique_name
+        assert len(
+            node.outputs) == 1, 'The number of the output should be one after the Tuple unpacked manually'
+        out_debugname = node.outputs[0]
+        
         dummy_input, input_debugname = self._prepare_dummy_input(node)
+        
         # get the input mask from self.masks
         # Note: the input mask of the successor nodes are
         # already created by the predecessor node
@@ -227,36 +232,36 @@ class ModelSpeedup:
                 # no need to infer the sparsity for this node
                 self.auto_inferences[unique_name] = None
                 return
+            # update the output result into self.internal_result, so that
+            # the successor nodes can take these output tensors as inputs.
+            self.internal_result[out_debugname] = func(*dummy_input)
+            
             # function doesn't have weights
             _auto_infer = AutoMaskInference(
-                func, dummy_input, self, in_masks)
+                out_debugname, func, self, dummy_input, input_debugname, in_masks)
         else:
             weight_mask = None
             if module_name in self.masks:
                 weight_mask = self.masks[module_name]
             _, module = get_module_by_name(self.bound_model, module_name)
+            # update the output result into self.internal_result, so that
+            # the successor nodes can take these output tensors as inputs.
+            self.internal_result[out_debugname] = module(*dummy_input)
+            
             _auto_infer = AutoMaskInference(
-                module, dummy_input, self, in_masks, weight_mask,
+                out_debugname, module, self, dummy_input, input_debugname, in_masks, weight_mask,
                 state_dict=copy.deepcopy(module.state_dict()))
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
 
         _auto_infer.update_direct_sparsity()
-        # also save the input debug names into the auto_infer
-        _auto_infer.input_debugname = input_debugname
         # update the mask tensor and the internal output of the submodules
         # after manually unpack the tuple/list of tensors, the number of the outputs
         # of each node should always be one(Except for the TupleUnpack node at the end
         # of the whole model)
-        assert len(
-            node.outputs) == 1, 'The number of the output should be one after the Tuple unpacked manually'
-
-        out_debugname = node.outputs[0]
+        
         # update the output mask into self.masks
         self.masks[out_debugname] = _auto_infer.output_mask
-        # update the output result into self.internal_result, so that
-        # the successor nodes can take these output tensors as inputs.
-        self.internal_result[out_debugname] = _auto_infer.output
         # update the parameter mask of the node
 
         self.masks[module_name] = _auto_infer.weight_mask

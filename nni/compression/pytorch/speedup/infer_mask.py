@@ -14,7 +14,7 @@ STD_DELTA = 1e-6
 
 
 class AutoMaskInference:
-    def __init__(self, module, dummy_input, speedup, in_masks=None, weight_mask=None,
+    def __init__(self, out_debugname, module, speedup, dummy_input, input_debugname, in_masks=None, weight_mask=None,
                  output_mask=None, name=None, state_dict=None):
         """
         This class will infer the mask of the target module automatically.
@@ -60,7 +60,8 @@ class AutoMaskInference:
         assert isinstance(dummy_input, list)
         # if there are multiple input variables
         self.dummy_input = tuple(dummy_input)
-
+        self.input_debugname = input_debugname
+        
         # Initialize the masks for input tensors
         self.in_masks = in_masks if in_masks is not None else [
             None] * len(self.dummy_input)
@@ -72,19 +73,19 @@ class AutoMaskInference:
                 # ones_like will put the created mask on the same device with the dummy_input
 
         # Initialize the mask for output tensors
-        self.output = self.module(*dummy_input)
-        # self.output.requires_grad_()
+        self.orig_output = speedup.internal_result[out_debugname]
+
         if output_mask is not None:
             # assume the given output mask is right
             self.output_mask = output_mask
         elif isinstance(module, nn.GroupNorm):
             self.output_mask = self.in_masks[0]
         else:
-            if isinstance(self.output, torch.Tensor):
-                self.output_mask = torch.ones_like(self.output)
-            elif isinstance(self.output, list) or isinstance(self.output, tuple):
+            if isinstance(self.orig_output, torch.Tensor):
+                self.output_mask = torch.ones_like(self.orig_output)
+            elif isinstance(self.orig_output, list) or isinstance(self.orig_output, tuple):
                 self.output_mask = []
-                for o_tensor in self.output:
+                for o_tensor in self.orig_output:
                     if isinstance(o_tensor, torch.Tensor):
                         self.output_mask.append(torch.ones_like(o_tensor))
                     else:
@@ -95,7 +96,6 @@ class AutoMaskInference:
                 self.output_mask = None
 
         # Initialize the mask for the parameters
-        weights = {}
         self.weight_mask = {}
         if weight_mask:
             self.weight_mask.update(weight_mask)
@@ -104,11 +104,9 @@ class AutoMaskInference:
             # the function should not has parameters
             # get all the parameter tensors of the target module
             for name, para in module.named_parameters():
-                weights[name] = para
                 if name not in self.weight_mask:
                     self.weight_mask[name] = torch.ones_like(para.data)
         
-        if isinstance(self.module, nn.Module):
             self.saved_weights = MappingProxyType({
                 k: v.clone() for k, v in module.named_parameters()
             })
@@ -281,18 +279,7 @@ class AutoMaskInference:
             out_mask[:, mask_pos] = 0
         return out_mask
 
-    def update_indirect_sparsity(self):
-        """
-        This function will update the indirect sparsity. To explain what's
-        indirect sparsity, for example, there is two tensors TA and TB, and
-        we perform the calculation: TC = TA x TB in which TC is also a tensor.
-        Once some values in TA are masked to zeros, then the corresponding
-        positions in TB are also potential sparsities, because these have no
-        effect of the final output(the gradient of these positions in TB equal
-        to 0 all the time). This function it to fine the potential sparsity caused
-        by other sparsity(we call it indirect sparsity here). Basically we can find
-        these potential sparsity through gradient.
-        """
+    def update_indirect_out_mask(self):
         # Each node only update the output mask when we backwards
         # update the output mask, this is because that some op may
         # have the broadcast operation, for example, OP A's output
@@ -303,37 +290,29 @@ class AutoMaskInference:
         # C's output tensor).
         # Besides, updating the mask of C's output tensor equals to updating
         # the input mask of OP B and C.
-        if isinstance(self.output, torch.Tensor) and self.output.grad is not None:
+        if isinstance(self.orig_output, torch.Tensor) and self.orig_output.grad is not None:
             # if output have gradient which means this node has successor
             # nodes and the successor nodes have already update their indirect
             # sparsity
             # we can mask the values whose gradient is always zeros
-            gradient_sum = torch.sum(torch.abs(self.output.grad.data), dim=0)
+            gradient_sum = torch.sum(torch.abs(self.orig_output.grad.data), dim=0)
             _grad_zero = gradient_sum == 0
-            for batchid in range(self.output.size(0)):
+            for batchid in range(self.orig_output.size(0)):
                 # set the same mask value for the whole batche
                 self.output_mask[batchid][_grad_zero] = 0
-        elif isinstance(self.output, tuple) or isinstance(self.output, list):
+        elif isinstance(self.orig_output, tuple) or isinstance(self.orig_output, list):
             assert isinstance(self.output_mask, (tuple, list))
-            for oid, tout in enumerate(self.output):
+            for oid, tout in enumerate(self.orig_output):
                 errmsg = 'The output only support tensor/list of tensors'
                 assert isinstance(tout, torch.Tensor), errmsg
                 gradient_sum = torch.sum(
-                    torch.abs(self.output.grad.data), dim=0)
+                    torch.abs(self.orig_output.grad.data), dim=0)
                 _grad_zero = gradient_sum == 0
-                for batchid in range(self.output.size(0)):
+                for batchid in range(self.orig_output.size(0)):
                     # set the same mask value for the whole batch
                     self.output_mask[oid][batchid][_grad_zero] = 0
 
-        self.requires_grad_(True)
-        # Forward inference with auto gradient enabled
-        # Note: tensors that need gradient cannot be used in the in-place operator
-        the_dummy_input = self.init_and_apply()
-        # Some operator may have the in_place operations, so we need to clone the input
-        # before passing to the self.module
-        the_dummy_input = [x.clone() for x in the_dummy_input]
-        output = self.module(*the_dummy_input)
-
+    def update_indirect_weight_mask(self, output):
         if output.grad_fn is None:
             # the output does not have the gradient function
             return
@@ -349,6 +328,31 @@ class AutoMaskInference:
             for weight_key in self.saved_weights.keys():
                 grad_zero = self.module.get_parameter(weight_key).grad.data == 0
                 self.weight_mask[weight_key][grad_zero] = 0
+
+    def update_indirect_sparsity(self):
+        """
+        This function will update the indirect sparsity. To explain what's
+        indirect sparsity, for example, there is two tensors TA and TB, and
+        we perform the calculation: TC = TA x TB in which TC is also a tensor.
+        Once some values in TA are masked to zeros, then the corresponding
+        positions in TB are also potential sparsities, because these have no
+        effect of the final output(the gradient of these positions in TB equal
+        to 0 all the time). This function it to fine the potential sparsity caused
+        by other sparsity(we call it indirect sparsity here). Basically we can find
+        these potential sparsity through gradient.
+        """
+        
+        self.update_indirect_out_mask()
+
+        self.requires_grad_(True)
+        # Forward inference with auto gradient enabled
+        # Note: tensors that need gradient cannot be used in the in-place operator
+        the_dummy_input = self.init_and_apply()
+        # Some operator may have the in_place operations, so we need to clone the input
+        # before passing to the self.module
+        the_dummy_input = [x.clone() for x in the_dummy_input]
+        output = self.module(*the_dummy_input)
+        self.update_indirect_weight_mask(output)
 
     def update_direct_sparsity(self):
         # we don't need the gradient in the forward inference
