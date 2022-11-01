@@ -5,7 +5,7 @@ from __future__ import annotations
 
 __all__ = [
     'Mutable', 'LabeledMutable', 'MutableSymbol', 'MutableExpression', 'Sample',
-    # 'Discrete', 'DiscreteMultiple', 'Continuous',
+    'Discrete', 'DiscreteMultiple', 'Continuous',
 ]
 
 import copy
@@ -476,3 +476,608 @@ class MutableSymbol(LabeledMutable, Symbol, MutableExpression):
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.extra_repr()})'
+
+
+class Discrete(MutableSymbol, Generic[Choice]):
+    """Choosing one from a list of values.
+
+    Parameters
+    ----------
+    values
+        The list of values to choose from.
+    distribution
+        The probability distribution of the values. Should be an array with the same length as ``values``.
+        The sum of the distribution should be 1.
+        If not specified, the values will be chosen uniformly.
+    default
+        Default value of the mutable. If not specified, the first value will be used.
+    label
+        The label of the mutable. If not specified, a label will be auto-generated.
+
+    Examples
+    --------
+    >>> x = Discrete([2, 3, 5], label='x1')
+    >>> x.simplify()
+    {'x1': Discrete([2, 3, 5], label='x1')}
+    >>> x.freeze({'x1': 3})
+    3
+    """
+
+    def __init__(
+        self, values: Iterable[Choice], *,
+        distribution: list[float] | None = None,
+        default: Choice | str = MISSING,
+        label: str | None = None
+    ) -> None:
+        values = list(values)
+        assert values, 'Discrete values must not be empty.'
+        self.label = label or auto_label()
+        self.values = values
+        self.distribution = distribution if distribution is not None else [1 / len(values)] * len(values)
+
+        if default is not MISSING:
+            self.validate({self.label: default})
+        self.default_value = default
+
+        assert not(any(isinstance(value, Mutable) for value in values)), 'Discrete values must not contain mutables.'
+        assert len(set(values)) == len(values), 'Values must be unique.'
+        assert len(self.distribution) == len(self.values), 'Distribution must have length n.'
+        assert abs(sum(self.distribution) - 1) < 1e-6, 'Distribution must sum to 1.'
+
+    def contains(self, sample: Sample) -> SampleValidationError | None:
+        if self.label not in sample:
+            return SampleMissingError(self.label, list(sample.keys()))
+        sample_val = sample[self.label]
+        if sample_val not in self.values:
+            return SampleValidationError(f'{sample_val} not found in {self.values}')
+        return None
+
+    def extra_repr(self) -> str:
+        if len(self.values) <= 7:
+            return f'{self.values!r}, label={self.label!r}'
+        return '[' +  \
+            ', '.join(map(repr, self.values[:3])) + \
+            ', ..., ' + \
+            ', '.join(map(repr, self.values[-3:])) + \
+            f'], label={self.label!r}'
+
+    def freeze(self, sample: Sample) -> Any:
+        self.validate(sample)
+        return sample[self.label]
+
+    def __len__(self):
+        return len(self.values)
+
+    def default(self, memo: Sample | None = None) -> Choice:
+        """The default() of :class:`Discrete` is the first value unless default value is set.
+
+        See Also
+        --------
+        Mutable.default
+        """
+        memo = {} if memo is None else memo
+        err = self.contains(memo)
+        if isinstance(err, SampleMissingError):
+            if self.default_value is not MISSING:
+                memo[self.label] = self.default_value
+            else:
+                memo[self.label] = self.values[0]
+        rv = self.freeze(memo)
+        if self.default_value is not MISSING and rv != self.default_value:
+            raise ValueError(f'Default value is specified to be {self.default_value} but got {rv}. '
+                             f'Please check the default value of {self.label}.')
+        return rv
+
+    def random(self, memo: Sample | None = None, random_state: RandomState | None = None) -> Choice:
+        """Randomly sample a value from choices.
+        Distribution is respected if provided.
+
+        See Also
+        --------
+        Mutable.random
+        """
+        memo = {} if memo is None else memo
+        if random_state is None:
+            random_state = RandomState()
+        err = self.contains(memo)
+        if isinstance(err, SampleMissingError):
+            index = random_state.choice(len(self.values), p=self.distribution)
+            memo[self.label] = self.values[index]
+        return self.freeze(memo)
+
+    def grid(self, memo: Sample | None = None, granularity: int | None = None) -> Iterable[Choice]:
+        """Return also values as a grid. Sorted by distribution from most likely to least likely.
+
+        See Also
+        --------
+        Mutable.grid
+        """
+        memo = {} if memo is None else memo
+        err = self.contains(memo)
+
+        if isinstance(err, SampleMissingError):
+            if all(dis == self.distribution[0] for dis in self.distribution):
+                # uniform distribution
+                values_perm = self.values
+            else:
+                # More heavily-distributed items are put upfront.
+                indices = sorted(list(range(len(self.values))), key=lambda i: self.distribution[i], reverse=True)
+                values_perm = [self.values[i] for i in indices]
+
+            for value in values_perm:
+                memo[self.label] = value
+                yield self.freeze(memo)
+            memo.pop(self.label)
+        else:
+            yield self.freeze(memo)
+
+
+class DiscreteMultiple(MutableSymbol, Generic[Choice]):
+    """Choosing multiple from a list of values without replacement.
+
+    It's implemented with a different class because for most algorithms, it's very different from :class:`Discrete`.
+
+    :class:`DiscreteMultiple` can be either treated as a atomic :class:`LabeledMutable` (i.e., *simple format*),
+    or be further simplified into a series of more fine-grained mutables (i.e., *discrete format*).
+
+    In *discrete format*, class:`DiscreteMultiple` can be broken down to a list of :class:`Discrete` of true and false,
+    each indicating whether the choice on the corresponding position should be chosen.
+    A constraint will be added if ``n_chosen`` is not None.
+    This is useful for some algorithms that only support discrete mutables.
+    Note that the prior distribution will be lost in this process.
+
+    Parameters
+    ----------
+    values
+        The list of values to choose from.
+    n_chosen
+        The number of values to choose. If not specified, any number of values can be chosen.
+    distribution
+        The probability distribution of the values. Should be an array with the same length as ``values``.
+        When ``n_chosen`` is None, it's the probability that each candidate is chosen.
+        When ``n_chosen`` is not None, the distribution should sum to 1.
+    default
+        Default value of the mutable. If not specified, the first ``n_chosen`` value will be used.
+    label
+        The label of the mutable. If not specified, a label will be auto-generated.
+
+    Examples
+    --------
+    >>> x = DiscreteMultiple([2, 3, 5, 7], n_chosen=2, label='x2')
+    >>> x.random()
+    [2, 7]
+    >>> x.simplify()
+    {'x2': DiscreteMultiple([2, 3, 5, 7], n_chosen=2, label='x2')}
+    >>> x.simplify(lambda t: not isinstance(t, DiscreteMultiple))
+    {
+        'x2/0': Discrete([True, False], label='x2/0'),
+        'x2/1': Discrete([True, False], label='x2/1'),
+        'x2/2': Discrete([True, False], label='x2/2'),
+        'x2/3': Discrete([True, False], label='x2/3'),
+        'x2/n': ExpressionConstraint(...)
+    }
+    >>> x.freeze({'x2': [3, 5]})
+    [3, 5]
+    >>> x.freeze({'x2/0': True, 'x2/1': False, 'x2/2': True, 'x2/3': False})
+    [2, 5]
+    """
+
+    def __init__(
+        self, values: Iterable[Choice], *,
+        n_chosen: int | None = None,
+        distribution: list[float] | None = None,
+        default: list[Choice] | str = MISSING,
+        label: str | None = None,
+    ) -> None:
+        values = list(values)
+        assert values, 'Discrete values must not be empty.'
+        self.label = label or auto_label()
+        self.values = values
+        self.n_chosen = n_chosen
+
+        if default is not MISSING:
+            self.validate({self.label: default})
+        self.default_value = default
+
+        assert len(set(values)) == len(values), 'Values must be unique.'
+        assert not(any(isinstance(value, Mutable) for value in values)), 'Discrete values must not contain mutables.'
+        assert self.n_chosen is None or 1 <= self.n_chosen <= len(self.values), 'n_chosen must be between 1 and n, or None.'
+        if distribution is not None:
+            self.distribution = distribution
+        elif self.n_chosen is None:
+            self.distribution = [0.5] * len(values)
+        else:
+            self.distribution = [1 / len(values)] * len(values)
+        assert len(self.distribution) == len(self.values), 'Distribution must have length n.'
+
+        if n_chosen is not None:
+            assert abs(sum(self.distribution) - 1) < 1e-6, f'Distribution must sum to 1 when n_chosen is {n_chosen}.'
+        assert all(0 <= dis <= 1 for dis in self.distribution), 'Distribution values must be between 0 and 1.'
+
+    def extra_repr(self):
+        if len(self.values) <= 7:
+            return f'{self.values!r}, n_chosen={self.n_chosen!r}, label={self.label!r}'
+        return '[' +  \
+            ', '.join(map(repr, self.values[:3])) + \
+            ', ..., ' + \
+            ', '.join(map(repr, self.values[-3:])) + \
+            f'], n_chosen={self.n_chosen!r}, label={self.label!r}'
+
+    def _simplify_to_discrete_format(self) -> list[LabeledMutable]:
+        mutables: list[LabeledMutable] = [Discrete([True, False], label=f'{self.label}/{i}') for i in range(len(self.values))]
+        if self.n_chosen is not None:
+            from .annotation import ExpressionConstraint
+            expr = sum(cast(List[Discrete], mutables)) == self.n_chosen
+            assert isinstance(expr, MutableExpression)
+            mutables.append(ExpressionConstraint(expr, label=f'{self.label}/n'))
+        return mutables
+
+    def _parse_simple_format(self, sample: Sample) -> SampleValidationError | list[Choice]:
+        """Try to freeze the DiscreteMultiple in a simple format."""
+        if self.label in sample:
+            sample_val = sample[self.label]
+            if len(set(sample_val)) != len(sample_val):
+                return SampleValidationError(f'{sample_val} must not have duplicates.')
+            if self.n_chosen is not None and len(sample_val) != self.n_chosen:
+                return SampleValidationError(f'{sample_val} must have length {self.n_chosen}.')
+            if not all(x in self.values for x in sample_val):
+                return SampleValidationError(f'{sample_val} must be contained in {self.values}.')
+            return sample_val
+        else:
+            return SampleMissingError(self.label, list(sample.keys()))
+
+    def _parse_discrete_format(self, sample: Sample) -> SampleValidationError | list[Choice]:
+        """Try to freeze the DiscreteMultiple in a discrete format."""
+        mutables = self._simplify_to_discrete_format()
+        rv = []
+        for i, mutable in enumerate(mutables):
+            exception = mutable.contains(sample)
+            if exception is not None:
+                exception.paths.insert(0, self.label)
+                return exception
+            value = mutable.freeze(sample)
+            if i < len(self.values) and value:
+                rv.append(self.values[i])
+        return rv
+
+    def contains(self, sample: Sample) -> SampleValidationError | None:
+        possible_exc_types = []
+        possible_reasons = []
+        for parse_fn in [self._parse_simple_format, self._parse_discrete_format]:
+            parse_result = parse_fn(sample)
+            if not isinstance(parse_result, SampleValidationError):
+                return None
+            possible_exc_types.append(type(parse_result))
+            possible_reasons.append(str(parse_result))
+        msg = f'Possible reasons are:\n' + ''.join([f'  * {reason}\n' for reason in possible_reasons])
+        if all(exc_type is SampleMissingError for exc_type in possible_exc_types):
+            return SampleMissingError(msg)
+        return SampleValidationError(msg)
+
+    def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
+        """If invoking ``is_leaf`` returns true, return self.
+        Otherwise, further break it down to several :class:`Discrete` and :class:`Constraint`.
+
+        See Also
+        --------
+        Mutable.leaf_mutables
+        """
+        if is_leaf(self):
+            yield self
+        else:
+            for mutable in self._simplify_to_discrete_format():
+                yield from mutable.leaf_mutables(is_leaf)
+
+    def freeze(self, sample: Sample) -> list[Choice]:
+        self.validate(sample)
+        for parse_fn in [self._parse_simple_format, self._parse_discrete_format]:
+            choice = parse_fn(sample)
+            if not isinstance(choice, SampleValidationError):
+                return choice
+        raise RuntimeError('Failed to parse. This should not happen.')
+
+    def default(self, memo: Sample | None = None) -> list[Choice]:
+        """The first ``n_chosen`` values. If ``n_chosen`` is None, return all values.
+
+        See Also
+        --------
+        Mutable.default
+        """
+        memo = {} if memo is None else memo
+        err = self.contains(memo)
+        if isinstance(err, SampleMissingError):
+            if self.default_value is not MISSING:
+                memo[self.label] = self.default_value
+            else:
+                memo[self.label] = self.values[:self.n_chosen]
+        rv = self.freeze(memo)
+        if self.default_value is not MISSING and rv != self.default_value:
+            raise ValueError(f'Default value is specified to be {self.default_value} but got {rv}. '
+                             f'Please check the default value of {self.label}.')
+        return rv
+
+    def random(self, memo: Sample | None = None, random_state: RandomState | None = None) -> list[Choice]:
+        """Randomly sample ``n_chosen`` values. If ``n_chosen`` is None, return an arbitrary subset.
+
+        The random here takes distribution into account.
+
+        See Also
+        --------
+        Mutable.random
+        """
+        memo = {} if memo is None else memo
+        if random_state is None:
+            random_state = RandomState()
+        err = self.contains(memo)
+        if isinstance(err, SampleMissingError):
+            if self.n_chosen is None:
+                chosen = [value for value in self.values if random_state.random() < self.distribution[self.values.index(value)]]
+            else:
+                chosen = sorted(random_state.choice(len(self.values), self.n_chosen, replace=False, p=self.distribution))
+                chosen = [self.values[c] for c in chosen]
+            memo[self.label] = chosen
+        return self.freeze(memo)
+
+    def grid(self, memo: Sample | None = None, granularity: int | None = None) -> Iterable[list[Choice]]:
+        """Iterate over all possible values.
+
+        If ``n_chosen`` is None, iterate over all possible subsets, in the order of increasing length.
+        Otherwise, iterate over all possible combinations of ``n_chosen`` length,
+        using the implementation of :func:`itertools.combinations`.
+
+        See Also
+        --------
+        Mutable.grid
+        """
+        memo = {} if memo is None else memo
+        err = self.contains(memo)
+
+        if isinstance(err, SampleMissingError):
+            if self.n_chosen is not None:
+                gen = itertools.combinations(self.values, self.n_chosen)
+            else:
+                gen = itertools.chain.from_iterable(itertools.combinations(self.values, r) for r in range(len(self.values) + 1))
+
+            assert self.label not in memo, 'Memo should not contain the label.'
+            for value in gen:
+                memo[self.label] = list(value)
+                yield self.freeze(memo)
+            memo.pop(self.label)
+        else:
+            yield self.freeze(memo)
+
+
+class Continuous(MutableSymbol):
+    """A variable from a continuous numeric domain.
+
+    It supports most commonly used distributions including uniform, loguniform,
+    normal, lognormal, as well as the quantized version.
+    It also supports using arbitrary distribution from :mod:`scipy.stats`.
+
+    Parameters
+    ----------
+    low
+        The lower bound of the domain. Used for uniform and loguniform.
+        It will also be used to clip the value if it is outside the domain.
+    high
+        The upper bound of the domain. Used for uniform and loguniform.
+        It will also be used to clip the value if it is outside the domain.
+    mu
+        The mean of the domain. Used for normal and lognormal.
+    sigma
+        The standard deviation of the domain. Used for normal and lognormal.
+    log_distributed
+        Whether the domain is log distributed.
+    quantize
+        If specified, the final value will be postprocessed with
+        ``clip(round(uniform(low, high) / q) * q, low, high)``,
+        where the clip operation is used to constrain the generated value within the bounds.
+        For example, when quantize is 2.5, all the values will be rounded to the nearest multiple of 2.5.
+        Note that, if ``low`` or ``high`` is not a multiple of ``quantize``,
+        it will be clipped to ``low`` or ``high`` **after** rounding.
+    distribution
+        The distribution to use. It should be a ``rv_frozen`` instance,
+        which can be obtained by calling ``scipy.stats.distribution_name(...)``.
+        If specified, ``low``, ``high``, ``mu``, ``sigma``, ``log_distributed`` will be ignored.
+    default
+        The default value. If not specified, the default value will be the median of distribution.
+    label
+        The label of the variable.
+
+    Examples
+    --------
+    To create a variable uniformly sampled from 0 to 1::
+
+        Continuous(low=0, high=1)
+
+    To create a variable normally sampled with mean 2 and std 3::
+
+        Continuous(mu=2, sigma=3)
+
+    To create a normally sampled variable with mean 0 and std 1, but
+    always in the range of [-1, 1] (note that it's not **truncated normal** though)::
+
+        Continuous(mu=0, sigma=1, low=-1, high=1)
+
+    To create a variable uniformly sampled from 0 to 100, but always multiple of 2::
+
+        Continuous(low=0, high=100, quantize=2)
+
+    To create a reciprocal continuous random variable in the range of [2, 6]::
+
+        Continuous(low=2, high=6, log_distributed=True)
+
+    To create a variable sampled from a custom distribution:
+
+        from scipy.stats import beta
+        Continuous(distribution=beta(2, 5))
+    """
+
+    def __init__(
+        self,
+        low: float = float('-inf'),
+        high: float = float('inf'),
+        *,
+        mu: float | None = None,
+        sigma: float | None = None,
+        log_distributed: bool = False,
+        quantize: float | None = None,
+        distribution: _distn_infrastructure.rv_frozen | None = None,
+        default: float | str = MISSING,
+        label: str | None = None,
+    ) -> None:
+        self.quantize = quantize
+        self.low = low
+        self.high = high
+
+        self.label = label or auto_label()
+
+        assert not(any(isinstance(value, Mutable) for value in [low, high, mu, sigma])), 'Continuous parameters must not be mutables.'
+
+        if distribution is not None:
+            if mu is not None or sigma is not None or log_distributed:
+                raise ValueError('mu, sigma and log_distributed must not be specified if distribution is specified.')
+            self.distribution = distribution
+
+        elif mu is not None and sigma is not None:
+            # as normal distribution
+            if log_distributed:
+                self.distribution = lognorm(s=sigma, scale=np.exp(mu))
+            else:
+                self.distribution = norm(loc=mu, scale=sigma)
+
+        else:
+            if log_distributed:
+                self.distribution = loguniform(a=low, b=high)
+            else:
+                self.distribution = uniform(loc=low, scale=high - low)
+
+        if default is not MISSING:
+            self.validate({self.label: default})
+        self.default_value = default
+
+    def equals(self, other: Any) -> bool:
+        """Checks whether two distributions are equal by examining the parameters.
+
+        See Also
+        --------
+        Mutable.equals
+        """
+        return type(self) == type(other) and \
+            self.distribution.args == other.distribution.args and \
+            self.distribution.kwds == other.distribution.kwds and \
+            type(self.distribution.dist) == type(other.distribution.dist) and \
+            self.quantize == other.quantize and \
+            self.default_value == other.default_value and \
+            self.label == other.label
+
+    def extra_repr(self) -> str:
+        return f'{self.low}, {self.high}, label={self.label!r}'
+
+    def contains(self, sample: Sample) -> SampleValidationError | None:
+        if self.label not in sample:
+            return SampleMissingError(self.label, list(sample.keys()))
+        sample_val = sample[self.label]
+        if not isinstance(sample_val, (float, int)):
+            raise SampleValidationError(f'Value of {self.label} must be a float or int, but got {type(sample_val)}')
+        if self.low is not None and self.low > sample_val:
+            return SampleValidationError(f'{sample_val} is lower than lower bound {self.low}')
+        if self.high is not None and self.high < sample_val:
+            return SampleValidationError(f'{sample_val} is higher than upper bound {self.high}')
+        if self.distribution.pdf(sample_val) == 0:
+            return SampleValidationError(f'{sample_val} is not in the distribution {self.distribution}')
+        if self.quantize is not None and abs(sample_val % self.quantize) > 1e-6:
+            return SampleValidationError(f'{sample_val} is not a multiple of {self.quantize}')
+        return None
+
+    def qclip(self, x: float) -> float:
+        """Quantize and clip the value, to satisfy the Q-constraint and low-high bounds."""
+        if self.quantize is not None:
+            x = round(x / self.quantize) * self.quantize
+        if self.low is not None:
+            x = max(x, self.low)
+        if self.high is not None:
+            x = min(x, self.high)
+        return x
+
+    def default(self, memo: Sample | None = None) -> float:
+        """If default value is not specified, :meth:`Continuous.default` returns median.
+
+        See Also
+        --------
+        Mutable.default
+        """
+        memo = {} if memo is None else memo
+        err = self.contains(memo)
+        if isinstance(err, SampleMissingError):
+            if self.default_value is not MISSING:
+                memo[self.label] = self.default_value
+            else:
+                memo[self.label] = self.qclip(self.distribution.median())
+        rv = self.freeze(memo)
+        if self.default_value is not MISSING and rv != self.default_value:
+            raise ValueError(f'Default value is specified to be {self.default_value} but got {rv}. '
+                             f'Please check the default value of {self.label}.')
+        return rv
+
+    def random(self, memo: Sample | None = None, random_state: RandomState | None = None) -> float:
+        """Directly sample from the distribution.
+
+        See Also
+        --------
+        Mutable.random
+        """
+        memo = {} if memo is None else memo
+        if random_state is None:
+            random_state = RandomState()
+        err = self.contains(memo)
+        if isinstance(err, SampleMissingError):
+            memo[self.label] = self.qclip(self.distribution.rvs(random_state=random_state))
+        return self.freeze(memo)
+
+    def grid(self, memo: Sample | None = None, granularity: int | None = None) -> Iterable[float]:
+        """Yield a list of samples within the distribution.
+
+        Since the grid of continuous space is infinite, we use granularity to
+        specify the number of samples to yield.
+        If granularity = 1, grid only explores median point of the distribution.
+        If granularity = 2, the quartile points of the distribution will also be generated.
+        Granularity = 3 explores the 1/8th points of the distribution, and so on.
+        If not specified, granularity defaults to 1.
+
+        Grid will eliminate duplicates within the same granularity.
+        Duplicates across different granularity will be ignored.
+
+        Examples
+        --------
+        >>> list(Continuous(0, 1).grid(granularity=2))
+        [0.25, 0.5, 0.75]
+        >>> list(Continuous(0, 1).grid(granularity=3))
+        [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875]
+        >>> list(Continuous(mu=0, sigma=1).grid(granularity=2))
+        [-0.6744897501960817, 0.0, 0.6744897501960817]
+        >>> list(Continuous(mu=0, sigma=1, quantize=0.5).grid(granularity=3))
+        [-1.0, -0.5, 0.0, 0.5, 1.0]
+
+        See Also
+        --------
+        Mutable.grid
+        """
+        memo = {} if memo is None else memo
+
+        if granularity is None:
+            granularity = 1
+
+        err = self.contains(memo)
+        if isinstance(err, SampleMissingError):
+            percentiles = [i / (2 ** granularity) for i in range(1, 2 ** granularity)]
+            last_sample: float | None = None
+            for p in percentiles:
+                sample = self.qclip(self.distribution.ppf(p))
+                if last_sample != sample:
+                    memo[self.label] = sample
+                    last_sample = sample
+                    yield self.freeze(memo)
+            memo.pop(self.label)
+        else:
+            yield self.freeze(memo)
