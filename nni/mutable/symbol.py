@@ -420,6 +420,8 @@ class Symbol(SymbolicExpression):
 
     def evaluate(self, values: Iterator[Any] | dict[str, Any]) -> Any:
         if isinstance(values, dict):
+            if self.label is None:
+                raise ValueError('Cannot evaluate symbol without label when values is a dict.')
             if self.label not in values:
                 raise KeyError(f'{self.label} is not in {values}')
             value = values[self.label]
