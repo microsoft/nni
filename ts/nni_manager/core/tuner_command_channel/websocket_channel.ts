@@ -142,6 +142,7 @@ class WebSocketChannelImpl implements WebSocketChannel {
         }
 
         this.serving = false;
+        this.waitingPong = false;
         clearInterval(this.heartbeatTimer);
 
         this.ws.off('close', this.handleWsClose);

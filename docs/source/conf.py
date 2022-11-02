@@ -114,6 +114,7 @@ linkcheck_ignore = [
     r'https://ml\.informatik\.uni-freiburg\.de/',
     r'https://docs\.nvidia\.com/deeplearning/',
     r'https://cla\.opensource\.microsoft\.com',
+    r'https://www\.docker\.com/',
 ]
 
 # Ignore all links located in release.rst
