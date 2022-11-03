@@ -303,7 +303,9 @@ class RetiariiExperiment(Experiment):
                 else:
                     raise RuntimeError(f'The experiment mode "{self._action}" is not supposed to invoke run() method.')
 
-                self._run_strategy(base_model_ir, self.applied_mutators)
+                # non-block
+                self._run_strategy_thread = Thread(target=self._run_strategy, args=(base_model_ir, self.applied_mutators))
+                self._run_strategy_thread.start()
                 # FIXME: move this logic to strategy with a new API provided by execution engine
                 self._wait_completion()
             except KeyboardInterrupt:
