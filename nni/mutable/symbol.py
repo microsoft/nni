@@ -24,7 +24,7 @@ def _symbol_expr_codegen(*, _internal: bool = False):
         'neg': '-', 'pos': '+', 'invert': '~',
         # binary
         'add': '+', 'sub': '-', 'mul': '*', 'matmul': '@',
-        'truediv': '//', 'floordiv': '/', 'mod': '%',
+        'truediv': '/', 'floordiv': '//', 'mod': '%',
         'lshift': '<<', 'rshift': '>>',
         'and': '&', 'xor': '^', 'or': '|',
         # no reverse
@@ -308,16 +308,16 @@ class SymbolicExpression:
         return self.expr_cls(operator.matmul, '{} @ {}', [other, self])
 
     def __truediv__(self, other: Any) -> Any:
-        return self.expr_cls(operator.truediv, '{} // {}', [self, other])
+        return self.expr_cls(operator.truediv, '{} / {}', [self, other])
 
     def __rtruediv__(self, other: Any) -> Any:
-        return self.expr_cls(operator.truediv, '{} // {}', [other, self])
+        return self.expr_cls(operator.truediv, '{} / {}', [other, self])
 
     def __floordiv__(self, other: Any) -> Any:
-        return self.expr_cls(operator.floordiv, '{} / {}', [self, other])
+        return self.expr_cls(operator.floordiv, '{} // {}', [self, other])
 
     def __rfloordiv__(self, other: Any) -> Any:
-        return self.expr_cls(operator.floordiv, '{} / {}', [other, self])
+        return self.expr_cls(operator.floordiv, '{} // {}', [other, self])
 
     def __mod__(self, other: Any) -> Any:
         return self.expr_cls(operator.mod, '{} % {}', [self, other])
