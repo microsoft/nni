@@ -135,10 +135,10 @@ class NNIManager implements Manager {
             
             const hyperParams = JSON.parse(params);
             const packedParameter = {
-                parameter_id: hyperParams['parameter_id'], // eslint-disable-line @typescript-eslint/camelcase
-                parameter_source: 'resumed', // eslint-disable-line @typescript-eslint/camelcase
+                parameter_id: hyperParams['parameter_id'],
+                parameter_source: 'resumed',
                 parameters: hyperParams['parameters'],
-                parameter_index: hyperParams['parameter_index'], // eslint-disable-line @typescript-eslint/camelcase
+                parameter_index: hyperParams['parameter_index'],
             }
             const form: TrialJobApplicationForm = {
                 id: job.trialJobId,
@@ -169,8 +169,8 @@ class NNIManager implements Manager {
 
         // TODO: NNI manager should not peek tuner's internal protocol, let's refactor this later
         const packedParameter = {
-            parameter_id: null, // eslint-disable-line @typescript-eslint/camelcase
-            parameter_source: 'customized', // eslint-disable-line @typescript-eslint/camelcase
+            parameter_id: null,
+            parameter_source: 'customized',
             parameters: JSON.parse(hyperParams)
         }
 
@@ -376,7 +376,7 @@ class NNIManager implements Manager {
             }
             await this.trainingService.cleanUp();
         } catch (err) {
-            this.log.error(`${err.stack}`);
+            this.log.error(`${(err as any).stack}`);
         }
         if (this.experimentProfile.endTime === undefined) {
             this.setEndtime();
@@ -630,9 +630,9 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
-                        trial_job_id: trialJobDetail.id, // eslint-disable-line @typescript-eslint/camelcase
+                        trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams // eslint-disable-line @typescript-eslint/camelcase
+                        hyper_params: hyperParams
                     }));
                     break;
                 case 'FAILED':
@@ -643,9 +643,9 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
-                        trial_job_id: trialJobDetail.id, // eslint-disable-line @typescript-eslint/camelcase
+                        trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams // eslint-disable-line @typescript-eslint/camelcase
+                        hyper_params: hyperParams
                     }));
                     break;
                 case 'WAITING':

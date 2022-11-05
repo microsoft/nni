@@ -59,7 +59,7 @@ class NNIDataStore implements DataStore {
         try {
             await this.db.storeExperimentProfile(experimentProfile);
         } catch (err) {
-            throw NNIError.FromError(err, 'Datastore error: ');
+            throw NNIError.FromError(err as any, 'Datastore error: ');
         }
     }
 
@@ -144,7 +144,7 @@ class NNIDataStore implements DataStore {
                 timestamp: Date.now()
             }));
         } catch (err) {
-            throw NNIError.FromError(err, 'Datastore error');
+            throw NNIError.FromError(err as any, 'Datastore error');
         }
     }
 
