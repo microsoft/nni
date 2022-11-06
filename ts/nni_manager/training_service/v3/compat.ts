@@ -18,6 +18,20 @@ type MutableTrialJobDetail = {
     -readonly [Property in keyof TrialJobDetail]: TrialJobDetail[Property];
 };
 
+const placeholderDetail: TrialJobDetail = {
+    id: '',
+    status: 'UNKNOWN',
+    submitTime: 0,
+    workingDirectory: '_unset_',
+    form: {
+        sequenceId: -1,
+        hyperParameters: {
+            value: 'null',
+            index: -1,
+        }
+    }
+};
+
 export class V3asV1 implements TrainingService {
     private config: TrainingServiceConfig;
     private v3: TrainingServiceV3;
@@ -56,21 +70,29 @@ export class V3asV1 implements TrainingService {
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         await this.startDeferred.promise;
         let trialId: string | null = null;
+        let submitTime: number = 0;
         while (trialId === null) {
             const envId = this.schedule();
+            submitTime = Date.now();
             trialId = await this.v3.createTrial(envId, this.config.trialCommand, 'trial_code');
         }
 
         // In new interface, hyper parameters will be sent on demand.
         this.parameters[trialId] = form.hyperParameters.value;
 
-        this.trialJobs[trialId] = {
-            id: trialId,
-            status: 'WAITING',
-            submitTime: Date.now(),
-            workingDirectory: '_unset_',  // never set in current remote training service, so it's optional
-            form: form,
-        };
+        if (this.trialJobs[trialId] === undefined) {
+            this.trialJobs[trialId] = {
+                id: trialId,
+                status: 'WAITING',
+                submitTime,
+                workingDirectory: '_unset_',  // never set in current remote training service, so it's optional
+                form: form,
+            };
+        } else {
+            // `await createTrial()` is not atomic, so onTrialStart callback might be invoked before this
+            this.trialJobs[trialId].submitTime = submitTime;
+            this.trialJobs[trialId].form = form;
+        }
         return this.trialJobs[trialId];
     }
 
@@ -142,6 +164,10 @@ export class V3asV1 implements TrainingService {
             this.emitter.emit('metric', { id: trialId, data: metric });
         });
         this.v3.onTrialStart(async (trialId, timestamp) => {
+            if (this.trialJobs[trialId] === undefined) {
+                this.trialJobs[trialId] = structuredClone(placeholderDetail);
+                this.trialJobs[trialId].id = trialId;
+            }
             this.trialJobs[trialId].status = 'RUNNING';
             this.trialJobs[trialId].startTime = timestamp;
         });

@@ -9,15 +9,15 @@
 
 import type { LocalConfig, RemoteConfig, TrainingServiceConfig } from 'common/experimentConfig';
 import type { TrainingServiceV3 } from 'common/training_service_v3';
-//import { LocalTrainingServiceV3 } from './local';
+import { LocalTrainingServiceV3 } from './local';
 //import { RemoteTrainingServiceV3 } from './remote';
 
 export function trainingServiceFactoryV3(config: TrainingServiceConfig): TrainingServiceV3 {
-    //if (config.platform === 'local_v3') {
-    //    return new LocalTrainingServiceV3(config);
+    if (config.platform === 'local_v3') {
+        return new LocalTrainingServiceV3('local', config);
     //} else if (config.platform === 'remote_v3') {
-    //    return new RemoteTrainingServiceV3(config);
-    //} else {
-    throw new Error(`Bad training service platform: ${config.platform}`);
-    //}
+    //    return new RemoteTrainingServiceV3('remote', config);
+    } else {
+        throw new Error(`Bad training service platform: ${config.platform}`);
+    }
 }

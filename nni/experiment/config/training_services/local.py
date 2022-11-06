@@ -47,3 +47,7 @@ class LocalConfig(TrainingServiceConfig):
             )
         if not self.trial_gpu_number and self.max_trial_number_per_gpu != 1:
             raise ValueError('LocalConfig: max_trial_number_per_gpu does not work without trial_gpu_number')
+
+@dataclass(init=False)
+class LocalConfigV3(LocalConfig):
+    platform: Literal['local_v3'] = 'local_v3'
