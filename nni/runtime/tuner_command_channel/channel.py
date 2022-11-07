@@ -61,7 +61,9 @@ class TunerCommandChannel:
         try:
             self._channel.send(command)
         except Exception as e:
-            _logger.warning('Exception on sending: %s', repr(e))
+            _logger.warning('Exception on sending: %r', e)
+            if not isinstance(e, WebSocket.ConnectionClosed):
+                _logger.exception(e)
             self._retry_send(command)
 
     def _retry_send(self, command: str) -> None:
@@ -70,6 +72,7 @@ class TunerCommandChannel:
             _logger.info(f'Attempt #{i}, wait {interval} seconds...')
             time.sleep(interval)
             self._channel = WebSocket(self._url)
+            self._channel.connect()
             try:
                 self._channel.send(command)
                 _logger.info('Reconnected.')
@@ -83,8 +86,9 @@ class TunerCommandChannel:
         try:
             command = self._channel.receive()
         except Exception as e:
-            # this is for robustness and should never happen
-            _logger.warning('Exception on receiving: %s', repr(e))
+            _logger.warning('Exception on receiving: %r', e)
+            if not isinstance(e, WebSocket.ConnectionClosed):
+                _logger.exception(e)
             command = None
         if command is None:
             command = self._retry_receive()
@@ -97,6 +101,7 @@ class TunerCommandChannel:
             _logger.info(f'Attempt #{i}, wait {interval} seconds...')
             time.sleep(interval)
             self._channel = WebSocket(self._url)
+            self._channel.connect()
             try:
                 command = self._channel.receive()
             except Exception as e:
