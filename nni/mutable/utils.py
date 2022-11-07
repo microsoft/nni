@@ -98,13 +98,14 @@ class LabelNamespace:
     """
     To support automatic labeling of mutables.
 
-    When entering a :class:`LabelNamespace` context, the number of mutables will recount from 1,
+    A namespace is bounded to a key. Namespace bounded to different keys are completed isolated.
+    The default key is ``param``.
+    When entering a :class:`LabelNamespace` with-context, the number of mutables will recount from 1,
     and thus the generation of labels are reproducible.
 
     The label namespace is NOT thread-safe. The behavior is undefined if multiple threads are
     trying to enter the namespace at the same time.
 
-    A namespace is bounded to a key. Namespace bounded to different keys are completed isolated.
     Namespace can have sub-namespaces (with the same key). The numbering will be chained (e.g., ``model_1_4_2``).
 
     :class:`LabelNamespace` is implemented based on :class:`ContextStack`.
@@ -115,10 +116,14 @@ class LabelNamespace:
     ...     label1 = auto_label()       # param_1
     ...     label2 = auto_label()       # param_2
     ...     with LabelNamespace('param'):
-    ...         label3 = auto_label()   # param_1_1
-    ...         label4 = auto_label()   # param_1_2
+    ...         label3 = auto_label()   # param_3_1
+    ...         label4 = auto_label()   # param_3_2
     ...     with LabelNamespace('another'):
-    ...         label5 = auto_label()   # another_1
+    ...         label5 = auto_label('another')   # another_1
+    ...     with LabelNamespace('param'):
+    ...         label6 = auto_label()   # param_4_1
+    >>> with LabelNamespace('param'):
+    ...     label7 = auto_label()       # param_1, because the counter is reset
     """
 
     def __init__(self, key: str = _DEFAULT_LABEL_NAMESPACE):
@@ -183,10 +188,24 @@ class LabelNamespace:
 def auto_label(key: str = _DEFAULT_LABEL_NAMESPACE) -> str:
     """Automatically generate a label in case the label is not set.
 
+    It will look for the nearest :class:`LabelNamespace` with the specified key.
+    If not found, it prints a warning and use the ``global`` namespace.
+
     Parameters
     ----------
     key
-        The key of the namespace to use. If not specified, the default namespace will be used.
+        The key of the namespace to use. If not specified, the default namespace (param) will be used.
+
+    Examples
+    --------
+    >>> label1 = auto_label()               # global_1
+    >>> with LabelNamespace('param'):
+    ...     label2 = auto_label('param')    # param_1, because in the namespace "param"
+    >>> with LabelNamespace():
+    ...     label3 = auto_label()           # param_1, default key is used
+    >>> with LabelNamespace('another'):
+    ...     label4 = auto_label('another')  # another_1
+    ...     label5 = auto_label()           # global_2
     """
 
     # NOTE: It's not recommended to use the default namespace because the stable label numbering cannot be guaranteed.
