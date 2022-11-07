@@ -15,7 +15,7 @@ from nni.nas.nn.pytorch import LayerChoice, InputChoice, Repeat, ChoiceOf, Cell
 from nni.nas.nn.pytorch.choice import ValueChoiceX
 from nni.nas.nn.pytorch.cell import CellOpFactory, create_cell_op_candidates, preprocess_cell_inputs
 
-from .base import BaseSuperNetModule
+from .base import BaseSuperNetModule, sub_state_dict
 from ._valuechoice_utils import evaluate_value_choice_with_dict, dedup_inner_choices, weighted_sum
 from .operation import MixedOperationSamplingPolicy, MixedOperation
 
@@ -75,6 +75,14 @@ class PathSamplingLayer(BaseSuperNetModule):
     def reduction(self, items: list[Any], sampled: list[Any]):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
+
+    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
+        sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
+
+        for samp in sampled:
+            module = getattr(self, str(samp))
+            if module is not None:
+                sub_state_dict(module, destination=destination, prefix=prefix, keep_vars=keep_vars)
 
     def forward(self, *args, **kwargs):
         if self._sampled is None:
@@ -229,7 +237,7 @@ class PathSamplingRepeat(BaseSuperNetModule):
 
     def __init__(self, blocks: list[nn.Module], depth: ChoiceOf[int]):
         super().__init__()
-        self.blocks = blocks
+        self.blocks: Any = blocks
         self.depth = depth
         self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices([depth])
         self._sampled: list[int] | int | None = None
@@ -267,6 +275,15 @@ class PathSamplingRepeat(BaseSuperNetModule):
     def reduction(self, items: list[Any], sampled: list[Any]):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
+
+    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
+        sampled: Any = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
+
+        for cur_depth, (name, module) in enumerate(self.blocks.named_children(), start=1):
+            if module is not None:
+                sub_state_dict(module, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
+            if not any(d > cur_depth for d in sampled):
+                break
 
     def forward(self, x):
         if self._sampled is None:

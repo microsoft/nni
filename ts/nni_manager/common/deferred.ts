@@ -1,77 +1,104 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  An augmented version of ts-deferred.
+ *
+ *   1. Support `await deferred.promise` more than once.
+ *
+ *          const deferred = new Deferred<void>;
+ *          deferred.promise.then(() => { console.log('hello'); });
+ *          deferred.promise.then(() => { console.log('world'); });
+ *          deferred.resolve();  // output "hello world" or "world hello"
+ *          deferred.promise.then(() => { console.log('late'); });  // output "late"
+ *
+ *   2. Allow to repeatedly resolve or reject with identical value.
+ *
+ *          const deferred = new Deferred<string>;
+ *          deferred.promise.then((msg) => { console.log('hello', msg); })
+ *          deferred.resolve('world');  // output "hello world"
+ *          deferred.resolve('world');  // nothing happen
+ *          deferred.resolve('universe');  // raise error
+ *          deferred.reject(new Error());  // raise error
+ **/
+
 import util from 'util';
 
-/**
- *  A more powerful `Deferred` that allows to await multiple times.
- *
- *  Example usage:
- *
- *      const deferred = new Deferred<void>();
- *      deferred.promise.then(() => { console.log('hello'); });
- *      deferred.promise.then(() => { console.log('world'); });
- *      deferred.resolve();
- *
- *  In the example above, both "hello" and "world" will be logged, in arbitrary order.
- **/
+import { Logger, getLogger } from 'common/log';
+
+const logger = getLogger('common.deferred');
+
 export class Deferred<T> {
     private resolveCallbacks: any[] = [];
     private rejectCallbacks: any[] = [];
-
     private isResolved: boolean = false;
-    private resolvedValue!: T;
-
     private isRejected: boolean = false;
-    private rejectedReason!: Error;
+    private resolvedValue?: T;
+    private rejectedReason?: Error;
 
     public get promise(): Promise<T> {
+        // use getter to compat ts-deferred
         if (this.isResolved) {
-            return Promise.resolve(this.resolvedValue);
+            return Promise.resolve(this.resolvedValue) as Promise<T>;
         }
         if (this.isRejected) {
-            return Promise.reject(this.rejectedReason);
+            return Promise.reject(this.rejectedReason) as Promise<T>;
         }
-
-        const p = new Promise<T>((resolve, reject) => {
-            this.resolveCallbacks.push(resolve);
-            this.rejectCallbacks.push(reject);
+        return new Promise<T>((resolutionFunc, rejectionFunc) => {
+            this.resolveCallbacks.push(resolutionFunc);
+            this.rejectCallbacks.push(rejectionFunc);
         });
-        return p;
     }
 
-    public resolve(value: T): void {
-        this.checkError('Trying to resolve:', value);
+    public get settled(): boolean {
+        // use getter for consistent api style
+        return this.isResolved || this.isRejected;
+    }
 
-        this.isResolved = true;
-        this.resolvedValue = value;
+    public resolve = (value: T): void => {
+        if (!this.isResolved && ! this.isRejected) {
+            this.isResolved = true;
+            this.resolvedValue = value;
+            for (const callback of this.resolveCallbacks) {
+                callback(value);
+            }
 
-        for (const callback of this.resolveCallbacks) {
-            callback(value);
+        } else if (this.isResolved && this.resolvedValue === value) {
+            logger.debug('Double resolve:', value);
+
+        } else {
+            const msg = this.errorMessage('trying to resolve with value: ' + util.inspect(value));
+            logger.error(msg);
+            throw new Error('Conflict Deferred result. ' + msg);
         }
     }
 
-    public reject(reason: Error): void {
-        this.checkError('Trying to reject:', reason);
+    public reject = (reason: Error): void => {
+        if (!this.isResolved && !this.isRejected) {
+            this.isRejected = true;
+            this.rejectedReason = reason;
+            for (const callback of this.rejectCallbacks) {
+                callback(reason);
+            }
 
-        this.isRejected = true;
-        this.rejectedReason = reason;
+        } else if (this.isRejected) {
+            logger.warning('Double reject:', this.rejectedReason, reason);
 
-        for (const callback of this.rejectCallbacks) {
-            callback(reason);
+        } else {
+            const msg = this.errorMessage('trying to reject with reason: ' + util.inspect(reason));
+            logger.error(msg);
+            throw new Error('Conflict Deferred result. ' + msg);
         }
     }
 
-    private checkError(message: string, value: any): void {
+    private errorMessage(curStat: string): string {
+        let prevStat = '';
         if (this.isResolved) {
-            const prev = util.inspect(this.resolvedValue);
-            const cur = util.inspect(value);
-            throw new Error(`Deferred has already been resolved: ${prev} ; ${message} ${cur}`);
+            prevStat = 'Already resolved with value: ' + util.inspect(this.resolvedValue);
         }
         if (this.isRejected) {
-            const prev = util.inspect(this.rejectedReason);
-            const cur = util.inspect(value);
-            throw new Error(`Deferred has already been rejected: ${prev} ; ${message} ${cur}`);
+            prevStat = 'Already rejected with reason: ' + util.inspect(this.rejectedReason);
         }
+        return prevStat + ' ; ' + curStat;
     }
 }

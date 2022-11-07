@@ -6,6 +6,7 @@ import logging
 import queue
 import re
 from collections import defaultdict
+from typing import List, Dict
 import torch
 from torch.utils.tensorboard._pytorch_graph import NodePy, NodePyIO, NodePyOP, GraphPy
 CLASSTYPE_KIND = 'ClassType'
@@ -262,6 +263,7 @@ class TorchModuleGraph(TorchGraph):
 
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         super().__init__(model, dummy_input, traced_model)
+        self.name_to_node: Dict[str, NodePyOP]
         self.global_count = 0
         self.reused_module = set()
         self.name_to_node, self.input_to_node, self.output_to_node = self._build_graph()
@@ -802,7 +804,7 @@ class TorchModuleGraph(TorchGraph):
                 node_group.auxiliary = self._extract_cat_info(
                     node_group, cpp_node)
 
-    def find_predecessors(self, unique_name):
+    def find_predecessors(self, unique_name) -> List[str]:
         """
         Find predecessor node of the given node
 
@@ -825,7 +827,7 @@ class TorchModuleGraph(TorchGraph):
                 predecessors.append(node_py.unique_name)
         return predecessors
 
-    def find_successors(self, unique_name):
+    def find_successors(self, unique_name) -> List[str]:
         """
         Find successor nodes of the given node
 

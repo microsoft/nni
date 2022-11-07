@@ -170,13 +170,13 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_pruning_bert_glue_thumb.png
-    :alt: Pruning Transformer with NNI
+    :alt: Pruning Bert on Task MNLI
 
   :ref:`sphx_glr_tutorials_pruning_bert_glue.py`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Pruning Transformer with NNI</div>
+      <div class="sphx-glr-thumbnail-title">Pruning Bert on Task MNLI</div>
     </div>
 
 

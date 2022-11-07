@@ -66,7 +66,7 @@ But in fact ``ModelSpeedup`` is a relatively independent tool, so you can use it
 
 
     import torch
-    from scripts.compression_mnist_model import TorchModel, device
+    from nni_assets.compression.mnist_model import TorchModel, device
 
     model = TorchModel().to(device)
     # masks = {layer_name: {'weight': weight_mask, 'bias': bias_mask}}
@@ -97,8 +97,6 @@ Show the original model structure.
 
 
 .. rst-class:: sphx-glr-script-out
-
- Out:
 
  .. code-block:: none
 
@@ -138,11 +136,9 @@ Roughly test the original model inference speed.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    Original Model - Elapsed Time :  0.5094916820526123
+    Original Model - Elapsed Time :  0.1178426742553711
 
 
 
@@ -165,13 +161,9 @@ Speedup the model and show the model structure after speedup.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
-    Note: .aten::log_softmax.12 does not have corresponding mask inference object
-    /home/nishang/anaconda3/envs/MCM/lib/python3.9/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  /opt/conda/conda-bld/pytorch_1640811803361/work/build/aten/src/ATen/core/TensorBody.h:417.)
+    /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
       return self._grad
     TorchModel(
       (conv1): Conv2d(1, 3, kernel_size=(5, 5), stride=(1, 1))
@@ -208,11 +200,9 @@ Roughly test the model after speedup inference speed.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    Speedup Model - Elapsed Time :  0.006000041961669922
+    Speedup Model - Elapsed Time :  0.003069639205932617
 
 
 
@@ -384,28 +374,23 @@ The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(1
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  4.528 seconds)
+   **Total running time of the script:** ( 0 minutes  15.253 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_speedup.py:
 
+.. only:: html
 
-.. only :: html
-
- .. container:: sphx-glr-footer
-    :class: sphx-glr-footer-example
+  .. container:: sphx-glr-footer sphx-glr-footer-example
 
 
+    .. container:: sphx-glr-download sphx-glr-download-python
 
-  .. container:: sphx-glr-download sphx-glr-download-python
+      :download:`Download Python source code: pruning_speedup.py <pruning_speedup.py>`
 
-     :download:`Download Python source code: pruning_speedup.py <pruning_speedup.py>`
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
-
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-     :download:`Download Jupyter notebook: pruning_speedup.ipynb <pruning_speedup.ipynb>`
+      :download:`Download Jupyter notebook: pruning_speedup.ipynb <pruning_speedup.ipynb>`
 
 
 .. only:: html

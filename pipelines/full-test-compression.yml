@@ -6,13 +6,6 @@ schedules:
     include: [ master ]
   always: true
 
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
-
 variables:
   filter.modified.globs: 'examples/model_compress/**,nni/algorithms/compression/**,nni/compression/**,pipelines/full-test-compression.yml,test/algo/compression/**'
   filter.prbody.heading: '#### Test Options'

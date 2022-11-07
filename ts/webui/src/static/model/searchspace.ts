@@ -47,6 +47,7 @@ class SimpleOrdinalAxis implements SingleAxis {
     type: string;
     baseName: string;
     fullName: string;
+    // eslint-disable-next-line @typescript-eslint/prefer-as-const
     scale: 'ordinal' = 'ordinal';
     domain: any[];
     nested = false;
@@ -62,6 +63,7 @@ class NestedOrdinalAxis implements SingleAxis {
     type: string;
     baseName: string;
     fullName: string;
+    // eslint-disable-next-line @typescript-eslint/prefer-as-const
     scale: 'ordinal' = 'ordinal';
     domain = new Map<string, MultipleAxes>();
     nested = true;

@@ -8,6 +8,7 @@ import pathlib
 import sys
 import traceback
 import time
+import ast
 from argparse import ArgumentParser
 # ref: https://help.aliyun.com/document_detail/203290.html?spm=a2c4g.11186623.6.727.6f9b5db6bzJh4x
 from alibabacloud_pai_dlc20201203.client import Client
@@ -71,15 +72,6 @@ if __name__ == "__main__":
                 data_source_id=args.oss_data_source_id,
             )
 
-        # job spec
-        spec = JobSpec(
-            type=args.type,
-            image=args.image,
-            pod_count=args.pod_count,
-            ecs_spec=args.ecs_spec,
-        )
-
-        
         if args.workspace_id == 'None':
             args.workspace_id = None
             logging.info("args.workspace_id %s %s",args.workspace_id,type(args.workspace_id))
@@ -87,14 +79,56 @@ if __name__ == "__main__":
         data_sources = [nas_1]
         if oss:
             data_sources = [nas_1, oss]
-        req = CreateJobRequest(
-            display_name=args.experiment_name,
-            job_type=args.job_type,
-            job_specs=[spec],
-            data_sources=data_sources,
-            user_command=args.user_command,
-            workspace_id=args.workspace_id,
-        )
+
+        if args.ecs_spec[0] == '{' and args.ecs_spec[-1] == '}':
+            config = ast.literal_eval(args.ecs_spec)
+            resource_id = config['resource_id']
+            cpu = config.get('cpu',1)
+            memory = config.get('memory',2)
+            gpu = config.get('gpu',0)
+            gputype = config.get('gputype',"")
+            shared_memory = config.get('shared_memory',"")
+
+            spec = JobSpec(
+                type=args.type,
+                image=args.image,
+                pod_count=args.pod_count,
+                resource_config=ResourceConfig(
+                    cpu=str(cpu),
+                    memory=str(memory) + "Gi",
+                    gpu=str(gpu),
+                    gputype=str(gputype),
+                    shared_memory=str(shared_memory)
+                ),
+            )
+
+            # 声明任务的执行内容。
+            req = CreateJobRequest(
+                display_name=args.experiment_name,
+                job_type=args.job_type,
+                job_specs=[spec],
+                data_sources=data_sources,
+                user_command=args.user_command,
+                workspace_id=args.workspace_id,
+                resource_id=str(resource_id),
+            )
+        else:
+            # job spec
+            spec = JobSpec(
+                type=args.type,
+                image=args.image,
+                pod_count=args.pod_count,
+                ecs_spec=args.ecs_spec,
+            )
+
+            req = CreateJobRequest(
+                display_name=args.experiment_name,
+                job_type=args.job_type,
+                job_specs=[spec],
+                data_sources=data_sources,
+                user_command=args.user_command,
+                workspace_id=args.workspace_id,
+            )
 
         response = client.create_job(req)
         job_id = response.body.job_id
@@ -136,4 +170,3 @@ if __name__ == "__main__":
                         
     except Exception as e:
         logging.exception('DLC submit Exception: \n')
-

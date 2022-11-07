@@ -3,7 +3,7 @@ Search Space
 
 .. _mutation-primitives:
 
-Mutation Pritimives
+Mutation Primitives
 -------------------
 
 LayerChoice
@@ -93,6 +93,15 @@ NASNet
     :members:
 
 ..  autoclass:: nni.retiarii.hub.pytorch.nasnet.NDS
+    :members:
+
+..  autoclass:: nni.retiarii.hub.pytorch.nasnet.NDSStage
+    :members:
+
+..  autoclass:: nni.retiarii.hub.pytorch.nasnet.NDSStagePathSampling
+    :members:
+
+..  autoclass:: nni.retiarii.hub.pytorch.nasnet.NDSStageDifferentiable
     :members:
 
 ENAS

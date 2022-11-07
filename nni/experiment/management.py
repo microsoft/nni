@@ -2,12 +2,12 @@
 # Licensed under the MIT license.
 
 from pathlib import Path
-import random
+from random import Random
 import string
 
 
 def generate_experiment_id() -> str:
-    return ''.join(random.sample(string.ascii_lowercase + string.digits, 8))
+    return ''.join(Random().sample(string.ascii_lowercase + string.digits, 8))
 
 
 def create_experiment_directory(experiment_id: str) -> Path:

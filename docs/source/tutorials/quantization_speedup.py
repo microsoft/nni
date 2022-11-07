@@ -64,7 +64,7 @@ Usage
 import torch
 import torch.nn.functional as F
 from torch.optim import SGD
-from scripts.compression_mnist_model import TorchModel, device, trainer, evaluator, test_trt
+from nni_assets.compression.mnist_model import TorchModel, device, trainer, evaluator, test_trt
 
 config_list = [{
     'quant_types': ['input', 'weight'],

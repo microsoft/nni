@@ -1,5 +1,6 @@
 $buttonBorderRadius: 23px;
-$errorseriscolor: #FC615C;
+$errorseriscolor: #fc615c;
+
 .config {
     position: fixed;
     right: 0;
@@ -87,17 +88,18 @@ $errorseriscolor: #FC615C;
     right: 20px;
     max-width: 455px;
     min-width: 300px;
-    padding: 28px 32px;
+    padding: 24px;
     border-radius: 8px;
-    box-shadow: 0px 4px 16px rgba(78, 97, 123, 0.2);
+    border: 1px solid #f8f8f8;
+    box-shadow: 0 4px 16px rgba(78, 97, 123, 0.2);
     background-color: #fff;
-    
+
     .head {
         height: 27px;
         line-height: 27px;
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
 
         .title {
             color: $errorseriscolor;
@@ -108,17 +110,22 @@ $errorseriscolor: #FC615C;
             right: 30px;
         }
 
-        .icon{
-            width: 25px;
-            height: 25px;
+        .icon {
+            width: 24px;
+            height: 24px;
             background-color: $errorseriscolor;
             border-radius: 50%;
-            margin-right: 15px;
-            
-            i{
-                font-size: 21px;
+            margin-right: 10px;
+            margin-top: 1px;
+
+            i {
+                display: block;
+                text-align: center;
+                font-size: 14px;
+                font-weight: 600;
                 color: #fff;
-                margin-left: 2px;
+                position: relative;
+                top: -1px;
             }
         }
     }
@@ -128,15 +135,20 @@ $errorseriscolor: #FC615C;
     }
 
     &-buttons {
-        margin-top: 10px;
+        margin-top: 16px;
     }
 
     .detailsBtn {
-        width: 113px;
-        height: 32px;
+        height: 30px;
+        font-size: 12px;
         color: #fff;
         background: $errorseriscolor;
         border: none;
         border-radius: 6px;
+        padding: 0 12px;
+
+        .ms-Button-label {
+            font-size: 12px;
+        }
     }
 }

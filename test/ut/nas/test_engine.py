@@ -27,6 +27,7 @@ class EngineTest(unittest.TestCase):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
+        advisor._advisor_initialized = True
         advisor._channel = LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
@@ -44,6 +45,7 @@ class EngineTest(unittest.TestCase):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
+        advisor._advisor_initialized = True
         advisor._channel = LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()

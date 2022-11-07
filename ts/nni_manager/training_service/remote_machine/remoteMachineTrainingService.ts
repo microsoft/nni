@@ -29,6 +29,7 @@ import {
     ExecutorManager, RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail
 } from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
+import { createScriptFile } from 'common/shellUtils';
 
 /**
  * Training Service implementation for Remote Machine (Linux)
@@ -510,9 +511,9 @@ class RemoteMachineTrainingService implements TrainingService {
         await execMkdir(path.join(trialLocalTempFolder, '.nni'));
 
         // Write install_nni.sh, it's not used in Windows platform.
-        await fs.promises.writeFile(path.join(trialLocalTempFolder, executor.getScriptName("install_nni")), CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
+        await createScriptFile(path.join(trialLocalTempFolder, executor.getScriptName("install_nni")), CONTAINER_INSTALL_NNI_SHELL_FORMAT);
         // Write file content ( run.sh and parameter.cfg ) to local tmp files
-        await fs.promises.writeFile(path.join(trialLocalTempFolder, executor.getScriptName("run")), runScriptTrialContent, { encoding: 'utf8' });
+        await createScriptFile(path.join(trialLocalTempFolder, executor.getScriptName("run")), runScriptTrialContent);
         await this.writeParameterFile(trialJobId, form.hyperParameters);
         // Copy files in codeDir to remote working directory
         await executor.copyDirectoryToRemote(trialLocalTempFolder, trialJobDetail.workingDirectory);
