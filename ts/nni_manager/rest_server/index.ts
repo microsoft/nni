@@ -35,6 +35,8 @@ import { Logger, getLogger } from 'common/log';
 import * as tunerCommandChannel from 'core/tuner_command_channel';
 import { createRestHandler } from './restHandler';
 
+import { getEnvironmentRouter } from 'training_service/v3/staging';  // FIXME
+
 const logger: Logger = getLogger('RestServer');
 
 /**
@@ -112,6 +114,9 @@ function rootRouter(): Router {
 
     /* WebSocket APIs */
     router.ws('/tuner', (ws, _req, _next) => { tunerCommandChannel.serveWebSocket(ws); });
+
+    /* FIXME: Staging training service v3 APIs */
+    router.use('/env', getEnvironmentRouter());
 
     /* Download log files */
     // The REST API path "/logs" does not match file system path "/log".
