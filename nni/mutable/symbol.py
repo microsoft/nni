@@ -3,6 +3,27 @@
 
 """
 Infrastructure for symbolic execution.
+
+Symbolic execution is a technique for executing programs on symbolic inputs.
+It supports arithmetic operations and comparisons on abstract symbols,
+and can be used to represent symbolic expressions for potential evaluation and optimization.
+
+The symbolic execution is implemented by overriding the operators of the :class:`Symbol` class.
+The operators are implemented in a way that they can be chained together to form a :class:`SymbolicExpression`.
+The symbolic execution is lazy,
+which means that the expression will not be evaluated until the final value is substituted.
+
+Examples
+--------
+>>> from nni.mutable.symbol import Symbol
+>>> x, y = Symbol('x'), Symbol('y')
+>>> expr = x * x + y * 2
+>>> print(expr)
+(x * x) + (y * 2)
+>>> list(expr.leaf_symbols())
+[Symbol('x'), Symbol('x'), Symbol('y')]
+>>> expr.evaluate({'x': 2, 'y': 3})
+10
 """
 
 from __future__ import annotations
@@ -155,11 +176,16 @@ class SymbolicExpression:
     def __repr__(self) -> str:
         return self.symbolic_repr()
 
-    def symbolic_repr(self) -> str:
+    def __str__(self) -> str:
+        return self.symbolic_repr(neat=True)
+
+    def symbolic_repr(self, neat: bool = False) -> str:
         reprs = []
         for arg in self.arguments:
             if isinstance(arg, SymbolicExpression) and not isinstance(arg, Symbol):
-                reprs.append('(' + arg.symbolic_repr() + ')')  # add parenthesis for operator priority
+                reprs.append('(' + arg.symbolic_repr(neat) + ')')  # add parenthesis for operator priority
+            elif neat:
+                reprs.append(str(arg))
             else:
                 reprs.append(repr(arg))
         return self.repr_template.format(*reprs)
@@ -434,6 +460,9 @@ class Symbol(SymbolicExpression):
             except StopIteration:
                 raise ValueError(f'Value list {values} is exhausted when trying to get a chosen value of {self}.')
         return value
+
+    def __str__(self):
+        return self.label
 
     def __repr__(self):
         return f'Symbol({repr(self.label)})'
