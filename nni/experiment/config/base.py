@@ -137,7 +137,7 @@ class ConfigBase:
         cls
             An object of ConfigBase subclass.
         """
-        with open(path) as yaml_file:
+        with open(path, encoding='utf_8') as yaml_file:
             data = yaml.safe_load(yaml_file)
         if not isinstance(data, dict):
             raise TypeError(f'Conent of config file {path} is not a dict/object')
