@@ -173,8 +173,6 @@ def compile_ts(release):
     Use yarn to download dependencies and compile TypeScript code.
     """
     _print('Building NNI manager')
-    #_yarn('ts/nni_manager')
-    #_yarn('ts/nni_manager', 'build')
     _npm('ts/nni_manager', 'install')
     _npm('ts/nni_manager', 'run', 'build')
     # todo: I don't think these should be here
