@@ -1122,6 +1122,7 @@ class MagicMethodPatcher:
                     t = ModuleDict()
                 else:
                     t = torch.nn.Module()
+                t._get_name = f._get_name
                 to_module.add_module(item, t)
             from_module, to_module = f, t
 

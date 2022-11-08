@@ -261,7 +261,7 @@ class ModelSpeedup:
         # of the whole model)
         
         # update the output mask into self.masks
-        self.masks[out_debugname] = _auto_infer.output_mask
+        self.masks[out_debugname] = _auto_infer.out_masks
         # update the parameter mask of the node
 
         self.masks[module_name] = _auto_infer.weight_mask

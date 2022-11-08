@@ -7,6 +7,9 @@ from typing import Dict
 import torch
 import torch.nn as nn
 from ..utils import randomize_tensor, torch_float_dtype, torch_integer_dtype
+
+from nni.common.concrete_trace_utils.utils import run_onlyif_instance, map_aggregate_zip, map_aggregate
+
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
@@ -14,8 +17,8 @@ STD_DELTA = 1e-6
 
 
 class AutoMaskInference:
-    def __init__(self, out_debugname, module, speedup, dummy_input, input_debugname, in_masks=None, weight_mask=None,
-                 output_mask=None, name=None, state_dict=None):
+    def __init__(self, out_debugname, module, speedup, dummy_input, input_debugname, in_masks, weight_mask=None,
+                 name=None, state_dict=None):
         """
         This class will infer the mask of the target module automatically.
         This update_direct_sparsity will infer the output mask according
@@ -63,8 +66,7 @@ class AutoMaskInference:
         self.input_debugname = input_debugname
         
         # Initialize the masks for input tensors
-        self.in_masks = in_masks if in_masks is not None else [
-            None] * len(self.dummy_input)
+        self.in_masks = in_masks
         for in_id, _ in enumerate(self.in_masks):
             if self.in_masks[in_id] is None and \
                     isinstance(self.dummy_input[in_id], torch.Tensor):
@@ -75,25 +77,22 @@ class AutoMaskInference:
         # Initialize the mask for output tensors
         self.orig_output = speedup.internal_result[out_debugname]
 
-        if output_mask is not None:
-            # assume the given output mask is right
-            self.output_mask = output_mask
-        elif isinstance(module, nn.GroupNorm):
-            self.output_mask = self.in_masks[0]
+        if isinstance(module, nn.GroupNorm):
+            self.out_masks = self.in_masks[0]
         else:
             if isinstance(self.orig_output, torch.Tensor):
-                self.output_mask = torch.ones_like(self.orig_output)
+                self.out_masks = torch.ones_like(self.orig_output)
             elif isinstance(self.orig_output, list) or isinstance(self.orig_output, tuple):
-                self.output_mask = []
+                self.out_masks = []
                 for o_tensor in self.orig_output:
                     if isinstance(o_tensor, torch.Tensor):
-                        self.output_mask.append(torch.ones_like(o_tensor))
+                        self.out_masks.append(torch.ones_like(o_tensor))
                     else:
                         # if one of the outputs is not tensor, set the corresponding
                         # mask to None
-                        self.output_mask.append(None)
+                        self.out_masks.append(None)
             else:
-                self.output_mask = None
+                self.out_masks = None
 
         # Initialize the mask for the parameters
         self.weight_mask = {}
@@ -211,14 +210,14 @@ class AutoMaskInference:
 
     def calc_out_masks(self, out):
         if isinstance(out, torch.Tensor):
-            return self.calc_one_out_mask(out.clone().detach())
+            out_mask = self.calc_one_masked_mask(out.clone().detach())
         elif isinstance(out, tuple) or isinstance(out, list):
-            return [self.calc_one_out_mask(tout.clone().detach()) for tout in out]
+            out_mask = [self.calc_one_masked_mask(tout.clone().detach()) for tout in out]
         else:
             _logger.warning(
                 'Only support the OP whose output is tensor/tuple of tensor/list of tensor')
+            out_mask = None
 
-    def apply_out_masks(self, out_mask):
         # We also need random the parameters of the module, because if the weight of the model has
         # a unmasked 0, then our out sparsity inference may be wrong
         # However, after radomizing the weight/parameters, the constant in the output tensors may
@@ -228,15 +227,15 @@ class AutoMaskInference:
         # Currently we also get the constant values at the same time when infering the mask, in
         # the future, we will separate the constant inference into a single graph pass.
         if isinstance(out_mask, torch.Tensor):
-            assert isinstance(self.output_mask, torch.Tensor)
-            self.output_mask *= out_mask
+            assert isinstance(self.out_masks, torch.Tensor)
+            self.out_masks *= out_mask
         elif isinstance(out_mask, list):
             for i, _ in enumerate(out_mask):
-                self.output_mask[i] *= out_mask[i]
+                self.out_masks[i] *= out_mask[i]
         else:
             _logger.warning('There is no output sparsity')
 
-    def calc_one_out_mask(self, tout):
+    def calc_one_masked_mask(self, tout):
         """
         Find the constants in the tensor tout. This function return a mask tensor that
         indicates if a value in tout is a constant, and return one more tensor to indicate
@@ -299,9 +298,9 @@ class AutoMaskInference:
             _grad_zero = gradient_sum == 0
             for batchid in range(self.orig_output.size(0)):
                 # set the same mask value for the whole batche
-                self.output_mask[batchid][_grad_zero] = 0
+                self.out_masks[batchid][_grad_zero] = 0
         elif isinstance(self.orig_output, tuple) or isinstance(self.orig_output, list):
-            assert isinstance(self.output_mask, (tuple, list))
+            assert isinstance(self.out_masks, (tuple, list))
             for oid, tout in enumerate(self.orig_output):
                 errmsg = 'The output only support tensor/list of tensors'
                 assert isinstance(tout, torch.Tensor), errmsg
@@ -310,7 +309,7 @@ class AutoMaskInference:
                 _grad_zero = gradient_sum == 0
                 for batchid in range(self.orig_output.size(0)):
                     # set the same mask value for the whole batch
-                    self.output_mask[oid][batchid][_grad_zero] = 0
+                    self.out_masks[oid][batchid][_grad_zero] = 0
 
     def update_indirect_weight_mask(self, output):
         if output.grad_fn is None:
@@ -318,10 +317,10 @@ class AutoMaskInference:
             return
         # Note: output maybe tensor or list/tuple of tensors
         if isinstance(output, torch.Tensor):
-            output.backward(self.output_mask)
+            output.backward(self.out_masks)
         elif isinstance(output, list) or isinstance(output, tuple):
             for tid, t_out in enumerate(output):
-                t_out.backward(self.output_mask[tid])
+                t_out.backward(self.out_masks[tid])
 
         # update the sparsity of the paramters
         if isinstance(self.module, nn.Module):
@@ -360,8 +359,7 @@ class AutoMaskInference:
         with torch.no_grad():
             the_dummy_input = self.init_and_apply()
             out = self.module(*the_dummy_input)
-            out_mask = self.calc_out_masks(out)
-            self.apply_out_masks(out_mask)
+            self.calc_out_masks(out)
 
     def get_masks(self):
-        return (self.in_masks, self.output_mask, self.weight_mask)
+        return (self.in_masks, self.out_masks, self.weight_mask)
