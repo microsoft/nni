@@ -49,7 +49,7 @@ def _symbol_expr_codegen(*, _internal: bool = False):
         'lshift': '<<', 'rshift': '>>',
         'and': '&', 'xor': '^', 'or': '|',
         # no reverse
-        'lt': '<', 'le': '<=', 'eq': '==',
+        'lt': '<', 'le': '<=',
         'ne': '!=', 'ge': '>=', 'gt': '>',
         # NOTE
         # Currently we don't support operators like __contains__ (b in a),
@@ -296,6 +296,13 @@ class SymbolicExpression:
     def __bool__(self) -> NoReturn:
         raise RuntimeError('Cannot use bool() on SymbolicExpression. That means, using SymbolicExpression in a if-clause is illegal. '
                            'Please try methods like `SymbolicExpression.max(a, b)` to see whether that meets your needs.')
+
+    def __eq__(self, other: Any) -> Any:
+        # Bypass some unnecessary expressions.
+        if self is other:
+            return True
+        return self.expr_cls(operator.eq, '{} == {}', [self, other])
+
     # endregion
 
     # region the following code is generated with codegen (see above)
@@ -386,9 +393,6 @@ class SymbolicExpression:
 
     def __le__(self, other: Any) -> Any:
         return self.expr_cls(operator.le, '{} <= {}', [self, other])
-
-    def __eq__(self, other: Any) -> Any:
-        return self.expr_cls(operator.eq, '{} == {}', [self, other])
 
     def __ne__(self, other: Any) -> Any:
         return self.expr_cls(operator.ne, '{} != {}', [self, other])
