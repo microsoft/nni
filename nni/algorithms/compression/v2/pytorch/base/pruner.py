@@ -139,6 +139,10 @@ class Pruner(Compressor):
                 wrapper._weight2buffer()
             self.is_wrapped = True
 
+        # check if self.bound_model is ddp model
+        if self.is_ddp_model:
+            self.reset_ddp_model()
+
     def _unwrap_model(self):
         """
         Unwrap all modules that needed to be compressed.

@@ -90,6 +90,8 @@ class Compressor:
         assert isinstance(model, Module), 'Only support compressing pytorch Module, but the type of model is {}.'.format(type(model))
 
         self.bound_model = model
+        self.check_ddp_model()
+
         self.config_list = config_list
         self.validate_config(model=model, config_list=config_list)
 
@@ -102,6 +104,38 @@ class Compressor:
             self.modules_wrapper[layer.name] = wrapper
 
         self._wrap_model()
+
+    def check_ddp_model(self):
+        if isinstance(self.bound_model, torch.nn.parallel.DistributedDataParallel):
+            attr_dicts = self.bound_model.__dict__
+
+            if "device_ids" in attr_dicts:
+                self.ddp_params = {"device_ids": attr_dicts.get("device_ids", None)}
+            if "output_device" in attr_dicts:
+                self.ddp_params["output_device"] = attr_dicts.get("output_device", None)
+            if "dim" in attr_dicts:
+                self.ddp_params["dim"] = attr_dicts.get("dim", 0)
+            if "broadcast_buffers" in attr_dicts:
+                self.ddp_params["broadcast_buffers"] = attr_dicts.get("broadcast_buffers", True)
+            if "process_group" in attr_dicts:
+                self.ddp_params["process_group"] = attr_dicts.get("process_group", None)
+            if "bucket_cap_mb" in attr_dicts:
+                self.ddp_params["bucket_cap_mb"] = attr_dicts.get("bucket_cap_mb", 25)
+            if "find_unused_parameters" in attr_dicts:
+                self.ddp_params["find_unused_parameters"] = attr_dicts.get("find_unused_parameters", False)
+            if "check_reduction" in attr_dicts:
+                self.ddp_params["check_reduction"] = attr_dicts.get("check_reduction", False)
+            if "gradient_as_bucket_view" in attr_dicts:
+                self.ddp_params["gradient_as_bucket_view"] = attr_dicts.get("gradient_as_bucket_view", False)
+            if "static_graph" in attr_dicts:
+                self.ddp_params["static_graph"] = attr_dicts.get("static_graph", False)
+
+            self.is_ddp_model = True
+        else:
+            self.is_ddp_model = False
+
+    def reset_ddp_model(self):
+        assert self.is_ddp_model
 
     def clear_model_references(self):
         """

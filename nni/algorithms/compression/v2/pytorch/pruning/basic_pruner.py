@@ -306,6 +306,7 @@ class LevelPruner(BasicPruner):
             else:
                 raise NotImplementedError('Only support mode `normal` and `balance`')
 
+
 class NormPruner(BasicPruner):
     """
     Parameters
@@ -755,11 +756,23 @@ class ActivationPruner(EvaluatorBasedPruner):
                 _module = _module.module
             batch_dims, batch_num = get_output_batch_dims(output, _module)  # type: ignore
             activation = self._activation_trans(output, batch_dims)
+
+            if self.is_ddp_model:
+                import torch.distributed as dist
+                ddp_batch_num = torch.tensor([batch_num]).to(activation.device)
+                ddp_activation = activation.clone()
+
+                dist.all_reduce(ddp_batch_num, op=dist.ReduceOp.SUM)
+                dist.all_reduce(ddp_activation, op=dist.ReduceOp.SUM)
+            else:
+                ddp_batch_num = torch.tensor([batch_num]).to(activation.device)
+                ddp_activation = activation
+
             if len(buffer) == 1:
-                buffer.append(torch.zeros_like(activation))
+                buffer.append(torch.zeros_like(ddp_activation))
             if buffer[0] < self.training_steps:
-                buffer[1] += activation.to(buffer[1].device)  # type: ignore
-                buffer[0] += batch_num
+                buffer[1] += ddp_activation.to(buffer[1].device)  # type: ignore
+                buffer[0] += ddp_batch_num.cpu().detach().numpy().tolist()[0]
         return collect_activation
 
     def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
@@ -1023,10 +1036,21 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_taylor(grad: Tensor):
+            if self.is_ddp_model:
+                import torch.distributed as dist
+                ddp_grad = grad.clone()
+                size = dist.get_world_size()
+
+                dist.all_reduce(ddp_grad, op=dist.ReduceOp.SUM)
+                ddp_grad /= size
+            else:
+                ddp_grad = grad
+
             if len(buffer) == 1:
-                buffer.append(torch.zeros_like(grad))
+                buffer.append(torch.zeros_like(ddp_grad))
             if buffer[0] < self.training_steps:
-                buffer[1] += self._calculate_taylor_expansion(weight_tensor, grad)
+                buffer[1] += self._calculate_taylor_expansion(
+                    weight_tensor, ddp_grad)
                 buffer[0] += 1
         return collect_taylor
 
@@ -1227,7 +1251,7 @@ class ADMMPruner(EvaluatorBasedPruner):
                 target_name = 'weight'
                 self.Z[module_name][target_name] = self.Z[module_name][target_name].mul(targets_mask[target_name])
                 self.U[module_name][target_name] = self.U[module_name][target_name] + data[module_name][target_name] - \
-                                                   self.Z[module_name][target_name]
+                    self.Z[module_name][target_name]
 
         self.Z, self.U = {}, {}
         torch.cuda.empty_cache()
