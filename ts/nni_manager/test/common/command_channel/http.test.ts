@@ -93,6 +93,7 @@ async function beforeHook(): Promise<void> {
     restServer = new RestServer(0, '');
     await restServer.start();
     port = RestServerHelpers.getPort(restServer);
+    globals.args.port = port;
 }
 
 async function afterHook() {
