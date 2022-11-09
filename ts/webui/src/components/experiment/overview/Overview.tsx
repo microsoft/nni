@@ -70,7 +70,7 @@ const Overview = (): any => {
             <div className='overviewWrapper'>
                 {/* exp params */}
                 <div className='overviewBasicInfo'>
-                    <TitleContext.Provider value={{ text: 'Experiment', icon: 'AutoRacing' }}>
+                    <TitleContext.Provider value={{ text: 'Experiment-Test', icon: 'AutoRacing' }}>
                         <Title />
                     </TitleContext.Provider>
                     <BestMetricContext.Provider value={{ bestAccuracy: bestAccuracy }}>
