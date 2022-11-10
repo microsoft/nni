@@ -140,6 +140,12 @@ class SymbolicExpression:
         ----------
         values
             Should be of the same length and the same order as ``leaf_symbols()``.
+
+        Warnings
+        --------
+        No validation here.
+        Even if one symbol has different values at different places,
+        the evaluation would still succeed.
         """
         ...
 
@@ -441,7 +447,7 @@ class Symbol(SymbolicExpression):
         Each symbol is bound with a label, i.e., the variable name.
     """
 
-    def __init__(self, label: str | None) -> None:
+    def __init__(self, label: str) -> None:
         self.label = label
 
     def leaf_symbols(self) -> Iterable[Symbol]:
