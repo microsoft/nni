@@ -113,6 +113,9 @@ class Mutable:
         >>> mutable.freeze(sample)
         9
 
+    In the example above, we create a new mutable that is the sum of
+    two existing variables (with :class:`MutableExpression`),
+    and then simplify it to get the basic dimensions.
     The *sample* here is a dictionary of parameters.
     It should have the exactly same keys as the simplified space,
     and values are replaced with the sampled values.
@@ -415,7 +418,8 @@ class MutableExpression(Mutable, SymbolicExpression):
     Expression of mutables. Common use cases include:
     summation of several mutables, binary comparison between two mutables.
 
-    It must be composed of one or several :class:`MutableSymbol` or :class:`MutableExpression`.
+    The expression is defined by a operator and a list of operands,
+    which must be one or several :class:`MutableSymbol` or :class:`MutableExpression`.
 
     The expression can be simplified into a dict of :class:`LabeledMutable`.
     It can also be evaluated to be a concrete value (via :meth:`~Mutable.freeze`),
