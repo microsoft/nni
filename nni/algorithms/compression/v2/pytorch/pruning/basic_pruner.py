@@ -306,7 +306,6 @@ class LevelPruner(BasicPruner):
             else:
                 raise NotImplementedError('Only support mode `normal` and `balance`')
 
-
 class NormPruner(BasicPruner):
     """
     Parameters
@@ -1251,7 +1250,7 @@ class ADMMPruner(EvaluatorBasedPruner):
                 target_name = 'weight'
                 self.Z[module_name][target_name] = self.Z[module_name][target_name].mul(targets_mask[target_name])
                 self.U[module_name][target_name] = self.U[module_name][target_name] + data[module_name][target_name] - \
-                    self.Z[module_name][target_name]
+                                                   self.Z[module_name][target_name]
 
         self.Z, self.U = {}, {}
         torch.cuda.empty_cache()
