@@ -188,7 +188,7 @@ class label_scope:
         For example, ``model/cell/2``.
         """
         if self.path is None:
-            raise ValueError('label_scope is not entered yet.')
+            raise ValueError(f'label_scope "{self.scope_name}" is not entered yet.')
         return '/'.join(self.path)
 
     def __repr__(self):
@@ -267,6 +267,9 @@ def auto_label(label: str | None = None, scope: label_scope | None = None) -> st
         # Validate the label name given.
         # The caller might have given a label name that is not valid.
         _validate_label_name(label)
+
+    if scope is not None and not isinstance(scope, label_scope):
+        raise TypeError('scope must be an instance of label_scope')
 
     if scope is None:
         # Auto-fetch the current label space (can be none).

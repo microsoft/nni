@@ -98,3 +98,10 @@ def test_label_validation(caplog):
 
     auto_label('123')
     assert 'only digits' in caplog.text
+
+    with pytest.raises(TypeError):
+        auto_label('hello', 'world')
+
+    with pytest.raises(ValueError, match='not entered'):
+        with label_scope('test'):
+            auto_label('hello', label_scope('world'))
