@@ -3,7 +3,7 @@ import { Stack, Dropdown, Toggle, IDropdownOption } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import { Trial } from '@model/trial';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
-import { TooltipForAccuracy, EventMap } from '@static/interface';
+import { TooltipForAccuracy } from '@static/interface';
 import { reformatRetiariiParameter } from '@static/function';
 import { gap15 } from '@components/fluent/ChildrenGap';
 import { optimizeModeValue } from './optimizeMode';
@@ -164,6 +164,7 @@ const generateBestCurveSeries = (trials: Trial[], finalKey: string, optimizeMode
         data
     };
 };
+
 const DefaultPoint = (props: DefaultPointProps) => {
     const { hasBestCurve, trialIds, changeExpandRowIDs, chartHeight } = props;
     const [bestCurveEnabled, setBestCurveEnabled] = useState(false);

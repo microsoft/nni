@@ -31,11 +31,13 @@ const innerChartMargins = {
     bottom: 20,
     left: 28
 };
+// class里的声明在前边的变量全局可用，可以储存值
+// function里面
+let pcs: any;
 
 const Para = (props: ParaProps) => {
     const paraRef = React.createRef<HTMLDivElement>();
-    let pcs: any;
-    const {trials, searchSpace } = props;
+    const { trials, searchSpace } = props;
     const [selectedPercent, setSelectedPercent] = useState('1');
     const [userSelectOptimizeMode, setUserSelectOptimizeMode] = useState(optimizeModeValue(EXPERIMENT.optimizeMode));
     const [primaryMetricKey, setPrimaryMetricKey] = useState('default');
@@ -43,11 +45,11 @@ const Para = (props: ParaProps) => {
     const [customizeColumnsDialogVisible, setCustomizeColumnsDialogVisible] = useState(false);
     const [availableDimensions, setAvailableDimensions] = useState([] as string[]);
     const [chosenDimensions, setChosenDimensions] = useState(localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`) !== null &&
-    getValue(`${EXPERIMENT.profile.id}_paraColumns`) !== null
+        getValue(`${EXPERIMENT.profile.id}_paraColumns`) !== null
         ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          JSON.parse(getValue(`${EXPERIMENT.profile.id}_paraColumns`)!)
+        JSON.parse(getValue(`${EXPERIMENT.profile.id}_paraColumns`)!)
         : []);
-    
+
     // get percent value number
     const percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
@@ -143,13 +145,16 @@ const Para = (props: ParaProps) => {
         return [range, 1];
     }
 
-     /**
-     * Render the parallel coordinates. Using trial data as base and leverage
-     * information from search space at a best effort basis.
-     * @param source Array of trial data
-     * @param searchSpace Search space
-     */
-      const renderParallelCoordinates = (): void => {
+    const _updateDisplayedColumns = (displayedColumns: string[]): void => {
+        setChosenDimensions(displayedColumns);
+    }
+    /**
+    * Render the parallel coordinates. Using trial data as base and leverage
+    * information from search space at a best effort basis.
+    * @param source Array of trial data
+    * @param searchSpace Search space
+    */
+    const renderParallelCoordinates = (): void => {
         const percent = parseFloat(selectedPercent);
         const inferredSearchSpace = TRIALS.inferredSearchSpace(searchSpace);
         const inferredMetricSpace = TRIALS.inferredMetricSpace();
@@ -224,6 +229,7 @@ const Para = (props: ParaProps) => {
                     .filter(([d, _]) => chosenDimensions.length === 0 || chosenDimensions.includes(d))
                     .reduce((obj, entry) => ({ ...obj, [entry[0]]: entry[1] }), {})
             );
+
         if (firstRun) {
             pcs
                 .margin(innerChartMargins)
@@ -243,13 +249,12 @@ const Para = (props: ParaProps) => {
 
         // set new available dims
         setAvailableDimensions(dimensions.map(e => e[0]));
-        setChosenDimensions(chosenDimensions.length === 0 ? dimensions.map(e => e[0]) : chosenDimensions);
     }
 
     useEffect(() => {
         // FIXME: redundant update(comment for componentDidUpdate)
         renderParallelCoordinates();
-    }, [selectedPercent, userSelectOptimizeMode, primaryMetricKey, chosenDimensions, trials, searchSpace]); // 百分比变化触发页面更新
+    }, [chosenDimensions, selectedPercent, userSelectOptimizeMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
 
     return (
         <div className='parameter'>
@@ -289,11 +294,12 @@ const Para = (props: ParaProps) => {
                 <ChangeColumnComponent
                     selectedColumns={chosenDimensions}
                     allColumns={availableDimensions.map(dim => ({ key: dim, name: dim }))}
-                    onSelectedChange={(selected: string[]): void => {
-                        setChosenDimensions(selected)
-                    }}
+                    onSelectedChange={_updateDisplayedColumns}
+                    // onSelectedChange={(selected: string[]): void => {
+                    //     setChosenDimensions(selected);
+                    // }}
                     onHideDialog={(): void => {
-                        setCustomizeColumnsDialogVisible(false)
+                        setCustomizeColumnsDialogVisible(false);
                     }}
                     minSelected={2}
                     whichComponent='para'

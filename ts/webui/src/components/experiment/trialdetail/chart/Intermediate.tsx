@@ -26,8 +26,8 @@ const Intermediate = (props: IntermediateProps): any => {
     const [isLoadconfirmBtn, setIsLoadconfirmBtn] = useState(false as boolean);
     const [isFilter, setIsFilter] = useState(false as boolean);
     const [length, setLength] = useState(100000 as number);
-    const [startMediaY, setStartMediaY] = useState(0 as number);
-    const [endMediaY, setEndMediaY] = useState(100 as number);
+    // const [startMediaY, setStartMediaY] = useState(0 as number);
+    // const [endMediaY, setEndMediaY] = useState(100 as number);
 
     const { source } = props;
 
@@ -105,12 +105,11 @@ const Intermediate = (props: IntermediateProps): any => {
                 },
                 dataZoom: [
                     {
-                        id: 'dataZoomY',
                         type: 'inside',
                         yAxisIndex: [0],
                         filterMode: 'none',
-                        start: startMediaY,
-                        end: endMediaY
+                        start: 0, // percent
+                        end: 100 // percent
                     }
                 ],
                 series: source
@@ -176,13 +175,13 @@ const Intermediate = (props: IntermediateProps): any => {
             drawIntermediate(props.source);
         }
     };
-    const intermediateDataZoom = (e: EventMap): void => {
-        if (e.batch !== undefined) {
-            setStartMediaY(e.batch[0].start !== null ? e.batch[0].start : 0);
-            setEndMediaY(e.batch[0].end !== null ? e.batch[0].end : 100);
-        }
-    };
-    const IntermediateEvents = { dataZoom: intermediateDataZoom };
+    // const intermediateDataZoom = (e: EventMap): void => {
+    //     if (e.batch !== undefined) {
+    //         setStartMediaY(e.batch[0].start !== null ? e.batch[0].start : 0);
+    //         setEndMediaY(e.batch[0].end !== null ? e.batch[0].end : 100);
+    //     }
+    // };
+    // const IntermediateEvents = { dataZoom: intermediateDataZoom };
 
     return (
         <div>
@@ -222,7 +221,7 @@ const Intermediate = (props: IntermediateProps): any => {
                     option={interSource}
                     style={{ width: '100%', height: 400, margin: '0 auto' }}
                     notMerge={true} // update now
-                    onEvents={IntermediateEvents}
+                    // onEvents={IntermediateEvents}
                 />
                 <div className='fontColor333 xAxis'># Intermediate result</div>
             </div>
