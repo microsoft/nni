@@ -48,7 +48,7 @@ If you are familiar with defining a model and training in pytorch, you can skip 
     import torch.nn.functional as F
     from torch.optim import SGD
 
-    from scripts.compression_mnist_model import TorchModel, trainer, evaluator, device, test_trt
+    from nni_assets.compression.mnist_model import TorchModel, trainer, evaluator, device, test_trt
 
     # define the model
     model = TorchModel().to(device)
@@ -73,9 +73,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.5901, Accuracy: 8293/10000 (83%)
-    Average test loss: 0.2469, Accuracy: 9245/10000 (92%)
-    Average test loss: 0.1586, Accuracy: 9531/10000 (95%)
+    Average test loss: 0.8954, Accuracy: 6995/10000 (70%)
+    Average test loss: 0.3259, Accuracy: 9046/10000 (90%)
+    Average test loss: 0.2125, Accuracy: 9354/10000 (94%)
 
 
 
@@ -195,9 +195,9 @@ QAT is a training-aware quantizer, it will update scale and zero point during tr
 
  .. code-block:: none
 
-    Average test loss: 0.1333, Accuracy: 9587/10000 (96%)
-    Average test loss: 0.1076, Accuracy: 9660/10000 (97%)
-    Average test loss: 0.0957, Accuracy: 9702/10000 (97%)
+    Average test loss: 0.1858, Accuracy: 9438/10000 (94%)
+    Average test loss: 0.1420, Accuracy: 9564/10000 (96%)
+    Average test loss: 0.1213, Accuracy: 9632/10000 (96%)
 
 
 
@@ -226,9 +226,7 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    INFO:nni.compression.pytorch.compressor:Model state_dict saved to ./log/mnist_model.pth
-    INFO:nni.compression.pytorch.compressor:Mask dict saved to ./log/mnist_calibration.pth
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0029], device='cuda:0'), 'weight_zero_point': tensor([96.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([101.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.014460563659668}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([118.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 25.994585037231445}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([120.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 21.589195251464844}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 10.066218376159668}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.317869186401367}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 21.97711944580078}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 17.56885528564453}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0039], device='cuda:0'), 'weight_zero_point': tensor([82.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0019], device='cuda:0'), 'weight_zero_point': tensor([127.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 18.87591552734375}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0'), 'weight_zero_point': tensor([123.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 26.67470932006836}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([129.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 21.60409164428711}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 18.998125076293945}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 27.000442504882812}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 22.2519588470459}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 17.8553524017334}}
 
 
 
@@ -257,8 +255,8 @@ build tensorRT engine to make a real speedup, for more information about speedup
 
  .. code-block:: none
 
-    Loss: 0.09545102081298829  Accuracy: 96.98%
-    Inference elapsed_time (whole dataset): 0.03549933433532715s
+    Loss: 0.12193695755004882  Accuracy: 96.38%
+    Inference elapsed_time (whole dataset): 0.036092281341552734s
 
 
 
@@ -266,7 +264,7 @@ build tensorRT engine to make a real speedup, for more information about speedup
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  45.743 seconds)
+   **Total running time of the script:** ( 1 minutes  39.686 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start_mnist.py:

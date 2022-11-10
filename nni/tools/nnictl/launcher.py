@@ -31,7 +31,7 @@ def create_experiment(args):
         _logger.error(f'"{config_file}" is not a valid file.')
         exit(1)
 
-    with config_file.open() as config:
+    with config_file.open(encoding='utf_8') as config:
         config_content = yaml.safe_load(config)
 
     v1_platform = config_content.get('trainingServicePlatform')

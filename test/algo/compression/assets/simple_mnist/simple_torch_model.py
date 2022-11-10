@@ -23,11 +23,11 @@ class SimpleTorchModel(torch.nn.Module):
         super().__init__()
         self.conv1 = torch.nn.Conv2d(1, 16, 3)
         self.bn1 = torch.nn.BatchNorm2d(16)
-        self.conv2 = torch.nn.Conv2d(16, 8, 3, groups=4)
-        self.bn2 = torch.nn.BatchNorm2d(8)
-        self.conv3 = torch.nn.Conv2d(16, 8, 3)
-        self.bn3 = torch.nn.BatchNorm2d(8)
-        self.fc1 = torch.nn.Linear(8 * 24 * 24, 100)
+        self.conv2 = torch.nn.Conv2d(16, 32, 3, groups=4)
+        self.bn2 = torch.nn.BatchNorm2d(32)
+        self.conv3 = torch.nn.Conv2d(16, 32, 3)
+        self.bn3 = torch.nn.BatchNorm2d(32)
+        self.fc1 = torch.nn.Linear(32 * 24 * 24, 100)
         self.fc2 = torch.nn.Linear(100, 10)
 
     def forward(self, x: torch.Tensor):

@@ -40,7 +40,12 @@ const NavCon = (props: NavProps): any => {
     };
 
     const openGithubNNI = (): void => {
-        const nniLink = `https://github.com/Microsoft/nni/tree/${version}`;
+        // 999.0.0-developing
+        let formatVersion = `v${version}`;
+        if (version === '999.0.0-developing') {
+            formatVersion = 'master';
+        }
+        const nniLink = `https://github.com/Microsoft/nni/tree/${formatVersion}`;
         window.open(nniLink);
     };
 
@@ -55,10 +60,15 @@ const NavCon = (props: NavProps): any => {
             method: 'GET'
         }).then(res => {
             if (res.status === 200) {
-                setVersion(res.data);
+                let formatVersion = res.data;
+                // 2.0 will get 2.0.0 by node, so delete .0 to get real version
+                if (formatVersion.endsWith('.0')) {
+                    formatVersion = formatVersion.slice(0, -2);
+                }
+                setVersion(formatVersion);
             }
         }).catch(error => {
-            console.info(error); // TODO 测试这块有没有问题，一个404的api返回status是200.。。
+            setVersion('ERROR'); // TODO 测试这块有没有问题，一个404的api返回status是200.。。
         });
     }, []);
 

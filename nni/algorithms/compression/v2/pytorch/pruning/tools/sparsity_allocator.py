@@ -212,7 +212,6 @@ class DependencyAwareAllocator(SparsityAllocator):
         return fused_metrics
 
     def common_target_masks_generation(self, metrics: Dict[str, Dict[str, Tensor]]) -> Dict[str, Dict[str, Tensor]]:
-        # placeholder, here we need more discussion about dependence sparsity, Plan A or Plan B.
         masks = {}
         # generate public part for modules that have dependencies
         for module_names in self.channel_dependency:
@@ -228,7 +227,8 @@ class DependencyAwareAllocator(SparsityAllocator):
 
                 group_nums = [self.group_dependency.get(module_name, 1) for module_name in sub_metrics.keys()]
                 max_group_nums = int(np.lcm.reduce(group_nums))
-                pruned_numel_per_group = int(fused_metric.numel() // max_group_nums * min_sparsity_rate)
+                numel_per_group = fused_metric.numel() // max_group_nums
+                kept_numel_per_group = numel_per_group - int(numel_per_group * min_sparsity_rate)
                 group_step = fused_metric.shape[0] // max_group_nums
 
                 # get the public part of the mask of the module with dependencies
@@ -236,9 +236,15 @@ class DependencyAwareAllocator(SparsityAllocator):
                 for gid in range(max_group_nums):
                     _start = gid * group_step
                     _end = (gid + 1) * group_step
-                    if pruned_numel_per_group > 0:
-                        threshold = torch.topk(fused_metric[_start: _end].reshape(-1), pruned_numel_per_group, largest=False)[0].max()
-                        dependency_mask[_start: _end] = torch.gt(fused_metric[_start:_end], threshold).type_as(fused_metric)
+                    if kept_numel_per_group > 0:
+                        flatten_partial_fused_metric = fused_metric[_start: _end].reshape(-1)
+                        kept_indices = torch.topk(flatten_partial_fused_metric, kept_numel_per_group).indices
+                        flatten_partial_mask = torch.zeros_like(flatten_partial_fused_metric).scatter(0, kept_indices, 1.0)
+                        dependency_mask[_start: _end] = flatten_partial_mask.reshape_as(dependency_mask[_start: _end])
+                    else:
+                        # all zeros means this target will be whole masked, will break the model in most cases,
+                        # maybe replace this layer to identity layer in the future
+                        dependency_mask[_start: _end] = torch.zeros_like(dependency_mask[_start: _end])
 
                 # change the metric value corresponding to the public mask part to the minimum value
                 for module_name, targets_metric in sub_metrics.items():
@@ -262,8 +268,9 @@ class DependencyAwareAllocator(SparsityAllocator):
                 sparsity_rate = wrapper.config['total_sparsity']
                 prune_num = int(sparsity_rate * target_metric.numel())
                 if prune_num != 0:
-                    threshold = torch.topk(target_metric.reshape(-1), prune_num, largest=False)[0].max()
-                    shrinked_mask = torch.gt(target_metric, threshold).type_as(target_metric)
+                    flatten_metric = target_metric.reshape(-1)
+                    kept_indices = torch.topk(flatten_metric, target_metric.numel() - prune_num).indices
+                    shrinked_mask = torch.zeros_like(flatten_metric).scatter(0, kept_indices, 1.0).reshape_as(target_metric)
                 else:
                     # target_metric should have the same size as shrinked_mask
                     shrinked_mask = torch.ones_like(target_metric)

@@ -16,6 +16,7 @@ import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction'
 import PaginationTable from '@components/common/PaginationTable';
 import CopyButton from '@components/common/CopyButton';
 import TooltipHostIndex from '@components/common/TooltipHostIndex';
+import { getValue } from '@model/localStorage';
 
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -49,10 +50,11 @@ function TableList(props: TableListProps): any {
     const {tableSource} = props;
     // 通篇的类型跟之前的PR做对比
     const [displayedItems, setDisplayedItems] = useState([] as any);
-    const [displayedColumns, setDisplayedColumns] = useState(localStorage.getItem('columns') !== null
-    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    JSON.parse(localStorage.getItem('columns')!)
-    : defaultDisplayedColumns);
+    const [displayedColumns, setDisplayedColumns] = useState(localStorage.getItem(`${EXPERIMENT.profile.id}_columns`) !== null &&
+    getValue(`${EXPERIMENT.profile.id}_columns`) !== null
+        ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          JSON.parse(getValue(`${EXPERIMENT.profile.id}_columns`)!)
+        : defaultDisplayedColumns,);
     const [columns, setColumns] = useState([] as IColumn[]);
     const [customizeColumnsDialogVisible, setCustomizeColumnsDialogVisible] = useState(false);
     const [compareDialogVisible, setCompareDialogVisible] = useState(false);
@@ -70,7 +72,7 @@ function TableList(props: TableListProps): any {
     useEffect(() => {
         _updateTableSource();
 
-    // },[tableSource, sortInfo, searchItems]); // 总数据源，表格排序规则触发页面更新, 看代码 searchItmes不用写进来
+    // },[tableSource, sortInfo, searchItems]); // TODO总数据源，表格排序规则触发页面更新, 看代码 searchItmes不用写进来
     },[tableSource, sortInfo]); // 总数据源，表格排序规则触发页面更新, 看代码 searchItmes不用写进来
 
     /* Table basic function related methods */

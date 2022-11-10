@@ -219,14 +219,6 @@ class Tuner(Recoverable):
         # data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         pass
 
-    def import_customized_data(self, data: list[TrialRecord]) -> None:
-        """
-        Internal API under revising, not recommended for end users.
-        """
-        # Import resume data for avoiding duplications
-        # data: a list of dictionarys, each of which has at least two keys, 'parameter_id' and 'parameters'
-        pass
-
     def _on_exit(self) -> None:
         pass
 

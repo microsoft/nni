@@ -43,7 +43,7 @@ Usage
 # But in fact ``ModelSpeedup`` is a relatively independent tool, so you can use it independently.
 
 import torch
-from scripts.compression_mnist_model import TorchModel, device
+from nni_assets.compression.mnist_model import TorchModel, device
 
 model = TorchModel().to(device)
 # masks = {layer_name: {'weight': weight_mask, 'bias': bias_mask}}
