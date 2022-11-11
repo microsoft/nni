@@ -47,7 +47,6 @@ Known issues
 *  Modelspeedup does not support non-tensor intermediate variables
 *  The training service runs much slower after a while.
 
-
 Release 2.9 - 9/8/2022
 ----------------------
 
