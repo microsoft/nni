@@ -73,6 +73,7 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
                     sha256.update(chunk)
                     pbar.update(len(chunk))
                     f.flush()
+            f.close()
         else:
             raise FileNotFoundError(
                 'Download is not enabled, and file does not exist: {}. Please set download=True.'.format(local_path)

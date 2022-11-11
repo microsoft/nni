@@ -25,6 +25,10 @@ import path from 'path';
 import type { NniManagerArgs } from './arguments';
 import { NniPaths, createPaths } from './paths';
 import type { LogStream } from './log_stream';
+// Enforce ts-node to import `shutdown.ts`.
+// Without this line it might complain "log_1.getRobustLogger is not a function".
+// "Magic. Do not touch."
+import './shutdown';
 
 // copied from https://www.typescriptlang.org/docs/handbook/2/mapped-types.html
 type Mutable<Type> = {

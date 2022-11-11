@@ -33,6 +33,12 @@ class DartsLightningModule(BaseOneShotLightningModule):
     The current implementation corresponds to DARTS (1st order) in paper.
     Second order (unrolled 2nd-order derivatives) is not supported yet.
 
+    .. note::
+
+       DARTS is running a weighted sum of possible architectures under the hood.
+       Please bear in mind that it will be slower and consume more memory that training a single architecture.
+       The common practice is to down-scale the network (e.g., smaller depth / width) for speedup.
+
     .. versionadded:: 2.8
 
        Supports searching for ValueChoices on operations, with the technique described in
@@ -215,6 +221,12 @@ class GumbelDartsLightningModule(DartsLightningModule):
     * :class:`nni.retiarii.nn.pytorch.Cell`.
     * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
 
+    .. note::
+
+       GumbelDARTS is running a weighted sum of possible architectures under the hood.
+       Please bear in mind that it will be slower and consume more memory that training a single architecture.
+       The common practice is to down-scale the network (e.g., smaller depth / width) for speedup.
+
     {{module_notes}}
 
     {optimization_note}
@@ -263,6 +275,8 @@ class GumbelDartsLightningModule(DartsLightningModule):
 
     def on_train_epoch_start(self):
         if self.use_temp_anneal:
+            if self.trainer.max_epochs is None:
+                raise ValueError('Please set max_epochs for trainer when using temperature annealing.')
             self.temp = (1 - self.trainer.current_epoch / self.trainer.max_epochs) * (self.init_temp - self.min_temp) + self.min_temp
             self.temp = max(self.temp, self.min_temp)
 

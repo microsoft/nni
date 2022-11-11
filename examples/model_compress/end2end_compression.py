@@ -217,7 +217,7 @@ def main(args):
     }]
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    quantizer = QAT_Quantizer(model, config_list, optimizer)
+    quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
     quantizer.compress()
 
     # Step6. Quantization Aware Training

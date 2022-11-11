@@ -62,12 +62,12 @@ class EvaluatorBasedPruningScheduler(BasePruningScheduler):
         for key, value in def_kwargs.items():
             if key not in merged_kwargs and key in arg_names:
                 merged_kwargs[key] = value
-        diff = set(arg_names).difference(merged_kwargs.keys())
-        if diff:
-            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
         diff = set(merged_kwargs.keys()).difference(arg_names)
         if diff:
             raise TypeError(f"{self.__class__.__name__}.__init__() got {len(diff)} unexpected keyword argument: {diff}")
+        diff = set(arg_names).difference(merged_kwargs.keys())
+        if diff:
+            raise TypeError(f"{self.__class__.__name__}.__init__() missing {len(diff)} required positional argument: {diff}")
         return merged_kwargs
 
 

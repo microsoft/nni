@@ -53,7 +53,7 @@ Coarse-grained pruning or structured pruning is pruning a regular group of weigh
 
 Only :ref:`level-pruner` and :ref:`admm-pruner` support fine-grained pruning, all other pruners do some kind of structured pruning on weights.
 
-.. _dependency-awareode-for-output-channel-pruning:
+.. _dependency-aware-mode-for-output-channel-pruning:
 
 Dependency-aware Mode for Output Channel Pruning
 ------------------------------------------------
@@ -104,5 +104,7 @@ In this case, the ``dependency-aware pruner`` will
 In addition, for the convolutional layers that have more than one filter group,
 ``dependency-aware pruner`` will also try to prune the same number of the channels for each filter group.
 Overall, this pruner will prune the model according to the L1 norm of each filter and try to meet the topological constrains (channel dependency, etc) to improve the final speed gain after the speedup process. 
+
+.. Note:: Operations that will be recognized as having channel dependencies: add/sub/mul/div, addcmul/addcdiv, logical_and/or/xor
 
 In the dependency-aware mode, the pruner will provide a better speed gain from the model pruning.

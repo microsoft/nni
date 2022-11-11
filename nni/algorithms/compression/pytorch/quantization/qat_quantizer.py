@@ -228,27 +228,6 @@ class QAT_Quantizer(Quantizer):
             'quant_dtype': 'uint',
             'quant_scheme': 'per_tensor_affine'
         }]
-
-    **Multi-GPU training**
-
-    QAT quantizer natively supports multi-gpu training (DataParallel and DistributedDataParallel). Note that the quantizer
-    instantiation should happen before you wrap your model with DataParallel or DistributedDataParallel. For example:
-
-    .. code-block:: python
-
-        from torch.nn.parallel import DistributedDataParallel as DDP
-        from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
-
-        model = define_your_model()
-
-        model = QAT_Quantizer(model, **other_params)  # <--- QAT_Quantizer instantiation
-
-        model = DDP(model)
-
-        for i in range(epochs):
-            train(model)
-            eval(model)
-
     """
 
     def __init__(self, model, config_list, optimizer, dummy_input=None):

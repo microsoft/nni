@@ -319,6 +319,9 @@ class CGOEngineTest(unittest.TestCase):
         advisor._channel = protocol.LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
+        # this is because RetiariiAdvisor only works after `_advisor_initialized` becomes True.
+        # normally it becomes true when `handle_request_trial_jobs` is invoked
+        advisor._advisor_initialized = True
 
         remote = RemoteConfig(machine_list=[])
         remote.machine_list.append(RemoteMachineConfig(host='test', gpu_indices=[0,1,2,3]))

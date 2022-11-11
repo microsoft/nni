@@ -8,6 +8,7 @@ import { SingleAxis, MultipleAxes } from '@static/interface';
 import { Trial } from '@model/trial';
 import ChangeColumnComponent from '../ChangeColumnComponent';
 import { optimizeModeValue } from './optimizeMode';
+import { getValue } from '@model/localStorage';
 
 import 'parcoord-es/dist/parcoords.css';
 import '@style/button.scss';
@@ -56,9 +57,10 @@ class Para extends React.Component<ParaProps, ParaState> {
             customizeColumnsDialogVisible: false,
             availableDimensions: [],
             chosenDimensions:
-                localStorage.getItem('paraColumns') !== null
+                localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`) !== null &&
+                getValue(`${EXPERIMENT.profile.id}_paraColumns`) !== null
                     ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                      JSON.parse(localStorage.getItem('paraColumns')!)
+                      JSON.parse(getValue(`${EXPERIMENT.profile.id}_paraColumns`)!)
                     : []
         };
     }

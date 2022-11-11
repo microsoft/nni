@@ -77,7 +77,6 @@ def traverse_and_mutate_submodules(
     memo = {}
 
     module_list = []
-
     def apply(m):
         # Need to call list() here because the loop body might replace some children in-place.
         for name, child in list(m.named_children()):
@@ -280,16 +279,21 @@ class BaseOneShotLightningModule(pl.LightningModule):
             result.update(module.search_space_spec())
         return result
 
-    def resample(self) -> dict[str, Any]:
+    def resample(self, memo=None) -> dict[str, Any]:
         """Trigger the resample for each :attr:`nas_modules`.
         Sometimes (e.g., in differentiable cases), it does nothing.
+
+        Parameters
+        ----------
+        memo : dict[str, Any]
+            Used to ensure the consistency of samples with the same label.
 
         Returns
         -------
         dict
             Sampled architecture.
         """
-        result = {}
+        result = memo or {}
         for module in self.nas_modules:
             result.update(module.resample(memo=result))
         return result
@@ -384,7 +388,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         return optim_conf
 
-    def setup(self, stage=None):
+    def setup(self, stage: str = cast(str, None)):  # add default value to be backward-compatible
         # redirect the access to trainer/log to this module
         # but note that we might be missing other attributes,
         # which could potentially be a problem
@@ -396,7 +400,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         return self.model.setup(stage)
 
-    def teardown(self, stage=None):
+    def teardown(self, stage: str = cast(str, None)):
         return self.model.teardown(stage)
 
     def configure_architecture_optimizers(self) -> list[optim.Optimizer] | optim.Optimizer | None:
@@ -488,7 +492,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
                     self.model.lr_scheduler_step(cast(Any, scheduler), cast(int, opt_idx), None)
         except AttributeError:
             # lightning < 1.6
-            for lr_scheduler in self.trainer.lr_schedulers:
+            for lr_scheduler in self.trainer.lr_schedulers:  # type: ignore
                 if lr_scheduler['reduce_on_plateau']:
                     warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
                 if lr_scheduler['interval'] == interval and current_idx % lr_scheduler['frequency']:
@@ -514,6 +518,12 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
     def on_train_end(self):
         return self.model.on_train_end()
+
+    def on_validation_start(self):
+        return self.model.on_validation_start()
+
+    def on_validation_end(self):
+        return self.model.on_validation_end()
 
     def on_fit_start(self):
         return self.model.on_fit_start()

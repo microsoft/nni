@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import fsPromises from 'fs/promises';
+
 // for readability
 const singleQuote = "'";
 const doubleQuote = '"';
@@ -58,4 +60,14 @@ export function powershellString(str: string): string {
         str = str.replaceAll(singleQuote, singleQuote + singleQuote);
         return singleQuote + str + singleQuote;
     }
+}
+
+export function createScriptFile(path: string, content: string): Promise<void> {
+    // eslint-disable-next-line no-control-regex
+    if (path.endsWith('.ps1') && !/^[\x00-\x7F]*$/.test(content)) {
+        // PowerShell does not use UTF-8 by default.
+        // Add BOM to inform it if the script contains non-ASCII characters.
+        content = '\uFEFF' + content;
+    }
+    return fsPromises.writeFile(path, content, { mode: 0o777 });
 }
