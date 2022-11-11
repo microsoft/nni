@@ -137,7 +137,7 @@ class Preprocessor:
         for epoch_idx in range(epochs):
             for batch_idx, packed_batch in enumerate(dataloader):
                 uids, batch = packed_batch
-                soft_labels = self._teacher_predict(batch=batch)
+                soft_labels = self._teacher_predict(batch)
 
                 soft_labels = labels_split_fn(soft_labels)
 
