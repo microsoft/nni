@@ -5,6 +5,49 @@
 Change Log
 ==========
 
+Release 2.10 - xx/xx/xxxx
+-------------------------
+
+Neural Architecture Search
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*  Added deduplication for evolutionary search.
+*  Fixed the racing issue in RL strategy submit model.
+*  Fixed an issue introduced by the trial recovery feature.
+*  Fixed import error of ``Lightning`` in nas.
+
+Compression
+"""""""""""
+
+*  #3514
+*  Fixed the bug that speedup ``rand_like_with_shape`` is easy to overflow when ``dtype=torch.int8``.
+*  Fixed the bug when calling ``torch._C.parse_schema`` in pytorch < 1.9.0.
+*  Fixed the propagation error with view tensors in speedup.
+
+Hyper-parameter optimization
+""""""""""""""""""""""""""""
+
+*  Fixed a dependency issue of Anneal tuner by change Anneal tuner dependency to optional.
+*  Fixed a bug that tuner might loss connection in long experiments.
+
+Training service
+""""""""""""""""
+
+*  Fixed a bug that trial code directory cannot have non-English characters.
+
+Web portal
+""""""""""
+
+*  Fixed an error in HPO experiment hyper-parameters page.
+*  Fixed a link error in About menu on WebUI.
+
+Known issues
+""""""""""""
+
+*  Modelspeedup does not support non-tensor intermediate variables
+*  The training service runs much slower after a while.
+
+
 Release 2.9 - 9/8/2022
 ----------------------
 
