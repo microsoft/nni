@@ -23,12 +23,16 @@ import type { Command, CommandChannelServer } from './interface';
 
 let timeoutMilliseconds = 1000;
 
+const HttpRequestTimeout = 408;
+const HttpGone = 410;
+
 export class HttpChannelServer implements CommandChannelServer {
     private emitter: EventEmitter = new EventEmitter();
     private log: Logger;
     // the server can only send commands when the client requests, so it needs a queue
     private outgoingQueues: Map<string, CommandQueue> = new Map();
     private path: string;
+    private serving: boolean = false;
 
     constructor(name: string, urlPath: string) {
         this.log = getLogger(`HttpChannelManager.${name}`);
@@ -36,9 +40,15 @@ export class HttpChannelServer implements CommandChannelServer {
     }
 
     public start(): void {
+        this.serving = true;
         const channelPath = globals.rest.urlJoin(this.path, ':channel');
         globals.rest.registerSyncHandler('GET', channelPath, this.handleGet.bind(this));
         globals.rest.registerSyncHandler('PUT', channelPath, this.handlePut.bind(this));
+    }
+
+    public shutdown(): void {
+        this.serving = false;
+        this.outgoingQueues.forEach(queue => { queue.clear(); });
     }
 
     public getChannelUrl(channelId: string): string {
@@ -58,7 +68,7 @@ export class HttpChannelServer implements CommandChannelServer {
         const promise = this.getOutgoingQueue(channelId).asyncPop(timeoutMilliseconds);
         promise.then(command => {
             if (command === null) {
-                response.sendStatus(408);
+                response.sendStatus(this.serving ? HttpRequestTimeout : HttpGone);
             } else {
                 response.send(command);
             }
@@ -66,6 +76,11 @@ export class HttpChannelServer implements CommandChannelServer {
     }
 
     private handlePut(request: Request, response: Response): void {
+        if (!this.serving) {
+            response.sendStatus(HttpGone);
+            return;
+        }
+
         const channelId = request.params['channel'];
         const command = request.body;
         this.emitter.emit('receive', channelId, command);
@@ -108,6 +123,12 @@ class CommandQueue {
                 }
             }, timeout);
             return deferred.promise;
+        }
+    }
+
+    public clear(): void {
+        for (const consumer of this.consumers) {
+            consumer.resolve(null);
         }
     }
 }

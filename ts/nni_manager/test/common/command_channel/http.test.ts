@@ -21,17 +21,18 @@ const unicodeCommand = { type: '你好', content: '世界' };
 describe('## http command channel ##', () => {
     before(beforeHook);
 
-    it('init', () => testInit());
+    it('start', () => testStart());
     it('server <- client-1', () => testReceive('1'));
     it('server -> client-2 (before polling)', () => testSendBefore('2'));
     it('server <- client-2', () => testReceive('2'));
     it('server -> client-1 (short after polling)', () => testSendAfter('1', 10));
     it('server -> client-2 (long after polling)', () => testSendAfter('2', 30));
+    it('stop', () => testStop());
 
     after(afterHook);
 });
 
-async function testInit(): Promise<void> {
+async function testStart(): Promise<void> {
     UnitTestHelpers.setTimeoutMilliseconds(20);
     server = new HttpChannelServer('ut', 'ut');
     server.onReceive((channelId, command) => {
@@ -62,6 +63,14 @@ async function testSendAfter(id: string, delay: number): Promise<void> {
     assert.deepEqual(command, unicodeCommand);
 }
 
+async function testStop(): Promise<void> {
+    const promise = clientReceive('1');
+    await setTimeout(10);
+    server.shutdown();
+    const response = await promise;
+    assert.equal(response, null);
+}
+
 /* Helper and environment */
 
 async function clientSend(id: string, command: Command): Promise<void> {
@@ -73,7 +82,7 @@ async function clientSend(id: string, command: Command): Promise<void> {
     });
 }
 
-async function clientReceive(id: string): Promise<Command> {
+async function clientReceive(id: string): Promise<Command | null> {
     const url = server.getChannelUrl(id);
     for (let i = 0; i < 10; i++) {
         const r = await fetch(url);
@@ -82,6 +91,9 @@ async function clientReceive(id: string): Promise<Command> {
         }
         if (r.status === 408) {
             continue;
+        }
+        if (r.status === 410) {
+            return null;
         }
         throw new Error(`Unexpected status ${r.status}`);
     }
