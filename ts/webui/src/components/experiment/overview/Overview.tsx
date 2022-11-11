@@ -26,22 +26,21 @@ export const BestMetricContext = React.createContext({
 });
 
 const Overview = (): any => {
+    const { changeMetricGraphMode, changeEntries } = useContext(AppContext); // global
+
     const clickMaxTop = (event: React.SyntheticEvent<EventTarget>): void => {
         event.stopPropagation();
         // #999 panel active bgcolor; #b3b3b3 as usual
-        const { changeMetricGraphMode } = useContext(AppContext);
-        changeMetricGraphMode('max');
+        changeMetricGraphMode('Maximize');
     };
 
     const clickMinTop = (event: React.SyntheticEvent<EventTarget>): void => {
         event.stopPropagation();
-        const { changeMetricGraphMode } = useContext(AppContext);
-        changeMetricGraphMode('min');
+        changeMetricGraphMode('Minimize');
     };
 
     const updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            const { changeEntries } = useContext(AppContext);
             changeEntries(item.key);
         }
     };
@@ -49,7 +48,7 @@ const Overview = (): any => {
     const findBestTrials = (): Trial[] => {
         const bestTrials = TRIALS.sort();
         const { bestTrialEntries, metricGraphMode } = useContext(AppContext);
-        if (metricGraphMode === 'max') {
+        if (metricGraphMode === 'Maximize') {
             bestTrials.reverse().splice(JSON.parse(bestTrialEntries));
         } else {
             bestTrials.splice(JSON.parse(bestTrialEntries));
@@ -102,20 +101,20 @@ const Overview = (): any => {
                             <Stack horizontal horizontalAlign='end'>
                                 <DefaultButton
                                     onClick={clickMaxTop}
-                                    className={metricGraphMode === 'max' ? 'active' : ''}
-                                    styles={{ root: { minWidth: 70, padding: 0 } }}
+                                    className={metricGraphMode === 'Maximize' ? 'active' : ''}
+                                    styles={{ root: { width: 94, padding: 0 } }}
                                 >
                                     <Icon iconName='Market' />
-                                    <span className='max'>Max</span>
+                                    <span className='max'>Maximize</span>
                                 </DefaultButton>
                                 <div className='mincenter'>
                                     <DefaultButton
                                         onClick={clickMinTop}
-                                        className={metricGraphMode === 'min' ? 'active' : ''}
-                                        styles={{ root: { minWidth: 70, padding: 0 } }}
+                                        className={metricGraphMode === 'Minimize' ? 'active' : ''}
+                                        styles={{ root: { width: 94, padding: 0 } }}
                                     >
                                         <Icon iconName='MarketDown' />
-                                        <span className='max'>Min</span>
+                                        <span className='max'>Minimize</span>
                                     </DefaultButton>
                                 </div>
                                 <div>

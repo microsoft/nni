@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import * as d3 from 'd3';
 import { Dropdown, IDropdownOption, Stack, DefaultButton } from '@fluentui/react';
 import ParCoords from 'parcoord-es';
+import { AppContext } from '@/App';
+import { Trial } from '@model/trial';
 import { SearchSpace } from '@model/searchspace';
+import { getValue } from '@model/localStorage';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { SingleAxis, MultipleAxes } from '@static/interface';
-import { Trial } from '@model/trial';
 import ChangeColumnComponent from '../ChangeColumnComponent';
-import { optimizeModeValue } from './optimizeMode';
-import { getValue } from '@model/localStorage';
 
 import 'parcoord-es/dist/parcoords.css';
 import '@style/button.scss';
@@ -31,15 +31,15 @@ const innerChartMargins = {
     bottom: 20,
     left: 28
 };
-// class里的声明在前边的变量全局可用，可以储存值
-// function里面
+
+// TODO: class 全局变量，需要调试 
 let pcs: any;
 
 const Para = (props: ParaProps) => {
+    const { metricGraphMode, changeMetricGraphMode } = useContext(AppContext);
     const paraRef = React.createRef<HTMLDivElement>();
     const { trials, searchSpace } = props;
     const [selectedPercent, setSelectedPercent] = useState('1');
-    const [userSelectOptimizeMode, setUserSelectOptimizeMode] = useState(optimizeModeValue(EXPERIMENT.optimizeMode));
     const [primaryMetricKey, setPrimaryMetricKey] = useState('default');
     const [noChart, setNoChart] = useState(true);
     const [customizeColumnsDialogVisible, setCustomizeColumnsDialogVisible] = useState(false);
@@ -60,7 +60,8 @@ const Para = (props: ParaProps) => {
     // get user mode number 'max' or 'min'
     const updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            setUserSelectOptimizeMode(item.key.toString()); // 原理同 percentNum function
+            // setUserSelectOptimizeMode(item.key.toString()); // 原理同 percentNum function
+            changeMetricGraphMode(item.key.toString());
         }
     };
 
@@ -179,7 +180,8 @@ const Para = (props: ParaProps) => {
                 // set color for primary metrics
                 // `colorScale` is used to produce a color range, while `scale` is to produce a pixel range
                 colorScale = convertToD3Scale(v, false);
-                convertedTrials.sort((a, b) => (userSelectOptimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]));
+                // convertedTrials.sort((a, b) => (userSelectOptimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]));
+                convertedTrials.sort((a, b) => (metricGraphMode === 'Minimize' ? a[k] - b[k] : b[k] - a[k]));
                 // filter top trials
                 if (percent != 1) {
                     const keptTrialNum = Math.max(Math.ceil(convertedTrials.length * percent), 1);
@@ -215,8 +217,10 @@ const Para = (props: ParaProps) => {
         }
 
         if (convertedTrials.length === 0 || dimensions.length <= 1) {
+            console.info('---');
             return;
         }
+        console.info('pcs', pcs);
 
         const firstRun = pcs === undefined;
         if (firstRun) {
@@ -243,7 +247,8 @@ const Para = (props: ParaProps) => {
             pcs.color(d => (colorScale as any)(d[colorDim as any]));
         }
         pcs.render();
-        if (firstRun) {
+        // if (firstRun) {
+        if (convertedTrials.length >= 0) {
             setNoChart(false);
         }
 
@@ -254,7 +259,11 @@ const Para = (props: ParaProps) => {
     useEffect(() => {
         // FIXME: redundant update(comment for componentDidUpdate)
         renderParallelCoordinates();
-    }, [chosenDimensions, selectedPercent, userSelectOptimizeMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
+        // return function clearPCS() {
+        //     pcs = undefined;
+        // };
+    // }, [chosenDimensions, selectedPercent, userSelectOptimizeMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
+    }, [chosenDimensions, selectedPercent, metricGraphMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
 
     return (
         <div className='parameter'>
@@ -267,11 +276,12 @@ const Para = (props: ParaProps) => {
                     styles={{ root: { marginRight: 10 } }}
                 />
                 <Dropdown
-                    selectedKey={userSelectOptimizeMode}
+                    // selectedKey={userSelectOptimizeMode}
+                    selectedKey={metricGraphMode}
                     onChange={updateUserOptimizeMode}
                     options={[
-                        { key: 'maximize', text: 'Maximize' },
-                        { key: 'minimize', text: 'Minimize' }
+                        { key: 'Maximize', text: 'Maximize' },
+                        { key: 'Minimize', text: 'Minimize' }
                     ]}
                     styles={{ dropdown: { width: 100 } }}
                     className='para-filter-percent'

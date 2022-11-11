@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Stack, Dropdown, Toggle, IDropdownOption } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
+import { AppContext } from '@/App';
 import { Trial } from '@model/trial';
-import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import { TRIALS } from '@static/datamodel';
 import { TooltipForAccuracy } from '@static/interface';
 import { reformatRetiariiParameter } from '@static/function';
 import { gap15 } from '@components/fluent/ChildrenGap';
-import { optimizeModeValue } from './optimizeMode';
+
 import 'echarts/lib/chart/scatter';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -139,7 +140,7 @@ const generateBestCurveSeries = (trials: Trial[], finalKey: string, optimizeMode
         const trial = trials[i];
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const delta = trial.acc![finalKey] - best.acc![finalKey];
-        const better = optimizeMode === 'minimize' ? delta < 0 : delta > 0;
+        const better = optimizeMode === 'Minimize' ? delta < 0 : delta > 0;
         if (better) {
             data.push([
                 trial.sequenceId,
@@ -167,9 +168,9 @@ const generateBestCurveSeries = (trials: Trial[], finalKey: string, optimizeMode
 
 const DefaultPoint = (props: DefaultPointProps) => {
     const { hasBestCurve, trialIds, changeExpandRowIDs, chartHeight } = props;
+    const { metricGraphMode, changeMetricGraphMode } = useContext(AppContext);
     const [bestCurveEnabled, setBestCurveEnabled] = useState(false);
     const [defaultMetricOption, setGraph] = useState(EmptyGraph);
-    const [userSelectOptimizeMode, setuserSelectOptimizeMode] = useState(optimizeModeValue(EXPERIMENT.optimizeMode) as string);
     const [userSelectAccuracyNumberKey, setuserSelectAccuracyNumberKey] = useState('default');
     const loadingBestCurveLine = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
         setBestCurveEnabled(checked ?? true);
@@ -177,8 +178,8 @@ const DefaultPoint = (props: DefaultPointProps) => {
 
     useEffect(() => {
         // (trialIds: string[], hasBestCurve: boolean, finalKey: string, bestCurveEnabled: boolean, optimizeMode: string
-        setGraph(generateGraph(trialIds, hasBestCurve, userSelectAccuracyNumberKey, bestCurveEnabled, userSelectOptimizeMode));
-    }, [trialIds.length, bestCurveEnabled, userSelectAccuracyNumberKey, userSelectOptimizeMode]);
+        setGraph(generateGraph(trialIds, hasBestCurve, userSelectAccuracyNumberKey, bestCurveEnabled, metricGraphMode));
+    }, [trialIds.length, bestCurveEnabled, userSelectAccuracyNumberKey, metricGraphMode]);
 
     const pointClick = (params: any): void => {
         // [hasBestCurve: true]: is detail page, otherwise, is overview page
@@ -255,7 +256,7 @@ const DefaultPoint = (props: DefaultPointProps) => {
 
     const updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            setuserSelectOptimizeMode(item.key.toString());
+            changeMetricGraphMode(item.key.toString());
         }
     };
 
@@ -285,17 +286,18 @@ const DefaultPoint = (props: DefaultPointProps) => {
     if (trials.length > 0) {
         dictDropdown = trials[0].accuracyNumberTypeDictKeys;
     }
+    
     return (
         <div>
             {hasBestCurve && (
                 <Stack horizontal reversed tokens={gap15} className='default-metric'>
                     <Toggle label='Optimization curve' inlineLabel onChange={loadingBestCurveLine} />
                     <Dropdown
-                        selectedKey={userSelectOptimizeMode}
+                        selectedKey={metricGraphMode}
                         onChange={updateUserOptimizeMode}
                         options={[
-                            { key: 'maximize', text: 'Maximize' },
-                            { key: 'minimize', text: 'Minimize' }
+                            { key: 'Maximize', text: 'Maximize' },
+                            { key: 'Minimize', text: 'Minimize' }
                         ]}
                         styles={{ dropdown: { width: 100 } }}
                         className='para-filter-percent'
