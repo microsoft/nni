@@ -26,18 +26,30 @@ class _UidDataset(Dataset):
         return self._dataset
 
     def observe(self):
+        """
+        Observe mode means this dataset is on processing by `Preprocessor`
+        """
         self._replay_mode = False
 
     def replay(self):
+        """
+        Replay mode means this dataset will replay the previous samples.
+        """
         self._replay_mode = True
 
 
 class IndexedDataset(_UidDataset):
+    """
+    Return (index, origin_sample).
+    """
     def __getitem__(self, index):
         return str(index), self._dataset.__getitem__(index)
 
 
 class HashedDataset(_UidDataset):
+    """
+    Return (hash(origin_sample), origin_sample).
+    """
     def __init__(self, dataset: Dataset, hash_fn: Callable[[Any], str]):
         super().__init__(dataset)
         self._hash_fn = hash_fn
@@ -48,6 +60,9 @@ class HashedDataset(_UidDataset):
 
 
 class AugmentationDataset(_UidDataset):
+    """
+    Return (previous_uid/seed, origin_sample).
+    """
     def __init__(self, dataset: Dataset, transform: Callable[[Any], Any], seed: int | None = None,
                  aux_dataset_cls: Type[_UidDataset] | None = None, *aux_args, **aux_kwargs):
         if isinstance(dataset, _UidDataset) and aux_dataset_cls is None:

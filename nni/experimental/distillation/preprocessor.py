@@ -19,6 +19,46 @@ _logger = logging.getLogger(__name__)
 
 
 class Preprocessor:
+    """
+    Preprocessor is a utility class to generate offline distillation dataloader.
+
+    Parameters
+    ----------
+    teacher_predict
+        The teacher predict function, given an input and return the logits/predictions/data that distillation needs.
+        Usually, it could be an evaluation mode model.
+    dataset
+        The training dataset, it will be wrapped by a `_UidDataset` in preprocessor.
+        If this dataset is already an instance of `_UidDataset` and `uid_dataset_cls` is None, it will not be wrap again.
+        (Reference to what is _UidDataset ...)
+    create_dataloader
+        A factory function to create a dataloader for the given `dataset`.
+    keep_in_memory
+        By default, False. If using memory or disk to save the distillation data (`teacher_predict` outputs).
+    cache_folder
+        By default, None. The path to save the data if `keep_in_memory` is False. If `cache_folder` is None,
+        a temp folder will be created to save data.
+        This argument will be ignored if `keep_in_memory` is True.
+    cache_mode
+        (Not stable!)  By default, `pickle`. Using `pickle` or `hdf5` to save data.
+    checkpoint_folder
+        By default, None. The path to load storage state to recover the previous saved distillation data.
+    uid_dataset_cls
+        By default, None. If `dataset` is not an instance of `_UidDataset` and `uid_dataset_cls` is None,
+        `IndexedDataset` will be used to wrap `dataset`. `IndexedDataset` take the index passed to `Dataset.__getitem__` as data's uid.
+        `uid_dataset_cls` should be a subclass of `_UidDataset`, `uid_dataset_cls.__getitem__` will return a tuple of (uid, original_data).
+        (Official uid dataset and how to customize uid dataset, please refer ...)
+    uidd_args
+        Additional arguments pass to `uid_dataset_cls.__init__`.
+        If there are many extra arguments, recommended to directly set `uid_dataset_cls` to None, and then pass in the wrapped `dataset`.
+    uidd_kwargs
+        Additional keyword arguments pass to `uid_dataset_cls.__init__`.
+        If there are many extra arguments, recommended to directly set `uid_dataset_cls` to None, and then pass in the wrapped `dataset`.
+    labels_split_fn
+        Please refer `Preprocessor.preprocess_labels`.
+    labels_collate_fn
+        Please refer `Preprocessor.create_replay_dataloader`.
+    """
     def __init__(self, teacher_predict: Callable[[Any], Any], dataset: Dataset, create_dataloader: Callable[[Dataset], DataLoader],
                  keep_in_memory: bool = False, cache_folder: str | PathLike | None = None, cache_mode: Literal['pickle', 'hdf5'] = 'pickle',
                  checkpoint_folder: str | PathLike | None = None, uid_dataset_cls: Type[_UidDataset] | None = None,
@@ -48,24 +88,45 @@ class Preprocessor:
         setattr(dataloader, 'collate_fn', collate_fn)
         return dataloader
 
-    def _patched_label_dataloader(self):
+    def _patched_label_dataloader(self, labels_collate_fn: Callable[[List], Any] | None = None):
         dataloader = self._patched_uid_dataloader()
 
         uid_collate_fn = dataloader.collate_fn
 
         def collate_fn(data):
             uids, origin_batch = uid_collate_fn(data)
-            soft_labels = list(map(self._storage.select, uids))
-            soft_labels = self._labels_collate_fn(soft_labels)
-            return soft_labels, origin_batch
+            distil_labels = list(map(self._storage.select, uids))
+            distil_labels = labels_collate_fn(distil_labels)
+            return distil_labels, origin_batch
 
         setattr(dataloader, 'collate_fn', collate_fn)
         return dataloader
 
-    def preprocess_labels(self, epochs: int = 1, log_process: bool = True):
+    def preprocess_labels(self, epochs: int = 1, log_process: bool = True, labels_split_fn: Callable[[Any], List] | None = None):
+        """
+        Run the `teacher_predict` on the whole dataset, and record the output as distillation labels.
+
+        Parameters
+        ----------
+        epochs
+            By default, 1. It specifies how many epochs used to preprocess distillation labels, usually it can be set to 1.
+            And in some training methods, such as data augumentation, each time the same meta data selected from dataset
+            might be different after augumentation.
+            At this time, setting `>1` can run more epochs to obtain multiple epochs of distillation labels.
+        log_process
+            If logging during preprocess labels.
+        labels_split_fn
+            A function used to split the batched output of `teacher_predict` to list of output. If `labels_split_fn` is None,
+            `teacher_predict` is expected to return a batched tensor, and it will be auto split on dim 0 by this function.
+            For example, `teacher_predict` returns a tensor with size (32, 100), which is the probability of 100 classes for 32 samples,
+            then after `labels_split_fn`, it will be split to a list of tensor with 32 elements,
+            each tensor is the probability with size (100,).
+        """
         if self._preprocessed:
             _logger.info('Preprocessor has been preprocessed.')
             return
+
+        labels_split_fn = labels_split_fn if labels_split_fn is not None else self._labels_split_fn
 
         self._dataset.observe()
 
@@ -78,7 +139,7 @@ class Preprocessor:
                 uids, batch = packed_batch
                 soft_labels = self._teacher_predict(batch=batch)
 
-                soft_labels = self._labels_split_fn(soft_labels)
+                soft_labels = labels_split_fn(soft_labels)
 
                 assert isinstance(soft_labels, abc.Iterable)
                 list(map(self._storage.record, uids, soft_labels))
@@ -90,13 +151,33 @@ class Preprocessor:
         self._preprocessed = True
         self._dataset.replay()
 
-    def create_replay_dataloader(self):
+    def create_replay_dataloader(self, labels_collate_fn: Callable[[List], Any] | None = None):
+        """
+        Return a dataloader that concat the original dataset and the preprocessed distillation labels.
+        The iteration of dataloader will return (distil_labels, origin_batch).
+
+        Parameters
+        ----------
+        labels_collate_fn
+            Use to create replayed dataloader.
+            A function used to collate the samples from distillation storage. If `labels_collate_fn` is None,
+            the samples are excepted to be tensors and have same size, they will be batched and return.
+        """
+        labels_collate_fn = labels_collate_fn if labels_collate_fn is not None else _default_labels_collate_fn
         if not self._preprocessed:
             raise RuntimeError
         self._dataset.replay()
-        return self._patched_label_dataloader()
+        return self._patched_label_dataloader(labels_collate_fn)
 
     def save_checkpoint(self, checkpoint_folder: str | PathLike):
+        """
+        Save a checkpoint that can be used to re-initialize the `Preprocessor` and reload the preprocessed distillation labels.
+
+        Parameters
+        ----------
+        checkpoint_folder
+            The directory to save checkpoint.
+        """
         root_path = Path(checkpoint_folder).absolute()
         root_path.mkdir(parents=True, exist_ok=True)
         self._storage.save_checkpoint(root_path)

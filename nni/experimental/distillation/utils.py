@@ -8,7 +8,6 @@ from typing import Dict, List, Union
 
 import numpy
 import torch
-import torch.nn.functional as F
 
 
 _DISTIL_DATA = Union[torch.Tensor, List[torch.Tensor], Dict[str, torch.Tensor]]
@@ -58,7 +57,3 @@ def pickle_load(file_path):
     assert load_path.exists(), f'{file_path} is not exist.'
     with load_path.open(mode='rb') as f:
         return pickle.load(f)
-
-
-# def kl_div_distil(output: torch.Tensor, target: torch.Tensor, temperature: float = 2., reduction: str = 'batchmean'):
-#     return F.kl_div(F.log_softmax(output / temperature, dim=-1), F.softmax(target / temperature, dim=-1), reduction=reduction) * (temperature ** 2)

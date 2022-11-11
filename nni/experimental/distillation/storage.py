@@ -28,6 +28,9 @@ SETTING_FILENAME = 'uid2filename.json'
 
 class _DistilStorage:
     def __len__(self) -> int:
+        """
+        Return how many distillation labels/data have been recorded.
+        """
         raise NotImplementedError()
 
     def record(self, uid: str, data: Any):
@@ -37,6 +40,9 @@ class _DistilStorage:
         raise NotImplementedError()
 
     def get_uids(self) -> List[str]:
+        """
+        Get uid list of recorded distillation labels.
+        """
         raise NotImplementedError()
 
     def save_checkpoint(self, checkpoint_folder: str | PathLike):
@@ -44,10 +50,16 @@ class _DistilStorage:
 
     @classmethod
     def from_checkpoint(cls, checkpoint_folder: str | PathLike):
+        """
+        From checkpoint recover distil storage.
+        """
         raise NotImplementedError()
 
 
 class MemoryStorage(_DistilStorage):
+    """
+    Cache the distillation labels in memory.
+    """
     def __init__(self) -> None:
         self._uid2data = {}
 
@@ -97,6 +109,10 @@ class MemoryStorage(_DistilStorage):
 
 
 class FileStorage(_DistilStorage):
+    """
+    Cache the distillation labels on disk.
+    Under each label will be saved as a file named `{uid}.pkl` under `cache_folder`.
+    """
     def __init__(self, cache_folder: str | PathLike):
         self._cache_folder = Path(cache_folder).absolute()
         self._data_folder = self._cache_folder / 'data'
@@ -129,9 +145,12 @@ class FileStorage(_DistilStorage):
             json_tricks.dump(self._uid2filename, f, indent=4)
 
     def cleanup(self):
+        """
+        Cleanup the saved files under `cache_folder`.
+        """
         cleanup_filename = set(self._uid2filename.values())
-        if Path(self._cache_folder / 'uid2filename.json').exists():
-            with Path(self._cache_folder / 'uid2filename.json').open(mode='r') as f:
+        if Path(self._cache_folder / SETTING_FILENAME).exists():
+            with Path(self._cache_folder / SETTING_FILENAME).open(mode='r') as f:
                 uid2filename: Dict[str, str] = json_tricks.load(f)
                 cleanup_filename = cleanup_filename.difference(uid2filename.values())
         for filename in cleanup_filename:
@@ -163,6 +182,7 @@ class FileStorage(_DistilStorage):
         return storage
 
 
+# NOTE: Under developing...
 class HDF5Storage(_DistilStorage):
     def __init__(self, cache_folder: str | PathLike):
         if h5py is None:
@@ -216,13 +236,13 @@ def create_storage(keep_in_memory: bool = False, cache_folder: str | PathLike | 
     elif cache_mode == 'pickle':
         storage_cls = FileStorage
         if cache_folder is None:
-            cache_folder = create_temp_folder()
+            cache_folder = _create_temp_folder()
         storage_args = []
         storage_kwargs = {'cache_folder': cache_folder}
     elif cache_mode == 'hdf5':
         storage_cls = HDF5Storage
         if cache_folder is None:
-            cache_folder = create_temp_folder()
+            cache_folder = _create_temp_folder()
         storage_args = []
         storage_kwargs = {'cache_folder': cache_folder}
 
@@ -233,7 +253,7 @@ def create_storage(keep_in_memory: bool = False, cache_folder: str | PathLike | 
         return storage_cls(*storage_args, **storage_kwargs)
 
 
-def create_temp_folder():
+def _create_temp_folder():
     temp_folder = tempfile.mkdtemp(prefix='nni_distil_preprocessor_')
     info_msg = f'Created temp directory {temp_folder}'
     _logger.info(info_msg)
