@@ -1,10 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  A simple GPU scheduler used by local and remote training services.
+ **/
+
 import { getLogger } from 'common/log';
-import { GpuSystemInfo, collectGpuInfo } from './collect_info';
+import { GpuSystemInfo, collectGpuInfo as origCollectGpuInfo } from './collect_info';
 
 const logger = getLogger('GpuScheduler');
+
+let collectGpuInfo = origCollectGpuInfo;  // for ut
 
 export interface ScheduleRestrictions {
     onlyAcceptIndices?: number[];
@@ -14,9 +20,9 @@ export interface ScheduleRestrictions {
 
 interface SchedulerGpuInfo {
     index: number;
-    util: number;
-    coreUtil: number;
-    memUtil: number;
+    util: number;  // theoretical utilization calculated by NNI's trialGpuNumber
+    coreUtil: number;  // real GPU core utilization (0 ~ 1)
+    memUtil: number;  // real GPU memory utilization (0 ~ 1)
     active: boolean;
     computeActive: boolean;
 }
@@ -32,6 +38,11 @@ export class GpuScheduler {
     private gpus: SchedulerGpuInfo[] = [];
     private trials: SchedulerTrialInfo[] = [];
 
+    /**
+     *  Initialize the scheduler.
+     *
+     *  If there is no GPU found, throw error.
+     **/
     public async init(): Promise<void> {
         const info = await collectGpuInfo(true);
         if (info === null) {
@@ -55,10 +66,17 @@ export class GpuScheduler {
         this.updateGpus(info);
     }
 
-    public async update(forceUpdate?: boolean): Promise<void> {
-        const info = await collectGpuInfo(forceUpdate);
+    /**
+     *  Update GPUs' utilization info.
+     *
+     *  If `force` is not true, it may use cached result.
+     *
+     *  This is normally unnecessary because it will implicitly update before scheduling.
+     **/
+    public async update(force?: boolean): Promise<void> {
+        const info = await collectGpuInfo(force);
         if (info === null) {
-            if (forceUpdate) {
+            if (force) {
                 throw new Error('GpuScheduler: Failed to update GPU info');
             }
             return;
@@ -70,17 +88,45 @@ export class GpuScheduler {
         this.updateGpus(info);
     }
 
+    /**
+     *  Schedule a trial and return allocated GPU indices.
+     *
+     *  If the trial cannot be scheduled for now, return `null`.
+     *  If the trial requires more then physical GPUs, throw error.
+     *
+     *  This scheduler does NOT monitor the trial's life span.
+     *  The caller must invokes `release()` or `releaseAll()` later.
+     *
+     *  `gpuNumber` can either be an integer or a float between 0 and 1.
+     *
+     *  The `restrictions` parameter may contain following options:
+     *
+     *  - onlyAcceptIndices:
+     *
+     *      Limit usable GPUs by index.
+     *      This is `gpuIndices` in experiment config.
+     *
+     *  - rejectActiveGpus:
+     *
+     *      Do not use GPUs with running processes.
+     *      This is reversed `useActiveGpu` in experiment config.
+     *
+     *  - rejectComputeActiveGpus:
+     *
+     *      Do not use GPUs with CUDA processes, but still use GPUs with graphics processes.
+     *      This is useful for desktop systems with graphical interface.
+     **/
     public async schedule(
             experimentId: string,
             trialId: string,
             gpuNumber: number,
-            restrictions: ScheduleRestrictions): Promise<number[] | null> {
+            restrictions?: ScheduleRestrictions): Promise<number[] | null> {
 
         if (gpuNumber >= this.gpus.length) {
             throw new Error(`GpuScheduler: Only have ${this.gpus.length} GPUs, requesting ${gpuNumber}`);
         }
 
-        const gpus = this.sortGpus(restrictions);
+        const gpus = this.sortGpus(restrictions ?? {});
 
         if (gpuNumber < 1) {
             const gpu = gpus[0];
@@ -108,10 +154,18 @@ export class GpuScheduler {
         }
     }
 
+    /**
+     *  Release a trial's allocated GPUs
+     **/
     public async release(experimentId: string, trialId: string): Promise<void> {
         this.releaseByFilter(trial => (trial.experimentId === experimentId && trial.trialId === trialId));
     }
 
+    /**
+     *  Release all trials of an experiment.
+     *
+     *  Useful when the experiment is shutting down or has lost response.
+     **/
     public async releaseAll(experimentId: string): Promise<void> {
         logger.info('Release whole experiment', experimentId);
         this.releaseByFilter(trial => (trial.experimentId === experimentId));
@@ -136,7 +190,7 @@ export class GpuScheduler {
     }
 
     private sortGpus(restrict: ScheduleRestrictions): SchedulerGpuInfo[] {
-        let gpus = this.gpus;
+        let gpus = this.gpus.slice();  // copy for in-place sort
         if (restrict.onlyAcceptIndices) {
             gpus = gpus.filter(gpu => restrict.onlyAcceptIndices!.includes(gpu.index));
         }
@@ -147,6 +201,10 @@ export class GpuScheduler {
             gpus = gpus.filter(gpu => !gpu.computeActive);
         }
 
+        // prefer the gpu with lower theoretical utilization;
+        // then the gpu without competing processes;
+        // then the gpu with more free memory;
+        // and finally the gpu with lower cuda core load.
         return gpus.sort((a, b) => {
             if (a.util !== b.util) {
                 return a.util - b.util;
@@ -160,7 +218,10 @@ export class GpuScheduler {
             if (a.memUtil !== b.memUtil) {
                 return a.memUtil - b.memUtil;
             }
-            return a.coreUtil - b.coreUtil;
+            if (a.coreUtil !== b.coreUtil) {
+                return a.coreUtil - b.coreUtil;
+            }
+            return a.index - b.index;
         });
     }
 
@@ -171,5 +232,15 @@ export class GpuScheduler {
             this.gpus[trial.gpuIndex].util -= trial.util;
         });
         this.trials = this.trials.filter(trial => !filter(trial));
+    }
+}
+
+export namespace UnitTestHelpers {
+    export function mockGpuInfo(info: GpuSystemInfo): void {
+        collectGpuInfo = (_?: boolean) => Promise.resolve(info);
+    }
+
+    export function getGpuUtils(scheduler: GpuScheduler): number[] {
+        return (scheduler as any).gpus.map((gpu: SchedulerGpuInfo) => gpu.util);
     }
 }

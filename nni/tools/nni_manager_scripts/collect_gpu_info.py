@@ -1,6 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""
+Collect GPU utilization metrics, and debug info if ``--detail`` is specified.
+Results are printed to stdout in JSON format.
+
+See `ts/nni_manager/common/gpu_scheduler/collect_info` for details.
+"""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
