@@ -15,9 +15,13 @@ _logger.setLevel(logging.INFO)
 
 STD_DELTA = 1e-6
 
+seeds = {
+    'inter_var': None,
+    'weight': None,
+}
 
 class AutoMaskInference:
-    def __init__(self, out_debugname, module, speedup, dummy_input, input_debugname, in_masks, weight_mask=None,
+    def __init__(self, out_debugname, module, speedup, dummy_input, weight_mask=None,
                  name=None, state_dict=None):
         """
         This class will infer the mask of the target module automatically.
@@ -63,16 +67,6 @@ class AutoMaskInference:
         assert isinstance(dummy_input, list)
         # if there are multiple input variables
         self.dummy_input = tuple(dummy_input)
-        self.input_debugname = input_debugname
-        
-        # Initialize the masks for input tensors
-        self.in_masks = in_masks
-        for in_id, _ in enumerate(self.in_masks):
-            if self.in_masks[in_id] is None and \
-                    isinstance(self.dummy_input[in_id], torch.Tensor):
-                # if the input mask is None then create a all-ones mask for corresponding input tensor
-                self.in_masks[in_id] = torch.ones_like(self.dummy_input[in_id])
-                # ones_like will put the created mask on the same device with the dummy_input
 
         # Initialize the mask for output tensors
         self.orig_output = speedup.internal_result[out_debugname]
@@ -115,6 +109,16 @@ class AutoMaskInference:
         self.batch_dim = speedup.batch_dim
         self.batch_size = speedup.confidence
 
+    def update_input_info(self, in_masks):
+        # Initialize the masks for input tensors
+        self.in_masks = in_masks
+        for in_id, _ in enumerate(self.in_masks):
+            if self.in_masks[in_id] is None and \
+                    isinstance(self.dummy_input[in_id], torch.Tensor):
+                # if the input mask is None then create a all-ones mask for corresponding input tensor
+                self.in_masks[in_id] = torch.ones_like(self.dummy_input[in_id])
+                # ones_like will put the created mask on the same device with the dummy_input
+
     def init_and_apply(self, start=0.1, end=8.0):
         input = self.randomize_input(self.dummy_input, start, end)
         input = self.apply_input_mask(input)
@@ -142,14 +146,20 @@ class AutoMaskInference:
                     # this tensor, because our tensor scrambling is on the batch
                     # dimention. For example, if the tensor is a scalar(returned
                     # by the size operator), then we will skip this tensor
+                    seeds['inter_var'] += 1
+                    torch.manual_seed(seeds['inter_var'])
                     randomize_tensor(tensor, start, end)
+                    torch.manual_seed(100)
 
         return input
 
     def randomize_weight(self, start, end):
         with torch.no_grad():
             for weight_key in self.saved_weights.keys():
+                seeds['weight'] += 1
+                torch.manual_seed(seeds['weight'])
                 randomize_tensor(self.module.get_parameter(weight_key).data, start, end)
+                torch.manual_seed(100)
 
     def zero_grad(self):
         """
@@ -165,11 +175,11 @@ class AutoMaskInference:
                     if tensor.grad is not None:
                         tensor.grad.data.zero_()
 
-    def requires_grad_(self, flag=True):
+    def requires_grad_(self, dummy_input, flag=True):
         """
         Set the requires_grad of input tensor and parameters to flag.
         """
-        for t_in in self.dummy_input:
+        for t_in in dummy_input:
             if isinstance(t_in, torch.Tensor) and t_in.dtype in torch_float_dtype:
                 # only float type can require the gradient
                 # enable the auto gradient
@@ -191,8 +201,9 @@ class AutoMaskInference:
                     # issue-4540 when two tensors are multiplied, the constants part make
                     # the propagation weaker, and lead to shape misaligment. Currently, we
                     # donnot support the constant folding, so, we just remove the constant here
-                    in_tensor.data = in_tensor.data * \
-                        self.in_masks[tid]
+                    in_tensor.data = in_tensor.data * self.in_masks[tid]
+                    # in_tensor.data *= self.in_masks[tid]
+                    # in_tensor *= self.in_masks[tid]
         return input
 
     def apply_weight_mask(self):
@@ -272,8 +283,6 @@ class AutoMaskInference:
         else:
             # calculate the std of the output among batch dimension
             std = torch.std(tout, dim=0)
-            # calculate the mean value of the output among the batch dimension
-            mean = torch.mean(tout, dim=0)
             mask_pos = std < STD_DELTA
             out_mask[:, mask_pos] = 0
         return out_mask
@@ -311,16 +320,17 @@ class AutoMaskInference:
                     # set the same mask value for the whole batch
                     self.out_masks[oid][batchid][_grad_zero] = 0
 
-    def update_indirect_weight_mask(self, output):
-        if output.grad_fn is None:
-            # the output does not have the gradient function
-            return
+    def update_indirect_weight_mask_helper(self, output, out_mask):
         # Note: output maybe tensor or list/tuple of tensors
         if isinstance(output, torch.Tensor):
-            output.backward(self.out_masks)
-        elif isinstance(output, list) or isinstance(output, tuple):
-            for tid, t_out in enumerate(output):
-                t_out.backward(self.out_masks[tid])
+            assert isinstance(out_mask, torch.Tensor)
+            if output.grad_fn is not None:
+                output.backward(out_mask)
+        else:
+            assert not isinstance(out_mask, torch.Tensor)
+
+    def update_indirect_weight_mask(self, output):
+        map_aggregate_zip(self.update_indirect_weight_mask_helper, output, self.out_masks)
 
         # update the sparsity of the paramters
         if isinstance(self.module, nn.Module):
@@ -343,10 +353,10 @@ class AutoMaskInference:
         
         self.update_indirect_out_mask()
 
-        self.requires_grad_(True)
         # Forward inference with auto gradient enabled
         # Note: tensors that need gradient cannot be used in the in-place operator
         the_dummy_input = self.init_and_apply()
+        self.requires_grad_(the_dummy_input, True)
         # Some operator may have the in_place operations, so we need to clone the input
         # before passing to the self.module
         the_dummy_input = [x.clone() for x in the_dummy_input]

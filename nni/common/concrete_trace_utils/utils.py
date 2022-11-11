@@ -44,7 +44,7 @@ def map_aggregate_zip(fn: Callable, arg0, *args) -> Any:
             assert keys_len == len(keys)
         return {k: map_aggregate_zip(fn, arg0[k], *(arg[k] for arg in args)) for k in keys}
     else:
-        assert not isinstance(arg0, slice)
+        # assert not isinstance(arg0, slice)
         return fn(arg0, *args)
 
 def map_aggregate(fn: Callable, a) -> Any:

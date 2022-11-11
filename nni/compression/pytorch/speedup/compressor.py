@@ -5,7 +5,8 @@ import copy
 
 import logging
 from pathlib import Path
-import queue
+from collections import deque
+# import queue
 
 import torch
 import torch.nn as nn
@@ -14,10 +15,9 @@ from nni.common.graph_utils import build_module_graph
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
-from .infer_mask import AutoMaskInference
+from .infer_mask import AutoMaskInference, seeds
 from .jit_translate import jit_to_python_function
 from ..utils import rand_like_with_shape
-
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
@@ -72,7 +72,7 @@ class ModelSpeedup:
             dummy_input, confidence, batch_dim)
         self.torch_graph = build_module_graph(model, self.dummy_input)
         # dict object to save the auto inferences objects of the submodules
-        self.auto_inferences = {}
+        self.auto_inferences: dict[str, AutoMaskInference] = {}
         # the index dict to find the corresponding torch._C.Value object
         # according to the debug name
         # we need the dummy_input to infer the mask automaticlly, so we save
@@ -202,26 +202,25 @@ class ModelSpeedup:
 
         return dummy_input, debugnames
 
-    def update_direct_sparsity(self, node):
+    def propagate_orig(self, node):
         """
         Update the direct sparsity for the target node. Here the direct sparsity
         means that the sparsity in the output tensor that caused by the sparsity
         in the input tensors/weight tensors.
         """
-        # this name is consistent with the name returned by named_modules()
         module_name = node.name
-        _logger.info('Update mask for %s', module_name)
         unique_name = node.unique_name
         assert len(
             node.outputs) == 1, 'The number of the output should be one after the Tuple unpacked manually'
         out_debugname = node.outputs[0]
+        _logger.info('Propagate variables for %s', unique_name)
         
         dummy_input, input_debugname = self._prepare_dummy_input(node)
+        self.input_debugnames[unique_name] = input_debugname
         
         # get the input mask from self.masks
         # Note: the input mask of the successor nodes are
         # already created by the predecessor node
-        in_masks = [self.masks[debugname] for debugname in input_debugname]
         if node.type == 'func':
             # we cannot get the runable function directly from the jit traced
             # graph, so we translate it back to python function, Note: the function
@@ -237,8 +236,8 @@ class ModelSpeedup:
             self.internal_result[out_debugname] = func(*dummy_input)
             
             # function doesn't have weights
-            _auto_infer = AutoMaskInference(
-                out_debugname, func, self, dummy_input, input_debugname, in_masks)
+            auto_infer = AutoMaskInference(
+                out_debugname, func, self, dummy_input)
         else:
             weight_mask = None
             if module_name in self.masks:
@@ -248,23 +247,35 @@ class ModelSpeedup:
             # the successor nodes can take these output tensors as inputs.
             self.internal_result[out_debugname] = module(*dummy_input)
             
-            _auto_infer = AutoMaskInference(
-                out_debugname, module, self, dummy_input, input_debugname, in_masks, weight_mask,
+            auto_infer = AutoMaskInference(
+                out_debugname, module, self, dummy_input, weight_mask,
                 state_dict=copy.deepcopy(module.state_dict()))
-        self.auto_inferences[unique_name] = _auto_infer
-        _auto_infer.name = node.unique_name
+        auto_infer.name = unique_name
+        self.auto_inferences[unique_name] = auto_infer
+        
+    def update_direct_sparsity(self, node):
+        module_name = node.name
+        unique_name = node.unique_name
+        out_debugname = node.outputs[0]
+        _logger.info('Update mask for %s', unique_name)
+        auto_infer = self.auto_inferences[unique_name]
 
-        _auto_infer.update_direct_sparsity()
+        input_debugname = self.input_debugnames[unique_name]
+        # in_masks = [self.masks[debugname] for debugname in input_debugname]
+        in_masks = [self.intermediate_masks[debugname] for debugname in input_debugname]
+        auto_infer.update_input_info(in_masks)
+        auto_infer.update_direct_sparsity()
         # update the mask tensor and the internal output of the submodules
         # after manually unpack the tuple/list of tensors, the number of the outputs
         # of each node should always be one(Except for the TupleUnpack node at the end
         # of the whole model)
         
         # update the output mask into self.masks
-        self.masks[out_debugname] = _auto_infer.out_masks
+        # self.masks[out_debugname] = auto_infer.out_masks
+        self.intermediate_masks[out_debugname] = auto_infer.out_masks
         # update the parameter mask of the node
 
-        self.masks[module_name] = _auto_infer.weight_mask
+        self.masks[module_name] = auto_infer.weight_mask
 
     def update_indirect_sparsity(self, node):
         """
@@ -284,6 +295,7 @@ class ModelSpeedup:
             The target node to update the indirect sparsity
         """
         unique_name = node.unique_name
+        input_debugname = self.input_debugnames[unique_name]
 
         if unique_name in self.auto_inferences and self.auto_inferences[unique_name] is not None:
             # if the auto inference object already in self.auto_inference, then
@@ -295,7 +307,7 @@ class ModelSpeedup:
             auto_infer.update_indirect_sparsity()
             # pass the gradient to the predecessor nodes
             for in_id, tin in enumerate(auto_infer.dummy_input):
-                debug_name = auto_infer.input_debugname[in_id]
+                debug_name = input_debugname[in_id]
 
                 last_output = self.internal_result[debug_name]
                 # if isinstance(last_output, torch.Tensor):
@@ -337,6 +349,60 @@ class ModelSpeedup:
             assert value is not None, errmsg
             return value
 
+    def direct_order(self):
+        in_degree = {}
+        # visit_queue = queue.Queue()
+        visit_queue = deque()
+        for node in self.torch_graph.nodes_py.nodes_op:
+            predecessors = self.torch_graph.find_predecessors(node.unique_name)
+            predecessors = sorted(set(predecessors), key = predecessors.index)
+            if len(predecessors) == 0:
+                # visit_queue.put(node)
+                visit_queue.append(node)
+            else:
+                in_degree[node.unique_name] = len(predecessors)
+        # while not visit_queue.empty():
+        while len(visit_queue) != 0:
+            # node = visit_queue.get()
+            node = visit_queue.popleft()
+            successors = self.torch_graph.find_successors(node.unique_name)
+            successors = sorted(set(successors), key = successors.index)
+            for successor in successors:
+                in_degree[successor] -= 1
+                if in_degree[successor] == 0:
+                    # visit_queue.put(self.torch_graph.name_to_node[successor])
+                    visit_queue.append(self.torch_graph.name_to_node[successor])
+                    in_degree.pop(successor)
+            yield node
+        assert len(in_degree) == 0
+
+    def indirect_order(self):
+        out_degree = {}
+        # visit_queue = queue.Queue()
+        visit_queue = deque()
+        for node in self.torch_graph.nodes_py.nodes_op:
+            successors = self.torch_graph.find_successors(node.unique_name)
+            successors = sorted(set(successors), key = successors.index)
+            if len(successors) == 0:
+                # visit_queue.put(node)
+                visit_queue.append(node)
+            else:
+                out_degree[node.unique_name] = len(successors)
+        # while not visit_queue.empty():
+        while len(visit_queue) != 0:
+            # node = visit_queue.get()
+            node = visit_queue.popleft()
+            predecessors = self.torch_graph.find_predecessors(node.unique_name)
+            predecessors = sorted(set(predecessors), key = predecessors.index)
+            for predecessor in predecessors:
+                out_degree[predecessor] -= 1
+                if out_degree[predecessor] == 0:
+                    # visit_queue.put(self.torch_graph.name_to_node[predecessor])
+                    visit_queue.append(self.torch_graph.name_to_node[predecessor])
+                    out_degree.pop(predecessor)
+            yield node
+        assert len(out_degree) == 0
+
     def infer_modules_masks(self):
         """
         Infer the mask for all layers in the module, this function can be divided into
@@ -344,14 +410,14 @@ class ModelSpeedup:
         of the mask. We keep repeating these two steps until the masks of the model doesn't
         change.
         """
+        self.input_debugnames = {}
+        self.intermediate_masks = {}
+
         # unpack the tensor tuple/list before the mask inference
         self.torch_graph.unpack_manually()
         # find the input/ouput tensor of the whole graph
-        graph_input = []
-        graph_output = []
         for name, nodeio in self.torch_graph.nodes_py.nodes_io.items():
             if nodeio.input_or_output == 'input':
-                graph_input.append((name, nodeio))
                 # also put the graph input tensor into the internal_result
                 # TODO if we can find the corresponding relation between the value node
                 # and the dummy_inputs, we can use the inputs value in the dummy_input
@@ -359,45 +425,42 @@ class ModelSpeedup:
                 self.internal_result[name] = value
                 # create the mask tensor for the input value
                 if isinstance(self.internal_result[name], torch.Tensor):
-                    self.masks[name] = torch.ones_like(value)
+                    torch.manual_seed(100)
+                    self.internal_result[name] = torch.rand_like(value)
+                    self.intermediate_masks[name] = torch.ones_like(value)
                     # self.constant[nasme] = torch.zeros_like(value)
-            elif nodeio.input_or_output == 'output':
-                graph_output.append((name, nodeio))
         # count the degree for the node in the graph
-        in_degree = {}
-        out_degree = {}
-        visit_queue = queue.Queue()
-        for node in self.torch_graph.nodes_py.nodes_op:
-            successors = self.torch_graph.find_successors(node.unique_name)
-            out_degree[node.unique_name] = len(successors)
-            predecessors = self.torch_graph.find_predecessors(node.unique_name)
-            in_degree[node.unique_name] = len(predecessors)
-            if in_degree[node.unique_name] == 0:
-                visit_queue.put(node)
-        # Forward mask inference
-        while not visit_queue.empty():
-            curnode = visit_queue.get()
-            # forward mask inference for curnode
-            self.update_direct_sparsity(curnode)
-            successors = self.torch_graph.find_successors(curnode.unique_name)
-            for successor in successors:
-                in_degree[successor] -= 1
-                if in_degree[successor] == 0:
-                    visit_queue.put(self.torch_graph.name_to_node[successor])
-        # backward mask inference
-        for unique_name in out_degree:
-            if out_degree[unique_name] == 0:
-                visit_queue.put(self.torch_graph.name_to_node[unique_name])
-        while not visit_queue.empty():
-            curnode = visit_queue.get()
-            self.update_indirect_sparsity(curnode)
-            predecessors = self.torch_graph.find_predecessors(
-                curnode.unique_name)
-            for predecessor in predecessors:
-                out_degree[predecessor] -= 1
-                if out_degree[predecessor] == 0:
-                    visit_queue.put(self.torch_graph.name_to_node[predecessor])
-
+        torch.manual_seed(100)
+        seeds['inter_var'] = 1000
+        seeds['weight'] = 1000
+        for node in self.direct_order():
+            self.propagate_orig(node)
+        print('inter var1:')
+        print([(k, torch.sum(v.orig_output)) for k, v in self.auto_inferences.items()])
+        print('inter var1.5:')
+        print([(k, v.orig_output.grad is None) for k, v in self.auto_inferences.items()])
+        torch.manual_seed(100)
+        seeds['inter_var'] = 1000
+        seeds['weight'] = 1000
+        for node in self.direct_order():
+            self.update_direct_sparsity(node)
+        print('inter var2:')
+        print([(k, [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] for i in v.in_masks]) for k, v in self.auto_inferences.items()])
+        print('inter var3:')
+        print([(k, (torch.manual_seed(100), torch.sum(torch.rand_like(v.out_masks.to(torch.float)) * v.out_masks))[1]) for k, v in self.auto_inferences.items()])
+        print('inter var4:')
+        print([(ko, [(ki, (torch.manual_seed(100), torch.sum(torch.rand_like(vi.to(torch.float)) * vi))[1]) for ki, vi in vo.items()]) for ko, vo in self.masks.items() if not ko.startswith('.')])
+        print('inter var4.5:')
+        print([(k, v.orig_output.grad is None) for k, v in self.auto_inferences.items()])
+        torch.manual_seed(100)
+        seeds['inter_var'] = 1000
+        seeds['weight'] = 1000
+        for node in self.indirect_order():
+            self.update_indirect_sparsity(node)
+        print('inter var5:')
+        print([(k, (torch.manual_seed(100), torch.sum(torch.rand_like(v.out_masks.to(torch.float)) * v.out_masks))[1]) for k, v in self.auto_inferences.items()])
+        # print('inter var6:')
+        # print([(k, (torch.manual_seed(100), torch.sum(torch.rand_like(v.out_masks.to(torch.float)) * v.out_masks))[1]) for k, v in self.auto_inferences.items()])
 
     def replace_compressed_modules(self):
         """
@@ -483,6 +546,15 @@ class ModelSpeedup:
             replace_function = self.customized_replace_func.get(m_type, replace_module.get(m_type, None))
             compressed_module = replace_function(
                 leaf_module, auto_infer.get_masks())
+            
+            print('inter var in replacement:')
+            print('replace module:', g_node.name)
+            print('replace in_masks:')
+            print([(torch.manual_seed(100), torch.sum(torch.rand_like(v.to(torch.float)) * v))[1] for v in auto_infer.in_masks])
+            print('replace out_masks:')
+            print([(torch.manual_seed(100), torch.sum(torch.rand_like(auto_infer.out_masks.to(torch.float)) * auto_infer.out_masks))[1]])
+            print('replace weight_mask:')
+            print({k: (torch.manual_seed(100), torch.sum(torch.rand_like(v.to(torch.float)) * v))[1] for k, v in auto_infer.weight_mask.items()})
             new_submodule = compressed_module
             if reindex_dim is None:
                 setattr(super_module, g_node.name.split(

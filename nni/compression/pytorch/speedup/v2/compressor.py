@@ -49,17 +49,9 @@ class ModelSpeedup(torch.fx.Interpreter):
         else:
             self.logger = logger
 
-    def get_node_input(self, node: Node):
-        pass
-    def get_node_output(self, node: Node):
-        pass
-    def get_node_input_randomized(self, node: Node):
-        pass
-
     def has_special_handler_indirect(self, node: Node) -> Optional[Callable]:
         pass
     
-
     @compatibility(is_backward_compatible=True)
     def store_attr(self, path: str, obj):
         target_atoms = path.split('.')
@@ -92,13 +84,26 @@ class ModelSpeedup(torch.fx.Interpreter):
         # randomize
         if len(new_obj.size()) > self.batch_dim and new_obj.size(self.batch_dim) == self.batch_size:
             with torch.no_grad():
-                randomize_tensor(new_obj, self.randomize_range_float[0], self.randomize_range_float[1])
+                self.seed_inter_var += 1
+                torch.manual_seed(self.seed_inter_var)
+                randomize_tensor(new_obj.data, self.randomize_range_float[0], self.randomize_range_float[1])
+                torch.manual_seed(100)
 
         # apply input mask
-        if obj in self.inter_var_mask:
-            new_obj *= self.inter_var_mask[obj]
+        if id(obj) in self.inter_var_mask:
+            # change data with no-in-place operators, so the data_ptr() changed
+            new_obj.data = new_obj.data * self.inter_var_mask[id(obj)]
+            # new_obj.data *= self.inter_var_mask[id(obj)] # in-place and data_ptr() not changed
+            # new_obj *= self.inter_var_mask[id(obj)]
         
         return new_obj
+
+    @run_onlyif_instance(Node)
+    def arg_loader_orig(self, obj: Node) -> Any:
+        if obj not in self.inter_vars:
+            raise RuntimeError(f'Node {n} referenced nonexistent value {n_arg}! Run Graph.lint() '
+                            f'to diagnose such issues')
+        return self.inter_vars[obj]
 
     @run_onlyif_instance(Node)
     def arg_loader_detach(self, obj: Node) -> Any:
@@ -116,15 +121,40 @@ class ModelSpeedup(torch.fx.Interpreter):
 
     @run_onlyif_instance(torch.Tensor, False)
     def get_in_mask(self, obj: torch.Tensor):
-        if obj in self.inter_var_mask:
-            return self.inter_var_mask[obj]
+        if id(obj) in self.inter_var_mask:
+            return self.inter_var_mask[id(obj)]
         return torch.ones_like(obj)
+
+    # @compatibility(is_backward_compatible=True)
+    # def placeholder(self, target, args, kwargs) -> Any:
+        
+    #     @run_onlyif_instance(torch.Tensor)
+    #     def input_init(obj: torch.Tensor):
+    #         return torch.ones_like(obj)
+
+    #     assert isinstance(target, str)
+    #     if target.startswith('*'):
+    #         return list(self.args_iter)
+    #     else:
+    #         try:
+    #             return map_aggregate(next(self.args_iter), input_init)
+    #         except StopIteration as si:
+    #             if len(args) > 0:
+    #                 return args[0]
+    #             else:
+    #                 raise RuntimeError(f'Expected positional argument for parameter {target}, but one was not passed in!')
 
     def propagate_orig(self):
         for node in self.module.graph.nodes:
             node: Node
             
-            self.logger.info('Propagate mask for %s', node.name)
+            if node.op in ('call_function', 'call_method'):
+                self.logger.info('Propagate variables for call: %s', node.name)
+            elif node.op in ('call_module'):
+                self.logger.info('Propagate variables for module: %s', node.name)
+            else:
+                self.logger.info('Propagate variables for %s: %s', node.op, node.name)
+
             args = map_aggregate(node.args, self.arg_loader_detach)
             kwargs = map_aggregate(node.kwargs, self.arg_loader_detach)
             
@@ -163,13 +193,44 @@ class ModelSpeedup(torch.fx.Interpreter):
                 # calculate the std of the output among batch dimension
                 std = torch.std(obj, dim=0)
                 # calculate the mean value of the output among the batch dimension
-                mean = torch.mean(obj, dim=0)
                 mask_pos = std < self.STD_DELTA
                 out_mask[:, mask_pos] = 0
-            self.inter_var_mask[obj] = out_mask
+            self.inter_var_mask[id(obj)] = out_mask
             return out_mask
         return None
     
+    def calc_direct_mask2(self, obj_in_orig, obj_proced):
+        if isinstance(obj_in_orig, torch.Tensor):
+            assert isinstance(obj_proced, torch.Tensor)
+            assert obj_in_orig.shape == obj_proced.shape
+
+            out_mask = torch.ones_like(obj_proced)
+            # judge if tout is a scalar(tensor that only have one value)
+            if len(obj_proced.size()) == 0:
+                # obj is a scalar tensor, for the scalar tensor, we take
+                # this scalar as a constant, usually, the scalar tensor is returned
+                # by the size() function
+                # return out_mask
+                pass
+            elif obj_proced.dtype in torch_integer_dtype:
+                # Pytorch cannot use torch.mean and torch.std to process
+                # intergers :( , so if dtype of the input tensor is integer, we need
+                # check if is the constant by ourselves
+                # Note: the first dimension should be the batch dimension
+                same = obj_proced[:] == obj_proced[0]
+                reduced = torch.sum(same, dim=0)
+                is_constant = reduced == obj_proced.size(0)
+                out_mask[:, is_constant] = 0
+            else:
+                # calculate the std of the output among batch dimension
+                std = torch.std(obj_proced, dim=0)
+                # calculate the mean value of the output among the batch dimension
+                mask_pos = std < self.STD_DELTA
+                out_mask[:, mask_pos] = 0
+            self.inter_var_mask[id(obj_in_orig)] = out_mask
+            return out_mask
+        return None
+
     def init_direct_mask(self, obj):
         if isinstance(obj, torch.Tensor):
             return torch.ones_like(obj)
@@ -185,7 +246,12 @@ class ModelSpeedup(torch.fx.Interpreter):
             if node.op in ('placeholder', 'output'):
                 continue
 
-            self.logger.info('Update direct mask for %s', node.name)
+            if node.op in ('call_function', 'call_method'):
+                self.logger.info('Update direct mask for call: %s', node.name)
+            elif node.op in ('call_module'):
+                self.logger.info('Update direct mask for module: %s', node.name)
+            else:
+                assert False
             handler = self.has_special_handler_direct(node)
             if handler is not None:
                 handler(self, node)
@@ -197,7 +263,10 @@ class ModelSpeedup(torch.fx.Interpreter):
                         if node.target in self.masks_file:
                             weight_mask = self.masks_file[node.target]
                         for weight_key, weight_value in sub_module.named_parameters():
+                            self.seed_weight += 1
+                            torch.manual_seed(self.seed_weight)
                             randomize_tensor(weight_value.data, self.randomize_range_float[0], self.randomize_range_float[1])
+                            torch.manual_seed(100)
                             if weight_key not in weight_mask:
                                 weight_mask[weight_key] = torch.ones_like(weight_value.data)
                             else:
@@ -205,20 +274,17 @@ class ModelSpeedup(torch.fx.Interpreter):
 
                         self.weight_masks[node] = weight_mask
 
-                    args = map_aggregate(node.args, self.arg_loader_preprocess)
-                    kwargs = map_aggregate(node.kwargs, self.arg_loader_preprocess)
-                    inter_var_masked = getattr(self, node.op)(node.target, args, kwargs)
+                    proced_args = map_aggregate(node.args, self.arg_loader_preprocess)
+                    proced_kwargs = map_aggregate(node.kwargs, self.arg_loader_preprocess)
+                    proced_out = getattr(self, node.op)(node.target, proced_args, proced_kwargs)
 
-                    args = map_aggregate(node.args, self.arg_loader_detach)
-                    kwargs = map_aggregate(node.kwargs, self.arg_loader_detach)
-                    self.args_masks[node] = map_aggregate(args, self.get_in_mask)
-                    self.kwargs_masks[node] = map_aggregate(kwargs, self.get_in_mask)
-                    self.out_masks[node] = map_aggregate(inter_var_masked, self.calc_direct_mask)
+                    self.args_masks[node] = map_aggregate(map_aggregate(node.args, self.arg_loader_detach), self.get_in_mask)
+                    self.kwargs_masks[node] = map_aggregate(map_aggregate(node.kwargs, self.arg_loader_detach), self.get_in_mask)
+                    # self.out_masks[node] = map_aggregate(proced_out, self.calc_direct_mask)
+                    self.out_masks[node] = map_aggregate_zip(self.calc_direct_mask2, self.inter_vars[node], proced_out)
             else:
-                args = map_aggregate(node.args, self.arg_loader_detach)
-                kwargs = map_aggregate(node.kwargs, self.arg_loader_detach)
-                self.args_masks[node] = map_aggregate(args, self.get_in_mask)
-                self.kwargs_masks[node] = map_aggregate(kwargs, self.get_in_mask)
+                self.args_masks[node] = map_aggregate(map_aggregate(node.args, self.arg_loader_detach), self.get_in_mask)
+                self.kwargs_masks[node] = map_aggregate(map_aggregate(node.kwargs, self.arg_loader_detach), self.get_in_mask)
                 self.out_masks[node] = map_aggregate(self.inter_vars[node], self.init_direct_mask)
             # do memory collect / compression
 
@@ -226,6 +292,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         if isinstance(obj_orig, torch.Tensor):
             assert isinstance(obj_mask, torch.Tensor)
             if obj_orig.grad is not None:
+                # todo: grad is bad
                 gradient_sum = torch.sum(torch.abs(obj_orig.grad.data), dim=0)
                 _grad_zero = gradient_sum == 0
                 for batchid in range(obj_orig.size(0)):
@@ -235,39 +302,25 @@ class ModelSpeedup(torch.fx.Interpreter):
     def update_indirect_weight_mask(self, output, out_mask):
         # Note: output maybe tensor or list/tuple of tensors
         if isinstance(output, torch.Tensor):
+            assert isinstance(out_mask, torch.Tensor)
             if output.grad_fn is not None:
                 output.backward(out_mask)
-
-    def update_indirect_weight_masks(self, node):
-        args = map_aggregate(node.args, self.arg_loader_preprocess)
-        kwargs = map_aggregate(node.kwargs, self.arg_loader_preprocess)
-        output = getattr(self, node.op)(node.target, args, kwargs)
-        if node.op == 'call_module':
-            map_aggregate_zip(self.update_indirect_weight_mask, output, self.out_masks[node])
-            
-            # update the sparsity of the paramters
-            sub_module = self.fetch_attr(node.target)
-            for weight_key, weight_value in sub_module.named_parameters():
-                grad_zero = weight_value.grad.data == 0
-                self.weight_masks[node][weight_key][grad_zero] = 0
         else:
-            map_aggregate_zip(self.update_indirect_weight_mask, output, self.out_masks[node])
+            assert not isinstance(out_mask, torch.Tensor)
 
-    def requires_grad_(self, node, flag = True):
+    def requires_grad_(self, node, args, kwargs, flag = True):
         """
         Set the requires_grad of input tensor and parameters to flag.
         """
-        
-        self.copied_args: Dict[Node, Any] = {}
-        self.copied_kwargs: Dict[Node, Any] = {}
-        if node in self.copied_args:
-            def requires_grad_if_tensor(self, obj):
-                if isinstance(obj, torch.Tensor):
-                    # only float type can require the gradient
-                    # enable the auto gradient
-                    return obj.requires_grad_(flag)
-                return None
-            map_aggregate(self.copied_args[node], requires_grad_if_tensor)
+        @run_onlyif_instance(torch.Tensor, False)
+        def requires_grad_if_tensor(obj: torch.Tensor):
+            # only float type can require the gradient
+            # enable the auto gradient
+            if obj.dtype in torch_float_dtype:
+                obj.requires_grad_(flag)
+
+        map_aggregate(args, requires_grad_if_tensor)
+        map_aggregate(kwargs, requires_grad_if_tensor)
 
         if node.op == 'call_module':
             sub_module = self.fetch_attr(node.target)
@@ -276,41 +329,84 @@ class ModelSpeedup(torch.fx.Interpreter):
                     weight_value.requires_grad_(flag)
 
     def update_indirect_sparsity(self):
-        # for node in self.module.graph.nodes[::-1]:
-        # for node in _node_list(self.module.graph):
         for node in reversed(self.module.graph.nodes):
             node: Node
             
             if node.op in ('placeholder', 'output'):
                 continue
             
-            self.logger.info('Update indirect mask for %s', node.name)
+            if node.op in ('call_function', 'call_method'):
+                self.logger.info('Update indirect mask for call: %s', node.name)
+            elif node.op in ('call_module'):
+                self.logger.info('Update indirect mask for module: %s', node.name)
+            else:
+                assert False
+
             out_orig = self.inter_vars[node]
             out_mask = self.out_masks[node]
 
             map_aggregate_zip(self.update_indirect_one_out_mask, out_orig, out_mask)
 
-            self.requires_grad_(node)
             # Forward inference with auto gradient enabled
             # Note: tensors that need gradient cannot be used in the in-place operator
             # Some operator may have the in_place operations, so we need to clone the input
             # before passing to the self.module
-            self.update_indirect_weight_masks(node)
+            proced_args = map_aggregate(node.args, self.arg_loader_preprocess)
+            proced_kwargs = map_aggregate(node.kwargs, self.arg_loader_preprocess)
+            
+            if node.op == 'call_module':
+                sub_module = self.fetch_attr(node.target)
+                weight_mask = {}
+                if node.target in self.masks_file:
+                    weight_mask = self.masks_file[node.target]
+                for weight_key, weight_value in sub_module.named_parameters():
+                    self.seed_weight += 1
+                    torch.manual_seed(self.seed_weight)
+                    randomize_tensor(weight_value.data, self.randomize_range_float[0], self.randomize_range_float[1])
+                    torch.manual_seed(100)
+                    if weight_key not in weight_mask:
+                        weight_mask[weight_key] = torch.ones_like(weight_value.data)
+                    else:
+                        weight_value.data *= weight_mask[weight_key]
+
+                self.weight_masks[node] = weight_mask
+
+            self.requires_grad_(node, proced_args, proced_kwargs) # ??
+            # Some operator may have the in_place operations, so we need to clone the input
+            # before passing to the self.module
+            cloned_proced_args = map_aggregate(proced_args, self.tensor_cloner)
+            cloned_proced_kwargs = map_aggregate(proced_kwargs, self.tensor_cloner)
+            output = getattr(self, node.op)(node.target, cloned_proced_args, cloned_proced_kwargs)
+
+            map_aggregate_zip(self.update_indirect_weight_mask, output, self.out_masks[node])
+
+            if node.op == 'call_module':
+                # update the sparsity of the paramters
+                sub_module = self.fetch_attr(node.target)
+                for weight_key, weight_value in sub_module.named_parameters():
+                    grad_zero = weight_value.grad.data == 0
+                    self.weight_masks[node][weight_key][grad_zero] = 0
 
             # # pass the gradient to the predecessor nodes
-            # for in_id, tin in enumerate(auto_infer.dummy_input):
-            #     debug_name = auto_infer.input_debugname[in_id]
+            def pass_gradient(in_orig, in_propagated):
+                # Note: output maybe tensor or list/tuple of tensors
+                if isinstance(in_orig, torch.Tensor):
+                    assert isinstance(in_propagated, torch.Tensor)
+                    if in_orig.grad is not None and in_propagated.grad is not None:
+                        in_orig.grad.data += in_propagated.grad.data
+                    elif in_orig.grad is None:
+                        in_orig.grad = in_propagated.grad
+                    elif in_orig.grad is not None and in_propagated.grad is None:
+                        # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
+                        # the size operation of tin will have no gradient
+                        pass
+                else:
+                    assert not isinstance(in_propagated, torch.Tensor)
+            orig_args = map_aggregate(node.args, self.arg_loader_orig)
+            orig_kwargs = map_aggregate(node.kwargs, self.arg_loader_orig)
 
-            #     last_output = self.internal_result[debug_name]
-            #     # if isinstance(last_output, torch.Tensor):
-            #     # TODO what if last output is tuple/list of tensor
-            #     if last_output.grad is not None and tin.grad is not None:
-            #         last_output.grad.data += tin.grad.data
-            #     elif last_output.grad is None:
-            #         last_output.grad = tin.grad
-            #     elif last_output.grad is not None and tin.grad is None:
-            #         # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
-            #         # the size operation of tin will have no gradient
+            map_aggregate_zip(pass_gradient, orig_args, proced_args)
+            map_aggregate_zip(pass_gradient, orig_kwargs, proced_kwargs)
 
     def replace_compressed_modules(self):
         """
@@ -393,6 +489,15 @@ class ModelSpeedup(torch.fx.Interpreter):
             replace_function = self.customized_replace_func.get(sub_module_name, replace_module.get(sub_module_name, None))
             masks = (self.args_masks[node], self.out_masks[node], self.weight_masks[node])
             compressed_module = replace_function(sub_module, masks)
+            
+            print('inter var in replacement:')
+            print('replace module:', node.name)
+            print('replace in_masks:')
+            print([(torch.manual_seed(100), torch.sum(torch.rand_like(v.to(torch.float)) * v))[1] for v in self.args_masks[node]])
+            print('replace out_masks:')
+            print([(torch.manual_seed(100), torch.sum(torch.rand_like(self.out_masks[node].to(torch.float)) * self.out_masks[node]))[1]])
+            print('replace weight_mask:')
+            print({k: (torch.manual_seed(100), torch.sum(torch.rand_like(v.to(torch.float)) * v))[1] for k, v in self.weight_masks[node].items()})
             new_submodule = compressed_module
             if reindex_dim is None:
                 self.store_attr(node.target, compressed_module)
@@ -414,11 +519,14 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.copied_kwargs: Dict[Node, Any] = {}
         # self.copied_output: Dict[Node, Any] = {}
 
-        self.inter_var_mask: Dict[torch.Tensor, torch.Tensor] = {}
+        self.inter_var_mask: Dict[id, torch.Tensor] = {}
         self.args_masks: Dict[Node, Any] = {}
         self.kwargs_masks: Dict[Node, Any] = {}
         self.out_masks: Dict[Node, Any] = {}
-        self.weight_masks: Dict[Node, Any] = {}
+        self.weight_masks: Dict[Node, Dict[str, Union[torch.Tensor, torch.nn.Parameter]]] = {}
+        
+        self.seed_inter_var = None
+        self.seed_weight = None
 
     def run(self, *args) -> Any:
         """
@@ -435,12 +543,33 @@ class ModelSpeedup(torch.fx.Interpreter):
         # which is more elegent
         fix_mask_conflict(self.masks_file, self.module, args)
 
-        self.logger.info('propagate forward')
-        self.propagate_orig()
-        self.logger.info('propagate forward end')
         self.logger.info('infer module masks...')
+        torch.manual_seed(100)
+        self.seed_inter_var = 1000
+        self.seed_weight = 1000
+        self.propagate_orig()
+        print('inter var1:')
+        print([(k, torch.sum(v) if isinstance(v, torch.Tensor) else v) for k, v in self.inter_vars.items()])
+        print('inter var1.5:')
+        print([(k, v.grad is None if isinstance(v, torch.Tensor) else v) for k, v in self.inter_vars.items()])
+        torch.manual_seed(100)
+        self.seed_inter_var = 1000
+        self.seed_weight = 1000
         self.update_direct_sparsity()
+        print('inter var2:')
+        print([(k, [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] if isinstance(i, torch.Tensor) else i for i in v]) for k, v in self.args_masks.items()])
+        print('inter var3:')
+        print([(k, (torch.manual_seed(100), torch.sum(torch.rand_like(v.to(torch.float)) * v))[1] if isinstance(v, torch.Tensor) else v) for k, v in self.out_masks.items()])
+        print('inter var4:')
+        print([(ko, [(ki, (torch.manual_seed(100), torch.sum(torch.rand_like(vi.to(torch.float)) * vi))[1]) for ki, vi in vo.items()]) for ko, vo in self.weight_masks.items() if ko.op == 'call_module'])
+        print('inter var4.5:')
+        print([(k, v.grad is None if isinstance(v, torch.Tensor) else v) for k, v in self.inter_vars.items()])
+        torch.manual_seed(100)
+        self.seed_inter_var = 1000
+        self.seed_weight = 1000
         self.update_indirect_sparsity()
+        print('inter var5:')
+        print([(k, (torch.manual_seed(100), torch.sum(torch.rand_like(v.to(torch.float)) * v))[1] if isinstance(v, torch.Tensor) else v) for k, v in self.out_masks.items()])
         self.logger.info('resolve the mask conflict')
 
         # load the original stat dict before replace the model

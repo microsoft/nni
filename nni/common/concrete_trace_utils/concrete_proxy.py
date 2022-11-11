@@ -12,7 +12,7 @@ from typing import List, Optional, Iterable, Any, Set, Union
 
 import torch
 from torch.fx._compatibility import compatibility
-from torch.fx.graph import magic_methods, reflectable_magic_methods
+from torch.fx.graph import magic_methods, inplace_methods, reflectable_magic_methods
 from torch.fx.node import Node
 from torch.fx.proxy import Proxy
 
@@ -357,7 +357,8 @@ def map_aggregate_not_proxy(a, fn):
         return fn(a)
 
 # register or wrap common methods on 'ConcreteProxy'
-for method in magic_methods:
+# for method in magic_methods:
+for method in {**magic_methods, **inplace_methods}:
     def _scope(method):
         def impl(*args, **kwargs):
             tracer = args[0].tracer

@@ -67,15 +67,23 @@ class TorchModel1(torch.nn.Module):
         self.fc3 = torch.nn.Linear(84, 10)
         self.pool1 = torch.nn.MaxPool2d((2, 2))
         self.pool2 = torch.nn.MaxPool2d((2, 2))
+        self.pool3 = torch.nn.MaxPool2d((2, 2))
+        self.pool4 = torch.nn.MaxPool2d((2, 2))
+        self.pool5 = torch.nn.MaxPool2d((2, 2))
         self.cond = torch.jit.script(CondModel())
-        self.asub = ASubModel()
+        # self.asub = ASubModel()
 
     def forward(self, x: torch.Tensor):
         y1 = torch.ones_like(x)
         y2 = torch.rand_like(x)
         y3 = torch.randn_like(x)
         y4 = torch.zeros_like(x)
-        x = x - y1 + y2 + y3 + y4
+        # x -= y1
+        # x += y2 + y3 + y4
+        x = x.sub(y1)
+        x = x.add(y2)
+        x = x.add(y3)
+        x = x.add(y4)
 
         x = x.contiguous(memory_format=torch.channels_last)
         x = torch._C._nn.upsample_bilinear2d(x, (28, 28), False)
@@ -94,9 +102,15 @@ class TorchModel1(torch.nn.Module):
         x = x.to(torch.float32)
 
         x = self.conv1(x)
-        y1 = self.pool1(F.relu(x))
-        y2 = self.pool1(F.gelu(x))
-        y3 = self.pool1(F.leaky_relu(x))
+        # y1 = self.pool1(F.relu(x))
+        # y2 = self.pool2(F.gelu(x))
+        # y3 = self.pool3(F.leaky_relu(x))
+        y1 = F.relu(x)
+        y2 = F.gelu(x)
+        y3 = F.leaky_relu(x)
+        y1 = self.pool1(y1)
+        y2 = self.pool2(y2)
+        y3 = self.pool3(y3)
 
         x = y1 + y2 + y3
 
@@ -105,8 +119,12 @@ class TorchModel1(torch.nn.Module):
         x = x * 1.00001
 
         x = self.conv2(x)
-        y1 = self.pool2(F.silu(x))
-        y2 = self.pool2(torch.tanh(x))
+        # y1 = self.pool4(F.silu(x))
+        # y2 = self.pool5(torch.tanh(x))
+        y1 = F.silu(x)
+        y2 = torch.tanh(x)
+        y1 = self.pool4(y1)
+        y2 = self.pool5(y2)
 
         x = y1 - y2
 
@@ -141,16 +159,17 @@ class TorchModel1(torch.nn.Module):
         x = x.type_as(x)
         x = x.expand_as(x)
         x = torch.matmul(x, x.t())
-        x = torch.split(x, 1, dim=1)
-        x = torch.cat(x, dim=1)
+        # x = torch.split(x, 1, dim=1)
+        # x = torch.cat(x, dim=1)
         # x = self.cond(x) # condition is not support now
-        x = self.asub(x)
+        # x = self.asub(x)
         x = torch.constant_pad_nd(x, (1,1,1,1), 3.14159)
 
         return x
 
 class AutoConvTestCase(unittest.TestCase):
     def test_l1norm_pruner(self):
+        torch.manual_seed(100)
         model = TorchModel1()
         dummy_input = torch.rand(3, 1, 28, 28)
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.5}]
@@ -159,7 +178,8 @@ class AutoConvTestCase(unittest.TestCase):
         pruner._unwrap_model()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         traced_model = concrete_trace(model, {'x': dummy_input}, False)
-        ModelSpeedup(traced_model, masks).run(dummy_input)
+        torch.manual_seed(100)
+        ModelSpeedup(traced_model, masks).run(torch.rand(8, 1, 28, 28))
         real_sparsity_list = compute_sparsity_compact2origin(TorchModel1(), traced_model, config_list)
 
         print('sparsity_list:', sparsity_list)
@@ -169,8 +189,8 @@ class AutoConvTestCase(unittest.TestCase):
         assert 0.45 < real_sparsity_list[0]['total_sparsity'] < 0.75
 
         print('the shape of output of the infer:', model(dummy_input).shape)
-        assert model(dummy_input).shape == torch.Size((5, 5))
+        assert traced_model(dummy_input).shape == torch.Size((5, 5))
 
 if __name__ == '__main__':
-    unittest.main()
-    # AutoConvTestCase().test_l1norm_pruner()
+    # unittest.main()
+    AutoConvTestCase().test_l1norm_pruner()
