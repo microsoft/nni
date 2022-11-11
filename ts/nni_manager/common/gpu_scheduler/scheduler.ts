@@ -237,7 +237,7 @@ export class GpuScheduler {
 
 export namespace UnitTestHelpers {
     export function mockGpuInfo(info: GpuSystemInfo): void {
-        collectGpuInfo = (_?: boolean) => Promise.resolve(info);
+        collectGpuInfo = (_?: boolean): any => Promise.resolve(info);
     }
 
     export function getGpuUtils(scheduler: GpuScheduler): number[] {

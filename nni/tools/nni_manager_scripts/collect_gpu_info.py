@@ -8,6 +8,8 @@ Results are printed to stdout in JSON format.
 See `ts/nni_manager/common/gpu_scheduler/collect_info` for details.
 """
 
+# pylint: skip-file
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
