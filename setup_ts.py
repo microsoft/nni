@@ -81,7 +81,7 @@ if sys.platform == 'linux' or sys.platform == 'darwin':
     node_extractor = lambda data: tarfile.open(fileobj=BytesIO(data), mode='r:xz')
     node_executable_in_tarball = 'bin/node'
 
-    npm_executable = 'npm'
+    npm_executable = 'bin/npm'
 
     yarn_executable = 'yarn'
     yarn_download_url = f'https://github.com/yarnpkg/yarn/releases/download/{yarn_version}/yarn-{yarn_version}.tar.gz'
@@ -268,7 +268,7 @@ _yarn_env = dict(os.environ)
 # `Path('nni_node').resolve()` does not work on Windows if the directory not exists
 _yarn_env['PATH'] = str(Path().resolve() / 'nni_node') + path_env_seperator + os.environ['PATH']
 _yarn_path = Path().resolve() / 'toolchain/yarn/bin' / yarn_executable
-_npm_path = Path().resolve() / 'toolchain/node/bin' / npm_executable
+_npm_path = Path().resolve() / 'toolchain/node' / npm_executable
 
 def _yarn(path, *args):
     _print('yarn ' + ' '.join(args) + f' (path: {path})')

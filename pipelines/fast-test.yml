@@ -174,7 +174,7 @@ stages:
 
   - job: ubuntu_legacy
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-20.04
 
     steps:
     - template: templates/install-dependencies.yml
