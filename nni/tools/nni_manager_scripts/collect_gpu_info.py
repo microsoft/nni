@@ -37,6 +37,8 @@ def dict_factory(obj):
     for k, v in obj:
         if k.startswith('_'):
             continue
+        if v is None:
+            continue
         words = k.split('_')
         camel_k = words[0] + ''.join(word.title() for word in words[1:])
         ret[camel_k] = v
