@@ -952,7 +952,7 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
         The old API (``trainer``, ``traced_optimizer`` and ``criterion``) is still supported and will be deprecated in v3.0.
         If you want to consult the old API, please refer to `v2.8 pruner API <https://nni.readthedocs.io/en/v2.8/reference/compression/pruner.html>`__.
     training_steps
-        The step number used to collect activations.
+        The step number used to collect gradients.
     mode
         'normal', 'dependency_aware' or 'global'.
 

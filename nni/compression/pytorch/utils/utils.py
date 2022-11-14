@@ -55,7 +55,7 @@ def rand_like_with_shape(shape, ori_t):
     lower_bound = torch.min(ori_t)
     higher_bound = torch.max(ori_t)
 
-    if dtype in [torch.uint8, torch.int16, torch.short, torch.int16, torch.long, torch.bool]:
+    if dtype in torch_integer_dtype:
         return torch.randint(lower_bound.long(), higher_bound.long() + 1, shape, dtype=dtype, device=device)
     else:
         return torch.rand(shape, dtype=dtype, device=device, requires_grad=require_grad)
@@ -69,6 +69,8 @@ def randomize_tensor(tensor, start=1, end=100):
     assert isinstance(tensor, torch.Tensor)
     if tensor.dtype in torch_integer_dtype:
         # integer tensor can only be randomized by the torch.randint
+        if tensor.dtype is torch.bool:
+            start, end = 0, 2
         torch.randint(int(start), int(end), tensor.size(),
                       out=tensor.data, dtype=tensor.dtype)
         # pass
