@@ -124,6 +124,11 @@ class Mutable:
     * Use ``if mutable.contains(sample)`` to check whether a sample is valid.
     * Use ``mutable.freeze(sample)`` to create a fixed version of the mutable.
 
+    Subclasses of mutables must implement :meth:`leaf_mutables` (which is the implementation of :meth:`simplify`),
+    :meth:`contains`, and :meth:`freeze`.
+    Subclasses of :class:`LabeledMutable` must also implement :meth:`default`,
+    :meth:`random` and :meth:`grid`.
+
     One final note, :class:`Mutable` is designed to be framework agnostic.
     It doesn't have any dependency on deep learning frameworks like PyTorch.
     """
@@ -174,11 +179,14 @@ class Mutable:
         All leaf mutables should be labeled for the purpose of deduplication in :meth:`simplify`.
 
         Subclass override this (and possibly call :meth:`leaf_mutables` of sub-mutables).
+        When they are implemented, they could use ``is_leaf`` to check whether a mutable should be expanded,
+        and use ``yield`` to return the leaf mutables.
 
         Parameters
         ----------
         is_leaf
             A function that takes a mutable and returns whether it's a leaf mutable.
+            See :meth:`simplify`.
 
         Returns
         -------
@@ -212,6 +220,12 @@ class Mutable:
         you can wrap the simplified results with a MutableDict and call simplify again,
         it will get you the same results.
         However, in practice, the order of dict keys might not be guaranteed.
+
+        There is also no guarantee that all mutables returned by :meth:`simplify` are leaf mutables
+        that will pass the check of ``is_leaf``. There are certain mutables that are not leaf by default,
+        but can't be expanded any more (e.g., :class:`~nni.mutable.annotation.MutableAnnotation`).
+        As long as they are labeled, they are still valid return values.
+        The caller can decide whether to raise an exception or simply ignore them.
 
         See Also
         --------
@@ -274,6 +288,7 @@ class Mutable:
         """
         sample: Sample = {} if memo is None else memo
         for mutable in self.simplify().values():
+            # Will raise NotImplementedError here if the mutable is leaf but default is not implemented.
             mutable.default(sample)
         return self.freeze(sample)
 
@@ -340,6 +355,7 @@ class Mutable:
         if random_state is None:
             random_state = RandomState()
         for mutable in self.simplify().values():
+            # Will raise NotImplementedError here if the mutable is leaf but random is not implemented.
             mutable.random(sample, random_state)
         return self.freeze(sample)
 
@@ -351,6 +367,12 @@ class Mutable:
         The default implementation of :meth:`grid` is to call iterate over
         the product of all the simplified grid values.
         Specifically, the grid will be iterated over in a depth-first-search order.
+
+        The deduplication of :meth:`grid` (even with a certain granularity) is not guaranteed.
+        But it will be done at a best-effort level.
+        In most cases, results from :meth:`grid` with a lower granularity will be a subset of
+        results from :meth:`grid` with a higher granularity.
+        The caller should handle the deduplication. 
 
         Parameters
         ----------
@@ -366,6 +388,7 @@ class Mutable:
             if index == len(simplified):
                 yield self.freeze(sample)
             else:
+                # Will raise NotImplementedError here if the mutable is leaf but grid is not implemented.
                 for _ in simplified[index].grid(sample, granularity):
                     yield from _iter(index + 1)
 
@@ -386,19 +409,24 @@ class LabeledMutable(Mutable):
 
     When two mutables have the same label, they semantically share the same choice.
     That means, the choices of the two mutables will be shared.
-
-    The labeled mutables are by default created with one reproducible, auto-generated label.
-    But it can also contain multiple labels if the mutable is more complex.
-    The label can also be specified by users, or sub-classes.
+    The labels can be either auto-generated, or provided by the user.
 
     Being a :class:`LabeledMutable` doesn't necessarily mean that it is a leaf mutable.
     Some :class:`LabeledMutable` can be further simplified into multiple leaf mutables.
+    In the current implementation, there are basically two kinds of :class:`LabeledMutable`:
+
+    1. :class:`MutableSymbol`. This is usually referred to as a "parameter". They produce a key-value in the sample.
+    2. :class:`~nni.mutable.annotation.MutableAnnotation`. They function as some kind of hint,
+       and do not generate a key-value in the sample. Sometimes they can also be simplified and
+       the :class:`MutableSymbol` they depend on would appear in the simplified result.
     """
 
     label: str
 
     def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
         if is_leaf(self):
+            # By default, is_leaf is true for MutableSymbol, and false for MutableAnnotation.
+            # So MutableAnnotation must implement `is_leaf`, even if it decides to yield itself.
             yield self
         else:
             raise ValueError(f'is_leaf() should return True for this type of mutable: {type(self)}')
