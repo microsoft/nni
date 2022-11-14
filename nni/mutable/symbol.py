@@ -262,9 +262,10 @@ class SymbolicExpression:
             return symbol_obj.expr_cls(min, 'min({})', lst)
         return min(lst)
 
-    def __hash__(self):
-        # this is required because we have implemented ``__eq__``
-        return id(self)
+    # Add this back if some tests complain in future.
+    # def __hash__(self):
+    #     # this is required because we have implemented ``__eq__``
+    #     return id(self)
 
     # NOTE:
     # Write operations are not supported. Reasons follow:
