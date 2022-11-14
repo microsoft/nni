@@ -9,12 +9,9 @@ const ExperimentManagerIndex = lazy(() => import('./components/experimentManagem
 import '@style/index.css';
 import '@style/loading.scss';
 import * as serviceWorker from './serviceWorker';
-import { Provider } from 'react-redux';
-import store from './store';
 const path = getPrefix();
 
 ReactDOM.render(
-    <Provider store={store}>
     <Suspense
         fallback={
             <div className='loading'>
@@ -32,8 +29,7 @@ ReactDOM.render(
                 </Route>
             </Routes>
         </Router>
-    </Suspense>
-    </Provider>,
+    </Suspense>,
 
     document.getElementById('root')
 );

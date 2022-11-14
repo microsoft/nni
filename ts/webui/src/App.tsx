@@ -28,7 +28,7 @@ export const AppContext = React.createContext({
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeColumn: (_val: string[]): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeMetricGraphMode: (_val: string): void => {},
+    changeMetricGraphMode: (_val: 'Maximize' | 'Minimize'): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeMaxDurationUnit: (_val: string): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function

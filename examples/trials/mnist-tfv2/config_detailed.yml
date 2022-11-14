@@ -29,8 +29,8 @@ trialCommand: python3 mnist.py  # The command to launch a trial. NOTE: change "p
 trialCodeDirectory: .           # The path of trial code. By default it's ".", which means the same directory of this config file.
 trialGpuNumber: 1               # How many GPUs should each trial use. CUDA is required when it's greater than zero.
 
-trialConcurrency: 1             # Run 4 trials concurrently.
-maxTrialNumber: 60              # Generate at most 10 trials.
+trialConcurrency: 4             # Run 4 trials concurrently.
+maxTrialNumber: 10              # Generate at most 10 trials.
 maxExperimentDuration: 1h       # Stop generating trials after 1 hour.
 
 tuner:                          # Configure the tuning algorithm.

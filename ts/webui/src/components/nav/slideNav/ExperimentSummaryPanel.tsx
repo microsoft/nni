@@ -7,7 +7,7 @@ import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { caclMonacoEditorHeight } from '@static/function';
 import '@style/logPanel.scss';
 
-// 实验总结数据页面还带着10s刷新。。。。
+// TODO: the same as the file LogPanel.tsx, should clear the timerIdList rather than only the timer Id
 
 interface ExpPanelProps {
     closeExpPanel: () => void;
@@ -58,7 +58,7 @@ const ExperimentSummaryPanel = (props: ExpPanelProps): any => {
         setExpPanelHeight(window.innerHeight);
     };
 
-    let refreshId: number = 0; // TODO: 应该设为数组
+    let refreshId: number = 0; // TODO: use list rather than number
     useEffect(() => {
         getExperimentContent();
         refreshId = window.setInterval(getExperimentContent, 10000);

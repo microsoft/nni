@@ -6,7 +6,7 @@ import { downFile } from '@static/function';
 import MonacoHTML from '@components/common/MonacoEditor';
 import '@style/logPanel.scss';
 
-// log页面也是带10s更新页面的
+// TODO: the same as the file ExperimentSummaryPanel.tsx, should clear the timerIdList rather than only the timer Id
 
 interface LogPanelProps {
     closePanel: () => void;
