@@ -11,7 +11,7 @@ Release 2.10 - 11/14/2022
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*  Added trail deduplication for evolutionary search.
+*  Added trial deduplication for evolutionary search.
 *  Fixed the racing issue in RL strategy on submitting models.
 *  Fixed an issue introduced by the trial recovery feature.
 *  Fixed import error of ``PyTorch Lightning`` in NAS.
