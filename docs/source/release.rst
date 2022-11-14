@@ -44,7 +44,7 @@ Web portal
 Known issues
 ^^^^^^^^^^^^
 
-*  Modelspeedup does not support non-tensor intermediate variables
+*  Modelspeedup does not support non-tensor intermediate variables.
 
 Release 2.9 - 9/8/2022
 ----------------------
