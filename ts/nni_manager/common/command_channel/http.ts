@@ -95,6 +95,9 @@ export class HttpChannelServer implements CommandChannelServer {
     }
 }
 
+/**
+ *  A FIFO queue with asynchronous pop.
+ **/
 class CommandQueue {
     private commands: Command[] = [];
     private consumers: Deferred<Command | null>[] = [];
@@ -108,24 +111,34 @@ class CommandQueue {
         }
     }
 
+    /**
+     *  The returned promise will be resolved when there is a command available,
+     *  or it will be resolved with null if `timeout` milliseconds passed before getting a command.
+     *
+     *  That means, if there is already a command in the queue, the promise is intermediately resolved;
+     *  if the queue is empty, it will be resolved either at a corresponding `push()` call,
+     *  or at `timeout` ms after this call.
+     **/
     public asyncPop(timeout: number): Promise<Command | null> {
-        // return null when timeout
         const command = this.commands.shift();
         if (command !== undefined) {
             return Promise.resolve(command);
         } else {
-            const deferred = new Deferred<Command | null>();
-            this.consumers.push(deferred);
+            const consumer = new Deferred<Command | null>();
+            this.consumers.push(consumer);
             setTimeout(() => {
-                if (!deferred.settled) {
-                    this.consumers = this.consumers.filter(item => (item !== deferred));
-                    deferred.resolve(null);
+                if (!consumer.settled) {
+                    this.consumers = this.consumers.filter(item => (item !== consumer));
+                    consumer.resolve(null);
                 }
             }, timeout);
-            return deferred.promise;
+            return consumer.promise;
         }
     }
 
+    /**
+     *  Make all pending promises timeout (resolve with null).
+     **/
     public clear(): void {
         for (const consumer of this.consumers) {
             consumer.resolve(null);
