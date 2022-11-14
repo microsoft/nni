@@ -4,7 +4,7 @@
 import logging
 import torch
 from schema import Schema, And, Or, Optional
-from nni.compression.pytorch.utils.config_validation import QuantizerSchema
+from nni.compression.pytorch.utils.config_validation_v1 import QuantizerSchema
 from nni.compression.pytorch.compressor import Quantizer
 from nni.compression.pytorch.quantization.utils import get_bits_length
 

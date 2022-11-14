@@ -5,7 +5,7 @@ import logging
 from collections import defaultdict
 import torch
 from schema import Schema, And, Or, Optional
-from nni.compression.pytorch.utils.config_validation import QuantizerSchema
+from nni.compression.pytorch.utils.config_validation_v1 import QuantizerSchema
 from nni.compression.pytorch.compressor import Quantizer, QuantForward
 from nni.compression.pytorch.quantization.observers import default_weight_observer, default_histogram_observer
 

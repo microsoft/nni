@@ -4,7 +4,7 @@
 import logging
 import torch
 from schema import Schema, And, Or, Optional
-from nni.compression.pytorch.utils.config_validation import QuantizerSchema
+from nni.compression.pytorch.utils.config_validation_v1 import QuantizerSchema
 from nni.compression.pytorch.compressor import BN_FOLD_TAG, Quantizer, QuantGrad
 from nni.compression.pytorch.quantization.literal import (
     PER_CHANNEL_QUANT_SCHEME,
