@@ -136,6 +136,7 @@ class Compressor:
 
     def reset_ddp_model(self):
         assert self.is_ddp_model
+        
         module = self.bound_model.module
         self.bound_model = torch.nn.parallel.DistributedDataParallel(
             module=module, **self.ddp_params)
