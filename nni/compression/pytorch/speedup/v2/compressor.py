@@ -342,6 +342,14 @@ class ModelSpeedup(torch.fx.Interpreter):
             else:
                 assert False
 
+            print('inter var before indirect propagation:', node.name)
+            print('in_masks:', [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] if isinstance(i, torch.Tensor) else i for i in self.args_masks[node]])
+            print('out_masks:', (torch.manual_seed(100), torch.sum(torch.rand_like(self.out_masks[node].to(torch.float)) * self.out_masks[node]))[1] if isinstance(self.out_masks[node], torch.Tensor) else self.out_masks[node])
+            # print('dummy_input:', [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] for i in auto_infer.dummy_input])
+            print('orig_output:', (torch.manual_seed(100), torch.sum(torch.rand_like(self.inter_vars[node].to(torch.float)) * self.inter_vars[node]))[1] if isinstance(self.inter_vars[node], torch.Tensor) else self.inter_vars[node])
+            print('orig_output.grad is None:', self.inter_vars[node].grad is None if isinstance(self.inter_vars[node], torch.Tensor) else self.inter_vars[node])
+            print('seeds:', self.seed_inter_var, self.seed_weight)
+
             out_orig = self.inter_vars[node]
             out_mask = self.out_masks[node]
 
@@ -407,6 +415,14 @@ class ModelSpeedup(torch.fx.Interpreter):
 
             map_aggregate_zip(pass_gradient, orig_args, proced_args)
             map_aggregate_zip(pass_gradient, orig_kwargs, proced_kwargs)
+            
+            print('inter var after indirect propagation:', node.name)
+            print('in_masks:', [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] if isinstance(i, torch.Tensor) else i for i in self.args_masks[node]])
+            print('out_masks:', (torch.manual_seed(100), torch.sum(torch.rand_like(self.out_masks[node].to(torch.float)) * self.out_masks[node]))[1] if isinstance(self.out_masks[node], torch.Tensor) else self.out_masks[node])
+            # print('dummy_input:', [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] for i in auto_infer.dummy_input])
+            print('orig_output:', (torch.manual_seed(100), torch.sum(torch.rand_like(self.inter_vars[node].to(torch.float)) * self.inter_vars[node]))[1] if isinstance(self.inter_vars[node], torch.Tensor) else self.inter_vars[node])
+            print('orig_output.grad is None:', self.inter_vars[node].grad is None if isinstance(self.inter_vars[node], torch.Tensor) else self.inter_vars[node])
+            print('seeds:', self.seed_inter_var, self.seed_weight)
 
     def replace_compressed_modules(self):
         """
@@ -548,9 +564,9 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.seed_inter_var = 1000
         self.seed_weight = 1000
         self.propagate_orig()
-        print('inter var1:')
+        print('inter var orig_output1:')
         print([(k, torch.sum(v) if isinstance(v, torch.Tensor) else v) for k, v in self.inter_vars.items()])
-        print('inter var1.5:')
+        print('inter var orig_output.grad1:')
         print([(k, v.grad is None if isinstance(v, torch.Tensor) else v) for k, v in self.inter_vars.items()])
         torch.manual_seed(100)
         self.seed_inter_var = 1000
@@ -564,6 +580,8 @@ class ModelSpeedup(torch.fx.Interpreter):
         print([(ko, [(ki, (torch.manual_seed(100), torch.sum(torch.rand_like(vi.to(torch.float)) * vi))[1]) for ki, vi in vo.items()]) for ko, vo in self.weight_masks.items() if ko.op == 'call_module'])
         print('inter var4.5:')
         print([(k, v.grad is None if isinstance(v, torch.Tensor) else v) for k, v in self.inter_vars.items()])
+        print('inter var orig_output2:')
+        print([(k, torch.sum(v) if isinstance(v, torch.Tensor) else v) for k, v in self.inter_vars.items()])
         torch.manual_seed(100)
         self.seed_inter_var = 1000
         self.seed_weight = 1000

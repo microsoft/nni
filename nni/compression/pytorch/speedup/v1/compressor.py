@@ -304,19 +304,6 @@ class ModelSpeedup:
             _logger.info(
                 'Update the indirect sparsity for the %s', unique_name)
             auto_infer = self.auto_inferences[unique_name]
-            
-            
-            print('inter var before indirect propagation:', unique_name)
-            print('in_masks:', [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] for i in auto_infer.in_masks])
-            print('out_masks:', [(torch.manual_seed(100), torch.sum(torch.rand_like(auto_infer.out_masks.to(torch.float)) * auto_infer.out_masks))[1]])
-            print('dummy_input:', [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] for i in auto_infer.dummy_input])
-            print('orig_output:', (torch.manual_seed(100), torch.sum(torch.rand_like(auto_infer.orig_output.to(torch.float)) * auto_infer.orig_output))[1])
-            print('orig_output.grad is None:', auto_infer.orig_output.grad is None)
-            print('seeds:', seeds['inter_var'], seeds['weight'])
-            # print([(ko, [(ki, (torch.manual_seed(100), torch.sum(torch.rand_like(vi.to(torch.float)) * vi))[1]) for ki, vi in vo.items()]) for ko, vo in self.masks.items() if not ko.startswith('.')])
-            # print([(k, v.orig_output.grad is None) for k, v in self.auto_inferences.items()])
-        
-        
             auto_infer.update_indirect_sparsity()
             # pass the gradient to the predecessor nodes
             for in_id, tin in enumerate(auto_infer.dummy_input):
@@ -333,14 +320,6 @@ class ModelSpeedup:
                     # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
                     # the size operation of tin will have no gradient
                     continue
-                
-            print('inter var after indirect propagation:', unique_name)
-            print('in_masks:', [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] for i in auto_infer.in_masks])
-            print('out_masks:', [(torch.manual_seed(100), torch.sum(torch.rand_like(auto_infer.out_masks.to(torch.float)) * auto_infer.out_masks))[1]])
-            print('dummy_input:', [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] for i in auto_infer.dummy_input])
-            print('orig_output:', (torch.manual_seed(100), torch.sum(torch.rand_like(auto_infer.orig_output.to(torch.float)) * auto_infer.orig_output))[1])
-            print('orig_output.grad is None:', auto_infer.orig_output.grad is None)
-            print('seeds:', seeds['inter_var'], seeds['weight'])
         else:
             _logger.warning(
                 'Note: %s does not have corresponding mask inference object', node.name)
@@ -456,9 +435,9 @@ class ModelSpeedup:
         seeds['weight'] = 1000
         for node in self.direct_order():
             self.propagate_orig(node)
-        print('inter var orig_output1:')
+        print('inter var1:')
         print([(k, torch.sum(v.orig_output)) for k, v in self.auto_inferences.items()])
-        print('inter var orig_output.grad1:')
+        print('inter var1.5:')
         print([(k, v.orig_output.grad is None) for k, v in self.auto_inferences.items()])
         torch.manual_seed(100)
         seeds['inter_var'] = 1000
@@ -473,8 +452,6 @@ class ModelSpeedup:
         print([(ko, [(ki, (torch.manual_seed(100), torch.sum(torch.rand_like(vi.to(torch.float)) * vi))[1]) for ki, vi in vo.items()]) for ko, vo in self.masks.items() if not ko.startswith('.')])
         print('inter var4.5:')
         print([(k, v.orig_output.grad is None) for k, v in self.auto_inferences.items()])
-        print('inter var orig_output2:')
-        print([(k, torch.sum(v.orig_output)) for k, v in self.auto_inferences.items()])
         torch.manual_seed(100)
         seeds['inter_var'] = 1000
         seeds['weight'] = 1000
@@ -497,6 +474,7 @@ class ModelSpeedup:
         with torch.no_grad():
             for unique_name in self.auto_inferences:
                 self.replace_submodule(unique_name)
+
 
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """
