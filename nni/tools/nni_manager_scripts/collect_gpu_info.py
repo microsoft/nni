@@ -8,7 +8,8 @@ Results are printed to stdout in JSON format.
 See `ts/nni_manager/common/gpu_scheduler/collect_info` for details.
 """
 
-# pylint: skip-file
+# pylint: disable=wildcard-import
+# pylint: disable=unused-wildcard-import
 
 from __future__ import annotations
 
@@ -30,7 +31,7 @@ def main() -> None:
         data = {'success': False}
     if errors:
         data['errors'] = sorted(errors)
-    print(json.dumps(data))
+    print(json.dumps(data), flush=True)
 
 def dict_factory(obj):
     ret = {}
