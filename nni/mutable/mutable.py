@@ -9,20 +9,13 @@ __all__ = [
 ]
 
 import copy
-import itertools
 import logging
-from typing import TypeVar, Type, Any, Generic, Dict, Iterable, Callable, List, TYPE_CHECKING, cast
+from typing import TypeVar, Type, Any, Dict, Iterable, Callable
 
-import numpy as np
 from numpy.random import RandomState
-from scipy.stats import norm, lognorm, uniform, loguniform
 
-from .exception import SampleValidationError, SampleMissingError
+from .exception import SampleValidationError
 from .symbol import SymbolicExpression, Symbol
-from .utils import auto_label
-
-if TYPE_CHECKING:
-    from scipy.stats import _distn_infrastructure
 
 Sample = Dict[str, Any]
 Choice = TypeVar('Choice')
@@ -372,7 +365,7 @@ class Mutable:
         But it will be done at a best-effort level.
         In most cases, results from :meth:`grid` with a lower granularity will be a subset of
         results from :meth:`grid` with a higher granularity.
-        The caller should handle the deduplication. 
+        The caller should handle the deduplication.
 
         Parameters
         ----------
