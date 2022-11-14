@@ -7,7 +7,7 @@ from collections import abc
 import logging
 from os import PathLike
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Type
+from typing import Any, Callable, Dict, List, Literal, Type, cast
 
 from torch.utils.data import DataLoader, Dataset
 
@@ -83,19 +83,19 @@ class Preprocessor:
 
         def collate_fn(data):
             uids, origin_data = list(zip(*data))
-            return uids, origin_collate_fn(origin_data)
+            return uids, origin_collate_fn(origin_data)  # type: ignore
 
         setattr(dataloader, 'collate_fn', collate_fn)
         return dataloader
 
-    def _patched_label_dataloader(self, labels_collate_fn: Callable[[List], Any] | None = None):
+    def _patched_label_dataloader(self, labels_collate_fn: Callable[[List], Any]):
         dataloader = self._patched_uid_dataloader()
 
         uid_collate_fn = dataloader.collate_fn
 
         def collate_fn(data):
             uids, origin_batch = uid_collate_fn(data)
-            distil_labels = list(map(self._storage.select, uids))
+            distil_labels = list(map(self._storage.select, cast(List[str], uids)))
             distil_labels = labels_collate_fn(distil_labels)
             return distil_labels, origin_batch
 

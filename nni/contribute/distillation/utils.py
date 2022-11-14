@@ -1,27 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from collections import abc
 from pathlib import Path
 import pickle
-from typing import Dict, List, Union
+from typing import List
 
 import numpy
 import torch
-
-
-_DISTIL_DATA = Union[torch.Tensor, List[torch.Tensor], Dict[str, torch.Tensor]]
-
-
-def _to_cpu_detach(data: _DISTIL_DATA) -> _DISTIL_DATA:
-    if isinstance(data, torch.Tensor):
-        return data.cpu().detach()
-    elif isinstance(data, abc.Sequence) and not isinstance(data, str):
-        return [_to_cpu_detach(d) for d in data]
-    elif isinstance(data, abc.Mapping):
-        return {k: _to_cpu_detach(v) for k, v in data.items()}
-    else:
-        return data
 
 
 def _to_tensor(sample):

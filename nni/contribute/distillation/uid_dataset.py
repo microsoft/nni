@@ -17,7 +17,7 @@ class _UidDataset(Dataset):
         self._replay_mode = False
 
     def __len__(self):
-        return len(self._dataset)
+        return len(self._dataset)  # type: ignore
 
     def __getitem__(self, index):
         return None, self._dataset.__getitem__(index)
@@ -100,7 +100,7 @@ class AugmentationDataset(_UidDataset):
         return f'{suid}/{seed}', sample
 
     def _generate_seed(self) -> int:
-        return torch.randint(-0x8000_0000_0000_0000, 0x7fff_ffff_ffff_ffff, (1,), dtype=torch.long, generator=self._rng).item()
+        return int(torch.randint(-0x8000_0000_0000_0000, 0x7fff_ffff_ffff_ffff, (1,), dtype=torch.long, generator=self._rng).item())
 
     def get_origin_dataset(self):
         return self._dataset.get_origin_dataset()
