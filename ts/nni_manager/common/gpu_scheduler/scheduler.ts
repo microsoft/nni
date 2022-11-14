@@ -123,7 +123,9 @@ export class GpuScheduler {
             restrictions?: ScheduleRestrictions): Promise<number[] | null> {
 
         if (gpuNumber >= this.gpus.length) {
-            throw new Error(`GpuScheduler: Only have ${this.gpus.length} GPUs, requesting ${gpuNumber}`);
+            // TODO: push this message to web portal
+            logger.error(`GpuScheduler: Only have ${this.gpus.length} GPUs, requesting ${gpuNumber}`);
+            return null;
         }
 
         const gpus = this.sortGpus(restrictions ?? {});
