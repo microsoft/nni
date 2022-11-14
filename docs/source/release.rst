@@ -17,32 +17,32 @@ Neural Architecture Search
 *  Fixed import error of ``PyTorch Lightning`` in NAS.
 
 Compression
-"""""""""""
+^^^^^^^^^^^
 
 *  Supported parsing schema by replacing ``torch._C.parse_schema`` in pytorch 1.8.0 in ModelSpeedup.
 *  Fixed the bug that speedup ``rand_like_with_shape`` is easy to overflow when ``dtype=torch.int8``.
 *  Fixed the propagation error with view tensors in speedup.
 
 Hyper-parameter optimization
-""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *  Supported rerunning the interrupted trials induced by the termination of an NNI experiment when resuming this experiment.
 *  Fixed a dependency issue of Anneal tuner by changing Anneal tuner dependency to optional.
 *  Fixed a bug that tuner might lose connection in long experiments.
 
 Training service
-""""""""""""""""
+^^^^^^^^^^^^^^^^
 
 *  Fixed a bug that trial code directory cannot have non-English characters.
 
 Web portal
-""""""""""
+^^^^^^^^^^
 
 *  Fixed an error in HPO experiment hyper-parameters page.
 *  Fixed a link error in About menu on WebUI.
 
 Known issues
-""""""""""""
+^^^^^^^^^^^^
 
 *  Modelspeedup does not support non-tensor intermediate variables
 
