@@ -38,7 +38,7 @@ Training service
 Web portal
 ^^^^^^^^^^
 
-*  Fixed an error in HPO experiment hyper-parameters page.
+*  Fixed an error of columns in HPO experiment hyper-parameters page by using localStorage.
 *  Fixed a link error in About menu on WebUI.
 
 Known issues
