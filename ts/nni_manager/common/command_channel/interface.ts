@@ -16,7 +16,8 @@ export interface Command {
  **/
 export interface CommandChannelServer {
     // constructor(name: string, urlPath: string)
-    start(): void;
+    start(): Promise<void>;
+    shutdown(): Promise<void>;
     getChannelUrl(channelId: string): string;
     send(channelId: string, command: Command): void;
     onReceive(callback: (channelId: string, command: Command) => void): void;

@@ -39,14 +39,14 @@ export class HttpChannelServer implements CommandChannelServer {
         this.path = urlPath;
     }
 
-    public start(): void {
+    public async start(): Promise<void> {
         this.serving = true;
         const channelPath = globals.rest.urlJoin(this.path, ':channel');
         globals.rest.registerSyncHandler('GET', channelPath, this.handleGet.bind(this));
         globals.rest.registerSyncHandler('PUT', channelPath, this.handlePut.bind(this));
     }
 
-    public shutdown(): void {
+    public async shutdown(): Promise<void> {
         this.serving = false;
         this.outgoingQueues.forEach(queue => { queue.clear(); });
     }

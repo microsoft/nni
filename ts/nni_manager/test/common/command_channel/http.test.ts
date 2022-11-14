@@ -38,7 +38,7 @@ async function testStart(): Promise<void> {
     server.onReceive((channelId, command) => {
         serverReceivedCommands[channelId].push(command);
     });
-    server.start();
+    await server.start();
     assert.equal(server.getChannelUrl('1'), `http://localhost:${port}/ut/1`);
 }
 
@@ -66,7 +66,7 @@ async function testSendAfter(id: string, delay: number): Promise<void> {
 async function testStop(): Promise<void> {
     const promise = clientReceive('1');
     await setTimeout(10);
-    server.shutdown();
+    await server.shutdown();
     const response = await promise;
     assert.equal(response, null);
 }
