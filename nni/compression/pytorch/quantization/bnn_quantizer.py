@@ -4,10 +4,12 @@
 import logging
 import torch
 from schema import Schema, And, Or, Optional
-from nni.compression.pytorch.utils.config_validation_v1 import QuantizerSchema
+
 from nni.compression.pytorch.compressor import Quantizer, QuantGrad
-from nni.compression.pytorch.quantization.literal import QuantType
-from nni.compression.pytorch.quantization.utils import get_bits_length
+
+from ..utils.config_validation_v1 import QuantizerSchema
+from ..utils.quantization.literal import QuantType
+from ..utils.quantization.utils import get_bits_length
 
 
 logger = logging.getLogger(__name__)

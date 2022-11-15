@@ -3,8 +3,10 @@
 
 import logging
 import torch
-from nni.compression.pytorch.compressor import BN_FOLD_TAG, Quantizer, QuantForward
-from nni.compression.pytorch.quantization.utils import get_bits_length
+from nni.compression.pytorch.compressor import Quantizer, QuantForward
+
+from ..utils.quantization.literal import BN_FOLD_TAG
+from ..utils.quantization.utils import get_bits_length
 
 
 logger = logging.getLogger(__name__)

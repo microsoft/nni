@@ -5,15 +5,17 @@ import logging
 import torch
 from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.utils.config_validation_v1 import QuantizerSchema
-from nni.compression.pytorch.compressor import BN_FOLD_TAG, Quantizer, QuantGrad
-from nni.compression.pytorch.quantization.literal import (
+from nni.compression.pytorch.compressor import Quantizer, QuantGrad
+
+from ..utils.quantization.literal import (
     PER_CHANNEL_QUANT_SCHEME,
     QuantScheme,
     QuantDtype,
     QuantType
 )
-from nni.compression.pytorch.quantization.settings import LayerQuantSetting
-from nni.compression.pytorch.quantization.utils import (
+from ..utils.quantization.literal import BN_FOLD_TAG
+from ..utils.quantization.settings import LayerQuantSetting
+from ..utils.quantization.utils import (
     calculate_qmin_qmax,
     get_min_max_value,
     get_quant_shape
