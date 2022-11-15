@@ -115,6 +115,8 @@ Usage
 
 .. rst-class:: sphx-glr-script-out
 
+ Out:
+
  .. code-block:: none
 
 
@@ -168,11 +170,13 @@ finetuning the model by using QAT
 
 .. rst-class:: sphx-glr-script-out
 
+ Out:
+
  .. code-block:: none
 
-    Average test loss: 0.3665, Accuracy: 9034/10000 (90%)
-    Average test loss: 0.1377, Accuracy: 9579/10000 (96%)
-    Average test loss: 0.1026, Accuracy: 9666/10000 (97%)
+    Average test loss: 0.3398, Accuracy: 8982/10000 (90%)
+    Average test loss: 0.1530, Accuracy: 9532/10000 (95%)
+    Average test loss: 0.1065, Accuracy: 9673/10000 (97%)
 
 
 
@@ -199,9 +203,11 @@ export model and get calibration_config
 
 .. rst-class:: sphx-glr-script-out
 
+ Out:
+
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0031], device='cuda:0'), 'weight_zero_point': tensor([98.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0015], device='cuda:0'), 'weight_zero_point': tensor([118.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.630928993225098}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0009], device='cuda:0'), 'weight_zero_point': tensor([124.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 16.194122314453125}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0013], device='cuda:0'), 'weight_zero_point': tensor([128.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 18.080970764160156}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 10.768582344055176}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 16.76420021057129}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 18.24903678894043}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 15.086852073669434}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0031], device='cuda:0'), 'weight_zero_point': tensor([120.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([112.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.270780563354492}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0'), 'weight_zero_point': tensor([131.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 14.321571350097656}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0014], device='cuda:0'), 'weight_zero_point': tensor([112.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 14.133180618286133}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 10.405377388000488}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 14.843622207641602}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 14.523283004760742}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 12.40306568145752}}
 
 
 
@@ -223,20 +229,16 @@ build tensorRT engine to make a real speedup
 
 
 
+
+
 .. rst-class:: sphx-glr-script-out
 
-.. code-block:: pytb
+ Out:
 
-    Traceback (most recent call last):
-      File "/home/ningshang/nni/examples/tutorials/quantization_speedup.py", line 111, in <module>
-        from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-      File "/home/ningshang/nni/nni/compression/pytorch/quantization_speedup/__init__.py", line 4, in <module>
-        from .integrated_tensorrt import CalibrateType, ModelSpeedupTensorRT
-      File "/home/ningshang/nni/nni/compression/pytorch/quantization_speedup/integrated_tensorrt.py", line 11, in <module>
-        from . import calibrator as calibrator
-      File "/home/ningshang/nni/nni/compression/pytorch/quantization_speedup/calibrator.py", line 7, in <module>
-        import pycuda.driver as cuda
-    ModuleNotFoundError: No module named 'pycuda'
+ .. code-block:: none
+
+    Loss: 0.10724755859375  Accuracy: 96.64%
+    Inference elapsed_time (whole dataset): 0.03695106506347656s
 
 
 
@@ -298,23 +300,28 @@ input tensor: ``torch.randn(128, 3, 32, 32)``
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  6.224 seconds)
+   **Total running time of the script:** ( 1 minutes  4.471 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_speedup.py:
 
-.. only:: html
 
-  .. container:: sphx-glr-footer sphx-glr-footer-example
+.. only :: html
+
+ .. container:: sphx-glr-footer
+    :class: sphx-glr-footer-example
 
 
-    .. container:: sphx-glr-download sphx-glr-download-python
 
-      :download:`Download Python source code: quantization_speedup.py <quantization_speedup.py>`
+  .. container:: sphx-glr-download sphx-glr-download-python
 
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
+     :download:`Download Python source code: quantization_speedup.py <quantization_speedup.py>`
 
-      :download:`Download Jupyter notebook: quantization_speedup.ipynb <quantization_speedup.ipynb>`
+
+
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+     :download:`Download Jupyter notebook: quantization_speedup.ipynb <quantization_speedup.ipynb>`
 
 
 .. only:: html

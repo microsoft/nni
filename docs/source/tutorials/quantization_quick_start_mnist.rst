@@ -69,11 +69,13 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
 .. rst-class:: sphx-glr-script-out
 
+ Out:
+
  .. code-block:: none
 
-    Average test loss: 0.5035, Accuracy: 8506/10000 (85%)
-    Average test loss: 0.2626, Accuracy: 9198/10000 (92%)
-    Average test loss: 0.1960, Accuracy: 9423/10000 (94%)
+    Average test loss: 0.6440, Accuracy: 8230/10000 (82%)
+    Average test loss: 0.2512, Accuracy: 9272/10000 (93%)
+    Average test loss: 0.1569, Accuracy: 9542/10000 (95%)
 
 
 
@@ -131,6 +133,8 @@ finetuning the model by using QAT
 
 .. rst-class:: sphx-glr-script-out
 
+ Out:
+
  .. code-block:: none
 
 
@@ -187,11 +191,13 @@ QAT is a training-aware quantizer, it will update scale and zero point during tr
 
 .. rst-class:: sphx-glr-script-out
 
+ Out:
+
  .. code-block:: none
 
-    Average test loss: 0.1451, Accuracy: 9560/10000 (96%)
-    Average test loss: 0.1279, Accuracy: 9578/10000 (96%)
-    Average test loss: 0.1084, Accuracy: 9668/10000 (97%)
+    Average test loss: 0.1209, Accuracy: 9629/10000 (96%)
+    Average test loss: 0.1032, Accuracy: 9696/10000 (97%)
+    Average test loss: 0.0909, Accuracy: 9736/10000 (97%)
 
 
 
@@ -216,9 +222,11 @@ export model and get calibration_config
 
 .. rst-class:: sphx-glr-script-out
 
+ Out:
+
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0035], device='cuda:0'), 'weight_zero_point': tensor([78.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0021], device='cuda:0'), 'weight_zero_point': tensor([124.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 18.605283737182617}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0011], device='cuda:0'), 'weight_zero_point': tensor([137.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 32.75674057006836}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0013], device='cuda:0'), 'weight_zero_point': tensor([115.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 26.47129249572754}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 18.679080963134766}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 33.193626403808594}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 27.17283821105957}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 21.425003051757812}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0032], device='cuda:0'), 'weight_zero_point': tensor([92.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0022], device='cuda:0'), 'weight_zero_point': tensor([110.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 11.599255561828613}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0'), 'weight_zero_point': tensor([113.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 26.364503860473633}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0013], device='cuda:0'), 'weight_zero_point': tensor([124.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 26.364498138427734}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 11.658699989318848}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.645591735839844}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.877971649169922}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 16.9318904876709}}
 
 
 
@@ -239,20 +247,16 @@ build tensorRT engine to make a real speedup, for more information about speedup
     test_trt(engine)
 
 
+
+
 .. rst-class:: sphx-glr-script-out
 
-.. code-block:: pytb
+ Out:
 
-    Traceback (most recent call last):
-      File "/home/ningshang/nni/examples/tutorials/quantization_quick_start_mnist.py", line 90, in <module>
-        from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-      File "/home/ningshang/nni/nni/compression/pytorch/quantization_speedup/__init__.py", line 4, in <module>
-        from .integrated_tensorrt import CalibrateType, ModelSpeedupTensorRT
-      File "/home/ningshang/nni/nni/compression/pytorch/quantization_speedup/integrated_tensorrt.py", line 11, in <module>
-        from . import calibrator as calibrator
-      File "/home/ningshang/nni/nni/compression/pytorch/quantization_speedup/calibrator.py", line 7, in <module>
-        import pycuda.driver as cuda
-    ModuleNotFoundError: No module named 'pycuda'
+ .. code-block:: none
+
+    Loss: 0.09197621383666992  Accuracy: 97.29%
+    Inference elapsed_time (whole dataset): 0.036701202392578125s
 
 
 
@@ -260,23 +264,28 @@ build tensorRT engine to make a real speedup, for more information about speedup
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  24.812 seconds)
+   **Total running time of the script:** ( 1 minutes  46.013 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start_mnist.py:
 
-.. only:: html
 
-  .. container:: sphx-glr-footer sphx-glr-footer-example
+.. only :: html
+
+ .. container:: sphx-glr-footer
+    :class: sphx-glr-footer-example
 
 
-    .. container:: sphx-glr-download sphx-glr-download-python
 
-      :download:`Download Python source code: quantization_quick_start_mnist.py <quantization_quick_start_mnist.py>`
+  .. container:: sphx-glr-download sphx-glr-download-python
 
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
+     :download:`Download Python source code: quantization_quick_start_mnist.py <quantization_quick_start_mnist.py>`
 
-      :download:`Download Jupyter notebook: quantization_quick_start_mnist.ipynb <quantization_quick_start_mnist.ipynb>`
+
+
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+     :download:`Download Jupyter notebook: quantization_quick_start_mnist.ipynb <quantization_quick_start_mnist.ipynb>`
 
 
 .. only:: html
