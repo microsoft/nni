@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# pylint: skip-file
+# type: ignore
+
 """Several planned features that are under discussion / not implemented yet."""
 
 from __future__ import annotations
