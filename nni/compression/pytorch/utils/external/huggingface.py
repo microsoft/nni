@@ -21,7 +21,7 @@ except ImportError:
 else:
     TRANSFORMERS_INSTALLED = True
 
-from nni.algorithms.compression.v2.pytorch.utils.attr import get_nested_attr
+from nni.compression.pytorch.utils.attr import get_nested_attr
 
 _logger = logging.getLogger(__name__)
 

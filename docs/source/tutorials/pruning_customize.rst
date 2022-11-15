@@ -73,8 +73,8 @@ Customize the pruning tools used by the pruner at first.
 
 
     import torch
-    from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner
-    from nni.algorithms.compression.v2.pytorch.pruning.tools import (
+    from nni.compression.pytorch.pruning.basic_pruner import BasicPruner
+    from nni.compression.pytorch.pruning.tools import (
         DataCollector,
         MetricsCalculator,
         SparsityAllocator
@@ -83,7 +83,7 @@ Customize the pruning tools used by the pruner at first.
 
     # This data collector collects weight in wrapped module as data.
     # The wrapped module is the module configured in pruner's config_list.
-    # This implementation is similar as nni.algorithms.compression.v2.pytorch.pruning.tools.WeightDataCollector
+    # This implementation is similar as nni.compression.pytorch.pruning.tools.WeightDataCollector
     class WeightDataCollector(DataCollector):
         def collect(self):
             data = {}
@@ -116,7 +116,7 @@ Customize the pruning tools used by the pruner at first.
             return metrics
 
 
-    # This implementation is similar as nni.algorithms.compression.v2.pytorch.pruning.tools.NormalSparsityAllocator
+    # This implementation is similar as nni.compression.pytorch.pruning.tools.NormalSparsityAllocator
     class BlockSparsityAllocator(SparsityAllocator):
         def __init__(self, pruner, block_sparse_size):
             super().__init__(pruner, dim=None, block_sparse_size=block_sparse_size, continuous_mask=True)

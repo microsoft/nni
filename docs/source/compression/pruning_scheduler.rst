@@ -30,8 +30,8 @@ Using AGP Pruning as an example to explain how to implement an iterative pruning
 
 .. code-block:: python
 
-    from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner, PruningScheduler
-    from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
+    from nni.compression.pytorch.pruning import L1NormPruner, PruningScheduler
+    from nni.compression.pytorch.pruning.tools import AGPTaskGenerator
 
     pruner = L1NormPruner(model=None, config_list=None, mode='dependency_aware', dummy_input=torch.rand(10, 3, 224, 224).to(device))
     task_generator = AGPTaskGenerator(total_iteration=10, origin_model=model, origin_config_list=config_list, log_dir='.', keep_intermediate_result=True)

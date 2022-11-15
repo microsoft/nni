@@ -10,7 +10,7 @@ import numpy as np
 from torch import Tensor
 from torch.nn import Module
 
-from nni.algorithms.compression.v2.pytorch.utils import config_list_canonical
+from nni.compression.pytorch.utils import config_list_canonical
 from nni.compression.pytorch.utils import count_flops_params
 
 _logger = logging.getLogger(__name__)

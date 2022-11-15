@@ -21,7 +21,7 @@ from nni.compression.pytorch.pruning import (
     ADMMPruner,
     MovementPruner
 )
-from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact
+from nni.compression.pytorch.utils import compute_sparsity_mask2compact
 
 
 class TorchModel(torch.nn.Module):

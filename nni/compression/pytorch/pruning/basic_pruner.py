@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression.v2.pytorch.base.pruner import PrunerModuleWrapper
+from nni.compression.pytorch.base.pruner import PrunerModuleWrapper
 
 from ..base import Pruner
 

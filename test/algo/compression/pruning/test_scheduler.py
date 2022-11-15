@@ -7,7 +7,7 @@ import torch
 import torch.nn.functional as F
 
 from nni.compression.pytorch.pruning import PruningScheduler, L1NormPruner
-from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
+from nni.compression.pytorch.pruning.tools import AGPTaskGenerator
 
 
 class TorchModel(torch.nn.Module):

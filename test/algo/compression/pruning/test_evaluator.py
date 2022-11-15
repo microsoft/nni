@@ -7,7 +7,7 @@ import pytest
 
 import torch
 
-from nni.algorithms.compression.v2.pytorch.utils.evaluator import (
+from nni.compression.pytorch.utils.evaluator import (
     TensorHook,
     ForwardHook,
     BackwardHook,

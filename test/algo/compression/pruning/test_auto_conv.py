@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 from nni.compression.pytorch.pruning import L1NormPruner
 from nni.compression.pytorch.speedup import ModelSpeedup
-from nni.algorithms.compression.v2.pytorch.utils import (
+from nni.compression.pytorch.utils import (
     compute_sparsity_compact2origin,
     compute_sparsity_mask2compact
 )

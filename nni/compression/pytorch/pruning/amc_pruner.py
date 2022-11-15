@@ -12,7 +12,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
+from nni.compression.pytorch.base import Task, TaskResult
 from nni.compression.pytorch.utils import count_flops_params
 
 from .iterative_pruner import IterativePruner, PRUNER_DICT

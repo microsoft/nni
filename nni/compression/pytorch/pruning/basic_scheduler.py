@@ -11,7 +11,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner, BasePruningScheduler, Task, TaskResult
+from nni.compression.pytorch.base import Pruner, BasePruningScheduler, Task, TaskResult
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 from .tools import TaskGenerator

@@ -423,7 +423,7 @@ First, we prune the attention layer with MovementPruner.
     # Initialize evaluator used by MovementPruner.
 
     import nni
-    from nni.algorithms.compression.v2.pytorch import TorchEvaluator
+    from nni.compression.pytorch import TorchEvaluator
 
     movement_training = functools.partial(training, train_dataloader=train_dataloader,
                                           log_path=log_dir / 'movement_pruning.log',

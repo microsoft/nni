@@ -7,33 +7,33 @@ import torch
 import torch.nn.functional as F
 
 import nni
-from nni.algorithms.compression.v2.pytorch.base import Pruner
+from nni.compression.pytorch.base import Pruner
 # TODO: remove in nni v3.0.
-from nni.algorithms.compression.v2.pytorch.pruning.tools import (
+from nni.compression.pytorch.pruning.tools import (
     WeightDataCollector,
     WeightTrainerBasedDataCollector,
     SingleHookTrainerBasedDataCollector
 )
-from nni.algorithms.compression.v2.pytorch.pruning.tools import (
+from nni.compression.pytorch.pruning.tools import (
     TargetDataCollector,
     EvaluatorBasedTargetDataCollector,
     EvaluatorBasedHookDataCollector
 )
-from nni.algorithms.compression.v2.pytorch.pruning.tools import (
+from nni.compression.pytorch.pruning.tools import (
     NormMetricsCalculator,
     HookDataNormMetricsCalculator,
     DistMetricsCalculator,
     APoZRankMetricsCalculator,
     MeanRankMetricsCalculator
 )
-from nni.algorithms.compression.v2.pytorch.pruning.tools import (
+from nni.compression.pytorch.pruning.tools import (
     NormalSparsityAllocator,
     GlobalSparsityAllocator
 )
-from nni.algorithms.compression.v2.pytorch.pruning.tools.base import HookCollectorInfo
-from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name
-from nni.algorithms.compression.v2.pytorch.utils.scaling import Scaling
-from nni.algorithms.compression.v2.pytorch.utils.constructor_helper import OptimizerConstructHelper
+from nni.compression.pytorch.pruning.tools.base import HookCollectorInfo
+from nni.compression.pytorch.utils import get_module_by_name
+from nni.compression.pytorch.utils.scaling import Scaling
+from nni.compression.pytorch.utils.constructor_helper import OptimizerConstructHelper
 
 
 class TorchModel(torch.nn.Module):

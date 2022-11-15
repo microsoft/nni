@@ -4,7 +4,7 @@
 import pytest
 import torch
 
-from nni.algorithms.compression.v2.pytorch.utils.scaling import Scaling
+from nni.compression.pytorch.utils.scaling import Scaling
 
 
 def test_scaling():

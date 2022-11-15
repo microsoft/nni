@@ -14,9 +14,9 @@ from torch.nn import Module
 from torch.nn.parameter import Parameter
 from torch.optim import Optimizer, Adam
 
-from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper, LayerInfo
-from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import EvaluatorBasedPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
-from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema
+from nni.compression.pytorch.base import PrunerModuleWrapper, LayerInfo
+from nni.compression.pytorch.pruning.basic_pruner import EvaluatorBasedPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
+from nni.compression.pytorch.utils import CompressorSchema
 
 from .tools.base import EvaluatorBasedDataCollector, TrainerBasedDataCollector
 
