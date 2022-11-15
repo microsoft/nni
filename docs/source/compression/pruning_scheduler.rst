@@ -14,7 +14,7 @@ For example, each iteration increases a little sparsity ratio, and after several
 fix the overall sparsity, try different ways to allocate sparsity between layers in each iteration, and find the best allocation way.
 
 We define a small goal as ``Task``, it usually includes states inherited from previous iterations (eg. pruned model and masks) and description of the current goal (eg. a config list that describes how to allocate sparsity).
-Details about ``Task`` can be found in this :githublink:`file <nni/algorithms/compression/v2/pytorch/base/scheduler.py>`.
+Details about ``Task`` can be found in this :githublink:`file <nni/compression/pytorch/base/scheduler.py>`.
 
 Pruning scheduler handles two main components, a basic pruner, and a task generator. The logic of generating ``Task`` is encapsulated in the task generator.
 In an iteration (one pruning step), pruning scheduler parses the ``Task`` getting from the task generator,
@@ -54,12 +54,12 @@ For example, ``AGPTaskGenerator`` will give the model pruned in the previous ite
 ``TaskGenerator`` put all these pruning information into ``Task`` and pruning scheduler will get the ``Task``, then run it.
 The pruning result will return to the ``TaskGenerator`` at the end of each iteration and ``TaskGenerator`` will judge whether and how to generate the next ``Task``.
 
-The information included in the ``Task`` and ``TaskResult`` can be found :githublink:`here <nni/algorithms/compression/v2/pytorch/base/scheduler.py>`.
+The information included in the ``Task`` and ``TaskResult`` can be found :githublink:`here <nni/compression/pytorch/base/scheduler.py>`.
 
 A clearer iterative pruning flow chart can be found :doc:`here <pruning>`.
 
 
-If you want to implement your own task generator, please following the ``TaskGenerator`` :githublink:`interface <nni/algorithms/compression/v2/pytorch/pruning/tools/base.py>`.
+If you want to implement your own task generator, please following the ``TaskGenerator`` :githublink:`interface <nni/compression/pytorch/pruning/tools/base.py>`.
 Two main functions should be implemented, ``init_pending_tasks(self) -> List[Task]`` and ``generate_tasks(self, task_result: TaskResult) -> List[Task]``.
 
 Why Use Pruning Scheduler
