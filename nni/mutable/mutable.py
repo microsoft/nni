@@ -737,12 +737,11 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
 
     def _simplify_to_discrete_format(self) -> list[LabeledMutable]:
         mutables: list[LabeledMutable] = [Discrete([True, False], label=f'{self.label}/{i}') for i in range(len(self.values))]
-        # FIXME: uncomment this at stage 6
-        # if self.n_chosen is not None:
-        #     from .annotation import ExpressionConstraint
-        #     expr = sum(cast(List[Discrete], mutables)) == self.n_chosen
-        #     assert isinstance(expr, MutableExpression)
-        #     mutables.append(ExpressionConstraint(expr, label=f'{self.label}/n'))
+        if self.n_chosen is not None:
+            from .annotation import ExpressionConstraint  # pylint: disable=import-error
+            expr = sum(cast(List[Discrete], mutables)) == self.n_chosen
+            assert isinstance(expr, MutableExpression)
+            mutables.append(ExpressionConstraint(expr, label=f'{self.label}/n'))
         return mutables
 
     def _parse_simple_format(self, sample: Sample) -> SampleValidationError | list[Choice]:
