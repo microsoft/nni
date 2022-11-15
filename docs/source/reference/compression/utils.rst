@@ -1,12 +1,6 @@
 Compression Utilities
 =====================
 
-SensitivityAnalysis
--------------------
-
-.. autoclass:: nni.compression.pytorch.utils.SensitivityAnalysis
-    :members:
-
 ChannelDependency
 -----------------
 
