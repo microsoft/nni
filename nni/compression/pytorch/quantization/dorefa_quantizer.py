@@ -42,7 +42,7 @@ class DoReFaQuantizer(Quantizer):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.pytorch.quantization import DoReFaQuantizer
+        >>> from nni.compression.pytorch.quantization import DoReFaQuantizer
         >>> model = ...
         >>> config_list = [{'quant_types': ['weight', 'input'], 'quant_bits': {'weight': 8, 'input': 8}, 'op_types': ['Conv2d']}]
         >>> optimizer = ...

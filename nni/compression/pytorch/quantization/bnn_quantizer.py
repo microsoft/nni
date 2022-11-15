@@ -58,7 +58,7 @@ class BNNQuantizer(Quantizer):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.pytorch.quantization import BNNQuantizer
+        >>> from nni.compression.pytorch.quantization import BNNQuantizer
         >>> model = ...
         >>> config_list = [{'quant_types': ['weight', 'input'], 'quant_bits': {'weight': 8, 'input': 8}, 'op_types': ['Conv2d']}]
         >>> optimizer = ...

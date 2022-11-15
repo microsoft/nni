@@ -43,4 +43,3 @@ Performance comparison and analysis can help users decide a proper algorithm (e.
 
 * :doc:`Neural Architecture Search Comparison <nas_comparison>`
 * :doc:`Hyper-parameter Tuning Algorithm Comparsion <hpo_comparison>`
-* :doc:`Model Compression Algorithm Comparsion <model_compress_comp>`

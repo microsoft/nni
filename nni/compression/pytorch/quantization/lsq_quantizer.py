@@ -48,7 +48,7 @@ class LsqQuantizer(Quantizer):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.pytorch.quantization import LsqQuantizer
+        >>> from nni.compression.pytorch.quantization import LsqQuantizer
         >>> model = ...
         >>> config_list = [{'quant_types': ['weight', 'input'], 'quant_bits': {'weight': 8, 'input': 8}, 'op_types': ['Conv2d']}]
         >>> optimizer = ...

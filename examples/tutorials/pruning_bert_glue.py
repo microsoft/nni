@@ -291,12 +291,11 @@ def create_pretrained_model():
 
 
 def create_finetuned_model():
-    finetuned_model = create_pretrained_model()
+    finetuned_model = create_pretrained_model().to(device)
     finetuned_model_state_path = Path(model_dir) / 'finetuned_model_state.pth'
 
     if finetuned_model_state_path.exists():
-        finetuned_model.load_state_dict(torch.load(finetuned_model_state_path, map_location='cpu'))
-        finetuned_model.to(device)
+        finetuned_model.load_state_dict(torch.load(finetuned_model_state_path, map_location=device))
     elif dev_mode:
         pass
     else:

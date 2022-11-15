@@ -200,6 +200,20 @@ Create dataloaders.
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Reusing dataset glue (data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad)
+      0%|          | 0/5 [00:00<?, ?it/s]    100%|##########| 5/5 [00:00<00:00, 775.23it/s]
+    Loading cached processed dataset at data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-3c69de2c84eda4c2.arrow
+      0%|          | 0/10 [00:00<?, ?ba/s]     20%|##        | 2/10 [00:00<00:00, 17.43ba/s]     50%|#####     | 5/10 [00:00<00:00, 21.79ba/s]     80%|########  | 8/10 [00:00<00:00, 23.21ba/s]    100%|##########| 10/10 [00:00<00:00, 23.16ba/s]
+    Loading cached processed dataset at data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad/cache-f411f352c3a0f4a6.arrow
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 153-154
 
 Training function & evaluation function.
@@ -342,7 +356,7 @@ Training function & evaluation function.
 
 Prepare pre-trained model and finetuning on downstream task.
 
-.. GENERATED FROM PYTHON SOURCE LINES 279-320
+.. GENERATED FROM PYTHON SOURCE LINES 279-319
 
 .. code-block:: default
 
@@ -361,12 +375,11 @@ Prepare pre-trained model and finetuning on downstream task.
 
 
     def create_finetuned_model():
-        finetuned_model = create_pretrained_model()
+        finetuned_model = create_pretrained_model().to(device)
         finetuned_model_state_path = Path(model_dir) / 'finetuned_model_state.pth'
 
         if finetuned_model_state_path.exists():
-            finetuned_model.load_state_dict(torch.load(finetuned_model_state_path, map_location='cpu'))
-            finetuned_model.to(device)
+            finetuned_model.load_state_dict(torch.load(finetuned_model_state_path, map_location=device))
         elif dev_mode:
             pass
         else:
@@ -390,7 +403,11 @@ Prepare pre-trained model and finetuning on downstream task.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 321-328
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 320-327
 
 Pruning
 ^^^^^^^
@@ -400,7 +417,7 @@ So in this section, we do pruning in stages.
 
 First, we prune the attention layer with MovementPruner.
 
-.. GENERATED FROM PYTHON SOURCE LINES 328-388
+.. GENERATED FROM PYTHON SOURCE LINES 327-387
 
 .. code-block:: default
 
@@ -467,14 +484,28 @@ First, we prune the attention layer with MovementPruner.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 389-393
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Did not bind any model, no need to unbind model.
+    Training 1 epochs, 3 steps...
+    /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/optim/lr_scheduler.py:122: UserWarning: Seems like `optimizer.step()` has been overridden after learning rate scheduler initialization. Please, make sure to call `optimizer.step()` before `lr_scheduler.step()`. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+      warnings.warn("Seems like `optimizer.step()` has been overridden after learning rate scheduler "
+    Did not bind any model, no need to unbind model.
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 388-392
 
 Load a new finetuned model to do speedup, you can think of this as using the finetuned state to initialize the pruned model weights.
 Note that nni speedup don't support replacing attention module, so here we manully replace the attention module.
 
 If the head is entire masked, physically prune it and create config_list for FFN pruning.
 
-.. GENERATED FROM PYTHON SOURCE LINES 393-423
+.. GENERATED FROM PYTHON SOURCE LINES 392-422
 
 .. code-block:: default
 
@@ -511,11 +542,32 @@ If the head is entire masked, physically prune it and create config_list for FFN
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 424-425
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    layer 0 prune 0 head: []
+    layer 1 prune 0 head: []
+    layer 2 prune 0 head: []
+    layer 3 prune 0 head: []
+    layer 4 prune 0 head: []
+    layer 5 prune 0 head: []
+    layer 6 prune 0 head: []
+    layer 7 prune 0 head: []
+    layer 8 prune 0 head: []
+    layer 9 prune 0 head: []
+    layer 10 prune 0 head: []
+    layer 11 prune 0 head: []
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 423-424
 
 Retrain the attention pruned model with distillation.
 
-.. GENERATED FROM PYTHON SOURCE LINES 425-451
+.. GENERATED FROM PYTHON SOURCE LINES 424-450
 
 .. code-block:: default
 
@@ -548,14 +600,24 @@ Retrain the attention pruned model with distillation.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 452-456
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Training 1 epochs, 1 steps...
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 451-455
 
 Iterative pruning FFN with TaylorFOWeightPruner in 12 iterations.
 Finetuning 3000 steps after each pruning iteration, then finetuning 2 epochs after pruning finished.
 
 NNI will support per-step-pruning-schedule in the future, then can use an pruner to replace the following code.
 
-.. GENERATED FROM PYTHON SOURCE LINES 456-537
+.. GENERATED FROM PYTHON SOURCE LINES 455-536
 
 .. code-block:: default
 
@@ -642,8 +704,59 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
 
 
 
+.. rst-class:: sphx-glr-script-out
 
-.. GENERATED FROM PYTHON SOURCE LINES 538-607
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/home/ningshang/nni/examples/tutorials/pruning_bert_glue.py", line 494, in <module>
+        _, ffn_masks = pruner.compress()
+      File "/home/ningshang/nni/nni/compression/pytorch/pruning/basic_pruner.py", line 204, in compress
+        result = super().compress()
+      File "/home/ningshang/nni/nni/compression/pytorch/pruning/basic_pruner.py", line 139, in compress
+        data = self.data_collector.collect()
+      File "/home/ningshang/nni/nni/compression/pytorch/pruning/tools/data_collector.py", line 118, in collect
+        self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
+      File "/home/ningshang/nni/nni/compression/pytorch/utils/evaluator.py", line 756, in train
+        self.training_func(self.model, optimizers, self._criterion, lr_schedulers, max_steps, max_epochs)
+      File "/home/ningshang/nni/examples/tutorials/pruning_bert_glue.py", line 198, in training
+        outputs = model(**batch)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+        return forward_call(*input, **kwargs)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/transformers/models/bert/modeling_bert.py", line 1556, in forward
+        outputs = self.bert(
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+        return forward_call(*input, **kwargs)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/transformers/models/bert/modeling_bert.py", line 1018, in forward
+        encoder_outputs = self.encoder(
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+        return forward_call(*input, **kwargs)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/transformers/models/bert/modeling_bert.py", line 607, in forward
+        layer_outputs = layer_module(
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+        return forward_call(*input, **kwargs)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/transformers/models/bert/modeling_bert.py", line 535, in forward
+        layer_output = apply_chunking_to_forward(
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/transformers/pytorch_utils.py", line 243, in apply_chunking_to_forward
+        return forward_fn(*input_tensors)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/transformers/models/bert/modeling_bert.py", line 547, in feed_forward_chunk
+        intermediate_output = self.intermediate(attention_output)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+        return forward_call(*input, **kwargs)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/transformers/models/bert/modeling_bert.py", line 448, in forward
+        hidden_states = self.intermediate_act_fn(hidden_states)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+        return forward_call(*input, **kwargs)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/transformers/activations.py", line 56, in forward
+        return self.act(input)
+      File "/home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/nn/functional.py", line 1556, in gelu
+        return torch._C._nn.gelu(input)
+    RuntimeError: CUDA out of memory. Tried to allocate 48.00 MiB (GPU 0; 7.80 GiB total capacity; 5.79 GiB already allocated; 22.31 MiB free; 6.18 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 537-606
 
 Result
 ------
@@ -718,7 +831,7 @@ Setting 2: pytorch 1.10.0
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  20.822 seconds)
+   **Total running time of the script:** ( 0 minutes  21.533 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_bert_glue.py:

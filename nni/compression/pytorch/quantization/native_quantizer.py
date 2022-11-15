@@ -35,7 +35,7 @@ class NaiveQuantizer(Quantizer):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.pytorch.quantization import NaiveQuantizer
+        >>> from nni.compression.pytorch.quantization import NaiveQuantizer
         >>> model = ...
         >>> NaiveQuantizer(model).compress()
     """

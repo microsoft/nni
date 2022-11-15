@@ -160,7 +160,7 @@ class QAT_Quantizer(Quantizer):
 
     Examples
     --------
-        >>> from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+        >>> from nni.compression.pytorch.quantization import QAT_Quantizer
         >>> model = ...
         >>> config_list = [{'quant_types': ['weight', 'input'], 'quant_bits': {'weight': 8, 'input': 8}, 'op_types': ['Conv2d']}]
         >>> optimizer = ...

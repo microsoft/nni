@@ -7,7 +7,7 @@ from enum import Enum, EnumMeta
 class _QuantLiteralEnumMeta(EnumMeta):
     def __contains__(cls, item):
         try:
-            cls(item)
+            cls(item)  # type: ignore
         except ValueError:
             return False
         return True
