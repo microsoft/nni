@@ -7,7 +7,7 @@ from enum import Enum, EnumMeta
 class _QuantLiteralEnumMeta(EnumMeta):
     def __contains__(cls, item):
         try:
-            cls(item)  # type: ignore
+            cls(item)  # pylint: disable=no-value-for-parameter
         except ValueError:
             return False
         return True
