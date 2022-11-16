@@ -517,7 +517,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
     ----------
     values
         The list of values to choose from.
-    distribution
+    weights
         The probability distribution of the values. Should be an array with the same length as ``values``.
         The sum of the distribution should be 1.
         If not specified, the values will be chosen uniformly.
@@ -537,7 +537,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
 
     def __init__(
         self, values: Iterable[Choice], *,
-        distribution: list[float] | None = None,
+        weights: list[float] | None = None,
         default: Choice | str = MISSING,
         label: str | None = None
     ) -> None:
@@ -545,7 +545,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
         assert values, 'Discrete values must not be empty.'
         self.label = label or auto_label()
         self.values = values
-        self.distribution = distribution if distribution is not None else [1 / len(values)] * len(values)
+        self.weights = weights if weights is not None else [1 / len(values)] * len(values)
 
         if default is not MISSING:
             self.validate({self.label: default})
@@ -553,8 +553,8 @@ class Discrete(MutableSymbol, Generic[Choice]):
 
         assert not(any(isinstance(value, Mutable) for value in values)), 'Discrete values must not contain mutables.'
         assert len(set(values)) == len(values), 'Values must be unique.'
-        assert len(self.distribution) == len(self.values), 'Distribution must have length n.'
-        assert abs(sum(self.distribution) - 1) < 1e-6, 'Distribution must sum to 1.'
+        assert len(self.weights) == len(self.values), 'Distribution must have length n.'
+        assert abs(sum(self.weights) - 1) < 1e-6, 'Distribution must sum to 1.'
 
     def contains(self, sample: Sample) -> SampleValidationError | None:
         if self.label not in sample:
@@ -613,7 +613,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
             random_state = RandomState()
         err = self.contains(memo)
         if isinstance(err, SampleMissingError):
-            index = random_state.choice(len(self.values), p=self.distribution)
+            index = random_state.choice(len(self.values), p=self.weights)
             memo[self.label] = self.values[index]
         return self.freeze(memo)
 
@@ -628,12 +628,12 @@ class Discrete(MutableSymbol, Generic[Choice]):
         err = self.contains(memo)
 
         if isinstance(err, SampleMissingError):
-            if all(dis == self.distribution[0] for dis in self.distribution):
+            if all(dis == self.weights[0] for dis in self.weights):
                 # uniform distribution
                 values_perm = self.values
             else:
                 # More heavily-distributed items are put upfront.
-                indices = sorted(list(range(len(self.values))), key=lambda i: self.distribution[i], reverse=True)
+                indices = sorted(range(len(self.values)), key=lambda i: self.weights[i], reverse=True)
                 values_perm = [self.values[i] for i in indices]
 
             for value in values_perm:
@@ -664,7 +664,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         The list of values to choose from.
     n_chosen
         The number of values to choose. If not specified, any number of values can be chosen.
-    distribution
+    weights
         The probability distribution of the values. Should be an array with the same length as ``values``.
         When ``n_chosen`` is None, it's the probability that each candidate is chosen.
         When ``n_chosen`` is not None, the distribution should sum to 1.
@@ -697,7 +697,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
     def __init__(
         self, values: Iterable[Choice], *,
         n_chosen: int | None = None,
-        distribution: list[float] | None = None,
+        weights: list[float] | None = None,
         default: list[Choice] | str = MISSING,
         label: str | None = None,
     ) -> None:
@@ -714,17 +714,17 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         assert len(set(values)) == len(values), 'Values must be unique.'
         assert not(any(isinstance(value, Mutable) for value in values)), 'Discrete values must not contain mutables.'
         assert self.n_chosen is None or 1 <= self.n_chosen <= len(self.values), 'n_chosen must be between 1 and n, or None.'
-        if distribution is not None:
-            self.distribution = distribution
+        if weights is not None:
+            self.weights = weights
         elif self.n_chosen is None:
-            self.distribution = [0.5] * len(values)
+            self.weights = [0.5] * len(values)
         else:
-            self.distribution = [1 / len(values)] * len(values)
-        assert len(self.distribution) == len(self.values), 'Distribution must have length n.'
+            self.weights = [1 / len(values)] * len(values)
+        assert len(self.weights) == len(self.values), 'Distribution must have length n.'
 
         if n_chosen is not None:
-            assert abs(sum(self.distribution) - 1) < 1e-6, f'Distribution must sum to 1 when n_chosen is {n_chosen}.'
-        assert all(0 <= dis <= 1 for dis in self.distribution), 'Distribution values must be between 0 and 1.'
+            assert abs(sum(self.weights) - 1) < 1e-6, f'Distribution must sum to 1 when n_chosen is {n_chosen}.'
+        assert all(0 <= dis <= 1 for dis in self.weights), 'Distribution values must be between 0 and 1.'
 
     def extra_repr(self):
         if len(self.values) <= 7:
@@ -843,9 +843,9 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         err = self.contains(memo)
         if isinstance(err, SampleMissingError):
             if self.n_chosen is None:
-                chosen = [value for value in self.values if random_state.random() < self.distribution[self.values.index(value)]]
+                chosen = [value for value in self.values if random_state.random() < self.weights[self.values.index(value)]]
             else:
-                chosen = sorted(random_state.choice(len(self.values), self.n_chosen, replace=False, p=self.distribution))
+                chosen = sorted(random_state.choice(len(self.values), self.n_chosen, replace=False, p=self.weights))
                 chosen = [self.values[c] for c in chosen]
             memo[self.label] = chosen
         return self.freeze(memo)
