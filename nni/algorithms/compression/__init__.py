@@ -4,4 +4,4 @@
 import logging
 
 _logger = logging.getLogger(__name__)
-_logger.warning('import path `nni.algorithms.compression` has be removed in v3.0, please import from `nni.compression`.')
+_logger.warning('import path `nni.algorithms.compression` has been removed in v3.0, please import from `nni.compression`.')
