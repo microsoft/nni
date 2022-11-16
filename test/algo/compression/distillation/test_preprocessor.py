@@ -9,8 +9,8 @@ import pytest
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from nni.contribute.distillation.preprocessor import Preprocessor
-from nni.contribute.distillation.uid_dataset import IndexedDataset, HashedDataset, AugmentationDataset
+from nni.contrib.distillation.preprocessor import Preprocessor
+from nni.contrib.distillation.uid_dataset import IndexedDataset, HashedDataset, AugmentationDataset
 
 from ..assets.common import log_dir
 
