@@ -48,6 +48,15 @@ export class TrialProcess {
         this.log = getLogger(`TrialProcess.${id}`);
     }
 
+    /**
+     *  Spawn the trial process. Return success or not.
+     *
+     *  Note that the trial is considered "success" here even if the trial command is ill-formed
+     *  or it returns non-zero code immediately.
+     *
+     *  This is because the command is run in a shell
+     *  and this method only checks if the shell is successfully launched.
+     **/
     public async spawn(options: TrialProcessOptions): Promise<boolean> {
         // might change for log collection
         const stdout = fs.createWriteStream(path.join(options.outputDirectory, 'trial.stdout'));
@@ -73,12 +82,12 @@ export class TrialProcess {
     }
 
     /**
-     *  Kill the trial with SIGINT (not SIGTERM) and wait for `timeout` milliseconds.
-     *  Then force kill with SIGKILL if it is still running.
+     *  Kill the trial, or silently do nothing if it is not running.
      *
-     *  If the trial is not running, silently do nothing.
+     *  On Unix, send SIGINT signal and wait for `timeout` milliseconds; then force kill with SIGKILL.
+     *  It uses SIGINT instead of SIGTERM because SIGINT can be caught as `KeyboardInterrupt` in python.
      *
-     *  (FIXME) On Windows it always do force kill.
+     *  (FIXME) On Windows, always do force kill.
      *
      *  The returned promise is resolved together with onStop() callback.
      **/
@@ -123,6 +132,15 @@ export class TrialProcess {
         });
     }
 
+    /**
+     *  Register an on trial stop callback.
+     *
+     *  The callback is guaranteed to be invoked as long as spawn() returns true,
+     *  even if this method is called after trial stopped.
+     *
+     *  If the trial stopped proactively (including exited during a SIGINT handler),
+     *  exitCode will be a number; otherwise it will be null.
+     **/
     public onStop(callback: (timestamp: number, exitCode: number | null, signal: string | null) => void): void {
         this.stopped.promise.then(() => {
             if (this.info.startSuccess) {
@@ -132,6 +150,7 @@ export class TrialProcess {
     }
 
     private buildEnv(opts: TrialProcessOptions): Record<string, string> {
+        // TODO: use a config file instead of environment varaibles for better debuggability
         const env: Record<string, string> = Object.assign({}, process.env as any);
         env['NNI_CODE_DIR'] = opts.codeDirectory;
         env['NNI_EXP_ID'] = globals.args.experimentId;

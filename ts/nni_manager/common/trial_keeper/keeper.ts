@@ -1,6 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  The helper class to implement a "reuse" training service.
+ *
+ *  TrialKeeper has a very similar interface to TrainingSerivceV3.
+ *  In fact the local training service is a thin wrapper over TrialKeeper.
+ **/
+
 import { EventEmitter } from 'events';
 import fs from 'fs/promises';
 import path from 'path';
@@ -69,6 +76,10 @@ export class TrialKeeper {
     }
 
     public async shutdown(): Promise<void> {
+        const trials = Array.from(this.trials.values());
+        const promises = trials.map(trial => trial.kill());
+        await Promise.all(promises);
+
         await this.channels.shutdown();
     }
 
