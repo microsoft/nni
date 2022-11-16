@@ -3,7 +3,8 @@
 
 from pathlib import Path
 import pickle
-from typing import List
+import random
+from typing import Dict, List
 
 import numpy
 import torch
@@ -42,3 +43,23 @@ def pickle_load(file_path):
     assert load_path.exists(), f'{file_path} is not exist.'
     with load_path.open(mode='rb') as f:
         return pickle.load(f)
+
+
+def _default_get_rngs_state():
+    return {
+        'random': random.getstate(),
+        'numpy.random': numpy.random.get_state(),
+        'torch.random': torch.random.get_rng_state(),
+    }
+
+
+def _default_set_rngs_state(rngs_state: Dict):
+    random.setstate(rngs_state['random'])
+    numpy.random.set_state(rngs_state['numpy.random'])
+    torch.random.set_rng_state(rngs_state['torch.random'])
+
+
+def _default_manual_seed(seed: int):
+    random.seed(seed)
+    numpy.random.seed(seed % 0xffff_ffff)
+    torch.random.manual_seed(seed)

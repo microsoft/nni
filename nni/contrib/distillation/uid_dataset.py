@@ -9,6 +9,8 @@ from typing import Any, Callable, Dict, List, Type
 import torch
 from torch.utils.data import Dataset, IterableDataset
 
+from .utils import _default_get_rngs_state, _default_set_rngs_state, _default_manual_seed
+
 
 class _UidDataset(Dataset):
     def __init__(self, dataset: Dataset, *args, **kwargs):
@@ -49,6 +51,11 @@ class IndexedDataset(_UidDataset):
 class HashedDataset(_UidDataset):
     """
     Return (hash(origin_sample), origin_sample).
+
+    Parameters
+    ----------
+    hash_fn
+        A hash function of sample from dataset, the hash value should be a str.
     """
     def __init__(self, dataset: Dataset, hash_fn: Callable[[Any], str]):
         super().__init__(dataset)
@@ -61,7 +68,23 @@ class HashedDataset(_UidDataset):
 
 class AugmentationDataset(_UidDataset):
     """
-    Return (previous_uid/seed, origin_sample).
+    Return (aux_uid/seed, origin_sample).
+
+    Parameters
+    ----------
+    dataset
+        The original dataset or a `_UidDataset` instance.
+        If dataset is a `_UidDataset` instance and `aux_dataset_cls` is None, this dataset will be took as the aux_dataset.
+    transform
+        The transform function for each sample from dataset.
+    seed
+        This seed controls the random generators used in transform.
+    aux_dataset_cls
+        `aux_dataset_cls` is used to wrap the dataset to generate the aux_uid.
+    aux_args
+        Additional position arguments for `aux_dataset_cls` initialization.
+    aux_kwargs
+        Additional keyword arguments for `aux_dataset_cls` initialization.
     """
     def __init__(self, dataset: Dataset, transform: Callable[[Any], Any], seed: int | None = None,
                  aux_dataset_cls: Type[_UidDataset] | None = None, *aux_args, **aux_kwargs):
@@ -84,7 +107,7 @@ class AugmentationDataset(_UidDataset):
     def __getitem__(self, index):
         suid, sample = self._dataset.__getitem__(index)
 
-        cpu_rng_state = torch.random.get_rng_state()
+        rngs_state = _default_get_rngs_state()
 
         if self._replay_mode:
             seed = self._suid_seed[str(suid)].pop(-1)
@@ -92,10 +115,10 @@ class AugmentationDataset(_UidDataset):
         else:
             seed = self._generate_seed()
             self._suid_seed[str(suid)].append(seed)
-        torch.random.manual_seed(seed)
+        _default_manual_seed(seed)
         sample = self._transform(sample)
 
-        torch.random.set_rng_state(cpu_rng_state)
+        _default_set_rngs_state(rngs_state)
 
         return f'{suid}/{seed}', sample
 
