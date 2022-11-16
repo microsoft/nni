@@ -19,6 +19,7 @@ import assert from 'assert/strict';
 import { NniManagerArgs, parseArgs } from './arguments';
 import { LogStream, initLogStream } from './log_stream';
 import { NniPaths, createPaths } from './paths';
+import { RestManager } from './rest';
 import { ShutdownManager } from './shutdown';
 
 export { NniManagerArgs, NniPaths };
@@ -32,6 +33,7 @@ export { NniManagerArgs, NniPaths };
 export interface NniGlobals {
     readonly args: NniManagerArgs;
     readonly paths: NniPaths;
+    readonly rest: RestManager;
     readonly shutdown: ShutdownManager;
 
     readonly logStream: LogStream;
@@ -59,8 +61,9 @@ export function initGlobals(): void {
     const args = parseArgs(process.argv.slice(2));
     const paths = createPaths(args);
     const logStream = initLogStream(args, paths);
+    const rest = new RestManager();
     const shutdown = new ShutdownManager();
 
-    const globals: NniGlobals = { args, paths, logStream, shutdown };
+    const globals: NniGlobals = { args, paths, logStream, rest, shutdown };
     Object.assign(global.nni, globals);
 }

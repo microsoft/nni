@@ -132,9 +132,9 @@ async function configRestServer(urlPrefix?: string): Promise<void> {
         await restServer.shutdown();
     }
 
+    globals.reset();
     globals.paths.logDirectory = path.join(__dirname, 'log');
     UnitTestHelpers.setWebuiPath(path.join(__dirname, 'static'));
-    UnitTestHelpers.disableNniManager();
 
     restServer = new RestServer(0, urlPrefix ?? '');
     await restServer.start();
@@ -144,15 +144,6 @@ async function configRestServer(urlPrefix?: string): Promise<void> {
     endPoint = urlJoin(endPointWithoutPrefix, urlPrefix ?? '');
 }
 
-function urlJoin(part1: string, part2: string): string {
-    if (part1.endsWith('/')) {
-        part1 = part1.slice(0, -1);
-    }
-    if (part2.startsWith('/')) {
-        part2 = part2.slice(1);
-    }
-    if (part2 === '') {
-        return part1;
-    }
-    return part1 + '/' + part2;
+function urlJoin(...parts: string[]): string {
+    return globals.rest.urlJoin(...parts);
 }
