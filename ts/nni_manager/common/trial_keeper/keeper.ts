@@ -76,11 +76,18 @@ export class TrialKeeper {
     }
 
     public async shutdown(): Promise<void> {
-        const trials = Array.from(this.trials.values());
-        const promises = trials.map(trial => trial.kill());
-        await Promise.all(promises);
+        let promises: Promise<void> = [];
 
-        await this.channels.shutdown();
+        promises.push(this.channels.shutdown());
+
+        if (this.gpuScheduler !== null) {
+            promises.push(this.gpuScheduler.shutdown());
+        }
+
+        const trials = Array.from(this.trials.values());
+        promises = promises.concat(trials.map(trial => trial.kill()));
+
+        await Promise.all(promises);
     }
 
     public registerDirectory(name: string, path: string): void {
