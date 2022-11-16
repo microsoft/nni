@@ -5,8 +5,6 @@ import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
 
-import fetch from 'node-fetch';
-
 import globals from 'common/globals/unittest';
 import { RestServer, UnitTestHelpers } from 'rest_server';
 import * as mock_netron_server from './mock_netron_server';
