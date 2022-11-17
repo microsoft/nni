@@ -6,20 +6,20 @@ import copy
 import logging
 from pathlib import Path
 import queue
-from typing import Any, Callable, Optional, Type
+from typing import Any, Callable, Optional, Type, Dict, Union
 import functools
 
 import torch
 import torch.fx
 from torch.fx import GraphModule
-from torch.fx.node import Argument, Node, Target, map_aggregate
+from torch.fx.node import Argument, Node, Target
 import torch.nn as nn
 
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name, randomize_tensor, torch_float_dtype, torch_integer_dtype
 from torch.fx._compatibility import compatibility
 from nni.compression.pytorch.speedup.compress_modules import replace_module
-from nni.common.concrete_trace_utils.utils import run_onlyif_instance, map_aggregate_zip
+from nni.common.concrete_trace_utils.utils import run_onlyif_instance, map_recursive, map_recursive_zip
 
 
 @compatibility(is_backward_compatible=True)
@@ -101,23 +101,23 @@ class ModelSpeedup(torch.fx.Interpreter):
     @run_onlyif_instance(Node)
     def arg_loader_orig(self, obj: Node) -> Any:
         if obj not in self.inter_vars:
-            raise RuntimeError(f'Node {n} referenced nonexistent value {n_arg}! Run Graph.lint() '
+            raise RuntimeError(f'Node {obj} referenced nonexistent value {obj.args}! Run Graph.lint() '
                             f'to diagnose such issues')
         return self.inter_vars[obj]
 
     @run_onlyif_instance(Node)
     def arg_loader_detach(self, obj: Node) -> Any:
         if obj not in self.inter_vars:
-            raise RuntimeError(f'Node {n} referenced nonexistent value {n_arg}! Run Graph.lint() '
+            raise RuntimeError(f'Node {obj} referenced nonexistent value {obj.args}! Run Graph.lint() '
                             f'to diagnose such issues')
-        return map_aggregate(self.inter_vars[obj], self.tensor_detacher)
+        return map_recursive(self.tensor_detacher, self.inter_vars[obj])
 
     @run_onlyif_instance(Node)
     def arg_loader_preprocess(self, obj: Node) -> Any:
         if obj not in self.inter_vars:
-            raise RuntimeError(f'Node {n} referenced nonexistent value {n_arg}! Run Graph.lint() '
+            raise RuntimeError(f'Node {obj} referenced nonexistent value {obj.args}! Run Graph.lint() '
                             f'to diagnose such issues')
-        return map_aggregate(self.inter_vars[obj], self.input_randomize_mask)
+        return map_recursive(self.input_randomize_mask, self.inter_vars[obj])
 
     @run_onlyif_instance(torch.Tensor, False)
     def get_in_mask(self, obj: torch.Tensor):
@@ -137,7 +137,7 @@ class ModelSpeedup(torch.fx.Interpreter):
     #         return list(self.args_iter)
     #     else:
     #         try:
-    #             return map_aggregate(next(self.args_iter), input_init)
+    #             return map_recursive(input_init, next(self.args_iter))
     #         except StopIteration as si:
     #             if len(args) > 0:
     #                 return args[0]
@@ -155,11 +155,11 @@ class ModelSpeedup(torch.fx.Interpreter):
             else:
                 self.logger.info('Propagate variables for %s: %s', node.op, node.name)
 
-            args = map_aggregate(node.args, self.arg_loader_detach)
-            kwargs = map_aggregate(node.kwargs, self.arg_loader_detach)
+            args = map_recursive(self.arg_loader_detach, node.args)
+            kwargs = map_recursive(self.arg_loader_detach, node.kwargs)
             
-            self.copied_args[node] = map_aggregate(args, self.tensor_cloner)
-            self.copied_kwargs[node] = map_aggregate(kwargs, self.tensor_cloner)
+            self.copied_args[node] = map_recursive(self.tensor_cloner, args)
+            self.copied_kwargs[node] = map_recursive(self.tensor_cloner, kwargs)
 
             inter_var_orig = getattr(self, node.op)(node.target, args, kwargs)
             self.inter_vars[node] = inter_var_orig
@@ -242,7 +242,7 @@ class ModelSpeedup(torch.fx.Interpreter):
     def update_direct_sparsity(self):
         for node in self.module.graph.nodes:
             node: Node
-            
+
             if node.op in ('placeholder', 'output'):
                 continue
 
@@ -274,18 +274,18 @@ class ModelSpeedup(torch.fx.Interpreter):
 
                         self.weight_masks[node] = weight_mask
 
-                    proced_args = map_aggregate(node.args, self.arg_loader_preprocess)
-                    proced_kwargs = map_aggregate(node.kwargs, self.arg_loader_preprocess)
+                    proced_args = map_recursive(self.arg_loader_preprocess, node.args)
+                    proced_kwargs = map_recursive(self.arg_loader_preprocess, node.kwargs)
                     proced_out = getattr(self, node.op)(node.target, proced_args, proced_kwargs)
 
-                    self.args_masks[node] = map_aggregate(map_aggregate(node.args, self.arg_loader_detach), self.get_in_mask)
-                    self.kwargs_masks[node] = map_aggregate(map_aggregate(node.kwargs, self.arg_loader_detach), self.get_in_mask)
-                    # self.out_masks[node] = map_aggregate(proced_out, self.calc_direct_mask)
-                    self.out_masks[node] = map_aggregate_zip(self.calc_direct_mask2, self.inter_vars[node], proced_out)
+                    self.args_masks[node] = map_recursive(self.get_in_mask, map_recursive(self.arg_loader_detach, node.args))
+                    self.kwargs_masks[node] = map_recursive(self.get_in_mask, map_recursive(self.arg_loader_detach, node.kwargs))
+                    # self.out_masks[node] = map_recursive(self.calc_direct_mask, proced_out)
+                    self.out_masks[node] = map_recursive_zip(self.calc_direct_mask2, self.inter_vars[node], proced_out)
             else:
-                self.args_masks[node] = map_aggregate(map_aggregate(node.args, self.arg_loader_detach), self.get_in_mask)
-                self.kwargs_masks[node] = map_aggregate(map_aggregate(node.kwargs, self.arg_loader_detach), self.get_in_mask)
-                self.out_masks[node] = map_aggregate(self.inter_vars[node], self.init_direct_mask)
+                self.args_masks[node] = map_recursive(self.get_in_mask, map_recursive(self.arg_loader_detach, node.args))
+                self.kwargs_masks[node] = map_recursive(self.get_in_mask, map_recursive(self.arg_loader_detach, node.kwargs))
+                self.out_masks[node] = map_recursive(self.init_direct_mask, self.inter_vars[node])
             # do memory collect / compression
 
     def update_indirect_one_out_mask(self, obj_orig, obj_mask):
@@ -319,8 +319,8 @@ class ModelSpeedup(torch.fx.Interpreter):
             if obj.dtype in torch_float_dtype:
                 obj.requires_grad_(flag)
 
-        map_aggregate(args, requires_grad_if_tensor)
-        map_aggregate(kwargs, requires_grad_if_tensor)
+        map_recursive(requires_grad_if_tensor, args)
+        map_recursive(requires_grad_if_tensor, kwargs)
 
         if node.op == 'call_module':
             sub_module = self.fetch_attr(node.target)
@@ -353,14 +353,14 @@ class ModelSpeedup(torch.fx.Interpreter):
             out_orig = self.inter_vars[node]
             out_mask = self.out_masks[node]
 
-            map_aggregate_zip(self.update_indirect_one_out_mask, out_orig, out_mask)
+            map_recursive_zip(self.update_indirect_one_out_mask, out_orig, out_mask)
 
             # Forward inference with auto gradient enabled
             # Note: tensors that need gradient cannot be used in the in-place operator
             # Some operator may have the in_place operations, so we need to clone the input
             # before passing to the self.module
-            proced_args = map_aggregate(node.args, self.arg_loader_preprocess)
-            proced_kwargs = map_aggregate(node.kwargs, self.arg_loader_preprocess)
+            proced_args = map_recursive(self.arg_loader_preprocess, node.args)
+            proced_kwargs = map_recursive(self.arg_loader_preprocess, node.kwargs)
             
             if node.op == 'call_module':
                 sub_module = self.fetch_attr(node.target)
@@ -382,11 +382,11 @@ class ModelSpeedup(torch.fx.Interpreter):
             self.requires_grad_(node, proced_args, proced_kwargs) # ??
             # Some operator may have the in_place operations, so we need to clone the input
             # before passing to the self.module
-            cloned_proced_args = map_aggregate(proced_args, self.tensor_cloner)
-            cloned_proced_kwargs = map_aggregate(proced_kwargs, self.tensor_cloner)
+            cloned_proced_args = map_recursive(self.tensor_cloner, proced_args)
+            cloned_proced_kwargs = map_recursive(self.tensor_cloner, proced_kwargs)
             output = getattr(self, node.op)(node.target, cloned_proced_args, cloned_proced_kwargs)
 
-            map_aggregate_zip(self.update_indirect_weight_mask, output, self.out_masks[node])
+            map_recursive_zip(self.update_indirect_weight_mask, output, self.out_masks[node])
 
             if node.op == 'call_module':
                 # update the sparsity of the paramters
@@ -410,11 +410,11 @@ class ModelSpeedup(torch.fx.Interpreter):
                         pass
                 else:
                     assert not isinstance(in_propagated, torch.Tensor)
-            orig_args = map_aggregate(node.args, self.arg_loader_orig)
-            orig_kwargs = map_aggregate(node.kwargs, self.arg_loader_orig)
+            orig_args = map_recursive(self.arg_loader_orig, node.args)
+            orig_kwargs = map_recursive(self.arg_loader_orig, node.kwargs)
 
-            map_aggregate_zip(pass_gradient, orig_args, proced_args)
-            map_aggregate_zip(pass_gradient, orig_kwargs, proced_kwargs)
+            map_recursive_zip(pass_gradient, orig_args, proced_args)
+            map_recursive_zip(pass_gradient, orig_kwargs, proced_kwargs)
             
             print('inter var after indirect propagation:', node.name)
             print('in_masks:', [(torch.manual_seed(100), torch.sum(torch.rand_like(i.to(torch.float)) * i))[1] if isinstance(i, torch.Tensor) else i for i in self.args_masks[node]])
