@@ -17,6 +17,18 @@ from torch.fx.node import Node
 from torch.fx.proxy import Proxy
 
 from . import concrete_tracer as et
+from .utils import (
+    _orig_tuple,
+    _orig_list,
+    _orig_isinstance,
+    _orig_range,
+    _orig_getattr,
+    _orig_dict,
+    _orig_len,
+    _orig_index,
+    _orig_bool,
+    _orig_slice,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -34,7 +46,7 @@ class ConcreteProxy(Proxy):
         'POP_JUMP_IF_TRUE',
         'JUMP_IF_NOT_EXC_MATCH', # occurred in new python vertion, not tested
     )
-    jump_opcodes = et._orig_tuple(dis.opmap[name] for name in jump_opnames if name in dis.opmap)
+    jump_opcodes = _orig_tuple(dis.opmap[name] for name in jump_opnames if name in dis.opmap)
     op_compare = dis.opmap['COMPARE_OP']
     op_extended_arg = dis.opmap['EXTENDED_ARG']
     op_call = dis.opmap['CALL_FUNCTION']
@@ -75,7 +87,7 @@ class ConcreteProxy(Proxy):
         calling_frame = frame.f_back
         assert calling_frame is not None
         cur = calling_frame.f_lasti // 2
-        insts: List[dis.Instruction] = et._orig_list(dis.get_instructions(calling_frame.f_code))
+        insts: List[dis.Instruction] = _orig_list(dis.get_instructions(calling_frame.f_code))
         while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
@@ -95,7 +107,7 @@ class ConcreteProxy(Proxy):
         elif insts[cur].opcode == self.op_unpack_sequence:
             # in executing `a, b, c = atuple`
             return ConcreteUnpackIterProxy(self)
-        elif insts[cur].opname == 'GET_ITER' and insts[cur + 1].opname == 'FOR_ITER' and et._orig_isinstance(self.value, et._orig_range):
+        elif insts[cur].opname == 'GET_ITER' and insts[cur + 1].opname == 'FOR_ITER' and _orig_isinstance(self.value, _orig_range):
             # in executing `for i in range(...)`
             return iter(self.value)
         # elif insts[cur].opname == 'CONTAINS_OP':
@@ -114,23 +126,23 @@ class ConcreteProxy(Proxy):
         calling_frame = frame.f_back
         assert calling_frame is not None
         cur = calling_frame.f_lasti // 2
-        insts: List[dis.Instruction] = et._orig_list(dis.get_instructions(calling_frame.f_code))
+        insts: List[dis.Instruction] = _orig_list(dis.get_instructions(calling_frame.f_code))
         while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
         if insts[cur].opcode == self.op_call_ex:
             # in executing func(..., *proxy)
-            return et._orig_len(self.value)
+            return _orig_len(self.value)
         elif insts[cur].opcode == self.op_tuple_unpack_call:
             # in executing func(*..., *proxy)
             # <= python 3.8
-            return et._orig_len(self.value)
+            return _orig_len(self.value)
         elif insts[cur].opcode == self.op_list_extend:
             # in executing x.extend(*proxy) or [x, *proxy]
             # >= python 3.9
-            return et._orig_len(self.value)
+            return _orig_len(self.value)
         else:
-            return self.tracer.create_proxy('call_function', et._orig_len, (self,), {})
+            return self.tracer.create_proxy('call_function', _orig_len, (self,), {})
 
     def __getitem__(self, *args, **kwargs) -> ConcreteProxy:
         return self.tracer.create_proxy('call_function', operator.getitem, (self,) + args, kwargs)
@@ -145,28 +157,28 @@ class ConcreteProxy(Proxy):
         calling_frame = frame.f_back
         assert calling_frame is not None
         cur = calling_frame.f_lasti // 2
-        insts: List[dis.Instruction] = et._orig_list(dis.get_instructions(calling_frame.f_code))
+        insts: List[dis.Instruction] = _orig_list(dis.get_instructions(calling_frame.f_code))
         while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
         if insts[cur].opcode in self.jump_opcodes or (
             insts[cur].opcode in self.jump_before_opcodes and insts[cur + 1].opcode in self.jump_opcodes):
             # in executing branch condition
-            return et._orig_bool(self.value)
+            return _orig_bool(self.value)
         elif insts[cur].opname == 'CONTAINS_OP':
             # in executing 'in'
-            return et._orig_bool(self.value)
+            return _orig_bool(self.value)
         elif insts[cur].opcode == self.op_not:
             # We cannot return a proxy because 'UNARY_NOT' op will check the type.
             _logger.warning('please use the function patcher, or use "x = operator.not_(y)" instead of "x = not y",'
                             'otherwise the traced graph may be wrong')
-            return et._orig_bool(self.value)
+            return _orig_bool(self.value)
         else:
             return self.tracer.create_proxy('call_function', bool, (self,), {})
 
     def __index__(self) -> Union[int, ConcreteProxy]:
         # should only be in list/tuple getitem
-        return et._orig_index(self.value)
+        return _orig_index(self.value)
 
     def __hash__(self) -> Union[int, ConcreteProxy]:
         # should only be in dict getitem
@@ -180,7 +192,7 @@ class ConcreteProxy(Proxy):
         calling_frame = frame.f_back
         assert calling_frame is not None
         cur = calling_frame.f_lasti // 2
-        insts: List[dis.Instruction] = et._orig_list(dis.get_instructions(calling_frame.f_code))
+        insts: List[dis.Instruction] = _orig_list(dis.get_instructions(calling_frame.f_code))
         while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
@@ -207,16 +219,16 @@ class ConcreteProxy(Proxy):
         args = args if args else ()
         kwargs = kwargs if kwargs else {}
 
-        tracers: Set[Any] = et._orig_set()
+        tracers: Set[Any] = _orig_set()
 
         def find_tracer(a):
-            if et._orig_isinstance(a, cls):
+            if _orig_isinstance(a, cls):
                 tracers.add(a.tracer)
         torch.fx.node.map_aggregate(args, find_tracer)
         torch.fx.node.map_aggregate(kwargs, find_tracer)
 
-        if et._orig_len(tracers) > 1:
-            raise RuntimeError(f'Found multiple different tracers {et._orig_list(tracers)} while '
+        if _orig_len(tracers) > 1:
+            raise RuntimeError(f'Found multiple different tracers {_orig_list(tracers)} while '
                                f'trying to trace operations {orig_method}')
         tracer, = tracers
 
@@ -242,7 +254,7 @@ class ConcreteAttrProxy(ConcreteProxy):
         self.attr = attr
         self.tracer = root.tracer
         self._node: Optional[Node] = None
-        self.value = et._orig_getattr(root.value, attr)
+        self.value = _orig_getattr(root.value, attr)
 
     def __repr__(self) -> str:
         calling_frame_name = inspect.stack()[1][1]
@@ -256,7 +268,7 @@ class ConcreteAttrProxy(ConcreteProxy):
         # which do not rely on the getitem call
         if self._node is None:
             self._node = self.tracer.create_proxy(
-                'call_function', et._orig_getattr, (self.root, self.attr), {}).node
+                'call_function', _orig_getattr, (self.root, self.attr), {}).node
         return self._node
 
     def __call__(self, *args, **kwargs):
@@ -302,13 +314,13 @@ class ConcreteUnpackIterProxy(ConcreteProxy):
     def __init__(self, root: ConcreteProxy):
         if not hasattr(root.value, '__getitem__'):
             # transfer 'set' to 'tuple'
-            root = et._orig_tuple(root)
+            root = _orig_tuple(root)
         self.root = root
         self.tracer = root.tracer
         self._node: Optional[Node] = None
         self._value: List[Any] = []
         self.index = -1
-        self.len = et._orig_len(root.value)
+        self.len = _orig_len(root.value)
 
     def __repr__(self) -> str:
         return f'ConcreteUnpackIterProxy({self.node.name})'
@@ -326,7 +338,7 @@ class ConcreteUnpackIterProxy(ConcreteProxy):
     def value(self):
         # the node for attributes is added lazily, since most will just be method calls
         # which do not rely on the getitem call
-        if et._orig_len(self._value) == 0:
+        if _orig_len(self._value) == 0:
             self._value.append(iter(self.root.value))
         return self._value[0]
 
@@ -341,18 +353,18 @@ def map_aggregate_not_proxy(a, fn):
     """
     Apply fn to each Node appearing arg. arg may be a list, tuple, slice, or dict with string keys.
     """
-    if et._orig_isinstance(a, ConcreteProxy):
+    if _orig_isinstance(a, ConcreteProxy):
         return fn(a)
-    elif et._orig_isinstance(a, et._orig_tuple):
-        t = et._orig_tuple(map_aggregate_not_proxy(elem, fn) for elem in a)
+    elif _orig_isinstance(a, _orig_tuple):
+        t = _orig_tuple(map_aggregate_not_proxy(elem, fn) for elem in a)
         # Support NamedTuple (if it has `_fields`) by repacking into original type.
         return t if not hasattr(a, '_fields') else type(a)(*t)
-    elif et._orig_isinstance(a, et._orig_list):
-        return et._orig_list(map_aggregate_not_proxy(elem, fn) for elem in a)
-    elif et._orig_isinstance(a, et._orig_dict):
-        return et._orig_dict((k, map_aggregate_not_proxy(v, fn)) for k, v in a.items())
-    elif et._orig_isinstance(a, slice):
-        return slice(map_aggregate_not_proxy(a.start, fn), map_aggregate_not_proxy(a.stop, fn), map_aggregate_not_proxy(a.step, fn))
+    elif _orig_isinstance(a, _orig_list):
+        return _orig_list(map_aggregate_not_proxy(elem, fn) for elem in a)
+    elif _orig_isinstance(a, _orig_dict):
+        return _orig_dict((k, map_aggregate_not_proxy(v, fn)) for k, v in a.items())
+    elif _orig_isinstance(a, _orig_slice):
+        return _orig_slice(map_aggregate_not_proxy(a.start, fn), map_aggregate_not_proxy(a.stop, fn), map_aggregate_not_proxy(a.step, fn))
     else:
         return fn(a)
 
@@ -362,7 +374,7 @@ for method in {**magic_methods, **inplace_methods}:
     def _scope(method):
         def impl(*args, **kwargs):
             tracer = args[0].tracer
-            target = et._orig_getattr(operator, method)
+            target = _orig_getattr(operator, method)
             return tracer.create_proxy('call_function', target, args, kwargs)
         impl.__name__ = method
         as_magic = f'__{method.strip("_")}__'
@@ -374,7 +386,7 @@ def _define_reflectable(orig_method_name):
     method_name = f'__r{orig_method_name.strip("_")}__'
 
     def impl(self, rhs):
-        target = et._orig_getattr(operator, orig_method_name)
+        target = _orig_getattr(operator, orig_method_name)
         return self.tracer.create_proxy('call_function', target, (rhs, self), {})
     impl.__name__ = method_name
     impl.__qualname__ = method_name
