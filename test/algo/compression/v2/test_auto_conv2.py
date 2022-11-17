@@ -6,7 +6,7 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from nni.common.concrete_trace_utils import concrete_trace
+from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
 from nni.compression.pytorch.pruning import L1NormPruner
 from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 from nni.algorithms.compression.v2.pytorch.utils import (
@@ -177,7 +177,12 @@ class AutoConvTestCase(unittest.TestCase):
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
-        traced_model = concrete_trace(model, {'x': dummy_input}, False)
+        traced_model = concrete_trace(model, {'x': dummy_input},
+                autowrap_leaf_class = {
+                    **ConcreteTracer.default_autowrap_leaf_class,
+                    int:        ((), False),
+                    slice:      ((), False),
+                })
         torch.manual_seed(100)
         ModelSpeedup(traced_model, masks).run(torch.rand(8, 1, 28, 28))
         real_sparsity_list = compute_sparsity_compact2origin(TorchModel1(), traced_model, config_list)
