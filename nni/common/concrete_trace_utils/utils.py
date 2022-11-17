@@ -12,7 +12,7 @@ _orig_module_getattribute: Callable = torch.nn.Module.__getattribute__
 _orig_agfunc_apply: Callable = torch.autograd.function.Function.apply
 _orig_torch_assert: Callable = torch._assert
 
-_orig_isinstance: Callable = builtins._orig_isinstance
+_orig_isinstance: Callable = builtins.isinstance
 _orig_getattr: Callable = builtins.getattr
 
 _orig_range: Type[Any] = builtins.range
@@ -26,6 +26,7 @@ _orig_dict: Type[Any] = builtins.dict
 _orig_map: Type[Any] = builtins.map
 _orig_zip: Type[Any] = builtins.zip
 _orig_enumerate: Type[Any] = builtins.enumerate
+_orig_slice: Type[Any] = builtins.slice
 
 _orig_len: Callable = builtins.len
 _orig_not: Callable = operator.not_

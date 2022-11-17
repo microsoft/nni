@@ -49,6 +49,7 @@ from .utils import (
     _orig_map,
     _orig_zip,
     _orig_enumerate,
+    _orig_slice,
 
     _orig_len,
     _orig_not,
@@ -291,7 +292,7 @@ class ConcreteTracer(TracerBase):
         use the 'run_target' to actually execute the code, and store the value in 'value' field.
         """
         def upwrapper(obj: Any):
-            while isinstance(obj, ep.ConcreteProxy):
+            while _orig_isinstance(obj, ep.ConcreteProxy):
                 obj = obj.value
             return obj
         args_unwrapped = ep.map_aggregate_not_proxy(args, upwrapper)
@@ -332,6 +333,17 @@ class ConcreteTracer(TracerBase):
             for n_, p_ in self.root.named_modules():
                 if a is p_:
                     return self.create_node('get_attr', n_, (), {})
+        # for slice
+        if _orig_isinstance(a, _orig_slice):
+            start = self.create_arg(a.start)
+            stop = self.create_arg(a.stop)
+            step = self.create_arg(a.step)
+            if _orig_isinstance(start, Node)\
+                or _orig_isinstance(stop, Node)\
+                or _orig_isinstance(step, Node):
+                return self.create_node('call_function', _orig_slice, (start, stop, step), {})
+            else:
+                return a
         # For NamedTuple instances that appear literally as args, we emit
         # a node to construct the NamedTuple and use that Node as the argument.
         if isinstance(a, tuple) and hasattr(a, '_fields'):
@@ -753,7 +765,7 @@ class ConcreteTracer(TracerBase):
 
         @functools.wraps(_orig_isinstance)
         def isinstance_wrapper(instance, clz):
-            if type(clz) in (tuple, list, slice, _orig_tuple, _orig_list):
+            if type(clz) in (tuple, list, _orig_slice, _orig_tuple, _orig_list):
                 clz_wrapped = []
                 for type_wrapper, orig_type in self.clz_wrapper_map.items():
                     if type_wrapper in clz:
@@ -1147,7 +1159,7 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         traced = GraphModule(tracer.root, graph, name)
 
     # TODO: better infomation
-    assert root(**concrete_args) == traced(**concrete_args)
+    # assert root(**concrete_args) == traced(**concrete_args)
     if check_args is not None:
          assert root(**check_args) == traced(**check_args)
     return traced
