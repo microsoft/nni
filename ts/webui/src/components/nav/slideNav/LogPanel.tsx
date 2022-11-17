@@ -82,7 +82,7 @@ const LogPanel = (props: LogPanelProps): any => {
                 <Pivot selectedKey={activeTab} style={{ minHeight: 190 }}>
                     <PivotItem headerText='Dispatcher log' key='dispatcher'>
                         <PivotItemContent
-                            content={dispatcherLogStr}
+                            content={dispatcherLogStr as string}
                             loading={isLoading}
                             height={monacoHeight}
                             downloadLog={downloadDispatcher}
@@ -91,7 +91,7 @@ const LogPanel = (props: LogPanelProps): any => {
                     </PivotItem>
                     <PivotItem headerText='NNIManager log' key='nnimanager'>
                         <PivotItemContent
-                            content={nniManagerLogStr}
+                            content={nniManagerLogStr as string}
                             loading={isLoading}
                             height={monacoHeight}
                             downloadLog={downloadNNImanager}
@@ -113,7 +113,7 @@ interface PivotProps {
     close: ()=> void;
 }
 
-export const PivotItemContent = (props: PivotProps): React.ReactNode => {
+export const PivotItemContent = (props: PivotProps): any => {
     const {content, loading, height, downloadLog, close} = props;
     return (
         <div className='panel logMargin'>

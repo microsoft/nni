@@ -61,7 +61,7 @@ const Para = (props: ParaProps) => {
     const updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
             // setUserSelectOptimizeMode(item.key.toString()); // 原理同 percentNum function
-            changeMetricGraphMode(item.key.toString());
+            changeMetricGraphMode(item.key.toString() as 'Maximize' | 'Minimize');
         }
     };
 

@@ -125,7 +125,7 @@ class App extends React.Component<{}, AppState> {
                     <Stack className='nni' style={{ minHeight: window.innerHeight }}>
                         <div className='header'>
                             <div className='headerCon'>
-                                <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
+                                <NavCon changeInterval={this.changeInterval} />
                             </div>
                         </div>
                         <Stack className='contentBox'>

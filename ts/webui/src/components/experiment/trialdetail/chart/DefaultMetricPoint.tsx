@@ -256,7 +256,7 @@ const DefaultPoint = (props: DefaultPointProps) => {
 
     const updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            changeMetricGraphMode(item.key.toString());
+            changeMetricGraphMode(item.key.toString() as 'Maximize' | 'Minimize');
         }
     };
 
