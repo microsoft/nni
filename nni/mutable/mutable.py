@@ -125,7 +125,7 @@ class Mutable:
     * Use ``mutable.freeze(sample)`` to create a fixed version of the mutable.
 
     Subclasses of mutables must implement :meth:`leaf_mutables` (which is the implementation of :meth:`simplify`),
-    :meth:`contains`, and :meth:`freeze`.
+    :meth:`check_contains`, and :meth:`freeze`.
     Subclasses of :class:`LabeledMutable` must also implement :meth:`default`,
     :meth:`random` and :meth:`grid`.
 
@@ -158,8 +158,10 @@ class Mutable:
         """
         raise NotImplementedError()
 
-    def contains(self, sample: Sample) -> SampleValidationError | None:
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
         """Check whether sample is validly sampled from the mutable space.
+        **Return** an exception if the sample is invalid, otherwise **return** ``None``.
+        Subclass is recommended to override this rather than :meth:`contains`.
 
         Parameters
         ----------
@@ -235,9 +237,23 @@ class Mutable:
             is_leaf = _is_mutable_symbol
         return dedup_labeled_mutables(self.leaf_mutables(is_leaf))
 
+    def contains(self, sample: Sample) -> bool:
+        """Check whether sample is validly sampled from the mutable space.
+
+        Parameters
+        ----------
+        sample
+            See :meth:`freeze`.
+
+        Returns
+        -------
+        Whether the sample is valid.
+        """
+        return self.check_contains(sample) is None
+
     def validate(self, sample: Sample) -> None:
         """Validate a sample.
-        Calls :meth:`contains` and raises an exception if the sample is invalid.
+        Calls :meth:`check_contains` and raises an exception if the sample is invalid.
 
         Parameters
         ----------
@@ -253,7 +269,7 @@ class Mutable:
         -------
         None
         """
-        exception = self.contains(sample)
+        exception = self.check_contains(sample)
         if exception is not None:
             raise exception
 
@@ -466,12 +482,12 @@ class MutableExpression(Mutable, SymbolicExpression):
         self.validate(sample)
         return self.evaluate(sample)
 
-    def contains(self, sample: Sample) -> SampleValidationError | None:
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
         for symbol in self.leaf_symbols():
             if not isinstance(symbol, MutableSymbol):
                 _logger.warning('The expression contains non-mutable symbols. This is not recommended: %s', self)
                 break
-            exception = symbol.contains(sample)
+            exception = symbol.check_contains(sample)
             if exception is not None:
                 exception.paths.insert(0, 'expression')
                 return exception
@@ -556,7 +572,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
         assert len(self.weights) == len(self.values), 'Distribution must have length n.'
         assert abs(sum(self.weights) - 1) < 1e-6, 'Distribution must sum to 1.'
 
-    def contains(self, sample: Sample) -> SampleValidationError | None:
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
         if self.label not in sample:
             return SampleMissingError(self.label, list(sample.keys()))
         sample_val = sample[self.label]
@@ -588,7 +604,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
         Mutable.default
         """
         memo = {} if memo is None else memo
-        err = self.contains(memo)
+        err = self.check_contains(memo)
         if isinstance(err, SampleMissingError):
             if self.default_value is not MISSING:
                 memo[self.label] = self.default_value
@@ -611,7 +627,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
         memo = {} if memo is None else memo
         if random_state is None:
             random_state = RandomState()
-        err = self.contains(memo)
+        err = self.check_contains(memo)
         if isinstance(err, SampleMissingError):
             index = random_state.choice(len(self.values), p=self.weights)
             memo[self.label] = self.values[index]
@@ -625,7 +641,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
         Mutable.grid
         """
         memo = {} if memo is None else memo
-        err = self.contains(memo)
+        err = self.check_contains(memo)
 
         if isinstance(err, SampleMissingError):
             if all(dis == self.weights[0] for dis in self.weights):
@@ -763,7 +779,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         mutables = self._simplify_to_discrete_format()
         rv = []
         for i, mutable in enumerate(mutables):
-            exception = mutable.contains(sample)
+            exception = mutable.check_contains(sample)
             if exception is not None:
                 exception.paths.insert(0, self.label)
                 return exception
@@ -772,7 +788,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
                 rv.append(self.values[i])
         return rv
 
-    def contains(self, sample: Sample) -> SampleValidationError | None:
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
         possible_exc_types = []
         possible_reasons = []
         for parse_fn in [self._parse_simple_format, self._parse_discrete_format]:
@@ -816,7 +832,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         Mutable.default
         """
         memo = {} if memo is None else memo
-        err = self.contains(memo)
+        err = self.check_contains(memo)
         if isinstance(err, SampleMissingError):
             if self.default_value is not MISSING:
                 memo[self.label] = self.default_value
@@ -840,7 +856,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         memo = {} if memo is None else memo
         if random_state is None:
             random_state = RandomState()
-        err = self.contains(memo)
+        err = self.check_contains(memo)
         if isinstance(err, SampleMissingError):
             if self.n_chosen is None:
                 chosen = [value for value in self.values if random_state.random() < self.weights[self.values.index(value)]]
@@ -862,7 +878,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         Mutable.grid
         """
         memo = {} if memo is None else memo
-        err = self.contains(memo)
+        err = self.check_contains(memo)
 
         if isinstance(err, SampleMissingError):
             if self.n_chosen is not None:
@@ -1006,7 +1022,7 @@ class Continuous(MutableSymbol):
     def extra_repr(self) -> str:
         return f'{self.low}, {self.high}, label={self.label!r}'
 
-    def contains(self, sample: Sample) -> SampleValidationError | None:
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
         if self.label not in sample:
             return SampleMissingError(self.label, list(sample.keys()))
         sample_val = sample[self.label]
@@ -1040,7 +1056,7 @@ class Continuous(MutableSymbol):
         Mutable.default
         """
         memo = {} if memo is None else memo
-        err = self.contains(memo)
+        err = self.check_contains(memo)
         if isinstance(err, SampleMissingError):
             if self.default_value is not MISSING:
                 memo[self.label] = self.default_value
@@ -1062,7 +1078,7 @@ class Continuous(MutableSymbol):
         memo = {} if memo is None else memo
         if random_state is None:
             random_state = RandomState()
-        err = self.contains(memo)
+        err = self.check_contains(memo)
         if isinstance(err, SampleMissingError):
             memo[self.label] = self.qclip(self.distribution.rvs(random_state=random_state))
         return self.freeze(memo)
@@ -1100,7 +1116,7 @@ class Continuous(MutableSymbol):
         if granularity is None:
             granularity = 1
 
-        err = self.contains(memo)
+        err = self.check_contains(memo)
         if isinstance(err, SampleMissingError):
             percentiles = [i / (2 ** granularity) for i in range(1, 2 ** granularity)]
             last_sample: float | None = None
