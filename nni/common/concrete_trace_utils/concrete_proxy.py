@@ -34,7 +34,7 @@ class ConcreteProxy(Proxy):
         'POP_JUMP_IF_TRUE',
         'JUMP_IF_NOT_EXC_MATCH', # occurred in new python vertion, not tested
     )
-    jump_opcodes = tuple(dis.opmap[name] for name in jump_opnames if name in dis.opmap)
+    jump_opcodes = et._orig_tuple(dis.opmap[name] for name in jump_opnames if name in dis.opmap)
     op_compare = dis.opmap['COMPARE_OP']
     op_extended_arg = dis.opmap['EXTENDED_ARG']
     op_call = dis.opmap['CALL_FUNCTION']
@@ -75,7 +75,7 @@ class ConcreteProxy(Proxy):
         calling_frame = frame.f_back
         assert calling_frame is not None
         cur = calling_frame.f_lasti // 2
-        insts = et._orig_list(dis.get_instructions(calling_frame.f_code))
+        insts: List[dis.Instruction] = et._orig_list(dis.get_instructions(calling_frame.f_code))
         while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
@@ -114,7 +114,7 @@ class ConcreteProxy(Proxy):
         calling_frame = frame.f_back
         assert calling_frame is not None
         cur = calling_frame.f_lasti // 2
-        insts = et._orig_list(dis.get_instructions(calling_frame.f_code))
+        insts: List[dis.Instruction] = et._orig_list(dis.get_instructions(calling_frame.f_code))
         while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
@@ -145,7 +145,7 @@ class ConcreteProxy(Proxy):
         calling_frame = frame.f_back
         assert calling_frame is not None
         cur = calling_frame.f_lasti // 2
-        insts = et._orig_list(dis.get_instructions(calling_frame.f_code))
+        insts: List[dis.Instruction] = et._orig_list(dis.get_instructions(calling_frame.f_code))
         while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
@@ -180,7 +180,7 @@ class ConcreteProxy(Proxy):
         calling_frame = frame.f_back
         assert calling_frame is not None
         cur = calling_frame.f_lasti // 2
-        insts = list(dis.get_instructions(calling_frame.f_code))
+        insts: List[dis.Instruction] = et._orig_list(dis.get_instructions(calling_frame.f_code))
         while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
@@ -202,7 +202,7 @@ class ConcreteProxy(Proxy):
     def __torch_function__(cls, orig_method, types, args=None, kwargs=None):
         # to wrap all the functions/methods with tensor inputs in the namespace 'torch.*'.
         # actually a simple way to do wrap, but may get wrong in functions with no tensor inputs.
-        # todo: considering if we can use other way to trace these functions.
+        # TODO: now for most functions in torch namespace, we do wrap directly and not use __torch_function__
 
         args = args if args else ()
         kwargs = kwargs if kwargs else {}
@@ -216,7 +216,7 @@ class ConcreteProxy(Proxy):
         torch.fx.node.map_aggregate(kwargs, find_tracer)
 
         if et._orig_len(tracers) > 1:
-            raise RuntimeError(f'Found multiple different tracers {list(tracers)} while '
+            raise RuntimeError(f'Found multiple different tracers {et._orig_list(tracers)} while '
                                f'trying to trace operations {orig_method}')
         tracer, = tracers
 
@@ -290,7 +290,7 @@ class ConcreteUnpackIterProxy(ConcreteProxy):
                 b = proxy[1]
                 y = [x, a, b]
     """
-    
+
     @staticmethod
     def try_create(root: Any):
         if isinstance(root, ConcreteProxy):
@@ -302,7 +302,7 @@ class ConcreteUnpackIterProxy(ConcreteProxy):
     def __init__(self, root: ConcreteProxy):
         if not hasattr(root.value, '__getitem__'):
             # transfer 'set' to 'tuple'
-            root = tuple(root)
+            root = et._orig_tuple(root)
         self.root = root
         self.tracer = root.tracer
         self._node: Optional[Node] = None
