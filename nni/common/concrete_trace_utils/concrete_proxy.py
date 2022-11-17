@@ -202,7 +202,7 @@ class ConcreteProxy(Proxy):
     def __torch_function__(cls, orig_method, types, args=None, kwargs=None):
         # to wrap all the functions/methods with tensor inputs in the namespace 'torch.*'.
         # actually a simple way to do wrap, but may get wrong in functions with no tensor inputs.
-        # todo: considering if we can use other way to trace these functions.
+        # TODO: now for most functions in torch namespace, we do wrap directly and not use __torch_function__
 
         args = args if args else ()
         kwargs = kwargs if kwargs else {}

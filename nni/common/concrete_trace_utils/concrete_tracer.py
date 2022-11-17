@@ -28,38 +28,37 @@ from torch.fx.proxy import TracerBase
 
 from . import concrete_proxy as ep
 from .operator_patcher import OperatorPatcher
+from .utils import (
+    _orig_module_call,
+    _orig_module_getattribute,
+
+    _orig_agfunc_apply,
+    _orig_torch_assert,
+
+    _orig_isinstance,
+    _orig_getattr,
+
+    _orig_range,
+    _orig_int,
+    _orig_bool,
+    _orig_tuple,
+    _orig_list,
+    _orig_set,
+    _orig_frozenset,
+    _orig_dict,
+    _orig_map,
+    _orig_zip,
+    _orig_enumerate,
+
+    _orig_len,
+    _orig_not,
+    _orig_is,
+    _orig_is_not,
+    _orig_contains,
+    _orig_index,
+)
 
 HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
-
-# These need to run in global scope to handle nested calls correctly
-_orig_module_call: Callable = torch.nn.Module.__call__
-_orig_module_getattr: Callable = torch.nn.Module.__getattr__
-_orig_module_getattribute: Callable = torch.nn.Module.__getattribute__
-
-_orig_agfunc_apply: Callable = torch.autograd.function.Function.apply
-_orig_torch_assert: Callable = torch._assert
-
-_orig_isinstance: Callable = builtins.isinstance
-_orig_getattr: Callable = builtins.getattr
-
-_orig_range: Type[Any] = builtins.range
-_orig_int: Type[Any] = builtins.int
-_orig_bool: Type[Any] = builtins.bool
-_orig_tuple: Type[Any] = builtins.tuple
-_orig_list: Type[Any] = builtins.list
-_orig_set: Type[Any] = builtins.set
-_orig_frozenset: Type[Any] = builtins.frozenset
-_orig_dict: Type[Any] = builtins.dict
-_orig_map: Type[Any] = builtins.map
-_orig_zip: Type[Any] = builtins.zip
-_orig_enumerate: Type[Any] = builtins.enumerate
-
-_orig_len: Callable = builtins.len
-_orig_not: Callable = operator.not_
-_orig_is: Callable = operator.is_
-_orig_is_not: Callable = operator.is_not
-_orig_contains: Callable = operator.contains
-_orig_index: Callable = operator.index
 
 @compatibility(is_backward_compatible=True)
 class ConcreteTracer(TracerBase):
@@ -398,6 +397,7 @@ class ConcreteTracer(TracerBase):
         # Prefer the O(1) algorithm
         if self.submodule_paths:
             path = self.submodule_paths.get(mod)
+            # TODO: better infomation
             if path is None:
                 raise NameError('module is not installed as a submodule')
             assert isinstance(path, str)
@@ -451,10 +451,11 @@ class ConcreteTracer(TracerBase):
             default_arg = ()
             if name in default_args and not name.startswith('*'):
                 default_arg = (default_args[name],)
-                
+
             if name in concrete_args:
                 self.placeholder_dict[f'{name}_{str(cnt)}'] = concrete_args[name]
             else:
+                # TODO: better infomation
                 assert name in default_args
                 self.placeholder_dict[f'{name}_{str(cnt)}'] = default_args[name]
             return self.create_proxy('placeholder', f'{name}_{str(cnt)}', default_arg, {})
@@ -512,6 +513,7 @@ class ConcreteTracer(TracerBase):
         if isinstance(root, torch.nn.Module):
             self.root = root
 
+            # TODO: better infomation
             assert hasattr(
                 root, forwrad_function_name
             ), f"traced_func_name={forwrad_function_name} doesn't exist in {type(root).__name__}"
@@ -631,6 +633,7 @@ class ConcreteTracer(TracerBase):
 
         @functools.wraps(_orig_range)
         def range_wrapper(*args):
+            # TODO: better infomation
             assert 1 <= _orig_len(args) <= 3
             args = (arg.value if _orig_isinstance(arg, ep.ConcreteProxy) else arg for arg in args)
             return _orig_range(*args)
@@ -775,7 +778,9 @@ class ConcreteTracer(TracerBase):
 
         @functools.wraps(_orig_getattr)
         def getattr_wrapper(obj, *args):
-            assert 1 <= _orig_len(args) <= 2
+            # TODO: better infomation
+            if not 1 <= _orig_len(args) <= 2:
+                raise Exception()
             args = _orig_list(args)
             if _orig_isinstance(args[0], ep.ConcreteProxy):
                 args[0] = args[0].value
@@ -1114,9 +1119,11 @@ def _create_wrapped_attr_for_middle_class(tracer: ConcreteTracer, _orig_clz_geta
 
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Optional[Dict[str, Any]],
+                   *,
                    use_function_patch: bool = False,
                    function_patch_backlist: List[str] = [],
                    forwrad_function_name: str = 'forward',
+                   check_args: Optional[Dict[str, Any]] = None,
                    autowrap_leaf_function = ConcreteTracer.default_autowrap_leaf_function,
                    autowrap_leaf_class = ConcreteTracer.default_autowrap_leaf_class,
                    leaf_module = (),
@@ -1128,7 +1135,19 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         fake_middle_class = fake_middle_class,
     )
     graph = tracer.trace(root, concrete_args, use_function_patch, function_patch_backlist, forwrad_function_name)
-    name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
+    graph_check = tracer.trace(root, concrete_args, use_function_patch, function_patch_backlist, forwrad_function_name)
+    for node_a, node_b in zip(graph.nodes, graph_check.nodes):
+        node_a: Node
+        node_b: Node
+        # TODO: better infomation
+        assert node_a.op == node_b.op and node_a.target == node_b.target
+
     with MagicMethodPatcher(tracer.root):
+        name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
         traced = GraphModule(tracer.root, graph, name)
+
+    # TODO: better infomation
+    assert root(**concrete_args) == traced(**concrete_args)
+    if check_args is not None:
+         assert root(**check_args) == traced(**check_args)
     return traced
