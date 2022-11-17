@@ -181,7 +181,6 @@ class AutoConvTestCase(unittest.TestCase):
                 autowrap_leaf_class = {
                     **ConcreteTracer.default_autowrap_leaf_class,
                     int:        ((), False),
-                    slice:      ((), False),
                 })
         torch.manual_seed(100)
         ModelSpeedup(traced_model, masks).run(torch.rand(8, 1, 28, 28))
