@@ -314,7 +314,8 @@ class ConcreteUnpackIterProxy(ConcreteProxy):
     def __init__(self, root: ConcreteProxy):
         if not hasattr(root.value, '__getitem__'):
             # transfer 'set' to 'tuple'
-            root = _orig_tuple(root)
+            # it' tuple not _orig_tuple!
+            root = tuple(root)
         self.root = root
         self.tracer = root.tracer
         self._node: Optional[Node] = None

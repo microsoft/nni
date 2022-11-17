@@ -155,6 +155,7 @@ class ConcreteTracer(TracerBase):
         # class
         _orig_bool:                 ((), False),
         _orig_zip:                  ((), False),
+        _orig_int:                  ((), False),
 
         # iterable class
         _orig_tuple:                ((), True),
@@ -1152,7 +1153,11 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         node_a: Node
         node_b: Node
         # TODO: better infomation
-        assert node_a.op == node_b.op and node_a.target == node_b.target
+        if node_a.op == 'get_attr' and node_a.name.startswith('_tensor_constant'):
+            assert node_b.op == 'get_attr' and node_b.name.startswith('_tensor_constant')
+            assert torch.equal(getattr(root, node_a.name), getattr(root, node_b.name))
+        else:
+            assert node_a.op == node_b.op and node_a.target == node_b.target
 
     with MagicMethodPatcher(tracer.root):
         name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
