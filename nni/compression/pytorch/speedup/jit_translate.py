@@ -403,9 +403,6 @@ def parse_aten_schema_version_1_8_x(schema: str):
     Using a lexer-parser like method to parse it.
     Re-write from torch/csrc/jit/frontend/function_schema_parser.cpp
     """
-    if schema in schema_fix_dict:
-        schema = schema_fix_dict[schema]
-
     single_solid_tokens = [
         '(', ')', '[', ']',
         '+', '-', '!', '>',
