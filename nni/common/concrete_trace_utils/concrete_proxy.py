@@ -28,6 +28,7 @@ from .utils import (
     _orig_index,
     _orig_bool,
     _orig_slice,
+    _orig_set,
 )
 
 _logger = logging.getLogger(__name__)
