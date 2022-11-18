@@ -5,7 +5,7 @@ from __future__ import annotations
 
 __all__ = [
     'Mutable', 'LabeledMutable', 'MutableSymbol', 'MutableExpression', 'Sample',
-    'Discrete', 'DiscreteMultiple', 'Continuous',
+    'Categorical', 'CategoricalMultiple', 'Continuous',
 ]
 
 import copy
@@ -92,7 +92,7 @@ class Mutable:
 
     On the other hand, most algorithms only care about the
     underlying variables that constitutes the space, rather than the complex compositions.
-    That is, the basic dimensions of discrete / continuous values in the space.
+    That is, the basic dimensions of categorical / continuous values in the space.
     Note that, this is only algorithm-friendly, but not friendly to those who writes the space.
 
     We provide two methods to achieve the best both worlds.
@@ -103,12 +103,12 @@ class Mutable:
 
     For example::
 
-        >>> from nni.mutable import Discrete
-        >>> mutable = Discrete([2, 3]) + Discrete([5, 7])
+        >>> from nni.mutable import Categorical
+        >>> mutable = Categorical([2, 3]) + Categorical([5, 7])
         >>> mutable
-        Discrete([2, 3], label='global_1') + Discrete([5, 7], label='global_2')
+        Categorical([2, 3], label='global_1') + Categorical([5, 7], label='global_2')
         >>> mutable.simplify()
-        {'global_1': Discrete([2, 3], label='global_1'), 'global_2': Discrete([5, 7], label='global_2')}
+        {'global_1': Categorical([2, 3], label='global_1'), 'global_2': Categorical([5, 7], label='global_2')}
         >>> sample = {'global_1': 2, 'global_2': 7}
         >>> mutable.freeze(sample)
         9
@@ -526,7 +526,7 @@ class MutableSymbol(LabeledMutable, Symbol, MutableExpression):
         return f'{self.__class__.__name__}({self.extra_repr()})'
 
 
-class Discrete(MutableSymbol, Generic[Choice]):
+class Categorical(MutableSymbol, Generic[Choice]):
     """Choosing one from a list of values.
 
     Parameters
@@ -544,9 +544,9 @@ class Discrete(MutableSymbol, Generic[Choice]):
 
     Examples
     --------
-    >>> x = Discrete([2, 3, 5], label='x1')
+    >>> x = Categorical([2, 3, 5], label='x1')
     >>> x.simplify()
-    {'x1': Discrete([2, 3, 5], label='x1')}
+    {'x1': Categorical([2, 3, 5], label='x1')}
     >>> x.freeze({'x1': 3})
     3
     """
@@ -558,7 +558,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
         label: str | None = None
     ) -> None:
         values = list(values)
-        assert values, 'Discrete values must not be empty.'
+        assert values, 'Categorical values must not be empty.'
         self.label = label or auto_label()
         self.values = values
         self.weights = weights if weights is not None else [1 / len(values)] * len(values)
@@ -567,7 +567,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
             self.validate({self.label: default})
         self.default_value = default
 
-        assert not(any(isinstance(value, Mutable) for value in values)), 'Discrete values must not contain mutables.'
+        assert not(any(isinstance(value, Mutable) for value in values)), 'Categorical values must not contain mutables.'
         assert len(set(values)) == len(values), 'Values must be unique.'
         assert len(self.weights) == len(self.values), 'Distribution must have length n.'
         assert abs(sum(self.weights) - 1) < 1e-6, 'Distribution must sum to 1.'
@@ -597,7 +597,7 @@ class Discrete(MutableSymbol, Generic[Choice]):
         return len(self.values)
 
     def default(self, memo: Sample | None = None) -> Choice:
-        """The default() of :class:`Discrete` is the first value unless default value is set.
+        """The default() of :class:`Categorical` is the first value unless default value is set.
 
         See Also
         --------
@@ -660,18 +660,18 @@ class Discrete(MutableSymbol, Generic[Choice]):
             yield self.freeze(memo)
 
 
-class DiscreteMultiple(MutableSymbol, Generic[Choice]):
+class CategoricalMultiple(MutableSymbol, Generic[Choice]):
     """Choosing multiple from a list of values without replacement.
 
-    It's implemented with a different class because for most algorithms, it's very different from :class:`Discrete`.
+    It's implemented with a different class because for most algorithms, it's very different from :class:`Categorical`.
 
-    :class:`DiscreteMultiple` can be either treated as a atomic :class:`LabeledMutable` (i.e., *simple format*),
-    or be further simplified into a series of more fine-grained mutables (i.e., *discrete format*).
+    :class:`CategoricalMultiple` can be either treated as a atomic :class:`LabeledMutable` (i.e., *simple format*),
+    or be further simplified into a series of more fine-grained mutables (i.e., *categorical format*).
 
-    In *discrete format*, class:`DiscreteMultiple` can be broken down to a list of :class:`Discrete` of true and false,
+    In *categorical format*, class:`CategoricalMultiple` can be broken down to a list of :class:`Categorical` of true and false,
     each indicating whether the choice on the corresponding position should be chosen.
     A constraint will be added if ``n_chosen`` is not None.
-    This is useful for some algorithms that only support discrete mutables.
+    This is useful for some algorithms that only support categorical mutables.
     Note that the prior distribution will be lost in this process.
 
     Parameters
@@ -691,17 +691,17 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
 
     Examples
     --------
-    >>> x = DiscreteMultiple([2, 3, 5, 7], n_chosen=2, label='x2')
+    >>> x = CategoricalMultiple([2, 3, 5, 7], n_chosen=2, label='x2')
     >>> x.random()
     [2, 7]
     >>> x.simplify()
-    {'x2': DiscreteMultiple([2, 3, 5, 7], n_chosen=2, label='x2')}
-    >>> x.simplify(lambda t: not isinstance(t, DiscreteMultiple))
+    {'x2': CategoricalMultiple([2, 3, 5, 7], n_chosen=2, label='x2')}
+    >>> x.simplify(lambda t: not isinstance(t, CategoricalMultiple))
     {
-        'x2/0': Discrete([True, False], label='x2/0'),
-        'x2/1': Discrete([True, False], label='x2/1'),
-        'x2/2': Discrete([True, False], label='x2/2'),
-        'x2/3': Discrete([True, False], label='x2/3'),
+        'x2/0': Categorical([True, False], label='x2/0'),
+        'x2/1': Categorical([True, False], label='x2/1'),
+        'x2/2': Categorical([True, False], label='x2/2'),
+        'x2/3': Categorical([True, False], label='x2/3'),
         'x2/n': ExpressionConstraint(...)
     }
     >>> x.freeze({'x2': [3, 5]})
@@ -718,7 +718,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         label: str | None = None,
     ) -> None:
         values = list(values)
-        assert values, 'Discrete values must not be empty.'
+        assert values, 'Categorical values must not be empty.'
         self.label = label or auto_label()
         self.values = values
         self.n_chosen = n_chosen
@@ -728,7 +728,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         self.default_value = default
 
         assert len(set(values)) == len(values), 'Values must be unique.'
-        assert not(any(isinstance(value, Mutable) for value in values)), 'Discrete values must not contain mutables.'
+        assert not(any(isinstance(value, Mutable) for value in values)), 'Categorical values must not contain mutables.'
         assert self.n_chosen is None or 1 <= self.n_chosen <= len(self.values), 'n_chosen must be between 1 and n, or None.'
         if weights is not None:
             self.weights = weights
@@ -751,17 +751,17 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
             ', '.join(map(repr, self.values[-3:])) + \
             f'], n_chosen={self.n_chosen!r}, label={self.label!r}'
 
-    def _simplify_to_discrete_format(self) -> list[LabeledMutable]:
-        mutables: list[LabeledMutable] = [Discrete([True, False], label=f'{self.label}/{i}') for i in range(len(self.values))]
+    def _simplify_to_categorical_format(self) -> list[LabeledMutable]:
+        mutables: list[LabeledMutable] = [Categorical([True, False], label=f'{self.label}/{i}') for i in range(len(self.values))]
         if self.n_chosen is not None:
             from .annotation import ExpressionConstraint  # pylint: disable=import-error
-            expr = sum(cast(List[Discrete], mutables)) == self.n_chosen
+            expr = sum(cast(List[Categorical], mutables)) == self.n_chosen
             assert isinstance(expr, MutableExpression)
             mutables.append(ExpressionConstraint(expr, label=f'{self.label}/n'))
         return mutables
 
     def _parse_simple_format(self, sample: Sample) -> SampleValidationError | list[Choice]:
-        """Try to freeze the DiscreteMultiple in a simple format."""
+        """Try to freeze the CategoricalMultiple in a simple format."""
         if self.label in sample:
             sample_val = sample[self.label]
             if len(set(sample_val)) != len(sample_val):
@@ -774,9 +774,9 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         else:
             return SampleMissingError(self.label, list(sample.keys()))
 
-    def _parse_discrete_format(self, sample: Sample) -> SampleValidationError | list[Choice]:
-        """Try to freeze the DiscreteMultiple in a discrete format."""
-        mutables = self._simplify_to_discrete_format()
+    def _parse_categorical_format(self, sample: Sample) -> SampleValidationError | list[Choice]:
+        """Try to freeze the CategoricalMultiple in a categorical format."""
+        mutables = self._simplify_to_categorical_format()
         rv = []
         for i, mutable in enumerate(mutables):
             exception = mutable.check_contains(sample)
@@ -791,7 +791,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
     def check_contains(self, sample: Sample) -> SampleValidationError | None:
         possible_exc_types = []
         possible_reasons = []
-        for parse_fn in [self._parse_simple_format, self._parse_discrete_format]:
+        for parse_fn in [self._parse_simple_format, self._parse_categorical_format]:
             parse_result = parse_fn(sample)
             if not isinstance(parse_result, SampleValidationError):
                 return None
@@ -804,7 +804,7 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
 
     def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
         """If invoking ``is_leaf`` returns true, return self.
-        Otherwise, further break it down to several :class:`Discrete` and :class:`Constraint`.
+        Otherwise, further break it down to several :class:`Categorical` and :class:`Constraint`.
 
         See Also
         --------
@@ -813,12 +813,12 @@ class DiscreteMultiple(MutableSymbol, Generic[Choice]):
         if is_leaf(self):
             yield self
         else:
-            for mutable in self._simplify_to_discrete_format():
+            for mutable in self._simplify_to_categorical_format():
                 yield from mutable.leaf_mutables(is_leaf)
 
     def freeze(self, sample: Sample) -> list[Choice]:
         self.validate(sample)
-        for parse_fn in [self._parse_simple_format, self._parse_discrete_format]:
+        for parse_fn in [self._parse_simple_format, self._parse_categorical_format]:
             choice = parse_fn(sample)
             if not isinstance(choice, SampleValidationError):
                 return choice
