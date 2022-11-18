@@ -27,7 +27,7 @@ stages:
     - template: templates/install-nni.yml
 
     - script: |
-        export PATH=./toolchain/node/bin:$PATH
+        export PATH=${PWD}/toolchain/node/bin:$PATH
         which node
         which npm
         npm --prefix ts/nni_manager run test
