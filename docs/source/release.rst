@@ -19,16 +19,16 @@ Neural Architecture Search
 Compression
 """""""""""
 
-*  Supported parsing schema by replacing ``torch._C.parse_schema`` in pytorch 1.8.0 in ModelSpeedup.
 *  Fixed the bug that speedup ``rand_like_with_shape`` is easy to overflow when ``dtype=torch.int8``.
+*  Supported parsing schema by replacing ``torch._C.parse_schema`` in pytorch 1.8.0 in ModelSpeedup.
 *  Fixed the propagation error with view tensors in speedup.
 
 Hyper-parameter optimization
 """"""""""""""""""""""""""""
 
-*  Supported rerunning the interrupted trials induced by the termination of an NNI experiment when resuming this experiment.
 *  Fixed a dependency issue of Anneal tuner by changing Anneal tuner dependency to optional.
 *  Fixed a bug that tuner might lose connection in long experiments.
+*  Supported rerunning the interrupted trials induced by the termination of an NNI experiment when resuming this experiment.
 
 Training service
 """"""""""""""""
