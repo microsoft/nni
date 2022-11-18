@@ -15,6 +15,24 @@ stages:
 - stage: lint
   jobs:
 
+  - job: ubuntu_legacy
+    pool:
+      vmImage: ubuntu-18.04
+
+    steps:
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: ubuntu-legacy
+
+    - template: templates/install-nni.yml
+
+    - script: |
+        export PATH=./toolchain/node/bin:$PATH
+        which node
+        which npm
+        npm --prefix ts/nni_manager run test
+      displayName: TypeScript unit test
+
   - job: copyright
     pool:
       vmImage: ubuntu-latest
