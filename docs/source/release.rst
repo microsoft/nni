@@ -14,7 +14,7 @@ Neural Architecture Search
 *  Added trail deduplication for evolutionary search.
 *  Fixed the racing issue in RL strategy on submitting models.
 *  Fixed an issue introduced by the trial recovery feature.
-*  Fixed the import error of ``PyTorch Lightning`` in NAS.
+*  Fixed import error of ``PyTorch Lightning`` in NAS.
 
 Compression
 """""""""""
@@ -38,13 +38,13 @@ Training service
 Web portal
 """"""""""
 
-*  Fixed an error of columns in HPO experiment hyper-parameters page by using localStorage.
+*  Fixed an error in HPO experiment hyper-parameters page.
 *  Fixed a link error in About menu on WebUI.
 
 Known issues
 """"""""""""
 
-*  Modelspeedup does not support non-tensor intermediate variables.
+*  Modelspeedup does not support non-tensor intermediate variables
 
 Release 2.9 - 9/8/2022
 ----------------------
