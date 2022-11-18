@@ -196,7 +196,7 @@ stages:
       displayName: Python unit test
 
     - script: |
-        yarn --cwd ts/nni_manager test
+        ./toolchain/node/bin/npm --prefix ts/nni_manager run test
       displayName: TypeScript unit test
 
   - job: windows
