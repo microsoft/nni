@@ -351,7 +351,8 @@ def arg_trans_layout(ivalue: Union[None, int, torch.layout]) -> torch.layout:
 
     """
     if ivalue is None:
-        # layout cannot be None with argument 'pin_memory' exist in in pytorch.
+        # tips: layout cannot be None with argument 'pin_memory' exist in in pytorch.
+        # tips: the default value of torch.layout is not like torch.dtype or torch.memory_format
         return torch.strided
     elif isinstance(ivalue, torch.layout):
         return ivalue
@@ -479,10 +480,10 @@ for layout_name, trans_name in layout_names_to_trans.items():
     if hasattr(torch, layout_name) and hasattr(torch.Tensor, trans_name):
         layout_names_to_trans_dict[getattr(torch, layout_name)] = getattr(torch.Tensor, trans_name)
 
-def hook_to__dtype_layout(positional, keyword, undetermined, undetermined_special_treat):
+def hook_to_dtype_layout(positional, keyword, undetermined, undetermined_special_treat):
     """
     there is no function corresponding to 'aten::to.dtype_layout'. so we gen it in another way.
-    
+
     positional_num = 1 (self)
     keyword_list = ['dtype', 'layout', 'device', 'pin_memory', 'non_blocking', 'copy', 'memory_format']
     special_treat = {
@@ -514,7 +515,7 @@ def hook_randint(positional, keyword, undetermined, undetermined_special_treat):
     return FuncAdapter(torch.randint, positional, keyword, undetermined, undetermined_special_treat)
 
 table_gen_hook = {
-    'to.dtype_layout': hook_to__dtype_layout, #TODO: this uncommon 'aten::to' is not tested
+    'to.dtype_layout': hook_to_dtype_layout, #TODO: this uncommon 'aten::to' is not tested
     'randint': hook_randint,
     'randint.generator': hook_randint,
     'randint.low': hook_randint,
