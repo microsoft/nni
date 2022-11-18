@@ -45,6 +45,8 @@ def _get_glibc_minor_version():  # type: () -> int | None
     try:
         from pip._internal.utils.glibc import glibc_version_string
         glibc_version = glibc_version_string()
+        if glibc_version is None:
+            return None
         glibc_major, glibc_minor = map(int, glibc_version.split('.'))
         if glibc_major < 2:
             raise RuntimeError('Unsupported glibc version: ' + glibc_version)
