@@ -120,7 +120,7 @@ class HuggingfaceBertParser(HuggingfaceModelParser):
     QKVO = QKV + ('attention.output.dense',)
     FFN1 = ('intermediate.dense',)
     FFN2 = ('output.dense',)
-    ATTENTION = ('attention.self',)
+    ATTENTION = ('attention',)
 
 
 class HuggingfaceBartParser(HuggingfaceModelParser):

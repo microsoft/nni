@@ -410,7 +410,11 @@ class ModelSpeedup:
         NOTE: ```func``` type cannot be replaced as it is not a module, thus, one limitation
         is that ```func``` should be not required to be replaced.
         """
+        from nni.contrib.pruning_speedup.replacer import TransformersAttentionReplacer
+        replacer = TransformersAttentionReplacer(self.bound_model)
+        print(type(replacer.parser))
         with torch.no_grad():
+            replacer.replace_modules(self.bound_model, self.auto_inferences)
             for unique_name in self.auto_inferences:
                 self.replace_submodule(unique_name)
 
