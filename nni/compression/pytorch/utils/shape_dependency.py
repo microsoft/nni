@@ -152,8 +152,12 @@ class ChannelDependency(Dependency):
         parent_layers = []
         queue = []
         queue.append(node)
+        visited_set = set()
         while queue:
             curnode = queue.pop(0)
+            if curnode in visited_set:
+                continue
+            visited_set.add(curnode)
             if curnode.op_type in self.target_types:
                 # find the first met conv
                 parent_layers.append(curnode.name)
@@ -164,6 +168,8 @@ class ChannelDependency(Dependency):
             parents = self.graph.find_predecessors(curnode.unique_name)
             parents = [self.graph.name_to_node[name] for name in parents]
             for parent in parents:
+                if parent in visited_set:
+                    continue
                 queue.append(parent)
 
         return parent_layers
