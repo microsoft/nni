@@ -5,7 +5,7 @@ from __future__ import annotations
 
 __all__ = [
     'Mutable', 'LabeledMutable', 'MutableSymbol', 'MutableExpression', 'Sample',
-    'Categorical', 'CategoricalMultiple', 'Continuous',
+    'Categorical', 'CategoricalMultiple', 'Numerical',
 ]
 
 import copy
@@ -398,7 +398,7 @@ class Mutable:
         granularity
             Optional integer to specify the level of granularity of the grid.
             This only affects the cases where the grid is not a finite set.
-            See :class:`Continuous` for details.
+            See :class:`Numerical` for details.
         """
         def _iter(index: int) -> Iterable[Any]:
             if index == len(simplified):
@@ -527,12 +527,16 @@ class MutableSymbol(LabeledMutable, Symbol, MutableExpression):
 
 
 class Categorical(MutableSymbol, Generic[Choice]):
-    """Choosing one from a list of values.
+    """Choosing one from a list of categorical values.
 
     Parameters
     ----------
     values
         The list of values to choose from.
+        There are no restrictions on value types. They can be integers, strings, and even dicts and lists.
+        There is no intrinsic ordering of the values, meaning that the order
+        in which the values appear in the list doesn't matter.
+        The values can also be an iterable, which will be expanded into a list.
     weights
         The probability distribution of the values. Should be an array with the same length as ``values``.
         The sum of the distribution should be 1.
@@ -677,7 +681,7 @@ class CategoricalMultiple(MutableSymbol, Generic[Choice]):
     Parameters
     ----------
     values
-        The list of values to choose from.
+        The list of values to choose from. See :class:`Categorical`.
     n_chosen
         The number of values to choose. If not specified, any number of values can be chosen.
     weights
@@ -895,8 +899,8 @@ class CategoricalMultiple(MutableSymbol, Generic[Choice]):
             yield self.freeze(memo)
 
 
-class Continuous(MutableSymbol):
-    """A variable from a continuous numeric domain.
+class Numerical(MutableSymbol):
+    """One variable from a univariate distribution.
 
     It supports most commonly used distributions including uniform, loguniform,
     normal, lognormal, as well as the quantized version.
@@ -936,29 +940,29 @@ class Continuous(MutableSymbol):
     --------
     To create a variable uniformly sampled from 0 to 1::
 
-        Continuous(low=0, high=1)
+        Numerical(low=0, high=1)
 
     To create a variable normally sampled with mean 2 and std 3::
 
-        Continuous(mu=2, sigma=3)
+        Numerical(mu=2, sigma=3)
 
     To create a normally sampled variable with mean 0 and std 1, but
     always in the range of [-1, 1] (note that it's not **truncated normal** though)::
 
-        Continuous(mu=0, sigma=1, low=-1, high=1)
+        Numerical(mu=0, sigma=1, low=-1, high=1)
 
     To create a variable uniformly sampled from 0 to 100, but always multiple of 2::
 
-        Continuous(low=0, high=100, quantize=2)
+        Numerical(low=0, high=100, quantize=2)
 
     To create a reciprocal continuous random variable in the range of [2, 6]::
 
-        Continuous(low=2, high=6, log_distributed=True)
+        Numerical(low=2, high=6, log_distributed=True)
 
     To create a variable sampled from a custom distribution:
 
         from scipy.stats import beta
-        Continuous(distribution=beta(2, 5))
+        Numerical(distribution=beta(2, 5))
     """
 
     def __init__(
@@ -980,7 +984,7 @@ class Continuous(MutableSymbol):
 
         self.label = label or auto_label()
 
-        assert not(any(isinstance(value, Mutable) for value in [low, high, mu, sigma])), 'Continuous parameters must not be mutables.'
+        assert not(any(isinstance(value, Mutable) for value in [low, high, mu, sigma])), 'Numerical parameters must not be mutables.'
 
         if distribution is not None:
             if mu is not None or sigma is not None or log_distributed:
@@ -1049,7 +1053,7 @@ class Continuous(MutableSymbol):
         return x
 
     def default(self, memo: Sample | None = None) -> float:
-        """If default value is not specified, :meth:`Continuous.default` returns median.
+        """If default value is not specified, :meth:`Numerical.default` returns median.
 
         See Also
         --------
@@ -1098,13 +1102,13 @@ class Continuous(MutableSymbol):
 
         Examples
         --------
-        >>> list(Continuous(0, 1).grid(granularity=2))
+        >>> list(Numerical(0, 1).grid(granularity=2))
         [0.25, 0.5, 0.75]
-        >>> list(Continuous(0, 1).grid(granularity=3))
+        >>> list(Numerical(0, 1).grid(granularity=3))
         [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875]
-        >>> list(Continuous(mu=0, sigma=1).grid(granularity=2))
+        >>> list(Numerical(mu=0, sigma=1).grid(granularity=2))
         [-0.6744897501960817, 0.0, 0.6744897501960817]
-        >>> list(Continuous(mu=0, sigma=1, quantize=0.5).grid(granularity=3))
+        >>> list(Numerical(mu=0, sigma=1, quantize=0.5).grid(granularity=3))
         [-1.0, -0.5, 0.0, 0.5, 1.0]
 
         See Also
