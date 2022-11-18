@@ -2,16 +2,24 @@
 // Licensed under the MIT license.
 
 /**
- *  TODO: Back ported from 3.0 draft.
- *
  *  An augmented version of ts-deferred.
  *
- *  You can `await deferred.promise` more than once and they will be resolved together.
+ *   1. Support `await deferred.promise` more than once.
  *
- *  You can resolve a deferred multiple times with identical value and it will be ignored.
+ *          const deferred = new Deferred<void>;
+ *          deferred.promise.then(() => { console.log('hello'); });
+ *          deferred.promise.then(() => { console.log('world'); });
+ *          deferred.resolve();  // output "hello world" or "world hello"
+ *          deferred.promise.then(() => { console.log('late'); });  // output "late"
  *
- *  If a deferred is resolved and/or rejected with conflict values,
- *  it will throw error and log both values or reasons.
+ *   2. Allow to repeatedly resolve or reject with identical value.
+ *
+ *          const deferred = new Deferred<string>;
+ *          deferred.promise.then((msg) => { console.log('hello', msg); })
+ *          deferred.resolve('world');  // output "hello world"
+ *          deferred.resolve('world');  // nothing happen
+ *          deferred.resolve('universe');  // raise error
+ *          deferred.reject(new Error());  // raise error
  **/
 
 import util from 'util';
@@ -55,7 +63,7 @@ export class Deferred<T> {
                 callback(value);
             }
 
-        } else if (this.isResolved && this.resolvedValue == value) {
+        } else if (this.isResolved && this.resolvedValue === value) {
             logger.debug('Double resolve:', value);
 
         } else {

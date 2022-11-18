@@ -554,7 +554,7 @@ class RemoteMachineTrainingService implements TrainingService {
             }
             deferred.resolve(trialJob);
         } catch (error) {
-            this.log.debug(`(Ignorable mostly)Update job status exception, error is ${error.message}`);
+            this.log.debug(`(Ignorable mostly)Update job status exception, error is ${(error as any).message}`);
             if (error instanceof NNIError && error.name === NNIErrorNames.NOT_FOUND) {
                 deferred.resolve(trialJob);
             } else {

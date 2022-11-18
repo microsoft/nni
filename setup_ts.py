@@ -24,8 +24,8 @@ import traceback
 from zipfile import ZipFile
 
 
-node_version = 'v16.14.2'
-yarn_version = 'v1.22.10'
+node_version = 'v18.12.1'
+yarn_version = 'v1.22.19'
 
 def _get_jupyter_lab_version():
     try:
@@ -81,6 +81,8 @@ if sys.platform == 'linux' or sys.platform == 'darwin':
     node_extractor = lambda data: tarfile.open(fileobj=BytesIO(data), mode='r:xz')
     node_executable_in_tarball = 'bin/node'
 
+    npm_executable = 'bin/npm'
+
     yarn_executable = 'yarn'
     yarn_download_url = f'https://github.com/yarnpkg/yarn/releases/download/{yarn_version}/yarn-{yarn_version}.tar.gz'
 
@@ -92,6 +94,8 @@ elif sys.platform == 'win32':
     node_download_url = f'https://nodejs.org/dist/{node_version}/{node_spec}.zip'
     node_extractor = lambda data: ZipFile(BytesIO(data))
     node_executable_in_tarball = 'node.exe'
+
+    npm_executable = 'npm.cmd'
 
     yarn_executable = 'yarn.cmd'
     yarn_download_url = f'https://github.com/yarnpkg/yarn/releases/download/{yarn_version}/yarn-{yarn_version}.tar.gz'
@@ -169,8 +173,8 @@ def compile_ts(release):
     Use yarn to download dependencies and compile TypeScript code.
     """
     _print('Building NNI manager')
-    _yarn('ts/nni_manager')
-    _yarn('ts/nni_manager', 'build')
+    _npm('ts/nni_manager', 'install')
+    _npm('ts/nni_manager', 'run', 'build')
     # todo: I don't think these should be here
     shutil.rmtree('ts/nni_manager/dist/config', ignore_errors=True)
     shutil.copytree('ts/nni_manager/config', 'ts/nni_manager/dist/config')
@@ -233,7 +237,7 @@ def copy_nni_node(version):
                 shutil.copytree(subsrc, subdst)
             else:
                 shutil.copy2(subsrc, subdst)
-    shutil.copyfile('ts/nni_manager/yarn.lock', 'nni_node/yarn.lock')
+    shutil.copyfile('ts/nni_manager/package-lock.json', 'nni_node/package-lock.lock')
     Path('nni_node/nni_manager.tsbuildinfo').unlink()
 
     package_json = json.load(open('ts/nni_manager/package.json'))
@@ -245,10 +249,11 @@ def copy_nni_node(version):
 
     if sys.platform == 'win32':
         # On Windows, manually install node-gyp for sqlite3.
-        _yarn('ts/nni_manager', 'global', 'add', 'node-gyp')
+        _npm('ts/nni_manager', 'install', '--global', 'node-gyp')
 
     # reinstall without development dependencies
-    _yarn('ts/nni_manager', '--prod', '--cwd', str(Path('nni_node').resolve()))
+    prod_path = Path('nni_node').resolve()
+    _yarn(str(prod_path), 'install', '--production')
 
     shutil.copytree('ts/webui/build', 'nni_node/static')
 
@@ -263,6 +268,7 @@ _yarn_env = dict(os.environ)
 # `Path('nni_node').resolve()` does not work on Windows if the directory not exists
 _yarn_env['PATH'] = str(Path().resolve() / 'nni_node') + path_env_seperator + os.environ['PATH']
 _yarn_path = Path().resolve() / 'toolchain/yarn/bin' / yarn_executable
+_npm_path = Path().resolve() / 'toolchain/node' / npm_executable
 
 def _yarn(path, *args):
     _print('yarn ' + ' '.join(args) + f' (path: {path})')
@@ -270,6 +276,13 @@ def _yarn(path, *args):
         subprocess.run(['yarn', *args], cwd=path, check=True)
     else:
         subprocess.run([str(_yarn_path), *args], cwd=path, check=True, env=_yarn_env)
+
+def _npm(path, *args):
+    _print('npm ' + ' '.join(args) + f' (path: {path})')
+    if os.environ.get('GLOBAL_TOOLCHAIN'):
+        subprocess.run(['npm', *args], cwd=path, check=True)
+    else:
+        subprocess.run([str(_npm_path), *args], cwd=path, check=True, env=_yarn_env)
 
 
 def _symlink(target_file, link_location):
