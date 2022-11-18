@@ -196,7 +196,8 @@ stages:
       displayName: Python unit test
 
     - script: |
-        ./toolchain/node/bin/npm --prefix ts/nni_manager run test
+        export PATH=./toolchain/node/bin:$PATH
+        npm --prefix ts/nni_manager run test
       displayName: TypeScript unit test
 
   - job: windows
