@@ -103,7 +103,7 @@ def unwrapper(model_onnx, index2name, config):
             model_onnx.graph.node.remove(mul_nd)
             idx = idx-2
         idx = idx+1
-    print('onnx_config:', onnx_config)
+    #print('onnx_config:', onnx_config)
     return model_onnx, onnx_config
 
 def torch_to_onnx(model, config, input_shape, model_path, input_names, output_names):

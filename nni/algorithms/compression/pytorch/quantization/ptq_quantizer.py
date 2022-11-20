@@ -354,6 +354,8 @@ class PtqQuantizer(Quantizer):
                 calibration_config[name]['weight_bits'] = module.layer_quant_setting.weight.bits
                 calibration_config[name]['weight_scale'] = module.weight_scale
                 calibration_config[name]['weight_zero_point'] = module.weight_zero_point
+                calibration_config[name]['min_weight'] = float(module.weight_scale * (module.weight_qmin - module.weight_zero_point))
+                calibration_config[name]['max_weight'] = float(module.weight_scale * (module.weight_qmax - module.weight_zero_point))
             if hasattr(module, 'input_scale'):
                 # FIXME: consider different quant schemes
                 calibration_config[name]['input_bits'] = module.layer_quant_setting.input.bits

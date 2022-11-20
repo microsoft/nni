@@ -1,14 +1,14 @@
-import numpy as np
+import time
 import torch
 import torch.nn as nn
 import torchvision
-from torch.utils.data import DataLoader
-from torchvision import datasets
 import torchvision.transforms as transforms
-import os
-import time
-import sys
 import torch.quantization
+
+from nni.algorithms.compression.pytorch.quantization import PtqQuantizer
+from nni.algorithms.compression.v2.pytorch.utils import TorchEvaluator
+from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+from nni.compression.pytorch.quantization_speedup.calibrator import Calibrator
 
 # # Setup warnings
 import warnings
@@ -25,9 +25,13 @@ warnings.filterwarnings(
 # Specify random seed for repeatable results
 torch.manual_seed(191009)
 
-#====================
+#data_path = '/data/data0/v-zhiqxi/imagenet-raw-data'
+data_path = '/data'
+saved_model_dir = 'data/'
+float_model_file = 'mobilenet_pretrained_float.pth'
+scripted_float_model_file = 'mobilenet_quantization_scripted.pth'
+scripted_quantized_model_file = 'mobilenet_quantization_scripted_quantized.pth'
 
-#from torch.quantization import QuantStub, DeQuantStub
 
 def _make_divisible(v, divisor, min_value=None):
     """
@@ -182,7 +186,6 @@ class MobileNetV2(nn.Module):
                     if type(m.conv[idx]) == nn.Conv2d:
                         torch.quantization.fuse_modules(m.conv, [str(idx), str(idx + 1)], inplace=True)
 
-#====================
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -225,43 +228,33 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def evaluate(model, criterion, data_loader, neval_batches, device):
+def evaluate(model, data_loader, neval_batches, device):
     model.eval()
     top1 = AverageMeter('Acc@1', ':6.2f')
     top5 = AverageMeter('Acc@5', ':6.2f')
     cnt = 0
+    total_time = 0
     with torch.no_grad():
         for image, target in data_loader:
             image = image.to(device)
             target = target.to(device)
+            start_time = time.time()
             output = model(image)
-            loss = criterion(output, target)
+            time_span = time.time() - start_time
+            total_time += time_span
+            print()
             cnt += 1
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
             print('.', end = '')
             top1.update(acc1[0], image.size(0))
             top5.update(acc5[0], image.size(0))
             if cnt >= neval_batches:
-                 return top1, top5
-
+                break
+    print('inference time: ', total_time / neval_batches)
     return top1, top5
 
-def load_model(model_file):
-    model = MobileNetV2()
-    state_dict = torch.load(model_file)
-    model.load_state_dict(state_dict)
-    model.to('cpu')
-    return model
 
-def print_size_of_model(model):
-    torch.save(model.state_dict(), "temp.p")
-    print('Size (MB):', os.path.getsize("temp.p")/1e6)
-    os.remove('temp.p')
-
-#===============
-
-def prepare_data_loaders(data_path):
-
+def prepare_data_loaders(data_path, train_batch_size, eval_batch_size):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     dataset = torchvision.datasets.ImageNet(
@@ -283,181 +276,97 @@ def prepare_data_loaders(data_path):
 
     train_sampler = torch.utils.data.RandomSampler(dataset)
     test_sampler = torch.utils.data.SequentialSampler(dataset_test)
-
     data_loader = torch.utils.data.DataLoader(
         dataset, batch_size=train_batch_size,
         sampler=train_sampler)
-
     data_loader_test = torch.utils.data.DataLoader(
         dataset_test, batch_size=eval_batch_size,
         sampler=test_sampler)
-
     return data_loader, data_loader_test
 
-#=====================
 
-#data_path = '/data/data0/v-zhiqxi/imagenet-raw-data'
-data_path = '/data'
-saved_model_dir = 'data/'
-float_model_file = 'mobilenet_pretrained_float.pth'
-scripted_float_model_file = 'mobilenet_quantization_scripted.pth'
-scripted_quantized_model_file = 'mobilenet_quantization_scripted_quantized.pth'
+def load_model(model_file):
+    model = MobileNetV2()
+    state_dict = torch.load(model_file)
+    model.load_state_dict(state_dict)
+    model.to('cpu')
+    return model
 
-train_batch_size = 30
-eval_batch_size = 50
-
-data_loader, data_loader_test = prepare_data_loaders(data_path)
-criterion = nn.CrossEntropyLoss()
-'''
-float_model = load_model(saved_model_dir + float_model_file).to('cpu')
-
-# Next, we'll "fuse modules"; this can both make the model faster by saving on memory access
-# while also improving numerical accuracy. While this can be used with any model, this is
-# especially common with quantized models.
-
-print('\n Inverted Residual Block: Before fusion \n\n', float_model.features[1].conv)
-float_model.eval()
-
-# Fuses modules
-float_model.fuse_model()
-
-# Note fusion of Conv+BN+Relu and Conv+Relu
-print('\n Inverted Residual Block: After fusion\n\n',float_model.features[1].conv)
-
-#==========================
-
-num_eval_batches = 100
-
-print("Size of baseline model")
-print_size_of_model(float_model)
-
-top1, top5 = evaluate(float_model, criterion, data_loader_test, neval_batches=num_eval_batches)
-print('Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
-torch.jit.save(torch.jit.script(float_model), saved_model_dir + scripted_float_model_file)
-
-#==========================torch native
-
-num_calibration_batches = 32
-
-myModel = load_model(saved_model_dir + float_model_file).to('cpu')
-myModel.eval()
-
-# Fuse Conv, bn and relu
-myModel.fuse_model()
-
-# Specify quantization configuration
-# Start with simple min/max range estimation and per-tensor quantization of weights
-myModel.qconfig = torch.quantization.default_qconfig
-print(myModel.qconfig)
-torch.quantization.prepare(myModel, inplace=True)
-
-# Calibrate first
-print('Post Training Quantization Prepare: Inserting Observers')
-print('\n Inverted Residual Block:After observer insertion \n\n', myModel.features[1].conv)
-
-# Calibrate with the training set
-evaluate(myModel, criterion, data_loader, neval_batches=num_calibration_batches)
-print('Post Training Quantization: Calibration done')
-
-# Convert to quantized model
-torch.quantization.convert(myModel, inplace=True)
-print('Post Training Quantization: Convert done')
-print('\n Inverted Residual Block: After fusion and quantization, note fused modules: \n\n',myModel.features[1].conv)
-
-print("Size of model after quantization")
-print_size_of_model(myModel)
-
-num_eval_batches = 100
-
-top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches)
-print('Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
-'''
-#==========================nni
 
 def test_trt(engine, data_loader, neval_batches):
     top1 = AverageMeter('Acc@1', ':6.2f')
     top5 = AverageMeter('Acc@5', ':6.2f')
     cnt = 0
+    total_time = 0
     for image, target in data_loader:
-        image = image.to(device)
-        target = target.to(device)
-        output, time = engine.inference(image)
-        output = output.to(device)
-        print('zql device: ', output.device, target.device)
-        loss = criterion(output, target)
+        output, time_span = engine.inference(image)
+        print('time: ', time_span)
+        total_time += time_span
+        output = output.view(-1, 1000)
         cnt += 1
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        print('zql: ', acc1, acc5)
-        print('.', end = '')
         top1.update(acc1[0], image.size(0))
         top5.update(acc5[0], image.size(0))
         if cnt >= neval_batches:
-                return top1, top5
-
+            break
+    print('inference time: ', total_time / neval_batches)
     return top1, top5
 
-num_calibration_batches = 32
-num_eval_batches = 100
-device = torch.device('cuda')
-#device = torch.device('cpu')
 
-myModel = load_model(saved_model_dir + float_model_file)
-myModel.eval()
-myModel.to(device)
-# top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
-# print('Before quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
+def test_trt_no_calibration(test_data_loader, num_eval_batches):
+    config_list = [{
+        'quant_types': ['input', 'weight', 'output'],
+        'quant_bits': {'input': 8, 'weight': 8, 'output': 8},
+        'quant_dtype': 'int',
+        'quant_scheme': 'per_tensor_symmetric',
+        'op_types': ['default']
+    }]
+    device = torch.device('cuda')
+    def my_eval(model):
+        evaluate(model, nn.CrossEntropyLoss(), test_data_loader,
+                 neval_batches=2, device=device)
 
+    myModel = load_model(saved_model_dir + float_model_file)
+    myModel.eval()
+    myModel.to(device)
+    dummy_input = torch.Tensor(64, 3, 224, 224)
+    dummy_input = dummy_input.to(device)
+    predict_func = TorchEvaluator(predicting_func=my_eval, dummy_input=dummy_input)
+    quantizer = PtqQuantizer(myModel, config_list, predict_func, True)
+    sim_quant_model, quant_result_conf = quantizer.compress()
+    calibration_config = quantizer.export_model()
+    print('quant result config: ', calibration_config)
 
-# # test trt
-# myModel.to(device)
-# dummy_input = torch.Tensor(30, 3, 224, 224)
-# dummy_input = dummy_input.to(device)
-# torch.onnx.export(myModel, dummy_input, 'mymodel.onnx', verbose=False, input_names=["actual_input_1"], output_names=["output1"], export_params=True)
-# # from nni.compression.pytorch.quantization_speedup.integrated_tensorrt import build_engine
-# # build_engine('mymodel.onnx', config={'mylatyer': 10}, strict_datatype=True)
-# exit(1)
+    input_shape = (64, 3, 224, 224)
+    newModel = load_model(saved_model_dir + float_model_file)
+    newModel.eval()
+    newModel.to(device)
+    engine = ModelSpeedupTensorRT(newModel, input_shape, config=calibration_config)
+    engine.compress()
+    top1, top5 = test_trt(engine, test_data_loader, neval_batches=num_eval_batches)
+    print('accuracy: ', top1, top5)
 
-def my_eval(model):
-    evaluate(model, criterion, data_loader, neval_batches=num_calibration_batches, device=device)
+def test_trt_calibration(test_data_loader, num_eval_batches):
+    # prepare calibrator
+    data_iter = iter(test_data_loader)
+    batch1 = next(data_iter)[0]
+    batch2 = next(data_iter)[0]
+    calib_data = torch.cat((batch1, batch2), 0)
+    calib_data = calib_data.numpy()
+    calib = Calibrator(calib_data, 'data/calib_cache_file.cache', batch_size=64)
+    # speedup and inference
+    input_shape = (64, 3, 224, 224)
+    device = torch.device('cuda')
+    newModel = load_model(saved_model_dir + float_model_file)
+    newModel.eval()
+    newModel.to(device)
+    engine = ModelSpeedupTensorRT(newModel, input_shape, config=None)
+    engine.compress_with_calibrator(calib)
+    top1, top5 = test_trt(engine, test_data_loader, neval_batches=num_eval_batches)
+    print('accuracy: ', top1, top5)
 
-from nni.algorithms.compression.pytorch.quantization import PtqQuantizer
-from nni.algorithms.compression.v2.pytorch.utils import TorchEvaluator
-
-config_list = [{
-    'quant_types': ['input', 'weight', 'output'],
-    'quant_bits': {'input': 8, 'weight': 8, 'output': 8},
-    #'quant_types': ['weight'],
-    #'quant_bits': {'weight': 8},
-    'quant_dtype': 'int',
-    'quant_scheme': 'per_tensor_symmetric',
-    'op_types': ['default']
-}]
-
-dummy_input = torch.Tensor(30, 3, 224, 224)
-dummy_input = dummy_input.to(device)
-predict_func = TorchEvaluator(predicting_func=my_eval, dummy_input=dummy_input)
-quantizer = PtqQuantizer(myModel, config_list, predict_func, True)
-
-#top1, top5 = evaluate(myModel, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
-#print('After quantization bn folding: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
-
-#exit(0)
-
-sim_quant_model, quant_result_conf = quantizer.compress()
-
-#top1, top5 = evaluate(sim_quant_model, criterion, data_loader_test, neval_batches=num_eval_batches, device=device)
-#print('After quantization: Evaluation accuracy on %d images, %2.2f'%(num_eval_batches * eval_batch_size, top1.avg))
-
-calibration_config = quantizer.export_model()
-print('quant result config: ', calibration_config)
-
-from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-input_shape = (30, 3, 224, 224)
-newModel = load_model(saved_model_dir + float_model_file)
-newModel.eval()
-newModel.to(device)
-engine = ModelSpeedupTensorRT(newModel, input_shape, config=calibration_config, batchsize=train_batch_size)
-#engine = ModelSpeedupTensorRT(None, input_shape, config=None, batchsize=32)
-engine.compress()
-top1, top5 = test_trt(engine, data_loader, neval_batches=num_calibration_batches)
-print('zql done: ', top1, top5)
+if __name__ == '__main__':
+    num_eval_batches = 100
+    data_loader, test_data_loader = prepare_data_loaders(data_path, train_batch_size=32, eval_batch_size=64)
+    # test_trt_calibration(test_data_loader, num_eval_batches)
+    test_trt_no_calibration(test_data_loader, num_eval_batches)
