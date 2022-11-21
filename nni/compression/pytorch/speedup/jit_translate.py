@@ -762,9 +762,9 @@ def hook_to_dtype_layout(positional, keyword, undetermined, undetermined_special
     real_to = FuncAdapter(torch.Tensor.to, positional, keyword, undetermined, undetermined_special_treat)
 
     def ret_func(*args):
-        if to_layout != torch.strided:
-            args[0] = layout_names_to_trans_dict[to_layout](args[0])
-        return real_to(*args)
+        the_self = args[0]
+        the_self = layout_names_to_trans_dict[to_layout](the_self)
+        return real_to(the_self, *args[1:])
 
     return ret_func
 
